@@ -1,58 +1,95 @@
 {
-  "added": 0,
-  "attempted": 1,
+  "added": 60,
+  "attempted": 4,
   "attempted_fixtures": [
     {
-      "away": "SpVgg Greuther F\u00fcrth",
+      "away": "Carroi",
       "date": "2026-10-11",
-      "home": "Hertha BSC",
-      "kickoff": "11-10, 12:30",
-      "league": "Germany 2. Bundesliga"
+      "home": "Ranger's",
+      "kickoff": "2026-10-11T11:00:00+02:00",
+      "league": "Andorra: 1a Divisi\u00f3"
+    },
+    {
+      "away": "HSC Hannover",
+      "date": "2026-10-11",
+      "home": "St. Pauli II",
+      "kickoff": "11-10, 13:00",
+      "league": "Germany Regionalliga - Nord"
+    },
+    {
+      "away": "Celtic",
+      "date": "2026-10-11",
+      "home": "Motherwell",
+      "kickoff": "11-10, 12:00",
+      "league": "Scotland Premiership"
+    },
+    {
+      "away": "Vysoke Myto",
+      "date": "2026-10-11",
+      "home": "Svitavy",
+      "kickoff": "10:00",
+      "league": "Czech Republic,Divize C"
     }
   ],
-  "candidate_fixtures": 49,
-  "captured_at": "2026-10-11T07:27:33+00:00",
+  "candidate_fixtures": 52,
+  "captured_at": "2026-10-11T10:22:33+00:00",
   "date": "2026-10-11",
   "due_reasons": {
-    "first_at": 1
+    "close_at": 2,
+    "first_at": 2
   },
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 1,
   "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 2
+    "kickoff_mismatch_display_fallback_overridden": 8
   },
-  "quoted_fixtures": [],
-  "rows": 0,
+  "quoted_fixtures": [
+    {
+      "away": "Celtic",
+      "date": "2026-10-11",
+      "home": "Motherwell",
+      "kickoff": "2026-10-11T11:00:00Z",
+      "league": "Scotland Premiership"
+    }
+  ],
+  "rows": 60,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_mismatch": 2,
-    "priced": 15,
-    "priced_close_window_not_open": 2,
-    "retry_cooldown": 31
+    "kickoff_already_passed": 1,
+    "kickoff_mismatch": 8,
+    "priced": 11,
+    "priced_close_window_not_open": 7,
+    "retry_cooldown": 29
   },
   "skipped": [
-    "Ranger's|Carroi (retry cooldown (6h after failed attempt))",
-    "Benfica|Vit\u00f3ria SC (priced)",
     "River Plate|Estudiantes de Rio Cuarto (retry cooldown (6h after failed attempt))",
     "BK Hacken|Orgryte IS (priced)",
     "Atletico Nacional|Deportivo Pasto (retry cooldown (6h after failed attempt))",
     "Suwon Bluewings|Ansan Greeners (retry cooldown (6h after failed attempt))",
     "Sardarapat|FC Noah (retry cooldown (6h after failed attempt))",
     "Vidar|Brattvag (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Real Betis|Osasuna: pick legacy display says 15:30Z, captured rows say 16:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Real Betis|Osasuna (priced, close window not open)",
     "Tokyo Verdy|Sanfrecce Hiroshima (retry cooldown (6h after failed attempt))",
     "Slovan Liberec|Slovacko (retry cooldown (6h after failed attempt))",
+    "Hertha BSC|SpVgg Greuther F\u00fcrth (retry cooldown (6h after failed attempt))",
     "Vikingur Reykjavik|IA Akranes (retry cooldown (6h after failed attempt))",
-    "Real Betis|Osasuna (priced)",
-    "St. Pauli II|HSC Hannover (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Benfica|Vit\u00f3ria SC: pick legacy display says 16:00Z, captured rows say 17:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Benfica|Vit\u00f3ria SC (priced, close window not open)",
+    "WARN kickoff-mismatch Grasshoppers|BSC Young Boys: pick legacy display says 11:00Z, captured rows say 12:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Grasshoppers|BSC Young Boys (priced, close window not open)",
     "Sparta Praha|Pardubice (retry cooldown (6h after failed attempt))",
+    "Union St. Gilloise|OH Leuven (retry cooldown (6h after failed attempt))",
     "Besiktas|Kocaelispor (priced)",
     "Brondby|Lyngby (priced)",
     "Almeria|Leganes (priced)",
     "Kjelsas|Rana FK (retry cooldown (6h after failed attempt))",
     "Stabaek|Strommen (retry cooldown (6h after failed attempt))",
     "Farense|Feirense (retry cooldown (6h after failed attempt))",
-    "UCSA|Yarud Mariupol' (retry cooldown (6h after failed attempt))",
+    "UCSA|Yarud Mariupol' (kickoff already passed)",
     "Sandnes ULF|Haugesund (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Aris Thessalonikis|Volos NFC: pick legacy display says 15:00Z, captured rows say 16:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Aris Thessalonikis|Volos NFC (priced, close window not open)",
     "Resistencia|12 de Junio VH (retry cooldown (6h after failed attempt))",
     "Sao Paulo|Vitoria (priced)",
     "Vllaznia Shkod\u00ebr|Dinamo Tirana (retry cooldown (6h after failed attempt))",
@@ -62,16 +99,14 @@
     "Lazio|Monza (priced, close window not open)",
     "Southampton|Portsmouth (priced)",
     "Lorenskog|Trygg-lade (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch SC Freiburg|FC Schalke 04: pick legacy display says 14:30Z, captured rows say 15:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "SC Freiburg|FC Schalke 04 (priced, close window not open)",
     "Kawasaki Frontale|Nagoya Grampus (priced)",
-    "SC Freiburg|FC Schalke 04 (priced)",
-    "Grasshopper-Club|BSC Young Boys (priced)",
     "Palmeiras|Corinthians (priced)",
     "Rennes|Auxerre (priced)",
     "Flamengo|Fluminense (priced)",
     "WARN kickoff-mismatch Motherwell|Celtic: pick legacy display says 10:00Z, captured rows say 11:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Motherwell|Celtic (priced, close window not open)",
     "Lusitania Lourosa|Chaves (retry cooldown (6h after failed attempt))",
-    "Svitavy|Vysoke Myto (retry cooldown (6h after failed attempt))",
     "FC St. Pauli|Karlsruher SC (retry cooldown (6h after failed attempt))",
     "Sliema Wanderers|Gzira United (retry cooldown (6h after failed attempt))",
     "Club America|Monterrey (priced)",
@@ -79,15 +114,21 @@
     "Gwangju FC|Ulsan Hyundai FC (retry cooldown (6h after failed attempt))",
     "AC Trento|Folgore Caratese (retry cooldown (6h after failed attempt))",
     "Csakvar|Kecskemeti TE (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Cagliari|Juventus: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Cagliari|Juventus (priced, close window not open)",
     "PSS Sleman|PSM Makassar (retry cooldown (6h after failed attempt))",
     "FK Partizan|Novi Pazar (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
+  "status": "ok",
   "unmatched": [
-    "Hertha BSC vs SpVgg Greuther F\u00fcrth (league not covered: Germany 2. Bundesliga)"
+    "Ranger's vs Carroi (league not covered: Andorra: 1a Divisi\u00f3)",
+    "St. Pauli II vs HSC Hannover (league not covered: Germany Regionalliga - Nord)",
+    "Svitavy vs Vysoke Myto (league not covered: Czech Republic,Divize C)"
   ],
   "unmatched_reasons": {
-    "league not covered: Germany 2. Bundesliga": 1
+    "league not covered: Andorra: 1a Divisi\u00f3": 1,
+    "league not covered: Czech Republic,Divize C": 1,
+    "league not covered: Germany Regionalliga - Nord": 1
   }
 }
