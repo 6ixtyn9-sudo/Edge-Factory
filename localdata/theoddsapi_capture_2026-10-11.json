@@ -1,21 +1,11 @@
 {
   "added": 0,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "FC Noah",
-      "date": "2026-10-11",
-      "home": "Sardarapat",
-      "kickoff": "2026-10-11T14:00:00+02:00",
-      "league": "Armenia: Premier League"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 52,
-  "captured_at": "2026-10-11T13:18:54+00:00",
+  "captured_at": "2026-10-11T16:14:02+00:00",
   "date": "2026-10-11",
-  "due_reasons": {
-    "first_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -25,11 +15,11 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 6,
+    "kickoff_already_passed": 11,
     "kickoff_mismatch": 9,
     "priced": 10,
-    "priced_close_window_not_open": 7,
-    "retry_cooldown": 28
+    "priced_close_window_not_open": 4,
+    "retry_cooldown": 27
   },
   "skipped": [
     "Ranger's|Carroi (retry cooldown (6h after failed attempt))",
@@ -37,6 +27,7 @@
     "BK Hacken|Orgryte IS (priced)",
     "Atletico Nacional|Deportivo Pasto (retry cooldown (6h after failed attempt))",
     "Suwon Bluewings|Ansan Greeners (retry cooldown (6h after failed attempt))",
+    "Sardarapat|FC Noah (retry cooldown (6h after failed attempt))",
     "Vidar|Brattvag (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Real Betis|Osasuna: pick legacy display says 15:30Z, captured rows say 16:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Real Betis|Osasuna (priced, close window not open)",
@@ -50,7 +41,7 @@
     "WARN kickoff-mismatch Grasshoppers|BSC Young Boys: pick legacy display says 11:00Z, captured rows say 12:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Grasshoppers|BSC Young Boys (kickoff already passed)",
     "Sparta Praha|Pardubice (retry cooldown (6h after failed attempt))",
-    "Union St. Gilloise|OH Leuven (retry cooldown (6h after failed attempt))",
+    "Union St. Gilloise|OH Leuven (kickoff already passed)",
     "Besiktas|Kocaelispor (priced)",
     "Brondby|Lyngby (priced)",
     "Almeria|Leganes (priced)",
@@ -63,15 +54,15 @@
     "Aris Thessalonikis|Volos NFC (priced, close window not open)",
     "Resistencia|12 de Junio VH (kickoff already passed)",
     "Sao Paulo|Vitoria (priced)",
-    "Vllaznia Shkod\u00ebr|Dinamo Tirana (retry cooldown (6h after failed attempt))",
+    "Vllaznia Shkod\u00ebr|Dinamo Tirana (kickoff already passed)",
     "Cherno More Varna|Levski Sofia (retry cooldown (6h after failed attempt))",
     "El Paso Locomotive|Orange County SC (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Lazio|Monza: pick legacy display says 12:00Z, captured rows say 13:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Lazio|Monza (priced, close window not open)",
+    "Lazio|Monza (kickoff already passed)",
     "Southampton|Portsmouth (priced)",
     "Lorenskog|Trygg-lade (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch SC Freiburg|FC Schalke 04: pick legacy display says 14:30Z, captured rows say 15:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "SC Freiburg|FC Schalke 04 (priced, close window not open)",
+    "SC Freiburg|FC Schalke 04 (kickoff already passed)",
     "Kawasaki Frontale|Nagoya Grampus (priced)",
     "Palmeiras|Corinthians (priced)",
     "Flamengo|Fluminense (priced)",
@@ -84,7 +75,7 @@
     "Club America|Monterrey (priced)",
     "Kongsvinger|Ranheim (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Rennes|Auxerre: pick legacy display says 14:15Z, captured rows say 15:15Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Rennes|Auxerre (priced, close window not open)",
+    "Rennes|Auxerre (kickoff already passed)",
     "Gwangju FC|Ulsan Hyundai FC (retry cooldown (6h after failed attempt))",
     "AC Trento|Folgore Caratese (retry cooldown (6h after failed attempt))",
     "Csakvar|Kecskemeti TE (retry cooldown (6h after failed attempt))",
@@ -94,11 +85,6 @@
     "FK Partizan|Novi Pazar (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Sardarapat vs FC Noah (league not covered: Armenia: Premier League)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Armenia: Premier League": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
