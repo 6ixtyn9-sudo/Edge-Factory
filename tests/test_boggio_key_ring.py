@@ -22,7 +22,8 @@ def test_ordered_ring_and_singular_fallback(monkeypatch):
     assert boggio.configured_keys() == ('one', 'two')
 
 
-def test_rejected_key_falls_over_once_without_leaking(monkeypatch):
+def test_rejected_key_falls_over_once_without_leaking(monkeypatch, tmp_path):
+    """Keep the bootstrap ledger seed in tmp_path so the tracked repo ledger stays clean."""
     monkeypatch.setenv('RAPIDAPI_KEYS', 'secret-a,secret-b')
     monkeypatch.setattr(boggio, 'MIN_INTERVAL_S', 0)
     boggio.reset_state()
@@ -35,10 +36,14 @@ def test_rejected_key_falls_over_once_without_leaking(monkeypatch):
             raise urllib.error.HTTPError(req.full_url, 429, 'quota', {}, io.BytesIO(b''))
         return Response()
     monkeypatch.setattr(boggio.urllib.request, 'urlopen', fake)
-    code, data, headers = boggio.get_json(boggio.predictions_url('2026-10-10'))
+    code, data, headers = boggio.get_json(
+        boggio.predictions_url('2026-10-10'), day='2026-10-10', localdata=tmp_path
+    )
     assert (code, data, len(seen)) == (200, {'data': []}, 2)
     assert [x['key_index'] for x in boggio.diagnostics()['key_attempts']] == [1, 2]
     assert 'secret-' not in repr(boggio.diagnostics())
     with pytest.raises(boggio.UpstreamBlocked, match='logical call budget'):
-        boggio.get_json(boggio.predictions_url('2026-10-10'))
+        boggio.get_json(
+            boggio.predictions_url('2026-10-10'), day='2026-10-10', localdata=tmp_path
+        )
     assert len(seen) == 2
