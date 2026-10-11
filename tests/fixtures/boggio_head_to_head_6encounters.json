@@ -1,0 +1,107 @@
+{
+  "_note": "6-encounter fixture for capability test: >=6 kept, >=2 competitions, mixed first-half, for inertness proof",
+  "data": {
+    "stats": {
+      "overall": {
+        "num_encounters": 10,
+        "over_05": 10,
+        "total_goals": 33,
+        "over_35": 4,
+        "over_25": 6,
+        "both_teams_scored": 6,
+        "over_15": 7,
+        "avg_goals_per_match": 3.3
+      },
+      "home_team": {
+        "goals_scored": 10,
+        "team_name": "Real Sociedad",
+        "clean_sheet": 1,
+        "won": 1,
+        "lost": 8,
+        "first_half_draw": 2,
+        "avg_goals_scored": 1.0,
+        "avg_bookie_draw_chance": 0.161,
+        "avg_bookie_lose_chance": 0.751,
+        "avg_goals_conceived": 2.3,
+        "first_half_lost": 5,
+        "first_half_win": 3,
+        "avg_bookie_win_chance": 0.098,
+        "goals_conceived": 23,
+        "draw": 1
+      },
+      "away_team": {
+        "goals_scored": 23,
+        "team_name": "Barcelona",
+        "clean_sheet": 3,
+        "won": 8,
+        "lost": 1,
+        "first_half_draw": 2,
+        "avg_goals_scored": 2.3,
+        "avg_bookie_draw_chance": 0.161,
+        "avg_bookie_lose_chance": 0.098,
+        "avg_goals_conceived": 1.0,
+        "first_half_lost": 3,
+        "first_half_win": 5,
+        "avg_bookie_win_chance": 0.751,
+        "goals_conceived": 10,
+        "draw": 1
+      }
+    },
+    "encounters": [
+      {
+        "first_half_result": "1 - 0",
+        "fulltime_result": "2 - 1",
+        "start_date": "2025-04-20",
+        "competition_name": "Primera Division",
+        "season": "2024 - 2025",
+        "away_team": "Real Sociedad",
+        "home_team": "Barcelona"
+      },
+      {
+        "first_half_result": "0 - 1",
+        "fulltime_result": "1 - 2",
+        "start_date": "2024-09-15",
+        "competition_name": "Primera Division",
+        "season": "2024 - 2025",
+        "away_team": "Barcelona",
+        "home_team": "Real Sociedad"
+      },
+      {
+        "first_half_result": "0 - 0",
+        "fulltime_result": "0 - 0",
+        "start_date": "2025-01-15",
+        "competition_name": "Copa del Rey",
+        "season": "2024 - 2025",
+        "away_team": "Barcelona",
+        "home_team": "Real Sociedad"
+      },
+      {
+        "first_half_result": "2 - 0",
+        "fulltime_result": "2 - 2",
+        "start_date": "2024-02-10",
+        "competition_name": "Primera Division",
+        "season": "2023 - 2024",
+        "away_team": "Real Sociedad",
+        "home_team": "Barcelona"
+      },
+      {
+        "first_half_result": "0 - 0",
+        "fulltime_result": "1 - 0",
+        "start_date": "2024-11-05",
+        "competition_name": "Copa del Rey",
+        "season": "2024 - 2025",
+        "away_team": "Barcelona",
+        "home_team": "Real Sociedad"
+      },
+      {
+        "first_half_result": "1 - 1",
+        "fulltime_result": "3 - 1",
+        "start_date": "2024-08-20",
+        "competition_name": "Primera Division",
+        "season": "2024 - 2025",
+        "away_team": "Real Sociedad",
+        "home_team": "Barcelona"
+      }
+    ]
+  }
+}

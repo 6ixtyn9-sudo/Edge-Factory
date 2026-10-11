@@ -304,11 +304,14 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print) -> dict:
         results["usable"] += 1 if snapshot.get("usable") else 0
         results["statuses"].append(f"{item['fixture_key']} http={code}")
         plan["snapshots"].append(snapshot)
+        # Ensure h2h_dominance appears early in what_it_bought (ledger truncation at 200 chars)
+        dom = snapshot['features'].get('h2h_dominance')
         boggio.record_call(entries, day=day, fixture_key=item["fixture_key"],
                            endpoint=boggio.H2H_ENDPOINT, pool_index=index, key=key, status=code,
                            remaining=remaining, spent=True,
                            what_bought=(f"identity_verified={snapshot['identity_verified']} "
-                                        f"usable={snapshot['usable']} encounters={len(snapshot['encounters'])} "
+                                        f"usable={snapshot['usable']} h2h_dominance={dom} "
+                                        f"encounters={len(snapshot['encounters'])} "
                                         f"features={sorted(snapshot['features'])} reason={snapshot['reason']}"))
         log(f"ledger=card_enrich fixture={item['fixture_key']} event_id={event_id} pool={index + 1} "
             f"http={code} family_remaining={remaining} encounters={len(snapshot['encounters'])} "

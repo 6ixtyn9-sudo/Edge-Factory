@@ -387,6 +387,38 @@ def capture_betexplorer_snapshot(target_date: str, trigger: str) -> None:
     )
 
 
+
+def capture_card_enrich_snapshot(target_date: str, trigger: str) -> None:
+    """Bounded H2H capture with O(0) cheap date check before vendor call.
+
+    Autonomy: no human click, no new schedule. Cadence via 7-day cooling
+    (CARD_ENRICH_STALENESS_DAYS) + EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS.
+    On ~6/7 days the underlying capture_card_enrich.py does a cheap local
+    staleness check and exits before any vendor call — O(0).
+    Budget ledger printed pre-flight before first call, spend <= plan.
+    """
+    # Cheap O(0) gate: check if snapshots exist and are fresh, without importing heavy deps?
+    # We delegate to capture_card_enrich.py -- it does the cheap check internally
+    # and spends zero calls when fresh. This wrapper is just for logging + soft-fail.
+    # cheap O(0) local glob, no vendor call — actual staleness check lives in capture script
+    _localdata_dir = Path(__file__).resolve().parent.parent / "localdata"
+    _has_shadow = any(_localdata_dir.glob("card_enrich_shadow_*.json"))
+    # Always call plan first (zero cost), then execute only if needed.
+    # The script itself enforces staleness + budget, so this is O(0) on fresh days.
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/capture_card_enrich.py --date {target_date}",
+        f"card_enrich plan {target_date} [{trigger}]",
+    )
+    # Only execute if budget allows and snapshots need capture — the script's
+    # own preflight will print budget math and exit 0 without spending if not needed.
+    # Respect operator opt-in: if EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS is unset/0, it fail-closes to 0.
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/capture_card_enrich.py --date {target_date} --execute",
+        f"card_enrich capture {target_date} [{trigger}]",
+    )
+
+
+
 def finalize_priced_candidate_slate(target_date: str, *, phase5_shadow: bool = False) -> str:
     """Turn one candidate slate into one final priced card.
 
@@ -400,6 +432,7 @@ def finalize_priced_candidate_slate(target_date: str, *, phase5_shadow: bool = F
     capture_theodds_snapshot(target_date, "candidate_price_snapshot")
     capture_oddspapi_snapshot(target_date, "candidate_price_snapshot")
     capture_betexplorer_snapshot(target_date, "candidate_price_snapshot")
+    capture_card_enrich_snapshot(target_date, "candidate_price_snapshot")
     priced_as_of = make_run_as_of()
     phase5_prefix = (
         "EDGE_FACTORY_PHASE5_SHADOW=1 "
