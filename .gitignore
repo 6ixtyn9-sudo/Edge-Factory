@@ -96,9 +96,8 @@ dist/
 # status, scrubbed schema keys/counts and timestamp (never a key or raw body).
 !localdata/betminer_probe_20*.json
 # card_enrich's per-call budget ledger: opaque pool digests, provider header
-# readings and what each call bought. It is the ONLY record that bounds the
-# shared Boggio family pot across runs, so it must survive cache eviction
-# (the raw shadow snapshots it describes stay ignored).
+# readings and what each call bought. It bounds the shared Boggio family pot across runs, so it must survive cache eviction
+# (the raw shadow snapshots it describes now also persist via whitelist below for 7-day dedup, bounded to 14 days).
 !localdata/card_enrich_call_ledger.jsonl
 # card_enrich H2H snapshots: retained for 7-day staleness dedup, bounded to 14 days
 # via prune in persist_snapshots(). Without persist, cache eviction causes re-buy:
