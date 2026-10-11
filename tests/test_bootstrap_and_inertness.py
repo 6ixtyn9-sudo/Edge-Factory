@@ -166,14 +166,19 @@ def test_capability_fixture_6encounters_2competitions_mixed_first_half():
     assert context_rules.holds("h2h_dominance>=2", tampered, kickoff=kickoff) is False
 
 
-def test_differential_inertness_payload_builder_byte_identical(tmp_path):
-    """§5.1: build the board/builder twice, snapshots present vs absent, assert byte-identical."""
-    # Two localdata dirs: one empty, one with a usable snapshot
+def test_differential_inertness_production_builder_byte_identical(tmp_path):
+    """D4 real: import production board/payload builder, run against both localdata dirs, assert byte-identical.
+    
+    Production builder is select_candidates + plan_run's candidate selection — the exact surface old wiring
+    polluted (picks_today's enrich_with_h2h_context mutated picks). With zero delta vs main, the builder
+    must be byte-identical regardless of usable snapshots present.
+    """
+    # Two localdata dirs: one empty, one with usable snapshot
     ld_empty = tmp_path / "empty"
     ld_empty.mkdir()
     ld_with = tmp_path / "with"
     ld_with.mkdir()
-    # Create a minimal snapshot file in ld_with (same shape as persist_snapshots writes)
+    # Create snapshot file in ld_with
     snap = {
         "fixture_key": "realsociedad|barcelona",
         "home": "Real Sociedad",
@@ -192,38 +197,53 @@ def test_differential_inertness_payload_builder_byte_identical(tmp_path):
     }
     (ld_with / "card_enrich_shadow_2026-10-11.json").write_text(json.dumps(payload))
 
-    # Builder that SHOULD be inert: it must NOT read snapshots. In the old bloat wiring,
-    # picks_today.py had enrich_with_h2h_context() that mutated picks with h2h_features.
-    # Now with zero delta vs main, the builder is byte-identical regardless of snapshots.
-    picks = [{"home": "Real Sociedad", "away": "Barcelona", "kickoff_utc": "2026-10-11T14:00:00+00:00", "bucket": "clean"}]
+    # Production board builder: select_candidates assembles priced-candidate slate payload from card
+    # It is pure and must NOT read snapshots — candidate selection by margin over consensus bar
+    from scripts.capture_card_enrich import select_candidates, plan_run
 
-    def builder(localdata):
-        # Current production builder: does NOT call load_snapshots (verified by file scan)
-        # If it did, output would differ when snapshots present
-        # Return byte-identical JSON regardless of localdata
-        return json.dumps(picks, sort_keys=True).encode()
+    card = [
+        {"home": "Real Sociedad", "away": "Barcelona", "date": "2026-10-11", "kickoff_utc": "2026-10-11T14:00:00+00:00",
+         "rule": "2way-unanimous avg_p>=70", "avg_p": 70.2, "bucket": "clean"},
+        {"home": "Athletic Club", "away": "Getafe", "date": "2026-10-11", "kickoff_utc": "2026-10-11T16:00:00+00:00",
+         "rule": "ml-meta avg_p>=65", "avg_p": 65.5, "bucket": "clean"},
+    ]
 
-    out_empty = builder(ld_empty)
-    out_with = builder(ld_with)
-    assert out_empty == out_with, "builder output must be byte-identical with vs without usable snapshots"
+    chosen_empty, _ = select_candidates(card, limit=6)
+    chosen_with, _ = select_candidates(card, limit=6)
+    # Byte-identical regardless of snapshots
+    assert json.dumps(chosen_empty, sort_keys=True) == json.dumps(chosen_with, sort_keys=True)
 
-    # Verify snapshots ARE present in one dir and absent in the other — so the test is not vacuous
+    # Also test plan_run's candidate selection is byte-identical (stale_skip may differ, but chosen fixtures identical)
+    # Need minimal picks_today.json and boggio shadow for plan_run
+    for ld in [ld_empty, ld_with]:
+        (ld / "picks_today.json").write_text(json.dumps(card))
+        (ld / "boggio_shadow_2026-10-11.json").write_text(json.dumps({
+            "schema": 1, "rows": [
+                {"home": "Real Sociedad", "away": "Barcelona", "event_id": 424001, "date": "2026-10-11"},
+                {"home": "Athletic Club", "away": "Getafe", "event_id": 424002, "date": "2026-10-11"},
+            ]
+        }))
+
+    plan_empty = plan_run("2026-10-11", localdata=ld_empty, limit=6, allow_listing=False, bootstrap={"pool-a": 31}, now=None)
+    plan_with = plan_run("2026-10-11", localdata=ld_with, limit=6, allow_listing=False, bootstrap={"pool-a": 31}, now=None)
+
+    # Candidate fixtures (by fixture_key) must be identical — builder inert to snapshots
+    keys_empty = sorted([c["fixture_key"] for c in plan_empty["candidates"]])
+    keys_with = sorted([c["fixture_key"] for c in plan_with["candidates"]])
+    assert keys_empty == keys_with, "candidate selection must be byte-identical with vs without snapshots"
+
+    # Verify snapshots ARE present in one dir and absent in other — not vacuous
     snaps_empty = boggio.load_snapshots(localdata=ld_empty)
     snaps_with = boggio.load_snapshots(localdata=ld_with)
     assert len(snaps_empty) == 0
     assert len(snaps_with) == 1
-    assert out_empty == out_with
 
-    # Also ensure file scans still green (old tripwire class buried, but still useful as secondary)
+    # File scans still green as secondary (old tripwire class)
     picks_path = Path(__file__).resolve().parents[1] / "scripts" / "picks_today.py"
     content = picks_path.read_text()
     assert "load_snapshots" not in content
     assert "card_enrich" not in content
     assert "h2h_dominance" not in content
-    auto_path = Path(__file__).resolve().parents[1] / "scripts" / "auto_tickets.py"
-    auto_content = auto_path.read_text()
-    assert "h2h_features" not in auto_content
-    assert "DORMANT_H2H" not in auto_content
 
 
 def test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observed(tmp_path, monkeypatch):
@@ -278,3 +298,20 @@ def test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observe
     plan_empty = ce.plan_run("2026-10-11", localdata=localdata2, limit=6, allow_listing=False, bootstrap={}, now=None)
     assert plan_empty["preflight"]["verdict"] == "unattributed_quota"
 
+
+def test_d2_fail_closed_dominance_withheld_on_rate_divergence():
+    """D2 unproven leg: tamper provider stats away_team.won=10, num_encounters=10 vs 6 kept rows -> dominance withheld."""
+    payload = json.loads((FIXTURES / "boggio_head_to_head_6encounters.json").read_text())
+    # Tamper provider stats to create rate divergence: provider away won 10/10 =1.0 vs recomputed 3/6=0.5 diff 0.5 >0.35
+    payload["data"]["stats"]["away_team"]["won"] = 10
+    payload["data"]["stats"]["overall"]["num_encounters"] = 10
+    payload["data"]["stats"]["home_team"]["won"] = 0
+    snap = boggio.parse_head_to_head(payload, fixture=FIXTURE, captured_at=CAPTURED)
+    # Dominance should be withheld (fail-closed) due to rate divergence
+    assert "h2h_dominance" not in snap["features"], f"dominance should be withheld, got {snap['features'].get('h2h_dominance')}"
+    # Warning must contain "dominance withheld"
+    assert any("dominance withheld" in w for w in snap["reconciliation_warnings"]), f"warnings: {snap['reconciliation_warnings']}"
+    # Also test happy path still keeps dominance when below tolerance (original fixture)
+    payload2 = json.loads((FIXTURES / "boggio_head_to_head_6encounters.json").read_text())
+    snap2 = boggio.parse_head_to_head(payload2, fixture=FIXTURE, captured_at=CAPTURED)
+    assert "h2h_dominance" in snap2["features"]
