@@ -49,21 +49,6 @@ jobs:
       EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || '1' }}
       ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
 
-      # Boggio card_enrich lane (head-to-head capture). Plain literals on purpose:
-      # `${{ secrets.X || 'N' }}` with no secret behind it is indirection that buys
-      # nothing, and a secret nobody rotates is exactly the config-that-reads-like-
-      # control this project keeps deleting. To change the cap, edit these two lines.
-      # Unset/0 in the code default means the lane is DISABLED, so this block is the
-      # switch, not a tuning knob.
-      #   The real cadence limit is the 7-day per-fixture staleness window in
-      #   boggio.py, not this number; the cap only bounds burst (churn, retries,
-      #   listing calls). Keep the quotes: the branch's presence-invariant test
-      #   regex expects a quoted nonzero integer.
-      # DO NOT add CARD_ENRICH_STALENESS_DAYS here: it is a module constant
-      # (boggio.py), not env-tunable, so such a line would be inert.
-      EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: '90'
-      EDGE_FACTORY_CARD_ENRICH_RESERVE: '20'
-
       TZ: 'Africa/Johannesburg'
     steps:
       - name: Checkout repository
