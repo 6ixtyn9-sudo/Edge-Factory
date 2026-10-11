@@ -5981,6 +5981,77 @@ def enrich_unmatched_with_betexplorer(
     return enriched
 
 
+
+def enrich_with_h2h_context(picks: list[dict], day: str) -> dict:
+    """Attach H2H snapshot features to picks (DORMANT wiring).
+
+    Loads local snapshots via boggio.load_snapshots() (no vendor calls).
+    For each pick, resolves fixture_key via source_team_key and attaches
+    H2H features + holds() evaluations. Does NOT alter bucket/stake tier
+    until evidence clears — DORMANT by design (receipt says so).
+    Returns stats dict for logging.
+    """
+    try:
+        snapshots = boggio.load_snapshots()
+    except Exception:
+        snapshots = {}
+    matched = 0
+    usable = 0
+    holds_eval = 0
+    for p in picks:
+        home = p.get("home") or ""
+        away = p.get("away") or ""
+        try:
+            hk = _identity_source_team_key(home)
+            ak = _identity_source_team_key(away)
+            fkey = f"{hk}|{ak}"
+        except Exception:
+            continue
+        snap = snapshots.get(fkey)
+        if not snap:
+            # Try reverse key (fixture may be stored reverse? capture uses home|away as given)
+            # We already use source_team_key which is order-sensitive, but try both.
+            continue
+        matched += 1
+        # Merge identity and capture into features for holds()
+        feats = dict(snap.get("features") or {})
+        feats["identity_verified"] = snap.get("identity_verified")
+        feats["captured_at"] = snap.get("captured_at")
+        # Attach to pick for persistence (not a displayed column)
+        p["h2h_features"] = feats
+        p["h2h_identity_verified"] = snap.get("identity_verified")
+        p["h2h_usable"] = snap.get("usable")
+        p["h2h_reason"] = snap.get("reason")
+        p["h2h_fixture_key"] = snap.get("fixture_key")
+        p["h2h_captured_at"] = snap.get("captured_at")
+        p["h2h_kickoff_utc"] = snap.get("kickoff_utc")
+        # Also merge into ctx for assay parity (does not affect bucket)
+        ctx = p.get("ctx") or {}
+        # Only attach if ctx already exists? We'll attach later after ctx built,
+        # but store here for now.
+        p["_h2h_ctx_pending"] = {k: v for k, v in feats.items() if k.startswith("h2h_") or k in ("rest_days","venue_split","form_gap")}
+        if snap.get("usable") and snap.get("identity_verified"):
+            usable += 1
+        # Evaluate a few predicates via holds() (fail-closed)
+        kickoff = snap.get("kickoff_utc") or p.get("kickoff_utc") or ""
+        if not kickoff:
+            continue
+        try:
+            # Example predicates — all fail closed via holds()
+            for rule in context_rules.DORMANT_H2H_RULES:
+                try:
+                    if context_rules.holds(rule, feats, kickoff=kickoff):
+                        holds_eval += 1
+                        # Store first matching rule for diagnostics
+                        p.setdefault("h2h_holds", []).append(rule)
+                except Exception:
+                    continue
+        except Exception:
+            continue
+    # Clean pending marker if not needed
+    return {"snapshots_total": len(snapshots), "picks": len(picks), "matched": matched, "usable": usable, "holds_eval": holds_eval}
+
+
 def main():
     # Keep the historical positional form (``picks_today.py YYYY-MM-DD``)
     # while accepting the operator-standard form used by the runbook and
@@ -6610,6 +6681,13 @@ def main():
                 file=sys.stderr,
             )
 
+        # H2H wiring (DORMANT): load snapshots via boggio.load_snapshots(), evaluate via context_rules.holds()
+        try:
+            h2h_stats = enrich_with_h2h_context(picks, day)
+            print(f"h2h enrich {day}: snapshots={h2h_stats['snapshots_total']} matched={h2h_stats['matched']} usable={h2h_stats['usable']} holds={h2h_stats['holds_eval']} (DORMANT)", file=sys.stderr)
+        except Exception as _h2h_exc:
+            print(f"h2h enrich {day} failed (audit-only): {_h2h_exc}", file=sys.stderr)
+
         day_picks: list[dict] = []
 
         for p in picks:
@@ -6620,6 +6698,12 @@ def main():
             # decay monitor's explicit HEALTHY verdict earns the clean bucket.
             meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "WATCH"})
             ctx = lookup_context(purity, p)
+            # Merge H2H pending features into ctx for assay parity (DORMANT, does not affect bucket)
+            pending = p.pop("_h2h_ctx_pending", None)
+            if pending:
+                for hk, hv in pending.items():
+                    if hk not in ctx:
+                        ctx[hk] = hv
             ctx = apply_resolution_to_ctx(
                 ctx, _veto_contexts, _veto_pools, veto_resolution_on,
                 sport=p.get("sport", "soccer"),
