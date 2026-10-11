@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 1,
@@ -31,7 +31,7 @@
         "selection_unmapped": 587
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -59,7 +59,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-12' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -159,32 +159,27 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 2,
       "join_miss_counts": {
         "fixture_key_miss": 23486,
         "no_pick_for_fixture": 32
       },
       "pa_matched": 3,
-      "pa_raw": 1373,
+      "pa_raw": 23520,
       "pa_scored": 23520,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -230,38 +225,37 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 9,
-        "board_league_count": 7,
+        "board_fixtures": 11,
+        "board_league_count": 3,
         "board_leagues": {
-          "brazil_-_serie_a": 40,
-          "chile_-_primera_b": 6,
-          "chile_-_primera_division": 15,
-          "colombia_-_primera_a": 112,
-          "costa_rica_-_primera_division": 9,
-          "honduras_-_liga_nacional": 3,
-          "peru_-_primera_division": 15
+          "bolivia_-_primera_division": 21,
+          "honduras_-_liga_nacional": 2,
+          "usa_-_major_league_soccer": 177
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 16,
+        "board_team_count": 19,
         "board_team_names": {
-          "Comerciantes Unidos": 15,
-          "Deportes Santa Cruz": 6,
-          "Deportivo Cali": 112,
-          "Deportivo Pereira": 112,
-          "Genesis FC": 3,
-          "Huachipato": 15,
-          "Inter San Carlos": 9,
-          "Juan Pablo II": 10,
-          "Juan Pablo II College": 5,
-          "O Higgins": 14,
-          "OHiggins": 1,
-          "Olimpia CD": 3,
-          "Perez Zeledon": 9,
-          "Remo": 40,
-          "Temuco": 6,
-          "Vasco Da Gama": 40
+          "AB Boliviano": 21,
+          "Atlanta Utd": 112,
+          "CD Choloma": 2,
+          "CD Motagua": 2,
+          "Charlotte FC": 13,
+          "Columbus": 24,
+          "DC Utd": 12,
+          "FC Cincinnati": 112,
+          "FC Dallas": 13,
+          "Inter Miami": 10,
+          "Inter Miami CF": 2,
+          "NE Revolution": 12,
+          "New England Revolution": 2,
+          "Oriente Petrolero": 21,
+          "Orlando City": 24,
+          "PHI Union": 1,
+          "Philadelphia": 1,
+          "Real Salt Lake": 2,
+          "Seattle Sounders": 14
         },
         "board_truncated": false,
         "card_fixture_count": 3,
