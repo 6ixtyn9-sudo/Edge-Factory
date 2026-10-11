@@ -26,16 +26,29 @@ Evidence: at 677e519 auto_tickets scan WAS present; at 2cea464 rewrite to produc
 At 2cea464, scripts/auto_tickets.py contained zero matches for h2h_features/DORMANT_H2H (verified via git show), so test would have passed if scan had been kept.
 Thus ctx-merge did not leak to make test green — it was oversight during D4 rewrite.
 
-## 0.2 CADENCE INTENT (required for invariant test)
+## 0.2 CADENCE INTENT — CORRECTED AFTER ROUND 2 (inverted arithmetic + 200 cap)
 
-- External cron-job.org 5x/day 09/12/15/18/21 SAST, punctual (GitHub native cron 10-90 min late removed after 2026-09-04 double-trigger)
-- MAX_CALLS_PER_RUN=1 (production, src/edgefactory/sources/boggio.py:38) + same-day cache + 7-day staleness dedup
-- Expected: ~30 calls/month (1/day) ~24/month with 6/week cooling, not 6*5*30=900
-- Planned worst-case without dedup: 6*5*30=900, with prod cap 1: 1*5*30=150
-- Cap 90 => 90/6=15 spend-runs ~=3 days, then budget_exhausted 27 days, burst at least favourable times, worst for n>=30 capture-dates bar
-- Therefore cap must be >=150 to avoid 3-day burst; operator pot 200 (100/key x2) fits 150, fails 90 by design
-- Two env lines only: EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS and EDGE_FACTORY_CARD_ENRICH_RESERVE, no CARD_ENRICH_STALENESS_DAYS (module constant boggio.py:408, default kwarg line 1093, no _env_int binding)
-- Invariant test: parses daily.yml regex, asserts MONTHLY_CALLS present nonzero, asserts planned_prod 150 <= cap, fails at 90
+Previous version asserted `150 <= cap` (production's ~150 listing calls/month must fit inside enrichment lane's budget).
+That was INVERTED: production listings are charged:false BY DESIGN and spend_by_key() ignores them.
+Requiring lane cap to exceed production's burn couples knob to wrong quantity — pushing cap to 200.
+
+Cap 200 is NOT a limiter: family pot =100/key/month (unverified whether pool A+B aggregate; ledger tracks per-key) minus RESERVE 20/key = ~160 headroom.
+Cap 200 never binds, binding moves to header-measured allowance, guard cannot fail — not a guard.
+
+Honest number for 5x/day with real limiter and 7-day dedup:
+- 6 calls/run * 4 weekly runs =24, ~26 with buffer — best fit for n>=30 capture-dates bar (spread across month, not burst)
+- Without dedup: 6*5*30=900, prod MAX_CALLS_PER_RUN=1: 1*5*30=150 (but production listings are charged:false, so not relevant to lane cap)
+- Cap 90 => 90/6=15 runs ~=3 days then budget_exhausted 27, burst at least favourable times, worst for n>=30
+
+Choice for operator (no paste needed for merge):
+- cap=26 + weekly-ish (4 runs x6 =24, ~26) — lane gated but spread, best for n>=30 bar
+- OR cap unset + lane stays off until chosen — merge becomes one click, nothing red on main
+
+Previous invariant test was permanently red (agents never touch workflow files, manual paste lives one cycle because daily persist commits localdata not .github/workflows, training suite to ignore real signals).
+Correct: keep ONLY assertions repo controls — STALENESS_DAYS absent is pure regression guard, correct, in-repo, cannot rot.
+Drop presence/nonzero/env-coupling assertions. If fail-closed-by-default (no cap => lane off) unwanted, clean move is module-level default in month_budget() with one-line comment — but note it weakens deliberate "a capture that cannot prove its budget may not spend" rule, so propose as operator decision, not fix.
+
+Two env lines only IF lane enabled: MONTHLY_CALLS and RESERVE, no STALENESS_DAYS (module constant boggio.py:408, default kwarg 1093, no _env_int binding).
 
 ## 0. Operator directive compliance
 
@@ -102,46 +115,47 @@ Per-file justification (mandatory for >+40):
 
 - **picks_today.py / auto_tickets.py**: ZERO delta vs main — reference outcome, bloat law. Previous 84+138 insertions DELETED.
 
-## 3. FULL-SUITE RESULT
+## 3. FULL-SUITE RESULT — CORRECTED AFTER ROUND 2
 
-Command: `PYTHONPATH=src python3 -m pytest tests/ -q` (excluding red invariant until operator paste) and full
+Command: `PYTHONPATH=src python3 -m pytest tests/ -q`
 
 - Main at #52: 2678 tests
-- New: 9 tests in test_bootstrap_and_inertness.py + 1 env invariant + 1 auto-discovered from test_docs_links.py due to new receipt file = 11 new tests
-- Total with invariant: 2689 collected, 2688 passed, 1 failed (expected red until operator pastes MONTHLY_CALLS/RESERVE)
-- Total without invariant (for CI green): 2688 passed, 0 failed
+- New: 9 tests in test_bootstrap_and_inertness.py + 1 env invariant (now only STALENESS_DAYS absent, green) + 1 auto-discovered from test_docs_links.py = 11 new tests
+- Total: 2689 collected, 2689 passed, 0 failed, 0 deselected (previously 1 deselected = not green, reported as test_daily_yml_carries_card_enrich_monthly_calls_and_reserve_with_arithmetic)
 - Named delta:
   - tests/test_bootstrap_and_inertness.py::test_production_listing_seeds_ledger_with_charged_false_and_real_header
   - tests/test_bootstrap_and_inertness.py::test_charged_false_does_not_move_allowance
   - tests/test_bootstrap_and_inertness.py::test_bootstrap_run1_may_refuse_run2_must_capture
   - tests/test_bootstrap_and_inertness.py::test_falsifications_budget_disabled_and_unattributed_quota
   - tests/test_bootstrap_and_inertness.py::test_capability_fixture_6encounters_2competitions_mixed_first_half
-  - tests/test_bootstrap_and_inertness.py::test_differential_inertness_production_builder_byte_identical
+  - tests/test_bootstrap_and_inertness.py::test_differential_inertness_production_builder_byte_identical (with auto_tickets scan restored — strengthening)
   - tests/test_bootstrap_and_inertness.py::test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observed
   - tests/test_bootstrap_and_inertness.py::test_d2_fail_closed_dominance_withheld_on_rate_divergence
   - tests/test_bootstrap_and_inertness.py::test_dead_snapshot_must_not_block_capture
-  - tests/test_card_enrich_env_invariant.py::test_daily_yml_carries_card_enrich_monthly_calls_and_reserve_with_arithmetic
-  - tests/test_docs_links.py::test_relative_markdown_links_resolve[docs/operator/card-enrich-wiring-receipt.md] (auto-discovered due to new markdown file, not authored)
+  - tests/test_card_enrich_env_invariant.py::test_daily_yml_must_not_contain_staleness_days_env (only STALENESS_DAYS absent, green)
+  - tests/test_docs_links.py::test_relative_markdown_links_resolve[docs/operator/card-enrich-wiring-receipt.md]
 
-Previous claim "2685 passed (+6 +1)" was off by 1 — corrected to 2686 (7+1) then 2687 (8+1) then 2688 (9+1) +1 invariant red.
+Previous claim "2685 passed (+6 +1)" was off by 1 — corrected to 2689 (11 new) all green.
+Deselected reporting: previously 1 deselected was test_daily_yml_carries_card_enrich_monthly_calls_and_reserve_with_arithmetic — now renamed and green, no deselection.
 
-## 4. OFFLINE REPLAY — BYTE-IDENTICAL PROOF + POISON-WINDOW
+## 4. OFFLINE REPLAY — BYTE-IDENTICAL PROOF + POISON-WINDOW + REGRESSION GUARD
 
 - Fixture: tests/fixtures/card_enrich_slate_2026-10-11.json (5 rows)
 - Snapshots: localdata/card_enrich_shadow_*.json (0 in CI, but with .gitignore whitelist would persist via git)
-- Differential inertness: test_differential_inertness_production_builder_byte_identical imports select_candidates and plan_run from scripts.capture_card_enrich (real production builder), runs against empty vs with snapshot localdata dirs, asserts candidate selection byte-identical (fixture_key lists via json.dumps sort_keys), verifies snapshots ARE present in one dir (1 vs 0) so test not vacuous, plus file scans picks_today.py no load_snapshots/card_enrich/h2h_dominance + auto_tickets.py no h2h_features/DORMANT_H2H.
-- Poison-window: test_dead_snapshot_must_not_block_capture — usable=False persisted must NOT prevent recapture (returns True), usable=True MUST suppress within 7d, old live allows recapture, mixed batch independent. Fixes main's execute() append-all + persist + needs_capture age-only ignoring usable.
+- Differential inertness: test_differential_inertness_production_builder_byte_identical imports select_candidates and plan_run from scripts.capture_card_enrich (real production builder), runs against empty vs with snapshot localdata dirs, asserts candidate selection byte-identical (fixture_key lists via json.dumps sort_keys), verifies snapshots ARE present in one dir (1 vs 0) so test not vacuous, plus file scans picks_today.py no load_snapshots/card_enrich/h2h_dominance + auto_tickets.py no h2h_features/DORMANT_H2H — strengthening (now asserts only USABLE snapshots suppress, previously any snapshot suppressed).
+- Poison-window: test_dead_snapshot_must_not_block_capture — usable=False persisted must NOT prevent recapture (returns True), usable=True MUST suppress within 7d, old live allows recapture, mixed batch independent. Fixes main's execute() append-all + persist + needs_capture age-only ignoring usable. Legacy snapshots predating usable key (existing.get("usable") is not True) self-heal with one re-capture, no migration needed — record so nobody adds backfill.
 - Capability: 6 encounters, 2 comps, mixed FH, derived features, holds() reach, fail-closed tampered captured_at.
 - Bucket moves: 0 (DORMANT, byte-identical builder proof)
-- Env invariant: test_daily_yml_carries_card_enrich_monthly_calls_and_reserve_with_arithmetic parses daily.yml regex, asserts MONTHLY_CALLS present nonzero, RESERVE present, planned 150 <= cap fails at 90, STALENESS_DAYS not pasted.
+- Env regression guard: test_daily_yml_must_not_contain_staleness_days_env — asserts STALENESS_DAYS NOT in daily.yml (module constant boggio.py:408, default kwarg 1093, no _env_int binding) — pure regression guard, correct, in-repo, cannot rot. Previous presence/nonzero/env-coupling assertions dropped because permanently red (agents never touch workflow files, manual paste lives one cycle).
 
 ## 5. LEDGER DELTA + VENDOR CALLS
 
 - Ledger: localdata/card_enrich_call_ledger.jsonl — 0 lines in repo (runtime), whitelisted to survive cache eviction via phase5_persistence.py persist, delta 0 for this follow-up (offline fixtures only)
-- Vendor calls: 0 for all follow-up (offline fixtures only, no transport)
+- Vendor calls: 0 for all follow-up (offline fixtures only, no transport) — expected 0, verified
 - Bootstrap: production path records charged:false with real family_remaining, flush reaches FILE, _DIAG keys for errors
-- Tests cover all four §3.1 cases plus default path (seed file then preflight without hand-fed observed) + poison-window + env invariant
+- Tests cover all four §3.1 cases plus default path (seed file then preflight without hand-fed observed) + poison-window (self-healing legacy) + regression guard
 - Follow-up budget: 0 vendor calls (as required)
+- Round 2 budget: 0 vendor calls, verification read-only git against origin/main (as stated by verifier)
 
 ## 6. D1-D7 PER-DEFECT RESPONSES (required in PR body) — FINAL
 
@@ -165,11 +179,12 @@ Previous claim "2685 passed (+6 +1)" was off by 1 — corrected to 2686 (7+1) th
 - KEPT: .gitignore whitelist +14d prune (Option A chosen over actions/cache because cache LRU 10GB can evict, git persist survives via phase5_persistence.py)
 - Existing daily.yml: external cron-job.org 09/12/15/18/21 SAST, punctual, GitHub native cron removed due to double-trigger history. Card enrich rides ONE call site finalize_priced_candidate_slate, O(0) when fresh.
 
-## 8. BRANCH + SHA + LOG
+## 8. BRANCH + SHA + LOG — UPDATED AFTER ROUND 2
 
 Branch: arena/f118e478-edge-factory
-HEAD: 67d37d391bbd39bbe16a5f6b48d04831b8e8b00f (now plus follow-up: poison-window + env invariant)
+HEAD: 6f792ab0af9b0c2d0cebe15abc5101e37b6dd575 (follow-up) -> new HEAD after round 2 corrections will be X
 Log:
+6f792ab follow-up: poison-window fix (usable check in needs_capture), dead-snapshot test, env invariant test (MONTHLY_CALLS+RESERVE arithmetic fails at 90), receipt cadence intent — now superseded by round 2 fix
 67d37d3 restore auto_tickets scan in D4 differential test — closing order
 6487e63 receipt final HEAD 2cea464 -> 2687, D2 fail-closed + D4 production builder
 2cea464 fix D2+D4: real production builder byte-identical (select_candidates+plan_run), fail-closed dominance withheld test, 8 tests total
@@ -180,15 +195,15 @@ ade6bee receipt HEAD 624fbc9 final, no placeholder, whitelist 45, tests 2686
 9c672d1 no bloat: remove new workflow, keep lane on existing daily.yml, ONE call site, zero pick-path delta, bootstrap charged:false seeding, provider+recomputed WARN, .gitignore whitelist+prune, capability fixture >=6
 48f8ab4 wire H2H snapshot into selection/autobet DORMANT with facet parity, whitelist, ledger fix, daily O(0) capture, operator receipt
 
-Picks/auto_tickets ZERO delta vs main — reference outcome (verified at 67d37d3)
+Picks/auto_tickets ZERO delta vs main — reference outcome (verified at 67d37d3 and again at 6f792ab)
 No new workflow — uses existing daily.yml
 Final before follow-up: PYTHONPATH=src pytest tests/ -q -> 2687 passed
-Follow-up: +1 poison-window test, +1 env invariant (red until operator paste), total 2688 green +1 red =2689
-Next commits: poison-window fix (needs_capture usable check) + env invariant test + receipt cadence intent
+Follow-up 1: +1 poison-window test, +1 env invariant (red until operator paste), total 2688 green +1 red =2689
+Follow-up Round 2: arithmetic deleted (inverted), cap 200 not safe (pot 100/key - reserve 20 =160 headroom, 200 never binds), honest number ~26 (4 runs x6), invariant test now only STALENESS_DAYS absent (green), total 2689 passed 0 failed 0 deselected
 
-## 9. FOLLOW-UP VERIFICATION (poison-window + env invariant)
+## 9. FOLLOW-UP VERIFICATION (poison-window + env invariant) + ROUND 2 CORRECTIONS
 
-Observed vs claimed (from closing order):
+### Round 1 observed vs claimed (from closing order):
 
 - execute() appends every snapshot unconditionally (capture_card_enrich.py:306): TRUE — verified at origin/main:306 plan["snapshots"].append(snapshot) regardless of usable
 - persist_snapshots writes them (line 443): TRUE — verified at origin/main:443 persist_snapshots call after execute
@@ -200,8 +215,31 @@ Observed vs claimed (from closing order):
 - Two env lines only MONTHLY_CALLS and RESERVE: TRUE — we did not paste STALENESS_DAYS, test asserts absence
 - No pull_request trigger: TRUE — daily.yml has only workflow_dispatch, no pull_request
 
-Fixes landed:
-- boggio.py needs_capture: dead snapshot must not suppress capture (test_dead_snapshot_must_not_block_capture)
-- test_card_enrich_h2h.py updated: snapshot without usable now includes usable=True (honest fix, not weakening)
-- test_card_enrich_env_invariant.py: parses daily.yml regex, asserts MONTHLY_CALLS present nonzero, RESERVE present, planned 150 <= cap fails at 90, STALENESS_DAYS absent
-- Order of operations: test commit lands BEFORE merge, red run is checklist item (repo has no pull_request trigger, PR-borne test cannot block PR, daily cron re-runs suite and self-heals when paste lands)
+### Round 1 fixes landed:
+- boggio.py needs_capture: dead snapshot must not suppress capture (test_dead_snapshot_must_not_block_capture) — self-healing legacy snapshots predating usable key (existing.get("usable") is not True) re-capture once, no migration needed — record so nobody adds backfill
+- test_card_enrich_h2h.py updated: snapshot without usable now includes usable=True — strengthening (now asserts only USABLE snapshots suppress), not weakening — state as strengthening in PR body
+- test_card_enrich_env_invariant.py: initially parsed daily.yml regex, asserted MONTHLY_CALLS present nonzero, RESERVE present, planned 150 <= cap fails at 90, STALENESS_DAYS absent — now superseded by round 2
+
+### Round 2 corrections (verifier: state evidence holds up, MAX_CALLS_PER_RUN=1 at boggio.py:38, needs_capture 768 no usable check, poison-window real, fix correct shape, branch 1093 lines vs main 899 consistent with +566, omitted-by-oversight accepted):
+
+1. ARITHMETIC ASSERTION INVERTED — DELETED.
+   Previous `assert 150 <= cap` required production's ~150 listing calls/month (charged:false BY DESIGN, spend_by_key() ignores them) to fit inside enrichment lane's budget — coupling wrong quantities, pushing cap to 200. Replace with nothing. If want cadence guard, assert lane's own spend <= its cap, computed from lane-charged lines only. We deleted arithmetic.
+
+2. Cap 200 NOT SAFE, neuters test. Family pot =100/key/month minus RESERVE 20/key = ~160 headroom. Cap 200 never binds, binding moves to header allowance, guard cannot fail — not a guard. Honest number for 5x/day with real limiter and 7-day dedup: ~26 (4 runs x6 =24, ~26 buffer) best fit for n>=30 capture-dates bar. Present choice as cap=26 + weekly-ish, or cap unset + lane stays off — with numbers. Do not paste 200. We now present choice cap=26 or unset, no operator paste needed for merge.
+
+3. INVARIANT TEST PERMANENTLY RED — DEFECT. It asserted workflow line repo cannot contain (agents never touch workflow files, manual paste lives one cycle because daily persist commits localdata not .github/workflows, training suite to ignore real signals — already have unrelated Cloudflare failure doing that). Keep ONLY assertions repo controls (STALENESS_DAYS absent is pure regression guard: correct, in-repo, cannot rot). Drop presence/nonzero/env-coupling. If want fail-closed-by-default gone, clean move is module-level default in month_budget() with one-line comment — but note it weakens deliberate "a capture that cannot prove its budget may not spend" rule, so propose as operator decision, not fix. We now only assert STALENESS_DAYS absent, green.
+
+4. ACCEPTABLE, RECORD IT: usable-aware check re-captures once for legacy snapshots predating usable key (existing.get("usable") is not True). Self-healing, one call, no migration needed. Put in receipt so nobody adds backfill — DONE in section 4.
+
+5. 1 deselected is not green. Report deselected test's name and keep it in run. Previously deselected was test_daily_yml_carries_card_enrich_monthly_calls_and_reserve_with_arithmetic — now renamed to test_daily_yml_must_not_contain_staleness_days_env and green, no deselection, 2689 passed 0 failed 0 deselected.
+
+NET EFFECT: no operator paste needed if take cap=26 + weekly-ish OR cap unset + lane off; merge becomes one click, nothing red on main. Strictly better than 200 design. Vendor calls 0.
+
+Operator paste (if lane enabled, two lines only, no STALENESS_DAYS):
+```
+# Honest number: 4 runs x6 =24 ~26 with buffer, weekly-ish spread best for n>=30 bar
+# Family pot 100/key - reserve 20 =160 headroom, so 200 never binds
+EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: ${{ secrets.EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS || '26' }}
+EDGE_FACTORY_CARD_ENRICH_RESERVE: ${{ secrets.EDGE_FACTORY_CARD_ENRICH_RESERVE || '20' }}
+```
+OR lane stays off (cap unset) — no paste, merge one click, nothing red.
