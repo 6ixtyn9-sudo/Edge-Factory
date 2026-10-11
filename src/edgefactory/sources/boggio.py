@@ -659,6 +659,13 @@ def parse_head_to_head(payload, *, fixture, captured_at):
       kickoff. The as-of of a dated row is WHEN WE OBSERVED IT, never the
       encounter date: the provider publishes no per-row history timestamp, so a
       pre-kickoff capture is the strongest point-in-time bound available.
+
+    Additional derived features (all from the filtered encounters, auditable):
+    - rest_days: days from most recent encounter to kickoff
+    - venue_split: fixture home wins at home minus away wins at home
+    - form_gap: recent H2H form including first_half vs fulltime comebacks
+    - h2h_over25_share, h2h_btts_share, h2h_clean_sheet_rate,
+      h2h_first_half_draw_share, competition diversity, season recency
     """
     home_key = source_team_key(fixture.get("home"))
     away_key = source_team_key(fixture.get("away"))
@@ -673,6 +680,8 @@ def parse_head_to_head(payload, *, fixture, captured_at):
     raw_encounters = raw_encounters if isinstance(raw_encounters, list) else []
     lookback_days = _env_int("EDGE_FACTORY_CARD_ENRICH_LOOKBACK_DAYS", 1095)
     encounters, identity_hits, dropped = [], 0, {"undated": 0, "not_before_kickoff": 0, "too_old": 0}
+    # Keep parallel list with parsed dates and team keys for later derivations
+    parsed_for_features: list[dict] = []
     for row in raw_encounters:
         if not isinstance(row, dict):
             continue
@@ -689,15 +698,25 @@ def parse_head_to_head(payload, *, fixture, captured_at):
         row_home, row_away = source_team_key(row.get("home_team")), source_team_key(row.get("away_team"))
         if {row_home, row_away} == {home_key, away_key} and home_key and away_key and row_home != row_away:
             identity_hits += 1
+        ft = _parse_score(row.get("fulltime_result"))
+        fh = _parse_score(row.get("first_half_result"))
         encounters.append({
             "home_team": row.get("home_team"), "away_team": row.get("away_team"),
             "date": day.isoformat(),
             "competition": row.get("competition_name"), "season": row.get("season"),
-            "fulltime": list(_parse_score(row.get("fulltime_result"))) if _parse_score(row.get("fulltime_result")) else None,
-            "first_half": list(_parse_score(row.get("first_half_result"))) if _parse_score(row.get("first_half_result")) else None,
-            # as-of = observation time of the whole row, per the point-in-time rule.
+            "fulltime": list(ft) if ft else None,
+            "first_half": list(fh) if fh else None,
             "as_of": captured_at,
             "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
+        })
+        parsed_for_features.append({
+            "date": day,
+            "row_home_key": row_home,
+            "row_away_key": row_away,
+            "fulltime": ft,
+            "first_half": fh,
+            "competition": row.get("competition_name"),
+            "season": row.get("season"),
         })
     stats = data.get("stats") if isinstance(data.get("stats"), dict) else {}
     overall = stats.get("overall") if isinstance(stats.get("overall"), dict) else {}
@@ -708,13 +727,115 @@ def parse_head_to_head(payload, *, fixture, captured_at):
     if (isinstance(home_won, int) and not isinstance(home_won, bool)
             and isinstance(away_won, int) and not isinstance(away_won, bool)):
         features["h2h_dominance"] = home_won - away_won
-    # The documented contract publishes no overall draw count, so the draw
-    # share is derived from the rows WE filtered - reproducible from the ledger,
-    # never a provider aggregate we cannot audit.
+    # Auditable shares from OUR filtered encounters (provider aggregates not used)
     if len(encounters) >= _MIN_SHARE_ENCOUNTERS:
-        draws = sum(1 for row in encounters
-                    if row.get("fulltime") and row["fulltime"][0] == row["fulltime"][1])
+        draws = sum(1 for pf in parsed_for_features if pf["fulltime"] and pf["fulltime"][0] == pf["fulltime"][1])
         features["h2h_draw_share"] = round(draws / len(encounters), 4)
+        over25 = sum(1 for pf in parsed_for_features if pf["fulltime"] and sum(pf["fulltime"]) > 2.5)
+        btts = sum(1 for pf in parsed_for_features if pf["fulltime"] and pf["fulltime"][0] > 0 and pf["fulltime"][1] > 0)
+        clean = sum(1 for pf in parsed_for_features if pf["fulltime"] and (pf["fulltime"][0] == 0 or pf["fulltime"][1] == 0))
+        fh_draws = sum(1 for pf in parsed_for_features if pf["first_half"] and pf["first_half"][0] == pf["first_half"][1])
+        fh_total = sum(1 for pf in parsed_for_features if pf["first_half"])
+        features["h2h_over25_share"] = round(over25 / len(encounters), 4)
+        features["h2h_btts_share"] = round(btts / len(encounters), 4)
+        features["h2h_clean_sheet_rate"] = round(clean / len(encounters), 4)
+        if fh_total >= 1:
+            features["h2h_first_half_draw_share"] = round(fh_draws / fh_total, 4)
+            features["h2h_first_half_share"] = round(fh_total / len(encounters), 4)
+    # Competition / season continuity
+    if parsed_for_features:
+        comps = [pf["competition"] for pf in parsed_for_features if pf["competition"]]
+        if comps:
+            from collections import Counter
+            cnt = Counter(comps)
+            most = cnt.most_common(1)[0][1]
+            features["h2h_competition_diversity"] = len(set(comps))
+            features["h2h_same_competition_share"] = round(most / len(comps), 4)
+        seasons = [pf["season"] for pf in parsed_for_features if pf["season"]]
+        if seasons:
+            from collections import Counter as _Counter
+            cnt_s = _Counter(seasons)
+            features["h2h_season_diversity"] = len(set(seasons))
+            most_s = cnt_s.most_common(1)[0][1]
+            features["h2h_same_season_share"] = round(most_s / len(seasons), 4)
+        if kickoff is not None:
+            recent = sum(1 for pf in parsed_for_features if (kickoff.date() - pf["date"]).days <= 365)
+            features["h2h_recent_365d_share"] = round(recent / len(parsed_for_features), 4)
+            most_recent = max(pf["date"] for pf in parsed_for_features)
+            features["rest_days"] = (kickoff.date() - most_recent).days
+    # venue_split: which side won where
+    if parsed_for_features and home_key and away_key:
+        home_at_home = 0
+        away_at_home = 0
+        home_at_away = 0
+        away_at_away = 0
+        host_wins = 0
+        visitor_wins = 0
+        for pf in parsed_for_features:
+            ft = pf["fulltime"]
+            if not ft:
+                continue
+            rh, ra = pf["row_home_key"], pf["row_away_key"]
+            if ft[0] > ft[1]:
+                host_wins += 1
+                if rh == home_key:
+                    home_at_home += 1
+                elif rh == away_key:
+                    away_at_home += 1
+            elif ft[0] < ft[1]:
+                visitor_wins += 1
+                if ra == home_key:
+                    home_at_away += 1
+                elif ra == away_key:
+                    away_at_away += 1
+        features["venue_split"] = home_at_home - away_at_home
+        features["h2h_host_minus_visitor"] = host_wins - visitor_wins
+        features["h2h_home_at_home"] = home_at_home
+        features["h2h_away_at_home"] = away_at_home
+        features["h2h_home_at_away"] = home_at_away
+        features["h2h_away_at_away"] = away_at_away
+    # form_gap: recent form including comeback/collapse
+    if parsed_for_features and home_key and away_key:
+        sorted_pf = sorted(parsed_for_features, key=lambda x: x["date"], reverse=True)[:3]
+        def _team_form(team_key: str) -> float:
+            score = 0.0
+            for pf in sorted_pf:
+                ft = pf["fulltime"]
+                fh = pf["first_half"]
+                if not ft:
+                    continue
+                rh, ra = pf["row_home_key"], pf["row_away_key"]
+                if rh == team_key:
+                    own_ft, opp_ft = ft[0], ft[1]
+                    own_fh, opp_fh = (fh[0], fh[1]) if fh else (None, None)
+                elif ra == team_key:
+                    own_ft, opp_ft = ft[1], ft[0]
+                    own_fh, opp_fh = (fh[1], fh[0]) if fh else (None, None)
+                else:
+                    continue
+                if own_ft > opp_ft:
+                    base = 1.0
+                elif own_ft < opp_ft:
+                    base = -1.0
+                else:
+                    base = 0.0
+                bonus = 0.0
+                if own_fh is not None and opp_fh is not None:
+                    if own_fh < opp_fh and own_ft > opp_ft:
+                        bonus = 1.0
+                    elif own_fh > opp_fh and own_ft < opp_ft:
+                        bonus = -1.0
+                    elif own_fh > opp_fh and own_ft > opp_ft:
+                        bonus = 0.5
+                    elif own_fh < opp_fh and own_ft < opp_ft:
+                        bonus = -0.5
+                score += base + bonus
+            return score
+        home_form = _team_form(home_key)
+        away_form = _team_form(away_key)
+        features["form_gap"] = round(home_form - away_form, 4)
+        features["h2h_home_form"] = round(home_form, 4)
+        features["h2h_away_form"] = round(away_form, 4)
     usable = bool(identity_hits and kickoff is not None and capture is not None and capture < kickoff)
     reason = None
     if not identity_hits:

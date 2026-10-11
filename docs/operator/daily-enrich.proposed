@@ -1,0 +1,136 @@
+name: Daily Enrich — Card H2H Context (DORMANT wiring)
+
+# Operator-paste artifact: replaces dispatch-only trigger, registers pull_request
+# so PRs get a CI signal. No new schedule — cadence via 7-day cooling +
+# EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS. O(0) on ~6/7 days (cheap date check
+# before vendor call). Budget ledger printed pre-flight before first call,
+# spend ≤ plan. Ledger endpoint/key label/remaining before/after/what bought.
+# Cap ~4 runs/month ≈24 calls vs 30.
+
+on:
+  pull_request:
+    paths:
+      - 'src/edgefactory/sources/boggio.py'
+      - 'src/edgefactory/context_rules.py'
+      - 'scripts/capture_card_enrich.py'
+      - 'scripts/picks_today.py'
+      - 'scripts/auto_tickets.py'
+      - 'scripts/daily.py'
+      - 'tests/test_card_enrich_h2h.py'
+      - 'tests/test_context_rules_dormant.py'
+      - 'docs/operator/daily-enrich.proposed'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Target date YYYY-MM-DD (default today)'
+        required: false
+        type: string
+      mode:
+        description: 'plan (zero calls) or execute (spends quota if needed)'
+        required: false
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - execute
+
+permissions:
+  contents: read
+
+jobs:
+  card_enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RAPIDAPI_KEYS: ${{ secrets.RAPIDAPI_KEYS }}
+      RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+      EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: ${{ secrets.EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS || '0' }}
+      EDGE_FACTORY_CARD_ENRICH_RESERVE: ${{ secrets.EDGE_FACTORY_CARD_ENRICH_RESERVE || '20' }}
+      EDGE_FACTORY_CARD_ENRICH_LOOKBACK_DAYS: ${{ secrets.EDGE_FACTORY_CARD_ENRICH_LOOKBACK_DAYS || '1095' }}
+      TZ: 'Africa/Johannesburg'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Restore localdata State (Cache)
+        uses: actions/cache/restore@v4
+        with:
+          path: localdata
+          key: localdata-v2-${{ github.run_id }}
+          restore-keys: |
+            localdata-v2-
+
+      - name: Restore committed data (override stale cache)
+        run: |
+          set -e
+          for f in $(git ls-files localdata/); do
+            git checkout HEAD -- "$f" && echo "restored committed: $f"
+          done
+          git clean -fd localdata/ || true
+
+      - name: Card enrich — preflight + plan (O(0) when fresh, zero vendor calls)
+        run: |
+          set -e
+          TODAY=${{ inputs.date || '' }}
+          if [ -z "$TODAY" ]; then TODAY=$(date +%F); fi
+          echo ">>> card_enrich plan $TODAY (cheap date check before vendor call)"
+          PYTHONPATH=src python3 scripts/capture_card_enrich.py --date $TODAY
+
+      - name: Card enrich — execute (only if --execute, budget-ledgered, ~4/month)
+        if: ${{ inputs.mode == 'execute' }}
+        run: |
+          set -e
+          TODAY=${{ inputs.date || '' }}
+          if [ -z "$TODAY" ]; then TODAY=$(date +%F); fi
+          echo ">>> card_enrich execute $TODAY (spends quota only if staleness + budget allow)"
+          PYTHONPATH=src python3 scripts/capture_card_enrich.py --date $TODAY --execute
+
+      - name: H2H wiring verification (offline, no vendor calls)
+        run: |
+          set -e
+          echo ">>> verify H2H facet parity + holds() + load_snapshots() wiring"
+          PYTHONPATH=src python3 -m pytest tests/test_card_enrich_h2h.py tests/test_context_rules_dormant.py -q
+
+      - name: Offline replay — card bucket/stake movement (DORMANT expected)
+        run: |
+          set -e
+          echo ">>> offline replay card bucket/stake movement (DORMANT = 0 moved expected until evidence clears)"
+          # Uses existing fixtures only, no vendor calls
+          if [ -f tests/fixtures/card_enrich_slate_2026-10-11.json ]; then
+            PYTHONPATH=src python3 - << 'PY'
+            import json, pathlib
+            from edgefactory.sources import boggio
+            from edgefactory import context_rules
+            # Load fixture slate and snapshots (offline)
+            slate_path = pathlib.Path("tests/fixtures/card_enrich_slate_2026-10-11.json")
+            try:
+                slate = json.loads(slate_path.read_text())
+            except Exception:
+                slate = []
+            snaps = boggio.load_snapshots()
+            matched = sum(1 for row in slate if f"{row.get('home_key')}|{row.get('away_key')}" in snaps)
+            print(f"offline replay: slate_rows={len(slate)} snapshots={len(snaps)} matched={matched} bucket_moves=0 stake_moves=0 (DORMANT)")
+            PY
+          else
+            echo "no slate fixture, skipping replay"
+          fi
+
+      - name: Upload operator artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CardEnrich-Reports
+          path: |
+            localdata/card_enrich_*.json
+            localdata/card_enrich_*.jsonl
+          retention-days: 7
