@@ -122,7 +122,18 @@ def test_cache_restore_unions_committed_rows_and_preserves_untracked_phase5_evid
     reconciliation_payload = '{"status":"read_only_audit","preserved":true}\n'
     reconciliation_path.parent.mkdir(parents=True)
     reconciliation_path.write_text(reconciliation_payload, encoding="utf-8")
-    for evidence_path in (candidate_path, reconciliation_path):
+
+    # card_enrich receipts are intentionally unignored so persist_localdata can
+    # commit them, but the restore-time git clean must not erase a cache copy
+    # before the next capture has had a chance to use it.
+    card_ledger = repo / "localdata" / "card_enrich_call_ledger.jsonl"
+    card_ledger_payload = '{"charged":false,"family_remaining":31}\n'
+    card_ledger.write_text(card_ledger_payload, encoding="utf-8")
+    card_shadow = repo / "localdata" / "card_enrich_shadow_2026-10-08.json"
+    card_shadow_payload = '{"schema":1,"snapshots":[]}\n'
+    card_shadow.write_text(card_shadow_payload, encoding="utf-8")
+
+    for evidence_path in (candidate_path, reconciliation_path, card_ledger, card_shadow):
         relative = evidence_path.relative_to(repo).as_posix()
         assert _git(repo, "check-ignore", "--no-index", "-q", relative, check=False).returncode == 1
 
@@ -138,6 +149,8 @@ def test_cache_restore_unions_committed_rows_and_preserves_untracked_phase5_evid
     assert stale_core.read_text(encoding="utf-8") == '{"edges":[]}\n'
     assert candidate_path.read_text(encoding="utf-8") == candidate_payload
     assert reconciliation_path.read_text(encoding="utf-8") == reconciliation_payload
+    assert card_ledger.read_text(encoding="utf-8") == card_ledger_payload
+    assert card_shadow.read_text(encoding="utf-8") == card_shadow_payload
     assert (repo / "localdata" / "phase5_shadow").exists()
     assert result["phase5_ledgers"][LEDGER] == 2
     assert result["phase5_ledgers"][ATTEMPTS] == 1
