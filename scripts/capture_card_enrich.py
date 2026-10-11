@@ -337,13 +337,15 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print) -> dict:
             # proves contact; attribute it to the last pool the ring touched.
             budget["allowed"] -= 1
             results["calls"] += 1
-            touched = max(1, _ring_attempt_count(exc))
+            touched = _ring_attempt_count(exc)
+            contact_detail = (f"{touched} pool(s) touched" if touched
+                              else "pool identified; attempt count unavailable")
             boggio.record_call(entries, day=day, fixture_key=item["fixture_key"],
                                endpoint=boggio.H2H_ENDPOINT,
                                pool_index=getattr(exc, "ring_pool_index", None),
                                key=getattr(exc, "ring_key", None),
                                status=None, remaining=None, spent=True,
-                               what_bought=f"ring rejected the fixture ({touched} pool(s) touched); no payload",
+                               what_bought=f"ring rejected the fixture ({contact_detail}); no payload",
                                error=exc)
             log(f"ledger=card_enrich fixture={item['fixture_key']} event_id={event_id} status=blocked")
             continue

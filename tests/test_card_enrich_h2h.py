@@ -741,6 +741,12 @@ def test_local_h2h_block_does_not_spend_or_write_a_receipt(tmp_path, monkeypatch
     out = capsys.readouterr().out
     assert "calls_spent=0 verdict=lane_blocked_local" in out
     assert "decision=lane_blocked_local call_spent=0" in out
+    # The pool preflight line is a plan diagnostic; the local-block receipt
+    # itself must not claim any pool, key tail, or contacted-attempt count.
+    refusal_receipt = "\n".join(line for line in out.splitlines()
+                                 if "lane_blocked_local" in line)
+    assert refusal_receipt
+    assert all(field not in refusal_receipt for field in ("pool=", "key_tail=", "attempts="))
     assert transport_calls == []
     assert boggio.read_call_ledger(localdata) == []
 
