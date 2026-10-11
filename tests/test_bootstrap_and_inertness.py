@@ -224,8 +224,8 @@ def test_differential_inertness_production_builder_byte_identical(tmp_path):
             ]
         }))
 
-    plan_empty = plan_run("2026-10-11", localdata=ld_empty, limit=6, allow_listing=False, bootstrap={"pool-a": 31}, now=None)
-    plan_with = plan_run("2026-10-11", localdata=ld_with, limit=6, allow_listing=False, bootstrap={"pool-a": 31}, now=None)
+    plan_empty = plan_run("2026-10-11", localdata=ld_empty, limit=6, bootstrap={"pool-a": 31}, now=None)
+    plan_with = plan_run("2026-10-11", localdata=ld_with, limit=6, bootstrap={"pool-a": 31}, now=None)
 
     # Candidate fixtures (by fixture_key) must be identical — builder inert to snapshots
     keys_empty = sorted([c["fixture_key"] for c in plan_empty["candidates"]])
@@ -288,7 +288,7 @@ def test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observe
         "logged_at": "2026-10-11T06:00:00+00:00",
     }, localdata=localdata)
     # Now call plan_run with NO hand-fed observed_remaining — it should read last_observed_remaining from ledger
-    plan = ce.plan_run("2026-10-11", localdata=localdata, limit=6, allow_listing=False, bootstrap={}, now=None)
+    plan = ce.plan_run("2026-10-11", localdata=localdata, limit=6, bootstrap={}, now=None)
     # last_observed_remaining should have found 31, so preflight should be approved (need_h2h=1, spendable 31)
     assert plan["preflight"]["verdict"] == "approved"
     assert plan["preflight"]["spendable"] >= 1
@@ -299,8 +299,32 @@ def test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observe
     (localdata2 / "boggio_shadow_2026-10-11.json").write_text(json.dumps({
         "schema": 1, "rows": [{"home": "Real Sociedad", "away": "Barcelona", "event_id": 424001, "date": "2026-10-11"}]
     }))
-    plan_empty = ce.plan_run("2026-10-11", localdata=localdata2, limit=6, allow_listing=False, bootstrap={}, now=None)
+    plan_empty = ce.plan_run("2026-10-11", localdata=localdata2, limit=6, bootstrap={}, now=None)
     assert plan_empty["preflight"]["verdict"] == "unattributed_quota"
+
+
+def test_previous_month_header_does_not_authorize_a_new_month(tmp_path, monkeypatch):
+    import scripts.capture_card_enrich as ce
+
+    localdata = tmp_path / "ld"
+    localdata.mkdir()
+    card = [{"home": "Real Sociedad", "away": "Barcelona", "date": "2026-10-11",
+             "kickoff_utc": "2026-10-11T14:00:00+00:00",
+             "rule": "2way-unanimous avg_p>=70", "avg_p": 70.2}]
+    (localdata / "picks_today.json").write_text(json.dumps(card))
+    (localdata / "boggio_shadow_2026-10-11.json").write_text(json.dumps({
+        "schema": 1, "rows": [{"home": "Real Sociedad", "away": "Barcelona", "event_id": 424001}]
+    }))
+    monkeypatch.setenv(boggio.CARD_ENRICH_BUDGET_ENV, "30")
+    monkeypatch.setenv("RAPIDAPI_KEYS", "pool-a")
+    boggio._append_ledger_line({
+        "month": "2026-09", "date": "2026-09-30", "key": boggio.key_fingerprint("pool-a"),
+        "family_remaining": 99, "charged": False,
+    }, localdata=localdata)
+
+    plan = ce.plan_run("2026-10-11", localdata=localdata, limit=6, bootstrap={}, now=None)
+    assert plan["preflight"]["verdict"] == "unattributed_quota"
+    assert plan["preflight"]["allowed_calls"] == 0
 
 
 def test_d2_fail_closed_dominance_withheld_on_rate_divergence():

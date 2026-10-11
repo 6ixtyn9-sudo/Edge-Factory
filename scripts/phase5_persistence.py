@@ -27,6 +27,8 @@ PHASE5_CLEAN_EXCLUDES = (
     "/localdata/phase5_shadow/",
     "/localdata/phase5_activation/",
     "/localdata/phase5_reconciliation/",
+    "/localdata/card_enrich_call_ledger.jsonl",
+    "/localdata/card_enrich_shadow_*.json",
     "/localdata/scored_candidate_shadow_*.jsonl",
 )
 

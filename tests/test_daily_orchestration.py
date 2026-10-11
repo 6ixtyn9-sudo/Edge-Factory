@@ -521,12 +521,24 @@ def test_oddspapi_capture_is_quota_opt_in_and_bounded(monkeypatch):
     assert label == "oddspapi bounded capture 2026-10-03 [pick_time]"
 
 
+def test_card_enrich_cron_uses_one_execute_call_and_keeps_preflight_inside_it():
+    with patch.object(daily, "run_soft") as run_soft:
+        daily.capture_card_enrich_snapshot("2026-10-11", "candidate_price_snapshot")
+
+    run_soft.assert_called_once()
+    command, label = run_soft.call_args.args
+    assert "scripts/capture_card_enrich.py --date 2026-10-11 --execute" in command
+    assert "--allow-listing" not in command
+    assert label == "card_enrich capture 2026-10-11 [candidate_price_snapshot]"
+
+
 def test_priced_finalization_captures_then_rebuilds_with_a_new_cutoff(monkeypatch):
     commands: list[tuple[str, str]] = []
     monkeypatch.setattr(daily, "make_run_as_of", lambda: "2026-10-03T09:15:00+02:00")
     with patch.object(daily, "capture_theodds_snapshot") as theodds, \
             patch.object(daily, "capture_oddspapi_snapshot") as oddspapi, \
             patch.object(daily, "capture_betexplorer_snapshot") as betexplorer, \
+            patch.object(daily, "capture_card_enrich_snapshot") as card_enrich, \
             patch.object(daily, "run", side_effect=lambda cmd, label: commands.append((cmd, label))):
         result = daily.finalize_priced_candidate_slate("2026-10-03")
 
@@ -534,6 +546,7 @@ def test_priced_finalization_captures_then_rebuilds_with_a_new_cutoff(monkeypatc
     theodds.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
     oddspapi.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
     betexplorer.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
+    card_enrich.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
     assert commands == [(
         "EDGE_FACTORY_RUN_AS_OF=2026-10-03T09:15:00+02:00 "
         "PYTHONPATH=src python3 scripts/picks_today.py 2026-10-03",
@@ -547,6 +560,7 @@ def test_official_finalization_enables_phase5_only_on_the_existing_pick_capture(
     with patch.object(daily, "capture_theodds_snapshot"), \
             patch.object(daily, "capture_oddspapi_snapshot"), \
             patch.object(daily, "capture_betexplorer_snapshot"), \
+            patch.object(daily, "capture_card_enrich_snapshot"), \
             patch.object(daily, "run", side_effect=lambda cmd, label: commands.append((cmd, label))):
         daily.finalize_priced_candidate_slate("2026-10-07", phase5_shadow=True)
 
