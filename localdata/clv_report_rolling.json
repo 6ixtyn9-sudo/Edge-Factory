@@ -21,7 +21,7 @@
       "avg_raw_odds_delta": -0.001537,
       "beat_later_price_n": 436,
       "beat_later_price_rate": 0.100917,
-      "total_picks": 536,
+      "total_picks": 540,
       "with_two_prices": 436
     },
     "WATCHLIST_NO_ODDS": {
@@ -29,7 +29,7 @@
       "avg_raw_odds_delta": 0.0,
       "beat_later_price_n": 2,
       "beat_later_price_rate": 0.0,
-      "total_picks": 99,
+      "total_picks": 100,
       "with_two_prices": 2
     },
     "WATCHLIST_SUSPECT_PRICE": {
@@ -87,7 +87,7 @@
       "avg_raw_odds_delta": -0.004047,
       "beat_later_price_n": 430,
       "beat_later_price_rate": 0.111628,
-      "total_picks": 499,
+      "total_picks": 500,
       "with_two_prices": 430
     },
     "ml-meta avg_p>=60": {
@@ -135,7 +135,7 @@
       "avg_raw_odds_delta": 0.0,
       "beat_later_price_n": 1,
       "beat_later_price_rate": 0.0,
-      "total_picks": 2,
+      "total_picks": 3,
       "with_two_prices": 1
     },
     "unanimous[bzzoiro+vitibet] avg_p>=70": {
@@ -151,21 +151,29 @@
       "avg_raw_odds_delta": 0.0,
       "beat_later_price_n": 2,
       "beat_later_price_rate": 0.0,
-      "total_picks": 2,
+      "total_picks": 4,
       "with_two_prices": 2
+    },
+    "unanimous[vitibet+zulubet] avg_p>=70": {
+      "avg_implied_prob_delta": null,
+      "avg_raw_odds_delta": null,
+      "beat_later_price_n": 0,
+      "beat_later_price_rate": null,
+      "total_picks": 1,
+      "with_two_prices": 0
     }
   },
   "end": "2026-10-11",
   "meta": {
-    "insufficient_snapshots": 111,
-    "unmatched_picks": 133
+    "insufficient_snapshots": 116,
+    "unmatched_picks": 135
   },
   "overall": {
     "avg_implied_prob_delta": 0.000739,
     "avg_raw_odds_delta": -0.000999,
     "beat_later_price_n": 821,
     "beat_later_price_rate": 0.096224,
-    "total_picks": 1065,
+    "total_picks": 1070,
     "with_two_prices": 821
   },
   "start": "2026-09-11"
