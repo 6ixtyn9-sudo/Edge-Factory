@@ -48,8 +48,20 @@ jobs:
       ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
       EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || '1' }}
       ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
-      EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: '90'
+
+      # Boggio card_enrich lane (head-to-head capture). Plain literals on purpose:
+      # `${{ secrets.X || '26' }}` with no secret behind it is indirection that
+      # buys nothing, and a secret nobody rotates is exactly the config-that-reads-
+      # like-control this project keeps deleting. To change the cap, edit these two
+      # lines. Unset/0 in the code default means the lane is DISABLED, so this block
+      # is the switch, not a tuning knob.
+      #   26 = ~4 captures/month x 6 calls, the weekly-ish cadence the n>=30
+      #        capture-dates bar wants; 20 = per-key calls held back for production.
+      # DO NOT add CARD_ENRICH_STALENESS_DAYS here: it is a module constant
+      # (boggio.py), not env-tunable, so such a line would be inert.
+      EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: '26'
       EDGE_FACTORY_CARD_ENRICH_RESERVE: '20'
+
       TZ: 'Africa/Johannesburg'
     steps:
       - name: Checkout repository
