@@ -319,3 +319,38 @@ def test_d2_fail_closed_dominance_withheld_on_rate_divergence():
     payload2 = json.loads((FIXTURES / "boggio_head_to_head_6encounters.json").read_text())
     snap2 = boggio.parse_head_to_head(payload2, fixture=FIXTURE, captured_at=CAPTURED)
     assert "h2h_dominance" in snap2["features"]
+
+
+def test_dead_snapshot_must_not_block_capture():
+    """Capture correctness: usable=False persisted must NOT prevent recapture; usable=True MUST."""
+    # Simulate persisted snapshots dict as returned by load_snapshots
+    day = "2026-10-11"
+    fk = "realsociedad|barcelona"
+    # usable=False, captured yesterday (within 7-day window) — should still need capture
+    snap_dead = {
+        "fixture_key": fk,
+        "captured_at": "2026-10-10T06:00:00+00:00",
+        "usable": False,
+        "identity_verified": True,
+    }
+    # usable=True, captured yesterday — should NOT need capture (dedup)
+    snap_live = {
+        "fixture_key": fk,
+        "captured_at": "2026-10-10T06:00:00+00:00",
+        "usable": True,
+        "identity_verified": True,
+    }
+    # usable=False must NOT block
+    assert boggio.needs_capture(fk, {fk: snap_dead}, day=day) is True, "dead snapshot must not suppress capture"
+    # usable=True must block (within staleness)
+    assert boggio.needs_capture(fk, {fk: snap_live}, day=day) is False, "live snapshot must suppress capture within window"
+    # usable=True but old (8 days ago) must allow recapture
+    snap_old = dict(snap_live, captured_at="2026-10-02T06:00:00+00:00")
+    assert boggio.needs_capture(fk, {fk: snap_old}, day=day) is True, "old live snapshot must allow recapture"
+    # Missing entirely must need capture
+    assert boggio.needs_capture(fk, {}, day=day) is True
+    # Mixed batch: one dead, one live — each evaluated independently
+    fk2 = "athletic|getafe"
+    mixed = {fk: snap_dead, fk2: snap_live}
+    assert boggio.needs_capture(fk, mixed, day=day) is True
+    assert boggio.needs_capture(fk2, mixed, day=day) is False
