@@ -244,6 +244,10 @@ def test_differential_inertness_production_builder_byte_identical(tmp_path):
     assert "load_snapshots" not in content
     assert "card_enrich" not in content
     assert "h2h_dominance" not in content
+    auto_path = Path(__file__).resolve().parents[1] / "scripts" / "auto_tickets.py"
+    auto_content = auto_path.read_text()
+    assert "h2h_features" not in auto_content
+    assert "DORMANT_H2H" not in auto_content
 
 
 def test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observed(tmp_path, monkeypatch):
