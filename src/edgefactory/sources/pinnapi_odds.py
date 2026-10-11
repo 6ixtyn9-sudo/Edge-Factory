@@ -119,7 +119,8 @@ RETRYABLE_ZERO_ROW_STATUSES = {"auth", "quota", "unavailable", "blocked", "error
 _MARKET_ALIASES = {
     "1x2": "1x2",
     "moneyline": "1x2",
-    "12": "1x2",
+    # "12" is a 2-way market (home-or-away / double chance) in Pinnacle,
+    # NOT the 3-way 1x2 market.  Do NOT alias it here.
     "totals": "totals",
     "over_under": "totals",
     "total": "totals",
