@@ -176,10 +176,10 @@ def resolve_from_listing(payload, *, day: str) -> dict[tuple[str, str], dict]:
     return out
 
 
-def last_observed_remaining(localdata: Path) -> dict[str, int]:
-    """Most recent provider-reported family remaining per key fingerprint."""
+def last_observed_remaining(localdata: Path, *, month: str | None = None) -> dict[str, int]:
+    """Most recent current-window provider reading per key fingerprint."""
     seen: dict[str, int] = {}
-    for entry in boggio.read_call_ledger(localdata):
+    for entry in boggio.read_call_ledger(localdata, month=month):
         remaining = entry.get("family_remaining")
         fingerprint = entry.get("key")
         if isinstance(remaining, int) and isinstance(fingerprint, str):
@@ -187,13 +187,42 @@ def last_observed_remaining(localdata: Path) -> dict[str, int]:
     return seen
 
 
-def plan_run(day: str, *, localdata: Path, limit: int, allow_listing: bool,
+def listing_attempted_today(localdata: Path, day: str) -> bool:
+    """Whether this lane already paid for its one listing call on ``day``."""
+    endpoint = boggio.H2H_ENDPOINT + ":listing"
+    return any(
+        str(entry.get("date", ""))[:10] == day
+        and entry.get("endpoint") == endpoint
+        and entry.get("charged") is True
+        for entry in boggio.read_call_ledger(localdata, month=boggio.family_month(day))
+    )
+
+
+def _ring_attempt_count(exc: boggio.UpstreamBlocked) -> int:
+    """Read explicit contact evidence; an absent marker means no attempts."""
+    try:
+        return max(0, int(getattr(exc, "ring_attempts", 0) or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _provider_was_contacted(exc: boggio.UpstreamBlocked) -> bool:
+    """A blocked call is billable only when the ring proves a request was tried.
+
+    ``UpstreamBlocked`` also represents local guards (for example, no key is
+    configured), so the exception type by itself is not evidence of provider
+    contact. The Boggio ring attaches these attributes only after an attempt.
+    """
+    return _ring_attempt_count(exc) >= 1 or getattr(exc, "ring_key", None) is not None
+
+
+def plan_run(day: str, *, localdata: Path, limit: int,
              bootstrap: dict[str, int], now: datetime | None = None) -> dict:
     """Every decision that can cost money, taken offline. Never touches the network."""
     card = load_card(localdata, day)
     chosen, census = select_candidates(card, limit=limit)
     snapshots = boggio.load_snapshots(localdata)
-    known = last_observed_remaining(localdata)
+    known = last_observed_remaining(localdata, month=boggio.family_month(day))
     known.update({str(k): int(v) for k, v in (bootstrap or {}).items()})
     ids = event_map(localdata, [day])
     for item in chosen:
@@ -203,15 +232,24 @@ def plan_run(day: str, *, localdata: Path, limit: int, allow_listing: bool,
         item["needs_call"] = bool(not item["stale_skip"])
         item["resolvable"] = item["event_id"] is not None
     unresolved = [i for i in chosen if i["needs_call"] and not i["resolvable"]]
-    need_listing = 1 if (allow_listing and unresolved) else 0
-    # A listing call does not just resolve ids, it BUYS the H2H calls it unlocks,
-    # so those fixtures must be counted in the pre-flight too. Under-counting
-    # here is how a "bounded" capture quietly spends 7 against a plan of 1.
-    need_h2h = sum(1 for i in chosen if i["needs_call"] and (i["resolvable"] or need_listing))
+    resolved_h2h = sum(1 for i in chosen if i["needs_call"] and i["resolvable"])
+    listing_used = listing_attempted_today(localdata, day)
+
+    # A listing is useful only when the preflight can cover both that call and
+    # at least one H2H it may unlock. Probe capacity through the same fail-closed
+    # budget function, then include the listing and every newly unlockable H2H
+    # in the actual preflight before execute() can touch the network.
+    listing_capacity = boggio.preflight(
+        need_h2h=2, need_listing=0, localdata=localdata, day=day,
+        observed_remaining=known,
+    ) if unresolved and not listing_used else None
+    need_listing = int(bool(
+        unresolved and not listing_used and listing_capacity
+        and listing_capacity["allowed_calls"] > 1
+    ))
+    need_h2h = resolved_h2h + (len(unresolved) if need_listing else 0)
     preflight = boggio.preflight(need_h2h=need_h2h, need_listing=need_listing,
                                 localdata=localdata, day=day, observed_remaining=known)
-    for i in chosen:
-        i["resolvable_after_listing"] = bool(i["resolvable"] or need_listing)
     # Freshness, measured against NOW rather than against the card date: the
     # provider's stats endpoints are upcoming-fixture-only and the lane's own
     # rule marks a post-kickoff capture ineligible, so a run on a card whose
@@ -222,13 +260,13 @@ def plan_run(day: str, *, localdata: Path, limit: int, allow_listing: bool,
     return {"pre_kickoff": pre_kickoff,
             "day": day, "card_rows": len(card), "candidates": chosen, "census": census,
             "unresolved": [i["fixture_key"] for i in unresolved],
-            "allow_listing": bool(allow_listing), "preflight": preflight,
+            "listing_used_today": listing_used, "preflight": preflight,
             "need_h2h": need_h2h, "need_listing": need_listing}
 
 
 def execute(day: str, plan: dict, *, localdata: Path, log=print) -> dict:
     """Pay for the plan, in pre-flight order, one ledger line per call."""
-    results = {"calls": 0, "usable": 0, "statuses": [], "unattributed": []}
+    results = {"calls": 0, "usable": 0, "statuses": [], "unattributed": [], "local_blocks": 0}
     budget = dict(allowed=plan["preflight"]["allowed_calls"])
     entries = boggio.read_call_ledger(localdata)
     captured_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -250,13 +288,24 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print) -> dict:
                                what_bought=f"fixture-id resolution: {len(listing_ids)} pending unexpired rows")
             results["statuses"].append(f"listing http={code} resolved={len(listing_ids)}")
         except boggio.UpstreamBlocked as exc:
-            boggio.record_call(entries, day=day, fixture_key="listing",
-                               endpoint=boggio.H2H_ENDPOINT + ":listing",
-                               pool_index=getattr(exc, "ring_pool_index", None),
-                               key=getattr(exc, "ring_key", None),
-                               status=None, remaining=None, spent=True,
-                               what_bought="listing rejected; ids unresolved for this run", error=exc)
-            results["statuses"].append(f"listing blocked: {str(exc)[:80]}")
+            if _provider_was_contacted(exc):
+                # A contacted listing may be billable even if it was rejected;
+                # consume its planned unit before continuing through the card.
+                budget["allowed"] -= 1
+                results["calls"] += 1
+                boggio.record_call(entries, day=day, fixture_key="listing",
+                                   endpoint=boggio.H2H_ENDPOINT + ":listing",
+                                   pool_index=getattr(exc, "ring_pool_index", None),
+                                   key=getattr(exc, "ring_key", None),
+                                   status=None, remaining=None, spent=True,
+                                   what_bought="listing rejected after provider contact; ids unresolved",
+                                   error=exc)
+                results["statuses"].append("listing contacted but blocked")
+            else:
+                results["local_blocks"] += 1
+                results["statuses"].append("listing blocked locally; request not sent")
+                log("ledger=card_enrich_listing verdict=lane_blocked_local calls_spent=0 "
+                    "note=no request was sent; budget untouched")
 
     for item in plan["candidates"]:
         if not item["needs_call"]:
@@ -267,7 +316,7 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print) -> dict:
         event_id = item["event_id"] or (listing_ids.get(pair) or {}).get("event_id")
         if not event_id:
             log(f"ledger=card_enrich fixture={item['fixture_key']} decision=unresolved_id "
-                f"calls_spent=0 (no pending listing row; --allow-listing not credited)")
+                f"calls_spent=0 note=no_matching_pending_listing_row")
             continue
         if budget["allowed"] <= 0:
             log(f"ledger=card_enrich fixture={item['fixture_key']} decision=budget_stop "
@@ -277,18 +326,26 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print) -> dict:
         try:
             key, index, code, payload, headers = boggio.h2h_call(event_id)
         except boggio.UpstreamBlocked as exc:
-            # Charged: a refused or half-delivered call is still a call the vendor
-            # may have billed. Attributed to the LAST pool the ring touched, which
-            # the transport reports on the exception rather than left to chance.
+            if not _provider_was_contacted(exc):
+                results["local_blocks"] += 1
+                results["statuses"].append(f"{item['fixture_key']} blocked locally; request not sent")
+                log(f"ledger=card_enrich fixture={item['fixture_key']} "
+                    "decision=lane_blocked_local call_spent=0 "
+                    "note=no request was sent; budget untouched")
+                continue
+            # A refused or half-delivered request is billable only after the ring
+            # proves contact; attribute it to the last pool the ring touched.
             budget["allowed"] -= 1
             results["calls"] += 1
-            touched = getattr(exc, "ring_attempts", 1) or 1
+            touched = _ring_attempt_count(exc)
+            contact_detail = (f"{touched} pool(s) touched" if touched
+                              else "pool identified; attempt count unavailable")
             boggio.record_call(entries, day=day, fixture_key=item["fixture_key"],
                                endpoint=boggio.H2H_ENDPOINT,
                                pool_index=getattr(exc, "ring_pool_index", None),
                                key=getattr(exc, "ring_key", None),
                                status=None, remaining=None, spent=True,
-                               what_bought=f"ring rejected the fixture ({touched} pool(s) touched); no payload",
+                               what_bought=f"ring rejected the fixture ({contact_detail}); no payload",
                                error=exc)
             log(f"ledger=card_enrich fixture={item['fixture_key']} event_id={event_id} status=blocked")
             continue
@@ -358,11 +415,8 @@ def main(argv=None, *, now=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--date", default=None, help="Card date (YYYY-MM-DD); default today, SAST")
     parser.add_argument("--limit", type=int, default=CARD_LIMIT_DEFAULT)
-    parser.add_argument("--allow-listing", action="store_true",
-                        help="Permit EXACTLY ONE default-listing call for fixture-id resolution (it "
-                             "draws the same family pot; counted in pre-flight or it does not happen)")
     # (accepted via --pool-remaining, harvested above so a '-'-leading pool label
-    # cannot be mistaken for a switch)
+    # cannot be mistaken for a switch; normal runs use provider readings persisted locally)
     parser.add_argument("--pool-remaining", action="append", default=None, metavar="FINGERPRINT=N",
                         help="Operator-supplied provider header reading (family-remaining counter) used "
                              "ONLY to plan, keyed by pool fingerprint or key tail from the receipt. "
@@ -376,6 +430,9 @@ def main(argv=None, *, now=None) -> int:
 
     localdata = Path(args.localdata)
     day = args.date or datetime.now(ZoneInfo("Africa/Johannesburg")).date().isoformat()
+    pruned = boggio.prune_snapshots(day, localdata=localdata)
+    if pruned:
+        print(f"ledger=card_enrich_prune removed={pruned} retention_days=14")
     bootstrap: dict[str, int] = {}
     for item in pool_readings + list(args.pool_remaining or []):
         if "=" not in item:
@@ -387,13 +444,13 @@ def main(argv=None, *, now=None) -> int:
             parser.error(f"--pool-remaining value must be an integer, got {value!r}")
 
     plan = plan_run(day, localdata=localdata, limit=max(1, args.limit),
-                    allow_listing=args.allow_listing, bootstrap=bootstrap, now=now)
+                    bootstrap=bootstrap, now=now)
     plan["snapshots"] = []
     boggio.print_preflight(plan["preflight"], log=print)
     print(f"ledger=card_enrich_plan date={day} card_rows={plan['card_rows']} "
           f"candidates={len(plan['candidates'])} need_h2h={plan['need_h2h']} "
           f"need_listing={plan['need_listing']} unresolved={len(plan['unresolved'])} "
-          f"allow_listing={int(plan['allow_listing'])} verdict={plan['preflight']['verdict']} "
+          f"listing_used_today={int(plan['listing_used_today'])} verdict={plan['preflight']['verdict']} "
           f"pre_kickoff_now={plan['pre_kickoff']}/{len(plan['candidates'])}")
     if plan["candidates"] and plan["pre_kickoff"] == 0:
         print(f"ledger=card_enrich_caution every selected fixture has already kicked off "
@@ -425,17 +482,18 @@ def main(argv=None, *, now=None) -> int:
               "note=pass --execute to pay quota (budget- and ledger-gated)")
         return 0
     if plan["preflight"]["allowed_calls"] <= 0:
-        if plan["unresolved"] and not plan["need_listing"]:
-            # The honest difference between "budget refused" and "nothing to buy":
-            # a silently inert first run reads like a working capture.
-            print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=nothing_to_capture "
-                  f"unresolved={len(plan['unresolved'])} "
-                  f"note=no fixture id is resolvable from the retained shadow ledger and no listing "
-                  f"call is credited; ids appear only once a post-merge capture has run. "
-                  f"Pass --allow-listing to pay ONE listing call for this run")
+        if plan["preflight"]["verdict"] != "approved":
+            print(f"ledger=card_enrich mode=execute calls_spent=0 "
+                  f"verdict={plan['preflight']['verdict']} note=fails closed; nothing was purchased")
             return 0
-        print(f"ledger=card_enrich mode=execute calls_spent=0 "
-              f"verdict={plan['preflight']['verdict']} note=fails closed; nothing was purchased")
+        if plan["unresolved"] and not plan["need_listing"]:
+            reason = ("one listing attempt was already used today" if plan["listing_used_today"]
+                      else "automatic listing requires more than one spendable call")
+            print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=nothing_to_capture "
+                  f"unresolved={len(plan['unresolved'])} note={reason}; no call was purchased")
+            return 0
+        print("ledger=card_enrich mode=execute calls_spent=0 verdict=no_calls_needed "
+              "note=no fresh, resolvable fixture requires capture")
         return 0
     if plan["preflight"]["allowed_calls"] > args.max_requests:
         print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=run_ceiling "
@@ -446,9 +504,14 @@ def main(argv=None, *, now=None) -> int:
     path = boggio.persist_snapshots(day, plan["snapshots"], plan["preflight"], localdata=localdata,
                                     notes=[f"need_h2h={plan['need_h2h']}",
                                            f"unresolved={len(plan['unresolved'])}"])
-    print(f"ledger=card_enrich mode=execute calls_spent={results['calls']} "
-          f"usable_snapshots={results['usable']} ledger_entries={results['ledger_entries']} "
-          f"shadow={path.name}")
+    if results["calls"] == 0 and results["local_blocks"]:
+        print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=lane_blocked_local "
+              f"note=no request was sent; budget untouched ledger_entries={results['ledger_entries']} "
+              f"shadow={path.name}")
+    else:
+        print(f"ledger=card_enrich mode=execute calls_spent={results['calls']} "
+              f"usable_snapshots={results['usable']} ledger_entries={results['ledger_entries']} "
+              f"shadow={path.name}")
     return 0
 
 

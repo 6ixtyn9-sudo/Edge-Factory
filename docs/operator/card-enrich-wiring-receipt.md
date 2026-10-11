@@ -1,5 +1,8 @@
 # Card Enrich H2H Wiring — Receipt (NO BLOAT, rides existing daily.yml) — FINAL PRE-MERGE GATE B1-B4
 
+> **Superseded 2026-10-11:** this historical receipt names `arena/f118e478-edge-factory`; the current Arena work is on `arena/df515545-edge-factory`, based at `b037556`. Its branch, HEAD, PR, workflow, ledger, and test claims below are not current verification.
+> **Carried forward:** the current worktree continues the quota-aware listing/H2H preflight and contact-evidence billing, one daily execute, receipt/snapshot cleanup preservation, 14-day prune, and dormant-pick-path guard. No workflow edit or live vendor call was made for this correction pass.
+
 Date: 2026-10-11 (UTC) — D1-D7 + poison-window + round2 + FINAL B1-B4
 Branch: arena/f118e478-edge-factory
 HEAD: c1a57c7b0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e (B1-B4: fix .gitignore false comment, harden presence invariant, paste body, SAFE+DORMANT framing, 2690 green)

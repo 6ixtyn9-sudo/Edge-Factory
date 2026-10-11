@@ -1203,6 +1203,26 @@ def record_call(entries, *, day, fixture_key, endpoint, pool_index, key, status,
     return entries[-1]
 
 
+def prune_snapshots(day, *, localdata=None, retention_days=14):
+    """Prune old day-scoped H2H snapshots, even when today's run buys nothing."""
+    root = localdata or LOCALDATA
+    removed = 0
+    try:
+        cutoff = datetime.strptime(str(day), "%Y-%m-%d").date() - timedelta(days=retention_days)
+        for old_file in root.glob("card_enrich_shadow_*.json"):
+            try:
+                date_part = old_file.stem.split("_")[-1]
+                file_date = datetime.strptime(date_part, "%Y-%m-%d").date()
+                if file_date < cutoff:
+                    old_file.unlink()
+                    removed += 1
+            except (ValueError, OSError):
+                continue
+    except Exception as exc:
+        _DIAG["persist_snapshots_prune_error"] = str(exc)[:200]
+    return removed
+
+
 def persist_snapshots(day, snapshots, preflight_plan, *, localdata=None, notes=None):
     """Write this run's day-scoped snapshot ledger (raw payload never stored)."""
     root = localdata or LOCALDATA
@@ -1225,23 +1245,8 @@ def persist_snapshots(day, snapshots, preflight_plan, *, localdata=None, notes=N
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
     tmp.replace(path)
-    # Bounded retention: prune shadow files older than 14 days (staleness is 7d,
-    # so 14d keeps 2x window for dedup while bounding git history growth).
-    # Burn math: without persist, cache eviction -> re-buy 6 calls/run;
-    # with persist + 14d prune, 6 calls/week = 24/month vs cap 30, vs pot 200.
-    try:
-        cutoff = (datetime.strptime(str(day), "%Y-%m-%d").date() - timedelta(days=14))
-        for old_file in root.glob("card_enrich_shadow_*.json"):
-            try:
-                # Extract date from filename card_enrich_shadow_YYYY-MM-DD.json
-                stem = old_file.stem  # card_enrich_shadow_2026-10-11
-                date_part = stem.split("_")[-1]
-                file_date = datetime.strptime(date_part, "%Y-%m-%d").date()
-                if file_date < cutoff:
-                    old_file.unlink()
-            except (ValueError, OSError):
-                continue
-    except Exception as _e:
-        _DIAG["persist_snapshots_prune_error"] = str(_e)[:200]
+    # Keep direct persist_snapshots() callers bounded too. The CLI also runs
+    # this before planning so no-capture/refusal exits cannot skip retention.
+    prune_snapshots(day, localdata=root)
     return path
 
