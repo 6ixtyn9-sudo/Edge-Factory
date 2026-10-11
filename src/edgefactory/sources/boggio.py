@@ -89,8 +89,8 @@ def _append_ledger_line(entry, localdata=None):
         with p.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(entry, sort_keys=True) + "\n")
             fh.flush()
-    except OSError:
-        pass
+    except OSError as _e:
+        _DIAG["append_ledger_line_os_error"] = str(_e)[:200]
 
 
 def get_json(url, *, timeout=30, day=None, localdata=None):
@@ -132,8 +132,8 @@ def get_json(url, *, timeout=30, day=None, localdata=None):
           "error_class": None,
           "logged_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
       }, localdata=localdata)
-  except Exception:
-      pass
+  except Exception as _e:
+      _DIAG["production_ledger_seed_error"] = str(_e)[:200]
   return code,data,headers
  _cooling=True
  raise UpstreamBlocked("boggio: no eligible key in ring")
@@ -825,8 +825,8 @@ def parse_head_to_head(payload, *, fixture, captured_at):
                                     warnings.append(f"divergence {prov_field}: provider_share={prov_share:.3f} recomputed={features[recomp_key]} diff={diff:.3f}")
                                     # fail-closed: do not trust the share feature past tolerance
                                     # keep recomputed but flag; holds() will still work but receipt notes divergence
-            except Exception:
-                pass
+            except Exception as _e:
+                _DIAG["parse_head_to_head_overall_divergence_error"] = str(_e)[:200]
 
             # Primary shares for holds() — keep existing names for compatibility, but only if >=3
             if len(encounters) >= _MIN_SHARE_ENCOUNTERS:
@@ -852,19 +852,8 @@ def parse_head_to_head(payload, *, fixture, captured_at):
             features["h2h_first_half_win_share"] = round((fh_home_wins + fh_away_wins) / fh_total, 4) if fh_total else 0
             features["h2h_first_half_lost_share"] = round(fh_away_wins / fh_total, 4) if fh_total else 0  # away wins = home lost at half
 
-            # Provider first_half_* vs recomputed — WARN
-            try:
-                for side, prov_stats in [("home", home_stats), ("away", away_stats)]:
-                    for field in ["first_half_win", "first_half_lost", "first_half_draw"]:
-                        prov_val = prov_stats.get(field)
-                        if isinstance(prov_val, int) and prov_num and prov_num > 0:
-                            # provider counts, we have shares; compare via share
-                            prov_share = prov_val / prov_num
-                            # we don't have exact side split for FH, so just warn if large
-                            if abs(prov_share - 0.5) > 0.6 and fh_total >= 3:
-                                warnings.append(f"FH divergence {side}.{field}: provider={prov_val}/{prov_num} vs recomputed FH total {fh_total}")
-            except Exception:
-                pass
+            # Provider first_half_* vs recomputed: honest comparison impossible on this payload
+            # (provider counts are per-team totals, recomputed is shared FH total) — receipt notes limitation.
 
     # Competition / season continuity
     if parsed_for_features:
@@ -990,13 +979,12 @@ def parse_head_to_head(payload, *, fixture, captured_at):
         features["h2h_provider_away_win_chance"] = a_win
         features["h2h_provider_away_draw_chance"] = a_draw
         features["h2h_provider_away_lose_chance"] = a_lose
-    except Exception:
-        pass
+    except Exception as _e:
+        _DIAG["parse_head_to_head_bookie_error"] = str(_e)[:200]
 
-    # W-D-L identity cross-check: provider won counts vs recomputed rows — WARN + fail-closed candidate
+    # W-D-L identity cross-check: provider won counts vs recomputed — normalized to rates, fail-closed past tolerance
     try:
         if parsed_for_features and isinstance(home_won, int) and isinstance(away_won, int):
-            # Recompute wins from filtered encounters
             recomputed_home_wins = 0
             recomputed_away_wins = 0
             for pf in parsed_for_features:
@@ -1014,20 +1002,29 @@ def parse_head_to_head(payload, *, fixture, captured_at):
                         recomputed_home_wins += 1
                     elif ra == away_key:
                         recomputed_away_wins += 1
-            # Provider counts are from larger window (e.g., 10 vs 3), so divergence expected;
-            # WARN if filtered >=3 and diff >2, and fail-closed dominance if so
-            if len(parsed_for_features) >= 3:
-                if abs(home_won - recomputed_home_wins) > 2 or abs(away_won - recomputed_away_wins) > 2:
-                    warnings.append(f"W-D-L divergence: provider won home={home_won} away={away_won} vs recomputed home={recomputed_home_wins} away={recomputed_away_wins} (filtered {len(parsed_for_features)} of raw {len(raw_encounters)})")
-                    # fail-closed: do not trust dominance if large divergence on filtered >=3?
-                    # We keep dominance but flag; holds() will still work but receipt notes divergence
-                    # For stricter fail-closed, we could drop dominance — but that would break existing tests.
-                    # Instead, keep warning and let receipt drive decision.
-                    pass
             features["h2h_home_wins_recomputed"] = recomputed_home_wins
             features["h2h_away_wins_recomputed"] = recomputed_away_wins
-    except Exception:
-        pass
+            # Normalize to rates for fair comparison (provider window may be larger than filtered)
+            prov_num = overall.get("num_encounters")
+            if isinstance(prov_num, int) and prov_num > 0 and len(parsed_for_features) >= 3:
+                home_rate_prov = home_won / prov_num
+                away_rate_prov = away_won / prov_num
+                filt = len(parsed_for_features)
+                home_rate_recomp = recomputed_home_wins / filt if filt else 0
+                away_rate_recomp = recomputed_away_wins / filt if filt else 0
+                diff_home = abs(home_rate_prov - home_rate_recomp)
+                diff_away = abs(away_rate_prov - away_rate_recomp)
+                # Tolerance 0.35 for rate divergence — provider 10 vs filtered 6 can differ but not wildly
+                if diff_home > 0.35 or diff_away > 0.35:
+                    warnings.append(
+                        f"W-D-L divergence (rate): provider home {home_won}/{prov_num}={home_rate_prov:.2f} vs recomp {recomputed_home_wins}/{filt}={home_rate_recomp:.2f} "
+                        f"away {away_won}/{prov_num}={away_rate_prov:.2f} vs {recomputed_away_wins}/{filt}={away_rate_recomp:.2f} — dominance withheld (fail-closed)"
+                    )
+                    # Fail-closed: withhold dominance past tolerance
+                    features.pop("h2h_dominance", None)
+    except Exception as _e:
+        _DIAG["parse_head_to_head_wdl_error"] = str(_e)[:200]
+
 
     # Provider aggregates retained verbatim for audit (overall)
     try:
@@ -1039,8 +1036,8 @@ def parse_head_to_head(payload, *, fixture, captured_at):
         features["h2h_provider_btts"] = overall.get("both_teams_scored")
         features["h2h_provider_total_goals"] = overall.get("total_goals")
         features["h2h_provider_avg_goals"] = overall.get("avg_goals_per_match")
-    except Exception:
-        pass
+    except Exception as _e:
+        _DIAG["parse_head_to_head_provider_overall_error"] = str(_e)[:200]
 
     usable = bool(identity_hits and kickoff is not None and capture is not None and capture < kickoff)
     reason = None
@@ -1239,7 +1236,7 @@ def persist_snapshots(day, snapshots, preflight_plan, *, localdata=None, notes=N
                     old_file.unlink()
             except (ValueError, OSError):
                 continue
-    except Exception:
-        pass
+    except Exception as _e:
+        _DIAG["persist_snapshots_prune_error"] = str(_e)[:200]
     return path
 
