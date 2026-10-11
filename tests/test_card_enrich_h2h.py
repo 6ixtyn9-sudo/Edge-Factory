@@ -264,7 +264,8 @@ def test_staleness_skip_suppresses_a_second_call_inside_the_window(tmp_path, mon
     localdata = _card(tmp_path / "ld")
     monkeypatch.setenv(boggio.CARD_ENRICH_BUDGET_ENV, "30")
     monkeypatch.setenv("RAPIDAPI_KEYS", "pool-a,pool-b")
-    snapshots = {"realsociedad|barcelona": {"captured_at": "2026-10-08T06:00:00+00:00"}}
+    # Live snapshot must have usable=True to suppress — dead snapshots must NOT block (poison-window fix)
+    snapshots = {"realsociedad|barcelona": {"captured_at": "2026-10-08T06:00:00+00:00", "usable": True}}
     assert boggio.needs_capture("realsociedad|barcelona", snapshots, day=CARD_DAY) is False
     assert boggio.needs_capture("realsociedad|barcelona", snapshots, day="2026-10-15") is True
     assert boggio.needs_capture("athleticclub|getafe", snapshots, day=CARD_DAY) is True

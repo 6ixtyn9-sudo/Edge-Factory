@@ -1091,9 +1091,14 @@ def load_snapshots(localdata=None):
 
 
 def needs_capture(fixture_key, snapshots, *, day, staleness_days=CARD_ENRICH_STALENESS_DAYS):
-    """True only when no snapshot of this fixture is younger than ``staleness_days``."""
+    """True only when no snapshot of this fixture is younger than ``staleness_days``.
+
+    A snapshot that cannot become evidence (usable is not True) must never
+    suppress a capture that could — otherwise post-kickoff usable=False rows
+    persisted via .gitignore whitelist poison the 7-day dedup window.
+    """
     existing = snapshots.get(str(fixture_key))
-    if not isinstance(existing, dict):
+    if not isinstance(existing, dict) or existing.get("usable") is not True:
         return True
     captured = _aware(existing.get("captured_at")) or _encounter_date(existing.get("captured_at"))
     today = _encounter_date(day)
