@@ -1,9 +1,9 @@
 # Card Enrich H2H Wiring — Receipt (NO BLOAT, rides existing daily.yml)
 
-Date: 2026-10-11 (UTC) — updated after verification seat audit D1-D7
+Date: 2026-10-11 (UTC) — updated after verification seat audit D1-D7 final
 Branch: arena/f118e478-edge-factory
-HEAD: 624fbc99a68191298787ca6975a1093eca56d55e
-Previous HEADs: 9c672d1 (no bloat), 48f8ab4 (initial wiring)
+HEAD: 2cea464a360b0bd508f7604efef0dd25b2af9edb
+Previous HEADs: ade6bee, 624fbc9, 2a81607, 677e519, 9c672d1 (no bloat), 48f8ab4 (initial wiring)
 Mode: DORMANT — computed, persisted, not applied to stakes; pick-path ZERO delta
 
 ## 0. Operator directive compliance
@@ -46,8 +46,8 @@ All fields USED or justified with WARN + fail-closed past tolerance.
  src/edgefactory/context_rules.py                   | 180 +++++++++-
  src/edgefactory/sources/boggio.py                  | 374 ++++++++++++++++++++-
  tests/fixtures/boggio_head_to_head_6encounters.json| 107 ++++++
- tests/test_bootstrap_and_inertness.py              | 181 ++++++++++
- 8 files changed, 1039 insertions(+), 16 deletions(-) vs main (2678 tests)
+ tests/test_bootstrap_and_inertness.py              | ~240 ++++++++++
+ 8 files changed, ~1100 insertions(+), 16 deletions(-) vs main (2678 tests -> 2687)
 ```
 
 Per-file justification (mandatory for >+40):
@@ -56,7 +56,7 @@ Per-file justification (mandatory for >+40):
 
 - **context_rules.py +180**: Whitelist expanded from 4 to 45 explicit features (count verified: len(_ALLOWED_FEATURES)=45, not 38) — no wildcard, h2h_goals raises ValueError per test. DORMANT_H2H_RULES 7 rules, ACTIVATION_BARS (pre-registered 2026-10-10: ≥200 settled outcomes, ≥30 dates, ≥50 fixtures/holdout, lower95>0 after multiplicity), DECAY_THRESHOLDS (auto-demote on forward decay). Growth >40 justified because whitelist must be explicit and activation/decay bars must be DATA with basis in receipt. Nothing importable from pick path.
 
-- **test_bootstrap_and_inertness.py +181**: 7 new tests required by §3.1/§5: production seeding FILE grows by 1 charged:false, allowance-invariance 0, bootstrap run1 may refuse run2 must capture, falsifications budget_disabled/unattributed_quota, capability fixture >=6 encounters >=2 comps mixed FH, differential inertness byte-identical builder, bootstrap default path seed file then preflight without hand-fed observed. Net-new files ≤1 test-only satisfied.
+- **test_bootstrap_and_inertness.py +~240**: 8 new tests required by §3.1/§5: production seeding FILE grows by 1 charged:false, allowance-invariance 0, bootstrap run1 may refuse run2 must capture, falsifications budget_disabled/unattributed_quota, capability fixture >=6 encounters >=2 comps mixed FH, differential inertness byte-identical via production builder select_candidates+plan_run, bootstrap default path seed file then preflight without hand-fed observed, fail-closed dominance withheld. Net-new files ≤1 test-only satisfied.
 
 - **tests/fixtures/boggio_head_to_head_6encounters.json +107**: Capability fixture: 6 kept encounters (all within 1095d lookback), 2 competitions (Primera Division, Copa del Rey), mixed first-half (draws and wins), for inertness proof. Required by §5.2.
 
@@ -73,25 +73,26 @@ Per-file justification (mandatory for >+40):
 Command: `PYTHONPATH=src python3 -m pytest tests/ -q`
 
 - Main at #52: 2678 tests
-- New: 7 tests in test_bootstrap_and_inertness.py + 1 auto-discovered from test_docs_links.py due to new receipt file = 8 new tests
-- Total: 2686 tests collected, 2686 passed, 0 failed
+- New: 8 tests in test_bootstrap_and_inertness.py + 1 auto-discovered from test_docs_links.py due to new receipt file = 9 new tests
+- Total: 2687 tests collected, 2687 passed, 0 failed
 - Named delta:
   - tests/test_bootstrap_and_inertness.py::test_production_listing_seeds_ledger_with_charged_false_and_real_header
   - tests/test_bootstrap_and_inertness.py::test_charged_false_does_not_move_allowance
   - tests/test_bootstrap_and_inertness.py::test_bootstrap_run1_may_refuse_run2_must_capture
   - tests/test_bootstrap_and_inertness.py::test_falsifications_budget_disabled_and_unattributed_quota
   - tests/test_bootstrap_and_inertness.py::test_capability_fixture_6encounters_2competitions_mixed_first_half
-  - tests/test_bootstrap_and_inertness.py::test_differential_inertness_payload_builder_byte_identical
+  - tests/test_bootstrap_and_inertness.py::test_differential_inertness_production_builder_byte_identical
   - tests/test_bootstrap_and_inertness.py::test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observed
+  - tests/test_bootstrap_and_inertness.py::test_d2_fail_closed_dominance_withheld_on_rate_divergence
   - tests/test_docs_links.py::test_relative_markdown_links_resolve[docs/operator/card-enrich-wiring-receipt.md] (auto-discovered due to new markdown file, not authored)
 
-Previous claim "2685 passed (+6 +1)" was off by 1 — corrected to 2686 (7+1).
+Previous claim "2685 passed (+6 +1)" was off by 1 — corrected to 2686 (7+1) then 2687 (8+1).
 
 ## 4. OFFLINE REPLAY — BYTE-IDENTICAL PROOF
 
 - Fixture: tests/fixtures/card_enrich_slate_2026-10-11.json (5 rows)
 - Snapshots: localdata/card_enrich_shadow_*.json (0 in CI, but with .gitignore whitelist would persist via git)
-- Differential inertness: test_differential_inertness_payload_builder_byte_identical builds board twice (empty localdata vs with snapshot), asserts byte-identical output, verifies snapshots ARE present in one dir (len 1 vs 0) so test not vacuous, plus file scans green as secondary.
+- Differential inertness: test_differential_inertness_production_builder_byte_identical imports select_candidates and plan_run from scripts.capture_card_enrich (real production builder), runs against empty vs with snapshot localdata dirs, asserts candidate selection byte-identical (fixture_key lists via json.dumps sort_keys), verifies snapshots ARE present in one dir (1 vs 0) so test not vacuous, plus file scans picks_today.py no load_snapshots/card_enrich/h2h_dominance.
 - Capability: 6 encounters, 2 comps, mixed FH, derived features, holds() reach, fail-closed tampered captured_at.
 - Bucket moves: 0 (DORMANT, byte-identical builder proof)
 
@@ -102,19 +103,19 @@ Previous claim "2685 passed (+6 +1)" was off by 1 — corrected to 2686 (7+1).
 - Bootstrap: production path records charged:false with real family_remaining, flush reaches FILE, _DIAG keys for errors
 - Tests cover all four §3.1 cases plus default path (seed file then preflight without hand-fed observed)
 
-## 6. D1-D7 PER-DEFECT RESPONSES (required in PR body)
+## 6. D1-D7 PER-DEFECT RESPONSES (required in PR body) — FINAL
 
 - **D1: deleted** — first-half divergence block `abs(prov_share - 0.5) > 0.6` was dead arithmetic (share in [0,1] max diff 0.5 from 0.5). Deleted, replaced with one-line comment: honest comparison impossible on this payload (per-team totals vs shared FH total) — receipt notes limitation.
 
-- **D2: implemented; test_capability_fixture_6encounters_2competitions_mixed_first_half exercises the gate** — normalized W-D-L to rates (provider won/num_encounters vs recomp_wins/filtered), tolerance 0.35, fail-closed dominance withheld (pop from features) with warning recorded. Previously comment declined directive to avoid breaking tests — now implemented, fixture repaired to 6 dates within 1095d lookback (2024-08-20 to 2025-04-20), all within window, rate diff home 0.066 away 0.3 <0.35 so dominance kept -7, no break.
+- **D2: implemented; fail-closed leg proven by test_d2_fail_closed_dominance_withheld_on_rate_divergence** — normalized W-D-L to rates (provider won/num_encounters vs recomp_wins/filtered), tolerance 0.35, fail-closed dominance withheld (pop from features) with warning "dominance withheld". Happy path exercised by test_capability_fixture_6encounters_2competitions_mixed_first_half (rate diff 0.066/0.3 <0.35 keeps dominance -7). Tamper case away_team.won=10 num_encounters=10 vs 6 kept → rate diff 0.5 >0.35 triggers pop + warning.
 
 - **D3: _DIAG keys: production_ledger_seed_error, parse_head_to_head_overall_divergence_error, parse_head_to_head_bookie_error, parse_head_to_head_provider_overall_error, persist_snapshots_prune_error, append_ledger_line_os_error, parse_head_to_head_wdl_error** — all five `except Exception: pass` blocks plus OSError-swallowing append now record diagnostic, including bootstrap seeding.
 
-- **D4: implemented; test_differential_inertness_payload_builder_byte_identical exercises byte-identical** — builds board twice (empty vs with snapshot), asserts byte-identical output, verifies snapshots present in one dir (len 1 vs 0) so not vacuous. Old grep-based test buried as secondary check.
+- **D4: implemented; test_differential_inertness_production_builder_byte_identical imports production builder select_candidates+plan_run** — runs against ld_empty vs ld_with (ld_with has card_enrich_shadow_2026-10-11.json usable snapshot), asserts byte-identical candidate keys (json.dumps sort_keys and fixture_key lists), verifies boggio.load_snapshots 0 vs 1 non-vacuous, file scans picks_today.py no load_snapshots/card_enrich/h2h_dominance. Old local closure tautology deleted.
 
 - **D5: implemented; test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observed closes it** — seeds FILE via charged:false, calls plan_run with bootstrap={}, reads last_observed_remaining from ledger (via last_observed_remaining()), asserts approved vs unattributed_quota without seeding.
 
-- **D6: filled** — HEAD now 677e519161415156b3eb76c4e531ef4e8cc2ee23 (was placeholder), whitelist count corrected from 38 to 45 (len(_ALLOWED_FEATURES)=45 verified), test count corrected from 2685 to 2686 (7 new in bootstrap file +1 auto from docs_links). Named seventh and eighth: test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observed and test_relative_markdown_links_resolve[docs/operator/card-enrich-wiring-receipt.md].
+- **D6: filled** — HEAD now 2cea464a360b0bd508f7604efef0dd25b2af9edb (was placeholder 677e519), whitelist count corrected from 38 to 45 (len(_ALLOWED_FEATURES)=45 verified), test count corrected from 2685 to 2686 to 2687 (8 new in bootstrap file +1 auto from docs_links). Named: test_bootstrap_default_path_seed_file_then_preflight_without_handfed_observed, test_d2_fail_closed_dominance_withheld_on_rate_divergence, test_relative_markdown_links_resolve[docs/operator/card-enrich-wiring-receipt.md].
 
 - **D7: corrected** — .gitignore burn math fixed: previously claimed "6×30=180/month" vs 24/month, now corrected to daily.yml runs 5x/day, 6/run=30/day, cap torched in ~5 cron invocations (<1 day) without dedup; with persist 6/week=~24/month vs cap 30 vs pot 200; production ~1/day=~30/month (not 75) due to MAX_CALLS_PER_RUN=1 + same-day cache, total ~54/month fits doubled pot. Matches persist_snapshots() honest framing.
 
@@ -127,12 +128,16 @@ Previous claim "2685 passed (+6 +1)" was off by 1 — corrected to 2686 (7+1).
 ## 8. BRANCH + SHA + LOG
 
 Branch: arena/f118e478-edge-factory
-HEAD: 624fbc99a68191298787ca6975a1093eca56d55e
+HEAD: 2cea464a360b0bd508f7604efef0dd25b2af9edb
 Log:
-2a81607 fix D6-D7 + D1-D5 (latest)
+2cea464 fix D2+D4: real production builder byte-identical (select_candidates+plan_run), fail-closed dominance withheld test, 8 tests total
+ade6bee receipt HEAD 624fbc9 final, no placeholder, whitelist 45, tests 2686
+624fbc9 finalize receipt: HEAD 2a81607, whitelist 45, tests 2686, burn math corrected
+2a81607 fix D6-D7 + D1-D5
 677e519 fix D1-D5: delete FH dead arithmetic, fail-closed dominance via rates, _DIAG for all except pass, differential inertness byte-identical, bootstrap default path test
 9c672d1 no bloat: remove new workflow, keep lane on existing daily.yml, ONE call site, zero pick-path delta, bootstrap charged:false seeding, provider+recomputed WARN, .gitignore whitelist+prune, capability fixture >=6
 48f8ab4 wire H2H snapshot into selection/autobet DORMANT with facet parity, whitelist, ledger fix, daily O(0) capture, operator receipt
 
 Picks/auto_tickets ZERO delta vs main — reference outcome
 No new workflow — uses existing daily.yml
+Final: PYTHONPATH=src pytest tests/ -q -> 2687 passed
