@@ -433,9 +433,9 @@
   },
   "match_over_25@v1": {
    "hits": 225,
-   "inv_price_sum": 221.8066461735738,
-   "multi_n": 39,
-   "n": 337,
+   "inv_price_sum": 222.409055812128,
+   "multi_n": 40,
+   "n": 338,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -773,9 +773,10 @@
     "2026-10-10|RAAL La Louvi\u00e8re vs Club Brugge KV|match_over_25@v1",
     "2026-10-10|Maritimo vs FC Porto|match_over_25@v1",
     "2026-10-10|FC Halifax Town vs Gateshead|match_over_25@v1",
-    "2026-10-10|Radomlje vs FC Koper|match_over_25@v1"
+    "2026-10-10|Radomlje vs FC Koper|match_over_25@v1",
+    "2026-10-10|Vasco da Gama vs Remo|match_over_25@v1"
    ],
-   "profit": 5.767,
+   "profit": 4.767,
    "records": [
     {
      "date": "2026-08-01",
@@ -3470,6 +3471,14 @@
      "multi_source": false,
      "price": 1.66,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-10",
+     "hit": false,
+     "match": "Vasco da Gama vs Remo",
+     "multi_source": true,
+     "price": 1.66,
+     "source": "theoddsapi"
     }
    ],
    "status": "PAPER",
