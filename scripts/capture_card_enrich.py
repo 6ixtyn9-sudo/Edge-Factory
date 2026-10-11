@@ -264,12 +264,19 @@ def plan_run(day: str, *, localdata: Path, limit: int,
             "need_h2h": need_h2h, "need_listing": need_listing}
 
 
-def execute(day: str, plan: dict, *, localdata: Path, log=print) -> dict:
-    """Pay for the plan, in pre-flight order, one ledger line per call."""
+def execute(day: str, plan: dict, *, localdata: Path, log=print,
+            now: datetime | None = None) -> dict:
+    """Pay for the plan, in pre-flight order, one ledger line per call.
+
+    ``now`` is the observation clock, injectable for the same reason as in
+    ``main``: the stamp written here is what ``parse_head_to_head`` compares
+    against the kickoff to decide ``usable``, so a run whose clock is read from
+    the wall would pay for rows its own pre-kickoff rule then discards.
+    """
     results = {"calls": 0, "usable": 0, "statuses": [], "unattributed": [], "local_blocks": 0}
     budget = dict(allowed=plan["preflight"]["allowed_calls"])
     entries = boggio.read_call_ledger(localdata)
-    captured_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    captured_at = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
     listing_ids: dict[tuple[str, str], dict] = {}
 
     # A listing call is only worth paying if a call it unlocks also fits in the
@@ -500,7 +507,7 @@ def main(argv=None, *, now=None) -> int:
               f"allowed={plan['preflight']['allowed_calls']} max_requests={args.max_requests} "
               f"note=refusing an unplanned burst; lower the budget or raise the cap deliberately")
         return 0
-    results = execute(day, plan, localdata=localdata)
+    results = execute(day, plan, localdata=localdata, now=now)
     path = boggio.persist_snapshots(day, plan["snapshots"], plan["preflight"], localdata=localdata,
                                     notes=[f"need_h2h={plan['need_h2h']}",
                                            f"unresolved={len(plan['unresolved'])}"])
