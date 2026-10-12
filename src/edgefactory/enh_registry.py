@@ -706,7 +706,9 @@ def _evaluate(entry: dict, today: str) -> None:
 def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                    price: float | None, hit: bool, source: str = "",
                    today: str | None = None, multi_source: bool = False,
-                   bucket: str = "", rule: str = "", stated: float | None = None) -> dict:
+                   bucket: str = "", rule: str = "", stated: float | None = None,
+                   league: str = "", home: str = "", away: str = "",
+                   home_key: str = "", away_key: str = "") -> dict:
     """Idempotently record one settled enhancement outcome.
 
     Dedupes on "date|match|<market>@v1" so repeated audit runs cannot double-count.
@@ -723,6 +725,14 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
     not gates — nothing here reads them. All three are optional, so every record
     written before this change renders as ``unattributed`` in a slice instead of
     being guessed at, and the dedup key is unchanged.
+
+    Floor-slice provenance (round 6, R2): ``league`` is the parent pick's league
+    as written, ``home``/``away`` the settled fixture's team names and
+    ``home_key``/``away_key`` their identity keys — the inputs ``derive_floors``
+    slices on. Additive and optional: a record written without them inherits its
+    parent floor (``unattributed`` league), and the dedup key is unchanged. Keys
+    are derived from the names through ``source_team_key`` unless the caller
+    already has them.
 
     Returns {"status": str|None, "recorded": bool}. Never raises."""
     try:
@@ -745,6 +755,13 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                 entry["hits"] = entry.get("hits", 0) + (1 if hit else 0)
                 entry["profit"] = round(entry.get("profit", 0.0) + ((price_f - 1.0) if hit else -1.0), 6)
                 entry["inv_price_sum"] = entry.get("inv_price_sum", 0.0) + 1.0 / price_f
+                if not (home_key and away_key) and (home or away):
+                    try:
+                        from edgefactory.identity import source_team_key
+                        home_key = home_key or source_team_key(home)
+                        away_key = away_key or source_team_key(away)
+                    except Exception:
+                        pass
                 entry.setdefault("records", []).append(
                     {"date": date_, "match": match, "price": round(price_f, 3),
                      "hit": bool(hit), "source": source or "",
@@ -755,7 +772,14 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                      "rule": str(rule or ""),
                      "stated": (float(stated) if isinstance(stated, (int, float))
                                 and not isinstance(stated, bool)
-                                and math.isfinite(float(stated)) else None)})
+                                and math.isfinite(float(stated)) else None),
+                     # Floor-slice provenance (round 6, R2). Additive; empty
+                     # means "inherit", never a guess.
+                     "league": str(league or ""),
+                     "home": str(home or ""),
+                     "away": str(away or ""),
+                     "home_key": str(home_key or ""),
+                     "away_key": str(away_key or "")})
                 entry["records"] = entry["records"][-MAX_RECORDS_PER_MARKET:]
                 if multi_source:
                     entry["multi_n"] = entry.get("multi_n", 0) + 1

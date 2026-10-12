@@ -247,3 +247,31 @@ def test_unknown_versions_and_junk_registries_yield_no_rows():
 
 
 # --- settle-time recording (the plumbing) ----------------------------------
+
+def test_record_outcome_records_league_and_team_keys_additively(tmp_path):
+    res = record_outcome(tmp_path, date_="2026-10-11", match="Team A vs Team B",
+                         market="match_over_25", price=1.9, hit=True,
+                         source="oddspapi", league="England,Premier League",
+                         home="Team A", away="Team B")
+    assert res["recorded"] is True
+    reg = json.loads((tmp_path / "localdata" / "enhancement_registry.json").read_text())
+    rec = reg["markets"]["match_over_25@v1"]["records"][0]
+    assert rec["league"] == "England,Premier League"
+    assert rec["home"] == "Team A" and rec["away"] == "Team B"
+    assert rec["home_key"] and rec["away_key"]
+    # dedup key unchanged: the same outcome is still one record
+    again = record_outcome(tmp_path, date_="2026-10-11", match="Team A vs Team B",
+                           market="match_over_25", price=1.9, hit=True,
+                           source="oddspapi", league="England,Premier League",
+                           home="Team A", away="Team B")
+    assert again["recorded"] is False
+    assert len(reg["markets"]["match_over_25@v1"]["records"]) == 1
+
+
+def test_records_without_slice_fields_still_record(tmp_path):
+    res = record_outcome(tmp_path, date_="2026-10-11", match="Team A vs Team B",
+                         market="match_over_25", price=1.9, hit=True)
+    assert res["recorded"] is True
+    reg = json.loads((tmp_path / "localdata" / "enhancement_registry.json").read_text())
+    rec = reg["markets"]["match_over_25@v1"]["records"][0]
+    assert rec["league"] == "" and rec["home_key"] == ""

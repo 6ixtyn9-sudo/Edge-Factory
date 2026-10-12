@@ -1760,6 +1760,13 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                                 "rule": str(pick.get("rule")
                                             or pick.get("display_rule") or ""),
                                 "stated": pick.get("enhancement_probability"),
+                                # Floor-slice provenance (round 6, R2): the
+                                # parent pick's league and the fixture's teams,
+                                # so the settled record can be sliced for the
+                                # per-slice floors. Additive; gates nothing.
+                                "league": str(pick.get("league") or ""),
+                                "home": str(pick.get("home") or ""),
+                                "away": str(pick.get("away") or ""),
                             })
 
                 # 5. Granular expectations audit ledger populator
@@ -1880,7 +1887,9 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                            price=oc["price"], hit=oc["hit"], source=oc["source"],
                            multi_source=oc.get("multi_source", False),
                            bucket=oc.get("bucket", ""), rule=oc.get("rule", ""),
-                           stated=oc.get("stated"))
+                           stated=oc.get("stated"),
+                           league=oc.get("league", ""), home=oc.get("home", ""),
+                           away=oc.get("away", ""))
         registry_states = all_statuses(ROOT)
     except Exception:
         registry_states = {}
