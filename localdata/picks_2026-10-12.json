@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-10-12T12:07:49+02:00",
+    "as_of": "2026-10-12T15:07:33+02:00",
     "avg_p": 74.3,
     "away": "York United",
     "bookmaker": null,
@@ -155,7 +155,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-12T12:07:49+02:00",
+    "as_of": "2026-10-12T15:07:33+02:00",
     "avg_p": 64.0,
     "away": "Venezia",
     "bookmaker": "betexplorer_best",
@@ -492,7 +492,7 @@
         "line": null,
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 1.57,
+        "odds": 1.53,
         "odds_kind": "provider_average",
         "price_coherence": null,
         "price_independence_family": "scoutingstats_average",
@@ -512,7 +512,7 @@
         "line": null,
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 4.2,
+        "odds": 4.33,
         "odds_kind": "provider_average",
         "price_coherence": null,
         "price_independence_family": "scoutingstats_average",
@@ -944,7 +944,7 @@
     "w_score": 0.3465
   },
   {
-    "as_of": "2026-10-12T12:07:49+02:00",
+    "as_of": "2026-10-12T15:07:33+02:00",
     "avg_p": 83.0,
     "away": "Independiente Petrolero",
     "bookmaker": null,
@@ -963,10 +963,10 @@
       "odds_band_name": "NO_ODDS",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O1-pool",
-      "resolution_pool_n": 75,
-      "resolution_pool_roi": -0.030887671232876716,
-      "resolution_reason": "O1 pool n=75 w_roi=-0.0309 -> CAUTION",
-      "resolution_verdict": "CAUTION",
+      "resolution_pool_n": 88,
+      "resolution_pool_roi": 0.12345057471264366,
+      "resolution_reason": "O1 pool n=88 w_roi=+0.1235 -> ALLOW",
+      "resolution_verdict": "ALLOW",
       "side_role": "home",
       "team_a": "UNKNOWN",
       "team_h": "UNKNOWN"
@@ -1553,7 +1553,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-12T12:07:49+02:00",
+    "as_of": "2026-10-12T15:07:33+02:00",
     "avg_p": 72.0,
     "away": "Nublense",
     "bookmaker": "LeoVegas (SE)",
@@ -1572,10 +1572,10 @@
       "odds_band_name": "1.50-1.75",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O1-pool",
-      "resolution_pool_n": 75,
-      "resolution_pool_roi": -0.030887671232876716,
-      "resolution_reason": "O1 pool n=75 w_roi=-0.0309 -> CAUTION",
-      "resolution_verdict": "CAUTION",
+      "resolution_pool_n": 88,
+      "resolution_pool_roi": 0.12345057471264366,
+      "resolution_reason": "O1 pool n=88 w_roi=+0.1235 -> ALLOW",
+      "resolution_verdict": "ALLOW",
       "side_role": "home",
       "team_a": "UNKNOWN",
       "team_h": "UNKNOWN"
@@ -1895,7 +1895,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-12T12:07:49+02:00",
+    "as_of": "2026-10-12T15:07:33+02:00",
     "avg_p": 63.5,
     "away": "Arda Kardzhali",
     "bookmaker": null,
@@ -2072,6 +2072,194 @@
     "veto_reason": "context VETO in ['team_h']",
     "vitibet_index": 2.23,
     "w_score": 1.0
+  },
+  {
+    "as_of": "2026-10-12T15:07:33+02:00",
+    "avg_p": 62.0,
+    "away": "San Luis",
+    "bookmaker": null,
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "sanluis",
+      "comp_type_name": "league",
+      "competition_type": "BOOST",
+      "home_norm": "dpuertomontt",
+      "league": "UNKNOWN",
+      "league_key": "chile primera b",
+      "league_raw": "Chile Primera B",
+      "niche": "UNKNOWN",
+      "odds_band": "VETO",
+      "odds_band_name": "2.00-2.50",
+      "resolution_original_verdict": "UNKNOWN",
+      "resolution_path": "O2-competition_type",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "O2-competition_type resolved to BOOST",
+      "resolution_verdict": "BOOST",
+      "side_role": "away",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-10-12",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "ML-META\u226560",
+    "draw_risk_flag": "EXTREME",
+    "edge_n_way": 3,
+    "edge_rule": "ml-meta avg_p>=60",
+    "edge_status": "certified",
+    "enhancement_label": "Match Over 2.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": null,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.4559,
+    "enhancement_reason": "Mathematical expectation is 60.7% (ML-calibrated 44.8%->60.5%, n=557) (Performance feedback: HR=64.9%, Adjusted Prob: 45.6%)",
+    "enhancement_state": "PAPER",
+    "event_notes": [
+      {
+        "cohort_n": 805,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.45589416525814336,
+        "raw_probability": 0.6071905171381611,
+        "reason": "Mathematical expectation is 60.7% (ML-calibrated 44.8%->60.5%, n=557) (Performance feedback: HR=64.9%, Adjusted Prob: 45.6%)"
+      },
+      {
+        "cohort_n": 805,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 3.5 Goals",
+        "market": "match_over_35",
+        "probability": 0.3865511231763829,
+        "raw_probability": 0.3865511231763829,
+        "reason": "Poisson expected hit rate is 38.7%"
+      },
+      {
+        "cohort_n": 805,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9812890622558595,
+        "raw_probability": 0.9791956734365111,
+        "reason": "Combined Under 3.5 is 97.9% (ML-calibrated 94.3%->97.3%, n=146) (Performance feedback: HR=97.3%, Adjusted Prob: 98.1%)"
+      },
+      {
+        "cohort_n": 805,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 2.5 Goals",
+        "market": "home_under_25",
+        "probability": 0.8871020417246824,
+        "raw_probability": 0.9204648754386974,
+        "reason": "Combined Under 2.5 is 92.0% (ML-calibrated 89.4%->92.0%, n=137) (Performance feedback: HR=93.9%, Adjusted Prob: 88.7%)"
+      },
+      {
+        "cohort_n": 805,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 1.5 Goals",
+        "market": "home_under_15",
+        "probability": 0.8151784260054081,
+        "raw_probability": 0.7443070018986249,
+        "reason": "Combined Under 1.5 is 74.4%"
+      },
+      {
+        "cohort_n": 805,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.23050803771702635,
+        "raw_probability": 0.22927568093201678,
+        "reason": "Poisson expected hit rate is 22.9% (ML-calibrated 23.8%->24.3%, n=448)"
+      }
+    ],
+    "home": "D. Puerto Montt",
+    "kickoff": "12-10, 16:30",
+    "kickoff_sast": "2026-10-12 17:30 SAST",
+    "kickoff_source": "derived_sibling_row",
+    "kickoff_utc": "2026-10-12T15:30:00+00:00",
+    "kickoff_witness": "vitibet kickoff '2026-10-12T17:30:00+02:00'",
+    "league": "Chile Primera B",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "price vs hit-rate math broken for 1X2",
+    "market_type": "1x2",
+    "match": "D. Puerto Montt vs San Luis",
+    "min_lead_minutes": 30,
+    "ml_ht_diff": 0,
+    "ml_ht_total": 0,
+    "ml_p": 0.6199,
+    "model_version": null,
+    "n_way": 3,
+    "odds": 2.3,
+    "odds_captured_at": null,
+    "odds_league": null,
+    "odds_match_method": "alias_fuzzy",
+    "odds_match_status": "suspect",
+    "odds_source": "zulubet",
+    "odds_tier": "low",
+    "pick": "away",
+    "price_board": [
+      {
+        "away": "San Luis de Quillota",
+        "bookmaker": "Pinnacle",
+        "captured_at": "2026-10-10T22:19:24+00:00",
+        "chosen": true,
+        "home": "Puerto Montt",
+        "kickoff": "2026-10-12T15:30:00Z",
+        "league": "Chile - Primera B",
+        "line": null,
+        "market": "1x2",
+        "match_method": "alias_fuzzy",
+        "named_bookmaker": true,
+        "odds": 2.15,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "pinnacle_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "money_line",
+        "raw_selection": "away",
+        "selection": "away",
+        "source": "pinnapi_odds"
+      }
+    ],
+    "price_corroborated": true,
+    "price_corroborating_families": [
+      "pinnacle_book"
+    ],
+    "price_corroboration_sufficient": true,
+    "price_corroborators": [
+      "pinnapi_odds"
+    ],
+    "price_evidence": "SUSPECT_ALIAS_FUZZY",
+    "price_named_book_corroborated": true,
+    "price_push_eligible": false,
+    "price_quarantine_reason": "alias_fuzzy",
+    "recommended_enhancement": "match_over_25",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "ml-meta avg_p>=60",
+    "source_weights": {
+      "forebet": 0.0
+    },
+    "sources_used": [
+      "zulubet",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=579): Avg Goals: 3.46 | Over 2.5: 68.4% | BTTS: 41.3% | Home Over 1.5 Goals: 10.9% | Away Over 1.5 Goals: 85.3%",
+    "suspect_price": {
+      "bookmaker": "Pinnacle",
+      "captured_at": "2026-10-10T22:19:24+00:00",
+      "league": "Chile - Primera B",
+      "match_method": "alias_fuzzy",
+      "odds": 2.15,
+      "source": "pinnapi_odds"
+    },
+    "veto_reason": "context VETO in ['odds_band']",
+    "vitibet_index": -2.97,
+    "w_score": 0.4891
   },
   {
     "as_of": "2026-10-12T12:07:49+02:00",
@@ -2642,7 +2830,7 @@
     "w_score": 0.2858
   },
   {
-    "as_of": "2026-10-12T12:07:49+02:00",
+    "as_of": "2026-10-12T15:07:33+02:00",
     "avg_p": 62.0,
     "away": "Halmstad",
     "bookmaker": null,
@@ -3063,7 +3251,7 @@
     "w_score": 0.5594
   },
   {
-    "as_of": "2026-10-12T12:07:49+02:00",
+    "as_of": "2026-10-12T15:07:33+02:00",
     "avg_p": 80.0,
     "away": "BKMA",
     "bookmaker": "betexplorer_best",
