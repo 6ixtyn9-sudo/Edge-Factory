@@ -73,6 +73,41 @@ def test_429_on_the_board_stops_the_capture_and_writes_quota_evidence(tmp_path, 
     assert persisted["status"] == "quota"
 
 
+def test_a_429_raised_at_the_seam_still_leaves_its_evidence(tmp_path, monkeypatch):
+    """The handler records what it caught, not what an earlier call recorded.
+
+    Production reaches these handlers through the transport, which records
+    first - so the handler's added call re-records identical values. This test
+    covers the bypassed case: a 429 raised directly at the seam must still
+    leave the provider's headers on the receipt, and must WIN over an earlier,
+    unrelated 429 (the way a quota day could otherwise read as a quiet slate,
+    2026-10-10). Both handler sites are in the receipt path this exercises.
+    """
+    monkeypatch.setattr(cap, "OUT_DIR", tmp_path)
+    monkeypatch.setattr(cap, "api_keys", lambda: ("k1",))
+    saved = dict(op._RATE_LIMIT_DIAG)
+    op._RATE_LIMIT_DIAG.clear()
+    try:
+        # an earlier, unrelated 429 in the same run (the catalogue fetch)
+        op._record_rate_limit(_http_error(429, {"Retry-After": "60"}))
+
+        def board(day):
+            raise _http_error(429, {"Retry-After": "3600"})
+
+        monkeypatch.setattr(cap, "fetch_fixtures", board)
+        monkeypatch.setattr(
+            cap, "fetch_odds",
+            lambda fid: (_ for _ in ()).throw(AssertionError("must not be called")))
+        receipt = cap.capture("2026-10-10")
+        assert receipt["status"] == "quota"
+        assert receipt["attempted"] == 0
+        # the exception this handler caught, not the stale one
+        assert receipt["rate_limit"]["retry_after_s"] == "3600"
+    finally:
+        op._RATE_LIMIT_DIAG.clear()
+        op._RATE_LIMIT_DIAG.update(saved)
+
+
 def test_429_on_a_fixture_call_stops_the_whole_pass(tmp_path, monkeypatch):
     monkeypatch.setattr(cap, "OUT_DIR", tmp_path)  # keep receipts out of repo localdata
     monkeypatch.setattr(cap, "api_keys", lambda: ("k1",))
