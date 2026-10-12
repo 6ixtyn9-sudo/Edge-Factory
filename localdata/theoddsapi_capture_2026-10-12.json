@@ -2,8 +2,8 @@
   "added": 0,
   "attempted": 0,
   "attempted_fixtures": [],
-  "candidate_fixtures": 7,
-  "captured_at": "2026-10-11T22:15:36+00:00",
+  "candidate_fixtures": 13,
+  "captured_at": "2026-10-12T01:12:21+00:00",
   "date": "2026-10-12",
   "due_reasons": {},
   "errors": [],
@@ -13,16 +13,22 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 1,
-    "retry_cooldown": 5,
-    "too_close_for_first_capture": 1
+    "kickoff_already_passed": 1,
+    "priced": 2,
+    "retry_cooldown": 10
   },
   "skipped": [
+    "Always Ready|Independiente Petrolero (retry cooldown (6h after failed attempt))",
+    "Pyunik Yerevan|BKMA (retry cooldown (6h after failed attempt))",
+    "AEK Larnaca FC|Omonia Aradippou (retry cooldown (6h after failed attempt))",
     "PAOK|Kalamata (retry cooldown (6h after failed attempt))",
-    "St. Louis City|Los Angeles Galaxy (too close to kickoff for first capture)",
+    "Forge|York United (retry cooldown (6h after failed attempt))",
+    "Club Universidad de Chile|Nublense (priced)",
+    "St. Louis City|Los Angeles Galaxy (kickoff already passed)",
     "IF Elfsborg|Halmstad (priced)",
     "Hapoel Kfar Saba|FC Ashdod (retry cooldown (6h after failed attempt))",
     "Livyi Bereh|Zorya Luhansk (retry cooldown (6h after failed attempt))",
+    "Ludogorets Razgrad|Arda Kardzhali (retry cooldown (6h after failed attempt))",
     "Antigua GFC|Coban Imperial (retry cooldown (6h after failed attempt))",
     "Hapoel Rishon LeZion|Maccabi Kabilio Jaffa (retry cooldown (6h after failed attempt))"
   ],

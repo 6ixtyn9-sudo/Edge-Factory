@@ -7,20 +7,20 @@
 - immutable morning-baseline rows: 582
 - verified official late-slate additions: 5
 - regular-ledger-only legacy rows: 0
-- unsafe regular ledgers ignored: 26
+- unsafe regular ledgers ignored: 27
 - empty regular ledgers (morning-baseline coverage only): 0
-- settled picks: 559
+- settled picks: 561
 - eligible prior picks: 578
-- pending/unmatched result picks: 12
+- pending/unmatched result picks: 10
 - rescheduled result picks (settled ±3d): 6
 - voided postponed/cancelled/abandoned events: 0
 - ambiguous event-disposition rows: 0
 - settled via shared overlay facts: 0
 - ambiguous result picks: 1
-- wins: 395
-- hit rate: +70.7%
-- priced picks: 476
-- ROI: +2.6%
+- wins: 397
+- hit rate: +70.8%
+- priced picks: 478
+- ROI: +2.8%
 
 ## Settlement policy
 
@@ -31,21 +31,21 @@
 ## Secondary Market Realized Rates
 
 Metrics scored against actual outcomes of the settled consensus picks in this window:
-- **Over 2.5 Goals**: occurred in 340 / 559 matches (60.8%)
-- **Both Teams to Score (BTTS)**: occurred in 296 / 559 matches (53.0%)
-- **Selected Team Over 1.5 Goals**: occurred in 370 / 559 matches (66.2%)
+- **Over 2.5 Goals**: occurred in 341 / 561 matches (60.8%)
+- **Both Teams to Score (BTTS)**: occurred in 297 / 561 matches (52.9%)
+- **Selected Team Over 1.5 Goals**: occurred in 371 / 561 matches (66.1%)
 
 ## Recommended Enhancements Audit
 
 Performance of deep context-derived recommended enhancements overlay:
-- **Total Recommended Enhancements**: 559
-- **Total Hits**: 464
-- **Overall Hit Rate**: 83.0%
+- **Total Recommended Enhancements**: 561
+- **Total Hits**: 466
+- **Overall Hit Rate**: 83.1%
 
 ### Breakdown by Enhancement Type:
 - `away_over_05`: recommended=22, hits=19, hit_rate=86.4%
 - `away_under_25`: recommended=25, hits=24, hit_rate=96.0%
-- `away_under_35`: recommended=191, hits=186, hit_rate=97.4%
+- `away_under_35`: recommended=193, hits=188, hit_rate=97.4%
 - `home_over_05`: recommended=18, hits=15, hit_rate=83.3%
 - `home_under_25`: recommended=33, hits=31, hit_rate=93.9%
 - `home_under_35`: recommended=37, hits=36, hit_rate=97.3%
@@ -61,16 +61,16 @@ Performance of deep context-derived recommended enhancements overlay:
 
 Every machine-readable 🔥 note on every settled pick in the window, scored against the final score (plain-market: a note hits iff its market lands in the final score (selection-independent for match totals and BTTS; the 1X2 selection only picks the team for team totals and the double-chance leg)).
 
-- notes on settled picks: **2171** | scored: 2171
+- notes on settled picks: **2178** | scored: 2178
 
 ### Per-market hit table
 
 | market | notes | n | hits | realized | promised avg | Δ | Brier |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `match_over_25` | 555 | 555 | 336 | 60.5% | 44.8% | +15.7% | 0.26179 |
-| `match_over_45` | 447 | 447 | 108 | 24.2% | 23.8% | +0.4% | 0.179557 |
-| `away_under_35` | 393 | 393 | 385 | 98.0% | 95.2% | +2.8% | 0.021294 |
-| `away_under_25` | 371 | 371 | 343 | 92.5% | 90.5% | +2.0% | 0.070162 |
+| `match_over_25` | 557 | 557 | 337 | 60.5% | 44.8% | +15.7% | 0.261769 |
+| `match_over_45` | 448 | 448 | 109 | 24.3% | 23.8% | +0.5% | 0.180642 |
+| `away_under_35` | 395 | 395 | 387 | 98.0% | 95.2% | +2.8% | 0.021194 |
+| `away_under_25` | 373 | 373 | 345 | 92.5% | 90.5% | +2.0% | 0.069833 |
 | `home_under_35` | 146 | 146 | 142 | 97.3% | 94.3% | +3.0% | 0.029633 |
 | `home_under_25` | 137 | 137 | 126 | 92.0% | 89.4% | +2.6% | 0.074882 |
 | `away_over_05` | 48 | 48 | 42 | 87.5% | 82.8% | +4.7% | 0.111269 |
@@ -88,7 +88,7 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 | engine | n | hits | realized | promised avg | Δ | Brier |
 | --- | --- | --- | --- | --- | --- | --- |
-| hybrid_cohort | 2091 | 1482 | 70.9% | 65.8% | +5.1% | 0.133593 |
+| hybrid_cohort | 2098 | 1488 | 70.9% | 65.8% | +5.1% | 0.133718 |
 | model | 80 | 59 | 73.8% | 63.6% | +10.1% | 0.158049 |
 
 
@@ -96,13 +96,13 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 | promised bucket | n | promised avg | realized | Δ |
 | --- | --- | --- | --- | --- |
-| 0.1-0.2 | 95 | 19.1% | 16.8% | -2.3% |
+| 0.1-0.2 | 96 | 19.1% | 17.7% | -1.4% |
 | 0.2-0.3 | 307 | 24.1% | 23.8% | -0.3% |
 | 0.3-0.4 | 55 | 33.0% | 47.3% | +14.2% |
-| 0.4-0.5 | 494 | 44.3% | 59.1% | +14.9% |
+| 0.4-0.5 | 496 | 44.2% | 59.1% | +14.8% |
 | 0.5-0.6 | 51 | 51.4% | 72.5% | +21.1% |
 | 0.8-0.9 | 368 | 86.9% | 89.7% | +2.8% |
-| 0.9-1.0 | 801 | 93.9% | 95.8% | +1.8% |
+| 0.9-1.0 | 805 | 93.9% | 95.8% | +1.8% |
 
 ## Statistical Line (📊) Calibration
 
@@ -110,37 +110,37 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 Scored as probabilistic forecasts per settled pick (each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) — calibration, not a direction call; the retired exact-score field remains in machine history only).
 
-- **Avg Goals forecast**: n=558, MAE=1.561523 goals, bias=-0.317652 (realized − promised), promised avg 3.532706 vs realized 3.215054
+- **Avg Goals forecast**: n=560, MAE=1.563036 goals, bias=-0.317429 (realized − promised), promised avg 3.531714 vs realized 3.214286
 
 ### Per-metric calibration
 
 | metric | n | promised avg | realized | Δ | Brier |
 | --- | --- | --- | --- | --- | --- |
-| Away Over 1.5 | 558 | 30.8% | 33.9% | +3.0% | 0.197032 |
-| BTTS-Yes | 558 | 41.4% | 52.9% | +11.5% | 0.262673 |
-| Home Over 1.5 | 558 | 64.0% | 52.7% | -11.4% | 0.23556 |
-| Over 2.5 | 558 | 69.5% | 60.8% | -8.8% | 0.246007 |
+| Away Over 1.5 | 560 | 30.8% | 33.8% | +3.0% | 0.196367 |
+| BTTS-Yes | 560 | 41.4% | 52.9% | +11.5% | 0.262648 |
+| Home Over 1.5 | 560 | 64.1% | 52.7% | -11.4% | 0.235975 |
+| Over 2.5 | 560 | 69.5% | 60.7% | -8.8% | 0.246096 |
 
 ### Promised-vs-realized calibration (all 📊 metrics pooled)
 
 | promised bucket | n | promised avg | realized | Δ |
 | --- | --- | --- | --- | --- |
 | 0.0-0.1 | 235 | 8.6% | 21.7% | +13.1% |
-| 0.1-0.2 | 325 | 10.4% | 20.0% | +9.6% |
+| 0.1-0.2 | 327 | 10.4% | 19.9% | +9.4% |
 | 0.2-0.3 | 7 | 26.9% | 71.4% | +44.5% |
 | 0.3-0.4 | 100 | 37.3% | 50.0% | +12.7% |
-| 0.4-0.5 | 446 | 42.6% | 53.1% | +10.6% |
+| 0.4-0.5 | 448 | 42.6% | 53.1% | +10.6% |
 | 0.5-0.6 | 3 | 52.2% | 33.3% | -18.9% |
-| 0.6-0.7 | 380 | 66.9% | 58.7% | -8.2% |
+| 0.6-0.7 | 382 | 66.8% | 58.6% | -8.2% |
 | 0.7-0.8 | 162 | 74.3% | 65.4% | -8.9% |
-| 0.8-0.9 | 525 | 84.6% | 65.1% | -19.4% |
+| 0.8-0.9 | 527 | 84.5% | 65.1% | -19.5% |
 | 0.9-1.0 | 49 | 92.4% | 75.5% | -16.9% |
 
 ## By rule
 
 - `2way-unanimous avg_p>=60`: settled=130, wins=81, hit_rate=0.623077, ROI=-0.142371
 - `2way-unanimous avg_p>=70`: settled=62, wins=51, hit_rate=0.822581, ROI=0.026444
-- `ml-meta avg_p>=55`: settled=254, wins=174, hit_rate=0.685039, ROI=0.085779
+- `ml-meta avg_p>=55`: settled=256, wins=176, hit_rate=0.6875, ROI=0.090039
 - `ml-meta avg_p>=60`: settled=73, wins=55, hit_rate=0.753425, ROI=0.039714
 - `ml-meta avg_p>=65`: settled=21, wins=17, hit_rate=0.809524, ROI=-0.010625
 - `ml-meta avg_p>=70`: settled=3, wins=2, hit_rate=0.666667, ROI=-0.266667
@@ -151,8 +151,8 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 ## By bucket
 
 - `CAUTION`: settled=41, wins=24, hit_rate=0.585366, ROI=-0.062437
-- `CERTIFIED_CLEAN`: settled=72, wins=48, hit_rate=0.666667, ROI=0.041732
-- `SKIPPED_VETO`: settled=278, wins=205, hit_rate=0.73741, ROI=0.032986
+- `CERTIFIED_CLEAN`: settled=73, wins=49, hit_rate=0.671233, ROI=0.048147
+- `SKIPPED_VETO`: settled=279, wins=206, hit_rate=0.738351, ROI=0.035386
 - `WATCHLIST_NO_ODDS`: settled=59, wins=39, hit_rate=0.661017, ROI=None
 - `WATCHLIST_SUSPECT_PRICE`: settled=4, wins=4, hit_rate=1.0, ROI=0.675
 - `WATCHLIST_UNCORROBORATED_PRICE`: settled=101, wins=72, hit_rate=0.712871, ROI=0.023861
@@ -169,14 +169,14 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 - `pinnapi_odds`: settled=15, wins=8, hit_rate=0.533333, ROI=0.050873
 - `scoutingstats_odds`: settled=204, wins=142, hit_rate=0.696078, ROI=-0.000147
 - `sharpapi_odds`: settled=1, wins=1, hit_rate=1.0, ROI=0.741
-- `theoddsapi`: settled=36, wins=29, hit_rate=0.805556, ROI=0.216944
+- `theoddsapi`: settled=38, wins=31, hit_rate=0.815789, ROI=0.236053
 - `zulubet`: settled=19, wins=11, hit_rate=0.578947, ROI=-0.190526
 
 ## By odds match method
 
 - `alias_fuzzy`: settled=13, wins=10, hit_rate=0.769231, ROI=0.070909
 - `betexplorer`: settled=117, wins=81, hit_rate=0.692308, ROI=-0.010342
-- `exact`: settled=294, wins=213, hit_rate=0.72449, ROI=0.051391
+- `exact`: settled=296, wins=215, hit_rate=0.726351, ROI=0.054963
 - `fallback`: settled=54, wins=36, hit_rate=0.666667, ROI=-0.043519
 - `none`: settled=81, wins=55, hit_rate=0.679012, ROI=None
 
@@ -189,7 +189,7 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 | APPROVED_DONOR_PRICE (`APPROVED_DONOR_PRICE`) | 1 | 1 | 1.0 | 1 | 0.52 |
 | BetExplorer rescue (`BETEXPLORER_RESCUE`) | 117 | 81 | 0.692308 | 117 | -0.010342 |
 | Bzzoiro primary match (`BZZOIRO_PRIMARY`) | 8 | 7 | 0.875 | 8 | 0.27125 |
-| NAMED_BOOKMAKER_PRICE (`NAMED_BOOKMAKER_PRICE`) | 81 | 63 | 0.777778 | 81 | 0.153693 |
+| NAMED_BOOKMAKER_PRICE (`NAMED_BOOKMAKER_PRICE`) | 83 | 65 | 0.783133 | 83 | 0.163965 |
 | ScoutingStats sole fallback (`SCOUTINGSTATS_SOLE`) | 204 | 142 | 0.696078 | 204 | -0.000147 |
 | Source fallback (`SOURCE_FALLBACK`) | 54 | 36 | 0.666667 | 54 | -0.043519 |
 | Suspect alias_fuzzy candidate (`SUSPECT_ALIAS_FUZZY`) | 13 | 10 | 0.769231 | 11 | 0.070909 |
@@ -201,18 +201,18 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 
 | cut | settled | wins | hit rate | priced | ROI |
 | --- | --- | --- | --- | --- | --- |
-| **overall (SKIPPED_VETO)** | 278 | 205 | 0.73741 | 256 | 0.032986 |
-| **trusted evidence only** | 122 | 95 | 0.778689 | 122 | 0.075527 |
+| **overall (SKIPPED_VETO)** | 279 | 206 | 0.738351 | 257 | 0.035386 |
+| **trusted evidence only** | 123 | 96 | 0.780488 | 123 | 0.080198 |
 | **soft evidence only** | 156 | 110 | 0.705128 | 134 | -0.005746 |
 | evidence: BETEXPLORER_RESCUE | 68 | 48 | 0.705882 | 68 | -0.054706 |
 | evidence: BZZOIRO_PRIMARY | 5 | 5 | 1.0 | 5 | 0.404 |
-| evidence: NAMED_BOOKMAKER_PRICE | 49 | 42 | 0.857143 | 49 | 0.222741 |
+| evidence: NAMED_BOOKMAKER_PRICE | 50 | 43 | 0.86 | 50 | 0.231286 |
 | evidence: SCOUTINGSTATS_SOLE | 103 | 70 | 0.679612 | 103 | -0.023689 |
 | evidence: SOURCE_FALLBACK | 22 | 18 | 0.818182 | 22 | 0.101818 |
 | evidence: SUSPECT_ALIAS_FUZZY | 9 | 6 | 0.666667 | 9 | -0.063333 |
 | evidence: UNMATCHED | 22 | 16 | 0.727273 | 0 | None |
 | odds band: <1.50 | 156 | 129 | 0.826923 | 156 | 0.032372 |
-| odds band: 1.50-2.00 | 92 | 53 | 0.576087 | 92 | -0.042671 |
+| odds band: 1.50-2.00 | 93 | 54 | 0.580645 | 93 | -0.035223 |
 | odds band: 2.00-3.00 | 8 | 7 | 0.875 | 8 | 0.915 |
 | odds band: unpriced | 22 | 16 | 0.727273 | 0 | None |
 | veto reason: UNRECORDED | 1 | 1 | 1.0 | 1 | 0.02 |
@@ -237,7 +237,7 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 | veto reason: context VETO in ['team_h', 'odds_band'] | 7 | 5 | 0.714286 | 7 | -0.054286 |
 | veto reason: context VETO in ['team_h', 'team_a', 'niche'] | 3 | 2 | 0.666667 | 3 | -0.04 |
 | veto reason: context VETO in ['team_h', 'team_a', 'odds_band'] | 3 | 2 | 0.666667 | 3 | -0.113333 |
-| veto reason: context VETO in ['team_h', 'team_a'] | 16 | 11 | 0.6875 | 15 | 0.134667 |
+| veto reason: context VETO in ['team_h', 'team_a'] | 17 | 12 | 0.705882 | 16 | 0.166875 |
 | veto reason: context VETO in ['team_h'] | 47 | 34 | 0.723404 | 39 | 0.07 |
 | veto reason: short-odds away favourite 1.02 | 1 | 1 | 1.0 | 1 | 0.02 |
 | veto reason: short-odds away favourite 1.16 | 1 | 1 | 1.0 | 1 | 0.16 |
@@ -256,7 +256,7 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 
 | quarantine reason | settled | wins | hit rate | priced | ROI | suspect captures | avg suspect price |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| No price quarantine (`NONE`) | 333 | 238 | 0.714715 | 252 | 0.053806 | 0 | None |
+| No price quarantine (`NONE`) | 335 | 240 | 0.716418 | 254 | 0.057949 | 0 | None |
 | alias_fuzzy match (`alias_fuzzy`) | 13 | 10 | 0.769231 | 11 | 0.070909 | 13 | 1.541538 |
 | ScoutingStats sole source (`scoutingstats_sole_source`) | 204 | 142 | 0.696078 | 204 | -0.000147 | 0 | None |
 | source_fallback_not_execution_eligible (`source_fallback_not_execution_eligible`) | 9 | 5 | 0.555556 | 9 | -0.22 | 0 | None |
@@ -431,6 +431,17 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
     - [🔴 MISS] **Away Team Under 2.5 Goals**: expected 90.1% (Actual: 3 away goals)
     - [🟢 HIT] **Match Over 2.5 Goals**: expected 42.9% (Actual: 6 goals)
     - [🟢 HIT] **Match Over 4.5 Goals**: expected 19.1% (Actual: 6 goals)
+
+### 2026-10-11: Flamengo vs Fluminense (Actual Score: **1-0**)
+- **1X2 Pick**: Selected `HOME` @ 1.51 -> 🟢 WON (Expected prob: 59.1%)
+  - [🔴 MISS] **Over 2.5 Goals**: expected 64.6% (Actual: 1 goals)
+  - [🟢 HIT] **BTTS-No**: expected 42.9% (Actual: BTTS-No)
+  - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 82.0% (Actual: 1 goals)
+  - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.7% (Actual: 0 goals)
+  - **🔥 Possible Events (graded)**:
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 96.2% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 90.7% (Actual: 0 away goals)
+    - [🔴 MISS] **Match Over 2.5 Goals**: expected 41.7% (Actual: 1 goals)
 
 ### 2026-10-11: Benfica vs Vitória SC (Actual Score: **2-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.22 -> 🟢 WON (Expected prob: 78.0%)
@@ -661,6 +672,18 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
     - [🔴 MISS] **Match Over 2.5 Goals**: expected 44.1% (Actual: 2 goals)
     - [🔴 MISS] **Match Over 4.5 Goals**: expected 22.1% (Actual: 2 goals)
 
+### 2026-10-11: Palmeiras vs Corinthians (Actual Score: **4-1**)
+- **1X2 Pick**: Selected `HOME` @ 1.65 -> 🟢 WON (Expected prob: 59.5%)
+  - [🟢 HIT] **Over 2.5 Goals**: expected 64.7% (Actual: 5 goals)
+  - [🔴 MISS] **BTTS-No**: expected 42.8% (Actual: BTTS-Yes)
+  - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 82.4% (Actual: 4 goals)
+  - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.4% (Actual: 1 goals)
+  - **🔥 Possible Events (graded)**:
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 96.1% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 90.5% (Actual: 1 away goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected 41.9% (Actual: 5 goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected 18.4% (Actual: 5 goals)
+
 ### 2026-10-11: Sliema Wanderers vs Gzira United (Actual Score: **1-1**)
 - **1X2 Pick**: Selected `HOME` @ n/a -> 🔴 LOST (Expected prob: 57.3%)
   - [🔴 MISS] **Over 2.5 Goals**: expected 64.8% (Actual: 2 goals)
@@ -781,9 +804,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
 - 2026-10-03 `CAUTION` `2way-unanimous avg_p>=60` — Sri Lanka vs Djibouti -> HOME @ 2.6 (pending_or_unmatched_result); keys=['srilanka']/['djibouti']
 - 2026-10-03 `WATCHLIST_NO_ODDS` `2way-unanimous avg_p>=60` — Rheindorf Altach II vs Hohenems -> AWAY @ None (pending_or_unmatched_result); keys=['rheindorf']/['hohenems']
 - 2026-10-03 `WATCHLIST_NO_ODDS` `2way-unanimous avg_p>=60` — Kufstein vs Imst -> AWAY @ None (pending_or_unmatched_result); keys=['kufstein']/['imst']
-- 2026-10-11 `CERTIFIED_CLEAN` `ml-meta avg_p>=55` — Flamengo vs Fluminense -> HOME @ 1.51 (pending_or_unmatched_result); keys=['flamengo']/['fluminens']
 - 2026-10-11 `SKIPPED_VETO` `ml-meta avg_p>=60` — Atletico Nacional vs Deportivo Pasto -> HOME @ 2.1 (pending_or_unmatched_result); keys=['nacional']/['pasto']
-- 2026-10-11 `SKIPPED_VETO` `ml-meta avg_p>=55` — Palmeiras vs Corinthians -> HOME @ 1.65 (pending_or_unmatched_result); keys=['palmeiras']/['corinthia']
 
 ## Ambiguous result examples
 
