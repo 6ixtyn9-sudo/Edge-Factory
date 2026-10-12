@@ -48,18 +48,39 @@ def fold_identity_words(name: object) -> str:
     return _WS_RE.sub(" ", s).strip()
 
 
-def team_identity_words(name: object) -> str:
-    """Team identity words with the glue token ``and`` removed.
+# One-token abbreviation folds. Several feeds abbreviate systematically -
+# BetExplorer serves "Newcastle Utd", "Man Utd", "Scunthorpe Utd" while the
+# archive spells the club out - so a per-pair patch leaves the same join
+# broken across the corpus. Measured 2026-10-12 over the committed archives:
+# 137 of 23,239 distinct spellings carry the token; folding it merges 78 key
+# groups, and every one of those groups is the same club once spacing and the
+# United spelling are set aside (0 wrong merges: no two real clubs differ only
+# by United/Utd). Full list:
+# handoff/round5_form_h2h_2026-10-12/a_identity_checks.txt
+TEAM_TOKEN_FOLDS: dict[str, str] = {"utd": "united"}
+
+
+def team_identity_words(name: object, *, fold_tokens: bool = True) -> str:
+    """Team identity words: ``and`` dropped, abbreviations folded.
 
     ``Dagenham & Redbridge`` and ``Dagenham and Redbridge`` both become
     ``dagenham redbridge``. ``and`` is only ever produced by the ``&``
     fold in real club names here; dropping it as a standalone token is
     the exact unification the incident required. Compound words that
     merely contain ``and`` (e.g. ``Wanderers``) are untouched because
-    removal is word-level.
+    removal is word-level. ``TEAM_TOKEN_FOLDS`` applies the same
+    word-level rule to abbreviations of one word (``Utd`` -> ``United``).
+
+    ``fold_tokens=False`` gives the historical rule (``and`` dropped,
+    abbreviations kept). The persisted operational key layers pass it -
+    their keys are stored in ``localdata`` (the purity registry, learned
+    aliases) and joined against data written before the fold existed, so
+    a fold there would orphan stored evidence; the seam carries the fold.
     """
-    words = [w for w in fold_identity_words(name).split() if w != "and"]
-    return " ".join(words)
+    words = fold_identity_words(name).split()
+    if fold_tokens:
+        words = [TEAM_TOKEN_FOLDS.get(w, w) for w in words]
+    return " ".join(w for w in words if w != "and")
 
 
 def fold_league_identity(name: object) -> str:
@@ -153,6 +174,43 @@ TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
     ("1899 Hoffenheim", "Hoffenheim"),
     # pinnapi probe 2026-10-10 run#4: AFC Fylde–Scunthorpe, England National League
     ("Scunthorpe", "Scunthorpe United"),
+    # betexplorer archive 2026-10-12: the same 2026-08-05 Arsenal–Real Betis
+    # Club Friendly fixture is spelled "Betis" in the monthly archive and
+    # "Real Betis" on the pick surface (7 same-date, same-opponent fixtures
+    # under both spellings: 2026-07-29 Lyon, 08-01 Almeria, 08-05 Arsenal,
+    # 08-08 Bournemouth)
+    ("Betis", "Real Betis"),
+    # ------------------------------------------------------------------
+    # 2026-10-12 adjudication (A-2): bare/abbreviated spellings the archive
+    # serves for one club, each with its evidence. Two evidence classes:
+    # "mutual" = the same date+opponent fixture under both spellings; "row"
+    # = rows whose opponents and competition belong to that one club (listed).
+    # The measurement script and every row are in
+    # handoff/round5_form_h2h_2026-10-12/a_identity_checks.txt.
+    ("Accrington", "Accrington Stanley"),        # row: 26 League Two vs the club's own league
+    ("Accrington St", "Accrington Stanley"),     # mutual x4 (Crawley, Barnet, Newport, Salford)
+    ("Borussia Monchen", "Borussia M'gladbach"), # mutual x2 (RB Leipzig, SV Elversberg)
+    ("Carrarese", "Carrarese Calcio"),           # mutual x4 (Torino, Ascoli, Empoli, Padova)
+    ("Charlton", "Charlton Athletic"),           # mutual x3 (Cheltenham, West Ham, Tottenham)
+    ("Ferroviaria", "Ferroviária SP"),           # mutual x2 (Figueirense, Paysandu)
+    # NB: "Ferroviario" (Serie D / Cearense, x31) is a DIFFERENT club - not aliased.
+    ("JEF United", "JEF United Chiba"),          # mutual x8 (Machida, FC Tokyo, Kawasaki ...)
+    ("JEF United Ichih", "JEF United Chiba"),    # mutual x6 (truncated spelling of the same club)
+    ("Kidderminster", "Kidderminster Harriers"), # mutual x2 (AFC Hornchurch, Southend)
+    ("Kidderminster Ha", "Kidderminster Harriers"),  # row: NL North, opponents Halesowen/Stourbridge
+    ("Scunthorpe Unite", "Scunthorpe United"),   # mutual x2 (Yeovil, Sutton) - truncation
+    ("Zeljeznicar", "Zeljeznicar Sarajevo"),     # mutual x2 (BSK Banja Luka, Zrinjski)
+    ("Mallorca", "Real Mallorca"),               # row: 21 LaLiga rows, only LaLiga club of the name
+    ("Flint Town", "Flint Town Utd"),            # row: Cymru Premier opponents (TNS, Connahs Quay)
+    ("Omonia Nicosia F", "Omonia Nicosia"),      # mutual x7 (Lincoln Red Imps twice, Aradippou ...)
+    ("Aris Thessalonik", "Aris Thessalonikis"),  # row: Greek top flight opponents (PAOK, OFI, Volos)
+    ("Corvinul Hunedoa", "Corvinul Hunedoara"),  # row: Romanian opponents (CFR Cluj, Csikszereda)
+    ("Newcastle", "Newcastle United"),           # mutual x11 (the EPL side; the archive's own
+    #                                              spelling of the fixture this round was read for)
+    # betexplorer archive 2026-10-12: 2026-08-01 Basel–Lausanne, Switzerland
+    # Super League appears under both spellings ("Basel" x38 rows, "FC Basel
+    # 1893" on the pick surface)
+    ("Basel", "FC Basel 1893"),
     # pinnapi probe 2026-10-10 run#4: Kairat Almaty–Zhetysu, Kazakhstan Premier League
     ("Zhetysu", "Zhetysu Taldykorgan"),
     # pinnapi probe 2026-10-10 run#4: Genk–Kortrijk, Belgium Pro League
@@ -199,11 +257,40 @@ def _curated_override_pairs() -> tuple[tuple[str, str], ...]:
     return tuple(pairs)
 
 
-TEAM_KEY_ALIASES: dict[str, str] = {
+_ALIAS_STEPS: dict[str, str] = {
     source_team_key_base(alias): source_team_key_base(canonical)
     for alias, canonical in TEAM_KEY_RAW_ALIASES + _curated_override_pairs()
     if source_team_key_base(alias) and source_team_key_base(canonical)
 }
+
+
+def _alias_fixed_point(key: str) -> str:
+    """Follow the alias map to its fixed point.
+
+    Needed because a target spelling can itself be an alias in the curated
+    file (``Borussia M'gladbach`` -> ``Borussia Monchengladbach``), and a
+    single hop would then make a pair disagree with its own target. Measured
+    2026-10-12: among 160 alias keys only the one pair added that day moves
+    under this resolution, and over 13,517 archive/curated spellings exactly
+    one spelling's key moves - so the table was already closed and this only
+    removes the footgun. The guard stops on a revisit: a cycle is a table
+    defect, and returning the key is safer than looping.
+    """
+    seen = {key}
+    while key in _ALIAS_STEPS:
+        nxt = _ALIAS_STEPS[key]
+        if nxt in seen:
+            break
+        seen.add(nxt)
+        key = nxt
+    return key
+
+
+TEAM_KEY_ALIASES: dict[str, str] = {
+    key: _alias_fixed_point(key) for key in _ALIAS_STEPS
+}
+TEAM_KEY_ALIASES = {key: value for key, value in TEAM_KEY_ALIASES.items()
+                    if value != key}
 
 
 def source_team_key(name: object) -> str:
