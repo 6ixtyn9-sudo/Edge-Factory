@@ -321,7 +321,8 @@ def migrate_folded_key(name: object) -> str:
     Measured 2026-10-12 over every committed localdata artifact: the only
     stored seam keys a pre-fold writer could have left are ``nasarawautd``
     (clv_unmatched_2026-09-17) and ``ayrutd`` (clv_unmatched_2026-10-03),
-    plus 14 phase5_shadow identity keys - see n1_persisted_keys.txt for the
+    plus 14 phase5_shadow identity keys - see the enumeration in
+    handoff/n1_persisted_keys.txt (sites, classes and the churn count) for the
     per-artifact read/write classification.
     """
     text = str(name or "")
