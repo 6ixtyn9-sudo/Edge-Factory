@@ -174,12 +174,12 @@
       "coherence_withheld_fixtures": 6,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 10,
+      "join_matched_rows": 20,
       "join_miss_counts": {
-        "fixture_key_miss": 16548,
+        "fixture_key_miss": 16538,
         "no_pick_for_fixture": 70
       },
-      "pa_matched": 4,
+      "pa_matched": 7,
       "pa_raw": 16628,
       "pa_scored": 16628,
       "reason": null,
@@ -311,7 +311,7 @@
       "status": null
     },
     "sportytrader_odds": {
-      "blocker": "HTTP Error 503: Service Unavailable",
+      "blocker": "sportytrader: Cloudflare/challenge markers detected",
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,

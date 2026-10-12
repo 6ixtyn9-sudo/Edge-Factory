@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-10-12",
+    "kickoff": "12-10, 18:00",
+    "home": "Forge",
+    "away": "York United",
+    "league": "Canada Canadian Premier League",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "forge",
+    "away_key": "yorkunited",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "H\u00e9rcules",
+        "away": "Sant Andreu",
+        "league": "Primera Division RFEF: Group 2",
+        "kickoff": "2026-10-12T16:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.65,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "hercules",
+        "away_key": "santandreu",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Real Oviedo",
+        "away": "SD Eibar",
+        "league": "La Liga 2",
+        "kickoff": "2026-10-12T16:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.25,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "realoviedo",
+        "away_key": "sdeibar",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Atalanta",
+        "away": "Venezia",
+        "league": "Serie A",
+        "kickoff": "2026-10-12T16:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.53,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "atalanta",
+        "away_key": "venezia",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Al Najma",
+        "away": "Damac FC",
+        "league": "Division 1",
+        "kickoff": "2026-10-12T15:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.83,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alnajma",
+        "away_key": "damacfc",
+        "kickoff_delta_minutes": 45
+      },
+      {
+        "home": "Arge\u015f",
+        "away": "CFR Cluj",
+        "league": "Superliga",
+        "kickoff": "2026-10-12T15:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.6,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "arges",
+        "away_key": "cfrcluj",
+        "kickoff_delta_minutes": 60
+      }
+    ]
+  },
+  {
+    "date": "2026-10-12",
     "kickoff": "18:10",
     "home": "Antigua GFC",
     "away": "Coban Imperial",
@@ -163,87 +244,6 @@
   },
   {
     "date": "2026-10-12",
-    "kickoff": "2026-10-12T17:00:00+02:00",
-    "home": "Pyunik Yerevan",
-    "away": "BKMA",
-    "league": "Armenia: Premier League",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "unanimous[betclan+vitibet] avg_p>=70",
-    "match_method": "fallback",
-    "home_key": "pyunikyerevan",
-    "away_key": "bkma",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Al Adalah",
-        "away": "Al Anwar",
-        "league": "Division 1",
-        "kickoff": "2026-10-12T14:55:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "aladalah",
-        "away_key": "alanwar",
-        "kickoff_delta_minutes": 5
-      },
-      {
-        "home": "Al Najma",
-        "away": "Damac FC",
-        "league": "Division 1",
-        "kickoff": "2026-10-12T15:15:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.83,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "alnajma",
-        "away_key": "damacfc",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Burgos",
-        "away": "Granada",
-        "league": "La Liga 2",
-        "kickoff": "2026-10-12T14:15:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.37,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "burgos",
-        "away_key": "granada",
-        "kickoff_delta_minutes": 45
-      },
-      {
-        "home": "JS El Biar",
-        "away": "CR Belouizdad",
-        "league": "Ligue 1",
-        "kickoff": "2026-10-12T14:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "jselbiar",
-        "away_key": "crbelouizdad",
-        "kickoff_delta_minutes": 60
-      },
-      {
-        "home": "Al Mokawloon",
-        "away": "ZED FC",
-        "league": "Premier League",
-        "kickoff": "2026-10-12T14:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.87,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "almokawloon",
-        "away_key": "zedfc",
-        "kickoff_delta_minutes": 60
-      }
-    ]
-  },
-  {
-    "date": "2026-10-12",
     "kickoff": "2026-10-12T18:00:00+02:00",
     "home": "AEK Larnaca FC",
     "away": "Omonia Aradippou",
@@ -319,87 +319,6 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "arges",
         "away_key": "cfrcluj",
-        "kickoff_delta_minutes": 60
-      }
-    ]
-  },
-  {
-    "date": "2026-10-12",
-    "kickoff": "2026-10-12T19:00:00+02:00",
-    "home": "Forge",
-    "away": "York United",
-    "league": "Canada: Canadian Premier League",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "unanimous[betclan+vitibet] avg_p>=70",
-    "match_method": "none",
-    "home_key": "forge",
-    "away_key": "yorkunited",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Real Oviedo",
-        "away": "SD Eibar",
-        "league": "La Liga 2",
-        "kickoff": "2026-10-12T16:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.25,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "realoviedo",
-        "away_key": "sdeibar",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Atalanta",
-        "away": "Venezia",
-        "league": "Serie A",
-        "kickoff": "2026-10-12T16:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.53,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "atalanta",
-        "away_key": "venezia",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Hapoel Jerusalem",
-        "away": "Maccabi Haifa",
-        "league": "Ligat ha'Al",
-        "kickoff": "2026-10-12T17:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "hapoeljerusalem",
-        "away_key": "maccabihaifa",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "H\u00e9rcules",
-        "away": "Sant Andreu",
-        "league": "Primera Division RFEF: Group 2",
-        "kickoff": "2026-10-12T16:15:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.65,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "hercules",
-        "away_key": "santandreu",
-        "kickoff_delta_minutes": 45
-      },
-      {
-        "home": "Oulu",
-        "away": "HJK",
-        "league": "Veikkausliiga",
-        "kickoff": "2026-10-12T16:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.2,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "oulu",
-        "away_key": "hjk",
         "kickoff_delta_minutes": 60
       }
     ]
@@ -487,7 +406,7 @@
   },
   {
     "date": "2026-10-12",
-    "kickoff": "11:00",
+    "kickoff": "17:00",
     "home": "Hapoel Kfar Saba",
     "away": "FC Ashdod",
     "league": "Israel,Leumit League",
@@ -500,43 +419,43 @@
     "nearby_bzzoiro_candidates": [],
     "nearby_scoutingstats_candidates": [
       {
-        "home": "Livyi Bereh",
-        "away": "Zorya Luhansk",
-        "league": "Premier League",
-        "kickoff": "2026-10-12T10:00:00Z",
+        "home": "Al Adalah",
+        "away": "Al Anwar",
+        "league": "Division 1",
+        "kickoff": "2026-10-12T14:55:00Z",
         "market": "1x2",
         "selection": "away",
         "odds": 2.35,
         "bookmaker": "scoutingstats_odds",
-        "home_key": "livyibereh",
-        "away_key": "zoryaluhansk",
-        "kickoff_delta_minutes": 60
+        "home_key": "aladalah",
+        "away_key": "alanwar",
+        "kickoff_delta_minutes": 5
       },
       {
-        "home": "Real Valladolid",
-        "away": "Albacete",
+        "home": "Al Najma",
+        "away": "Damac FC",
+        "league": "Division 1",
+        "kickoff": "2026-10-12T15:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alnajma",
+        "away_key": "damacfc",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Burgos",
+        "away": "Granada",
         "league": "La Liga 2",
-        "kickoff": "2026-10-12T12:00:00Z",
+        "kickoff": "2026-10-12T14:15:00Z",
         "market": "1x2",
         "selection": "away",
-        "odds": 3.8,
+        "odds": 3.1,
         "bookmaker": "scoutingstats_odds",
-        "home_key": "realvalladolid",
-        "away_key": "albacete",
-        "kickoff_delta_minutes": 180
-      },
-      {
-        "home": "Pakhtakor",
-        "away": "Al-Qadsiah",
-        "league": "AFC Champions League Elite",
-        "kickoff": "2026-10-12T13:45:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 1.45,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "pakhtakor",
-        "away_key": "alqadsiah",
-        "kickoff_delta_minutes": 285
+        "home_key": "burgos",
+        "away_key": "granada",
+        "kickoff_delta_minutes": 45
       },
       {
         "home": "Cultural Leonesa",
@@ -549,7 +468,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "culturalleonesa",
         "away_key": "arenasdegetxo",
-        "kickoff_delta_minutes": 300
+        "kickoff_delta_minutes": 60
       },
       {
         "home": "Modern Sport FC",
@@ -562,7 +481,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "modernsportfc",
         "away_key": "enppi",
-        "kickoff_delta_minutes": 300
+        "kickoff_delta_minutes": 60
       }
     ]
   },
@@ -725,6 +644,87 @@
         "home_key": "tallerescordoba",
         "away_key": "independiente",
         "kickoff_delta_minutes": 390
+      }
+    ]
+  },
+  {
+    "date": "2026-10-12",
+    "kickoff": "12-10, 16:00",
+    "home": "Pyunik Yerevan",
+    "away": "BKMA",
+    "league": "Armenia Premier League",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "pyunikyerevan",
+    "away_key": "bkma",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Pakhtakor",
+        "away": "Al-Qadsiah",
+        "league": "AFC Champions League Elite",
+        "kickoff": "2026-10-12T13:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "pakhtakor",
+        "away_key": "alqadsiah",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Burgos",
+        "away": "Granada",
+        "league": "La Liga 2",
+        "kickoff": "2026-10-12T14:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.37,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "burgos",
+        "away_key": "granada",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Al Adalah",
+        "away": "Al Anwar",
+        "league": "Division 1",
+        "kickoff": "2026-10-12T14:55:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "aladalah",
+        "away_key": "alanwar",
+        "kickoff_delta_minutes": 55
+      },
+      {
+        "home": "Arge\u015f",
+        "away": "CFR Cluj",
+        "league": "Superliga",
+        "kickoff": "2026-10-12T15:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.6,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "arges",
+        "away_key": "cfrcluj",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "VPS",
+        "away": "Gnistan",
+        "league": "Veikkausliiga",
+        "kickoff": "2026-10-12T15:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.3,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "vps",
+        "away_key": "gnistan",
+        "kickoff_delta_minutes": 60
       }
     ]
   }
