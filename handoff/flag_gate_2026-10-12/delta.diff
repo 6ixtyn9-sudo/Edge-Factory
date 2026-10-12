@@ -1,0 +1,97 @@
+--- /tmp/gate_proof/board.off.json	2026-10-12 08:52:02.565429519 +0000
++++ /tmp/gate_proof/board.on.json	2026-10-12 08:52:02.745431042 +0000
+@@ -1,5 +1,18 @@
+ {
+- "betexplorer_pairs": [],
++ "betexplorer_pairs": [
++  "coventry|newcastle|btts|no|2.36|Stake.com",
++  "coventry|newcastle|btts|yes|1.57|bet365.us",
++  "jselbiar|crbelouiz|ou_0.5|over|1.09|BetMGM.us",
++  "jselbiar|crbelouiz|ou_0.5|under|6.75|BetMGM.us",
++  "jselbiar|crbelouiz|ou_1.5|over|1.49|BetMGM.us",
++  "jselbiar|crbelouiz|ou_1.5|under|2.45|BetMGM.us",
++  "jselbiar|crbelouiz|ou_2.5|over|2.55|BetMGM.us",
++  "jselbiar|crbelouiz|ou_2.5|under|1.44|BetMGM.us",
++  "jselbiar|crbelouiz|ou_3.5|over|5.0|BetMGM.us",
++  "jselbiar|crbelouiz|ou_3.5|under|1.14|BetMGM.us",
++  "jselbiar|crbelouiz|ou_4.5|over|11.0|BetMGM.us",
++  "jselbiar|crbelouiz|ou_4.5|under|1.04|BetMGM.us"
++ ],
+  "boards": {
+   "picks_2026-10-12.json": [
+    {
+@@ -307,10 +320,10 @@
+     "away": "CR Belouizdad",
+     "enhancement_mapped": true,
+     "enhancement_multi_source": false,
+-    "enhancement_price": null,
+-    "enhancement_price_book": null,
+-    "enhancement_price_source": null,
+-    "enhancement_priced": false,
++    "enhancement_price": 5.0,
++    "enhancement_price_book": "BetMGM.us",
++    "enhancement_price_source": "betexplorer",
++    "enhancement_priced": true,
+     "home": "JS El Biar",
+     "recommended_enhancement": "match_over_35"
+    },
+@@ -318,10 +331,10 @@
+     "away": "Newcastle Utd",
+     "enhancement_mapped": true,
+     "enhancement_multi_source": false,
+-    "enhancement_price": null,
+-    "enhancement_price_book": null,
+-    "enhancement_price_source": null,
+-    "enhancement_priced": false,
++    "enhancement_price": 1.57,
++    "enhancement_price_book": "bet365.us",
++    "enhancement_price_source": "betexplorer",
++    "enhancement_priced": true,
+     "home": "Coventry",
+     "recommended_enhancement": "btts_yes"
+    }
+@@ -488,10 +501,10 @@
+    "away": "CR Belouizdad",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+-   "enhancement_price": null,
+-   "enhancement_price_book": null,
+-   "enhancement_price_source": null,
+-   "enhancement_priced": false,
++   "enhancement_price": 5.0,
++   "enhancement_price_book": "BetMGM.us",
++   "enhancement_price_source": "betexplorer",
++   "enhancement_priced": true,
+    "home": "JS El Biar",
+    "recommended_enhancement": "match_over_35"
+   },
+@@ -499,10 +512,10 @@
+    "away": "CR Belouizdad",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+-   "enhancement_price": null,
+-   "enhancement_price_book": null,
+-   "enhancement_price_source": null,
+-   "enhancement_priced": false,
++   "enhancement_price": 2.55,
++   "enhancement_price_book": "BetMGM.us",
++   "enhancement_price_source": "betexplorer",
++   "enhancement_priced": true,
+    "home": "JS El Biar",
+    "recommended_enhancement": "match_over_25"
+   },
+@@ -510,10 +523,10 @@
+    "away": "Newcastle Utd",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+-   "enhancement_price": null,
+-   "enhancement_price_book": null,
+-   "enhancement_price_source": null,
+-   "enhancement_priced": false,
++   "enhancement_price": 1.57,
++   "enhancement_price_book": "bet365.us",
++   "enhancement_price_source": "betexplorer",
++   "enhancement_priced": true,
+    "home": "Coventry",
+    "recommended_enhancement": "btts_yes"
+   }

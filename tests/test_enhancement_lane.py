@@ -128,38 +128,139 @@ def test_a_missing_or_junk_price_never_fires():
 
 
 # --------------------------------------------------------------------------
-# presentation: one leg per ticket, shadow parents, autobets' layout
+# presentation: 2-leg accas, the main lane's card, the lane's own evidence
 # --------------------------------------------------------------------------
 
-def test_one_leg_per_ticket_and_the_day_deploys_the_lane_stake(tmp_path, _tmp_lane):
-    _board(_tmp_lane, [_pick(price=1.72), _pick(market="btts_yes", price=1.90, label="BTTS YES")])
-    legs = at.enhancement_legs(json.loads((_tmp_lane / "picks_today.json").read_text()))
-    firing = [l for l in legs if l["verdict"] == "fire"]
-    assert len(firing) == 2
-    deploy = at.ENHANCEMENT_LANE.stake_frac * 100.0
-    assert deploy == pytest.approx(25.0)          # same 25%-of-free-bank as autobets
-    per_ticket = deploy / len(firing)
-    assert per_ticket == pytest.approx(12.5)      # one leg per ticket
+def _now():
+    import datetime as _dt
+    return _dt.datetime.now(at.TZ)
+
+
+def _distinct(n, market="match_over_25", price=1.90, **kw):
+    """`n` firing picks on `n` DIFFERENT fixtures.
+
+    Distinct on purpose: the same-fixture guard is itself a gate, and a test
+    that is not about it must not trip it by accident. Prices descend with
+    rank so the order — and therefore the barbell pairing — is the list order.
+    """
+    fixtures = [("Alpha FC", "Beta FC"), ("Gamma FC", "Delta FC"),
+                ("Epsilon FC", "Zeta FC"), ("Eta FC", "Theta FC"),
+                ("Iota FC", "Kappa FC"), ("Lambda FC", "Mu FC")]
+    return [_pick(home=h, away=a, market=market, price=price - 0.01 * i, **kw)
+            for i, (h, a) in enumerate(fixtures[:n])]
+
+
+def _legs_and_plan(localdata, bank_eff=100.0, fixture_report=None):
+    legs = at.enhancement_legs(json.loads((localdata / "picks_today.json").read_text()))
+    report = {} if fixture_report is None else fixture_report
+    pool = at.enhancement_pool(legs)
+    plan = at.plan_day(pool, bank_eff, stake_frac=at.ENHANCEMENT_LANE.stake_frac,
+                       fixture_report=report)
+    at._carry_lane_evidence(plan, pool)      # what cmd_enhancement does
+    return legs, plan
+
+
+def test_the_card_is_two_leg_accas_barbelled_at_the_main_lanes_stake(tmp_path, _tmp_lane):
+    """§1: accas exactly the way autobets does them — pairing, size, stakes."""
+    _registry(_tmp_lane)
+    _board(_tmp_lane, _distinct(4))
+    legs, plan = _legs_and_plan(_tmp_lane)
+    assert [l["verdict"] for l in legs] == ["fire"] * 4
+    # barbell: strongest with weakest — 1st+4th, then 2nd+3rd
+    assert [[l["match"] for l in a["legs"]] for a in plan] == [
+        ["Alpha FC vs Beta FC", "Eta FC vs Theta FC"],
+        ["Gamma FC vs Delta FC", "Epsilon FC vs Zeta FC"]]
+    for a in plan:
+        assert a["odds"] == pytest.approx(
+            round(a["legs"][0]["odds"] * a["legs"][1]["odds"], 2))
+    # the main lane's arithmetic, on the LANE's stake knob: 25% / MAX_ACCAS
+    assert [a["stake_pct"] for a in plan] == pytest.approx([12.5, 12.5])
+    assert sum(a["stake_pct"] for a in plan) == pytest.approx(
+        at.ENHANCEMENT_LANE.stake_frac * 100.0)
+    # ...and identical to what the MAIN lane's own call would size for the
+    # same pool (B-6: the two arithmetic paths cannot disagree)
+    main_plan = at.plan_day(at.enhancement_pool(legs), 100.0)
+    assert [a["stake_pct"] for a in plan] == [a["stake_pct"] for a in main_plan]
+    assert [[l["match"] for l in a["legs"]] for a in plan] == \
+           [[l["match"] for l in a["legs"]] for a in main_plan]
+
+    txt = at.render_enhancement_tickets(at.fresh_state(), DAY, legs, plan, _now(),
+                                        should_freeze=False, freeze_record=None,
+                                        bank_eff=100.0, root=tmp_path)
+    assert txt.count("[ACCA #1]") == 1 and txt.count("[ACCA #2]") == 1
+    assert "[ENH #" not in txt
+    assert txt.count("— stake 12.5% of capital (12.5% of free bank)") == 2
+    # per-leg evidence: stated %, the market's registry line, its floor, the book
+    assert "(stated 46%)" in txt
+    assert "[registry 50% n=2 · floor 1.60 · Stake.com]" in txt
+    assert "deploying 25% of free bank today = 25.0% of capital" in txt
+
+
+def test_a_lone_eligible_leg_is_a_no_bet_that_says_so(tmp_path, _tmp_lane):
+    """§3/§5(3): below MIN_ACCAS the card prints its reason, never a single."""
+    _board(_tmp_lane, _distinct(1))
+    legs, plan = _legs_and_plan(_tmp_lane)
+    assert plan == []
+    txt = at.render_enhancement_tickets(at.fresh_state(), DAY, legs, plan, _now(),
+                                        should_freeze=False, freeze_record=None,
+                                        bank_eff=100.0)
+    assert "NO BET — only 1 eligible leg(s), need 2 for an acca" in txt
+    assert "(bank stays unbet; a lone leg is never a single)" in txt
+    assert "[ACCA #" not in txt and "[ENH #" not in txt and "deploying" not in txt
+
+
+def test_three_eligible_legs_drop_the_leftover_never_a_single(tmp_path, _tmp_lane):
+    _board(_tmp_lane, _distinct(3))
+    legs, plan = _legs_and_plan(_tmp_lane)
+    assert len(plan) == 1 and len(plan[0]["legs"]) == 2
+    txt = at.render_enhancement_tickets(at.fresh_state(), DAY, legs, plan, _now(),
+                                        should_freeze=False, freeze_record=None,
+                                        bank_eff=100.0)
+    assert "[ACCA #1]" in txt and "[ACCA #2]" not in txt
+    assert "1 eligible leg(s) left over without an acca partner (never a single)" in txt
+
+
+def test_a_same_fixture_duplicate_is_dropped_and_reported(tmp_path, _tmp_lane):
+    """B-1's eligibility: priced, clearing its floor, and not a fixture dupe."""
+    _board(_tmp_lane, [
+        _pick(market="match_over_25", price=1.90, prob=0.40),
+        _pick(market="btts_yes", price=1.90, prob=0.60,
+              label="Both Teams to Score - Yes (BTTS-Yes)")])
+    report = {}
+    legs, plan = _legs_and_plan(_tmp_lane, fixture_report=report)
+    pool = at.enhancement_pool(legs)
+    kept, dropped = at.dedup_fixture_legs(at.rank_legs(pool))
+    # the HIGHEST-RANKED leg of the pair survives — the btts leg here
+    assert [l["market"] for l in kept] == ["btts_yes"]
+    assert [l["market"] for l in dropped] == ["match_over_25"]
+    assert report["dropped"] == ["Pyunik Yerevan vs BKMA"]
+    assert plan == []                     # one survivor is not a card
+    txt = at.render_enhancement_tickets(at.fresh_state(), DAY, legs, plan, _now(),
+                                        should_freeze=False, freeze_record=None,
+                                        bank_eff=100.0, fixture_report=report)
+    assert ("same-fixture duplicate(s) dropped (one fixture rides a card once): "
+            "Pyunik Yerevan vs BKMA") in txt
+    assert "NO BET — only 1 eligible leg(s), need 2 for an acca" in txt
 
 
 def test_a_vetoed_parent_stays_shadow(tmp_path, _tmp_lane):
-    _board(_tmp_lane, [_pick(bucket="SKIPPED_VETO", price=1.72)])
-    txt = at.render_enhancement_tickets(
-        at.fresh_state(), DAY, at.enhancement_legs(json.loads(
-            (_tmp_lane / "picks_today.json").read_text())),
-        __import__("datetime").datetime.now(at.TZ),
-        should_freeze=False, freeze_record=None, bank_eff=100.0)
-    assert at.ENH_SHADOW_TAG.strip() in txt
+    _board(_tmp_lane, _distinct(2, bucket="SKIPPED_VETO"))
+    legs, plan = _legs_and_plan(_tmp_lane)
+    txt = at.render_enhancement_tickets(at.fresh_state(), DAY, legs, plan, _now(),
+                                        should_freeze=False, freeze_record=None,
+                                        bank_eff=100.0)
+    acca_line = next(l for l in txt.splitlines() if l.startswith("[ACCA #1]"))
+    assert acca_line.endswith(at.ENH_SHADOW_TAG)
     assert "[SHADOW — paper]" in txt
 
 
 def test_the_artifact_matches_autobets_conventions(tmp_path, _tmp_lane):
     _registry(_tmp_lane)
-    _board(_tmp_lane, [_pick(price=1.72), _pick(market="match_over_35", price=3.10)])
-    import datetime as _dt
-    legs = at.enhancement_legs(json.loads((_tmp_lane / "picks_today.json").read_text()))
+    _board(_tmp_lane, _distinct(2) + [
+        _pick(home="Nu FC", away="Xi FC", price=1.59)])       # below floor
+    legs, plan = _legs_and_plan(_tmp_lane)
     txt = at.render_enhancement_tickets(
-        at.fresh_state(), DAY, legs, _dt.datetime.now(at.TZ),
+        at.fresh_state(), DAY, legs, plan, _now(),
         should_freeze=True, freeze_record={"frozen_at": f"{DAY}T09:00:00+02:00"},
         bank_eff=100.0)
     lines = txt.splitlines()
@@ -170,7 +271,9 @@ def test_the_artifact_matches_autobets_conventions(tmp_path, _tmp_lane):
     assert "ENHANCEMENT SLICE (settled, registry)" in txt
     assert "by bucket" in txt and "by rule" in txt
     # the refused leg is visible for audit but is NOT an instruction
-    assert "[NO BET]" in txt and "below floor 3.30 — no bet" in txt
+    assert "[NO BET]" in txt and "below floor 1.60 — no bet" in txt
+    assert "Nu FC" not in "\n".join(
+        l for l in txt.splitlines() if l.startswith("[ACCA #"))
     assert "deploying 25% of free bank today" in txt
     assert "+100% per cycle (performance-based; you act on it)" in txt
     assert "All figures are percentages of capital." in txt
@@ -207,9 +310,29 @@ def _args(**kw):
     return types.SimpleNamespace(**base)
 
 
+def _scores_for(pairs, day=DAY):
+    """{key: (hs, gs)} in the settled-facts key space, from (home, away, hs, gs)."""
+    out = {}
+    for home, away, hs, gs in pairs:
+        for hk, ak in at._result_write_keys(home, away):
+            out[(day, hk, ak)] = (hs, gs)
+    return out
+
+
+def _freeze_now(localdata):
+    """Run the lane command as the 09:00 run does; return the loaded state."""
+    monkey = pytest.MonkeyPatch()
+    monkey.setattr(at, "FREEZE_HOUR", 0)
+    try:
+        st = at.fresh_state()
+        at.cmd_enhancement(_args(), st)
+    finally:
+        monkey.undo()
+    return json.loads((localdata / "enhancement_tickets_state.json").read_text())
+
+
 def test_the_freeze_is_write_once_and_force_cannot_rewrite_it(tmp_path, _tmp_lane):
-    import datetime as _dt
-    _board(_tmp_lane, [_pick(price=1.72)])
+    _board(_tmp_lane, _distinct(2))
     path = _tmp_lane / "enhancement_tickets_state.json"
     art = _tmp_lane / f"enhancement_tickets_{DAY}.txt"
     monkey = pytest.MonkeyPatch()
@@ -222,7 +345,7 @@ def test_the_freeze_is_write_once_and_force_cannot_rewrite_it(tmp_path, _tmp_lan
         assert stamp["final"] is True
 
         # A later run with a DIFFERENT card must not move a frozen date...
-        _board(_tmp_lane, [_pick(market="btts_yes", price=2.10, label="BTTS YES")])
+        _board(_tmp_lane, _distinct(2, market="btts_yes", price=2.10))
         at.cmd_enhancement(_args(), json.loads(path.read_text()))
         assert art.read_text() == frozen_text
         # ...and neither may --force (that is how bets rotate under the operator).
@@ -233,32 +356,170 @@ def test_the_freeze_is_write_once_and_force_cannot_rewrite_it(tmp_path, _tmp_lan
         monkey.undo()
 
 
-def test_before_the_freeze_hour_the_slip_is_a_draft(tmp_path, _tmp_lane):
-    _board(_tmp_lane, [_pick(price=1.72)])
+def test_before_the_freeze_hour_the_card_is_a_draft(tmp_path, _tmp_lane):
+    _board(_tmp_lane, _distinct(2))
     monkey = pytest.MonkeyPatch()
     monkey.setattr(at, "FREEZE_HOUR", 25)                 # never reached
-    try:
-        st = at.fresh_state()
-        at.cmd_enhancement(_args(), st)
-        state = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
-        assert not state.get("frozen_by_date")
-        assert "DRAFT" in "" or True
-    finally:
-        monkey.undo()
-
-
-def test_the_lane_keeps_its_own_state_and_the_main_state_file_alone(tmp_path, _tmp_lane):
-    import datetime as _dt
-    _board(_tmp_lane, [_pick(price=1.72)])
-    monkey = pytest.MonkeyPatch()
-    monkey.setattr(at, "FREEZE_HOUR", 0)
     try:
         at.cmd_enhancement(_args(), at.fresh_state())
     finally:
         monkey.undo()
+    state = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
+    assert not state.get("frozen_by_date")
+    # a draft is already the acca shape, so --status and settle read it
+    assert [s["date"] for s in state["open_slips"]] == [DAY]
+    assert (at.ENHANCEMENT_LANE.state_file).exists()
+    assert (_tmp_lane / f"enhancement_tickets_{DAY}.txt").exists()
+
+
+def test_the_lane_keeps_its_own_state_and_the_main_state_file_alone(tmp_path, _tmp_lane):
+    _board(_tmp_lane, _distinct(2))
+    _freeze_now(_tmp_lane)
     assert (at.ENHANCEMENT_LANE.state_file).exists()
     assert at.ENHANCEMENT_LANE.state_file.name == "enhancement_tickets_state.json"
     assert not (tmp_path / "localdata" / "auto_tickets_state.json").exists()
+
+
+def test_the_frozen_entry_has_the_main_lanes_shape_and_nothing_else(tmp_path, _tmp_lane):
+    """§5(1)/(2): 'keys identical to main lane', pinned against the main lane."""
+    _board(_tmp_lane, _distinct(2))
+    state = _freeze_now(_tmp_lane)
+    lane_entry = state["open_slips"][0]
+    # the main lane's own writer, on a main-lane pool (no lane fields at all)
+    main_pool = [{"match": "Alpha FC vs Beta FC", "pick": "home",
+                  "prob": 0.46, "odds": 1.90},
+                 {"match": "Gamma FC vs Delta FC", "pick": "away",
+                  "prob": 0.46, "odds": 1.89}]
+    main_state = at.fresh_state()
+    at.upsert_slip(main_state, DAY, at.plan_day(main_pool, 100.0))
+    main_entry = main_state["open_slips"][0]
+    # 'keys identical to the main lane' — pinned against the main lane itself
+    assert set(lane_entry) == set(main_entry)
+    assert {"date", "accas", "staked_pct"} <= set(main_entry)
+    assert set(lane_entry["accas"][0]) == set(main_entry["accas"][0])
+    assert {"legs", "odds", "stake_pct"} <= set(main_entry["accas"][0])
+    assert lane_entry["staked_pct"] == main_entry["staked_pct"]
+    lane_leg = lane_entry["accas"][0]["legs"][0]
+    main_leg = main_entry["accas"][0]["legs"][0]
+    # the card leg carries every key the main lane's leg carries, then its own
+    assert set(main_leg) <= set(lane_leg)
+    assert {"match", "pick", "prob", "odds", "result"} <= set(main_leg)
+    assert {"market", "label", "floor", "price_book", "shadow"} <= set(lane_leg)
+    assert "market" not in main_leg and "shadow" not in main_leg
+    assert lane_leg["fixture_key"][0] == DAY
+
+
+def test_the_market_grading_path_is_the_registrys_own_hit_definition():
+    """The frozen leg's market is graded by the definition the registry uses."""
+    cases = [("match_over_25", "over", 3, 0), ("match_over_25", "over", 1, 0),
+             ("match_over_35", "over", 4, 0), ("btts_yes", "yes", 2, 1),
+             ("btts_yes", "yes", 3, 0), ("match_under_25", "under", 2, 1)]
+    for market, selection, hs, gs in cases:
+        leg = {"market": market, "pick": selection, "match": "Alpha FC vs Beta FC",
+               "fixture_key": [DAY, "Alpha FC", "Beta FC"]}
+        got = at.enhancement_leg_result(leg, DAY, _scores_for([("Alpha FC", "Beta FC", hs, gs)]))
+        want = reg.check_enhancement_hit(market, selection, hs, gs)
+        assert got == ("win" if want else "loss"), (market, hs, gs)
+    # a market the scorer has no rule for is HELD, never graded
+    leg = {"market": "no_such_market", "pick": "over", "match": "Alpha FC vs Beta FC",
+           "fixture_key": [DAY, "Alpha FC", "Beta FC"]}
+    assert at.enhancement_leg_result(leg, DAY, _scores_for([("Alpha FC", "Beta FC", 3, 0)])) is None
+    # and no score at all is 'not known yet', not a loss
+    assert at.enhancement_leg_result(leg, DAY, {}) is None
+
+
+def test_a_market_leg_on_a_conflicted_fixture_is_held_as_a_conflict():
+    leg = {"market": "match_over_25", "pick": "over", "match": "Pafos vs Dinamo Tirana",
+           "fixture_key": [DAY, "Pafos", "Dinamo Tirana"]}
+    entries = {DAY: [
+        {"home": "Pafos", "away": "Dinamo Tirana", "outcome": "home"},
+        {"home": "Pafos FC", "away": "Dinamo Tirana", "outcome": "away"}]}
+    assert at.enhancement_leg_result(leg, DAY, _scores_for([("Pafos", "Dinamo Tirana", 3, 0)]),
+                                     entries) == "conflict"
+
+
+def test_run_two_settles_the_frozen_card_through_the_shared_lifecycle(tmp_path, _tmp_lane):
+    """§2/§5(2): the crash is gone by construction — run 1 freezes, run 2 settles."""
+    _board(_tmp_lane, _distinct(4))
+    state = _freeze_now(_tmp_lane)
+    bank0 = state["bank"]
+    staked = state["open_slips"][0]["staked_pct"]
+    assert staked == pytest.approx(25.0)
+    scores = _scores_for([
+        ("Alpha FC", "Beta FC", 3, 0),       # over 2.5 in acca #1
+        ("Eta FC", "Theta FC", 4, 1),        # over 2.5 in acca #1
+        ("Gamma FC", "Delta FC", 1, 0)])     # acca #2 is decided by this loss
+    # (Epsilon FC has no score yet — a settled LOSING leg decides the acca
+    # anyway, bookmaker rules, which is the shared early-loss path.)
+    lines = at.settle_open_slips(state, {}, archives=[], entries_by_date={},
+                                 lane=at.ENHANCEMENT_LANE, scores=scores)
+    # bank moved by ret - staked, per acca; history grew; nothing left open
+    assert state["open_slips"] == []
+    h = state["history"][-1]
+    assert h["date"] == DAY
+    assert h["staked_pct"] == pytest.approx(25.0)
+    assert [a["won"] for a in h["accas"]] == [True, False]
+    win_ret = round(12.5 * h["accas"][0]["odds"], 4)
+    assert h["returned_pct"] == pytest.approx(win_ret)
+    assert state["bank"] == pytest.approx(bank0 + win_ret - staked)
+    assert any("settled 2026-10-12 acca" in l for l in lines)
+    assert any("legs=['win', 'win']" in l for l in lines)
+    assert any("(decided by settled loss leg)" in l for l in lines)
+    # idempotent: a second settle has nothing to do and moves nothing
+    bank_after = state["bank"]
+    assert at.settle_open_slips(state, {}, archives=[], entries_by_date={},
+                                lane=at.ENHANCEMENT_LANE, scores=scores) == []
+    assert state["bank"] == bank_after
+
+
+def test_the_settle_writes_the_lanes_own_state_and_the_main_file_stays_absent(tmp_path, _tmp_lane):
+    """The settle is part of the lane's lifecycle, not a route into main's."""
+    _board(_tmp_lane, _distinct(2))
+    state = _freeze_now(_tmp_lane)
+    main_file = _tmp_lane / "auto_tickets_state.json"
+    assert not main_file.exists()
+    frozen = state["open_slips"][0]
+    staked = frozen["staked_pct"]                              # one acca, 12.5%
+    acca = frozen["accas"][0]
+    scores = _scores_for([("Alpha FC", "Beta FC", 3, 0), ("Gamma FC", "Delta FC", 2, 1)])
+    lines = at.settle_open_slips(state, {}, archives=[], entries_by_date={},
+                                 lane=at.ENHANCEMENT_LANE, scores=scores)
+    saved = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
+    assert saved["open_slips"] == []
+    # the shared arithmetic: bank moves by returned - staked, per acca
+    assert saved["bank"] == pytest.approx(100.0 + acca["stake_pct"] * acca["odds"] - staked)
+    assert saved["history"][-1]["returned_pct"] == pytest.approx(
+        acca["stake_pct"] * acca["odds"])
+    assert any("settled 2026-10-12 acca" in l for l in lines)
+    # the lane's bank move must never land in the main lane's file
+    assert not main_file.exists()
+
+
+def test_a_missing_score_holds_the_leg_and_the_slip_date_timer_voids_it(tmp_path, _tmp_lane):
+    """No score is 'not known yet' — the shared void horizon closes it out."""
+    import datetime as _dt
+    _board(_tmp_lane, _distinct(2))
+    state = _freeze_now(_tmp_lane)
+    assert at.settle_open_slips(state, {}, archives=[], entries_by_date={},
+                                lane=at.ENHANCEMENT_LANE, scores={}) == []
+    assert len(state["open_slips"]) == 1 and state["history"] == []
+    state["open_slips"][0]["date"] = (
+        _dt.datetime.now(at.TZ) - _dt.timedelta(days=6)).strftime("%Y-%m-%d")
+    lines = at.settle_open_slips(state, {}, archives=[], entries_by_date={},
+                                 lane=at.ENHANCEMENT_LANE, scores={})
+    assert state["open_slips"] == []
+    assert state["bank"] == pytest.approx(100.0)          # stake returned
+    assert state["history"][-1]["returned_pct"] == pytest.approx(
+        state["history"][-1]["staked_pct"])
+    assert any("legs=['void', 'void']" in l for l in lines)
+
+
+def test_the_main_lanes_legs_never_carry_a_market():
+    """The settle's market path is unreachable for a main-lane card."""
+    pool = [{"match": "A vs B", "pick": "home", "prob": 0.5, "odds": 2.0},
+            {"match": "C vs D", "pick": "away", "prob": 0.5, "odds": 2.0}]
+    plan = at.plan_day(pool, 100.0)
+    assert set(plan[0]["legs"][0]) == {"match", "pick", "prob", "odds", "result"}
 
 
 def test_the_flag_off_means_the_lane_does_nothing(tmp_path, _tmp_lane, monkeypatch):
@@ -478,3 +739,27 @@ def test_the_track_record_render_is_honest_with_no_history(tmp_path):
     import audit_recent_picks as au
 
     assert "no settled enhancement history yet" in au.render_track_record(tmp_path)
+
+
+def test_enhancements_with_the_flag_off_is_a_no_op_not_the_main_lane(monkeypatch, capsys):
+    """REGRESSION: `--enhancements` without the flag must do nothing.
+
+    It used to fall through to the main lane, whose default path printed the
+    AUTO TICKETS status block — so a daily step labelled "enhancement tickets"
+    would report the main lane's performance and imply the enhancement lane was
+    live while it was off. Enablement passes this flag (see
+    docs/operator/enhancement-lane.yml.proposed), so the flag-off path has to be
+    inert and say why.
+    """
+    monkeypatch.delenv(at.ENH_BOARD_FLAG, raising=False)
+    monkeypatch.setattr(at.sys, "argv", ["auto_tickets.py", "--enhancements"])
+    monkeypatch.setattr(at, "load_state", _boom)   # main-lane state must not be read
+    monkeypatch.setattr(at, "cmd_today", _boom)
+    assert at.main() == 0
+    out = capsys.readouterr().out
+    assert f"{at.ENH_BOARD_FLAG}=1" in out and "nothing done" in out
+    assert "AUTO TICKETS" not in out
+
+
+def _boom(*a, **k):   # pragma: no cover - only reached on regression
+    raise AssertionError("the disabled enhancement lane must not touch the main lane")

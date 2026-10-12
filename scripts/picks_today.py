@@ -6439,7 +6439,6 @@ def main():
             cached_rows=list(data.get("scoutingstats", {}).values()),
             stats=scouting_stats,
         )
-        prices_index = load_prices_index(ROOT, day)
         # TheOddsAPI is a cached named-book board, not another live request.
         # Its cutoff is this pick build's ``as_of`` so a later CLV snapshot
         # cannot time-travel into an already-generated card.
@@ -6533,6 +6532,14 @@ def main():
         else:
             be_stats["status"] = "snapshot_only"
             be_enriched = 0
+
+        # Load the price index AFTER the rescue above, on purpose: the
+        # rescue's fetch writes today's BetExplorer detail ledger, and that
+        # ledger is itself a price source for the enhancement board
+        # (schema 2, merged behind EDGE_FACTORY_ENH_BOARD). Loading the
+        # index earlier would leave a fixture rescued in this very run
+        # unpriced on the board.
+        prices_index = load_prices_index(ROOT, day)
 
         # Shadow stats were captured above, before bundle construction.
         fp_shadow_stats = shadow_stats.get("futbolpronosticos", {})
