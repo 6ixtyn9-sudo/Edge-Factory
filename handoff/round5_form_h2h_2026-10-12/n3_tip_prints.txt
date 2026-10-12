@@ -84,7 +84,7 @@ marker counts (13 markers, occurrences and lines in the module):
    test_second_429_cools_run_and_makes_no_third_request
    test_same_day_fixture_cache_dedupes_requests_and_survives_run_reset
    test_request_counts_track_every_attempt_for_the_receipt
-   (5 tests collected in 0.06s)
+   (5 tests collected in 0.04s)
 -- tests/test_betexplorer_match_detail.py: 20 test(s)
    test_market_columns_lines_and_prices_come_from_the_response
    test_a_line_the_all_block_does_not_cover_keeps_the_table_rows
@@ -106,10 +106,10 @@ marker counts (13 markers, occurrences and lines in the module):
    test_a_stub_fetch_leaves_no_stale_detail
    test_receipt_keeps_the_row_refusal_census
    test_wrapper_receipt_summarises_the_detail_ledger
-   (20 tests collected in 0.07s)
+   (20 tests collected in 0.05s)
 
 == (d) per-file sha256 at this tip + the attribution rows ==
-HEAD: f50b760
+HEAD: 9ac4a2d
   9eb63ddcc3b8e7888fa87a03737fdce9ea37583a574c50e574f97940b67d25f0  scripts/capture_betexplorer.py
   fca5051139c291904d15c152f907d5f24707008eb5f3deba3c6dd2dca6d259d7  scripts/picks_today.py
   d7462151f468051187634d5b37563e678ae018f39997dc2f76d438eb3feb1a16  scripts/clean_localdata.py
@@ -121,12 +121,12 @@ HEAD: f50b760
   777a4440def3c093a529e3a037d0a2dd758a6d8e4a15e1cbf245f30cf81ef001  .gitignore
 
 attribution rows (which commit of THIS chain carried each change in):
-  licensing doc Stage-1 consumption bullet   <- 3458653
-  capture receipt census whitelist           <- c1538ca
-  picks_today rescue ordering / price index  <- 3458653
-  match_snapshot depth regions               <- ff49617 + 45c8f30
-  test_match_detail                          <- ff49617 + c1538ca
-  odds adapter                               <- ff49617 (both sides of the three contested hunks kept)
+  licensing doc Stage-1 consumption bullet   <- 24b04d0
+  capture receipt census whitelist           <- 979f7fb
+  picks_today rescue ordering / price index  <- 24b04d0
+  match_snapshot depth regions               <- a4a5b29 + 03cd867
+  test_match_detail                          <- a4a5b29 + 979f7fb
+  odds adapter                               <- a4a5b29 (both sides of the three contested hunks kept)
 
 (pre-reset SHAs are void: the whole chain was rebuilt after a sandbox reset,
  so every attribution above cites this chain's own commits.)

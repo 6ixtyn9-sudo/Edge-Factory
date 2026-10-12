@@ -1,4 +1,4 @@
-=== A2: module-global budget rebinds, sweep at f50b760 ===
+=== A2: module-global budget rebinds, sweep at 9ac4a2d ===
 
 $ grep -rn "source\._MAX_FETCHES_PER_RUN *=\|_be_mod\._MAX_FETCHES_PER_RUN *=" scripts/
 scripts/capture_betexplorer.py:202:        source._MAX_FETCHES_PER_RUN = limit
@@ -96,4 +96,4 @@ $ grep -n "the wrapper.s receipt" tests/test_betexplorer_match_detail.py
 
 $ PYTHONPATH=src .venv/bin/python -m pytest tests/test_dated_claims_ledger.py -q -p no:randomly
 ..........................                                               [100%]
-26 passed in 0.17s
+26 passed in 0.15s
