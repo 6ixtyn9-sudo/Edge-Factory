@@ -1,11 +1,28 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 2,
+  "attempted_fixtures": [
+    {
+      "away": "Independiente Petrolero",
+      "date": "2026-10-12",
+      "home": "Always Ready",
+      "kickoff": "12-10, 22:15",
+      "league": "Bolivia Primera Divisi\u00f3n"
+    },
+    {
+      "away": "Omonia Aradippou",
+      "date": "2026-10-12",
+      "home": "AEK Larnaca FC",
+      "kickoff": "2026-10-12T18:00:00+02:00",
+      "league": "Cyprus: 1. Division"
+    }
+  ],
   "candidate_fixtures": 18,
-  "captured_at": "2026-10-12T16:13:29+00:00",
+  "captured_at": "2026-10-12T19:14:00+00:00",
   "date": "2026-10-12",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 2
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -15,35 +32,39 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 6,
+    "kickoff_already_passed": 11,
     "kickoff_mismatch": 2,
     "priced": 1,
-    "priced_close_window_not_open": 2,
-    "retry_cooldown": 9
+    "retry_cooldown": 4
   },
   "skipped": [
     "Pyunik Yerevan|BKMA (kickoff already passed)",
-    "AEK Larnaca FC|Omonia Aradippou (retry cooldown (6h after failed attempt))",
-    "Always Ready|Independiente Petrolero (retry cooldown (6h after failed attempt))",
-    "Forge|York United (retry cooldown (6h after failed attempt))",
+    "Forge|York United (kickoff already passed)",
     "PAOK|Kalamata (retry cooldown (6h after failed attempt))",
     "Club Universidad de Chile|Nublense (priced)",
     "St. Louis City|Los Angeles Galaxy (kickoff already passed)",
     "WARN kickoff-mismatch Atalanta|Venezia: pick legacy display says 15:30Z, captured rows say 16:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Atalanta|Venezia (priced, close window not open)",
+    "Atalanta|Venezia (kickoff already passed)",
     "JS El Biar|CR Belouizdad (kickoff already passed)",
-    "Ludogorets|Arda Kardzhali (retry cooldown (6h after failed attempt))",
+    "Ludogorets|Arda Kardzhali (kickoff already passed)",
     "WARN kickoff-mismatch IF Elfsborg|Halmstad: pick legacy display says 16:00Z, captured rows say 17:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "IF Elfsborg|Halmstad (priced, close window not open)",
+    "IF Elfsborg|Halmstad (kickoff already passed)",
     "D. Puerto Montt|San Luis (kickoff already passed)",
     "Hapoel Kfar Saba|FC Ashdod (retry cooldown (6h after failed attempt))",
     "Livyi Bereh|Zorya Luhansk (kickoff already passed)",
     "Guangzhou Dandelion|Shanghai Second (kickoff already passed)",
-    "Lanus|Velez Sarsfield (retry cooldown (6h after failed attempt))",
+    "Lanus|Velez Sarsfield (kickoff already passed)",
     "Antigua GFC|Coban Imperial (retry cooldown (6h after failed attempt))",
     "Hapoel Rishon LeZion|Maccabi Kabilio Jaffa (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Always Ready vs Independiente Petrolero (league not covered: Bolivia Primera Divisi\u00f3n)",
+    "AEK Larnaca FC vs Omonia Aradippou (league not covered: Cyprus: 1. Division)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Bolivia Primera Divisi\u00f3n": 1,
+    "league not covered: Cyprus: 1. Division": 1
+  }
 }
