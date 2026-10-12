@@ -1,0 +1,130 @@
+comparison run: the same driver with the identity read as the width-9
+norm_team bucket (scratch tree /tmp/w9_rule, patched at import: source_team_key =
+norm_team(name, width=9)), every other change of this round held constant.
+Reproduce with handoff/round5_form_h2h_2026-10-12/w35_width9_rule.sh (it
+copies src/ and this bundle's intel_report.py to a scratch root, links
+localdata and Config into it, swaps the key, and runs it from that root -
+the driver puts its own src first on sys.path, so the working directory
+decides which tree is measured).
+archive rows: 147709   settled fixtures: 409
+team identity: source_team_key (canonical, curated aliases, squad classes
+vetoed); the width-9 norm_team bucket is reported below but not counted
+with 5+ prior matches both sides: 376   insufficient_history: 33
+
+per month:
+  2026-08  total  165  sufficient  144  insufficient   21
+  2026-09  total  170  sufficient  162  insufficient    8
+  2026-10  total   74  sufficient   70  insufficient    4
+
+per league (top 30 by fixtures):
+  Wl1                                                  total   13  sufficient   11
+  De1                                                  total   10  sufficient   10
+  EPL                                                  total    9  sufficient    8
+  Nl1                                                  total    9  sufficient    8
+  World UEFA Nations League                            total    9  sufficient    7
+  Bg1                                                  total    8  sufficient    8
+  Ch1                                                  total    7  sufficient    7
+  Es1                                                  total    7  sufficient    7
+  Jp1                                                  total    7  sufficient    5
+  No1                                                  total    7  sufficient    7
+  Ee1                                                  total    6  sufficient    6
+  Nl2                                                  total    6  sufficient    6
+  Norway,1. Division                                   total    6  sufficient    6
+  Portugal,Liga Portugal                               total    6  sufficient    6
+  International,Uefa Nations League A Grp. 3           total    5  sufficient    5
+  It1                                                  total    5  sufficient    5
+  NCQ                                                  total    5  sufficient    1
+  NL                                                   total    5  sufficient    5
+  Sa1                                                  total    5  sufficient    5
+  Sc1                                                  total    5  sufficient    5
+  Sc3                                                  total    5  sufficient    5
+  USA,Major League Soccer                              total    5  sufficient    5
+  World UEFA Europa Conference League                  total    5  sufficient    4
+  EFL                                                  total    4  sufficient    4
+  England,National League                              total    4  sufficient    4
+  Germany Bundesliga                                   total    4  sufficient    4
+  Scotland,League One                                  total    4  sufficient    4
+  Algeria Ligue 1                                      total    3  sufficient    1
+  Brazil,Serie A                                       total    3  sufficient    3
+  Denmark,1. Division                                  total    3  sufficient    3
+
+name-matching misses (a side with 0 archive rows at pick date): 1
+  2026-08-04 BG Pathum United vs Aston Villa                  priors home=0 away=49
+
+insufficient_history rows (0 < priors < 5): 32
+  2026-08-06 SC Braga vs Dinamo Minsk                 priors 35/3 p=None reason=insufficient_history
+  2026-08-01 Cruzeiro W vs Botafogo W                   priors 15/2 p=None reason=insufficient_history  squad_class=['women', 'women']
+  2026-08-13 Omonia Nicosia vs Lincoln Red Imps             priors 4/24 p=None reason=insufficient_history
+  2026-08-15 Union Saint-Gilloise vs Zulte Waregem                priors 4/4 p=None reason=insufficient_history
+  2026-08-16 Feyenoord vs Go Ahead Eagles              priors 25/4 p=None reason=insufficient_history
+  2026-08-16 Twente vs PEC Zwolle                   priors 29/3 p=None reason=insufficient_history
+  2026-08-20 FC Midtjylland vs HNK Rijeka                   priors 36/4 p=None reason=insufficient_history
+  2026-08-21 Arsenal vs Coventry City                priors 42/3 p=None reason=insufficient_history
+  2026-08-21 FC Tokyo vs JEF United Chiba             priors 19/3 p=None reason=insufficient_history
+  2026-08-22 Heerenveen vs PEC Zwolle                   priors 26/4 p=None reason=insufficient_history
+  2026-08-22 Al-Ahli Jeddah vs Abha                         priors 3/24 p=None reason=insufficient_history
+  2026-08-23 BSC Young Boys vs FC Vaduz                     priors 3/33 p=None reason=insufficient_history
+  2026-08-28 Holywell Town vs Caernarfon Town              priors 4/21 p=None reason=insufficient_history
+  2026-08-28 Pen-y-Bont FC vs Flint Town Utd               priors 20/4 p=None reason=insufficient_history
+  2026-08-29 Tokyo Verdy vs Kashima Antlers              priors 4/23 p=None reason=insufficient_history
+  2026-08-29 BSC Young Boys vs FC Basel 1893                priors 4/35 p=None reason=insufficient_history
+  2026-08-31 Dagenham and Redbridge vs Slough Town                  priors 4/7 p=None reason=insufficient_history
+  2026-09-24 Cameroon vs Comoros                      priors 4/3 p=None reason=insufficient_history
+  2026-09-24 Portugal vs Wales                        priors 9/3 p=None reason=insufficient_history
+  2026-09-24 Liechtenstein vs Lithuania                    priors 4/3 p=None reason=insufficient_history
+  2026-09-24 Austria vs Israel                       priors 7/2 p=None reason=insufficient_history
+  2026-09-25 Burkina Faso vs Benin                        priors 5/4 p=None reason=insufficient_history
+  2026-09-25 Morocco vs Gabon                        priors 13/1 p=None reason=insufficient_history
+  2026-09-25 Nigeria vs Madagascar                   priors 8/3 p=None reason=insufficient_history
+  2026-09-26 San Marino vs Finland                      priors 25/3 p=None reason=insufficient_history
+  2026-10-02 Belgium vs Türkiye                      priors 12/2 p=None reason=insufficient_history
+  2026-10-03 Spain vs Czechia                      priors 14/2 p=None reason=insufficient_history
+  2026-10-07 CS Constantine vs US Biskra                    priors 3/3 p=None reason=insufficient_history
+  2026-10-08 MC Oran vs ES Setif                     priors 3/20 p=None reason=insufficient_history
+  2026-08-09 São Paulo W vs RB Bragantino W              priors 21/4 p=None reason=insufficient_history  squad_class=['women', 'women']
+  2026-08-10 FC Botoșani vs Corvinul Hunedoara           priors 28/3 p=None reason=insufficient_history
+  2026-08-10 Sepsi OSK Sfantu Gheorghe vs FCSB                         priors 2/42 p=None reason=insufficient_history
+
+thin sides by squad class (of 37 sides): senior x35, women x2
+  a non-senior side's thin history is the archive covering that class
+  of competition far less; keep such sides out of any floor-deriving slice.
+
+unjoined spellings on those sides (width-9 bucket rows the canonical
+key rejects - the curated alias table does not join these):
+  2026-08-06 Dinamo Minsk                 canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-08-04 BG Pathum United             canonical priors   0   unjoined: (none in the width-9 bucket)
+  2026-08-01 Botafogo W                   canonical priors   2   unjoined: (none in the width-9 bucket)
+  2026-08-13 Omonia Nicosia               canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-15 Union Saint-Gilloise         canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-15 Zulte Waregem                canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-16 Go Ahead Eagles              canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-16 PEC Zwolle                   canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-08-20 HNK Rijeka                   canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-21 Coventry City                canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-08-21 JEF United Chiba             canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-08-22 PEC Zwolle                   canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-22 Al-Ahli Jeddah               canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-08-23 BSC Young Boys               canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-08-28 Holywell Town                canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-28 Flint Town Utd               canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-29 Tokyo Verdy                  canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-29 BSC Young Boys               canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-31 Dagenham and Redbridge       canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-09-24 Cameroon                     canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-09-24 Comoros                      canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-09-24 Wales                        canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-09-24 Liechtenstein                canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-09-24 Lithuania                    canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-09-24 Israel                       canonical priors   2   unjoined: (none in the width-9 bucket)
+  2026-09-25 Benin                        canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-09-25 Gabon                        canonical priors   1   unjoined: (none in the width-9 bucket)
+  2026-09-25 Madagascar                   canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-09-26 Finland                      canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-10-02 Türkiye                      canonical priors   2   unjoined: (none in the width-9 bucket)
+  2026-10-03 Czechia                      canonical priors   2   unjoined: (none in the width-9 bucket)
+  2026-10-07 CS Constantine               canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-10-07 US Biskra                    canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-10-08 MC Oran                      canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-08-09 RB Bragantino W              canonical priors   4   unjoined: (none in the width-9 bucket)
+  2026-08-10 Corvinul Hunedoara           canonical priors   3   unjoined: (none in the width-9 bucket)
+  2026-08-10 Sepsi OSK Sfantu Gheorghe    canonical priors   2   unjoined: (none in the width-9 bucket)

@@ -1,0 +1,25 @@
+=== A-2 census before/after, real code on both sides ===
+before commit: ceb2fbb   after: working tree
+census: the 814 fixture sides of the settled registry, prior archive rows
+before each side's own kickoff date, and sides with >= 5 priors.
+command (a_census_before_after.sh): a_census.py run once per tree
+
+$ PYTHONPATH=/tmp/census_before/src .venv/bin/python /home/user/Edge-Factory/handoff/round5_form_h2h_2026-10-12/a_census.py
+{
+  "edgefactory_from": "/tmp/census_before/src/edgefactory/form_intel.py",
+  "tree": "/tmp/census_before/src",
+  "fixture_sides": 814,
+  "prior_rows": 21177,
+  "sides_with_window": 761,
+  "window": 5
+}
+
+$ PYTHONPATH=src .venv/bin/python /home/user/Edge-Factory/handoff/round5_form_h2h_2026-10-12/a_census.py
+{
+  "edgefactory_from": "/home/user/Edge-Factory/src/edgefactory/form_intel.py",
+  "tree": "/home/user/Edge-Factory/src",
+  "fixture_sides": 814,
+  "prior_rows": 21605,
+  "sides_with_window": 776,
+  "window": 5
+}

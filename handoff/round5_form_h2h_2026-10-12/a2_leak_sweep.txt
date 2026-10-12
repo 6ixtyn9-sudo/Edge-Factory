@@ -1,0 +1,99 @@
+=== A2: module-global budget rebinds, sweep at f50b760 ===
+
+$ grep -rn "source\._MAX_FETCHES_PER_RUN *=\|_be_mod\._MAX_FETCHES_PER_RUN *=" scripts/
+scripts/capture_betexplorer.py:202:        source._MAX_FETCHES_PER_RUN = limit
+scripts/picks_today.py:6215:    _be_mod._MAX_FETCHES_PER_RUN = max(0, int(max_fetches))
+
+  ^ the two PRODUCTION sites (capture_betexplorer.capture and the picks_today
+    enrichment entry point). Both are deliberate for one real run in one
+    process; neither restores the previous value, which is why a TEST that
+    calls either entry point changes the budget of every later test in the
+    same process. Reported here; the production semantics are left alone on
+    purpose - changing them is behaviour, not hygiene.
+
+$ grep -rnE "^[^#]*\b(_MAX_[A-Z_]+|_MARKET_[A-Z_]+) *=([^=]|$)" tests/   # bare rebinds, assignments only
+tests/test_oddspapi_catalog_resolution.py:254:    op._MARKET_ID_TO_TYPE = dict(op._FALLBACK_ID_TO_TYPE)
+tests/test_oddspapi_catalog_resolution.py:255:    op._MARKET_CATALOG_ENTRIES = {}
+tests/test_oddspapi_catalog_resolution.py:256:    op._MARKET_CATALOG = {}
+tests/test_oddspapi_catalog_resolution.py:262:        op._MARKET_ID_TO_TYPE = dict(op._FALLBACK_ID_TO_TYPE)
+tests/test_oddspapi_catalog_resolution.py:263:        op._MARKET_CATALOG_ENTRIES = {}
+tests/test_oddspapi_catalog_resolution.py:264:        op._MARKET_CATALOG = {}
+  ^ FOUND. Disposition of each, so "wrapped or explained" is checkable:
+    * tests/test_oddspapi_catalog_resolution.py -- the oddspapi catalog
+      module's own caches, in a DIFFERENT module from the BetExplorer adapter.
+      That test restores them in a `finally` (grep the file for
+      "restore the module-level caches") to the module's documented empty /
+      fallback state, not to a snapshot: the caches are meant to be empty
+      between runs, so restoring to the default IS the correct restore.
+      Reason recorded here rather than wrapped; it is the same file's own
+      documented pattern (added 2026-07 before this round).
+    * every other budget global in tests/ is touched only through
+      monkeypatch.setattr (below) or through the production entry points the
+      conftest guard covers.
+
+$ grep -rn "setattr(be, \"_MAX\|setattr(be, \"_MARKET\|setattr(_be_mod" tests/
+tests/test_betexplorer_match_detail.py:533:    monkeypatch.setattr(be, "_MAX_REQUESTS_PER_RUN", 4)
+tests/test_betexplorer_match_detail.py:630:    monkeypatch.setattr(be, "_MAX_FETCHES_PER_RUN", be._MAX_FETCHES_PER_RUN)
+
+  ^ monkeypatch.setattr is scoped: pytest restores it at the end of the test
+    that made the change, so these need no further wrapping.
+
+$ grep -n "be\._" tests/*.py  |  grep -v "monkeypatch|assert|#|getattr|setattr"
+tests/test_betexplorer_match_detail.py:292:    be._match_cache.clear()
+tests/test_betexplorer_match_detail.py:293:    be._fixture_cache.clear()
+tests/test_betexplorer_match_detail.py:510:    be._match_cache.clear()
+tests/test_betexplorer_match_detail.py:511:    be._fixture_cache.clear()
+tests/test_betexplorer_match_detail.py:553:    be._match_cache.clear()
+tests/test_betexplorer_match_detail.py:554:    be._fixture_cache.clear()
+tests/test_betexplorer_match_detail.py:570:    be._match_cache.clear()
+tests/test_betexplorer_match_detail.py:571:    be._fixture_cache.clear()
+tests/test_betexplorer_match_detail.py:598:    be._match_cache.clear()
+tests/test_betexplorer_match_detail.py:599:    be._fixture_cache.clear()
+tests/test_betexplorer_match_detail.py:623:    be._fixture_cache.clear()
+tests/test_betexplorer_match_detail.py:624:    be._match_cache.clear()
+tests/test_betexplorer_match_detail.py:655:    be._fixture_cache.clear()
+tests/test_betexplorer_match_detail.py:656:    be._match_cache.clear()
+tests/test_betexplorer_politeness.py:91:        be._fetch("https://www.betexplorer.com/example", retries=5)
+tests/test_betexplorer_politeness.py:97:        be._fetch("https://www.betexplorer.com/another", retries=1)
+
+  ^ direct attribute touches with no setter in sight: cache clears (run-scoped
+    memory the tests themselves populate) and _fetch(...) calls. The one
+    ASSIGNMENT this list used to contain - test_betexplorer_match_detail.py's
+    be._request_count = 4 - is now a monkeypatch.setattr, so pytest restores it.
+
+$ grep -rn "_fixture_cache.clear()\|_match_cache.clear()" tests/ | wc -l
+14
+
+  ^ cache clears: run-scoped MEMORY, not budgets - cleared by the tests that
+    populate them (the census test and the detail tests).
+
+== the systemic guard the suite now carries ==
+$ grep -n "_restore_budget_globals\|_budgets_end_at_their_defaults\|_BUDGET_GLOBALS" tests/conftest.py
+127:_BUDGET_GLOBALS = (
+152:def _restore_budget_globals():
+157:    names = _BUDGET_GLOBALS + _RUN_STATE_GLOBALS
+165:def _budgets_end_at_their_defaults():
+172:    defaults = {name: getattr(_odds_module(), name) for name in _BUDGET_GLOBALS}
+176:               for name in _BUDGET_GLOBALS if getattr(be, name) != defaults[name]}
+
+  * _restore_budget_globals (autouse, function-scoped): snapshots the budget
+    globals before EVERY test and puts them back after it, so no test can
+    inherit another test's value - even when the change came from a production
+    entry point the test merely called.
+  * _budgets_end_at_their_defaults (autouse, session-scoped): the alarm. If the
+    suite ever ends with a budget that is not what a real run would see, the
+    session fails and names the drifted globals, instead of quietly
+    under-budgeting later tests.
+
+== the dated claim this sweep also protects ==
+$ grep -n "the wrapper.s receipt" tests/test_betexplorer_match_detail.py
+609:# receipt 2026-10-12 (round-2 §2.2, OPERATOR-RELAYED): the wrapper's receipt
+
+  ^ the comment belongs to
+    tests/test_betexplorer_match_detail.py::test_receipt_keeps_the_row_refusal_census
+    and is PINNED by tests/test_dated_claims_ledger.py, whose scan is the only
+    reason the comment form matters.
+
+$ PYTHONPATH=src .venv/bin/python -m pytest tests/test_dated_claims_ledger.py -q -p no:randomly
+..........................                                               [100%]
+26 passed in 0.17s
