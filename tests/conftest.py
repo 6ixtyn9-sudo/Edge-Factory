@@ -104,3 +104,78 @@ def _hermetic_env(monkeypatch):
     for knob in _ENV_KNOBS:
         monkeypatch.delenv(knob, raising=False)
     yield
+
+
+# ---- module budget globals (2026-10-12, round-5 close-out A2) --------------
+#
+# The BetExplorer adapter sizes its network work with module-level budgets, and
+# two PRODUCTION call sites clamp one of them with a bare rebind, not a scoped
+# change: scripts/capture_betexplorer.py (capture(): `source._MAX_FETCHES_PER_RUN
+# = limit`) and scripts/picks_today.py (the enrichment entry point:
+# `_be_mod._MAX_FETCHES_PER_RUN = max(0, int(max_fetches))`). Both are
+# deliberate for a real run - one process, one run - but a TEST that exercises
+# either entry point leaves the global at the test's own small value, and the
+# next test in the process then sees a budget it never asked for. Found the hard
+# way: the round-5 census test called capture(max_fixtures=1) and the politeness
+# cache test's second read was refused by the leftover budget of 1
+# (5 passed in isolation, 1 failed in suite order).
+#
+# Rather than rely on every test remembering (monkeypatch only restores what it
+# itself patched), the suite snapshots the budgets before each test and puts
+# them back after. This is the systemic half of A2; the session-end assertion
+# below is the alarm if anything else ever moves them.
+_BUDGET_GLOBALS = (
+    "_MAX_FETCHES_PER_RUN", "_MAX_REQUESTS_PER_RUN", "_MARKET_INTERVAL",
+    "_MAX_MARKET_ROWS", "_MAX_MARKET_LINES", "_MAX_H2H_ROWS",
+    "_MAX_STANDINGS_ROWS", "_MAX_LAST_RESULT_ROWS", "_MAX_BOOKS_RETAINED",
+    "_MAX_MARKET_BOOKS_PER_LINE",
+)
+
+
+#: Run-scoped scalars with the same failure mode as the budgets: a test that
+#: sets one leaves it set for the rest of the process unless it restores it.
+_RUN_STATE_GLOBALS = (
+    "_request_count", "_fetch_count", "_be_429", "_be_cached",
+    "_be_cooling_down", "_market_requests", "_market_budget_stop",
+)
+
+
+def _odds_module():
+    try:
+        from edgefactory.sources import betexplorer_odds as be  # noqa: PLC0415
+    except Exception:  # pragma: no cover - src not importable: nothing to guard
+        return None
+    return be
+
+
+@pytest.fixture(autouse=True)
+def _restore_budget_globals():
+    be = _odds_module()
+    if be is None:
+        yield
+        return
+    names = _BUDGET_GLOBALS + _RUN_STATE_GLOBALS
+    before = {name: getattr(be, name) for name in names if hasattr(be, name)}
+    yield
+    for name, value in before.items():
+        setattr(be, name, value)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _budgets_end_at_their_defaults():
+    """Session-end alarm: the budgets a run would see must be the defaults.
+
+    If a test moves one and something prevents the per-test restore (a module
+    reload, a fixture running outside this conftest, a new pattern), the suite
+    reports it here instead of silently under-budgeting later tests.
+    """
+    defaults = {name: getattr(_odds_module(), name) for name in _BUDGET_GLOBALS}
+    yield
+    be = _odds_module()
+    drifted = {name: (defaults[name], getattr(be, name))
+               for name in _BUDGET_GLOBALS if getattr(be, name) != defaults[name]}
+    assert not drifted, (
+        f"module budgets left below their defaults after the suite: {drifted}. "
+        "Somewhere a test (or a production entry point called from one) rebound a "
+        "budget global without restoring it - see tests/conftest.py, A2 of the "
+        "2026-10-12 close-out.")
