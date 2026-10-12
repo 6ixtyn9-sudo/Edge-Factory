@@ -531,7 +531,10 @@ def test_market_tabs_can_be_turned_off(tmp_path, monkeypatch):
 
 def test_market_tabs_stop_at_the_run_request_budget(tmp_path, monkeypatch):
     monkeypatch.setattr(be, "_MAX_REQUESTS_PER_RUN", 4)
-    be._request_count = 4
+    # Run counter, not a budget: monkeypatched so pytest restores it, rather
+    # than left at 4 for whatever test runs next in this process (A2 of the
+    # 2026-10-12 close-out - same class as the capture() budget clamp).
+    monkeypatch.setattr(be, "_request_count", 4)
     calls: list[str] = []
     rows = _run_pick(calls=calls)
     assert [row["odds"] for row in rows] == [3.10, 3.60, 2.20]
@@ -619,6 +622,12 @@ def test_receipt_keeps_the_row_refusal_census(tmp_path, monkeypatch):
     """
     be._fixture_cache.clear()
     be._match_cache.clear()
+    # capture() clamps the adapter's run budget to max_fixtures (be._MAX_FETCHES_
+    # PER_RUN) with a plain assignment, so an unpatched call would leave the
+    # module budget at 1 for every later test in the process: the politeness
+    # cache test then sees its SECOND read refused by the fetch budget and
+    # returns [] (found 2026-10-12). Recording the value here restores it.
+    monkeypatch.setattr(be, "_MAX_FETCHES_PER_RUN", be._MAX_FETCHES_PER_RUN)
     monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
     monkeypatch.setattr(capture, "_candidate_rows", lambda day: [PICK])
     monkeypatch.setattr(be, "betexplorer_odds_rows_for_pick",
