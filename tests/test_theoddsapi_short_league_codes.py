@@ -31,14 +31,43 @@ from edgefactory.sources.theoddsapi import (  # noqa: E402
     sport_key_for_league,
 )
 
-SPORTS_PATH = ROOT / "localdata" / "theoddsapi_sports.json"
+# The mapping evidence is the FROZEN catalogue, not the live cache.
+#
+# `localdata/theoddsapi_sports.json` is tracked and rewritten by every run, so
+# pinning the mappings against it made this file fail for a non-code reason:
+# on 2026-10-11 the provider delisted Switzerland, Russia and Belgium
+# (`soccer_switzerland_superleague`, `soccer_russia_premier_league`,
+# `soccer_belgium_first_div` - 48 sports before, 45 after, read off the
+# committed caches), and four assertions here went red while every mapping was
+# still correct. `_first_listed` returning None for a delisted competition is
+# the DESIGNED, fail-closed behaviour, and this file must not contradict it.
+#
+# `tests/data/theoddsapi_sports_2026-10-10.json` is the verbatim 48-sport
+# catalogue captured 2026-10-10T04:20:11Z that the alias mappings were
+# verified against (`docs/operator/DATED-CLAIMS.md`,
+# `docs/operator/PROVIDER-EVIDENCE-2026-10-10.md`). It is evidence and cannot
+# move under the test. Live-catalogue drift is asserted as a PROPERTY below
+# (a short code may resolve to its mapped key or to None, never to a
+# different competition), never as an equality against today's churn.
+SPORTS_PATH = ROOT / "tests" / "data" / "theoddsapi_sports_2026-10-10.json"
+LIVE_SPORTS_PATH = ROOT / "localdata" / "theoddsapi_sports.json"
+# The three competitions the live provider delisted on 2026-10-11.
+DELISTED_2026_10_11 = {
+    "Be1": "soccer_belgium_first_div",
+    "Ch1": "soccer_switzerland_superleague",
+    "Ru1": "soccer_russia_premier_league",
+}
 
 
-def _sports():
-    raw = json.loads(SPORTS_PATH.read_text())
+def _load_catalogue(path):
+    raw = json.loads(path.read_text())
     if isinstance(raw, list):
         return raw
     return raw.get("sports", raw.get("data", []))
+
+
+def _sports():
+    return _load_catalogue(SPORTS_PATH)
 
 
 SPORTS = _sports()
@@ -113,7 +142,61 @@ def test_every_mapped_key_exists_in_the_catalogue():
     """A code may never point at a key the provider does not list."""
     for code, keys in SHORT_LEAGUE_KEYS.items():
         assert any(k in CATALOGUE for k in keys), (
-            f"{code} -> {keys}: none present in theoddsapi_sports.json")
+            f"{code} -> {keys}: none present in the frozen 2026-10-10 catalogue")
+
+
+# --------------------------------------------------------------------------
+# provider delisting: the 2026-10-11 regression, and why it is not one
+# --------------------------------------------------------------------------
+
+def test_delisted_competitions_resolve_to_none_never_to_a_neighbour():
+    """The live provider stopped listing three competitions; resolution must
+    fail closed for exactly those codes and leave their neighbours alone.
+
+    Simulated on the frozen catalogue so the case is deterministic: this is
+    the safety property the 10-11 delisting exercised for real, and None is
+    the correct answer - a neighbouring competition's key would be a wrong
+    price on a real card.
+    """
+    trimmed = [s for s in SPORTS if s.get("key") not in set(DELISTED_2026_10_11.values())]
+    assert len(trimmed) == len(SPORTS) - len(DELISTED_2026_10_11)  # precondition
+    for code, key in DELISTED_2026_10_11.items():
+        assert sport_key_for_league(code, trimmed) is None, (
+            f"{code} must stop resolving once {key} is delisted")
+    # Neighbours unaffected by the delisting still resolve.
+    for code, expected in (("It1", "soccer_italy_serie_a"), ("EPL", "soccer_epl")):
+        assert sport_key_for_league(code, trimmed) == expected
+
+
+def test_live_catalogue_drift_is_none_or_the_mapped_key_never_a_wrong_one():
+    """Churn-tolerant property over the LIVE cache that ships in the repo.
+
+    Whatever the provider lists today, a short code may resolve only to one of
+    its own mapped keys or to None. This is the assertion that should have been
+    here on 2026-10-11: it stays green through a delisting instead of reading
+    today's catalogue as if it were part of the mapping.
+    """
+    if not LIVE_SPORTS_PATH.exists():
+        pytest.skip("no live catalogue cache in this checkout")
+    live = _load_catalogue(LIVE_SPORTS_PATH)
+    if not live:
+        pytest.skip("empty live catalogue cache")
+    for code, keys in SHORT_LEAGUE_KEYS.items():
+        resolved = sport_key_for_league(code, live)
+        assert resolved is None or resolved in keys, (
+            f"{code} resolved to {resolved!r}, which is not one of {keys}")
+
+
+def test_the_mapping_evidence_is_a_frozen_snapshot_not_the_live_cache():
+    """Guard the pin itself: this file's equality assertions must read
+    committed evidence. Re-pointing them at the tracked, run-rewritten cache
+    is what turned a provider delisting into four red mappings tests.
+    """
+    assert SPORTS_PATH.name == "theoddsapi_sports_2026-10-10.json"
+    assert "tests" in SPORTS_PATH.parts and "localdata" not in SPORTS_PATH.parts
+    assert set(DELISTED_2026_10_11.values()) <= CATALOGUE, (
+        "the frozen catalogue must still contain the three competitions the "
+        "provider later delisted, or the delisting simulation proves nothing")
 
 
 def test_tiers_never_collapse():

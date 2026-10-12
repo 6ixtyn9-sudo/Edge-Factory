@@ -54,6 +54,8 @@ recollection.
 | `tests/test_betexplorer_identity_guard.py` | regression fixtures reproduce the 2026-10-10 cache evidence | `localdata/betexplorer_odds_cache_2026-10-10.json` |
 | `src/edgefactory/sources/pinnapi_odds.py` | 3,418 prematch events with teams and no markets container observed 2026-10-10; periods tree is the documented prematch shape per vendor docs consulted 2026-10-10 | `localdata/source_health_2026-10-10.json` |
 | `tests/test_pinnapi_odds.py` | documented-shape fixture values taken from the vendor's published example, 2026-10-10 | `tests/fixtures/pinnapi_prematch_documented.json` |
+| `src/edgefactory/sources/pinnapi_odds.py` | 2026-10-11/13 capture held a three-way money_line book beside two-way groups under the same container name; a group without all three sides is now a named drop | `localdata/picks_2026-10-13.json` |
+| `scripts/picks_today.py` | 2026-10-11 coherent-book incident: per-fixture/per-book/per-second 1x2 quotes partition into one three-way book (1.0415) and two-way pairs (1.0293, 1.0468); the maximum-odds tie-break chose the two-way quote | `localdata/picks_2026-10-13.json` |
 
 ## What this does not catch
 
