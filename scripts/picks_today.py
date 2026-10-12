@@ -78,7 +78,11 @@ from edgefactory.phase5_k import (
     source_columns as phase5_source_columns,
 )
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
-from edgefactory.enh_registry import status_for as enh_status_for
+from edgefactory.enh_registry import (
+    clears_floor as enh_clears_floor,
+    floor_for as enh_floor_for,
+    status_for as enh_status_for,
+)
 from edgefactory.source_health import (
     FOREBET_LIVE_LAST_DAY,
     bzzoiro_status_line,
@@ -5963,6 +5967,55 @@ def format_kickoff(pick: dict) -> str:
     return "n/a"
 
 
+def enhancement_board_line(p: dict) -> str | None:
+    """The board's one enhancement line for a pick, or None when it has none.
+
+    Marker 🔬 = priced and clearing its market's floor: a real candidate the
+    operator can act on, still short of registry certification. Marker 🚫 = the
+    Stage 2 floor gate fired, so there is no bet — not paper, not shadow.
+
+    The gate is ``enh_registry.clears_floor`` itself, the same call the
+    enhancement slip uses for its ``[NO BET]`` audit lines, so the board and the
+    slip can never disagree about what is a bet. Operator ruling: "betting on ev
+    will lead us to not bet at all ... we just need prices above a certain
+    threshold, like how autobets does it." EV stays on the row as information
+    and gates nothing here.
+
+    A floorless market never clears (``clears_floor`` is False without a
+    threshold), which is why the team unders that used to print a 🔬 line now
+    print nothing to bet on. Unpriced enhancements return None and print
+    nothing: the EV selector already prefers priced markets, and showing
+    "Home O0.5 (unpriced)" on every favourite is noise.
+    """
+    rec_market = p.get("recommended_enhancement")
+    if not rec_market:
+        return None
+    rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
+    # RT-6: archived/legacy picks can carry None or string probabilities —
+    # a formatting crash here would kill the whole render.
+    try:
+        rec_prob = float(p.get("enhancement_probability") or 0.0)
+    except (TypeError, ValueError):
+        rec_prob = 0.0
+    rec_price = p.get("enhancement_price")
+    if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
+            and math.isfinite(rec_price) and rec_price > 1.0):
+        return None  # NaN/inf/junk must never render as a price (RT-2)
+    book = f" {p.get('enhancement_price_book')}" if p.get("enhancement_price_book") else ""
+    src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
+    edge = p.get("enhancement_edge_sample")
+    edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int, float)) else ""
+    if enh_clears_floor(rec_market, rec_price):
+        return f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}{edge_txt}{src}"
+    # Show WHY it is not a bet rather than hiding the candidate: the gate firing
+    # is audit evidence, and the slip prints the same verdict as [NO BET].
+    gate_floor = enh_floor_for(rec_market)
+    why = (f"below {rec_market} floor {gate_floor:.2f}"
+           if gate_floor is not None else "no floor set for this market")
+    return (f"     🚫 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
+            f" — no bet: {why}{src}")
+
+
 def print_buckets(buckets: dict, title_date: str = ""):
     print(f"\nEdge Factory Picks — {title_date}" if title_date else "\nEdge Factory Picks")
     print("=" * 60)
@@ -6041,31 +6094,9 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 # Vetoed core pick -> side-products are shadow research, never advice.
                 shadow_tag = " [SHADOW — paper]" if p.get("bucket") == "SKIPPED_VETO" else ""
                 print(f"     🔥{shadow_tag} Possible Events: {event_text}")
-            rec_market = p.get("recommended_enhancement")
-            if rec_market:
-                rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
-                # RT-6: archived/legacy picks can carry None or string probabilities —
-                # a formatting crash here would kill the whole render.
-                try:
-                    rec_prob = float(p.get("enhancement_probability") or 0.0)
-                except (TypeError, ValueError):
-                    rec_prob = 0.0
-                rec_price = p.get("enhancement_price")
-                if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
-                        and math.isfinite(rec_price) and rec_price > 1.0):
-                    rec_price = None  # NaN/inf/junk must never render as a price (RT-2)
-                if rec_price is not None:
-                    # Priced but not registry-ELIGIBLE: show the EV pick with
-                    # its captured price and sample edge so the operator can
-                    # act on it. Marker stays 🔬 until the registry certifies.
-                    book = f" {p.get('enhancement_price_book')}" if p.get("enhancement_price_book") else ""
-                    src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
-                    edge = p.get("enhancement_edge_sample")
-                    edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int,float)) else ""
-                    print(f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}{edge_txt}{src}")
-                # Unpriced / research-only enhancements are intentionally
-                # hidden: the EV selector already prefers priced markets, and
-                # showing "Home O0.5 (unpriced)" on every favourite is noise.
+            rec_line = enhancement_board_line(p)
+            if rec_line:
+                print(rec_line)
         print()
     print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
     print("⚠️  Bet only what you can afford to lose.")

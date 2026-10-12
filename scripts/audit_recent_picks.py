@@ -1864,6 +1864,15 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                                 # governance N5 (Addendum 27.11): whether >=2
                                 # distinct sources priced this exact selection.
                                 "multi_source": bool(probe.get("enhancement_multi_source")),
+                                # Slice provenance (2026-10-12): the parent
+                                # pick's bucket and rule, and the enhancement's
+                                # own stated probability. Recorded so the
+                                # settled track record can be sliced by bucket
+                                # and rule; purely provenance, gates nothing.
+                                "bucket": str(pick.get("bucket") or ""),
+                                "rule": str(pick.get("rule")
+                                            or pick.get("display_rule") or ""),
+                                "stated": pick.get("enhancement_probability"),
                             })
 
                 # 5. Granular expectations audit ledger populator
@@ -1982,7 +1991,9 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         for oc in priced_outcomes:
             record_outcome(ROOT, date_=oc["date"], match=oc["match"], market=oc["market"],
                            price=oc["price"], hit=oc["hit"], source=oc["source"],
-                           multi_source=oc.get("multi_source", False))
+                           multi_source=oc.get("multi_source", False),
+                           bucket=oc.get("bucket", ""), rule=oc.get("rule", ""),
+                           stated=oc.get("stated"))
         registry_states = all_statuses(ROOT)
     except Exception:
         registry_states = {}
@@ -2410,6 +2421,61 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
     path.write_text("\n".join(lines) + "\n")
 
 
+def render_track_record(root: Path | None = None) -> str:
+    """The settled enhancement track record, with its floors and its slices.
+
+    This is the operator-facing view of the numbers the Stage 2 floor gate is
+    derived from: per-market hit rate, the price at which that rate exactly pays
+    for itself (``breakeven`` = 1/rate), the floor actually in force, and the
+    settled profit — as percentages of capital, never currency. Every market is
+    PAPER until the hit-rate and CLV evidence justifies staking.
+
+    Slices (bucket / rule) are rendered beside the market row so a floor can be
+    re-derived per bucket instead of pooled. Records written before slice
+    provenance existed are reported as unattributed, never guessed at.
+    """
+    from edgefactory.enh_registry import (ENHANCEMENT_PRICE_FLOORS,
+                                          market_track_record, slice_for_market)
+
+    rows = market_track_record(root)
+    out = ["=" * 78,
+           "ENHANCEMENT MARKET TRACK RECORD (settled registry; PAPER unless stated)"]
+    if not rows:
+        out.append("no settled enhancement history yet")
+        out.append("=" * 78)
+        return "\n".join(out)
+    out.append(f"  {'market':<18}{'status':<10}{'n':>5}{'hits':>6}{'rate':>8}"
+               f"{'breakeven':>11}{'floor':>7}{'profit':>10}")
+    for r in rows:
+        rate = f"{r['rate']:.1%}" if r["n"] else "--"
+        be = f"{r['breakeven']:.3f}" if r.get("breakeven") else "--"
+        floor = f"{r['floor']:.2f}" if r.get("floor") else "none"
+        warn = ""
+        if r["n"] < 30:
+            warn = "  ⚠ small-n"
+        elif r.get("breakeven") and r.get("floor") and r["floor"] < r["breakeven"]:
+            warn = "  ⚠ floor below breakeven"
+        out.append(f"  {r['market']:<18}{r['status']:<10}{r['n']:>5}{r['hits']:>6}"
+                   f"{rate:>8}{be:>11}{floor:>7}{r['profit']:>+10.3f}u{warn}")
+    undefined = sorted(set(ENHANCEMENT_PRICE_FLOORS)
+                       - {r["market"] for r in rows})
+    if undefined:
+        out.append(f"  floors configured with no settled history: "
+                   f"{', '.join(undefined)}")
+    for r in rows:
+        for key in ("bucket", "rule"):
+            slices = slice_for_market(root, r["market"], key)
+            if not slices:
+                continue
+            out.append(f"  {r['market']} by {key}:")
+            for name, s in slices.items():
+                rate = f"{s['rate']:.1%}" if s["n"] else "--"
+                out.append(f"    {name:<32}n={s['n']:<5}hits={s['hits']:<5}"
+                           f"rate={rate:<7}profit={s['profit']:+.3f}u")
+    out.append("=" * 78)
+    return "\n".join(out)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Audit recent archived daily picks against settled warehouse results.")
     ap.add_argument("--end", default=date.today().isoformat(), help="End date inclusive (YYYY-MM-DD).")
@@ -2421,7 +2487,16 @@ def main() -> int:
         action="store_true",
         help="Allow same-day archived picks to count as settled. Default is OFF to avoid live/in-progress false settlements.",
     )
+    ap.add_argument(
+        "--track-record",
+        action="store_true",
+        help="Print the settled enhancement market track record (floors, hit rates, bucket/rule slices) and exit. Reads localdata/enhancement_registry.json only.",
+    )
     args = ap.parse_args()
+
+    if args.track_record:
+        print(render_track_record(ROOT))
+        return 0
 
     end = datetime.strptime(args.end, "%Y-%m-%d").date()
     if args.start:
