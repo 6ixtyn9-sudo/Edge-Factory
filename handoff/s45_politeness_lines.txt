@@ -18,7 +18,7 @@
 == 3. a capture with the transport stubbed: the receipt, whole ==
 {
   "be_429": 0,
-  "be_cached": 1,
+  "be_cached": 0,
   "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
@@ -29,7 +29,10 @@
 
 == 4. the politeness module, collected and run by name ==
   tests/test_betexplorer_politeness.py: 5 test(s)
-    (5 tests collected in 0.05s)
+    (5 tests collected in 0.04s)
   tests/test_betexplorer_match_detail.py: 20 test(s)
     (20 tests collected in 0.05s)
+
+== 5. the repository's own state files, checked after the run ==
+  git status --porcelain -- localdata/  ->  (empty: the demo wrote no real state)
   25 passed in 0.17s
