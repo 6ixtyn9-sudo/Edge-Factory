@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 1,
@@ -31,7 +31,7 @@
         "selection_unmapped": 599
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -59,7 +59,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-13' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -138,7 +138,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
-      "raw": 256,
+      "raw": 238,
       "reason": null,
       "scored": 79,
       "status": null
@@ -159,32 +159,27 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "event_type": "prematch",
-      "freshness_h": 0.0,
-      "join_matched_rows": 10,
+      "freshness_h": null,
+      "join_matched_rows": 11,
       "join_miss_counts": {
-        "fixture_key_miss": 16548,
+        "fixture_key_miss": 16547,
         "no_pick_for_fixture": 70
       },
       "pa_matched": 4,
-      "pa_raw": 910,
+      "pa_raw": 16628,
       "pa_scored": 16628,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -278,9 +273,6 @@
           "unsupported_market:team_total_points_odd_even": 4
         },
         "card_fixture_count": 6,
-        "card_fixtures_on_board": 0,
-        "card_fixtures_reversed": 0,
-        "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 166
@@ -291,16 +283,16 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 20
       },
-      "reason": null,
+      "reason": "cache_rows_pending_join",
       "sa_matched": 0,
-      "sa_raw": 2,
+      "sa_raw": 20,
       "sa_scored": 20,
-      "status": "ok"
+      "status": "cache_only"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

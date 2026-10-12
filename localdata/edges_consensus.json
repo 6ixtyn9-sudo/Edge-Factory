@@ -905,31 +905,32 @@
       "valid": {
         "avg_odds": null,
         "hit": 0.5037,
-        "n": 33990,
-        "n_priced": 32825,
+        "n": 33991,
+        "n_priced": 32826,
         "roi": 0.1148,
         "wilson_lb": 0.4984,
-        "wins": 17121
+        "wins": 17122
       },
       "view": "weighted_1x2",
       "weighted": true,
       "where": "w_score >= 0.55"
     },
     {
+      "benched_at": "2026-10-12",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.7023,
         "checked_at": "2026-10-12",
         "recent": {
-          "n": 87,
-          "wins": 61,
           "hit": 0.7011,
+          "n": 87,
+          "roi": 0.5806,
           "wilson_lb": 0.5981,
-          "roi": 0.5806
+          "wins": 61
         },
-        "baseline_lb": 0.7023,
         "recent_lb": 0.5981,
-        "recent_ub": 0.7872
+        "recent_ub": 0.7872,
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "market": "1x2",
       "rule": "ml-meta avg_p>=55",
@@ -954,8 +955,7 @@
         "wins": 1918
       },
       "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 55",
-      "benched_at": "2026-10-12"
+      "where": "ml_p*100 >= 55"
     },
     {
       "decay": {

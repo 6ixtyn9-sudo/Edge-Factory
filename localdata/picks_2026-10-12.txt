@@ -1,6 +1,6 @@
 Edge Factory Picks — 2026-10-12
 ============================================================
-Generated at: 2026-10-12 00:12:29
+Generated at: 2026-10-12 03:09:32
 
 
 CERTIFIED CLEAN PICKS
@@ -20,10 +20,7 @@ CAUTION PICKS
 
 WATCHLIST — NO MATCHED ODDS
 ============================================================
-  [ML-META≥60] IF Elfsborg vs Halmstad                    KO 12:00 -> HOME   avg 65%  w=0.63 @n/a
-     bucket=WATCHLIST_NO_ODDS  league=se1:UNKNOWN  odds_band=NO_ODDS:UNKNOWN
-     📊 Realized Stats on Home Win (n=1229): Avg Goals: 3.47 | Over 2.5: 67.5% | BTTS: 39.9% | Home Over 1.5 Goals: 85.3% | Away Over 1.5 Goals: 10.5%
-     🔥 Possible Events: Match Over 2.5: 45.0% | Match Over 3.5: 32.4% | Away Team Under 3.5: 97.0% | Away Team Under 2.5: 92.9% | Match Over 4.5: 22.2%
+  (none)
 
 WATCHLIST — UNCORROBORATED SCOUTINGSTATS PRICE
 ============================================================
@@ -31,7 +28,14 @@ WATCHLIST — UNCORROBORATED SCOUTINGSTATS PRICE
 
 WATCHLIST — SUSPECT FUZZY PRICE MATCH
 ============================================================
-  (none)
+  [ML-META≥60] IF Elfsborg vs Halmstad                    KO 17:00 -> HOME   avg 65%  w=0.63 @n/a
+     bucket=WATCHLIST_SUSPECT_PRICE  league=se1:UNKNOWN  odds_band=NO_ODDS:UNKNOWN
+     📊 Realized Stats on Home Win (n=1229): Avg Goals: 3.47 | Over 2.5: 67.5% | BTTS: 39.9% | Home Over 1.5 Goals: 85.3% | Away Over 1.5 Goals: 10.5%
+     🔥 Possible Events: Match Over 3.5: 38.7% | Away Team Under 3.5: 98.7% | Away Team Under 2.5: 93.1% | Match Over 2.5: 44.7% | Match Over 4.5: 22.2%
+  [ML-META≥60] Ludogorets Razgrad vs Arda Kardzhali       KO 17:00 -> HOME   avg 60%  w=1.00 @n/a
+     bucket=WATCHLIST_SUSPECT_PRICE  league=bulgaria first professional league:UNKNOWN  odds_band=NO_ODDS:UNKNOWN
+     📊 Realized Stats on Home Win (n=1587): Avg Goals: 3.27 | Over 2.5: 64.7% | BTTS: 42.2% | Home Over 1.5 Goals: 82.3% | Away Over 1.5 Goals: 10.1%
+     🔥 Possible Events: Match Over 3.5: 33.9% | Away Team Under 3.5: 98.8% | Away Team Under 2.5: 91.9% | Match Over 2.5: 41.8% | Match Over 4.5: 18.4%
 
 WATCHLIST — UNKNOWN CONTEXT
 ============================================================
@@ -39,18 +43,38 @@ WATCHLIST — UNKNOWN CONTEXT
 
 SKIPPED — VETO CONTEXT
 ============================================================
-  [unanimous[statarea+vitibet] avg_p>=70] PAOK vs Kalamata                           KO 10:00 -> HOME   avg 72%  w=1.00 @1.21
+  [unanimous[betclan+vitibet] avg_p>=70] Always Ready vs Independiente Petrolero    KO 2026-10-12T23:15:00+02:00 -> HOME   avg 83%  w=1.00 @n/a
+     bucket=SKIPPED_VETO  league=primera division:UNKNOWN  odds_band=NO_ODDS:UNKNOWN
+     📊 Realized Stats on Home Win (n=48): Avg Goals: 4.69 | Over 2.5: 83.3% | BTTS: 39.6% | Home Over 1.5 Goals: 93.8% | Away Over 1.5 Goals: 10.4%
+     🔥 Possible Events: Home Team Under 3.5: 95.2% | Away Team Under 3.5: 95.1% | Match Over 2.5: 37.6%
+  [unanimous[betclan+vitibet] avg_p>=70] Pyunik Yerevan vs BKMA                     KO 2026-10-12T17:00:00+02:00 -> HOME   avg 78%  w=1.00 @1.21
+     bucket=SKIPPED_VETO  league=am1:UNKNOWN  odds_band=1.20-1.35:UNKNOWN
+     📊 Realized Stats on Home Win (n=217): Avg Goals: 4.09 | Over 2.5: 79.3% | BTTS: 40.1% | Home Over 1.5 Goals: 92.2% | Away Over 1.5 Goals: 8.8%
+     🔥 Possible Events: Match Over 2.5: 45.6% | Match Over 3.5: 48.9% | Away Team Under 3.5: 97.3% | Away Team Under 2.5: 87.2% | Match Over 4.5: 30.8%
+  [unanimous[betclan+vitibet] avg_p>=70] AEK Larnaca FC vs Omonia Aradippou         KO 2026-10-12T18:00:00+02:00 -> HOME   avg 76%  w=1.00 @1.43
+     bucket=SKIPPED_VETO  league=1 division:UNKNOWN  odds_band=1.35-1.50:UNKNOWN
+     📊 Realized Stats on Home Win (n=371): Avg Goals: 4.01 | Over 2.5: 78.2% | BTTS: 42.0% | Home Over 1.5 Goals: 90.6% | Away Over 1.5 Goals: 9.7%
+     🔥 Possible Events: Match Over 2.5: 50.0% | Match Over 3.5: 51.3% | Away Team Under 3.5: 98.2% | Away Team Under 2.5: 90.5% | Match Over 4.5: 32.8%
+  [unanimous[statarea+vitibet] avg_p>=70] PAOK vs Kalamata                           KO 15:00 -> HOME   avg 73%  w=1.00 @1.21
      bucket=SKIPPED_VETO  league=greece super league:UNKNOWN  odds_band=1.20-1.35:UNKNOWN
+     📊 Realized Stats on Home Win (n=605): Avg Goals: 3.79 | Over 2.5: 74.7% | BTTS: 40.7% | Home Over 1.5 Goals: 87.6% | Away Over 1.5 Goals: 9.3%
+     🔥 Possible Events: Match Over 3.5: 48.4%
+  [unanimous[betclan+vitibet] avg_p>=70] Forge vs York United                       KO 2026-10-12T19:00:00+02:00 -> HOME   avg 72%  w=1.00 @n/a
+     bucket=SKIPPED_VETO  league=canada canadian premier league:UNKNOWN  odds_band=NO_ODDS:UNKNOWN
      📊 Realized Stats on Home Win (n=661): Avg Goals: 3.78 | Over 2.5: 74.1% | BTTS: 41.5% | Home Over 1.5 Goals: 87.7% | Away Over 1.5 Goals: 9.7%
-     🔥 Possible Events: Match Over 2.5: 49.7% | Match Over 3.5: 39.9% | Away Team Under 3.5: 97.1% | Away Team Under 2.5: 92.8% | Match Over 4.5: 29.7%
+     🔥 Possible Events: Match Over 2.5: 50.0% | Match Over 3.5: 47.7% | Away Team Under 3.5: 98.7% | Away Team Under 2.5: 93.4% | Match Over 4.5: 29.7%
+  [unanimous[betclan+vitibet] avg_p>=70] Club Universidad de Chile vs Nublense      KO 2026-10-12T22:00:00+02:00 -> HOME   avg 72%  w=1.00 @1.57
+     bucket=SKIPPED_VETO  league=primera division:UNKNOWN  odds_band=1.50-1.75:UNKNOWN
+     📊 Realized Stats on Home Win (n=728): Avg Goals: 3.76 | Over 2.5: 73.6% | BTTS: 41.6% | Home Over 1.5 Goals: 87.5% | Away Over 1.5 Goals: 9.5%
+     🔥 Possible Events: Match Over 3.5: 47.0%
   [unanimous[vitibet+zulubet] avg_p>=70] St. Louis City vs Los Angeles Galaxy       KO 12-10, 00:00 -> HOME   avg 72%  w=1.00 @1.53
      bucket=SKIPPED_VETO  league=usa major league soccer:UNKNOWN  odds_band=1.50-1.75:UNKNOWN
      📊 Realized Stats on Home Win (n=807): Avg Goals: 3.74 | Over 2.5: 73.1% | BTTS: 41.9% | Home Over 1.5 Goals: 87.4% | Away Over 1.5 Goals: 9.8%
      🔥 Possible Events: Match Over 2.5: 49.7% | Match Over 3.5: 39.1% | Away Team Under 3.5: 97.0% | Away Team Under 2.5: 92.4% | Match Over 4.5: 29.4%
-  [ML-META≥60] Hapoel Kfar Saba vs FC Ashdod              KO 11:00 -> AWAY   avg 62%  w=0.49 @1.46
+  [ML-META≥60] Hapoel Kfar Saba vs FC Ashdod              KO 16:00 -> AWAY   avg 62%  w=0.49 @1.46
      bucket=SKIPPED_VETO  league=israel leumit league:UNKNOWN  odds_band=1.35-1.50:BOOST
      📊 Realized Stats on Away Win (n=568): Avg Goals: 3.47 | Over 2.5: 68.5% | BTTS: 41.4% | Home Over 1.5 Goals: 11.1% | Away Over 1.5 Goals: 85.6%
-     🔥 Possible Events: Match Over 2.5: 45.5% | Away Team Over 0.5: 80.5% | Match Over 3.5: 32.4% | Home Team Under 3.5: 99.0% | Home Team Under 2.5: 89.5% | Match Over 4.5: 23.1%
+     🔥 Possible Events: Match Over 2.5: 45.1% | Match Over 3.5: 38.7% | Home Team Under 3.5: 98.0% | Home Team Under 2.5: 89.2% | Home Team Under 1.5: 82.4% | Match Over 4.5: 23.1%
   [ML-META≥55] Hapoel Rishon LeZion vs Maccabi Kabilio Ja KO 09:00 -> HOME   avg 57%  w=0.29 @1.56
      bucket=SKIPPED_VETO  league=israel leumit league:UNKNOWN  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Home Win (n=1669): Avg Goals: 3.22 | Over 2.5: 64.8% | BTTS: 44.0% | Home Over 1.5 Goals: 81.8% | Away Over 1.5 Goals: 10.3%
@@ -60,6 +84,6 @@ SKIPPED — DEAD EDGE
 ============================================================
   (none)
 
-Total archived picks in this report: 7
+Total archived picks in this report: 13
 ⚠️  Flat stakes only. Best odds inflate ROI (~halve it).
 ⚠️  Bet only what you can afford to lose.
