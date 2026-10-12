@@ -55,6 +55,12 @@ import tempfile  # noqa: E402
 from tests.test_betexplorer_match_detail import PICK, _reset_be, _run_pick  # noqa: E402
 
 tmp = pathlib.Path(tempfile.mkdtemp(prefix="s45_receipt_"))
+# BOTH modules write under their own module-level LOCALDATA at call time (the
+# odds cache and the per-match detail ledger in the adapter, the receipt in the
+# wrapper). Point both at a scratch directory before anything runs: a demo run
+# must never write the repository's real state.
+_orig_localdata = (capture.LOCALDATA, be.LOCALDATA)
+capture.LOCALDATA = be.LOCALDATA = tmp
 calls: list[str] = []
 _run_pick(PICK, calls=calls)
 try:
@@ -78,6 +84,14 @@ for module in ("tests/test_betexplorer_politeness.py",
     print(f"  {module}: {len(names)} test(s)")
     tail = [l for l in out.splitlines() if "test" in l and "::" not in l][-1:]
     print(f"    ({tail[0].strip() if tail else '?'})")
+capture.LOCALDATA, be.LOCALDATA = _orig_localdata   # restored; the scratch copy stays behind
+print()
+print("== 5. the repository's own state files, checked after the run ==")
+git_status = subprocess.run(["git", "status", "--porcelain", "--", "localdata/"],
+                            cwd=ROOT, capture_output=True, text=True).stdout.strip()
+print(f"  git status --porcelain -- localdata/  ->  "
+      f"{git_status if git_status else '(empty: the demo wrote no real state)'}")
+
 run = subprocess.run([sys.executable, "-m", "pytest",
                       "tests/test_betexplorer_politeness.py", "tests/test_betexplorer_match_detail.py",
                       "-q", "-p", "no:randomly"], cwd=ROOT, capture_output=True, text=True,
