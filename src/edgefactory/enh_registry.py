@@ -88,6 +88,47 @@ ENHANCEMENT_PRICE_FLOORS: dict[str, float] = {
     "btts_yes": 1.85,
 }
 
+# The absolute margin over break-even that ``derive_floors`` adds to a slice's
+# derived price (1 / wilson_lb + margin). It is the SAME margin the operator's
+# table above already implies — 1.60 over a 1.515 break-even is +0.085, 1.45
+# over 1.375 is +0.075, 3.30 over 3.20 is +0.10, 1.85 over 1.75 is +0.10 — so
+# 0.10 is the table's own upper margin, never a new invention. The derivation
+# prints the margin it used, and the harness A/B (see
+# ``scripts/replay_harness.py``) is what may change it; nothing loosens because
+# this number moves, because the derivation is tighten-only either way.
+ENHANCEMENT_FLOOR_MARGIN = 0.10
+
+
+def derive_floors_for_day(root: Path | None = None, as_of: str | None = None, *,
+                          margin: float = ENHANCEMENT_FLOOR_MARGIN,
+                          parent_floors: dict | None = None,
+                          min_n: int = MIN_PRICED_N) -> dict:
+    """Read the registry and derive the day's floor table (fail-soft).
+
+    The thin convenience around ``derive_floors``: it resolves the registry and
+    the operator's parent table, and on ANY failure answers an empty table
+    (``{"rows": [], "floors": {}, ...}``) — a lane must never crash because a
+    registry is unreadable, and an empty table means every leg falls back to the
+    operator's floor, which is the pre-R2 behaviour.
+    """
+    as_of = str(as_of or date.today().isoformat())[:10]
+    parents = ENHANCEMENT_PRICE_FLOORS if parent_floors is None else parent_floors
+    try:
+        root = root or Path(__file__).resolve().parents[2]
+        reg = _read(registry_path(root))
+        if not isinstance(reg, dict) or not reg:
+            raise ValueError("empty registry")
+        return derive_floors(reg, as_of, parent_floors=parents, margin=margin,
+                             min_n=min_n)
+    except Exception:
+        return {"as_of": as_of, "margin": float(margin), "min_n": int(min_n),
+                "rows": [], "floors": {},
+                "counts": {"market": 0, "league": 0, "team": 0, "inherited": 0,
+                           "market_basis": 0, "league_basis": 0, "team_basis": 0,
+                           "team_slices": 0},
+                "coverage": {"records": 0, "priced": 0, "with_league": 0,
+                             "with_keys": 0, "league_pct": 0.0, "keys_pct": 0.0}}
+
 
 # ---------------------------------------------------------------------------
 # Market scoring: what counts as a HIT for a settled enhancement market
@@ -212,13 +253,20 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
 
 
 def floor_for(market: str | None) -> float | None:
-    """The minimum acceptable price for `market`, or None when it has none."""
+    """The minimum acceptable price for `market`, or None when it has none.
+
+    This is the operator's PARENT floor — the root of the floor hierarchy
+    ``market -> league -> team`` (see ``derive_floors``). It is a plain number
+    and never consults evidence; the per-slice derivation only ever tightens
+    what this returns.
+    """
     if not market:
         return None
     return ENHANCEMENT_PRICE_FLOORS.get(str(market).strip())
 
 
-def clears_floor(market: str | None, price: object) -> bool:
+def clears_floor(market: str | None, price: object, *,
+                 floor: object = None) -> bool:
     """True when `price` is at or above the market's floor.
 
     False for a market with no floor (no threshold exists), and False for
@@ -226,14 +274,306 @@ def clears_floor(market: str | None, price: object) -> bool:
     price" the render and the capture boundary use (RT-2), so a string or a
     bool can never stand in for a decimal price. A leg BELOW its floor is not a
     bet — not paper, not shadow.
+
+    ``floor`` overrides the static lookup with a derived per-slice floor
+    (``derive_floors`` -> ``floor_for_slice``), so the gate has ONE validity
+    rule whether the number came from the operator's table or from the
+    evidence. Passing ``floor=None`` (the default) is the operator's table —
+    unchanged behaviour, byte for byte.
     """
-    floor = floor_for(market)
-    if floor is None:
+    gate = floor_for(market) if floor is None else floor
+    if gate is None:
+        return False
+    if isinstance(gate, bool) or not isinstance(gate, (int, float)):
+        return False
+    if not math.isfinite(float(gate)):
         return False
     if isinstance(price, bool) or not isinstance(price, (int, float)):
         return False
     value = float(price)
-    return math.isfinite(value) and value > 1.0 and value >= floor
+    return math.isfinite(value) and value > 1.0 and value >= float(gate)
+
+
+# ---------------------------------------------------------------------------
+# Dynamic floors (round 6, R2): the floor hierarchy market -> league -> team.
+#
+# The operator's ruling fixed the ROOT of the hierarchy (ENHANCEMENT_PRICE_FLOORS,
+# one number per market). R2 adds the levels below it, derived from the settled
+# registry itself with the statistic the registry already certifies with
+# (``wilson_lb``), and the rules are deliberately blunt:
+#
+#   * a slice INHERITS its parent's floor unless its own evidence unlocks a
+#     deviation;
+#   * the evidence gate is n >= MIN_PRICED_N AND a usable Wilson lower bound —
+#     the same statistic as the PAPER -> ELIGIBLE transition;
+#   * the derived number is 1 / wilson_lb + margin, and it is applied through
+#     max(parent, derived): TIGHTEN-ONLY, always. A slice can never lower its
+#     parent's floor; loosening is an operator ruling, not a derivation;
+#   * a team slice NEVER deviates (it is report-only: too thin to certify), and
+#     a market with no operator floor never gains one — it stays floorless, so
+#     it still cannot fire;
+#   * no lookahead: day D's floors use only records dated strictly before D. The
+#     derivation is pure — registry in, table out, no clock and no I/O — so the
+#     day's floors are re-derivable from the registry commit plus the inputs
+#     printed into the slip;
+#   * records written before the slice fields existed are reported as
+#     ``unattributed`` and inherit; nothing is guessed at.
+# ---------------------------------------------------------------------------
+FLOOR_BASIS_INHERITED = "inherited"
+FLOOR_BASIS_MARKET = "market"
+FLOOR_BASIS_LEAGUE = "league"
+FLOOR_BASIS_TEAM = "team"          # report-only: the row's evidence is shown, never applied
+UNATTRIBUTED_LEAGUE = "unattributed"
+
+
+def _priced_records_before(records: object, as_of: str) -> list[dict]:
+    """Priced records dated strictly before ``as_of`` (the no-lookahead rule).
+
+    "Priced" is the same test ``slice_records`` and the certification path use:
+    a finite real number > 1.0. A record without a usable date is excluded —
+    an undated record cannot be shown to precede the day being derived.
+    """
+    out = []
+    for rec in records or []:
+        try:
+            if not isinstance(rec, dict):
+                continue
+            day = str(rec.get("date") or "")[:10]
+            if not day or day >= as_of:
+                continue
+            price = rec.get("price")
+            if isinstance(price, bool) or not isinstance(price, (int, float)):
+                continue
+            if not math.isfinite(float(price)) or float(price) <= 1.0:
+                continue
+            out.append(rec)
+        except Exception:
+            continue
+    out.sort(key=lambda r: (str(r.get("date") or ""), str(r.get("match") or "")))
+    return out
+
+
+def _slice_evidence(recs: list[dict]) -> dict:
+    """n / hits / rate / Wilson LB for one priced record slice."""
+    n = len(recs)
+    hits = sum(1 for r in recs if r.get("hit"))
+    rate = (hits / n) if n else 0.0
+    lb = wilson_lb(hits, n) if n else 0.0
+    return {"n": n, "hits": hits, "rate": rate, "wilson_lb": lb,
+            "breakeven": (1.0 / rate) if rate else None}
+
+
+def _candidate_floor(evidence: dict, margin: float, min_n: int) -> float | None:
+    """1 / wilson_lb + margin — the one derived number — or None when gated.
+
+    Gate: n >= min_n AND a strictly positive lower bound (a slice whose LB
+    rounds to 0 has no usable lower bound, so it cannot raise anything).
+    """
+    if evidence["n"] < min_n or evidence["wilson_lb"] <= 0.0:
+        return None
+    return 1.0 / evidence["wilson_lb"] + float(margin)
+
+
+def derive_floors(registry: dict, as_of: str, *, parent_floors: dict,
+                  margin: float, min_n: int = MIN_PRICED_N) -> dict:
+    """Derive the day's per-slice floor table from the settled registry.
+
+    ``registry`` is the parsed ``enhancement_registry.json`` payload (any
+    version; unknown versions simply yield no records), ``as_of`` is the day
+    being derived for (only records dated strictly before it count),
+    ``parent_floors`` is the operator's root table (``ENHANCEMENT_PRICE_FLOORS``)
+    and ``margin`` the operator's absolute margin over break-even. ``min_n``
+    defaults to ``MIN_PRICED_N`` — pass it, never a new literal.
+
+    Returns::
+
+        {"as_of", "margin", "min_n",
+         "rows": [ {level, market, league, team, name, n, hits, rate,
+                    wilson_lb, breakeven, candidate_floor, parent_floor,
+                    floor, basis, gate, reason} ],
+         "floors": {"<market>": {"floor", "basis"},
+                    "<market>|<league>": {"floor", "basis"}},
+         "counts": {"market": i, "league": l, "team": t, "inherited": h,
+                    "team_slices": evaluated},
+         "coverage": {"records": n, "priced": n, "with_league": n,
+                      "with_keys": n, "league_pct": f, "keys_pct": f}}
+
+    Pure and deterministic: same inputs -> same output, no clock, no I/O.
+    ``basis`` on a row is where the APPLIED floor came from; a team row whose
+    own evidence clears the gate is labelled ``basis="team"`` and still carries
+    the parent's floor — its ``candidate_floor`` is the number its evidence
+    would give, reported, never applied.
+    """
+    as_of = str(as_of)[:10]
+    market_rows: list[dict] = []
+    league_rows: list[dict] = []
+    team_rows: list[dict] = []
+    team_slices_seen = 0
+
+    markets = registry.get("markets") if isinstance(registry, dict) else None
+    markets = markets if isinstance(markets, dict) else {}
+    priced_total = 0
+    with_league = 0
+    with_keys = 0
+
+    def _team_keys(rec: dict) -> list[tuple[str, str]]:
+        keys = []
+        for side in ("home", "away"):
+            key = str(rec.get(f"{side}_key") or "").strip()
+            name = str(rec.get(side) or "").strip()
+            if key:
+                keys.append((key, name))
+        return keys
+
+    for mkey, entry in sorted(markets.items()):
+        plain = mkey[: -len(f"@{REGISTRY_VERSION}")] if mkey.endswith(f"@{REGISTRY_VERSION}") else mkey
+        recs = _priced_records_before((entry or {}).get("records") if isinstance(entry, dict) else None, as_of)
+        priced_total += len(recs)
+        with_league += sum(1 for r in recs if str(r.get("league") or "").strip())
+        with_keys += sum(1 for r in recs
+                         if str(r.get("home_key") or "").strip() and str(r.get("away_key") or "").strip())
+        parent = floor_for(plain)
+        evidence = _slice_evidence(recs)
+        candidate = _candidate_floor(evidence, margin, min_n)
+        applied = parent
+        basis = FLOOR_BASIS_INHERITED
+        gate = candidate is not None
+        if parent is None:
+            reason = "no operator floor for this market — stays floorless, cannot fire"
+        elif gate and candidate > parent:
+            applied, basis = candidate, FLOOR_BASIS_MARKET
+            reason = (f"market evidence n={evidence['n']} wilsonLB={evidence['wilson_lb']:.4f} "
+                      f"-> {candidate:.4f} > parent {parent:.2f}")
+        elif gate:
+            reason = (f"market evidence n={evidence['n']} wilsonLB={evidence['wilson_lb']:.4f} "
+                      f"-> {candidate:.4f} <= parent {parent:.2f} (clamped)")
+        else:
+            reason = (f"market evidence thin or unbounded (n={evidence['n']} of {min_n}) "
+                      "— inherits parent")
+        market_rows.append({
+            "level": "market", "market": plain, "league": None, "team": None,
+            "name": plain, **evidence, "candidate_floor": candidate,
+            "parent_floor": parent, "floor": applied, "basis": basis,
+            "gate": gate, "reason": reason,
+        })
+
+        leagues: dict[str, list[dict]] = {}
+        for rec in recs:
+            leagues.setdefault(str(rec.get("league") or "").strip() or UNATTRIBUTED_LEAGUE, []).append(rec)
+        for league, lrecs in sorted(leagues.items()):
+            lev = _slice_evidence(lrecs)
+            recorded = league != UNATTRIBUTED_LEAGUE
+            lcand = _candidate_floor(lev, margin, min_n) if recorded else None
+            # The parent of a league slice is the MARKET's APPLIED floor (which
+            # may itself have been tightened), never the operator's root: a
+            # slice tightens its parent, and its parent is what actually gates.
+            lparent = applied
+            lapplied, lbasis = lparent, FLOOR_BASIS_INHERITED
+            lgate = lcand is not None
+            if not recorded:
+                # No league recorded for these records: they are not a league
+                # slice, they are the absence of one. They inherit the market
+                # floor and can never unlock a deviation.
+                lcand = None
+                lreason = ("no league recorded on these records — inherits the market "
+                           "floor (a backfill is how a league slice appears)")
+            elif lparent is None:
+                lreason = "market floorless — no league floor to raise"
+            elif lgate and lcand > lparent:
+                lapplied, lbasis = lcand, FLOOR_BASIS_LEAGUE
+                lreason = (f"league evidence n={lev['n']} wilsonLB={lev['wilson_lb']:.4f} "
+                           f"-> {lcand:.4f} > market {lparent:.4f}")
+            elif lgate:
+                lreason = (f"league evidence n={lev['n']} wilsonLB={lev['wilson_lb']:.4f} "
+                           f"-> {lcand:.4f} <= market {lparent:.4f} (clamped)")
+            else:
+                lreason = (f"league evidence thin or unbounded (n={lev['n']} of {min_n}) "
+                           "— inherits market")
+            league_rows.append({
+                "level": "league", "market": plain, "league": league, "team": None,
+                "name": league, **lev, "candidate_floor": lcand,
+                "parent_floor": lparent, "floor": lapplied, "basis": lbasis,
+                "gate": lgate, "reason": lreason,
+            })
+
+            teams: dict[str, dict] = {}
+            for rec in lrecs:
+                for key, name in _team_keys(rec):
+                    slot = teams.setdefault(key, {"names": [], "recs": []})
+                    slot["recs"].append(rec)
+                    if name and name not in slot["names"]:
+                        slot["names"].append(name)
+            for key, slot in sorted(teams.items()):
+                team_slices_seen += 1
+                tev = _slice_evidence(slot["recs"])
+                tcand = _candidate_floor(tev, margin, min_n)
+                tgate = tcand is not None
+                if tgate:
+                    treason = (f"team evidence n={tev['n']} wilsonLB={tev['wilson_lb']:.4f} "
+                               f"-> {tcand:.4f} REPORTED, not applied: a team slice never "
+                               "deviates (too thin to certify)")
+                else:
+                    treason = (f"team evidence thin or unbounded (n={tev['n']} of {min_n}) "
+                               "— report-only, inherits")
+                if tev["n"] < min_n and not tgate:
+                    continue          # a thin team slice is not worth a table row
+                team_rows.append({
+                    "level": "team", "market": plain, "league": league, "team": key,
+                    "name": sorted(slot["names"])[0] if slot["names"] else key,
+                    **tev, "candidate_floor": tcand, "parent_floor": lapplied,
+                    "floor": lapplied,
+                    "basis": FLOOR_BASIS_TEAM if tgate else FLOOR_BASIS_INHERITED,
+                    "gate": tgate, "reason": treason,
+                })
+
+    floors: dict[str, dict] = {}
+    for row in market_rows:
+        floors[row["market"]] = {"floor": row["floor"], "basis": row["basis"]}
+    for row in league_rows:
+        floors[f"{row['market']}|{row['league']}"] = {"floor": row["floor"],
+                                                      "basis": row["basis"]}
+    counts = {
+        "market": len(market_rows),
+        "league": len(league_rows),
+        "team": len(team_rows),
+        "inherited": sum(1 for r in market_rows + league_rows + team_rows
+                         if r["basis"] == FLOOR_BASIS_INHERITED),
+        "market_basis": sum(1 for r in market_rows if r["basis"] == FLOOR_BASIS_MARKET),
+        "league_basis": sum(1 for r in league_rows if r["basis"] == FLOOR_BASIS_LEAGUE),
+        "team_basis": sum(1 for r in team_rows if r["basis"] == FLOOR_BASIS_TEAM),
+        "team_slices": team_slices_seen,
+    }
+    coverage = {
+        "records": priced_total, "priced": priced_total,
+        "with_league": with_league, "with_keys": with_keys,
+        "league_pct": (100.0 * with_league / priced_total) if priced_total else 0.0,
+        "keys_pct": (100.0 * with_keys / priced_total) if priced_total else 0.0,
+    }
+    return {"as_of": as_of, "margin": float(margin), "min_n": int(min_n),
+            "rows": market_rows + league_rows + team_rows,
+            "floors": floors, "counts": counts, "coverage": coverage}
+
+
+def floor_for_slice(derived: dict, market: str | None,
+                    league: str | None = None) -> tuple[float | None, str]:
+    """(floor, basis) applied to one leg: its league slice, else the market root.
+
+    A leg with no league (or one the registry has never seen) inherits the
+    market root. Team slices are report-only and are therefore never consulted
+    here. Returns ``(None, "inherited")`` for a market with no floor.
+    """
+    market = str(market or "").strip()
+    floors = (derived or {}).get("floors") if isinstance(derived, dict) else None
+    floors = floors if isinstance(floors, dict) else {}
+    league = str(league or "").strip()
+    if league:
+        slot = floors.get(f"{market}|{league}")
+        if isinstance(slot, dict) and slot.get("floor") is not None:
+            return float(slot["floor"]), str(slot.get("basis") or FLOOR_BASIS_INHERITED)
+    slot = floors.get(market)
+    if isinstance(slot, dict) and slot.get("floor") is not None:
+        return float(slot["floor"]), str(slot.get("basis") or FLOOR_BASIS_INHERITED)
+    return None, FLOOR_BASIS_INHERITED
 
 
 def registry_path(root: Path) -> Path:
