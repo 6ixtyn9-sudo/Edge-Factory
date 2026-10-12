@@ -703,6 +703,29 @@ def _evaluate(entry: dict, today: str) -> None:
                              status_reason=f"rolling {BENCH_WINDOW_DAYS}d roi={roi:+.4f} on n={len(recs)} (circuit breaker)")
 
 
+def processed_window_is_safe(keys_in_window: int, *, cap: int = MAX_PROCESSED_KEYS) -> bool:
+    """Trim-safety (round 6D): can ``processed`` dedupe a whole rescan window?
+
+    ``processed`` is the registry's dedup list and it is capped at
+    ``MAX_PROCESSED_KEYS`` by trimming the OLDEST keys. That is safe only while a
+    key can never be re-encountered by a later run after being trimmed: a
+    trimmed key that is still inside a rescan window would be recorded again,
+    and if it was priced the certification counters would double-count.
+
+    The invariant is therefore: the keys ONE market can present inside any
+    rescan window are fewer than the cap, so the trim can never reach inside the
+    window. This function is that test, in one place, for the callers (and the
+    suite) that must check it as the archives grow.
+
+    Measured 2026-10-12 over the committed archives (118 pick files): the worst
+    per-market 30-day window is 428 keys (``match_over_25``) and the
+    whole-archive window is 702 — both below 1600. If a market ever crosses, the
+    unpriced keys have to move to their own capped list rather than sharing
+    ``processed``.
+    """
+    return int(keys_in_window) < int(cap)
+
+
 def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                    price: float | None, hit: bool, source: str = "",
                    today: str | None = None, multi_source: bool = False,
