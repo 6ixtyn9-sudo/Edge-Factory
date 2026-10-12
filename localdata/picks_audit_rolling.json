@@ -388,9 +388,15 @@
   "empty_regular_ledger_dates": [],
   "end": "2026-10-12",
   "enhancement_registry": {
+    "away_over_05": "SHADOW",
     "away_under_25": "PAPER",
     "away_under_35": "PAPER",
     "btts_yes": "PAPER",
+    "goal_range_2_3": "SHADOW",
+    "goal_range_4_6": "SHADOW",
+    "home_over_05": "SHADOW",
+    "home_under_25": "SHADOW",
+    "home_under_35": "SHADOW",
     "match_over_15": "PAPER",
     "match_over_25": "PAPER",
     "match_over_35": "PAPER",
@@ -401,74 +407,110 @@
       "away_over_05": {
         "hit_rate": 0.863636,
         "hits": 19,
+        "price_note": "hit-rate only: a mapped feed quoted no price for it in this window",
+        "price_source_class": "no_price_observed",
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 22
+        "recommended": 22,
+        "registry_processed": 47,
+        "settled": 22
       },
       "away_under_25": {
         "hit_rate": 0.96,
         "hits": 24,
+        "price_note": "",
+        "price_source_class": "priced",
         "priced_hits": 1,
         "priced_n": 1,
         "priced_roi": 0.9,
-        "recommended": 25
+        "recommended": 25,
+        "registry_processed": 25,
+        "settled": 25
       },
       "away_under_35": {
         "hit_rate": 0.974093,
         "hits": 188,
+        "price_note": "",
+        "price_source_class": "priced",
         "priced_hits": 1,
         "priced_n": 1,
         "priced_roi": 0.435,
-        "recommended": 193
+        "recommended": 193,
+        "registry_processed": 249,
+        "settled": 193
       },
       "home_over_05": {
         "hit_rate": 0.833333,
         "hits": 15,
+        "price_note": "hit-rate only: a mapped feed quoted no price for it in this window",
+        "price_source_class": "no_price_observed",
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 18
+        "recommended": 18,
+        "registry_processed": 181,
+        "settled": 18
       },
       "home_under_25": {
         "hit_rate": 0.939394,
         "hits": 31,
+        "price_note": "hit-rate only: a mapped feed quoted no price for it in this window",
+        "price_source_class": "no_price_observed",
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 33
+        "recommended": 33,
+        "registry_processed": 36,
+        "settled": 33
       },
       "home_under_35": {
         "hit_rate": 0.972973,
         "hits": 36,
+        "price_note": "hit-rate only: a mapped feed quoted no price for it in this window",
+        "price_source_class": "no_price_observed",
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 37
+        "recommended": 37,
+        "registry_processed": 55,
+        "settled": 37
       },
       "match_over_15": {
         "hit_rate": 0.857143,
         "hits": 6,
+        "price_note": "",
+        "price_source_class": "priced",
         "priced_hits": 5,
         "priced_n": 6,
         "priced_roi": -0.088333,
-        "recommended": 7
+        "recommended": 7,
+        "registry_processed": 54,
+        "settled": 7
       },
       "match_over_25": {
         "hit_rate": 0.648889,
         "hits": 146,
+        "price_note": "",
+        "price_source_class": "priced",
         "priced_hits": 99,
         "priced_n": 146,
         "priced_roi": 0.027582,
-        "recommended": 225
+        "recommended": 225,
+        "registry_processed": 565,
+        "settled": 225
       },
       "match_over_45": {
         "hit_rate": 1.0,
         "hits": 1,
+        "price_note": "",
+        "price_source_class": "priced",
         "priced_hits": 1,
         "priced_n": 1,
         "priced_roi": 5.6,
-        "recommended": 1
+        "recommended": 1,
+        "registry_processed": 1,
+        "settled": 1
       }
     },
     "hit_rate": 0.83066,

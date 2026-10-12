@@ -1,11 +1,11 @@
-O2.5 TRACKER — graded 685/729 listed overs (window 2026-07-31..2026-10-13)
+O2.5 TRACKER — graded 686/729 listed overs (window 2026-07-31..2026-10-13)
 
 cut                                   n    hit  stated     ROI
-ALL priced                          633    64%     50%   -6.1%
+ALL priced                          634    64%     50%   -6.2%
 band 50-60%                         201    67%     53%   -7.8%
-band <50%                           413    63%     47%   -4.6%
+band <50%                           414    63%     47%   -4.9%
 band >=60%                           19    63%     90%  -19.9%
-SHARP-priced (theoddsapi/betexpl)   203    65%     49%   -9.1%
+SHARP-priced (theoddsapi/betexpl)   204    65%     49%   -9.5%
 SOFT-priced (scoutingstats)         269    65%     49%   -0.9%
 
 --- goals surface by rule ---
@@ -13,7 +13,7 @@ rule 2way-unanimous avg_p>=60        54    63%     48%   -6.8%
 rule 2way-unanimous avg_p>=70       141    68%     51%   -6.2%
 rule 2way-unanimous min_p>=60 avg_p>=65    1   100%     45%  +36.0%
 rule 3way-unanimous avg_p>=65         4    75%     52%   +9.7%
-rule ml-meta avg_p>=55              275    63%     48%   -2.7%
+rule ml-meta avg_p>=55              276    63%     48%   -3.1%
 rule ml-meta avg_p>=60               51    55%     47%  -10.3%
 rule ml-meta avg_p>=65               25    72%     48%   -8.8%
 rule ml-meta avg_p>=70               14    86%     50%   +8.6%
@@ -26,7 +26,7 @@ rule unanimous[vitibet+zulubet] avg_p>=    2   100%     49%  +64.3%
 --- goals surface by bucket ---
 bucket CAUTION                       75    67%     50%   +6.4%
 bucket CERTIFIED_CLEAN               38    53%     47%  -16.7%
-bucket SKIPPED_VETO                 349    66%     49%   -6.1%
+bucket SKIPPED_VETO                 350    66%     49%   -6.4%
 bucket WATCHLIST_NO_ODDS              5    60%     51%  -12.0%
 bucket WATCHLIST_SUSPECT_PRICE       19    63%     57%  -12.3%
 bucket WATCHLIST_UNCORROBORATED_PRICE  127    60%     53%   -9.7%
@@ -37,12 +37,12 @@ CHECKPOINT 3 GATE (50-60% band, priced):
    band 50-60% priced               201    67%     53%   -7.8%
    STATUS: PENDING — hit 67% < 70%, ROI -7.8% <= 0
 
-pending priced overs (results not yet filed): 32
+pending priced overs (results not yet filed): 31
+   2026-09-22 45% @ 2.37 (scoutingstats)
    2026-09-27 46% @ 1.31 (betexplorer_odds)
    2026-10-03 50% @ 2.6 (zulubet)
    2026-10-11 50% @ 2.1 (pinnapi_odds)
    2026-10-11 52% @ 1.37 (theoddsapi)
-   2026-10-11 49% @ 1.44 (theoddsapi)
    2026-10-12 50% @ 1.43 (betexplorer_odds)
    2026-10-12 49% @ 1.47 (scoutingstats)
    2026-10-12 45% @ 1.46 (betexplorer_odds)
