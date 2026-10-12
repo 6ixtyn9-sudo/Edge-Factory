@@ -94,6 +94,19 @@ def _candidate_rows(day: str) -> list[dict]:
     return unique
 
 
+# Receipt stat whitelist: which of the adapter's run and request counters reach
+# the capture receipt. The row-refusal census (`be_rows_rejected` and its
+# reasons) belongs here beside the request counters: it is the evidence the
+# 2026-10-12 row-join guard is audited from (round-2 §2.2), and in the
+# delivered patch the whitelist dropped it, so the census never reached the
+# receipt. Everything not listed stays in the run log only.
+RECEIPT_STAT_KEYS = frozenset({
+    "be_429", "be_cooling_down", "be_cached", "be_fetches",
+    "requests", "market_requests", "market_budget_stop",
+    "be_rows_rejected", "be_rows_rejected_reasons",
+})
+
+
 def _receipt_path(day: str) -> Path:
     return LOCALDATA / f"betexplorer_capture_{str(day)[:10]}.json"
 
@@ -205,8 +218,7 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
             key: value
             for stats in (source.run_stats(), source.request_stats())
             for key, value in stats.items()
-            if key in {"be_429", "be_cooling_down", "be_cached", "be_fetches",
-                       "requests", "market_requests", "market_budget_stop"}
+            if key in RECEIPT_STAT_KEYS
         })
         receipt["match_detail"] = _detail_summary(day)
         receipt["status"] = "ok" if receipt["rows"] else "empty"
