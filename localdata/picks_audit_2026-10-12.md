@@ -43,15 +43,15 @@ Performance of deep context-derived recommended enhancements overlay:
 - **Overall Hit Rate**: 83.1%
 
 ### Breakdown by Enhancement Type:
-- `away_over_05`: recommended=22, hits=19, hit_rate=86.4%
-- `away_under_25`: recommended=25, hits=24, hit_rate=96.0%
-- `away_under_35`: recommended=193, hits=188, hit_rate=97.4%
-- `home_over_05`: recommended=18, hits=15, hit_rate=83.3%
-- `home_under_25`: recommended=33, hits=31, hit_rate=93.9%
-- `home_under_35`: recommended=37, hits=36, hit_rate=97.3%
-- `match_over_15`: recommended=7, hits=6, hit_rate=85.7%
-- `match_over_25`: recommended=225, hits=146, hit_rate=64.9%
-- `match_over_45`: recommended=1, hits=1, hit_rate=100.0%
+- `away_over_05`: recommended=22, settled=22, hit_rate=86.4%, priced_n=0, registry_processed=47, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `away_under_25`: recommended=25, settled=25, hit_rate=96.0%, priced_n=1, registry_processed=25, class=priced
+- `away_under_35`: recommended=193, settled=193, hit_rate=97.4%, priced_n=1, registry_processed=249, class=priced
+- `home_over_05`: recommended=18, settled=18, hit_rate=83.3%, priced_n=0, registry_processed=181, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `home_under_25`: recommended=33, settled=33, hit_rate=93.9%, priced_n=0, registry_processed=36, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `home_under_35`: recommended=37, settled=37, hit_rate=97.3%, priced_n=0, registry_processed=55, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `match_over_15`: recommended=7, settled=7, hit_rate=85.7%, priced_n=6, registry_processed=54, class=priced
+- `match_over_25`: recommended=225, settled=225, hit_rate=64.9%, priced_n=146, registry_processed=565, class=priced
+- `match_over_45`: recommended=1, settled=1, hit_rate=100.0%, priced_n=1, registry_processed=1, class=priced
 
 ## Possible Events (🔥) Full-Surface Audit
 

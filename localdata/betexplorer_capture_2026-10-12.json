@@ -1,5 +1,5 @@
 {
-  "attempted": 10,
+  "attempted": 12,
   "attempted_fixtures": [
     {
       "avg_p": 83.0,
@@ -62,6 +62,16 @@
       "w_score": 1.0
     },
     {
+      "avg_p": 71.5,
+      "away": "Los Angeles Galaxy",
+      "date": "2026-10-12",
+      "home": "St. Louis City",
+      "league": "USA Major League Soccer",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
       "avg_p": 65.2,
       "away": "Halmstad",
       "date": "2026-10-12",
@@ -80,6 +90,16 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 0.4857
+    },
+    {
+      "avg_p": 61.2,
+      "away": "Zorya Luhansk",
+      "date": "2026-10-12",
+      "home": "Livyi Bereh",
+      "league": "Ukraine Premier League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.4542
     },
     {
       "avg_p": 60.7,
@@ -103,13 +123,31 @@
     }
   ],
   "be_429": 0,
-  "be_cached": 9,
+  "be_cached": 11,
   "be_cooling_down": false,
-  "candidate_fixtures": 10,
-  "captured_at": "2026-10-12T04:07:19.177338+00:00",
+  "be_rows_rejected": 3,
+  "be_rows_rejected_reasons": {
+    "row teams do not both match the pick": 3
+  },
+  "candidate_fixtures": 14,
+  "captured_at": "2026-10-12T20:25:30.372545+00:00",
   "date": "2026-10-12",
   "errors": [],
-  "fixtures_with_rows": 8,
+  "fixtures_with_rows": 9,
+  "market_budget_stop": false,
+  "market_requests": 5,
+  "match_detail": {
+    "bookmakers": 19,
+    "challenge_pages": 0,
+    "fixtures": 1,
+    "market_rows": 57,
+    "markets": 6,
+    "named_rows": 57,
+    "standings_rows": 0,
+    "with_h2h": 0,
+    "with_last_results": 0,
+    "with_standings": 0
+  },
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
@@ -128,16 +166,6 @@
       "date": "2026-10-12",
       "home": "AEK Larnaca FC",
       "league": "Cyprus: 1. Division",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 72.5,
-      "away": "York United",
-      "date": "2026-10-12",
-      "home": "Forge",
-      "league": "Canada: Canadian Premier League",
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
@@ -163,6 +191,16 @@
       "w_score": 1.0
     },
     {
+      "avg_p": 71.5,
+      "away": "Los Angeles Galaxy",
+      "date": "2026-10-12",
+      "home": "St. Louis City",
+      "league": "USA Major League Soccer",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
       "avg_p": 65.2,
       "away": "Halmstad",
       "date": "2026-10-12",
@@ -183,6 +221,16 @@
       "w_score": 0.4857
     },
     {
+      "avg_p": 61.2,
+      "away": "Zorya Luhansk",
+      "date": "2026-10-12",
+      "home": "Livyi Bereh",
+      "league": "Ukraine Premier League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.4542
+    },
+    {
       "avg_p": 60.4,
       "away": "Arda Kardzhali",
       "date": "2026-10-12",
@@ -193,7 +241,8 @@
       "w_score": 1.0
     }
   ],
-  "rows": 24,
+  "requests": 9,
+  "rows": 27,
   "schema": 1,
   "status": "ok"
 }

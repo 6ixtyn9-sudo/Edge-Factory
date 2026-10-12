@@ -1,49 +1,11 @@
 {
   "added": 0,
-  "attempted": 5,
-  "attempted_fixtures": [
-    {
-      "away": "Kalamata",
-      "date": "2026-10-12",
-      "home": "PAOK",
-      "kickoff": "11:00",
-      "league": "Greece,Super League"
-    },
-    {
-      "away": "FC Ashdod",
-      "date": "2026-10-12",
-      "home": "Hapoel Kfar Saba",
-      "kickoff": "12:00",
-      "league": "Israel,Leumit League"
-    },
-    {
-      "away": "Zorya Luhansk",
-      "date": "2026-10-12",
-      "home": "Livyi Bereh",
-      "kickoff": "12-10, 11:00",
-      "league": "Ukraine Premier League"
-    },
-    {
-      "away": "Coban Imperial",
-      "date": "2026-10-12",
-      "home": "Antigua GFC",
-      "kickoff": "18:10",
-      "league": "Guatemala,Liga Nacional Apertura"
-    },
-    {
-      "away": "Maccabi Kabilio Jaffa",
-      "date": "2026-10-12",
-      "home": "Hapoel Rishon LeZion",
-      "kickoff": "09:00",
-      "league": "Israel,Leumit League"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 14,
-  "captured_at": "2026-10-12T04:14:25+00:00",
+  "captured_at": "2026-10-12T20:32:56+00:00",
   "date": "2026-10-12",
-  "due_reasons": {
-    "first_at": 5
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -51,34 +13,27 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
+    "kickoff_already_passed": 3,
     "priced": 2,
-    "retry_cooldown": 6
+    "retry_cooldown": 9
   },
   "skipped": [
     "Always Ready|Independiente Petrolero (retry cooldown (6h after failed attempt))",
     "Pyunik Yerevan|BKMA (retry cooldown (6h after failed attempt))",
     "AEK Larnaca FC|Omonia Aradippou (retry cooldown (6h after failed attempt))",
     "Forge|York United (retry cooldown (6h after failed attempt))",
+    "PAOK|Kalamata (retry cooldown (6h after failed attempt))",
     "Club Universidad de Chile|Nublense (priced)",
     "St. Louis City|Los Angeles Galaxy (kickoff already passed)",
     "IF Elfsborg|Halmstad (priced)",
-    "Guangzhou Dandelion|Shanghai Second (retry cooldown (6h after failed attempt))",
-    "Ludogorets Razgrad|Arda Kardzhali (retry cooldown (6h after failed attempt))"
+    "Hapoel Kfar Saba|FC Ashdod (retry cooldown (6h after failed attempt))",
+    "Livyi Bereh|Zorya Luhansk (kickoff already passed)",
+    "Guangzhou Dandelion|Shanghai Second (kickoff already passed)",
+    "Ludogorets Razgrad|Arda Kardzhali (retry cooldown (6h after failed attempt))",
+    "Antigua GFC|Coban Imperial (retry cooldown (6h after failed attempt))",
+    "Hapoel Rishon LeZion|Maccabi Kabilio Jaffa (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Hapoel Kfar Saba vs FC Ashdod (league not covered: Israel,Leumit League)",
-    "Livyi Bereh vs Zorya Luhansk (league not covered: Ukraine Premier League)",
-    "Antigua GFC vs Coban Imperial (league not covered: Guatemala,Liga Nacional Apertura)",
-    "Hapoel Rishon LeZion vs Maccabi Kabilio Jaffa (league not covered: Israel,Leumit League)",
-    "PAOK vs Kalamata (no event in soccer_greece_super_league)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Guatemala,Liga Nacional Apertura": 1,
-    "league not covered: Israel,Leumit League": 2,
-    "league not covered: Ukraine Premier League": 1,
-    "no event in soccer_greece_super_league": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
