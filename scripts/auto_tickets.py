@@ -3342,8 +3342,33 @@ def leg_lookup_key(slip_date, leg):
 
 # Legs whose index row was found by a compatibility key rather than by the
 # recomputed one. Empty in normal operation; a non-empty list means stored
-# identities predate a fold change and had to be migrated at read.
-LEGACY_KEY_HITS: list[tuple[str, tuple]] = []
+# identities predate a fold change and had to be migrated at read. Each
+# entry is an audit record (both keys, slip day, resolved fixture) - see
+# _compat_record - and every entry is ALSO journaled as a settlement line,
+# so a run log reconstructs the migration without re-running the resolver.
+LEGACY_KEY_HITS: list[dict] = []
+
+# Candidates the corroboration guard refused: the matched row's own spelling
+# does not reproduce the stored pre-fold key, so the score belongs to a
+# different fixture (another club of the name, or a rename). Recorded, and
+# journaled, because a refusal holds the leg - it must never be silent.
+LEGACY_KEY_REFUSED: list[dict] = []
+
+# Sunset (dated TODO, 2026-10-12). This tier exists only for slips frozen
+# BEFORE the word fold (commit 4204ceb "identity: fold the Utd abbreviation
+# and join the evidenced spellings"). auto_tickets' void timer is 5 days and
+# no slip outlives its fixtures by more than that, so the tier has no work to
+# do once the last pre-fold slip is off the book. REMOVE it - the migrated
+# candidate in leg_lookup_keys, _compat_refusal, both trails and the summary
+# line - when BOTH hold, read off the settlement run logs:
+#   * the per-run "compat keys: N hit(s)" summary reads 0 hit(s) for 14
+#     consecutive settlement runs (N=14: one fortnight, twice the void timer
+#     plus slack for a weekend of skipped runs), and
+#   * no open slip's stored fixture_key fails the current fold (grep the lane
+#     state files' fixture_key values; every one must be reproduced by
+#     source_team_key on its own day).
+# Reprint both checks: PYTHONPATH=src .venv/bin/python handoff/n1_persisted_keys.py
+# (churn section) and any settlement run log (summary line).
 
 
 def leg_lookup_keys(slip_date, leg) -> list[tuple]:
@@ -3376,6 +3401,81 @@ def leg_lookup_keys(slip_date, leg) -> list[tuple]:
             if migrated != primary:
                 keys.append(migrated)
     return keys
+
+
+def _prefold_leg_key(day, home, away, pick):
+    """The leg key the PRE-fold rule computed (alias resolution, no token
+    fold). Used only to corroborate a stored key against the row a
+    compatibility candidate matched - never to build an index or a lookup
+    order, so the forward path has exactly one key function.
+    """
+    from edgefactory.identity import source_team_key
+
+    return (str(day)[:10], source_team_key(home, fold_tokens=False),
+            source_team_key(away, fold_tokens=False), str(pick or "").upper())
+
+
+def _compat_refusal(leg, row):
+    """Why a compatibility hit must NOT be taken, or None when it may.
+
+    The migrated key is the only lever that finds a leg frozen before a WORD
+    fold, and by construction that same key also names a DIFFERENT club that
+    folds onto it - a same-day ``Sutton Utd`` against a ``Sutton United``,
+    which no key function can tell apart. The guard therefore asks the
+    matched row to corroborate the stored identity: the row's OWN spelling
+    must still produce the stored key under the pre-fold rule. A row that
+    does not (another club of the name, or a club renamed since the freeze)
+    is refused and the leg is held for the void timer, exactly like a missing
+    row - the score of a different fixture is never attributed to it.
+    """
+    if not isinstance(leg, dict):
+        return None
+    stored = leg.get("fixture_key")
+    if not (isinstance(stored, (list, tuple)) and len(stored) >= 3):
+        # A text-path leg was recomputed under the current rule; there is no
+        # stored pre-fold identity to corroborate.
+        return None
+    day = str(stored[0] or "")[:10]
+    pre = _prefold_leg_key(day, row.get("home"), row.get("away"), leg.get("pick"))
+    stored_pair = (str(stored[1] or ""), str(stored[2] or ""))
+    if (pre[1], pre[2]) == stored_pair:
+        return None
+    return (f"matched row's own pre-fold key {pre[1]!r}/{pre[2]!r} does not "
+            f"reproduce the stored {stored_pair[0]!r}/{stored_pair[1]!r}")
+
+
+def _compat_record(slip, leg, primary, matched, row, reason=None):
+    """One audit record: both keys, the slip's day and the resolved fixture.
+
+    A counter is not a trail: this is what makes a compatibility settlement
+    reconstructible without re-running the resolver.
+    """
+    rec = {
+        "slip_date": str(slip.get("date") or "")[:10],
+        "primary": tuple(primary) if primary else None,
+        "matched": tuple(matched) if matched else None,
+        "stored": tuple(leg.get("fixture_key") or ()) or None,
+        "fixture": [str(row.get("date") or row.get("_archive_day") or "")[:10],
+                    row.get("home"), row.get("away")],
+        "pick": str(row.get("pick") or (leg.get("pick") if isinstance(leg, dict)
+                                        else "") or "").upper(),
+        "match": (leg.get("match") if isinstance(leg, dict) else None),
+    }
+    if reason:
+        rec["refused_because"] = reason
+    return rec
+
+
+def _compat_line(verdict, record):
+    label = "matched" if verdict == "matched" else "REFUSED"
+    line = (f"compat key {label}: slip {record['slip_date']} "
+            f"stored {record['stored']} missed primary {record['primary']}; "
+            f"candidate {record['matched']} -> fixture "
+            f"{record['fixture'][0]} {record['fixture'][1]} vs "
+            f"{record['fixture'][2]} [{record['pick']}]")
+    if record.get("refused_because"):
+        line += f" - {record['refused_because']}; held, never re-attributed"
+    return line
 
 
 def _slip_day_anchor(slip_date):
@@ -3464,6 +3564,7 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
         day = str(p.get("date") or p.get("_archive_day") or "")[:10]
         index[_folded_leg_key(day, p.get("home"), p.get("away"), p.get("pick"))] = p
     lines, still_open = [], []
+    run_hits = run_refusals = 0
     for slip in st["open_slips"]:
         open_accas = []
         for a in slip["accas"]:
@@ -3474,10 +3575,25 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
                 p = None
                 for leg_key in keys:
                     p = index.get(leg_key)
-                    if p is not None:
-                        if leg_key != keys[0]:
-                            LEGACY_KEY_HITS.append((str(slip["date"]), leg_key))
-                        break
+                    if p is None:
+                        continue
+                    if leg_key != keys[0]:
+                        # A compatibility candidate. Primary-first by the
+                        # loop order above; taken only when the matched row
+                        # corroborates the stored identity (A1b).
+                        refusal = _compat_refusal(l, p)
+                        record = _compat_record(slip, l, keys[0], leg_key, p,
+                                                reason=refusal)
+                        if refusal is not None:
+                            LEGACY_KEY_REFUSED.append(record)
+                            run_refusals += 1
+                            lines.append(_compat_line("refused", record))
+                            p = None
+                        else:
+                            LEGACY_KEY_HITS.append(record)
+                            run_hits += 1
+                            lines.append(_compat_line("matched", record))
+                    break
                 if p is None:
                     r = None
                     if l.get("market"):
@@ -3556,6 +3672,18 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
             slip["staked_pct"] = round(sum(a["stake_pct"] for a in open_accas), 4)
             still_open.append(slip)
     st["open_slips"] = still_open
+    # The sunset criterion's observable: one line per settlement run, so
+    # "no hits for N runs" is readable off the run log without re-running
+    # anything. The human-readable per-leg trail goes to `lines` (matched /
+    # refused, with both keys and the resolved fixture) because each entry is
+    # a settlement event.
+    # Printed (not appended to `lines`) for the same reason as the other
+    # settlement_* run scalars above: `lines` is the settlement EVENT list
+    # callers assert on, and this counter must appear on EVERY run - zero
+    # included - because "no hits for N consecutive runs" is the sunset
+    # criterion read off the run log.
+    print(f"settlement_compat_key_hits={run_hits} refused={run_refusals}",
+          file=sys.stderr)
     # Route the write the same way the read was routed: a lane settles into
     # its OWN state file. (Caught by the §5 run-1-freezes/run-2-settles
     # proof: without the lane here the settlement landed in the main lane's
