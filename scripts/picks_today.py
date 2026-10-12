@@ -6281,6 +6281,9 @@ def enrich_unmatched_with_betexplorer(
 
     if stats is not None:
         stats.update(_be_mod.run_stats())
+        # Network-attempt counters (priced lane + market-tab detail requests),
+        # so the run log shows what BetExplorer actually saw.
+        stats.update(_be_mod.request_stats())
         stats["be_priced_before"] = priced_before
         stats["be_priced_after"] = priced
         stats["be_target_legs"] = target
