@@ -79,10 +79,13 @@ _BLOCK_TEXT_CHARS = 96
 # length, so these caps bound a pathological page rather than the page's own
 # list. Measured 2026-10-12 on a Premier League match page (Coventry vs
 # Newcastle Utd): 20 H2H dated rows and the full 20-rank table were served,
-# and the form block serves its active view only ("5 results", five dated rows
-# per side, closing 1x2 odds on each); the 10/15/all views are not in the
-# response. Reading the whole block is therefore reading what the page sends -
-# no expander is fetched and none is needed.
+# the form block serves its active view only ("5 results", five dated rows per
+# side, closing 1x2 odds on each). Every expander in this region is a JS
+# control with no href - the form view strip, "Show more matches" and "Show
+# full table" carry no URL at all. The only hrefs are "Show all" (the
+# mutual-matches/?home= list) and the standings tabs (standings/?...as-ajax=1),
+# both on the standing never-fetch list, so there is nothing fetchable here
+# that is not already banned; no request is made for any of them.
 _MAX_H2H_ROWS = 40
 _MAX_STANDINGS_ROWS = 40
 # The standings header is the page's own column list (e.g.
@@ -181,9 +184,13 @@ def parse_match_page_blocks(body) -> dict:
     it, up to a bound for a pathological page: the H2H list arrives at its own
     length, and the form block carries only its active view (measured on a
     live page: "5 results", five dated rows per side — the 10/15/all views are
-    not in the response). Missing structures stay missing; nothing here is
-    consumed by pricing, cards, or ML, so an unverified selector can never
-    become a price, and no team name is invented for an unlabelled row.
+    not in the response). Every expander here is a JS control with no href;
+    the only hrefs in the region are the mutual-matches list ("Show all") and
+    the standings AJAX tabs, both on the standing never-fetch list, so nothing
+    fetchable exists here that is not banned and this module requests none of
+    them. Missing structures stay missing; nothing here is consumed by
+    pricing, cards, or ML, so an unverified selector can never become a price,
+    and no team name is invented for an unlabelled row.
     """
     text = flatten_text(body)
     out: dict = {"blocks": []}
