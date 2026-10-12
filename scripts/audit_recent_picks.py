@@ -1557,10 +1557,15 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "total_recommended": 0,
         "total_hits": 0,
         "by_enhancement": defaultdict(lambda: {"recommended": 0, "hits": 0,
-                                               "priced_n": 0, "priced_hits": 0,
+                                               "settled": 0, "priced_n": 0, "priced_hits": 0,
                                                "priced_profit": 0.0})
     }
     priced_outcomes: list[dict] = []  # settled outcomes with REAL captured prices (registry feed)
+    # Round 6D: settled outcomes with NO captured price. They carry the same
+    # provenance and are fed to the registry's processed-only path, where they
+    # dedupe but never advance certification - so the measurement ledger and the
+    # certification ledger finally cover the same universe of settled picks.
+    unpriced_outcomes: list[dict] = []
 
     # Full-surface audit collectors (Addendum 12): every 🔥 note and every 📊
     # promised metric on every settled pick — not just the one recommendation.
@@ -1738,15 +1743,13 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                             _enh_pricing.attach_enhancement_price(probe, _prices_by_day[pick_date])
                             price = probe.get("enhancement_price")
                             price_source = probe.get("enhancement_price_source") or ""
-                        if (isinstance(price, (int, float)) and not isinstance(price, bool)
-                                and math.isfinite(price) and price > 1.0):
-                            slot["priced_n"] += 1
-                            if hit:
-                                slot["priced_hits"] += 1
-                            slot["priced_profit"] += (price - 1.0) if hit else -1.0
-                            priced_outcomes.append({
+                        slot["settled"] += 1
+                        # Built once for BOTH ledgers (round 6D): `price` is the
+                        # only field that differs, and None means the registry
+                        # records it processed-only.
+                        outcome = {
                                 "date": str(pick_date), "match": pick.get("match") or "",
-                                "market": enh_type, "price": float(price), "hit": bool(hit),
+                                "market": enh_type, "price": None, "hit": bool(hit),
                                 "source": price_source,
                                 # governance N5 (Addendum 27.11): whether >=2
                                 # distinct sources priced this exact selection.
@@ -1767,7 +1770,17 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                                 "league": str(pick.get("league") or ""),
                                 "home": str(pick.get("home") or ""),
                                 "away": str(pick.get("away") or ""),
-                            })
+                        }
+                        if (isinstance(price, (int, float)) and not isinstance(price, bool)
+                                and math.isfinite(price) and price > 1.0):
+                            slot["priced_n"] += 1
+                            if hit:
+                                slot["priced_hits"] += 1
+                            slot["priced_profit"] += (price - 1.0) if hit else -1.0
+                            outcome["price"] = float(price)
+                            priced_outcomes.append(outcome)
+                        else:
+                            unpriced_outcomes.append(outcome)
 
                 # 5. Granular expectations audit ledger populator
                 # (full-surface: score the pick's 🔥 notes ONCE here so the
@@ -1854,35 +1867,17 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                         and math.isfinite(avg_goals_promised)):
                     goal_forecasts.append((float(avg_goals_promised), float(hs + gs)))
 
-    serialized_by_enhancement = {}
-    for enh, stats in enh_stats["by_enhancement"].items():
-        rec = stats["recommended"]
-        hits = stats["hits"]
-        p_n = stats.get("priced_n", 0)
-        p_profit = stats.get("priced_profit", 0.0)
-        serialized_by_enhancement[enh] = {
-            "recommended": rec,
-            "hits": hits,
-            "hit_rate": round(hits / rec, 6) if rec else 0.0,
-            "priced_n": p_n,
-            "priced_hits": stats.get("priced_hits", 0),
-            "priced_roi": round(p_profit / p_n, 6) if p_n else None,
-        }
-
-    serialized_enh_audit = {
-        "total_recommended": enh_stats["total_recommended"],
-        "total_hits": enh_stats["total_hits"],
-        "hit_rate": round(enh_stats["total_hits"] / enh_stats["total_recommended"], 6) if enh_stats["total_recommended"] else None,
-        "by_enhancement": serialized_by_enhancement
-    }
-
-    # Enhancement certification registry: feed priced settled outcomes (idempotent,
-    # fail-soft) and snapshot states for the report. Unpriced outcomes never advance
-    # certification — probability without price is not evidence of value.
+    # Enhancement certification registry (round 6D): feed BOTH ledgers - the
+    # priced settled outcomes (they advance certification) and the unpriced ones
+    # (processed-only; they dedupe and are measurable, but never certify:
+    # probability without price is not evidence of value). Idempotent, fail-soft.
+    # This runs before the serialization below so the reconciliation can print
+    # the registry's own processed counts beside the measurement counts.
     registry_states: dict[str, str] = {}
+    registry_processed: dict[str, int] = {}
     try:
-        from edgefactory.enh_registry import all_statuses, record_outcome
-        for oc in priced_outcomes:
+        from edgefactory.enh_registry import all_statuses, record_outcome, versioned
+        for oc in (*priced_outcomes, *unpriced_outcomes):
             record_outcome(ROOT, date_=oc["date"], match=oc["match"], market=oc["market"],
                            price=oc["price"], hit=oc["hit"], source=oc["source"],
                            multi_source=oc.get("multi_source", False),
@@ -1891,8 +1886,71 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                            league=oc.get("league", ""), home=oc.get("home", ""),
                            away=oc.get("away", ""))
         registry_states = all_statuses(ROOT)
+        # Reconciliation read: what the certification ledger now holds per market,
+        # so `recommended` / `settled` / `processed` / `priced_n` are printed side
+        # by side instead of diverging silently.
+        try:
+            from edgefactory.enh_registry import registry_path
+            _reg = json.loads(registry_path(ROOT).read_text())
+            for _mkey, _entry in (_reg.get("markets") or {}).items():
+                registry_processed[str(_mkey)] = len(_entry.get("processed") or [])
+        except Exception:
+            registry_processed = {}
     except Exception:
         registry_states = {}
+
+    def _price_class(market: str, priced_n: int) -> tuple[str, str]:
+        """Why a market is (or is not) priced — measured, never assumed.
+
+        ``no_price_source``: the mapping says no captured feed quotes it (the
+        absence is a decision). ``no_price_observed``: a feed is mapped, but no
+        price arrived for it inside this window. Both are hit-rate-only here.
+        """
+        try:
+            from edgefactory.enh_pricing import MARKET_PRICE_MAP
+            mapped = MARKET_PRICE_MAP.get(market, "missing")
+        except Exception:
+            return ("unknown", "")
+        if mapped is None or mapped == "missing":
+            return ("no_price_source", "hit-rate only: no captured feed quotes this market")
+        if priced_n == 0:
+            return ("no_price_observed",
+                    "hit-rate only: a mapped feed quoted no price for it in this window")
+        return ("priced", "")
+
+    serialized_by_enhancement = {}
+    for enh, stats in enh_stats["by_enhancement"].items():
+        rec = stats["recommended"]
+        hits = stats["hits"]
+        p_n = stats.get("priced_n", 0)
+        p_profit = stats.get("priced_profit", 0.0)
+        cls, note = _price_class(enh, p_n)
+        try:
+            _mk = versioned(enh) or enh
+        except Exception:
+            _mk = enh
+        serialized_by_enhancement[enh] = {
+            "recommended": rec,
+            "hits": hits,
+            "settled": stats.get("settled", 0),
+            "hit_rate": round(hits / rec, 6) if rec else 0.0,
+            "priced_n": p_n,
+            "priced_hits": stats.get("priced_hits", 0),
+            "priced_roi": round(p_profit / p_n, 6) if p_n else None,
+            # Round 6D reconciliation: the certification ledger's own count of
+            # processed keys for this market (priced + unpriced), beside the
+            # measurement counts above.
+            "registry_processed": registry_processed.get(_mk, 0),
+            "price_source_class": cls,
+            "price_note": note,
+        }
+
+    serialized_enh_audit = {
+        "total_recommended": enh_stats["total_recommended"],
+        "total_hits": enh_stats["total_hits"],
+        "hit_rate": round(enh_stats["total_hits"] / enh_stats["total_recommended"], 6) if enh_stats["total_recommended"] else None,
+        "by_enhancement": serialized_by_enhancement
+    }
 
     return {
         "start": start,
@@ -2049,7 +2107,15 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 rec = summary.get("recommended", 0)
                 hits = summary.get("hits", 0)
                 hr = summary.get("hit_rate", 0.0)
-                lines.append(f"- `{key}`: recommended={rec}, hits={hits}, hit_rate={hr:.1%}")
+                settled = summary.get("settled", 0)
+                p_n = summary.get("priced_n", 0)
+                proc = summary.get("registry_processed", 0)
+                cls = summary.get("price_source_class", "")
+                note = summary.get("price_note") or ""
+                lines.append(
+                    f"- `{key}`: recommended={rec}, settled={settled}, hit_rate={hr:.1%}, "
+                    f"priced_n={p_n}, registry_processed={proc}, class={cls}"
+                    + (f" — {note}" if note else ""))
         lines.append("")
 
     # Full-surface audit sections (Addendum 12)
