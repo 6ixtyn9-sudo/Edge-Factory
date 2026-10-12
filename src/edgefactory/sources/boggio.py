@@ -1223,8 +1223,15 @@ def prune_snapshots(day, *, localdata=None, retention_days=14):
     return removed
 
 
-def persist_snapshots(day, snapshots, preflight_plan, *, localdata=None, notes=None):
-    """Write this run's day-scoped snapshot ledger (raw payload never stored)."""
+def persist_snapshots(day, snapshots, preflight_plan, *, localdata=None, notes=None, outcome=None):
+    """Write this run's day-scoped snapshot ledger (raw payload never stored).
+
+    ``outcome`` is this run's own census - call counts, per-fixture decision
+    counts and explicit reasons, bounded to counts and opaque labels. A charged
+    run that captured nothing used to leave no durable trace of that fact
+    (stdout is not a record); passing it here fixes that. Optional and additive:
+    callers that hold only snapshots are unaffected.
+    """
     root = localdata or LOCALDATA
     root.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -1241,6 +1248,8 @@ def persist_snapshots(day, snapshots, preflight_plan, *, localdata=None, notes=N
         "notes": list(notes or []),
         "snapshots": snapshots,
     }
+    if outcome is not None:
+        payload["outcome"] = outcome
     path = snapshot_path(day, root)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
