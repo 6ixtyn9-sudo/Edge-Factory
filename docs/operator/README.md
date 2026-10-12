@@ -227,6 +227,14 @@ Deep evidence retained in [`archive/`](archive/):
   run; the statarea (UTC−5/−7) and zulubet (UTC+1) renderers behind the
   kickoff offset families; and the two already-played fixtures the pre-match
   lead guard admitted on 2026-10-03, now clamped one-directionally.
+- [`PHANTOM-1X2-2026-10-11.md`](PHANTOM-1X2-2026-10-11.md) — the Viking/Bayern
+  `away @ 2.06` that was never a 1x2 price (real quote 1.088; two more
+  Champions League legs and one placed accumulator from the same snapshot),
+  the three market groups recovered from the archived board, and the four
+  layers that now refuse or withhold such a quote: the provider-side
+  three-sides rule, the lined-1x2 refusal, the per-book coherent-trio gate
+  (with counters in `source_health`), and `line`/`raw_market` on every
+  archived quote so the next occurrence is diagnosable without the payload.
 - [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md) — HUNT-01 exhaustive
   hunt for free prediction/odds APIs ("like bzzoiro"): search log, 25-candidate
   inventory, A–H scorecards, shortlist of 3 (**Betminer** voice winner /

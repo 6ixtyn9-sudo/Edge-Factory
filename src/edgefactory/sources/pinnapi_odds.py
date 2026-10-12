@@ -682,20 +682,38 @@ def _rows_from_periods(event: dict[str, Any], event_id: Any, home: str, away: st
     out: list[dict[str, Any]] = []
     money_line = main.get("money_line")
     if isinstance(money_line, dict):
-        priced_sides = 0
-        for side in ("home", "draw", "away"):
-            if money_line.get(side) is None:
-                continue
-            row = _build_row(day, home, away, league, kickoff, captured_at,
-                             event_id=event_id,
-                             raw_market="money_line", raw_selection=side, line=None,
-                             price=money_line.get(side))
-            if row is not None:
-                out.append(row)
-                priced_sides += 1
-        if priced_sides == 0:
+        # A `money_line` group under the prematch tree is the full-time
+        # THREE-WAY book, and only a three-way book is this pipeline's 1x2
+        # market. The same container name carries two-way offers too
+        # (draw-no-bet / handicap shaped), and a two-sided group priced as
+        # 1x2 is how an impossible quote reached a real card: the
+        # 2026-10-11 capture held, for one fixture and one second under one
+        # bookmaker, the genuine 18.79 / 14.45 / 1.088 trio plus a 16.35 /
+        # 1.033 pair and a 1.7813 / 2.06 pair. The join then took the largest
+        # same-side number (2.06) as the away price of the three-way market
+        # and printed it as a named-book quote (see the Viking vs Bayern
+        # incident, docs/operator). Fail closed: emit a group only when all
+        # three sides are present, and NAME the drop otherwise so a partial
+        # container can never masquerade as a completed 1x2 book.
+        present = [side for side in ("home", "draw", "away")
+                   if money_line.get(side) is not None]
+        if not present:
             # A container with no priced side is a named miss, not silence.
             _count_drop("money_line_without_prices")
+        elif len(present) < 3:
+            # One or two sides only: recognised provider shape this pipeline
+            # will not price as a 1x2 book. The reason carries WHICH sides
+            # arrived, so the next occurrence is diagnosable from the ledger
+            # alone (no raw payload required).
+            _count_drop("money_line_partial_group:" + "_".join(present))
+        else:
+            for side in ("home", "draw", "away"):
+                row = _build_row(day, home, away, league, kickoff, captured_at,
+                                 event_id=event_id,
+                                 raw_market="money_line", raw_selection=side, line=None,
+                                 price=money_line.get(side))
+                if row is not None:
+                    out.append(row)
     elif money_line is not None:
         _count_drop(f"money_line_unreadable:{type(money_line).__name__}")
     else:

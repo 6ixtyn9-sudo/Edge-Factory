@@ -792,6 +792,52 @@ def test_event_without_periods_is_counted_not_silent():
     assert pa.canonicalization_drop_reasons() == {}
 
 
+def test_a_two_way_money_line_group_is_dropped_never_priced_as_1x2():
+    """A `money_line` container that is not a full three-way book is not 1x2.
+
+    The 2026-10-11/13 incident: a single relay snapshot held, for one fixture
+    under one bookmaker and one second, a complete three-way book
+    (18.79 / 14.45 / 1.088) PLUS two-way groups (16.35 / 1.033 and
+    1.7813 / 2.06 - each pair summing to a plausible 2-way margin, so they
+    are separate markets, not stale copies). The join then took the largest
+    same-side number as the away price of the three-way market. Three sides
+    or a named drop: a partial group may never become a 1x2 quote.
+    """
+    payload = _documented_payload()
+    ev = payload["events"][0]
+    ev["periods"]["num_0"]["money_line"] = {"home": 1.7813, "away": 2.06}
+    ev["periods"]["num_0"].pop("totals")
+    payload["events"] = [ev]
+    rows, ok = pa.parse_snapshot(payload, day="2026-10-04")
+    assert ok and not rows
+    # named, not silent: the reason says which sides arrived
+    assert pa.canonicalization_drop_reasons().get("money_line_partial_group:home_away") == 1
+
+
+def test_a_three_way_group_and_a_two_way_group_under_one_fixture_keep_only_the_three_way():
+    """The exact Viking/Bayern/Galatasaray/Arsenal payload shape.
+
+    Two events for the same fixture (same plain team names, same capture
+    second): the genuine full-time three-way market and a two-way group that
+    shares the `money_line` container name. Only the three-way group may
+    produce rows, and its numbers must be the ones the picker can see.
+    """
+    payload = _documented_payload()
+    three_way = json.loads(json.dumps(payload["events"][0]))
+    two_way = json.loads(json.dumps(payload["events"][0]))
+    two_way["id"] = 990001
+    three_way["periods"]["num_0"]["money_line"] = {"home": 18.79, "draw": 14.45, "away": 1.088}
+    three_way["periods"]["num_0"].pop("totals")
+    two_way["periods"]["num_0"]["money_line"] = {"home": 1.7813, "away": 2.06}
+    two_way["periods"]["num_0"].pop("totals")
+    payload["events"] = [three_way, two_way]
+    rows, ok = pa.parse_snapshot(payload, day="2026-10-13")
+    assert ok
+    assert {(r["selection"], r["odds"]) for r in rows} == {
+        ("home", 18.79), ("draw", 14.45), ("away", 1.088)}
+    assert pa.canonicalization_drop_reasons().get("money_line_partial_group:home_away") == 1
+
+
 def test_spreads_and_team_totals_are_never_converted():
     # Recognised provider vocabulary this pipeline deliberately does not
     # price: no row may carry a spread/handicap or team-total market.

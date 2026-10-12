@@ -82,6 +82,7 @@ from edgefactory.enh_registry import status_for as enh_status_for
 from edgefactory.source_health import (
     FOREBET_LIVE_LAST_DAY,
     bzzoiro_status_line,
+    coherence_observation,
     daily_status_block,
     persist_daily_source_health,
     pinnapi_contract_observation,
@@ -2796,6 +2797,154 @@ def _kickoff_attributed_odds_row(row: dict, provider: str) -> dict:
     return attributed
 
 
+# --- coherent 1x2 book gate (2026-10-12) ---------------------------------
+#
+# The 1x2 index keys on (date, home, away, market, selection) and resolves a
+# same-side tie by bookmaker priority and then by LARGEST odds. That is a
+# reasonable rule while a (fixture, bookmaker) pair can hold only one quote
+# per side. It is not a safe rule when the pair holds several: on
+# 2026-10-11/13 one captured snapshot carried, for a single fixture under the
+# single bookmaker "Pinnacle", a complete three-way book (18.79 / 14.45 /
+# 1.088) PLUS a 16.35 / 1.033 pair and a 1.7813 / 2.06 pair. Two of those
+# three groups were not the full-time 1x2 market at all, so the maximum
+# same-side number (2.06 for the away side) won the tie and was printed,
+# stored and banded as a named-book away price - a phantom ~69% above the
+# real quote (Viking vs Bayern; same build: Galatasaray/Arsenal).
+#
+# The gate below is source-agnostic because the identity question is: a
+# three-way book is self-validating (its three implied probabilities must sum
+# to a plausible margin), a same-side extra quote is not. So, per fixture and
+# per (provider, bookmaker, capture second):
+#
+#   * a complete trio whose overround sits in [1.00, 1.20] exists -> THAT
+#     trio is the book's 1x2 offer; every other quote in the group is refused
+#     (`excluded_not_in_three_way_book`) and may not be priced, boarded or
+#     credited as corroboration;
+#   * no trio, but some side carries several distinct quotes -> the group is
+#     ambiguous and NOTHING in it is priced (`withheld_ambiguous_one_x_two`);
+#     with no coherent book to appeal to, the honest answer is no answer;
+#   * no trio and one quote per side -> left exactly as it was (268 of 514
+#     archived priced picks, and every single-source board, are this case).
+#
+# The bounds are evidence, not taste: 1.00 is the arbitrage floor a single
+# book cannot cross (under it the three quotes are provably not one market),
+# and 1.20 is the widest true three-way margin observed in the archive. Both
+# refusals are counted, and the refused rows stay on the pick's price_board
+# with their marker, so the next occurrence is visible without the raw
+# payload that was missing this time.
+COHERENT_BOOK_OVERROUND_MIN = 1.00
+COHERENT_BOOK_OVERROUND_MAX = 1.20
+
+_EXCLUDED_NOT_IN_BOOK = "excluded_not_in_three_way_book"
+_WITHHELD_AMBIGUOUS = "withheld_ambiguous_one_x_two"
+
+
+def _fail_closed_odds(value) -> float | None:
+    """Positive decimal odds, or None. As strict as the index, on purpose."""
+    return _valid_decimal_odds(value)
+
+
+def _tightest_coherent_one_x_two_trio(sides: dict[str, list[dict]]):
+    """Tightest in-range home/draw/away trio for one (fixture, book, second).
+
+    Mirrors the reconciliation the operator was shown for the Viking board:
+    enumerate the quotes, keep only combinations whose implied-probability
+    sum is a plausible book margin, and return the tightest. Returns
+    ``(overround, home_row, draw_row, away_row)`` or ``None``.
+    """
+    best = None
+    for home in sides.get("home", []):
+        for draw in sides.get("draw", []):
+            for away in sides.get("away", []):
+                try:
+                    overround = (1.0 / float(home["odds"]) + 1.0 / float(draw["odds"])
+                                 + 1.0 / float(away["odds"]))
+                except (KeyError, TypeError, ValueError, ZeroDivisionError):
+                    continue
+                if not (COHERENT_BOOK_OVERROUND_MIN <= overround <= COHERENT_BOOK_OVERROUND_MAX):
+                    continue
+                candidate = (round(overround, 6), home["odds"], draw["odds"], away["odds"],
+                             home, draw, away)
+                if best is None or candidate[:4] < best[:4]:
+                    best = candidate
+    return best
+
+
+def _gate_one_x_two_rows(rows: list[dict]) -> tuple[list[dict], list[dict], dict]:
+    """Apply the coherent-book rule to the canonical 1x2 rows of a bundle.
+
+    Returns ``(kept, refused, summary)``. Non-1x2 rows pass through
+    untouched: every other market this pipeline prices already carries its
+    identity in the key (``ou_2.5`` vs ``ou_3.5``), so a same-key collision
+    there is a different question.
+    """
+    groups: dict[tuple, list[dict]] = {}
+    kept: list[dict] = []
+    refused: list[dict] = []
+    summary: dict = {
+        "groups": 0, "excluded_rows": 0, "withheld_fixtures": 0,
+        # Readable fixture names, bounded: an operator reading "1 withheld"
+        # in the receipt has to be able to see WHICH fixture lost its price
+        # without opening the payload nobody retained.
+        "withheld_fixture_names": [], "reason_counts": {},
+    }
+    for row in rows:
+        if str(row.get("market") or "") != "1x2":
+            kept.append(row)
+            continue
+        key = (
+            str(row.get("date") or ""),
+            odds_team_key(row.get("home") or ""),
+            odds_team_key(row.get("away") or ""),
+            str(row.get("provider") or ""),
+            str(row.get("bookmaker") or ""),
+            str(row.get("captured_at") or ""),
+        )
+        groups.setdefault(key, []).append(row)
+
+    for key, group in groups.items():
+        summary["groups"] += 1
+        sides: dict[str, list[dict]] = {}
+        for row in group:
+            if _fail_closed_odds(row.get("odds")) is None:
+                continue
+            sides.setdefault(str(row.get("selection") or ""), []).append(row)
+        trio = _tightest_coherent_one_x_two_trio(sides)
+        if trio is not None:
+            in_book = {id(row) for row in trio[4:7]}
+            for row in group:
+                if id(row) in in_book:
+                    kept.append(row)
+                else:
+                    refused.append({
+                        **row,
+                        "price_coherence": _EXCLUDED_NOT_IN_BOOK,
+                        "coherent_trio_overround": trio[0],
+                    })
+            continue
+        ambiguous = any(
+            len({row.get("odds") for row in side_rows}) > 1
+            for selection, side_rows in sides.items()
+            if selection in _ONE_X_TWO_SELECTIONS
+        )
+        if ambiguous:
+            summary["withheld_fixtures"] += 1
+            if len(summary["withheld_fixture_names"]) < 10:
+                summary["withheld_fixture_names"].append(
+                    f"{group[0].get('home') or '?'} vs {group[0].get('away') or '?'}")
+            for row in group:
+                refused.append({**row, "price_coherence": _WITHHELD_AMBIGUOUS})
+            continue
+        kept.extend(group)
+
+    summary["excluded_rows"] = len(refused)
+    reasons: Counter = Counter()
+    for row in refused:
+        reasons[str(row.get("price_coherence") or "")] += 1
+    summary["reason_counts"] = dict(reasons)
+    return kept, refused, summary
+
+
 def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | None = None) -> dict[str, dict]:
     exact: dict[tuple[str, str, str, str, str], dict] = {}
     time_candidates: dict[tuple[str, str, str, str, str], list[dict]] = {}
@@ -2803,29 +2952,45 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
     valid_rows = 0
     canonicalization_dropped = Counter()
     attributed_rows = [_kickoff_attributed_odds_row(row, provider) for row in rows]
-    normalized_rows: list[dict] = []
+    usable: list[dict] = []
     for row in attributed_rows:
         normalized_row, reason = canonicalize_row(row)
         if normalized_row is None:
             canonicalization_dropped[str(reason or "unmappable")] += 1
             continue
-        normalized_rows.append(normalized_row)
         row = normalized_row
         odds = _valid_decimal_odds(row.get("odds"))
         if odds is None:
             continue
-        exact_key = _odds_row_key(row)
-        time_key = _time_match_key(row)
-        if exact_key is None or time_key is None:
+        if _odds_row_key(row) is None or _time_match_key(row) is None:
             continue
         valid_rows += 1
         normalized = dict(row)
         normalized["odds"] = odds
         normalized.setdefault("provider", provider)
+        usable.append(normalized)
+
+    # Identity hygiene before any index sees these rows: a same-side extra
+    # quote inside one book may not compete on "largest odds". See the gate's
+    # comment for the incident and the bounds.
+    kept_rows, coherence_refused, coherence_summary = _gate_one_x_two_rows(usable)
+
+    for normalized in kept_rows:
+        exact_key = _odds_row_key(normalized)
+        time_key = _time_match_key(normalized)
         if _prefer_odds_row(normalized, exact.get(exact_key)):
             exact[exact_key] = normalized
         time_candidates.setdefault(time_key, []).append(normalized)
-        market_candidates.setdefault(_market_pick_key(normalized, selection_key="selection"), []).append(normalized)
+
+    # The board/audit index keeps EVERY usable row, refused ones included and
+    # marked: `market_candidates` is evidence, never a pricing tier, and an
+    # operator has to be able to see the quote the gate threw away (this is
+    # the observability half of the 2026-10-11 incident, where the phantom
+    # survived in the archive with no marker at all). The refused rows are
+    # the gate's marked copies, so the marker travels with the evidence.
+    for normalized in (*kept_rows, *coherence_refused):
+        market_candidates.setdefault(
+            _market_pick_key(normalized, selection_key="selection"), []).append(normalized)
 
     for key, candidates in time_candidates.items():
         candidates.sort(
@@ -2856,6 +3021,9 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
             "market_candidate_keys": len(market_candidates),
             "canonicalization_dropped": sum(canonicalization_dropped.values()),
             "canonicalization_drop_reasons": dict(canonicalization_dropped),
+            "coherence_excluded_rows": int(coherence_summary["excluded_rows"]),
+            "coherence_withheld_fixtures": int(coherence_summary["withheld_fixtures"]),
+            "coherence_reason_counts": dict(coherence_summary["reason_counts"]),
         })
 
     return {
@@ -2864,6 +3032,10 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
         "time_candidates": time_candidates,
         "market_candidates": market_candidates,
         "raw_rows_list": list(exact.values()),
+        # Coherent-book refusals travel WITH the bundle (not only in the stats
+        # dict a caller may not pass): the source-health passthrough reads
+        # them from here, so a withheld price cannot happen silently.
+        "coherence": coherence_summary,
         # Preserve provider vocabulary for join-miss accounting.  The matching
         # indexes above stay canonical; diagnostics must be able to distinguish
         # an unmappable market/selection from an uncovered fixture instead of
@@ -3147,6 +3319,17 @@ def _price_board_entry(source: str, row: dict) -> dict:
         "selection": row.get("selection"),
         "home": row.get("home"),
         "away": row.get("away"),
+        # Identity, not just price. The 2026-10-11 phantom was unreconstructible
+        # afterwards because the archived board stored the canonical market
+        # ("1x2") and not the container/line it came from, so nobody could tell
+        # a full-time three-way quote from a two-way one that had been folded
+        # into it. These two fields cost nothing and close that hole.
+        "line": row.get("line"),
+        "raw_market": row.get("raw_market"),
+        "raw_selection": row.get("raw_selection"),
+        # Present only on quotes the coherent-book gate refused; names which
+        # rule refused them so the board itself carries the verdict.
+        "price_coherence": row.get("price_coherence"),
     }
 
 
@@ -3296,6 +3479,13 @@ def _stamp_price_corroboration(picks: list[dict]) -> int:
             for entry in pick.get("price_board") or []:
                 src = str(entry.get("source") or "")
                 if not src or src == chosen:
+                    continue
+                # A quote the coherent-book gate refused is not evidence for
+                # anything, least of all agreement: the 2026-10-11 phantom was
+                # a same-book extra quote, and a same-side extra quote from
+                # another source would be the same class. Corroboration stays
+                # reserved for quotes that survived identity checks.
+                if entry.get("price_coherence"):
                     continue
                 if (str(entry.get("market") or "") != market
                         or str(entry.get("selection") or "") != sel):
@@ -3670,6 +3860,51 @@ def donor_odds_bundles(day: str, *, localdata=None) -> list[dict]:
         # failure into the indistinguishable claim that the donor had no rows.
         bundles.append(bundle)
     return bundles
+
+
+def _record_bundle_coherence(shadow_stats: dict, bundles) -> None:
+    """Copy each bundle's coherent-book refusal counts onto its source row.
+
+    The gate runs at bundle-build time; the health row is assembled much
+    later, so without this passthrough a refused or withheld 1x2 quote would
+    exist only inside one day's pick archive. Counts only (no row payload):
+    this ends up in a committed receipt.
+    """
+    for bundle in bundles or []:
+        source = str(bundle.get("provider") or "").strip()
+        coherence = bundle.get("coherence")
+        if not source or not coherence or source not in shadow_stats:
+            continue
+        entry = shadow_stats[source]
+        entry["coherence_excluded_rows"] = int(coherence.get("excluded_rows") or 0)
+        entry["coherence_withheld_fixtures"] = int(coherence.get("withheld_fixtures") or 0)
+        entry["coherence_reason_counts"] = dict(coherence.get("reason_counts") or {})
+
+
+def coherence_observation_lines(bundles) -> list[str]:
+    """One run-log line per source whose 1x2 index refused or withheld rows.
+
+    The counters also land in the source-health row, but a run has to be
+    readable without opening a receipt: "N quotes refused, M fixtures
+    withheld" next to the source name is the difference between an
+    explainable slate and a mysteriously smaller one.
+    """
+    lines: list[str] = []
+    for bundle in bundles or []:
+        source = str((bundle or {}).get("provider") or "").strip()
+        summary = (bundle or {}).get("coherence") or {}
+        excluded = int(summary.get("excluded_rows") or 0)
+        withheld = int(summary.get("withheld_fixtures") or 0)
+        if not source or not (excluded or withheld):
+            continue
+        reasons = ", ".join(
+            f"{key}={count}" for key, count in sorted((summary.get("reason_counts") or {}).items()))
+        withheld_names = summary.get("withheld_fixture_names") or []
+        named = f": {', '.join(withheld_names[:3])}" if withheld_names else ""
+        lines.append(
+            f"coherent-book gate {source}: {excluded} 1x2 quote(s) refused, "
+            f"{withheld} fixture(s) price-withheld ({reasons or 'no reasons'}){named}")
+    return lines
 
 
 def donor_match_counts(picks: list[dict], donor_bundles: list[dict]) -> dict[str, int]:
@@ -6195,6 +6430,8 @@ def main():
                 join_row = donor_join_report.get(source_name) or {}
                 entry["join_miss_counts"] = dict(join_row.get("miss_counts") or {})
                 entry["join_matched_rows"] = int(join_row.get("matched_rows") or 0)
+        # The coherent-book gate's refusals, per donor (2026-10-12).
+        _record_bundle_coherence(shadow_stats, donor_bundles)
         oddspapi_join_row = donor_join_report.get(ODDSPAPI_ODDS_SOURCE) or {}
         if oddspapi_join_row:
             oddspapi_stats["join_miss_counts"] = dict(
@@ -6202,6 +6439,8 @@ def main():
             oddspapi_stats["join_matched_rows"] = int(
                 oddspapi_join_row.get("matched_rows") or 0)
         for line in donor_join_miss_lines(donor_join_report):
+            print(line, file=sys.stderr)
+        for line in coherence_observation_lines(donor_bundles):
             print(line, file=sys.stderr)
         for line in donor_vocabulary_lines(donor_join_report):
             print(line, file=sys.stderr)
@@ -6546,6 +6785,12 @@ def main():
                     join_row.get("miss_counts") or {})
                 health_observations[health_key]["join_matched_rows"] = int(
                     join_row.get("matched_rows") or 0)
+                # The coherent-book gate's refusals ride the same row: the
+                # gate drops prices, and a dropped price must never be
+                # invisible. (The builder lifts these for pinnapi; passing
+                # them here keeps the wiring in one place for every source.)
+                health_observations[health_key].update(
+                    coherence_observation(shadow_stats.get(source_name) or {}))
         persist_daily_source_health(day, health_observations)
         print(daily_status_block(day), file=sys.stderr)
         # Source ROLES, printed next to health: the pipeline must never imply
