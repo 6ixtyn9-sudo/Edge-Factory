@@ -4358,17 +4358,23 @@ def _enh_price(pick: dict):
     return None
 
 
-def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None) -> list[dict]:
+def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
+                     floors: dict | None = None) -> list[dict]:
     """One candidate per enhancement on the board, with its gate verdict.
 
-    Verdicts: ``fire`` (priced at or above its market's floor), ``below_floor``
+    Verdicts: ``fire`` (priced at or above its slice's floor), ``below_floor``
     (priced under the floor — no bet, not paper, not shadow), ``unpriced`` (the
     market is priced by some feed but this leg has no price today) and
     ``unpriceable`` (no feed carries this market at all — team totals). Every
     candidate carries the parent pick's bucket and rule so the settled record
     can be sliced by them.
+
+    ``floors`` is the day's derived floor table (``enh_registry.derive_floors``):
+    the leg's floor is its LEAGUE slice's when one is known, else the market
+    root — never a team slice (report-only). Without it the operator's static
+    table applies, which is the pre-R2 behaviour, byte for byte.
     """
-    from edgefactory.enh_registry import ENHANCEMENT_PRICE_FLOORS, clears_floor, floor_for
+    from edgefactory.enh_registry import clears_floor, floor_for, floor_for_slice
     try:
         from edgefactory.enh_pricing import MARKET_PRICE_MAP
     except Exception:
@@ -4380,6 +4386,10 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None) ->
         if not market:
             continue
         price = _enh_price(pick)
+        if floors:
+            leg_floor, leg_basis = floor_for_slice(floors, market, pick.get("league"))
+        else:
+            leg_floor, leg_basis = floor_for(market), "inherited"
         if price is None:
             mapped = MARKET_PRICE_MAP.get(market, "missing")
             # "Unpriceable" is not "we found no price today": it means no feed in
@@ -4393,7 +4403,7 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None) ->
                 isinstance(mapped, tuple) and str(mapped[0]).startswith("tt_"))
             verdict = "unpriceable" if unpriceable else "unpriced"
         else:
-            verdict = "fire" if clears_floor(market, price) else "below_floor"
+            verdict = "fire" if clears_floor(market, price, floor=leg_floor) else "below_floor"
         legs.append({
             "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
             "home": pick.get("home"), "away": pick.get("away"),
@@ -4410,7 +4420,9 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None) ->
             "price_source": pick.get("enhancement_price_source"),
             "bucket": str(pick.get("bucket") or ""),
             "rule": str(pick.get("rule") or pick.get("display_rule") or ""),
-            "floor": floor_for(market),
+            "league": str(pick.get("league") or ""),
+            "floor": leg_floor,
+            "floor_basis": leg_basis,
             "verdict": verdict,
             "shadow": str(pick.get("bucket") or "") == "SKIPPED_VETO",
         })
@@ -4479,7 +4491,9 @@ def enhancement_pool(legs: list[dict]) -> list[dict]:
     The recipe reads ``match``/``pick``/``prob``/``odds`` and the same-fixture
     guard reads ``row``; those five keys are the whole contract, so this pool
     is the same shape the main lane feeds the recipe. The rest travels with
-    the leg because the card prints it as that leg's evidence.
+    the leg because the card prints it as that leg's evidence — including
+    ``floor_basis`` and ``league``, without which the card could name a floor
+    but not the slice that set it.
     """
     pool = []
     for leg in legs or []:
@@ -4497,6 +4511,8 @@ def enhancement_pool(legs: list[dict]) -> list[dict]:
             "market": leg.get("market"),
             "label": leg.get("label"),
             "floor": leg.get("floor"),
+            "floor_basis": leg.get("floor_basis"),
+            "league": leg.get("league"),
             "price_book": leg.get("price_book"),
             "shadow": bool(leg.get("shadow")),
         })
@@ -4511,7 +4527,10 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
     the slip freezes — and the settle grades a leg BY ITS MARKET, so losing
     that field is losing the bet itself. ``(match, pick)`` identifies a
     carded leg: the recipe has already dropped same-fixture duplicates, so
-    no two legs on the card share one.
+    no two legs on the card share one. ``floor_basis`` and ``league`` ride
+    along with ``floor`` so the frozen card says which slice set the number
+    and which slice it was (the derivation is evidence, and evidence that is
+    dropped before the freeze cannot be audited afterwards).
     """
     by_key = {(str(l.get("match")), str(l.get("pick"))): l for l in pool}
     for acca in plan or []:
@@ -4519,15 +4538,59 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
             meta = by_key.get((str(leg.get("match")), str(leg.get("pick"))))
             if not meta:
                 continue
-            for key in ("market", "label", "floor", "price_book", "shadow"):
+            for key in ("market", "label", "floor", "floor_basis", "league",
+                        "price_book", "shadow"):
                 leg[key] = meta.get(key)
+
+
+def _enh_floor_lines(floors: dict | None) -> list[str]:
+    """The day's derived floor table, as the artifact prints it.
+
+    Every row is one slice: its level, its settled evidence (n, Wilson LB), the
+    number that evidence derives (1 / LB + margin), the floor actually applied
+    and where it came from. A team row is labelled ``team`` and its candidate is
+    REPORTED, never applied — a team slice never deviates. The header carries the
+    margin, the gate and the registry's own slice attribution, so the table is
+    re-derivable from the registry commit plus the numbers on the lines.
+    """
+    if not floors or not floors.get("rows"):
+        return ["FLOORS (registry floors unavailable — the operator's table applies)"]
+    cov = floors.get("coverage") or {}
+    out = [f"FLOORS (derived for {floors.get('as_of')} · margin "
+           f"{float(floors.get('margin') or 0):.3f} · gate n>="
+           f"{floors.get('min_n')} + Wilson LB · registry attribution "
+           f"{cov.get('with_league', 0)}/{cov.get('records', 0)} records with a league "
+           f"({float(cov.get('league_pct') or 0):.1f}%))"]
+    out.append(f"  {'slice':36s} {'n':>4s} {'wilsonLB':>8s} {'derived':>8s} "
+               f"{'floor':>7s}  basis")
+    for row in floors["rows"]:
+        label = str(row.get("name") or row.get("market") or "")
+        if row.get("level") == "league":
+            label = f"{row['market']} / {label}"
+        elif row.get("level") == "team":
+            label = f"{row['market']} / {row.get('league') or '-'} / {label}"
+        floor_txt = "none" if row.get("floor") is None else f"{row['floor']:.4f}"
+        cand = row.get("candidate_floor")
+        cand_txt = "-" if cand is None else f"{cand:.4f}"
+        out.append(f"  {label[:36]:36s} {row.get('n', 0):4d} "
+                   f"{float(row.get('wilson_lb') or 0):8.4f} {cand_txt:>8s} "
+                   f"{floor_txt:>7s}  {row.get('basis')}"
+                   + ("" if row.get("level") != "team" else " (report-only)"))
+    counts = floors.get("counts") or {}
+    out.append(f"  {counts.get('market', 0)} market row(s), {counts.get('league', 0)} "
+               f"league row(s), {counts.get('team', 0)} of "
+               f"{counts.get('team_slices', 0)} team slice(s) shown (report-only, never "
+               f"consulted) · deviating: {counts.get('market_basis', 0)} market, "
+               f"{counts.get('league_basis', 0)} league")
+    return out
 
 
 def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                                plan: list[dict], now, *,
                                should_freeze: bool, freeze_record: dict | None,
                                bank_eff: float, fixture_report: dict | None = None,
-                               root: Path | None = None) -> str:
+                               root: Path | None = None,
+                               floors: dict | None = None) -> str:
     """The lane's artifact — autobets' acca card, on the lane's own bank.
 
     Same header, same acca block, same stake line and same footer as the main
@@ -4545,6 +4608,8 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
              f"committed {committed:.1f}% · next take-profit notification at "
              f"{take_profit_target(st):.1f}%"]
     lines.extend(_enh_slice_lines(root))
+    lines.append("")
+    lines.extend(_enh_floor_lines(floors))
     lines.append("")
     registry = {r["market"]: r for r in market_track_record(root)}
     dropped = list((fixture_report or {}).get("dropped") or [])
@@ -4564,7 +4629,7 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                 if rec.get("n"):
                     bits.append(f"registry {rec['rate']:.0%} n={rec['n']}")
                 if l.get("floor") is not None:
-                    bits.append(f"floor {l['floor']:.2f}")
+                    bits.append(f"floor {l['floor']:.2f} ({l.get('floor_basis') or 'inherited'})")
                 if l.get("price_book"):
                     bits.append(str(l["price_book"]))
                 detail = f" [{' · '.join(bits)}]" if bits else ""
@@ -4588,7 +4653,8 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
             # A floorless market reaches this verdict too (clears_floor is False
             # without a threshold) but it is NOT "below" anything — say which
             # case it is, exactly as the board line does.
-            "below_floor": (f"below floor {leg['floor']:.2f} — no bet"
+            "below_floor": (f"below floor {leg['floor']:.2f} "
+                            f"[{leg.get('floor_basis') or 'inherited'}] — no bet"
                             if leg["floor"] is not None
                             else "no floor set for this market — no bet"),
             "unpriced": "no price captured — no bet",
@@ -4646,7 +4712,15 @@ def cmd_enhancement(args, st) -> int:
             slate = []
     except Exception:
         slate = []
-    legs = enhancement_legs(slate)
+    # The day's floors, derived once from the committed registry and carried by
+    # the legs, the artifact and the lane's own state. Deterministic: the same
+    # registry commit derives the same table on every re-print.
+    from edgefactory.enh_registry import derive_floors_for_day
+    # Resolve the registry through THIS module's localdata (the same constant the
+    # lane's own state and slate resolve through), so a scratch/test root derives
+    # from its own registry and never from the repository's.
+    floors = derive_floors_for_day(LOCALDATA.parent, target)
+    legs = enhancement_legs(slate, floors=floors)
     pool = enhancement_pool(legs)
     bank_eff = effective_bank(st, exclude_date=target)
     should_freeze = (str(target) == now.strftime("%Y-%m-%d")
@@ -4663,7 +4737,11 @@ def cmd_enhancement(args, st) -> int:
     if plan:
         # Same write path as the main lane, routed to this lane's state and
         # freeze book. A no-bet day writes no card (and no lock), exactly
-        # like the main lane.
+        # like the main lane. The floor table rides the state write, so the
+        # card and the derivation it was built from are persisted together.
+        st["enh_floor_table"] = {k: floors.get(k) for k in
+                                 ("as_of", "margin", "min_n", "floors", "counts",
+                                  "coverage")}
         freeze_record = upsert_slip(st, target, plan,
                                     freeze_at=now if should_freeze else None,
                                     lane=ENHANCEMENT_LANE)
@@ -4671,7 +4749,8 @@ def cmd_enhancement(args, st) -> int:
                                      should_freeze=should_freeze,
                                      freeze_record=freeze_record,
                                      bank_eff=bank_eff,
-                                     fixture_report=fixture_report)
+                                     fixture_report=fixture_report,
+                                     floors=floors)
     print(txt)
     if plan:
         slip_txt.write_text(txt)
