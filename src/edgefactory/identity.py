@@ -123,9 +123,18 @@ TEAM_STRUCTURE_NOISE = frozenset(
 )
 
 
-def source_team_key_base(name: object, *, width: int = 24) -> str:
+def source_team_key_base(name: object, *, width: int = 24,
+                         fold_tokens: bool = True) -> str:
+    """Structure-stripped key. ``fold_tokens=False`` is the historical rule.
+
+    The token fold (``utd`` -> ``united``) is a WORD rule, so it is applied
+    inside ``team_identity_words``; a caller that needs the PRE-fold key -
+    the compatibility guard in ``auto_tickets``, which checks that a stored
+    pre-fold key really is what this spelling used to produce - passes
+    ``fold_tokens=False`` and otherwise runs the identical code path.
+    """
     words = [
-        w for w in team_identity_words(name).split()
+        w for w in team_identity_words(name, fold_tokens=fold_tokens).split()
         if w not in TEAM_STRUCTURE_NOISE
     ]
     return re.sub(r"[^a-z0-9]", "", " ".join(words))[:width]
@@ -293,9 +302,17 @@ TEAM_KEY_ALIASES = {key: value for key, value in TEAM_KEY_ALIASES.items()
                     if value != key}
 
 
-def source_team_key(name: object) -> str:
-    """Identity-folded voter-row team key with alias resolution."""
-    key = source_team_key_base(name)
+def source_team_key(name: object, *, fold_tokens: bool = True) -> str:
+    """Identity-folded voter-row team key with alias resolution.
+
+    ``fold_tokens=False`` answers the key the PRE-fold rule produced for a
+    spelling: alias resolution included, token folding off. The alias map's
+    keys are derived through the folding base, so a pre-fold lookup can miss
+    an entry whose key only exists in folded space - that direction is
+    deliberate, because a miss asks the caller to fail closed rather than to
+    guess which club was meant.
+    """
+    key = source_team_key_base(name, fold_tokens=fold_tokens)
     return TEAM_KEY_ALIASES.get(key, key)
 
 
