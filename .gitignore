@@ -87,6 +87,12 @@ dist/
 # The bounded BetExplorer snapshot is the raw receipt for its final-card rows.
 !localdata/betexplorer_odds_cache_20*.json
 !localdata/betexplorer_capture_20*.json
+# Per-match BetExplorer detail for priced fixtures: match-page blocks (H2H,
+# last results, standings excerpt) and one comparison response per market
+# (1X2, O/U, AH, DNB, DC, BTTS) with its per-bookmaker rows and handicap
+# lines. No raw HTML; markets/rows/text are capped, and the capture receipt
+# is its only reader - pricing never touches this file.
+!localdata/betexplorer_match_detail_20*.json
 # Compact source-health receipts are the auditable attempt/join trail.  Raw
 # shadow ledgers stay ignored: they can be large and are not needed to prove
 # whether a source supplied a price.

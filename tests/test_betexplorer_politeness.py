@@ -66,7 +66,7 @@ def test_first_429_honors_retry_after_and_uses_30_second_floor(monkeypatch):
         return Response()
 
     monkeypatch.setattr(be.urllib.request, "urlopen", urlopen)
-    monkeypatch.setattr(be, "_throttle", lambda: None)
+    monkeypatch.setattr(be, "_throttle", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(be.time, "sleep", lambda seconds: sleeps.append(seconds))
 
     assert be._fetch("https://www.betexplorer.com/example") == "ok"
@@ -84,7 +84,7 @@ def test_second_429_cools_run_and_makes_no_third_request(monkeypatch):
         raise _http_429()
 
     monkeypatch.setattr(be.urllib.request, "urlopen", urlopen)
-    monkeypatch.setattr(be, "_throttle", lambda: None)
+    monkeypatch.setattr(be, "_throttle", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(be.time, "sleep", lambda _seconds: None)
 
     with pytest.raises(be.BetExplorerCoolingDown):
@@ -136,3 +136,39 @@ def test_same_day_fixture_cache_dedupes_requests_and_survives_run_reset(monkeypa
     monkeypatch.setattr(be, "fetch_day_matches", lambda _day: (_ for _ in ()).throw(AssertionError("network")))
     assert be.betexplorer_odds_rows_for_pick(pick, "2026-10-02") == first
     assert be.run_stats()["be_cached"] == 1
+
+
+def test_request_counts_track_every_attempt_for_the_receipt(monkeypatch):
+    """The receipt reports what the site saw: every attempt, retries included.
+
+    The tab requests the detail lane adds are counted separately, so a run log
+    can tell priced-lane traffic from retained-detail traffic.
+    """
+    attempts = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            return b"ok"
+
+    def urlopen(_request, timeout=20):
+        attempts.append(timeout)
+        if len(attempts) == 1:
+            raise _http_429("1")
+        return Response()
+
+    monkeypatch.setattr(be.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(be, "_throttle", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(be.time, "sleep", lambda _seconds: None)
+
+    assert be._fetch("https://www.betexplorer.com/example") == "ok"
+    assert be.request_stats() == {"requests": 2, "market_requests": 0,
+                                  "market_budget_stop": False}
+    be.reset_fetch_count()
+    assert be.request_stats() == {"requests": 0, "market_requests": 0,
+                                  "market_budget_stop": False}
