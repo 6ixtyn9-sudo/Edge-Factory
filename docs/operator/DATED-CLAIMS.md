@@ -58,6 +58,7 @@ recollection.
 | `scripts/picks_today.py` | 2026-10-11 coherent-book incident: per-fixture/per-book/per-second 1x2 quotes partition into one three-way book (1.0415) and two-way pairs (1.0293, 1.0468); the maximum-odds tie-break chose the two-way quote | `localdata/picks_2026-10-13.json` |
 
 | `tests/test_betexplorer_row_join_guard.py` | committed 2026-10-12 odds cache holds the fixture key built from Forge and York United whose rows are Forge v INTER TORONTO 1.35/4.80/6.40, and separately caches Ludogorets-Arda 1.50/4.00/6.50 and Elfsborg-Halmstad 1.36/5.25/8.00 while the 2026-10-12 board published those legs with odds=None; the test's row fixtures are those cached rows verbatim, with only `captured_at` regenerated so the 24h freshness guard cannot time-rot them | `localdata/betexplorer_odds_cache_2026-10-12.json` |
+| `tests/test_betexplorer_match_detail.py` | the wrapper receipt carries the row-refusal census per the 2026-10-12 round-2 ruling: a refused row is a dropped price, and the receipt must name how many were refused and why (the 2026-10-12 Forge vs York United receipt lost rows with no trace) | OPERATOR-RELAYED |
 | `src/edgefactory/enh_pricing.py` | operator directive 2026-10-12: the retained BetExplorer detail prices the enhancement board and the registry floor, not EV, decides what is a bet; the reader's slot names (`ou_<line>`, `btts`, `dc`) are the ones `MARKET_PRICE_MAP` looks up, which the round-trip test pins against the capture's own ledger | `docs/operator/BETEXPLORER-LICENSING.md` |
 
 ## What this does not catch

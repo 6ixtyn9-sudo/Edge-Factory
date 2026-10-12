@@ -603,6 +603,10 @@ def test_a_stub_fetch_leaves_no_stale_detail(monkeypatch):
 
 # --- the receipt ------------------------------------------------------------
 
+# receipt 2026-10-12 (round-2 §2.2, OPERATOR-RELAYED): the wrapper's receipt
+# must carry the refused-row census - a refused row is a dropped price, and the
+# 2026-10-12 Forge vs York United receipt lost rows with no trace. Backing:
+# docs/operator/DATED-CLAIMS.md.
 def test_receipt_keeps_the_row_refusal_census(tmp_path, monkeypatch):
     """Round-2 §2.2: the refused-row census must reach the capture receipt.
 
@@ -634,6 +638,13 @@ def test_receipt_keeps_the_row_refusal_census(tmp_path, monkeypatch):
         "row teams do not both match the pick": 3}
     assert receipt["requests"] == 1 and receipt["be_cached"] == 2
     assert {"be_rows_rejected", "be_rows_rejected_reasons"} <= capture.RECEIPT_STAT_KEYS
+    # the capture above resolves fixtures through the adapter, so its run-scoped
+    # in-memory caches hold entries keyed under THIS test's tmp_path; leaving
+    # them behind makes the next module read this directory's "authoritative
+    # empty answer" instead of its own (found 2026-10-12: the politeness cache
+    # test failed only when this one ran first).
+    be._fixture_cache.clear()
+    be._match_cache.clear()
 
 
 def test_wrapper_receipt_summarises_the_detail_ledger(tmp_path, monkeypatch):
