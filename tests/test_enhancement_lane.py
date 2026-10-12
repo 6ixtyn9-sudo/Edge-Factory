@@ -53,6 +53,12 @@ def _tmp_lane(tmp_path, monkeypatch):
         "ENHANCEMENT TICKETS (ROLLING)", at.STAKE_FRAC))
     # Main-lane paths must never be touched by these tests either.
     monkeypatch.setattr(at, "STATE_FILE", localdata / "auto_tickets_state.json")
+    # The board renders floors from ITS module's localdata (the same constant the
+    # picks come from): point it at the same temp root so the board and the lane
+    # read one registry, and drop the render cache.
+    import picks_today as pt
+    monkeypatch.setattr(pt, "LOCALDATA", localdata)
+    pt._ENH_FLOORS_CACHE.clear()
     monkeypatch.setenv(at.ENH_BOARD_FLAG, "1")
     yield localdata
 
@@ -192,7 +198,7 @@ def test_the_card_is_two_leg_accas_barbelled_at_the_main_lanes_stake(tmp_path, _
     assert txt.count("— stake 12.5% of capital (12.5% of free bank)") == 2
     # per-leg evidence: stated %, the market's registry line, its floor, the book
     assert "(stated 46%)" in txt
-    assert "[registry 50% n=2 · floor 1.60 · Stake.com]" in txt
+    assert "[registry 50% n=2 · floor 1.60 (inherited) · Stake.com]" in txt
     assert "deploying 25% of free bank today = 25.0% of capital" in txt
 
 
@@ -271,7 +277,7 @@ def test_the_artifact_matches_autobets_conventions(tmp_path, _tmp_lane):
     assert "ENHANCEMENT SLICE (settled, registry)" in txt
     assert "by bucket" in txt and "by rule" in txt
     # the refused leg is visible for audit but is NOT an instruction
-    assert "[NO BET]" in txt and "below floor 1.60 — no bet" in txt
+    assert "[NO BET]" in txt and "below floor 1.60 [inherited] — no bet" in txt
     assert "Nu FC" not in "\n".join(
         l for l in txt.splitlines() if l.startswith("[ACCA #"))
     assert "deploying 25% of free bank today" in txt
@@ -763,3 +769,102 @@ def test_enhancements_with_the_flag_off_is_a_no_op_not_the_main_lane(monkeypatch
 
 def _boom(*a, **k):   # pragma: no cover - only reached on regression
     raise AssertionError("the disabled enhancement lane must not touch the main lane")
+
+
+# --------------------------------------------------------------------------
+# R2: the derived per-slice floors reach the board, the slip and the state
+# --------------------------------------------------------------------------
+
+def _tightened_registry(localdata: Path) -> dict:
+    """A registry whose market slice clears the gate and tightens the floor.
+
+    40 priced records, 18 hits: Wilson LB95 ~0.30 -> 1/LB + 0.10 ~ 3.4, well
+    above the operator's 1.60 for match_over_25. The same table is what the
+    derivation prints, so the tests assert the numbers the code derives.
+    """
+    recs = []
+    for i in range(40):
+        recs.append({"date": f"2026-09-{i % 28 + 1:02d}", "match": f"T{i} vs U{i}",
+                     "price": 1.9, "hit": (i < 18), "source": "oddspapi",
+                     "multi_source": False, "bucket": "", "rule": "", "stated": None,
+                     "league": "Testland,Liga", "home": f"T{i}", "away": f"U{i}",
+                     "home_key": f"t{i}", "away_key": f"u{i}"})
+    payload = {"version": 2, "markets": {"match_over_25@v1": {
+        "status": "PAPER", "n": 40, "hits": 18, "profit": -1.0, "inv_price_sum": 20.0,
+        "multi_n": 0, "processed": [], "records": recs}}}
+    (localdata / "enhancement_registry.json").write_text(json.dumps(payload))
+    return payload
+
+
+def test_the_derived_floor_tightens_the_market_and_the_slip_and_the_board_agree(tmp_path, _tmp_lane):
+    import picks_today as pt
+    _tightened_registry(_tmp_lane)
+    floors = reg.derive_floors_for_day(_tmp_lane.parent, DAY)
+    market_row = [r for r in floors["rows"] if r["level"] == "market"][0]
+    assert market_row["basis"] == "market"
+    derived = market_row["floor"]
+    assert derived > reg.floor_for("match_over_25")
+
+    # A price that clears the OPERATOR's floor and not the derived one is not a
+    # bet on either surface — and both surfaces say which floor refused it.
+    price = round(reg.floor_for("match_over_25") + 0.01, 2)
+    pick = _pick(price=price)
+    leg = at.enhancement_legs([pick], floors=floors)[0]
+    assert leg["verdict"] == "below_floor"
+    assert leg["floor"] == derived and leg["floor_basis"] == "market"
+    board = pt.enhancement_board_line(pick, floors=floors)
+    assert board.startswith("     🚫 ")
+    assert f"below match_over_25 floor {derived:.2f} (market)" in board
+    # ...and the same price against the operator's table (no derived rows) fires
+    assert at.enhancement_legs([pick], floors={})[0]["verdict"] == "fire"
+    assert pt.enhancement_board_line(pick, floors={}).startswith("     🔬 ")
+    # A price above the derived floor fires on both, quoting the basis.
+    above = _pick(price=round(derived + 0.05, 2))
+    assert at.enhancement_legs([above], floors=floors)[0]["verdict"] == "fire"
+    assert f"floor {derived:.2f} (market)" in pt.enhancement_board_line(above, floors=floors)
+
+
+def test_the_lane_artifact_and_state_carry_the_days_derivation(_tmp_lane):
+    _tightened_registry(_tmp_lane)
+    _board(_tmp_lane, _distinct(4, price=4.10))
+    st = at.fresh_state()
+    rc = at.cmd_enhancement(_args(), st)
+    assert rc == 0
+    artifact = (_tmp_lane / f"{at.ENHANCEMENT_LANE.slip_prefix}_{DAY}.txt").read_text()
+    assert "FLOORS (derived for" in artifact
+    assert "margin 0.100" in artifact and "Wilson LB" in artifact
+    assert f"match_over_25" in artifact and "basis" in artifact
+    # the derived floor, not the operator's, is the number on the leg lines
+    floors = reg.derive_floors_for_day(_tmp_lane.parent, DAY)
+    derived = [r for r in floors["rows"] if r["level"] == "market"][0]["floor"]
+    assert f"floor {derived:.2f} (market)" in artifact
+    # the state the lane persists carries the same table
+    saved = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
+    table = saved.get("enh_floor_table")
+    assert table and table["as_of"] == DAY
+    assert table["margin"] == reg.ENHANCEMENT_FLOOR_MARGIN
+    assert table["min_n"] == reg.MIN_PRICED_N
+    assert table["floors"]["match_over_25"]["basis"] == "market"
+    assert table["floors"]["match_over_25"]["floor"] == derived
+    assert table["coverage"]["with_league"] == 40
+
+
+def test_a_team_slice_is_never_consulted_for_a_leg(tmp_path, _tmp_lane):
+    """The report-only rule, through the shipped entry points."""
+    import picks_today as pt
+    payload = _tightened_registry(_tmp_lane)
+    recs = payload["markets"]["match_over_25@v1"]["records"]
+    for rec in recs[:30]:                       # Team T0 rides 30 of the 40 records
+        rec["home"], rec["home_key"] = "T0", "t0"
+    ( _tmp_lane / "enhancement_registry.json").write_text(json.dumps(payload))
+    floors = reg.derive_floors_for_day(_tmp_lane.parent, DAY)
+    team_rows = [r for r in floors["rows"] if r["level"] == "team" and r["team"] == "t0"]
+    assert team_rows, "the team slice must be reported"
+    assert team_rows[0]["basis"] == "team" and "not applied" in team_rows[0]["reason"]
+    applied, basis = reg.floor_for_slice(floors, "match_over_25", "Testland,Liga")
+    assert basis != "team"                       # never the team number
+    assert applied == [r for r in floors["rows"]
+                       if r["level"] == "league"][0]["floor"]
+    pick = _pick(price=round(applied + 0.02, 2))
+    assert at.enhancement_legs([pick], floors=floors)[0]["verdict"] == "fire"
+    assert pt.enhancement_board_line(pick, floors=floors).startswith("     🔬 ")

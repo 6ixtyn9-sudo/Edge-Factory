@@ -5967,7 +5967,29 @@ def format_kickoff(pick: dict) -> str:
     return "n/a"
 
 
-def enhancement_board_line(p: dict) -> str | None:
+_ENH_FLOORS_CACHE: dict[str, dict] = {}
+
+
+def _enh_floor_table(day: str) -> dict:
+    """The day's derived floor table, computed once per render (cached).
+
+    Read-only, and resolved through THIS module's ``LOCALDATA`` at call time —
+    the same constant the picks themselves come from — so a scratch or test root
+    derives from its own registry, never from the repository's. An unreadable
+    registry yields an empty table and every line falls back to the operator's
+    static floor, which is the pre-R2 render.
+    """
+    key = str(day or "")[:10] or date.today().isoformat()
+    if key not in _ENH_FLOORS_CACHE:
+        try:
+            from edgefactory.enh_registry import derive_floors_for_day
+            _ENH_FLOORS_CACHE[key] = derive_floors_for_day(LOCALDATA.parent, key)
+        except Exception:
+            _ENH_FLOORS_CACHE[key] = {"floors": {}, "rows": []}
+    return _ENH_FLOORS_CACHE[key]
+
+
+def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     """The board's one enhancement line for a pick, or None when it has none.
 
     Marker 🔬 = priced and clearing its market's floor: a real candidate the
@@ -5976,7 +5998,11 @@ def enhancement_board_line(p: dict) -> str | None:
 
     The gate is ``enh_registry.clears_floor`` itself, the same call the
     enhancement slip uses for its ``[NO BET]`` audit lines, so the board and the
-    slip can never disagree about what is a bet. Operator ruling: "betting on ev
+    slip can never disagree about what is a bet. The floor is the pick's slice
+    floor — its LEAGUE slice's when the derived table has one, else the market
+    root, exactly what ``auto_tickets.enhancement_legs`` applies — and the line
+    says which basis it came from (``inherited`` still means the operator's
+    table, where a team slice always stays). Operator ruling: "betting on ev
     will lead us to not bet at all ... we just need prices above a certain
     threshold, like how autobets does it." EV stays on the row as information
     and gates nothing here.
@@ -6005,13 +6031,21 @@ def enhancement_board_line(p: dict) -> str | None:
     src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
     edge = p.get("enhancement_edge_sample")
     edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int, float)) else ""
-    if enh_clears_floor(rec_market, rec_price):
-        return f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}{edge_txt}{src}"
+    from edgefactory.enh_registry import floor_for_slice
+    # None: derive the day's table from this workspace's registry. An explicit
+    # table (including one with no rows) is used as given — the lane passes its
+    # own, so the board and the slip can never consult different numbers.
+    table = _enh_floor_table(p.get("date")) if floors is None else floors
+    floor, basis = floor_for_slice(table, rec_market, p.get("league"))
+    if floor is None:                      # no derived row: the operator's table
+        floor, basis = enh_floor_for(rec_market), "inherited"
+    if enh_clears_floor(rec_market, rec_price, floor=floor):
+        return (f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
+                f"{edge_txt}{src} — floor {floor:.2f} ({basis})")
     # Show WHY it is not a bet rather than hiding the candidate: the gate firing
     # is audit evidence, and the slip prints the same verdict as [NO BET].
-    gate_floor = enh_floor_for(rec_market)
-    why = (f"below {rec_market} floor {gate_floor:.2f}"
-           if gate_floor is not None else "no floor set for this market")
+    why = (f"below {rec_market} floor {floor:.2f} ({basis})"
+           if floor is not None else "no floor set for this market")
     return (f"     🚫 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
             f" — no bet: {why}{src}")
 
