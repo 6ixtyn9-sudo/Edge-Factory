@@ -183,6 +183,21 @@ def _line_from(value: object) -> str | None:
     return match.group(1).replace("_", ".")
 
 
+def _line_present(value: object) -> bool:
+    """True when the provider attached ANY explicit line/handicap marker.
+
+    Distinct from ``_line_from`` (which reads a number out of a string): a
+    ``0`` line is a real marker - Pinnacle renders its draw-no-bet as a
+    zero handicap - and ``0 or ""`` would have swallowed it.  The check is
+    presence, not numeric value, because the question being asked is
+    "is this the line-less full-time market?", not "what is the line?".
+    """
+    if value is None:
+        return False
+    text = str(value).strip().lower()
+    return bool(text) and text not in {"none", "null", "nan"}
+
+
 # --- provider vocabulary -------------------------------------------------
 #
 # Every token below was read off a captured payload, a committed capture
@@ -279,6 +294,16 @@ def canonical_market(market: object, line: object = None) -> tuple[str | None, s
     ):
         return None, f"unsupported_market:{raw or 'empty'}"
     if raw in _1X2_TOKENS or compact in {"1x2", "headtohead", "headtohead3way", "matchodds"}:
+        # A 1x2 token carrying a line is NOT the full-time three-way market:
+        # the line is the provider's own statement that this is a handicap /
+        # draw-no-bet / half-market price, whatever name the container
+        # borrowed.  The line was previously dropped for every non-ou market
+        # (``canonical_market_selection`` keeps ``line`` only for ``ou_*``),
+        # so a lined two-way price could enter the index as a line-less 1x2
+        # quote and then win the same-side max-odds tie-break - the
+        # 2026-10-11 phantom class.  Recognised vocabulary, refused loudly.
+        if _line_present(line):
+            return None, f"unsupported_market:{raw or 'empty'}_with_line"
         return "1x2", None
     if raw in _BTTS_TOKENS or "bothteamstoscore" in compact:
         return "btts", None
@@ -386,8 +411,14 @@ def canonicalize_row(row: dict[str, Any]) -> tuple[dict[str, Any] | None, str | 
     normalized["selection"] = result.selection
     if result.line is not None:
         normalized["line"] = result.line
-    normalized["raw_market"] = row.get("market")
-    normalized["raw_selection"] = row.get("selection")
+    # Keep the provider's own container/selection spelling when the row
+    # already carries it (every adapter writes them), because the join runs
+    # this canonicalizer a second time over already-canonical rows - and
+    # overwriting raw_market with "1x2" there is how the archived board lost
+    # the ability to say WHICH container a phantom quote came from
+    # (2026-10-11). Diagnostics only; never used for matching.
+    normalized["raw_market"] = row.get("raw_market") or row.get("market")
+    normalized["raw_selection"] = row.get("raw_selection") or row.get("selection")
     return normalized, None
 
 

@@ -159,6 +159,35 @@ def pinnapi_contract_observation(stats: dict[str, Any]) -> dict[str, Any]:
     return {k: stats.get(k) for k in PINNAPI_CONTRACT_FIELDS}
 
 
+# Coherent-book gate (2026-10-12). A 1x2 join refuses quotes that cannot
+# belong to a complete three-way book (`coherence_excluded_rows`) and withholds
+# a fixture's price outright when no complete book can be identified
+# (`coherence_withheld_fixtures`). Both are dropped prices, and a dropped price
+# that leaves no trace is exactly how the 2026-10-11 phantom survived a whole
+# day of receipts - so the counters ride into the committed row. The reason map
+# is our own closed vocabulary, carried as a bounded census; no row payload.
+COHERENCE_OBSERVATION_FIELDS = (
+    "coherence_excluded_rows", "coherence_withheld_fixtures", "coherence_reason_counts",
+)
+
+
+def coherence_observation(stats: dict[str, Any]) -> dict[str, Any]:
+    """Lift the coherent-book refusal counters out of a source's stats.
+
+    Source-agnostic by construction: the gate is applied to every bundle, so
+    the same helper can be pointed at any source's observation. Today it is
+    wired to the one source that ships several quotes per fixture and book
+    (pinnapi), plus a run-log line for every source that refused anything.
+    """
+    stats = stats or {}
+    return {
+        "coherence_excluded_rows": _int_or_zero(stats.get("coherence_excluded_rows")),
+        "coherence_withheld_fixtures": _int_or_zero(stats.get("coherence_withheld_fixtures")),
+        "coherence_reason_counts": _reason_counts(
+            stats.get("coherence_reason_counts"), limit=_MAX_VOCABULARY_MISSES),
+    }
+
+
 SHARPAPI_BOARD_FIELDS = (
     "board_rows", "board_fixtures", "board_league_count", "board_leagues",
     "board_non_prematch_rows", "board_priced_rows", "board_truncated",
@@ -368,6 +397,10 @@ def build_daily_source_health(
                     if shape.get(k) is not None
                 } or None,
             })
+            # Coherent-book refusals, in the same committed row as the rest of
+            # the price-supply evidence: a withheld price has to be visible
+            # from the receipt, not only from the day's pick archive.
+            row.update(coherence_observation(obs))
         elif name == "sharpapi_odds":
             row.update({
                 "sa_raw": int(obs.get("sa_raw") or 0),
