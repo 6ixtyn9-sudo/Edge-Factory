@@ -1,0 +1,53 @@
+== R2 §1 re-measurement ==
+  base               : origin/main = dda42eed28c6830ea027a3fba9fe24e7146106d0
+  registry           : localdata/enhancement_registry.json (via git show, never the working tree)
+  registry blob      : sha256 fb49e951410aa55be124874271be9faa51c7ca26fe905c86e51082e7053f75be
+                       101024 bytes, last commit 2026-10-12T15:40:59+02:00 dda42ee
+  working-tree copy  : same
+  registry version   : 2, 7 market type(s)
+
+== §1 line 1 — priced records ==
+  definition : records across all markets carrying a numeric `price`
+  measured   : 409 priced / 409 stored
+  pack       : 409  -> MATCH
+
+== §1 line 2 — distinct team tokens ==
+  definition : distinct team names in the priced records' `match` field
+  measured   : 578 raw spellings / 554 repo-keyed tokens (source_team_key)
+  pack       : 578 (raw spellings)  -> MATCH
+
+== §1 line 3 — teams by record count ==
+  definition : how many priced records each team token appears in
+  measured (raw spellings) : {'>=10': 0, '>=5': 8, '>=4': 19, '>=3': 57, '>=2': 153}
+  measured (repo keys)     : {'>=10': 0, '>=5': 9, '>=4': 22, '>=3': 67, '>=2': 162}
+  teams with >=5 (raw)     : ['Celtic 6', 'Manchester City 6', 'Feyenoord 6', 'Arsenal 5', 'The New Saints 5', 'Benfica 5', 'Barcelona 5', 'Kristiansund BK 5']
+    (the pack names 'Man City'; the registry spells it 'Manchester City' -
+     a naming difference, not a count difference)
+  teams with >=5 (keys)    : ['celtic 6', 'manchestercity 6', 'feyenoord 6', 'bayernmunich 6', 'arsenal 5', 'thenewsaints 5', 'benfica 5', 'barcelona 5', 'kristiansund 5']
+  pack                     : >=10 0, >=5 8 (Celtic 6, Man City 6, Feyenoord 6)
+
+== §1 line 4 — the `league` field ==
+  definition : priced records carrying any of ['league', 'league_name', 'country_league', 'competition']
+  measured   : {'league': 0, 'league_name': 0, 'country_league': 0, 'competition': 0} over 409 priced records
+  pack       : 0/409  -> MATCH
+
+== §1 line 5 — per-market priced n ==
+  match_over_25@v1         n= 350  status=PAPER hits=231 profit=2.297
+  match_over_15@v1         n=  33  status=PAPER hits=24 profit=-5.78
+  match_over_35@v1         n=  16  status=PAPER hits=5 profit=-2.2
+  btts_yes@v1              n=   7  status=PAPER hits=4 profit=1.99
+  away_under_25@v1         n=   1  status=PAPER hits=1 profit=0.9
+  away_under_35@v1         n=   1  status=PAPER hits=1 profit=0.435
+  match_over_45@v1         n=   1  status=PAPER hits=1 profit=5.6
+  markets with n=1 (the pack's "three singles") : ['away_under_25@v1', 'away_under_35@v1', 'match_over_45@v1']
+  pack over_25 n    =  350  -> measured 350 MATCH (['match_over_25@v1'])
+  pack over_15 n    =   33  -> measured 33 MATCH (['match_over_15@v1'])
+  pack over_35 n    =   16  -> measured 16 MATCH (['match_over_35@v1'])
+  pack btts_yes n   =    7  -> measured 7 MATCH (['btts_yes@v1'])
+
+== §1 line 6 — the over_15 trap ==
+  match_over_15@v1: n=33 hits=24 hit%=72.7 units=-5.78  (recorded hits=24, profit=-5.78)
+  pack : 72.7% hit / -5.78 u  -> compare above; the same slice must not be used to LOWER a floor
+
+== difference report ==
+  none: every pack §1 number reproduces on origin/main dda42ee
