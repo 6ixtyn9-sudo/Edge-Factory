@@ -16,7 +16,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .identity import canonical_league_key, fold_league_identity, team_identity_words
+from .identity import (canonical_league_key, fold_league_identity,
+                       team_identity_words)
 from .util import (
     clear_team_alias_cache,
     resolve_team_alias,
@@ -106,7 +107,9 @@ def _registry_lookup(kind: str, raw: object) -> str | None:
     if kind == "leagues":
         candidates.append(fold_league_identity(raw))
     else:
-        folded_team = team_identity_words(str(raw or ""))
+        # historical word rule: this list is matched against keys persisted
+        # before the fold existed (see team_identity_words)
+        folded_team = team_identity_words(str(raw or ""), fold_tokens=False)
         candidates.append(norm_team(folded_team))
         candidates.append(norm_entity_team(folded_team, width=24))
     for key in candidates:
@@ -165,7 +168,20 @@ def canonical_team(raw: object, *, width: int = 24) -> str:
         return base + suffix if suffix and not squad_markers(learned) else base
     # Folded identity fallback: identical to the legacy form for clean
     # names; unifies '&' <-> 'and' spellings (Dagenham incident).
-    return norm_entity_team(team_identity_words(str(raw or "")), width=width)
+    #
+    # Deliberately the PRE-FOLD word function (2026-10-12): the seam's
+    # ``team_identity_words`` now folds the abbreviation 'utd' -> 'united',
+    # which is right for the archive seam but must NOT move an operational
+    # key. These keys are persisted and joined against stored data - the
+    # committed ``localdata/purity_registry.json`` carries keys such as
+    # ``soccer|afctelfordutd|*|1x2|home`` built under the historical rule -
+    # and this function's own contract above is "byte-for-byte for names
+    # resolved without an alias". Folding here would silently orphan every
+    # stored verdict for a club spelled '... Utd', i.e. change which picks
+    # the purity layer explains, so the fallback keeps the historical rule
+    # and the seam carries the fold.
+    return norm_entity_team(team_identity_words(str(raw or ""), fold_tokens=False),
+                            width=width)
 
 
 def canonical_team_variants(raw: object, *, width: int = 24) -> list[str]:
@@ -192,8 +208,11 @@ def canonical_team_variants(raw: object, *, width: int = 24) -> list[str]:
             variants.append(key)
 
     _add(canonical_team(raw, width=width))
-    # pre-alias fallback: the historical key for this exact spelling
-    _add(norm_entity_team(team_identity_words(str(raw or "")), width=width))
+    # pre-alias fallback: the historical key for this exact spelling (the
+    # historical word rule, no abbreviation folds: these keys are looked up
+    # in tables written before the fold existed)
+    _add(norm_entity_team(team_identity_words(str(raw or ""), fold_tokens=False),
+                          width=width))
     override = _override_lookup("teams", raw)
     if override:
         teams = load_overrides().get("teams", {})
@@ -201,8 +220,8 @@ def canonical_team_variants(raw: object, *, width: int = 24) -> list[str]:
             for spelling, canonical in teams.items():
                 if str(canonical) != str(override):
                     continue
-                _add(norm_entity_team(team_identity_words(str(spelling)),
-                                      width=width))
+                _add(norm_entity_team(
+                    team_identity_words(str(spelling), fold_tokens=False), width=width))
     return variants
 
 
