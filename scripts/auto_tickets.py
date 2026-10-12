@@ -3340,6 +3340,44 @@ def leg_lookup_key(slip_date, leg):
     return _folded_leg_key(slip_date, parts[0], parts[1], pick)
 
 
+# Legs whose index row was found by a compatibility key rather than by the
+# recomputed one. Empty in normal operation; a non-empty list means stored
+# identities predate a fold change and had to be migrated at read.
+LEGACY_KEY_HITS: list[tuple[str, tuple]] = []
+
+
+def leg_lookup_keys(slip_date, leg) -> list[tuple]:
+    """Every index key a frozen leg may be filed under, best first.
+
+    ``leg_lookup_key`` answers with the identity the CURRENT fold computes.
+    A leg frozen before a fold change carries the key the OLD fold computed,
+    and re-folding cannot recover the new one when the change was a WORD
+    fold: the stored key is one glued word, so there is no token left to
+    fold (``source_team_key("newcastleutd")`` is unchanged, while the archive
+    now files that club as ``newcastleunited``). The primary key is always
+    first, so a leg whose identity did not move resolves exactly as before;
+    the migrated spelling follows as a read-only compatibility candidate.
+
+    Only the STORED key is migrated, never the display text: a slip whose
+    text path produced the key is recomputed under the current rule already.
+    """
+    primary = leg_lookup_key(slip_date, leg)
+    if primary is None:
+        return []
+    keys = [primary]
+    stored = leg.get("fixture_key") if isinstance(leg, dict) else None
+    if isinstance(stored, (list, tuple)) and len(stored) >= 3 and (stored[1] or stored[2]):
+        from edgefactory.identity import migrate_folded_key
+
+        home, away = migrate_folded_key(stored[1]), migrate_folded_key(stored[2])
+        if (home, away) != (stored[1], stored[2]):
+            migrated = _folded_leg_key(str(stored[0] or slip_date), home, away,
+                                       leg.get("pick"))
+            if migrated != primary:
+                keys.append(migrated)
+    return keys
+
+
 def _slip_day_anchor(slip_date):
     """Slip-date timestamp used as the 5-day void-timer fallback when a
     kickoff is missing/unparseable (or the archive row is entirely
@@ -3432,7 +3470,14 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
             legres = []
             conflicts = []
             for l in a["legs"]:
-                p = index.get(leg_lookup_key(slip["date"], l))
+                keys = leg_lookup_keys(slip["date"], l)
+                p = None
+                for leg_key in keys:
+                    p = index.get(leg_key)
+                    if p is not None:
+                        if leg_key != keys[0]:
+                            LEGACY_KEY_HITS.append((str(slip["date"]), leg_key))
+                        break
                 if p is None:
                     r = None
                     if l.get("market"):
