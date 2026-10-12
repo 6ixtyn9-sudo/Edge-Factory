@@ -299,6 +299,37 @@ def source_team_key(name: object) -> str:
     return TEAM_KEY_ALIASES.get(key, key)
 
 
+def migrate_folded_key(name: object) -> str:
+    """Re-spell a STORED key whose tail is a folded token (``utd``).
+
+    The token fold is word-level, and a persisted key is one glued word, so
+    ``source_team_key`` cannot migrate it: ``source_team_key("newcastleutd")``
+    is ``"newcastleutd"``, because there is no separate ``utd`` token left to
+    fold. Any file written before the fold therefore carries keys the current
+    seam never produces, and re-deriving them at read time cannot recover the
+    new spelling - the same asymmetry the Türkiye rename had, except the
+    rename was a different word and this one is a different WORD BOUNDARY.
+
+    This returns the current-key spelling for a text that ends in the folded
+    token (``newcastleutd`` -> ``newcastleunited``) and the text unchanged for
+    everything else. Compatibility only: the value is a lookup candidate
+    beside the recomputed key, never written back into any state file, and the
+    corpus says the fold it undoes merges no two real clubs (68 groups over
+    the committed archives, 0 wrong: handoff/round5_form_h2h_2026-10-12/
+    a_identity_checks.txt).
+
+    Measured 2026-10-12 over every committed localdata artifact: the only
+    stored seam keys a pre-fold writer could have left are ``nasarawautd``
+    (clv_unmatched_2026-09-17) and ``ayrutd`` (clv_unmatched_2026-10-03),
+    plus 14 phase5_shadow identity keys - see n1_persisted_keys.txt for the
+    per-artifact read/write classification.
+    """
+    text = str(name or "")
+    if len(text) > 3 and text[-3:].lower() == "utd" and text[-4:-3].isalnum():
+        return text[:-3] + "united"
+    return text
+
+
 # Squad distinguishers, as marker CLASSES. Two names whose marker classes
 # disagree never denote the same team: "Club Brugge KV" and "Club Brugge KV
 # U23" are different sides of the same club playing in different
