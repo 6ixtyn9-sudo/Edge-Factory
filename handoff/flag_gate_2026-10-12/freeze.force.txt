@@ -1,0 +1,23 @@
+settlement_narrow_key_superseded=763
+!! SUPERSEDED NARROW KEY 2026-07-14: ['Deportivo Armenio vs Talleres (R.E)', 'Deportivo Armenio vs Talleres (RdE)', 'Deportivo Armenio vs Talleres Remedios'] — one truncated key over several real fixtures; now settled on distinct wide keys
+!! SUPERSEDED NARROW KEY 2026-07-14: ['Hapoel Petach Ti vs Spartak Pleven', 'Hapoel Petah Tikva vs Spartak Pleven'] — one truncated key over several real fixtures; now settled on distinct wide keys
+!! SUPERSEDED NARROW KEY 2026-07-14: ['Inter Club Escal vs Lincoln Red Imps', 'Inter Escaldes vs Lincoln Red Imps'] — one truncated key over several real fixtures; now settled on distinct wide keys
+!! SUPERSEDED NARROW KEY 2026-07-14: ['Parndorf vs Austria Vienna (Am)', 'Parndorf vs Austria Vienna I'] — one truncated key over several real fixtures; now settled on distinct wide keys
+!! SUPERSEDED NARROW KEY 2026-07-15: ['Chattanooga RW vs Alta', 'Chattanooga Red vs Alta'] — one truncated key over several real fixtures; now settled on distinct wide keys
+   (+758 more superseded key(s); full list in NARROW_KEY_SUPERSEDED)
+settlement_ambiguous_pending=0
+settlement_empty_key_dropped=122
+settlement_narrow_key_superseded=763
+settlement_ambiguous_pending=0
+settlement_empty_key_dropped=122
+Traceback (most recent call last):
+  File "/tmp/gate_wt/scripts/auto_tickets.py", line 4374, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/tmp/gate_wt/scripts/auto_tickets.py", line 4341, in main
+    for line in settle_open_slips(st, load_settled(), lane=ENHANCEMENT_LANE):
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/gate_wt/scripts/auto_tickets.py", line 3342, in settle_open_slips
+    for a in slip["accas"]:
+             ~~~~^^^^^^^^^
+KeyError: 'accas'

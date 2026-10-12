@@ -48,9 +48,10 @@ tab traversal, no retries-hammering):
 - Retention: `localdata/betexplorer_match_detail_YYYY-MM-DD.json` — capped
   lists (24 books, 8 H2H rows, 10 last-result rows, 96-char excerpts), a
   30-day local prune, committed alongside the other BetExplorer receipts.
-- Consumption: none. Pricing still reads the best triple only; the ledger is
-  read by the capture receipt for counts and by nothing else. A row whose
-  markup carries no bookmaker is stored with no bookmaker, never a guess.
+- Consumption in that build: none. Pricing still read the best triple only;
+  the ledger was read by the capture receipt for counts and by nothing else.
+  A row whose markup carries no bookmaker is stored with no bookmaker, never
+  a guess. (Superseded by the Stage 1 consumption bullet further down.)
 
 Robots state re-verified 2026-10-12 against
 `https://www.betexplorer.com/robots.txt`: the path-only match page and the
@@ -132,9 +133,21 @@ What was built — the "click more" the page shows, made explicit:
   offers (Form, O/U, HT/FT, Top scorers; Overall/Home/Away) are each a
   separate AJAX request and are NOT fetched; the last-results selector
   (5/10/15/all) also stays at what the page serves (5 per team).
-- Consumption: still none. Pricing reads the 1x2 best triple only. A tab that
-  fails, is budget-stopped or is switched off is recorded (`market_failures`)
-  rather than papered over, and a detail-write failure never touches pricing.
+- Consumption (Stage 1, operator directive 2026-10-12): the retained detail
+  now prices the **enhancement board** — `enh_pricing._accumulate_betexplorer`
+  reads this ledger for the day and merges it into the same local price index
+  the board and the enhancement slip are priced from. Read: the `ou` tabs'
+  Over/Under cells per handicap line, `bts` Yes/No and `dc` 1X/12/X2, each
+  cell taken by the label the page writes, never by position. A cell the site
+  flagged as a best-price offer wins its slot; otherwise the highest retained
+  price does, and the price keeps the row's own bookmaker and creation stamp.
+  A market this overlay does not price is skipped rather than guessed, and
+  nothing here is an EV gate — the registry floor decides what is a bet. All
+  of it stays behind `EDGE_FACTORY_ENH_BOARD`: with the flag unset the ledger
+  contributes nothing and the board renders byte-identical (round-2 §3). A
+  tab that fails, is budget-stopped or is switched off is recorded
+  (`market_failures`) rather than papered over, and a detail-write failure
+  never touches pricing.
 
 Build-time inspection (disclosed, this round): read-only fetches of the public
 `ou` and `bts` endpoints for the same one example fixture the operator pasted,

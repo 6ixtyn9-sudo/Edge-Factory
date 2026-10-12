@@ -22,6 +22,10 @@ in the unified schema. Those sources now feed one merged index:
     oddspapi     localdata/oddspapi_odds_YYYY-MM.csv.gz   (unified schema;
                  team totals, double chance, totals, btts, 1x2 — operator
                  override 2026-08-05, Addendum 27.7; flag-gated capture)
+    betexplorer  localdata/betexplorer_match_detail_<day>.json (schema 2;
+                 multi-book comparison responses the priced lane already
+                 fetched: O/U lines, BTTS, double chance. Day-scoped evidence,
+                 written and read in the same run)
 
 Merge semantics: best price across sources per (date, pair, market, selection)
 with SOURCE ATTRIBUTION on the winning price, and when >=2 sources price the same
@@ -37,6 +41,7 @@ at the boundary (RT-2, addendum 9) at every source.
 from __future__ import annotations
 
 import csv
+import json
 import os
 import gzip
 import math
@@ -101,6 +106,34 @@ DIVERGENCE_MIN_SPREAD = 0.10  # flag when max/min best-source prices differ by >
 # nothing legit drops; post-kickoff rows are lookahead artifacts that must
 # never price a settled pick.
 ODDSPAPI_MAX_AGE_H = 72
+
+BETEXPLORER_SOURCE = "betexplorer"
+# The enhancement board's own switch. scripts/auto_tickets reads the same
+# variable for the board builder; when it is unset the board does not exist, so
+# a source that ONLY the board consumes must not price anything either — one
+# meaning, read here at merge time (round-2 ruling, 2026-10-12).
+ENH_BOARD_FLAG = "EDGE_FACTORY_ENH_BOARD"
+
+
+def enhancement_board_enabled() -> bool:
+    """True when the operator has switched the enhancement board on."""
+    return os.environ.get(ENH_BOARD_FLAG) == "1"
+# The detail ledger carries each market's own column labels, so a cell is read
+# only when its label is understood here — the site spells double chance "1X",
+# BTTS "Yes", totals "Over"; a label outside this map is skipped, never guessed
+# by position. (Ledger columns, per the capture: 1x2 "1,X,2"; AH/DNB "1,2";
+# totals "Over,Under"; DC "1X,12,X2"; BTTS "Yes,No".)
+_BE_COLUMN_SELECTIONS: dict[str, str] = {
+    "over": "over", "under": "under",
+    "yes": "yes", "no": "no",
+    "1x": "1x", "x2": "x2", "12": "12",
+}
+# Ledger slug -> the market name the index (and MARKET_PRICE_MAP) uses. The
+# capture writes BetExplorer's own tab slugs; the map spells BTTS "btts", so a
+# reader that passed the slug straight through would file prices under a market
+# nothing ever looks up. 1x2 / ah / ha (DNB) are retained evidence only: no
+# enhancement maps to them, so they are not read.
+_BE_SLUGS: dict[str, str] = {"ou": "ou", "bts": "btts", "dc": "dc"}
 
 # scoutingstats wide-row column map: (market, selection) -> odds column.
 # Verified against src/edgefactory/sources/scoutingstats.py COLUMNS (2026-08-03).
@@ -264,6 +297,123 @@ def _accumulate_scoutingstats(path: Path, *, day: str, out: dict[str, Any]) -> N
         return
 
 
+def _be_line_market(slug: str, line: object) -> str | None:
+    """The index's slot for one ledger line: "2.50" -> "ou_2.5".
+
+    The slot spelling is the one MARKET_PRICE_MAP already looks up
+    (``ou_1.5``/``ou_2.5``/``ou_3.5``/``ou_4.5``); a line the map does not
+    name (0.50, 5.50, a quarter line) still enters the index under its own
+    faithful name, it simply has no enhancement that reads it yet.
+    """
+    try:
+        value = float(str(line).replace("+", ""))
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(value):
+        return None
+    return f"{slug}_{value:g}"
+
+
+def _be_block_cells(slug: str, block: object) -> list[tuple[str, str, float, str, str, bool]]:
+    """(market, selection, price, book, at, best) per priced cell of one market.
+
+    Column order is taken from the block's own ``columns`` list, never assumed:
+    the capture stores the site's labels, and the row's ``odds``/``created``
+    lists are aligned to that same list. A row whose line the block's ``lines``
+    list no longer carries is skipped — ``lines`` is the capture's record of
+    what survived its per-market cap, so a line absent from it has no retained
+    evidence to price from.
+    """
+    if not isinstance(block, dict):
+        return []
+    columns = [str(column).strip().lower() for column in (block.get("columns") or [])]
+    selections = [_BE_COLUMN_SELECTIONS.get(column) for column in columns]
+    lines = {str(line) for line in (block.get("lines") or []) if line is not None}
+    cells: list[tuple[str, str, float, str, str, bool]] = []
+    for row in block.get("rows") or []:
+        if not isinstance(row, dict):
+            continue
+        odds = list(row.get("odds") or [])
+        created = list(row.get("created") or [])
+        line = row.get("line")
+        if slug == "ou" and lines and line is not None and str(line) not in lines:
+            continue
+        market = _be_line_market(slug, line) if slug == "ou" else _BE_SLUGS[slug]
+        if market is None:
+            continue
+        for index, selection in enumerate(selections):
+            if not selection:
+                continue
+            price = _parse_price(odds[index] if index < len(odds) else None)
+            if price is None:
+                continue
+            at = str(created[index]) if index < len(created) and created[index] else ""
+            cells.append((market, selection, price,
+                          str(row.get("bookmaker") or ""), at, bool(row.get("best"))))
+    return cells
+
+
+def _accumulate_betexplorer(path: Path, *, day: str, out: dict[str, Any]) -> None:
+    """Read the schema-2 BetExplorer detail ledger for `day` (one file per day).
+
+    Operator directive 2026-10-12, confirmed in this same PR in
+    docs/operator/BETEXPLORER-LICENSING.md: the detail the priced lane already
+    fetched is the enhancement board's price source, and the registry floor —
+    not EV — decides what is a bet.
+
+    Producer: ``sources.betexplorer_odds._persist_match_detail`` — the match
+    page's blocks plus one comparison response per market, each retained with
+    its own column labels, handicap lines and per-bookmaker rows. Prices are
+    taken the way the operator reads that page by hand: a row the site flagged
+    as a best-price offer wins, else the highest retained price for the
+    selection; the price keeps the row's own bookmaker and creation stamp as
+    its attribution. No EV gate — the registry floor, not this reader, decides
+    whether a price is bettable.
+
+    Fail-soft: an absent, foreign-schema, unreadable or empty ledger
+    contributes nothing and never raises.
+    """
+    try:
+        if not path.exists():
+            return
+        payload = json.loads(path.read_text())
+        if not isinstance(payload, dict) or int(payload.get("schema") or 0) != 2:
+            return
+        fixtures = payload.get("fixtures")
+        if not isinstance(fixtures, dict):
+            return
+        ledger_day = str(payload.get("date") or "")[:10]
+        if ledger_day and ledger_day != str(day)[:10]:
+            return  # a ledger under the wrong day's name prices nothing
+        for entry in fixtures.values():
+            if not isinstance(entry, dict):
+                continue
+            home, away = entry.get("home"), entry.get("away")
+            if not home or not away:
+                continue
+            flagged: dict[tuple[str, str], tuple[float, str, str]] = {}
+            highest: dict[tuple[str, str], tuple[float, str, str]] = {}
+            markets = entry.get("markets")
+            for slug, block in (markets or {}).items() if isinstance(markets, dict) else ():
+                if str(slug) not in _BE_SLUGS:
+                    continue  # not a market this overlay prices
+                for market, selection, price, book, at, best in _be_block_cells(str(slug), block):
+                    slot = (market, selection)
+                    if slot not in highest or price > highest[slot][0]:
+                        highest[slot] = (price, book, at)
+                    if best and (slot not in flagged or price > flagged[slot][0]):
+                        flagged[slot] = (price, book, at)
+            if not highest:
+                continue
+            nh, na = norm_team(home), norm_team(away)
+            for (market, selection) in highest:
+                price, book, at = flagged.get((market, selection)) or highest[(market, selection)]
+                _put(out, nh, na, market, selection, price, book, at, BETEXPLORER_SOURCE)
+            out["names"].setdefault((nh, na), (home, away))
+    except Exception:
+        return
+
+
 def load_prices_index(root: Path, day: str) -> dict[str, Any]:
     """Merge all local price sources for `day` into
     {"pairs":  {(nh,na): {(market,sel): (best_price, book, at, source)}},
@@ -281,6 +431,19 @@ def load_prices_index(root: Path, day: str) -> dict[str, Any]:
                         strict_source=BZZOIRO_SOURCE, out=out)
     _accumulate_scoutingstats(localdata / f"scoutingstats_{month}.csv.gz",
                               day=day, out=out)
+    # BetExplorer detail ledger (schema 2, day-scoped): the comparison
+    # responses the priced lane already fetched for this day. Zero network —
+    # the file is local, and an absent ledger simply contributes nothing.
+    #
+    # Behind the board's own switch (round-2 ruling, 2026-10-12): with
+    # EDGE_FACTORY_ENH_BOARD unset this source contributes nothing at all, so
+    # the board renders exactly as it did before the source existed — same
+    # inputs, same bytes. The switch is read here, at merge time, so a ledger on
+    # disk can never price anything while the board is off.
+    if enhancement_board_enabled():
+        _accumulate_betexplorer(
+            localdata / f"betexplorer_match_detail_{str(day)[:10]}.json",
+            day=day, out=out)
     # Operator override 2026-08-05 (Addendum 27.7): OddsPapi prices team
     # totals / double chance / totals / btts for the enhancement overlay.
     # REAL flag gate (red-team finding F6, fixed 2026-08-05): the store is

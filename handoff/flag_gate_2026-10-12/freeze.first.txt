@@ -1,0 +1,40 @@
+settlement_narrow_key_superseded=763
+!! SUPERSEDED NARROW KEY 2026-07-14: ['Deportivo Armenio vs Talleres (R.E)', 'Deportivo Armenio vs Talleres (RdE)', 'Deportivo Armenio vs Talleres Remedios'] — one truncated key over several real fixtures; now settled on distinct wide keys
+!! SUPERSEDED NARROW KEY 2026-07-14: ['Hapoel Petach Ti vs Spartak Pleven', 'Hapoel Petah Tikva vs Spartak Pleven'] — one truncated key over several real fixtures; now settled on distinct wide keys
+!! SUPERSEDED NARROW KEY 2026-07-14: ['Inter Club Escal vs Lincoln Red Imps', 'Inter Escaldes vs Lincoln Red Imps'] — one truncated key over several real fixtures; now settled on distinct wide keys
+!! SUPERSEDED NARROW KEY 2026-07-14: ['Parndorf vs Austria Vienna (Am)', 'Parndorf vs Austria Vienna I'] — one truncated key over several real fixtures; now settled on distinct wide keys
+!! SUPERSEDED NARROW KEY 2026-07-15: ['Chattanooga RW vs Alta', 'Chattanooga Red vs Alta'] — one truncated key over several real fixtures; now settled on distinct wide keys
+   (+758 more superseded key(s); full list in NARROW_KEY_SUPERSEDED)
+settlement_ambiguous_pending=0
+settlement_empty_key_dropped=122
+settlement_narrow_key_superseded=763
+settlement_ambiguous_pending=0
+settlement_empty_key_dropped=122
+ENHANCEMENT TICKETS (ROLLING) — 2026-10-12
+==============================================================
+PERFORMANCE: total bank 100.0% of capital (x1.00) = free bank 100.0% + committed 0.0% · next take-profit notification at 200.0%
+ENHANCEMENT SLICE (settled, registry)
+  by market              n   hits    rate   breakeven    profit
+  match_over_25        350    231   66.0%       1.515    +2.30u
+  match_over_15         33     24   72.7%       1.375    -5.78u
+  match_over_35         16      5   31.2%       3.200    -2.20u
+  btts_yes               7      4   57.1%       1.750    +1.99u
+  away_under_25          1      1  100.0%       1.000    +0.90u
+  away_under_35          1      1  100.0%       1.000    +0.43u
+  match_over_45          1      1  100.0%       1.000    +5.60u
+  by bucket
+    unattributed (pre-2026-10-12)  409    267   65.3%    +3.24u
+  by rule
+    unattributed (pre-2026-10-12)  409    267   65.3%    +3.24u
+
+[ENH #1] @5.00 — stake 25.0% of capital (25.0% of free bank)
+   JS El Biar vs CR Belouizdad                  Match Over 3.5 Goals @ 5.00 (stated 34%) [registry 31% n=16 · floor 3.30 · BetMGM.us]
+
+   [NO BET] Coventry vs Newcastle Utd                Both Teams To Score @ 1.57 (stated 34%) — below floor 1.85 — no bet
+
+deploying 25% of free bank today = 25.0% of capital · take-profit NOTIFICATION at +100% per cycle (performance-based; you act on it).
+All figures are percentages of capital. Round to your bookmaker's minimum stake. Bet only what you can afford to lose.
+
+FROZEN AT 10:52 - FINAL
+
+STATUS: ✅ FROZEN AT 10:52 - FINAL enhancement slip; later runs re-print unchanged (write-once lock in enhancement_tickets_state.json: frozen_by_date[2026-10-12]).

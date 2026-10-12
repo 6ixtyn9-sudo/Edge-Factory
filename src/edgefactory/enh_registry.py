@@ -89,6 +89,128 @@ ENHANCEMENT_PRICE_FLOORS: dict[str, float] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Market scoring: what counts as a HIT for a settled enhancement market
+#
+# One definition, shared: the audit certifies the registry from it, and the
+# ticket engine grades a frozen enhancement leg from it. Kept next to the
+# floors because the floor and the hit definition answer the same question
+# from opposite sides (what price is enough / what actually landed).
+# ---------------------------------------------------------------------------
+def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bool | None:
+    if hs is None or gs is None:
+        return None
+    sel = selection.lower()
+    if enh_type == "match_over_15":
+        # FIX-2 (2026-08-03, Addendum 12): plain-market scoring. The promised %
+        # rendered for this market and the price captured for it are both the
+        # PLAIN total, so the hit must be selection-independent. The removed
+        # Win+Over combo branches measured a different market than the one
+        # priced, deflating every hit-rate (and any future registry
+        # certification) built on them.
+        return (hs + gs) >= 2
+    elif enh_type == "match_over_25":
+        # FIX-2: plain-market scoring (see match_over_15).
+        return (hs + gs) >= 3
+    elif enh_type == "match_under_15":
+        return (hs + gs) <= 1
+    elif enh_type == "match_under_25":
+        return (hs + gs) <= 2
+    elif enh_type == "match_under_35":
+        return (hs + gs) <= 3
+    elif enh_type == "btts_yes":
+        # FIX-2: plain-market scoring (see match_over_15).
+        return hs > 0 and gs > 0
+    elif enh_type == "btts_no":
+        return hs == 0 or gs == 0
+    elif enh_type in ("team_over_05", "home_over_05"):
+        return hs >= 1 if (enh_type == "home_over_05" or sel == "home") else gs >= 1
+    elif enh_type in ("team_over_15", "home_over_15"):
+        return hs >= 2 if (enh_type == "home_over_15" or sel == "home") else gs >= 2
+    elif enh_type == "home_over_25":
+        return hs >= 3
+    elif enh_type == "home_over_35":
+        return hs >= 4
+    elif enh_type == "home_over_45":
+        return hs >= 5
+    elif enh_type == "home_under_05":
+        return hs == 0
+    elif enh_type == "home_under_15":
+        return hs <= 1
+    elif enh_type == "home_under_25":
+        return hs <= 2
+    elif enh_type == "home_under_35":
+        return hs <= 3
+    elif enh_type == "home_under_45":
+        return hs <= 4
+    elif enh_type == "away_over_05":
+        return gs >= 1
+    elif enh_type == "away_over_15":
+        return gs >= 2
+    elif enh_type == "away_over_25":
+        return gs >= 3
+    elif enh_type == "away_over_35":
+        return gs >= 4
+    elif enh_type == "away_over_45":
+        return gs >= 5
+    elif enh_type == "away_under_05":
+        return gs == 0
+    elif enh_type == "away_under_15":
+        return gs <= 1
+    elif enh_type == "away_under_25":
+        return gs <= 2
+    elif enh_type == "away_under_35":
+        return gs <= 3
+    elif enh_type == "away_under_45":
+        return gs <= 4
+    elif enh_type == "goal_range_0_1":
+        return (hs + gs) in [0, 1]
+    elif enh_type == "goal_range_2_3":
+        return (hs + gs) in [2, 3]
+    elif enh_type == "goal_range_4_5":
+        return (hs + gs) in [4, 5]
+    elif enh_type == "goal_range_4_6":
+        return (hs + gs) in [4, 5, 6]
+    elif enh_type == "goal_range_6_plus":
+        return (hs + gs) >= 6
+    elif enh_type == "goal_range_7_plus":
+        return (hs + gs) >= 7
+    elif enh_type == "exact_0":
+        return (hs + gs) == 0
+    elif enh_type == "exact_1":
+        return (hs + gs) == 1
+    elif enh_type == "exact_2":
+        return (hs + gs) == 2
+    elif enh_type == "exact_3":
+        return (hs + gs) == 3
+    elif enh_type == "exact_4":
+        return (hs + gs) == 4
+    elif enh_type == "exact_5":
+        return (hs + gs) == 5
+    elif enh_type == "match_over_05":
+        return (hs + gs) >= 1
+    elif enh_type == "match_over_35":
+        return (hs + gs) >= 4
+    elif enh_type == "match_over_45":
+        return (hs + gs) >= 5
+    elif enh_type == "match_over_55":
+        return (hs + gs) >= 6
+    elif enh_type == "match_under_05":
+        return (hs + gs) == 0
+    elif enh_type == "match_under_45":
+        return (hs + gs) <= 4
+    elif enh_type == "match_under_55":
+        return (hs + gs) <= 5
+    elif enh_type == "double_chance":
+        if sel == "home": # 1X
+            return hs >= gs
+        elif sel == "away": # X2
+            return gs >= hs
+        elif sel == "draw": # 12
+            return hs != gs
+    return None
+
+
 def floor_for(market: str | None) -> float | None:
     """The minimum acceptable price for `market`, or None when it has none."""
     if not market:
