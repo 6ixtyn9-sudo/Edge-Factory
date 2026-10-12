@@ -196,7 +196,7 @@ TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
     # = rows whose opponents and competition belong to that one club (listed).
     # The measurement script and every row are in
     # handoff/round5_form_h2h_2026-10-12/a_identity_checks.txt.
-    ("Accrington", "Accrington Stanley"),        # row: 26 League Two vs the club's own league
+    ("Accrington", "Accrington Stanley"),        # evidence: row-case-only - 26 League Two rows vs the club's own league (a_identity_checks.txt, A-2 per-pair table)
     ("Accrington St", "Accrington Stanley"),     # mutual x4 (Crawley, Barnet, Newport, Salford)
     ("Borussia Monchen", "Borussia M'gladbach"), # mutual x2 (RB Leipzig, SV Elversberg)
     ("Carrarese", "Carrarese Calcio"),           # mutual x4 (Torino, Ascoli, Empoli, Padova)
@@ -206,14 +206,14 @@ TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
     ("JEF United", "JEF United Chiba"),          # mutual x8 (Machida, FC Tokyo, Kawasaki ...)
     ("JEF United Ichih", "JEF United Chiba"),    # mutual x6 (truncated spelling of the same club)
     ("Kidderminster", "Kidderminster Harriers"), # mutual x2 (AFC Hornchurch, Southend)
-    ("Kidderminster Ha", "Kidderminster Harriers"),  # row: NL North, opponents Halesowen/Stourbridge
-    ("Scunthorpe Unite", "Scunthorpe United"),   # mutual x2 (Yeovil, Sutton) - truncation
+    ("Kidderminster Ha", "Kidderminster Harriers"),  # evidence: row-case-only - NL North, opponents Halesowen/Stourbridge (a_identity_checks.txt)
+    ("Scunthorpe Unite", "Scunthorpe United"),   # evidence: row-case-only - truncation of the same club (mutual count is 0; the row case carries it)
     ("Zeljeznicar", "Zeljeznicar Sarajevo"),     # mutual x2 (BSK Banja Luka, Zrinjski)
-    ("Mallorca", "Real Mallorca"),               # row: 21 LaLiga rows, only LaLiga club of the name
+    ("Mallorca", "Real Mallorca"),               # evidence: row-case-only - 21 LaLiga rows, only LaLiga club of the name
     ("Flint Town", "Flint Town Utd"),            # row: Cymru Premier opponents (TNS, Connahs Quay)
     ("Omonia Nicosia F", "Omonia Nicosia"),      # mutual x7 (Lincoln Red Imps twice, Aradippou ...)
-    ("Aris Thessalonik", "Aris Thessalonikis"),  # row: Greek top flight opponents (PAOK, OFI, Volos)
-    ("Corvinul Hunedoa", "Corvinul Hunedoara"),  # row: Romanian opponents (CFR Cluj, Csikszereda)
+    ("Aris Thessalonik", "Aris Thessalonikis"),  # evidence: row-case-only - Greek top-flight opponents (PAOK, OFI, Volos)
+    ("Corvinul Hunedoa", "Corvinul Hunedoara"),  # evidence: row-case-only - Romanian opponents (CFR Cluj, Csikszereda)
     ("Newcastle", "Newcastle United"),           # mutual x11 (the EPL side; the archive's own
     #                                              spelling of the fixture this round was read for)
     # betexplorer archive 2026-10-12: 2026-08-01 Basel–Lausanne, Switzerland
