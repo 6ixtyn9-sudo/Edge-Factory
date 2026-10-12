@@ -603,6 +603,39 @@ def test_a_stub_fetch_leaves_no_stale_detail(monkeypatch):
 
 # --- the receipt ------------------------------------------------------------
 
+def test_receipt_keeps_the_row_refusal_census(tmp_path, monkeypatch):
+    """Round-2 §2.2: the refused-row census must reach the capture receipt.
+
+    The wrapper merges the adapter's run and request counters through an
+    explicit whitelist. As delivered, that whitelist kept the request counters
+    and dropped `be_rows_rejected*` — the census the 2026-10-12 row-join guard
+    is audited from — so the receipt showed what was fetched and not what was
+    refused. The census is whitelisted beside the counters, and this test fails
+    if it is filtered out again.
+    """
+    be._fixture_cache.clear()
+    be._match_cache.clear()
+    monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(capture, "_candidate_rows", lambda day: [PICK])
+    monkeypatch.setattr(be, "betexplorer_odds_rows_for_pick",
+                        lambda pick, day, norm_team_fn=None: [])
+    monkeypatch.setattr(be, "run_stats", lambda: {
+        "be_429": 0, "be_cooling_down": False, "be_cached": 2,
+        "be_rows_rejected": 3,
+        "be_rows_rejected_reasons": {"row teams do not both match the pick": 3}})
+    monkeypatch.setattr(be, "request_stats", lambda: {
+        "requests": 1, "market_requests": 0, "market_budget_stop": False})
+    monkeypatch.setattr(capture, "_detail_summary", lambda day: {})
+
+    receipt = capture.capture("2026-10-12", max_fixtures=1)
+
+    assert receipt["be_rows_rejected"] == 3
+    assert receipt["be_rows_rejected_reasons"] == {
+        "row teams do not both match the pick": 3}
+    assert receipt["requests"] == 1 and receipt["be_cached"] == 2
+    assert {"be_rows_rejected", "be_rows_rejected_reasons"} <= capture.RECEIPT_STAT_KEYS
+
+
 def test_wrapper_receipt_summarises_the_detail_ledger(tmp_path, monkeypatch):
     monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
     (tmp_path / LEDGER).write_text(json.dumps({
