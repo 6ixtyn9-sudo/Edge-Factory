@@ -1,0 +1,132 @@
+== (a) picks_today.py: the #61 rescue flow, both stats calls ==
+$ grep -n 'run_stats\|request_stats\|NETWORK-FREE SEAM\|Bounded rescue' scripts/picks_today.py
+  6233:        # (1) NETWORK-FREE SEAM FIRST, and for EVERY pick. A fresh same-day
+  6265:        # (3) Bounded rescue. `continue`, never `break`: once the target is met
+  6283:        stats.update(_be_mod.run_stats())
+  6286:        stats.update(_be_mod.request_stats())
+
+the flow itself, numbered (scripts/picks_today.py):
+  6236          # from the whole loop, so once four legs were priced by any source every
+  6237          # later leg was abandoned — including legs whose prices were already on
+  6238          # disk. Receipt: Ludogorets-Arda (1.50/4.00/6.50) and Elfsborg-Halmstad
+  6239          # (1.36/5.25/8.00) were captured at 01:05Z and cached under this run's
+  6240          # own key, yet the board published them with odds=None /
+  6241          # odds_match_status="unmatched". A leg may be unpriced because there is
+  6242          # no price — never because of ordering.
+  6243          cached_rows = _be_mod.cached_odds_rows_for_pick(pick, day)
+  6244          if cached_rows or _be_mod.cached_fixture_present(pick, day):
+  6245              if cached_rows:
+  6246                  matching_row = _betexplorer_matching_row(cached_rows, pick)
+  6247                  if pick.get("odds") is None and matching_row is not None:
+  6248                      if _apply_betexplorer_row(pick, matching_row, cached_rows,
+  6249                                                bundles=bundles, source=_BE_SOURCE):
+  6250                          enriched += 1
+  6251                          priced += 1
+  6252                  else:
+  6253                      # Not this pick's selection, or already priced by a live
+  6254                      # source (which is never overwritten): keep the rows as
+  6255                      # board corroboration only.
+  6256                      _append_betexplorer_board_rows(pick, cached_rows, _BE_SOURCE)
+  6257              # The cache is authoritative for this fixture this run — an empty
+  6258              # entry is a resolved answer, not a miss.
+  6259              continue
+  6260  
+  6261          # (2) A live source already priced this fixture: do not rescue it.
+  6262          if method not in ("fallback", "none", "alias_fuzzy"):
+      ... (step (2), step (3) and the two stats calls follow)
+  6275          if matching_row is None:
+  6276              continue
+  6277          if _apply_betexplorer_row(pick, matching_row, rows,
+  6278                                    bundles=bundles, source=_BE_SOURCE):
+  6279              enriched += 1
+  6280              priced += 1
+  6281  
+  6282      if stats is not None:
+  6283          stats.update(_be_mod.run_stats())
+  6284          # Network-attempt counters (priced lane + market-tab detail requests),
+  6285          # so the run log shows what BetExplorer actually saw.
+  6286          stats.update(_be_mod.request_stats())
+  6287          stats["be_priced_before"] = priced_before
+  6288          stats["be_priced_after"] = priced
+  6289          stats["be_target_legs"] = target
+  6290      return enriched
+  6291  
+
+== (b) betexplorer_odds.py: the two stat sets and the constants ==
+run_stats() fields (5): be_429, be_cached, be_cooling_down, be_rows_rejected, be_rows_rejected_reasons
+request_stats() fields (3): market_budget_stop, market_requests, requests
+their union (8): be_429, be_cached, be_cooling_down, be_rows_rejected, be_rows_rejected_reasons, market_budget_stop, market_requests, requests
+the receipt whitelist in scripts/capture_betexplorer.py is a superset: it also carries be_fetches (from reset_fetch_count), so every field the two calls produce reaches the receipt
+marker counts (13 markers, occurrences and lines in the module):
+  MARKETS                     2 occurrence(s) at line(s) 503, 505
+  DETAIL_MARKETS              2 occurrence(s) at line(s) 505, 795
+  MARKET_TABS_ENABLED         2 occurrence(s) at line(s) 506, 793
+  _MARKET_INTERVAL            2 occurrence(s) at line(s) 510, 806
+  _MAX_REQUESTS_PER_RUN       3 occurrence(s) at line(s) 511, 798, 801
+  _MAX_MARKET_ROWS            2 occurrence(s) at line(s) 517, 695
+  _MAX_MARKET_LINES           2 occurrence(s) at line(s) 518, 688
+  parse_market_response       3 occurrence(s) at line(s) 730, 814, 864
+  fetch_market_responses      2 occurrence(s) at line(s) 780, 873
+  fetch_match_odds_full       2 occurrence(s) at line(s) 836, 888
+  request_stats               1 occurrence(s) at line(s) 132
+  _persist_match_detail       2 occurrence(s) at line(s) 1010, 1353
+  _market_block               2 occurrence(s) at line(s) 990, 1028
+  _MARKET_INTERVAL = 5.1
+  _MAX_MARKET_ROWS = 48
+  _MAX_MARKET_LINES = 10
+  _MAX_H2H_ROWS = 40
+  _MAX_STANDINGS_ROWS = 40
+
+== (c) the patch's two test modules: names and counts, collected at this tip ==
+-- tests/test_betexplorer_politeness.py: 5 test(s)
+   test_results_parser_captures_final_score_for_result_backfill
+   test_first_429_honors_retry_after_and_uses_30_second_floor
+   test_second_429_cools_run_and_makes_no_third_request
+   test_same_day_fixture_cache_dedupes_requests_and_survives_run_reset
+   test_request_counts_track_every_attempt_for_the_receipt
+   (5 tests collected in 0.06s)
+-- tests/test_betexplorer_match_detail.py: 20 test(s)
+   test_market_columns_lines_and_prices_come_from_the_response
+   test_a_line_the_all_block_does_not_cover_keeps_the_table_rows
+   test_single_line_markets_keep_the_pages_own_columns_and_ranks
+   test_unnamed_rows_are_never_given_a_bookmaker
+   test_multi_line_markets_are_capped_to_the_lines_nearest_level
+   test_single_line_markets_keep_up_to_24_bookmakers
+   test_best_triple_contract_is_unchanged
+   test_match_page_blocks_read_h2h_last_results_and_standings
+   test_the_whole_table_and_h2h_list_are_read_not_the_collapsed_view
+   test_a_digit_leading_club_name_stays_in_the_team_field
+   test_capture_retains_every_market_from_one_response_per_market
+   test_market_tab_requests_take_the_wider_interval
+   test_market_tabs_can_be_turned_off
+   test_market_tabs_stop_at_the_run_request_budget
+   test_market_failures_are_recorded_without_touching_the_priced_lane
+   test_cache_hit_makes_no_request_and_adds_no_detail
+   test_detail_write_failure_never_breaks_the_priced_lane
+   test_a_stub_fetch_leaves_no_stale_detail
+   test_receipt_keeps_the_row_refusal_census
+   test_wrapper_receipt_summarises_the_detail_ledger
+   (20 tests collected in 0.07s)
+
+== (d) per-file sha256 at this tip + the attribution rows ==
+HEAD: f50b760
+  9eb63ddcc3b8e7888fa87a03737fdce9ea37583a574c50e574f97940b67d25f0  scripts/capture_betexplorer.py
+  fca5051139c291904d15c152f907d5f24707008eb5f3deba3c6dd2dca6d259d7  scripts/picks_today.py
+  d7462151f468051187634d5b37563e678ae018f39997dc2f76d438eb3feb1a16  scripts/clean_localdata.py
+  5ea9a4e515d38eabcd7be76a06e71932970a80548dabe3423b22b722448d474c  src/edgefactory/sources/betexplorer_match_snapshot.py
+  648f690c62062ff837914c3990e15cd1ca25cd237e8d489f45493bf9f76ae1fd  src/edgefactory/sources/betexplorer_odds.py
+  bfbbc1d9cb80e98bd2ad7e583f33217b5b75798298c16a7294f45c59d36d5c44  tests/test_betexplorer_match_detail.py
+  40c094f4345c96c0f6329842a9286913e7b33226c20ade4583d5cc98cb63d0fc  tests/test_betexplorer_politeness.py
+  ffb499377f7b2856661ddd97e5f50343c7f2d12c4d11a48d1bcc4854027188aa  docs/operator/BETEXPLORER-LICENSING.md
+  777a4440def3c093a529e3a037d0a2dd758a6d8e4a15e1cbf245f30cf81ef001  .gitignore
+
+attribution rows (which commit of THIS chain carried each change in):
+  licensing doc Stage-1 consumption bullet   <- 3458653
+  capture receipt census whitelist           <- c1538ca
+  picks_today rescue ordering / price index  <- 3458653
+  match_snapshot depth regions               <- ff49617 + 45c8f30
+  test_match_detail                          <- ff49617 + c1538ca
+  odds adapter                               <- ff49617 (both sides of the three contested hunks kept)
+
+(pre-reset SHAs are void: the whole chain was rebuilt after a sandbox reset,
+ so every attribution above cites this chain's own commits.)
