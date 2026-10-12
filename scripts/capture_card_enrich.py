@@ -126,7 +126,7 @@ def event_map(localdata: Path, days: list[str]) -> dict[tuple[str, str], dict]:
     """
     out: dict[tuple[str, str], dict] = {}
     for day in days:
-        path = localdata / f"boggio_shadow_{day}.json"
+        path = production_shadow_path(localdata, day)
         try:
             rows = json.loads(path.read_text(encoding="utf-8")).get("rows", [])
         except (OSError, ValueError, TypeError, AttributeError):
@@ -198,6 +198,24 @@ def listing_attempted_today(localdata: Path, day: str) -> bool:
     )
 
 
+def production_shadow_path(localdata: Path, day: str) -> Path:
+    """Where the production lane keeps the day's own rows - the retained ids."""
+    return localdata / f"boggio_shadow_{day}.json"
+
+
+def production_listing_entry(localdata: Path, day: str) -> dict | None:
+    """The production lane's free listing fetch for ``day``, from the shared ledger.
+
+    One entry means the very payload a paid listing would re-fetch has already
+    been bought once today, by the price lane, at no cost to this one.
+    """
+    for entry in boggio.read_call_ledger(localdata, month=boggio.family_month(day)):
+        if (str(entry.get("date", ""))[:10] == day
+                and entry.get("endpoint") == "boggio_production_listing"):
+            return entry
+    return None
+
+
 def _ring_attempt_count(exc: boggio.UpstreamBlocked) -> int:
     """Read explicit contact evidence; an absent marker means no attempts."""
     try:
@@ -214,6 +232,27 @@ def _provider_was_contacted(exc: boggio.UpstreamBlocked) -> bool:
     contact. The Boggio ring attaches these attributes only after an attempt.
     """
     return _ring_attempt_count(exc) >= 1 or getattr(exc, "ring_key", None) is not None
+
+
+def _unresolved_detail(item: dict, pair: tuple[str, str],
+                       retained: dict[tuple[str, str], dict],
+                       listing_ids: dict[tuple[str, str], dict]) -> dict:
+    """Why one fixture stayed unresolved, as bounded counts and folded keys.
+
+    The question the 2026-10-12 receipt could not answer: was the pair absent
+    from the retained rows entirely, or present-but-differently-keyed?
+    """
+
+    def sharing(pairs):
+        return [f"{home}|{away}" for (home, away) in pairs
+                if home == pair[0] or away == pair[1]]
+
+    retained_near, listing_near = sharing(retained), sharing(listing_ids)
+    return {"fixture": item["fixture_key"],
+            "retained_pairs_sharing_a_key": len(retained_near),
+            "listing_pairs_sharing_a_key": len(listing_near) if listing_ids else None,
+            "nearest_retained": retained_near[:2],
+            "nearest_listing": listing_near[:2]}
 
 
 def plan_run(day: str, *, localdata: Path, limit: int,
@@ -234,6 +273,13 @@ def plan_run(day: str, *, localdata: Path, limit: int,
     unresolved = [i for i in chosen if i["needs_call"] and not i["resolvable"]]
     resolved_h2h = sum(1 for i in chosen if i["needs_call"] and i["resolvable"])
     listing_used = listing_attempted_today(localdata, day)
+
+    # Receipt facts, resolved here and never re-derived from stdout later:
+    # whether the day's own rows are on disk, and whether the production lane
+    # already fetched this listing for free (the same payload a paid listing
+    # would re-buy).
+    shadow_present = production_shadow_path(localdata, day).exists()
+    production_listing = production_listing_entry(localdata, day)
 
     # A listing is useful only when the preflight can cover both that call and
     # at least one H2H it may unlock. Probe capacity through the same fail-closed
@@ -261,7 +307,10 @@ def plan_run(day: str, *, localdata: Path, limit: int,
             "day": day, "card_rows": len(card), "candidates": chosen, "census": census,
             "unresolved": [i["fixture_key"] for i in unresolved],
             "listing_used_today": listing_used, "preflight": preflight,
-            "need_h2h": need_h2h, "need_listing": need_listing}
+            "need_h2h": need_h2h, "need_listing": need_listing,
+            "retained_pairs": len(ids), "retained_map": ids,
+            "shadow_file_present": shadow_present,
+            "free_listing_recorded_today": production_listing is not None}
 
 
 def execute(day: str, plan: dict, *, localdata: Path, log=print,
@@ -273,7 +322,15 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print,
     against the kickoff to decide ``usable``, so a run whose clock is read from
     the wall would pay for rows its own pre-kickoff rule then discards.
     """
-    results = {"calls": 0, "usable": 0, "statuses": [], "unattributed": [], "local_blocks": 0}
+    results = {
+        "calls": 0, "usable": 0, "statuses": [], "unattributed": [], "local_blocks": 0,
+        # The census is the durable answer to "what did this run's spend buy?".
+        # Counts, reasons and folded keys only; never a raw payload or a secret.
+        "decisions": {"staleness_skip": 0, "unresolved_id": 0, "budget_stop": 0,
+                      "lane_blocked_local": 0, "captured": 0, "capture_blocked": 0},
+        "unresolved_detail": [],
+        "listing": {"charged": False, "resolved_pairs": 0, "outcome": "not_planned"},
+    }
     budget = dict(allowed=plan["preflight"]["allowed_calls"])
     entries = boggio.read_call_ledger(localdata)
     captured_at = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
@@ -293,6 +350,8 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print,
                                endpoint=boggio.H2H_ENDPOINT + ":listing", pool_index=index, key=key,
                                status=code, remaining=remaining, spent=True,
                                what_bought=f"fixture-id resolution: {len(listing_ids)} pending unexpired rows")
+            results["listing"].update({"charged": True, "resolved_pairs": len(listing_ids),
+                                       "outcome": "charged"})
             results["statuses"].append(f"listing http={code} resolved={len(listing_ids)}")
         except boggio.UpstreamBlocked as exc:
             if _provider_was_contacted(exc):
@@ -307,25 +366,33 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print,
                                    status=None, remaining=None, spent=True,
                                    what_bought="listing rejected after provider contact; ids unresolved",
                                    error=exc)
+                results["listing"].update({"charged": True, "resolved_pairs": 0,
+                                           "outcome": "blocked_after_contact"})
                 results["statuses"].append("listing contacted but blocked")
             else:
                 results["local_blocks"] += 1
+                results["listing"]["outcome"] = "lane_blocked_local"
                 results["statuses"].append("listing blocked locally; request not sent")
                 log("ledger=card_enrich_listing verdict=lane_blocked_local calls_spent=0 "
                     "note=no request was sent; budget untouched")
 
     for item in plan["candidates"]:
         if not item["needs_call"]:
+            results["decisions"]["staleness_skip"] += 1
             log(f"ledger=card_enrich fixture={item['fixture_key']} decision=staleness_skip "
                 f"window_days={boggio.CARD_ENRICH_STALENESS_DAYS}")
             continue
         pair = (item["home_key"], item["away_key"])
         event_id = item["event_id"] or (listing_ids.get(pair) or {}).get("event_id")
         if not event_id:
+            results["decisions"]["unresolved_id"] += 1
+            results["unresolved_detail"].append(_unresolved_detail(
+                item, pair, plan.get("retained_map") or {}, listing_ids))
             log(f"ledger=card_enrich fixture={item['fixture_key']} decision=unresolved_id "
                 f"calls_spent=0 note=no_matching_pending_listing_row")
             continue
         if budget["allowed"] <= 0:
+            results["decisions"]["budget_stop"] += 1
             log(f"ledger=card_enrich fixture={item['fixture_key']} decision=budget_stop "
                 f"allowed_exhausted=1 calls_spent=0")
             results["unattributed"].append(item["fixture_key"])
@@ -335,6 +402,7 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print,
         except boggio.UpstreamBlocked as exc:
             if not _provider_was_contacted(exc):
                 results["local_blocks"] += 1
+                results["decisions"]["lane_blocked_local"] += 1
                 results["statuses"].append(f"{item['fixture_key']} blocked locally; request not sent")
                 log(f"ledger=card_enrich fixture={item['fixture_key']} "
                     "decision=lane_blocked_local call_spent=0 "
@@ -344,6 +412,7 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print,
             # proves contact; attribute it to the last pool the ring touched.
             budget["allowed"] -= 1
             results["calls"] += 1
+            results["decisions"]["capture_blocked"] += 1
             touched = _ring_attempt_count(exc)
             contact_detail = (f"{touched} pool(s) touched" if touched
                               else "pool identified; attempt count unavailable")
@@ -365,6 +434,7 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print,
                                        "avg_p": item["avg_p"], "bucket": item["bucket"]}})
         budget["allowed"] -= 1
         results["calls"] += 1
+        results["decisions"]["captured"] += 1
         results["usable"] += 1 if snapshot.get("usable") else 0
         results["statuses"].append(f"{item['fixture_key']} http={code}")
         plan["snapshots"].append(snapshot)
@@ -508,9 +578,24 @@ def main(argv=None, *, now=None) -> int:
               f"note=refusing an unplanned burst; lower the budget or raise the cap deliberately")
         return 0
     results = execute(day, plan, localdata=localdata, now=now)
+    # The receipt carries what the spend bought. Stdout is not a record: without
+    # this, a charged run that captured nothing cannot be told apart from a quiet
+    # success once the log scrolls away.
+    outcome = {
+        "calls_charged": results["calls"],
+        "usable_snapshots": results["usable"],
+        "retained_pairs": plan["retained_pairs"],
+        "shadow_file_present": plan["shadow_file_present"],
+        "free_listing_recorded_today": plan["free_listing_recorded_today"],
+        "listing": results["listing"],
+        "decisions": results["decisions"],
+        "unresolved": results["unresolved_detail"],
+        "ledger_entries": results["ledger_entries"],
+    }
     path = boggio.persist_snapshots(day, plan["snapshots"], plan["preflight"], localdata=localdata,
                                     notes=[f"need_h2h={plan['need_h2h']}",
-                                           f"unresolved={len(plan['unresolved'])}"])
+                                           f"unresolved={len(plan['unresolved'])}"],
+                                    outcome=outcome)
     if results["calls"] == 0 and results["local_blocks"]:
         print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=lane_blocked_local "
               f"note=no request was sent; budget untouched ledger_entries={results['ledger_entries']} "
