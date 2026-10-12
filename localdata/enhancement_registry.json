@@ -432,10 +432,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 231,
-   "inv_price_sum": 229.8783339456116,
+   "hits": 232,
+   "inv_price_sum": 230.53192871685343,
    "multi_n": 42,
-   "n": 350,
+   "n": 351,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -786,9 +786,10 @@
     "2026-10-11|Slovan Liberec vs Slovacko|match_over_25@v1",
     "2026-10-11|Real Betis vs Osasuna|match_over_25@v1",
     "2026-10-11|Brondby vs Lyngby|match_over_25@v1",
-    "2026-10-11|Besiktas vs Kocaelispor|match_over_25@v1"
+    "2026-10-11|Besiktas vs Kocaelispor|match_over_25@v1",
+    "2026-10-12|PAOK vs Kalamata|match_over_25@v1"
    ],
-   "profit": 2.297,
+   "profit": 2.827,
    "records": [
     {
      "date": "2026-08-01",
@@ -3587,6 +3588,14 @@
      "multi_source": false,
      "price": 1.47,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-12",
+     "hit": true,
+     "match": "PAOK vs Kalamata",
+     "multi_source": false,
+     "price": 1.53,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
@@ -3594,10 +3603,10 @@
    "status_since": "2026-08-03"
   },
   "match_over_35@v1": {
-   "hits": 5,
-   "inv_price_sum": 5.869544534918694,
+   "hits": 7,
+   "inv_price_sum": 6.5772368426110015,
    "multi_n": 0,
-   "n": 16,
+   "n": 18,
    "processed": [
     "2026-08-09|Benfica vs Academico Viseu|match_over_35@v1",
     "2026-08-09|Malm\u00f6 FF vs Degerfors IF|match_over_35@v1",
@@ -3614,9 +3623,11 @@
     "2026-09-11|AC Pisa vs Virtus Entella|match_over_35@v1",
     "2026-09-11|Cienciano vs Montevideo City Torque|match_over_35@v1",
     "2026-09-12|Palmeiras vs Sao Paulo|match_over_35@v1",
-    "2026-09-12|IFK Goteborg vs Halmstad|match_over_35@v1"
+    "2026-09-12|IFK Goteborg vs Halmstad|match_over_35@v1",
+    "2026-10-12|Livyi Bereh vs Zorya Luhansk|match_over_35@v1",
+    "2026-10-12|Club Universidad de Chile vs Nublense|match_over_35@v1"
    ],
-   "profit": -2.2,
+   "profit": 1.55,
    "records": [
     {
      "date": "2026-08-09",
@@ -3744,6 +3755,22 @@
      "match": "IFK Goteborg vs Halmstad",
      "multi_source": false,
      "price": 2.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-12",
+     "hit": true,
+     "match": "Livyi Bereh vs Zorya Luhansk",
+     "multi_source": false,
+     "price": 3.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-12",
+     "hit": true,
+     "match": "Club Universidad de Chile vs Nublense",
+     "multi_source": false,
+     "price": 2.5,
      "source": "scoutingstats"
     }
    ],

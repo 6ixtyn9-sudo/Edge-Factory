@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 203.9865280000001,
+  "bank": 178.4882280000001,
   "cycle_base": 203.9865280000001,
   "open_slips": [
     {
@@ -36,48 +36,13 @@
           "odds": 1.9,
           "stake_pct": 25.4983,
           "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "AEK Larnaca FC vs Omonia Aradippou",
-              "pick": "HOME",
-              "prob": 0.755,
-              "odds": 1.43,
-              "result": null,
-              "fixture_key": [
-                "2026-10-12",
-                "AEK Larnaca FC",
-                "Omonia Aradippou"
-              ]
-            },
-            {
-              "match": "PAOK vs Kalamata",
-              "pick": "HOME",
-              "prob": 0.73,
-              "odds": 1.21,
-              "result": null,
-              "fixture_key": [
-                "2026-10-12",
-                "PAOK",
-                "Kalamata"
-              ]
-            }
-          ],
-          "odds": 1.73,
-          "stake_pct": 25.4983,
-          "results": [
-            null,
+            "win",
             null
           ],
           "won": null
         }
       ],
-      "staked_pct": 50.9966
+      "staked_pct": 25.4983
     }
   ],
   "history": [
@@ -792,6 +757,18 @@
         }
       ],
       "bank_pct": 203.9865
+    },
+    {
+      "date": "2026-10-12",
+      "staked_pct": 25.4983,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.73,
+          "won": false
+        }
+      ],
+      "bank_pct": 178.4882
     }
   ],
   "events": [
