@@ -281,18 +281,38 @@ def plan_run(day: str, *, localdata: Path, limit: int,
     shadow_present = production_shadow_path(localdata, day).exists()
     production_listing = production_listing_entry(localdata, day)
 
+    # A paid listing buys the same provider payload the production lane already
+    # fetched for free. When that payload is on disk and its retained ids still
+    # did not match, paying again cannot resolve the fixture - it can only re-buy
+    # rows we already hold. The refusal is explicit and named; the paid call
+    # stays available when no day rows exist to resolve from (cache eviction).
+    listing_reason = ""
+    if unresolved:
+        if listing_used:
+            listing_reason = "listing_already_paid_today"
+        elif production_listing is not None and shadow_present:
+            listing_reason = "free_listing_present_zero_matches"
+        elif not shadow_present:
+            listing_reason = "shadow_file_absent"
+        else:
+            listing_reason = "no_production_listing_recorded_today"
+
     # A listing is useful only when the preflight can cover both that call and
     # at least one H2H it may unlock. Probe capacity through the same fail-closed
     # budget function, then include the listing and every newly unlockable H2H
     # in the actual preflight before execute() can touch the network.
+    suppress = listing_reason == "free_listing_present_zero_matches"
     listing_capacity = boggio.preflight(
         need_h2h=2, need_listing=0, localdata=localdata, day=day,
         observed_remaining=known,
-    ) if unresolved and not listing_used else None
+    ) if unresolved and not listing_used and not suppress else None
     need_listing = int(bool(
-        unresolved and not listing_used and listing_capacity
+        unresolved and not listing_used and not suppress and listing_capacity
         and listing_capacity["allowed_calls"] > 1
     ))
+    if (listing_reason in {"shadow_file_absent", "no_production_listing_recorded_today"}
+            and not need_listing):
+        listing_reason = "listing_capacity_insufficient"
     need_h2h = resolved_h2h + (len(unresolved) if need_listing else 0)
     preflight = boggio.preflight(need_h2h=need_h2h, need_listing=need_listing,
                                 localdata=localdata, day=day, observed_remaining=known)
@@ -310,7 +330,8 @@ def plan_run(day: str, *, localdata: Path, limit: int,
             "need_h2h": need_h2h, "need_listing": need_listing,
             "retained_pairs": len(ids), "retained_map": ids,
             "shadow_file_present": shadow_present,
-            "free_listing_recorded_today": production_listing is not None}
+            "free_listing_recorded_today": production_listing is not None,
+            "listing_reason": listing_reason}
 
 
 def execute(day: str, plan: dict, *, localdata: Path, log=print,
@@ -329,7 +350,8 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print,
         "decisions": {"staleness_skip": 0, "unresolved_id": 0, "budget_stop": 0,
                       "lane_blocked_local": 0, "captured": 0, "capture_blocked": 0},
         "unresolved_detail": [],
-        "listing": {"charged": False, "resolved_pairs": 0, "outcome": "not_planned"},
+        "listing": {"charged": False, "resolved_pairs": 0, "outcome": "not_planned",
+                    "reason": plan.get("listing_reason") or ""},
     }
     budget = dict(allowed=plan["preflight"]["allowed_calls"])
     entries = boggio.read_call_ledger(localdata)
@@ -485,6 +507,29 @@ def _harvest_pool_readings(argv: list[str]) -> tuple[list[str], list[str]]:
     return kept, readings
 
 
+def _persist_receipt(day: str, plan: dict, results: dict, localdata: Path) -> Path:
+    """Write the day's receipt, census included.
+
+    Stdout is not a record: without this, a charged run that captured nothing
+    cannot be told apart from a quiet success once the log scrolls away.
+    """
+    outcome = {
+        "calls_charged": results["calls"],
+        "usable_snapshots": results["usable"],
+        "retained_pairs": plan["retained_pairs"],
+        "shadow_file_present": plan["shadow_file_present"],
+        "free_listing_recorded_today": plan["free_listing_recorded_today"],
+        "listing": results["listing"],
+        "decisions": results["decisions"],
+        "unresolved": results["unresolved_detail"],
+        "ledger_entries": results["ledger_entries"],
+    }
+    return boggio.persist_snapshots(day, plan["snapshots"], plan["preflight"], localdata=localdata,
+                                    notes=[f"need_h2h={plan['need_h2h']}",
+                                           f"unresolved={len(plan['unresolved'])}"],
+                                    outcome=outcome)
+
+
 def main(argv=None, *, now=None) -> int:
     """``now`` is injectable so the freshness guard stays deterministic: a test
     that borrowed the wall clock would rot the day its fixture date passed."""
@@ -529,6 +574,11 @@ def main(argv=None, *, now=None) -> int:
           f"need_listing={plan['need_listing']} unresolved={len(plan['unresolved'])} "
           f"listing_used_today={int(plan['listing_used_today'])} verdict={plan['preflight']['verdict']} "
           f"pre_kickoff_now={plan['pre_kickoff']}/{len(plan['candidates'])}")
+    if plan.get("listing_reason"):
+        print(f"ledger=card_enrich_listing decision={plan['listing_reason']} "
+              f"need_listing={plan['need_listing']} retained_pairs={plan['retained_pairs']} "
+              f"shadow_file_present={int(plan['shadow_file_present'])} "
+              f"free_listing_recorded_today={int(plan['free_listing_recorded_today'])}")
     if plan["candidates"] and plan["pre_kickoff"] == 0:
         print(f"ledger=card_enrich_caution every selected fixture has already kicked off "
               f"(card date={plan['day']}, now={datetime.now(timezone.utc).isoformat(timespec='seconds')}). "
@@ -558,14 +608,27 @@ def main(argv=None, *, now=None) -> int:
         print("ledger=card_enrich mode=plan_only calls_spent=0 "
               "note=pass --execute to pay quota (budget- and ledger-gated)")
         return 0
+    if plan.get("listing_reason") == "free_listing_present_zero_matches":
+        # The refusal is a result in its own right: it gets the same receipt a
+        # paid run would, so a later reader can see why nothing was bought.
+        results = execute(day, plan, localdata=localdata, now=now)
+        path = _persist_receipt(day, plan, results, localdata)
+        print("ledger=card_enrich_listing verdict=suppressed "
+              "reason=free_listing_present_zero_matches calls_spent=0 "
+              "note=the same-day listing payload is already on disk; re-buying it is refused")
+        print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=nothing_to_capture "
+              f"unresolved={len(plan['unresolved'])} note=free_listing_present_zero_matches "
+              f"shadow={path.name}")
+        return 0
     if plan["preflight"]["allowed_calls"] <= 0:
         if plan["preflight"]["verdict"] != "approved":
             print(f"ledger=card_enrich mode=execute calls_spent=0 "
                   f"verdict={plan['preflight']['verdict']} note=fails closed; nothing was purchased")
             return 0
         if plan["unresolved"] and not plan["need_listing"]:
-            reason = ("one listing attempt was already used today" if plan["listing_used_today"]
-                      else "automatic listing requires more than one spendable call")
+            reason = (plan.get("listing_reason")
+                      or ("one listing attempt was already used today" if plan["listing_used_today"]
+                          else "automatic listing requires more than one spendable call"))
             print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=nothing_to_capture "
                   f"unresolved={len(plan['unresolved'])} note={reason}; no call was purchased")
             return 0
@@ -578,24 +641,7 @@ def main(argv=None, *, now=None) -> int:
               f"note=refusing an unplanned burst; lower the budget or raise the cap deliberately")
         return 0
     results = execute(day, plan, localdata=localdata, now=now)
-    # The receipt carries what the spend bought. Stdout is not a record: without
-    # this, a charged run that captured nothing cannot be told apart from a quiet
-    # success once the log scrolls away.
-    outcome = {
-        "calls_charged": results["calls"],
-        "usable_snapshots": results["usable"],
-        "retained_pairs": plan["retained_pairs"],
-        "shadow_file_present": plan["shadow_file_present"],
-        "free_listing_recorded_today": plan["free_listing_recorded_today"],
-        "listing": results["listing"],
-        "decisions": results["decisions"],
-        "unresolved": results["unresolved_detail"],
-        "ledger_entries": results["ledger_entries"],
-    }
-    path = boggio.persist_snapshots(day, plan["snapshots"], plan["preflight"], localdata=localdata,
-                                    notes=[f"need_h2h={plan['need_h2h']}",
-                                           f"unresolved={len(plan['unresolved'])}"],
-                                    outcome=outcome)
+    path = _persist_receipt(day, plan, results, localdata)
     if results["calls"] == 0 and results["local_blocks"]:
         print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=lane_blocked_local "
               f"note=no request was sent; budget untouched ledger_entries={results['ledger_entries']} "
