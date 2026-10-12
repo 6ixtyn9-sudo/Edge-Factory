@@ -1,85 +1,88 @@
 # Handoff status — BetExplorer capture → enhancement lane (2026-10-12, round 6)
 
 My working notes for this task, kept inside the repo so a sandbox reset cannot lose them.
-**Not part of any PR** (untracked; never staged). The reviewer's checks live in the
-operator's briefs (the chat memos; the reviewer's own files died with earlier resets).
+**Not part of any PR's reviewed code** (it is a handoff note; the reviewer's checks live in
+the operator's briefs in the chat).
 
-## Where things stand — after the round-6 push (R1 complete)
+## Where things stand — the R2 checkpoint set is built and green locally
 
-**The chain is pushed.** `arena/3c65f248-edge-factory` = **`607de7a`** on the remote
-(`8e50de2..607de7a`, fast-forward, 24 commits, never squashed). PR #61 is OPEN,
-head = the pushed tip, title/body rewritten to the sectioned round-6 scope (nine
-sections + "single merge by the operator; the chain is the unit of review").
+**R2 (dynamic floors) is complete on this branch and about to be pushed as a
+distinguishable checkpoint set** on top of `c77c803` (which is PR #61's current head and
+the remote tip before this push):
 
-Round 6 changed the standing rule: **everything lands before the single merge.**
-The old freeze (#1/#2/#3 sequencing) is withdrawn; the merge is the vehicle's end,
-and it also ends this session's push access — so nothing may be left unpushed.
+| # | subject | what it carries |
+| --- | --- | --- |
+| 1 | `floors: derive per-slice floors from Wilson evidence` | `enh_registry.derive_floors` (pure) + `derive_floors_for_day` (fail-soft), `floor_for_slice`, `clears_floor(..., floor=)`, `FLOOR_BASIS_*`; `tests/test_enh_registry_dynamic_floors.py` |
+| 2 | `registry: record league and team keys` | `record_outcome` gains `league/home/away/home_key/away_key` (additive, optional, dedup key unchanged) + the lane's call site |
+| 3 | `registry: backfill the slice fields from the committed picks` | `scripts/backfill_registry_slices.py`; applied: 398/409 = 97.3 % attributed, 11 unmatched listed and still inheriting; registry `fb49e951…` → `ffc1655e…` |
+| 4 | `lane: gate every leg on its slice floor, and print the derivation` | `enhancement_legs(..., floors=)`, `floor/floor_basis/league` carried through pool+plan (`_carry_lane_evidence`), `_enh_floor_lines()`, `st["enh_floor_table"]`, the board line in `picks_today` |
+| 5 | `harness: slice-aware floor arms and the bet-day metric` | `replay_harness --enhancements --ab live derived`; mean log growth per **bet-day** + `MIN_ACCAS` no-bet frequency |
+| 6 | `proofs: the nine R2 proofs at this tip` (+ evidence artifact) | `handoff/r2_proofs.py` / `.txt` — today: **ALL PROOFS PASS** |
 
-**Verified at the pushed tip** (`607de7a`):
+**Rules the derivation obeys** (the pack, `handoff/AGENT-INSTRUCTIONS-6B-R2-RELAY.md`):
+three levels market → league → team (team **report-only**); gate `n >= MIN_PRICED_N (30)`
+**and** a usable Wilson lower bound; `floor = max(parent, 1/wilson_lb + margin)`,
+**tighten-only** (loosening = operator ruling); margin = the table's own 0.10; no
+lookahead (day D reads only records dated before D); no new literals; the derivation is
+re-derivable and printed into slip/state.
 
-* nine-file sha256 table — matches the frozen table exactly (`.gitignore`
-  `777a4440…`, licensing `ffb49937…`, capture `9eb63ddc…`, clean_localdata
-  `d7462151…`, picks_today `fca50511…`, match_snapshot `5ea9a4e5…`, odds
-  `648f690c…`, test_match_detail `bfbbc1d9…`, politeness `40c094f4…`);
-* `bash handoff/round5_form_h2h_2026-10-12/c_patch_gate.sh` → exit 0, six
-  never-contended + three contended re-printed with attribution to THIS chain;
-* suite: `pytest tests -q -p no:randomly` → **2907 passed** (59.07 s at the final tip);
-  seeds 1, 2, 3, 7, 13 → **2907 passed** each;
-* owed items landed: `handoff/s45_politeness_lines.{py,txt}` (§4.5) and
-  `handoff/s46_drift_remeasure.txt` (§4.6, second fixture `lKAT82nf`, 0.50 line +
-  strip only — the rest of the lines stay unverified this round);
-* self-caught and repaired: the first §4.5 driver wrote real `localdata/` state;
-  both tracked files restored from `HEAD`, the new untracked ledger deleted, and
-  the driver now redirects both module-level `LOCALDATA`s to scratch (commit
-  `607de7a`);
-* `.github/` diff vs `8e50de2` = **0**; `localdata/` untouched; the two forbidden
-  files untouched; working tree clean except this file.
+**Derived table for 2026-10-12** (409 priced records, 398 with league+keys, margin 0.10):
+`over_15` **1.8927 market** (a 72.7 % record does **not** lower it), `over_25`
+**1.7424 market**, `btts` 1.85 and `over_35` 3.30 **inherited**; `away_under_25/35` and
+`match_over_45` stay floorless; 213 league rows, 0 deviating; 696 team rows, 0 applied.
 
-**The chain (22 commits, subjects as printed by `git log`)** — the four subjects
-recovered verbatim from the chain's own in-repo citations are `capture: the
-reviewer's record-depth patch, applied via git am -3`, `receipt: keep the
-row-refusal census the patch's whitelist dropped`, `pricing: the captured ledger
-reaches the board behind the flag`, `capture: read the whole form block the page
-serves` (cited by `n3_tip_prints.sh`, `c_patch_gate.sh`, `w6_flag_gate_rerun.sh`,
-`a3b_whitelist_table.txt`); the rest carry the round's theme names because the
-pre-reset SHA/subject table died with the third re-clone. Every pre-reset hash
-stays **void**.
+**Verified at this tip** (raw: `handoff/r2_evidence_at_tip.txt`):
+
+* CI-exact (`PYTHONPATH=src python3 -m pytest tests/ -q`) → **2925 passed in 58.49 s**;
+  shuffled seeds 1, 2, 3, 7, 13 → **2925 passed** each (the pack's floor is ≥ 2907;
+  R2 adds 18 tests and loses none);
+* nine-file table: eight rows identical to `607de7a`, **one moved and attributed** —
+  `scripts/picks_today.py` `fca5051139c2…` → `81419280c181…` (commit 4: the board line
+  now prints the floor and its basis). The pack predicted this move; this is the
+  republished authority;
+* C gate re-printed at this tip (scan of the six never-contended + three contended with
+  per-file tip/parent/post-image hashes); the bundle's own `SHA256SUMS.txt` is 26/32 with
+  **six stale driver hashes attributed to `c466729`** (the shared guard preamble), not
+  re-signed;
+* outbound probe re-run → exit 0, artifact byte-identical → **0**;
+* `.github/` diff vs `origin/main` = 0; `localdata/` clean vs HEAD; the two forbidden
+  card-enrich files untouched; `localdata/card_enrich_call_ledger.jsonl` = HEAD.
+
+**Harness A/B at this tip** (`handoff/r2_harness_ab.txt`): mean log growth per bet-day —
+live **−0.0154** (30 bet-days / 46 bets / 13 hits) vs derived **−0.0182** (21 / 26 / 6);
+paired bootstrap median **+0.0029**, P(B>A) **54 %** — a wash at this sample, with the
+derived arm betting a third less often (no-bet 36 % vs 29 %); the derived arm's small-n
+caveat is printed in the artifact.
+
+**Round-5 bundle** (unchanged, frozen): `handoff/round5_form_h2h_2026-10-12/` — its
+`SHA256SUMS.txt` still validates 26/32 for the reason above.
 
 ## Next (round 6, in order)
 
-1. **R2 — dynamic floors, pre-merge (NEXT).** Build to the round-4 brief
-   (`handoff/AGENT-INSTRUCTIONS-4.md`) **re-measuring its numbers first** —
-   **that file is NOT in this workspace** (verified: `ls handoff/`), so this item
-   is blocked pending the operator relaying it. Spec as it survives: market level,
-   evidence gate + Wilson lower bound, **tighten-only**; league level only after
-   the `league` field is recorded and backfilled, coverage % reported; team level
-   **report-only**; no lookahead; derivation written into the slip; auditable;
-   distinguishable commit set with its own proof subsection; acceptance = the
-   harness A/B on **mean log growth per bet-day**.
-2. **Owed reports at the FINAL pushed SHA**: §6 rounds 2+3 raw output, §4.5
-   politeness receipt lines, §4.6 drift re-measure, the w6 flag-gate re-run, the
-   N-1 reprint, the nine-file table.
-3. **R3**: the `capture_oddspapi.py` one-liner lands **only** with the three-arm
-   count-neutrality proof (byte-identical receipt with transport recording; the
-   handler records the 429 when the transport is bypassed; no path double-counts);
-   any arm failing → dated PR-body follow-up, shipped code untouched. The relay
-   check (`Workers Builds: edge-factory-source-relay`) is not chased; re-report
-   its status after the final push.
-4. **R4 — handover**: only after R2 + the owed items and a green suite: post
-   `ref` · final head SHA · PR URL · **"READY FOR DISPATCH"**, nothing else. After
-   the operator's run pushes state commits: no rebase, no force-push, no reset;
+1. **R3 — the `capture_oddspapi.py` one-liner, three-arm proof.** Lands only with all
+   three arms green: byte-identical receipt with transport recording; the handler records
+   the 429 when the transport is bypassed; no path double-counts. Any arm failing → a
+   dated follow-up in the PR body, shipped code untouched.
+2. **Owed reports at the FINAL pushed SHA**: §6 raw output for this round,
+   `handoff/round5_form_h2h_2026-10-12/w6_flag_gate_rerun.sh` re-run (the relay check is
+   not chased; its status is only re-reported after the final push).
+3. **PR #61 body**: kept sectioned; the R2 checkpoint is appended as its own section with
+   the commit SHAs above. **One merge by the operator; the chain is the unit of review.**
+4. **R4 — handover**: post `ref` · final head SHA · PR URL · **"READY FOR DISPATCH"**,
+   nothing else. After the operator's run pushes state commits: no rebase/force-push/reset;
    `git pull --rebase` (fast-forward only); any run failure fixed pre-merge.
-5. A4 stays optional (excerpt sha256 `b1a4b33d97fc…`); the terminal-outcome rule
-   stands (every proof asserts graded odds / bank arithmetic / persisted state).
+5. A4 stays optional (excerpt sha256 `b1a4b33d97fc…`); the terminal-outcome rule stands
+   (every proof asserts graded odds / bank arithmetic / persisted state).
 
 ## Environment / scratch
 
 * `.venv` is excluded from workspace snapshots — recreate with
   `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt` plus
   `pytest`/`pytest-randomly` for the shuffled runs.
-* The rebuild tooling lives in `/tmp/rebuild6/` (`states.py`, `states2.py`,
-  `build.py`, captured gate output). `/tmp/final6` is the verified content
-  snapshot; `/tmp/post6` the patch post-image. All disposable once the chain is
-  pushed — the pushed SHA is the authority.
-* `localdata/card_enrich_call_ledger.jsonl` matches `HEAD`; the two
-  card-enrich files stay untouched. `.github/` is never written.
+* Scratch: `/tmp/r2/` (`proofs.out|err`, `harness.out|err`, `ci/`, `cgate_at_tip.txt`,
+  `outbound.out`) — disposable; the pushed SHA is the authority. `/tmp/rebuild6/` holds
+  the (now superseded) rebuild tooling.
+* Demo drivers write real state, so every one of them runs under
+  `handoff/scratch_localdata.py` (`guard_localdata()`) — scratch root only.
+* `localdata/card_enrich_call_ledger.jsonl` matches `HEAD`; the two card-enrich files stay
+  untouched. `.github/` is never written.
