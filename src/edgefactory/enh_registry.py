@@ -51,6 +51,69 @@ MAX_RECORDS_PER_MARKET = 400
 MAX_PROCESSED_KEYS = 1600
 
 
+# ---------------------------------------------------------------------------
+# Minimum acceptable price per enhancement market — "the floor".
+#
+# Operator ruling 2026-10-12, verbatim: "betting on ev will lead us to not bet
+# at all, we have the track record of enhanced, we know what wins more, we just
+# need prices above a certain threshold, like how autobets does it."
+#
+# There is deliberately NO EV veto anywhere on this path. The row's
+# ``enhancement_breakeven`` and ``enhancement_edge_sample`` stay attached as
+# INFORMATION ONLY and gate nothing.
+#
+# Each floor is the market's break-even price (1 / settled hit-rate) plus a
+# margin, read off the settled registry on 2026-10-12:
+#
+#   market            n   hits   rate   breakeven   floor   profit(u)
+#   match_over_25   350    231  66.0%     1.515      1.60    +2.297
+#   match_over_15    33     24  72.7%     1.375      1.45    -5.780
+#   match_over_35    16      5  31.2%     3.200      3.30    -2.200
+#   btts_yes          7      4  57.1%     1.750      1.85    +1.990
+#
+# These are plain numeric literals (repo convention: daily.yml keeps its caps as
+# literal '90' / '20') and they are a STARTING POINT to be re-derived from the
+# settled slices, not gospel — match_over_15 clears its break-even on hit rate
+# alone while being NEGATIVE in profit, which is exactly why the floor is
+# per-market rather than one constant.
+#
+# A market with no floor listed here does not fire: with no settled evidence
+# there is no threshold to clear, and inventing one would be the unvalidated
+# betting the registry exists to prevent. Adding a market is a one-line diff
+# once its slice justifies a number.
+ENHANCEMENT_PRICE_FLOORS: dict[str, float] = {
+    "match_over_25": 1.60,
+    "match_over_15": 1.45,
+    "match_over_35": 3.30,
+    "btts_yes": 1.85,
+}
+
+
+def floor_for(market: str | None) -> float | None:
+    """The minimum acceptable price for `market`, or None when it has none."""
+    if not market:
+        return None
+    return ENHANCEMENT_PRICE_FLOORS.get(str(market).strip())
+
+
+def clears_floor(market: str | None, price: object) -> bool:
+    """True when `price` is at or above the market's floor.
+
+    False for a market with no floor (no threshold exists), and False for
+    anything that is not a real number > 1.0 — the same definition of "is a
+    price" the render and the capture boundary use (RT-2), so a string or a
+    bool can never stand in for a decimal price. A leg BELOW its floor is not a
+    bet — not paper, not shadow.
+    """
+    floor = floor_for(market)
+    if floor is None:
+        return False
+    if isinstance(price, bool) or not isinstance(price, (int, float)):
+        return False
+    value = float(price)
+    return math.isfinite(value) and value > 1.0 and value >= floor
+
+
 def registry_path(root: Path) -> Path:
     return Path(root) / "localdata" / REGISTRY_FILENAME
 
@@ -180,7 +243,8 @@ def _evaluate(entry: dict, today: str) -> None:
 
 def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                    price: float | None, hit: bool, source: str = "",
-                   today: str | None = None, multi_source: bool = False) -> dict:
+                   today: str | None = None, multi_source: bool = False,
+                   bucket: str = "", rule: str = "", stated: float | None = None) -> dict:
     """Idempotently record one settled enhancement outcome.
 
     Dedupes on "date|match|<market>@v1" so repeated audit runs cannot double-count.
@@ -189,6 +253,15 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
     rolling BENCH window is deterministic in tests and batch replay.
     ``multi_source`` (governance N5): True when >=2 distinct sources priced this
     outcome; increments the market's multi_n used by the ELIGIBLE floor.
+
+    Slice provenance (2026-10-12), recorded so the settled track record can
+    answer "do enhancement bets pay better out of SKIPPED_VETO picks?":
+    ``bucket`` is the parent pick's bucket, ``rule`` its rule id, ``stated`` the
+    enhancement's own probability as stated at pick time. They are PROVENANCE,
+    not gates — nothing here reads them. All three are optional, so every record
+    written before this change renders as ``unattributed`` in a slice instead of
+    being guessed at, and the dedup key is unchanged.
+
     Returns {"status": str|None, "recorded": bool}. Never raises."""
     try:
         mkey = versioned(market)
@@ -213,7 +286,14 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                 entry.setdefault("records", []).append(
                     {"date": date_, "match": match, "price": round(price_f, 3),
                      "hit": bool(hit), "source": source or "",
-                     "multi_source": bool(multi_source)})
+                     "multi_source": bool(multi_source),
+                     # Slice provenance (2026-10-12). "" / None means
+                     # unattributed, never a guess.
+                     "bucket": str(bucket or ""),
+                     "rule": str(rule or ""),
+                     "stated": (float(stated) if isinstance(stated, (int, float))
+                                and not isinstance(stated, bool)
+                                and math.isfinite(float(stated)) else None)})
                 entry["records"] = entry["records"][-MAX_RECORDS_PER_MARKET:]
                 if multi_source:
                     entry["multi_n"] = entry.get("multi_n", 0) + 1
@@ -223,6 +303,89 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
             return {"status": entry.get("status"), "recorded": True}
     except Exception:
         return {"status": None, "recorded": False}
+
+
+UNATTRIBUTED = "unattributed"
+
+
+def market_track_record(root: Path | None = None,
+                        market: str | None = None) -> list[dict]:
+    """Settled per-market rows for the settlement tables.
+
+    ``[{market, status, n, hits, rate, breakeven, profit}]`` where ``breakeven``
+    is 1/rate — the price at which the settled hit rate exactly pays for itself
+    (the number the floors in ``ENHANCEMENT_PRICE_FLOORS`` are derived from).
+    ``market`` selects one unversioned market; None returns every market, most
+    settled first. Fail-soft: [] on any error.
+    """
+    try:
+        root = root or Path(__file__).resolve().parents[2]
+        reg = _read(registry_path(root))
+        suffix = f"@{REGISTRY_VERSION}"
+        rows = []
+        for key, entry in (reg.get("markets") or {}).items():
+            plain = key[: -len(suffix)] if key.endswith(suffix) else key
+            if market is not None and plain != market:
+                continue
+            n = int(entry.get("n") or 0)
+            hits = int(entry.get("hits") or 0)
+            rate = (hits / n) if n else 0.0
+            rows.append({
+                "market": plain,
+                "status": entry.get("status") or "SHADOW",
+                "n": n,
+                "hits": hits,
+                "rate": rate,
+                "breakeven": (1.0 / rate) if rate else None,
+                "profit": float(entry.get("profit") or 0.0),
+                "floor": floor_for(plain),
+            })
+        rows.sort(key=lambda r: (-r["n"], r["market"]))
+        return rows
+    except Exception:
+        return []
+
+
+def slice_records(records: list[dict], key: str) -> dict[str, dict]:
+    """Group settled records by a provenance key ("bucket" or "rule").
+
+    Returns ``{value: {n, hits, rate, profit}}`` sorted most-settled first.
+    Records written before slice provenance existed have no such field and are
+    reported as ``UNATTRIBUTED`` — never guessed at.
+    """
+    out: dict[str, dict] = {}
+    for rec in records or []:
+        try:
+            value = str(rec.get(key) or "").strip() or UNATTRIBUTED
+            slot = out.setdefault(value, {"n": 0, "hits": 0, "profit": 0.0})
+            price = rec.get("price")
+            if not isinstance(price, (int, float)) or isinstance(price, bool):
+                continue
+            if not math.isfinite(float(price)) or float(price) <= 1.0:
+                continue
+            slot["n"] += 1
+            slot["hits"] += 1 if rec.get("hit") else 0
+            slot["profit"] = round(
+                slot["profit"] + ((float(price) - 1.0) if rec.get("hit") else -1.0), 6)
+        except Exception:
+            continue
+    for slot in out.values():
+        slot["rate"] = (slot["hits"] / slot["n"]) if slot["n"] else 0.0
+    return dict(sorted(out.items(), key=lambda kv: (-kv[1]["n"], kv[0])))
+
+
+def slice_for_market(root: Path | None = None, market: str | None = None,
+                     key: str = "bucket") -> dict[str, dict]:
+    """``slice_records`` over one market's settled history, newest markets first.
+
+    Fail-soft: {} on any error.
+    """
+    try:
+        root = root or Path(__file__).resolve().parents[2]
+        entry = _read(registry_path(root))["markets"].get(versioned(market)) or {}
+        return slice_records(entry.get("records") or [], key)
+    except Exception:
+        return {}
 
 
 def status_for(market: str | None, root: Path | None = None) -> str:

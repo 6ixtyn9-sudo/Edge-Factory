@@ -414,24 +414,18 @@ def card_diff_days(universe, spec_a, spec_b):
     return diff
 
 
-def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
-    """Resample DAYS once per iteration and score both variants on the SAME
-    days (paired). Returns the distribution of (B - A) mean log growth."""
-    random.seed(seed)
-    da, db = replay(universe, spec_a), replay(universe, spec_b)
-    days = sorted(set(da) | set(db))
+def _paired_day_bootstrap(ga, gb, days, n=5000, seed=2026):
+    """The paired resampler: resample DAY indices ONCE per iteration and score
+    both arms on the SAME sampled days. `ga`/`gb` are {day: log growth} with a
+    missing day meaning "no bet that day" (log growth 0, so both arms are
+    averaged over the same denominator).
+
+    Shared by the acca lane and the enhancement lane so the two cannot drift
+    into different statistics under the same name.
+    """
     if not days:
         return None
-    # A ruined policy is not made healthy by silently deleting its bankruptcy
-    # day. It is ineligible for bootstrap comparison.
-    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
-        return None
-    # A no-bet day is log growth 0 for that arm, and BOTH arms are scored on
-    # the SAME sampled days — otherwise the resampling is paired but the
-    # averaging is not, and an arm that skips days is compared against a
-    # different denominator on every draw.
-    ga = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
-    gb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
+    random.seed(seed)
     diffs = []
     for _ in range(n):
         sample = random.choices(days, k=len(days))
@@ -449,6 +443,180 @@ def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
             "median_mult": math.exp(q(0.5) * horizon),
             "p10_mult": math.exp(q(0.1) * horizon),
             "p90_mult": math.exp(q(0.9) * horizon)}
+
+
+def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
+    """Resample DAYS once per iteration and score both variants on the SAME
+    days (paired). Returns the distribution of (B - A) mean log growth."""
+    da, db = replay(universe, spec_a), replay(universe, spec_b)
+    days = sorted(set(da) | set(db))
+    if not days:
+        return None
+    # A ruined policy is not made healthy by silently deleting its bankruptcy
+    # day. It is ineligible for bootstrap comparison.
+    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
+        return None
+    ga = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
+    gb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
+    return _paired_day_bootstrap(ga, gb, days, n=n, seed=seed)
+
+
+# --------------------------------------------------------------------------
+# enhancement lane replay (2026-10-12)
+#
+# Replays the SETTLED records in localdata/enhancement_registry.json against
+# floor variants, on the harness's own terms: hit rate, and MEAN LOG GROWTH PER
+# BET-DAY as the primary metric, with the n<30 noise flag.
+#
+# Honest limit, stated in every run: this can only backtest history that HAD a
+# price — n=350 (over 2.5), n=33 (over 1.5), n=16 (over 3.5), n=7 (btts) on
+# 2026-10-12. The newly-priced legs exist only going forward, which is why the
+# lane writes its daily artifact from day one. Use these numbers for RELATIVE
+# floor comparisons; never as a prediction of absolute bank growth.
+# --------------------------------------------------------------------------
+def enh_records(root=None):
+    """Flatten the registry's settled records into one row per priced outcome."""
+    root = root or at.ROOT
+    path = root / "localdata" / "enhancement_registry.json"
+    try:
+        reg = json.loads(path.read_text())
+    except Exception:
+        return []
+    rows = []
+    for key, entry in (reg.get("markets") or {}).items():
+        market = key.split("@")[0]
+        for rec in (entry.get("records") or []):
+            price = rec.get("price")
+            if not isinstance(price, (int, float)) or isinstance(price, bool):
+                continue
+            if not math.isfinite(float(price)) or float(price) <= 1.0:
+                continue
+            rows.append({"market": market, "date": str(rec.get("date") or "")[:10],
+                         "price": float(price), "hit": bool(rec.get("hit")),
+                         "bucket": rec.get("bucket") or "", "rule": rec.get("rule") or "",
+                         "source": rec.get("source") or ""})
+    return rows
+
+
+def enh_day_growth(records, floors, *, stake_frac=None):
+    """{day: {"growth": factor, "log_growth": x, "bets": n, "hits": k}}.
+
+    The lane deploys ``stake_frac`` of free bank per bet-day split evenly across
+    that day's firing tickets (one leg per ticket), so a leg's fraction of the
+    day's deployment is 1/n_firing — the same sizing discipline the acca lane
+    uses, expressed for singles. A market with no floor does not fire.
+    """
+    from edgefactory.enh_registry import clears_floor
+    stake = at.STAKE_FRAC if stake_frac is None else float(stake_frac)
+    by_day = {}
+    for rec in records:
+        floor = floors.get(rec["market"]) if floors else None
+        if floor is None:
+            continue                                   # no settled floor -> no bet
+        if not clears_floor(rec["market"], rec["price"]) or rec["price"] < float(floor):
+            continue
+        by_day.setdefault(rec["date"], []).append(rec)
+    out = {}
+    for day, legs in by_day.items():
+        if not day or not legs:
+            continue
+        f = stake / len(legs)                          # per-ticket fraction of bank
+        factor = 1.0
+        for leg in legs:
+            factor *= (1.0 + f * (leg["price"] - 1.0)) if leg["hit"] else (1.0 - f)
+        out[day] = {"growth": factor, "log_growth": math.log(factor) if factor > 0 else float("-inf"),
+                    "bets": len(legs), "hits": sum(1 for l in legs if l["hit"])}
+    return out
+
+
+def enh_arm(records, floors, *, stake_frac=None):
+    """Summary of one floor variant over the settled history."""
+    days = enh_day_growth(records, floors, stake_frac=stake_frac)
+    bets = sum(d["bets"] for d in days.values())
+    hits = sum(d["hits"] for d in days.values())
+    log_growths = [d["log_growth"] for d in days.values() if math.isfinite(d["log_growth"])]
+    return {
+        "days": len(days), "bets": bets, "hits": hits,
+        "rate": (hits / bets) if bets else 0.0,
+        "mean_log_growth": (sum(log_growths) / len(log_growths)) if log_growths else 0.0,
+        "by_day": {d: v["log_growth"] for d, v in days.items()},
+        "_days_detail": days,
+    }
+
+
+def cmd_enhancements(args):
+    """Report the settled enhancement history under floor variants."""
+    from edgefactory.enh_registry import ENHANCEMENT_PRICE_FLOORS
+    records = enh_records()
+    if not records:
+        print("no settled enhancement records found — nothing to replay")
+        return 0
+    print("=" * 74)
+    print("ENHANCEMENT LANE REPLAY (settled registry records only)")
+    print("=" * 74)
+    print("doctrine: this can only backtest history that HAD a price. On 2026-10-12")
+    print("that is over 2.5 (n=350), over 1.5 (n=33), over 3.5 (n=16), btts (n=7).")
+    print("The newly-priced legs exist only going forward. Use these numbers for")
+    print("RELATIVE floor comparisons — never as a prediction of bank growth.\n")
+
+    arms = [("live floors", dict(ENHANCEMENT_PRICE_FLOORS))]
+    if args.ab:
+        for label, spec_text in (("A", args.ab[0]), ("B", args.ab[1])):
+            spec = parse_spec(spec_text)
+            if "floor" in spec:
+                uniform = float(spec["floor"])
+                arms.append((f"arm {label}: every market at floor={uniform:.2f}",
+                             {m: uniform for m in ENHANCEMENT_PRICE_FLOORS}))
+            else:
+                # "live" (or any non-floor spec) is the live-floors arm, so
+                # `--ab live floor=1.70` reads as "the floors we ship vs 1.70".
+                arms.append((f"arm {label}: live floors",
+                             dict(ENHANCEMENT_PRICE_FLOORS)))
+
+    print(f"{'floor variant':<44}{'bet-days':>9}{'bets':>6}{'hits':>6}"
+          f"{'rate':>8}{'mean log growth/bet-day':>25}")
+    print("-" * 98)
+    arm_summaries = []
+    for label, floors in arms:
+        s = enh_arm(records, floors)
+        arm_summaries.append((label, s))
+        print(f"{label:<44}{s['days']:>9}{s['bets']:>6}{s['hits']:>6}"
+              f"{s['rate']:>7.1%}{s['mean_log_growth']:>+25.4f}"
+              f"{noise_flag(s['bets'])}")
+    print()
+
+    # Per-market detail under the live floors, so a floor that never binds is
+    # visible rather than implied.
+    print("by market (live floors):")
+    print(f"  {'market':<18}{'floor':>7}{'n':>6}{'hits':>6}{'rate':>8}{'fires':>7}")
+    live = dict(ENHANCEMENT_PRICE_FLOORS)
+    for market in sorted(live):
+        rows = [r for r in records if r["market"] == market]
+        fired = [r for r in rows if r["price"] >= live[market]]
+        hits = sum(1 for r in fired if r["hit"])
+        print(f"  {market:<18}{live[market]:>7.2f}{len(rows):>6}"
+              f"{sum(1 for r in rows if r['hit']):>6}"
+              f"{(sum(1 for r in rows if r['hit'])/len(rows) if rows else 0):>7.1%}"
+              f"{len(fired):>7}{noise_flag(len(fired))}")
+    print()
+
+    # Bootstrap the two arms the operator actually named with --ab (the last two
+    # rows), not the informational live-floors row above them.
+    if args.ab and len(arm_summaries) >= 2:
+        (_, sa), (_, sb) = arm_summaries[-2], arm_summaries[-1]
+        days = sorted(set(sa["by_day"]) | set(sb["by_day"]))
+        ga = {d: sa["by_day"].get(d, 0.0) for d in days}
+        gb = {d: sb["by_day"].get(d, 0.0) for d in days}
+        bs = _paired_day_bootstrap(ga, gb, days)
+        if bs is None:
+            print("no bootstrap: one arm ruins a bet-day, or there are no days.")
+        else:
+            print("paired bootstrap, B minus A, mean log growth per bet-day "
+                  "(5000 resamples):")
+            print(f"  median {bs['median']:+.4f}  p10 {bs['p10']:+.4f}  "
+                  f"p90 {bs['p90']:+.4f}  P(B>A) {bs['p_b_higher']:.0%}  "
+                  f"horizon {bs['horizon']} bet-days")
+    return 0
 
 
 # --------------------------------------------------------------------------
@@ -2641,6 +2809,9 @@ def main():
     ap.add_argument("--ab", nargs=2, metavar=("SPEC_A", "SPEC_B"),
                     help="paired A/B of two specs, with no-op guard + bootstrap")
     ap.add_argument("--battery", action="store_true", help="the full sweep vs live baseline")
+    ap.add_argument("--enhancements", action="store_true",
+                    help="replay the settled enhancement registry against floor "
+                         "variants (hit rate + mean log growth per bet-day)")
     ap.add_argument("--legs", action="store_true", help="stated-prob band table, saturated days")
     ap.add_argument("--slots", action="store_true",
                     help="leg/acca quality by rank slot (checkpoint ① at leg scale)")
@@ -2733,6 +2904,11 @@ def main():
 
     settled = at.load_settled()
     archives = at.load_archived_picks()
+
+    # The enhancement lane replays the settled registry, not the acca universe,
+    # so it answers before any universe is built.
+    if args.enhancements:
+        return cmd_enhancements(args)
 
     if args.warehouse_replay:
         # Runs against the RAW archive (not the settled-only replay universe):

@@ -64,12 +64,14 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 import sys
 from functools import lru_cache
 from collections import Counter
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -224,6 +226,56 @@ BAD_QUARANTINE = {"alias_fuzzy", "suspect", "suspect_alias_fuzzy"}
 
 STATE_FILE = LOCALDATA / "auto_tickets_state.json"
 
+
+# ---- lanes (2026-10-12) ----------------------------------------------------
+# The same rolling lifecycle drives more than one product. A lane is its own
+# state file, slip prefix, label and daily stake; everything else — the 09:00
+# write-once freeze, per-acca settlement, the percentage bank, the take-profit
+# notification marker and the artifact layout — is the SAME code path, so the
+# lanes cannot drift apart in behaviour or in how their numbers are computed.
+#
+# The enhancement lane (operator ruling 2026-10-12: "i need it to look like how
+# autobets presents it and to have the same lifecycle of autobets") is ADDITIVE:
+# it has its own state and its own artifact and never touches the main lane's.
+class Lane(NamedTuple):
+    """One lane's identity: where its state lives and what it calls itself."""
+    state_file: Path
+    slip_prefix: str
+    label: str
+    # Total deployed per bet-day as a fraction of FREE bank (same units and same
+    # meaning as STAKE_FRAC above). Percentages of capital throughout — never
+    # currency.
+    stake_frac: float
+
+
+MAIN_LANE = Lane(STATE_FILE, "auto_tickets", "AUTO TICKETS (ROLLING)", STAKE_FRAC)
+
+ENHANCEMENT_STATE_FILE = LOCALDATA / "enhancement_tickets_state.json"
+# Enables the enhancement lane's board builder. Unset, nothing about the
+# existing pipeline changes: no lane state is read, no artifact is written.
+ENH_BOARD_FLAG = "EDGE_FACTORY_ENH_BOARD"
+ENHANCEMENT_LANE = Lane(ENHANCEMENT_STATE_FILE, "enhancement_tickets",
+                        "ENHANCEMENT TICKETS (ROLLING)", STAKE_FRAC)
+
+
+def enhancement_board_enabled() -> bool:
+    """True when the operator has switched the enhancement lane on."""
+    return os.environ.get(ENH_BOARD_FLAG) == "1"
+
+
+def state_path(lane: "Lane | None" = None) -> Path:
+    """Where a lane keeps its state.
+
+    The MAIN lane resolves ``STATE_FILE`` at CALL time, not import time: that
+    global is the seam every test and tool in the repo redirects to keep writes
+    out of the committed ledger, and a lane object captured at import would
+    silently ignore the redirect and write test slips into real state (the
+    2026-09-06 leak). An explicit lane uses its own file.
+    """
+    if lane is None or lane == MAIN_LANE:
+        return STATE_FILE
+    return lane.state_file
+
 # ---- daily freeze lock (2026-10-02, OP-01 T2) -------------------------------
 # A frozen card is the operator's placed bet. The old lock was a per-day
 # sidecar file `localdata/auto_tickets_<date>.frozen`; its durability depended
@@ -246,9 +298,9 @@ FROZEN_BOOK_KEY = "frozen_by_date"
 SUPERSEDED_BOOK_KEY = "superseded_by_date"
 
 
-def legacy_frozen_path(target: str):
+def legacy_frozen_path(target: str, lane: "Lane | None" = None):
     """The pre-T2 per-day marker file. Read-only from here on."""
-    return LOCALDATA / f"auto_tickets_{target}.frozen"
+    return LOCALDATA / f"{(lane or MAIN_LANE).slip_prefix}_{target}.frozen"
 
 
 def frozen_entry(st: dict, target: str) -> dict | None:
@@ -265,7 +317,8 @@ def superseded_entry(st: dict, target: str) -> dict | None:
     return entry if isinstance(entry, dict) else None
 
 
-def record_superseded_no_bet(st: dict, target: str, when, *, reason: str) -> dict:
+def record_superseded_no_bet(st: dict, target: str, when, *, reason: str,
+                            lane: "Lane | None" = None) -> dict:
     """Record a force-recut no-bet without touching the frozen card.
 
     The old slip remains available for audit and any already-placed bet must
@@ -282,18 +335,19 @@ def record_superseded_no_bet(st: dict, target: str, when, *, reason: str) -> dic
         "result": "NO BET",
         "reason": reason,
         "frozen_at": frozen.get("frozen_at"),
-        "audit_slip": f"localdata/auto_tickets_{target}.txt",
+        "audit_slip": f"localdata/{(lane or MAIN_LANE).slip_prefix}_{target}.txt",
     }
     book[str(target)] = entry
     return entry
 
 
-def is_frozen(st: dict, target: str) -> bool:
+def is_frozen(st: dict, target: str, lane: "Lane | None" = None) -> bool:
     """True when the date is locked by state OR by a legacy marker file."""
-    return frozen_entry(st, target) is not None or legacy_frozen_path(target).exists()
+    return (frozen_entry(st, target) is not None
+            or legacy_frozen_path(target, lane).exists())
 
 
-def record_freeze(st: dict, target: str, when) -> dict:
+def record_freeze(st: dict, target: str, when, lane: "Lane | None" = None) -> dict:
     """Write-once freeze of ``target``. Never overwrites an existing entry.
 
     Returns the entry in force — the pre-existing one if the date was already
@@ -304,7 +358,7 @@ def record_freeze(st: dict, target: str, when) -> dict:
     existing = book.get(str(target))
     if isinstance(existing, dict):
         return existing                      # write-once: immutable
-    legacy = legacy_frozen_path(target)
+    legacy = legacy_frozen_path(target, lane)
     if legacy.exists():
         stamp = (legacy.read_text() or "").strip()
         entry = {"frozen_at": stamp or when.isoformat(timespec="seconds"),
@@ -2786,9 +2840,9 @@ def alias_outcome_conflict(pick, entries_by_date) -> bool:
 
 
 # ---------------- state (all percentages of capital) ----------------
-def load_state() -> dict:
+def load_state(lane: "Lane | None" = None) -> dict:
     try:
-        st = json.loads(STATE_FILE.read_text())
+        st = json.loads(state_path(lane).read_text())
     except Exception:
         return {}
     slips = st.get("open_slips") or []
@@ -2802,8 +2856,8 @@ def load_state() -> dict:
     return st
 
 
-def save_state(st: dict) -> None:
-    STATE_FILE.write_text(json.dumps(st, indent=2, default=str))
+def save_state(st: dict, lane: "Lane | None" = None) -> None:
+    state_path(lane).write_text(json.dumps(st, indent=2, default=str))
 
 
 def fresh_state() -> dict:
@@ -3141,10 +3195,15 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
 
 
 # ---------------- settlement + take-profit notification ----------------
-def _apply_settlement(st, ret_pct, staked_pct, when):
+def _apply_settlement(st, ret_pct, staked_pct, when, lane: "Lane | None" = None):
     """Move the bank by the settled P&L (all %) and fire the TAKE-PROFIT
     NOTIFICATION when performance reaches the cycle target. No amounts are
-    withdrawn — the operator acts on the notification. Returns event lines."""
+    withdrawn — the operator acts on the notification. Returns event lines.
+
+    ``lane`` only chooses the notification marker's filename, so each lane
+    leaves its own ``<prefix>_takeprofit_<date>.json`` receipt while the bank
+    arithmetic and the notification rule stay one implementation.
+    """
     events = []
     st["bank"] += ret_pct - staked_pct
     if st["bank"] >= take_profit_target(st):
@@ -3157,7 +3216,7 @@ def _apply_settlement(st, ret_pct, staked_pct, when):
                              "gain_pct": round(gain_pct, 2),
                              "bank_after_pct": round(st["bank"], 2),
                              "next_target_pct": round(take_profit_target(st), 2)})
-        marker = LOCALDATA / f"auto_tickets_takeprofit_{when}.json"
+        marker = LOCALDATA / f"{(lane or MAIN_LANE).slip_prefix}_takeprofit_{when}.json"
         try:
             marker.write_text(json.dumps(st["events"][-1], indent=2))
         except Exception:
@@ -3256,7 +3315,8 @@ def _slip_day_anchor(slip_date):
         return None
 
 
-def settle_open_slips(st, settled, archives=None, entries_by_date=None):
+def settle_open_slips(st, settled, archives=None, entries_by_date=None,
+                      lane: "Lane | None" = None):
     """Grade every acca whose outcome is decided; the bank moves per acca.
 
     An acca settles as soon as all its legs resolve — a single stuck leg no
@@ -3339,7 +3399,7 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
                 open_accas.append(a)
                 continue
             ret = a["stake_pct"] * a["odds"] if a["won"] else 0.0
-            ev = _apply_settlement(st, ret, a["stake_pct"], slip["date"])
+            ev = _apply_settlement(st, ret, a["stake_pct"], slip["date"], lane)
             _record_acca_settlement(st, slip["date"], a)
             lines.append(f"settled {slip['date']} acca @{a['odds']:.2f} legs={legres}: bank {st['bank']:.1f}%"
                          + (" (decided by settled loss leg"
@@ -3989,6 +4049,262 @@ def print_status(st):
         print(f"  {h['date']}  {acc:40s} bank {h['bank_pct']:7.1f}%")
 
 
+# ---------------- enhancement lane (2026-10-12, ADDITIVE) ----------------
+# The operator's ruling: "i need it to look like how autobets presents it and
+# to have the same lifecycle of autobets" and "i dont want them to change the
+# system have now … additional". So this lane keeps its own state and artifact,
+# its legs are priced from the enhancement price already on the board, and it
+# reuses the SAME freeze / settle / bank / take-profit / renderer lifecycle
+# above rather than a lookalike copy of it.
+#
+# Gate (operator ruling 2026-10-12): "betting on ev will lead us to not bet at
+# all, we have the track record of enhanced, we know what wins more, we just
+# need prices above a certain threshold, like how autobets does it." A leg
+# fires on its market's settled floor alone — ENHANCEMENT_PRICE_FLOORS in
+# edgefactory.enh_registry. There is NO EV veto here; enhancement_breakeven and
+# enhancement_edge_sample stay on the row as information only.
+ENH_SHADOW_TAG = " [SHADOW — paper]"      # same tag the 🔥 render already uses
+
+
+def _enh_price(pick: dict):
+    """The pick's captured enhancement price, or None when it is not a price."""
+    price = pick.get("enhancement_price")
+    if isinstance(price, (int, float)) and not isinstance(price, bool) \
+            and math.isfinite(float(price)) and float(price) > 1.0:
+        return float(price)
+    return None
+
+
+def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None) -> list[dict]:
+    """One candidate per enhancement on the board, with its gate verdict.
+
+    Verdicts: ``fire`` (priced at or above its market's floor), ``below_floor``
+    (priced under the floor — no bet, not paper, not shadow), ``unpriced`` (the
+    market is priced by some feed but this leg has no price today) and
+    ``unpriceable`` (no feed carries this market at all — team totals). Every
+    candidate carries the parent pick's bucket and rule so the settled record
+    can be sliced by them.
+    """
+    from edgefactory.enh_registry import ENHANCEMENT_PRICE_FLOORS, clears_floor, floor_for
+    try:
+        from edgefactory.enh_pricing import MARKET_PRICE_MAP
+    except Exception:
+        MARKET_PRICE_MAP = {}
+
+    legs: list[dict] = []
+    for pick in slate or []:
+        market = pick.get("recommended_enhancement")
+        if not market:
+            continue
+        price = _enh_price(pick)
+        if price is None:
+            mapped = MARKET_PRICE_MAP.get(market, "missing")
+            # "Unpriceable" is not "we found no price today": it means no feed in
+            # this pipeline carries the market at all. That is an absent mapping
+            # (goal_range_2_3) and every team total (tt_*): BetExplorer has no
+            # team-total tab, and the 2026-08-03 audit recorded those markets'
+            # fair price as ~1.03 — at the 95-97% they are stated at they would
+            # need 1.06-1.10 to be a bet, so they are shown, marked, and never
+            # priced.
+            unpriceable = mapped is None or (
+                isinstance(mapped, tuple) and str(mapped[0]).startswith("tt_"))
+            verdict = "unpriceable" if unpriceable else "unpriced"
+        else:
+            verdict = "fire" if clears_floor(market, price) else "below_floor"
+        legs.append({
+            "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
+            "home": pick.get("home"), "away": pick.get("away"),
+            "fixture_key": _folded_leg_key(
+                pick.get("date") or "", pick.get("home"), pick.get("away"), "HOME"),
+            "market": market,
+            "label": pick.get("enhancement_label") or str(market).replace("_", " ").upper(),
+            "probability": pick.get("enhancement_probability"),
+            "price": price,
+            "price_book": pick.get("enhancement_price_book"),
+            "price_source": pick.get("enhancement_price_source"),
+            "bucket": str(pick.get("bucket") or ""),
+            "rule": str(pick.get("rule") or pick.get("display_rule") or ""),
+            "floor": floor_for(market),
+            "verdict": verdict,
+            "shadow": str(pick.get("bucket") or "") == "SKIPPED_VETO",
+        })
+    # Firing legs first, strongest stated probability first — the same ordering
+    # discipline the main lane uses to fill a bounded day.
+    legs.sort(key=lambda l: (l["verdict"] != "fire",
+                             -(l["probability"] if isinstance(l["probability"], (int, float)) else 0.0)))
+    return legs
+
+
+def _enh_slice_lines(root: Path | None = None) -> list[str]:
+    """The settled slice table: by market, then by bucket, then by rule."""
+    from edgefactory.enh_registry import (UNATTRIBUTED, market_track_record,
+                                          slice_for_market)
+    root = root or ROOT
+    rows = [r for r in market_track_record(root) if r["n"]]
+    if not rows:
+        return []
+    lines = ["ENHANCEMENT SLICE (settled, registry)",
+             f"  {'by market':<18}{'n':>6}{'hits':>7}{'rate':>8}{'breakeven':>12}{'profit':>10}"]
+    for r in rows:
+        be = f"{r['breakeven']:.3f}" if r["breakeven"] else "—"
+        lines.append(f"  {r['market']:<18}{r['n']:>6}{r['hits']:>7}"
+                     f"{r['rate'] * 100:>7.1f}%{be:>12}{r['profit']:>+9.2f}u")
+    for key, title in (("bucket", "by bucket"), ("rule", "by rule")):
+        merged: dict[str, dict] = {}
+        for r in rows:
+            for value, slot in slice_for_market(root, r["market"], key).items():
+                agg = merged.setdefault(value, {"n": 0, "hits": 0, "profit": 0.0})
+                agg["n"] += slot["n"]
+                agg["hits"] += slot["hits"]
+                agg["profit"] = round(agg["profit"] + slot["profit"], 6)
+        if not merged:
+            continue
+        lines.append(f"  {title}")
+        for value, agg in sorted(merged.items(), key=lambda kv: (-kv[1]["n"], kv[0])):
+            rate = (agg["hits"] / agg["n"]) if agg["n"] else 0.0
+            label = value if value != UNATTRIBUTED else f"{value} (pre-2026-10-12)"
+            lines.append(f"    {label:<28}{agg['n']:>5}{agg['hits']:>7}"
+                         f"{rate * 100:>7.1f}%{agg['profit']:>+9.2f}u")
+    return lines
+
+
+def render_enhancement_tickets(st: dict, target: str, legs: list[dict], now,
+                               *, should_freeze: bool, freeze_record: dict | None,
+                               bank_eff: float, root: Path | None = None) -> str:
+    """The lane's artifact — same header/footer conventions as the main slip."""
+    from edgefactory.enh_registry import market_track_record, slice_for_market
+    root = root or ROOT
+    firing = [l for l in legs if l["verdict"] == "fire"]
+    committed = st["bank"] - bank_eff
+    lines = [f"{ENHANCEMENT_LANE.label} — {target}", "=" * 62,
+             f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
+             f"(x{st['bank'] / st['base_pct']:.2f}) = free bank {bank_eff:.1f}% + "
+             f"committed {committed:.1f}% · next take-profit notification at "
+             f"{take_profit_target(st):.1f}%"]
+    lines.extend(_enh_slice_lines(root))
+    lines.append("")
+
+    day_deploy = ENHANCEMENT_LANE.stake_frac * bank_eff
+    stake_pct = (day_deploy / len(firing)) if firing else 0.0
+    for i, leg in enumerate(firing, 1):
+        share = (stake_pct / bank_eff) if bank_eff else 0.0
+        lines.append(f"[ENH #{i}] @{leg['price']:.2f} — stake {stake_pct:.1f}% of capital "
+                     f"({share:.1%} of free bank){ENH_SHADOW_TAG if leg['shadow'] else ''}")
+        prob = leg["probability"]
+        stated = f" (stated {float(prob):.0%})" if isinstance(prob, (int, float)) else ""
+        registry = next((r for r in market_track_record(root)
+                         if r["market"] == leg["market"]), None)
+        bits = []
+        if registry and registry["n"]:
+            bits.append(f"registry {registry['rate']:.0%} n={registry['n']}")
+        if leg["floor"] is not None:
+            bits.append(f"floor {leg['floor']:.2f}")
+        if leg["price_book"]:
+            bits.append(str(leg["price_book"]))
+        elif leg["price_source"]:
+            bits.append(str(leg["price_source"]))
+        detail = f" [{' · '.join(bits)}]" if bits else ""
+        lines.append(f"   {leg['match']:44s} {leg['label']} @ {leg['price']:.2f}{stated}{detail}")
+        lines.append("")
+
+    # Legs the gate refused are shown for audit, never as instructions.
+    for leg in legs:
+        if leg["verdict"] == "fire":
+            continue
+        prob = leg["probability"]
+        stated = f" (stated {float(prob):.0%})" if isinstance(prob, (int, float)) else ""
+        price = f" @ {leg['price']:.2f}" if leg["price"] is not None else ""
+        reason = {
+            # A floorless market reaches this verdict too (clears_floor is False
+            # without a threshold) but it is NOT "below" anything — say which
+            # case it is, exactly as the board line does.
+            "below_floor": (f"below floor {leg['floor']:.2f} — no bet"
+                            if leg["floor"] is not None
+                            else "no floor set for this market — no bet"),
+            "unpriced": "no price captured — no bet",
+            "unpriceable": "unpriceable — no feed carries this market",
+        }.get(leg["verdict"], leg["verdict"])
+        lines.append(f"   [NO BET] {leg['match']:40s} {leg['label']}{price}{stated} — {reason}")
+    if any(l["verdict"] != "fire" for l in legs):
+        lines.append("")
+
+    lines.append(f"deploying {ENHANCEMENT_LANE.stake_frac:.0%} of free bank today "
+                 f"= {sum(stake_pct for _ in firing):.1f}% of capital · take-profit "
+                 f"NOTIFICATION at +{TAKE_PROFIT_GAIN:.0%} per cycle "
+                 f"(performance-based; you act on it).")
+    lines.append("All figures are percentages of capital. Round to your bookmaker's "
+                 "minimum stake. Bet only what you can afford to lose.")
+    if should_freeze and freeze_record:
+        lines.append("")
+        lines.append(freeze_footer(freeze_record))
+    return "\n".join(lines)
+
+
+def cmd_enhancement(args, st) -> int:
+    """Draft / freeze / re-print the enhancement lane's slip for `args.date`."""
+    from edgefactory.enh_registry import market_track_record, slice_for_market
+    now = datetime.now(TZ)
+    target = args.date or now.strftime("%Y-%m-%d")
+    slip_txt = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}.txt"
+
+    if not enhancement_board_enabled():
+        print(f"enhancement lane is off — set {ENH_BOARD_FLAG}=1 to build it")
+        return 0
+
+    # A frozen date is final, --force included: rewriting the artifact of an
+    # already-staked date is the "bets rotated under the operator" failure the
+    # write-once lock exists to prevent. --force still rebuilds a DRAFT before
+    # the 09:00 boundary (it only suppresses the freeze below).
+    if is_frozen(st, target, ENHANCEMENT_LANE):
+        entry = frozen_entry(st, target) or {}
+        print(f"enhancement slip for {target} is frozen "
+              f"({freeze_footer(entry)}); write-once lock in "
+              f"{ENHANCEMENT_LANE.state_file.name}")
+        if slip_txt.exists():
+            print(slip_txt.read_text())
+        return 0
+
+    try:
+        slate = json.loads((LOCALDATA / "picks_today.json").read_text())
+        if not isinstance(slate, list):
+            slate = []
+    except Exception:
+        slate = []
+    legs = enhancement_legs(slate)
+    bank_eff = effective_bank(st, exclude_date=target)
+    should_freeze = (str(target) == now.strftime("%Y-%m-%d")
+                     and now.hour >= FREEZE_HOUR and not args.force)
+    freeze_record = record_freeze(st, target, now, ENHANCEMENT_LANE) if should_freeze else None
+    if should_freeze:
+        st.setdefault("open_slips", [])
+        firing = [l for l in legs if l["verdict"] == "fire"]
+        stake_pct = ((ENHANCEMENT_LANE.stake_frac * bank_eff) / len(firing)) if firing else 0.0
+        existing = next((s for s in st["open_slips"] if str(s.get("date")) == target), None)
+        entry = {"date": target,
+                 "tickets": [{"odds": l["price"], "stake_pct": round(stake_pct, 4),
+                              "market": l["market"], "match": l["match"],
+                              "shadow": l["shadow"]} for l in firing],
+                 "staked_pct": round(stake_pct * len(firing), 4)}
+        if existing is None:
+            st["open_slips"].append(entry)
+        else:
+            st["open_slips"][st["open_slips"].index(existing)] = entry
+    txt = render_enhancement_tickets(st, target, legs, now,
+                                     should_freeze=should_freeze,
+                                     freeze_record=freeze_record, bank_eff=bank_eff)
+    print(txt)
+    slip_txt.write_text(txt)
+    save_state(st, ENHANCEMENT_LANE)
+    if should_freeze and freeze_record:
+        print(f"\nSTATUS: ✅ {freeze_footer(freeze_record)} enhancement slip; later runs "
+              f"re-print unchanged (write-once lock in "
+              f"{ENHANCEMENT_LANE.state_file.name}: {FROZEN_BOOK_KEY}[{target}]).")
+    else:
+        print(f"\nSTATUS: ⏳ DRAFT — regenerates each run until the "
+              f"{FREEZE_HOUR:02d}:00 freeze.")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="Rolling auto-tickets (percent-only, validated acca engine)")
     ap.add_argument("--today", action="store_true", help="settle open slips, then build/reprint today")
@@ -4000,7 +4316,26 @@ def main():
     ap.add_argument("--date", default=None)
     ap.add_argument("--reset", action="store_true")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--enhancements", action="store_true",
+                    help=f"the enhancement lane's own slip (needs {ENH_BOARD_FLAG}=1)")
     args = ap.parse_args()
+
+    # Additive lane, own state: it shares the lifecycle functions but never the
+    # main lane's state file or artifact. Without the flag every command below
+    # behaves exactly as before.
+    if args.enhancements and enhancement_board_enabled():
+        st = load_state(ENHANCEMENT_LANE)
+        if not st:
+            st = fresh_state()
+        if args.settle or args.today or args.force or not sys.argv[1:]:
+            for line in settle_open_slips(st, load_settled(), lane=ENHANCEMENT_LANE):
+                print(line)
+        if args.status and not (args.today or args.force):
+            print_status(st)
+            return 0
+        rc = cmd_enhancement(args, st)
+        save_state(st, ENHANCEMENT_LANE)
+        return rc
 
     st = load_state()
     if args.backfill:
