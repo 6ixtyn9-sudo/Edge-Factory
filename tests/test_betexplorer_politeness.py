@@ -72,7 +72,8 @@ def test_first_429_honors_retry_after_and_uses_30_second_floor(monkeypatch):
     assert be._fetch("https://www.betexplorer.com/example") == "ok"
     assert len(calls) == 2
     assert sleeps == [31.0]
-    assert be.run_stats() == {"be_429": 1, "be_cooling_down": False, "be_cached": 0}
+    assert be.run_stats() == {"be_429": 1, "be_cooling_down": False, "be_cached": 0,
+                              "be_rows_rejected": 0, "be_rows_rejected_reasons": {}}
 
 
 def test_second_429_cools_run_and_makes_no_third_request(monkeypatch):

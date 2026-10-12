@@ -6102,6 +6102,59 @@ def _append_betexplorer_board_rows(pick: dict, rows: list[dict], source: str) ->
     pick["price_board"] = board
 
 
+def _betexplorer_matching_row(rows: list[dict], pick: dict) -> dict | None:
+    """The row that prices this pick's own selection on this pick's market."""
+    sel = str(pick.get("pick") or "")
+    market = str(pick.get("market") or "")
+    return next(
+        (r for r in rows
+         if str(r.get("selection") or "") == sel
+         and str(r.get("market") or "") == market),
+        None,
+    )
+
+
+def _apply_betexplorer_row(pick: dict, matching_row: dict, rows: list[dict], *,
+                           bundles: tuple | None, source: str) -> bool:
+    """Attach one BetExplorer row to `pick`; True when the pick was priced.
+
+    ONE code path for both the network-free cache read and the bounded rescue
+    fetch (repo doctrine: "One code path, or the harness lies"), so a cached
+    price and a fetched price always land an identical field set. Returns False
+    (leaving the pick untouched) when the row carries no usable decimal price.
+    """
+    new_odds = _valid_decimal_odds(matching_row.get("odds"))
+    if new_odds is None:
+        return False
+    previous_odds = pick.get("odds")
+    previous_source = pick.get("odds_source")
+    pick["odds"] = new_odds
+    pick["odds_source"] = source
+    pick["odds_match_method"] = "betexplorer"
+    pick["bookmaker"] = matching_row.get("bookmaker")
+    pick["odds_captured_at"] = matching_row.get("captured_at")
+    pick["odds_league"] = matching_row.get("league")
+    pick["price_evidence"] = PRICE_EVIDENCE_BETEXPLORER_RESCUE
+    pick["price_push_eligible"] = True
+    pick.pop("price_quarantine_reason", None)
+    pick.pop("suspect_price", None)
+    if previous_odds is not None and previous_source != pick["odds_source"]:
+        pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+    be_bundle = _odds_bundle_from_rows(rows, provider=source)
+    if bundles is not None:
+        # Keep every BetExplorer 1X2 row on the board; the selected row is
+        # marked while the other sides remain corroboration candidates.
+        _stamp_price_board(
+            pick, (*bundles, be_bundle), chosen_row=matching_row,
+            chosen_source=source, chosen_method="betexplorer",
+        )
+    else:
+        _append_betexplorer_board_rows(pick, rows, source)
+    # Idempotent normalisation hook (BetExplorer rows are bare HH:MM today).
+    resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=source)
+    return True
+
+
 def enrich_unmatched_with_betexplorer(
     picks: list[dict],
     day: str,
@@ -6146,67 +6199,54 @@ def enrich_unmatched_with_betexplorer(
     for pick in picks:
         method = str(pick.get("odds_match_method") or "")
 
-        # A live source already priced this fixture: do not rescue it. A fresh
-        # same-day BetExplorer cache is still useful as a second-source board
-        # candidate, so reading cache is explicitly network-free.
-        if method not in ("fallback", "none", "alias_fuzzy"):
-            cached_rows = _be_mod.cached_odds_rows_for_pick(pick, day)
+        # (1) NETWORK-FREE SEAM FIRST, and for EVERY pick. A fresh same-day
+        # cache read costs nothing, so no budget decision may skip it. Before
+        # 2026-10-12 the rescue budget was checked first and `break` returned
+        # from the whole loop, so once four legs were priced by any source every
+        # later leg was abandoned — including legs whose prices were already on
+        # disk. Receipt: Ludogorets-Arda (1.50/4.00/6.50) and Elfsborg-Halmstad
+        # (1.36/5.25/8.00) were captured at 01:05Z and cached under this run's
+        # own key, yet the board published them with odds=None /
+        # odds_match_status="unmatched". A leg may be unpriced because there is
+        # no price — never because of ordering.
+        cached_rows = _be_mod.cached_odds_rows_for_pick(pick, day)
+        if cached_rows or _be_mod.cached_fixture_present(pick, day):
             if cached_rows:
-                _append_betexplorer_board_rows(pick, cached_rows, _BE_SOURCE)
+                matching_row = _betexplorer_matching_row(cached_rows, pick)
+                if pick.get("odds") is None and matching_row is not None:
+                    if _apply_betexplorer_row(pick, matching_row, cached_rows,
+                                              bundles=bundles, source=_BE_SOURCE):
+                        enriched += 1
+                        priced += 1
+                else:
+                    # Not this pick's selection, or already priced by a live
+                    # source (which is never overwritten): keep the rows as
+                    # board corroboration only.
+                    _append_betexplorer_board_rows(pick, cached_rows, _BE_SOURCE)
+            # The cache is authoritative for this fixture this run — an empty
+            # entry is a resolved answer, not a miss.
             continue
 
-        # The current ticket surface needs at most four priced legs. Once that
-        # bounded supply exists, abstain from further rescue requests.
+        # (2) A live source already priced this fixture: do not rescue it.
+        if method not in ("fallback", "none", "alias_fuzzy"):
+            continue
+
+        # (3) Bounded rescue. `continue`, never `break`: once the target is met
+        # no further REQUEST is made, but every later pick still reaches its free
+        # cache read at (1) on this pass.
         if priced >= target:
-            break
+            continue
 
         rows = betexplorer_odds_rows_for_pick(pick, day, norm_team_fn=_norm_team)
         if not rows:
             continue
-
-        sel = str(pick.get("pick") or "")
-        market = str(pick.get("market") or "")
-        matching_row = next(
-            (r for r in rows
-             if str(r.get("selection") or "") == sel
-             and str(r.get("market") or "") == market),
-            None,
-        )
+        matching_row = _betexplorer_matching_row(rows, pick)
         if matching_row is None:
             continue
-
-        new_odds = _valid_decimal_odds(matching_row.get("odds"))
-        if new_odds is None:
-            continue
-
-        previous_odds = pick.get("odds")
-        previous_source = pick.get("odds_source")
-        pick["odds"] = new_odds
-        pick["odds_source"] = _BE_SOURCE
-        pick["odds_match_method"] = "betexplorer"
-        pick["bookmaker"] = matching_row.get("bookmaker")
-        pick["odds_captured_at"] = matching_row.get("captured_at")
-        pick["odds_league"] = matching_row.get("league")
-        pick["price_evidence"] = PRICE_EVIDENCE_BETEXPLORER_RESCUE
-        pick["price_push_eligible"] = True
-        pick.pop("price_quarantine_reason", None)
-        pick.pop("suspect_price", None)
-        if previous_odds is not None and previous_source != pick["odds_source"]:
-            pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
-        be_bundle = _odds_bundle_from_rows(rows, provider=_BE_SOURCE)
-        if bundles is not None:
-            # Keep every BetExplorer 1X2 row on the board; the selected row is
-            # marked while the other sides remain corroboration candidates.
-            _stamp_price_board(
-                pick, (*bundles, be_bundle), chosen_row=matching_row,
-                chosen_source=_BE_SOURCE, chosen_method="betexplorer",
-            )
-        else:
-            _append_betexplorer_board_rows(pick, rows, _BE_SOURCE)
-        # Idempotent normalisation hook (BetExplorer rows are bare HH:MM today).
-        resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=_BE_SOURCE)
-        enriched += 1
-        priced += 1
+        if _apply_betexplorer_row(pick, matching_row, rows,
+                                  bundles=bundles, source=_BE_SOURCE):
+            enriched += 1
+            priced += 1
 
     if stats is not None:
         stats.update(_be_mod.run_stats())
