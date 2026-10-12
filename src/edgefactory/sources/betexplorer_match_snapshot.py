@@ -75,9 +75,14 @@ _RESULT_SCORE = re.compile(r"\b(\d{1,2})\s*:\s*(\d{1,2})\b")
 _RESULT_ODDS = re.compile(r"\b(\d{1,2}\.\d{2})\s+(\d{1,2}\.\d{2})\s+(\d{1,2}\.\d{2})\b")
 _H2H_STOPS = ("Show more matches", "Odds Comparison", "Standings")
 _BLOCK_TEXT_CHARS = 96
-# The page serves the whole H2H list and the whole league table; the
-# "Show more matches" and "Show full table" controls are client-side toggles,
-# so these caps only bound a pathological page, not the page's own view.
+# The H2H list and the league table are served in the response at their own
+# length, so these caps bound a pathological page rather than the page's own
+# list. Measured 2026-10-12 on a Premier League match page (Coventry vs
+# Newcastle Utd): 20 H2H dated rows and the full 20-rank table were served,
+# and the form block serves its active view only ("5 results", five dated rows
+# per side, closing 1x2 odds on each); the 10/15/all views are not in the
+# response. Reading the whole block is therefore reading what the page sends -
+# no expander is fetched and none is needed.
 _MAX_H2H_ROWS = 40
 _MAX_STANDINGS_ROWS = 40
 # The standings header is the page's own column list (e.g.
@@ -126,9 +131,10 @@ def _result_rows(region: str, *, limit: int) -> list[dict]:
 def _standings_block(text: str) -> dict:
     """The league table the page serves, read from the page's own columns.
 
-    The match page holds the whole table ("Show full table" only toggles it),
-    so rows are read in full, capped at _MAX_STANDINGS_ROWS for a pathological
-    page. Column labels come from the page's own header; the numeric tail of
+    The match page holds the whole table (its own "Show full table" control is a
+    JS control with no href; the tab links are AJAX sub-tables this module never
+    fetches), so rows are read in full, capped at _MAX_STANDINGS_ROWS for a
+    pathological page. Column labels come from the page's own header; the numeric tail of
     each row (MP W D L GF:GA GD Pts) is what makes a row a row, so an
     unlabelled digit run is skipped rather than guessed into a column.
     """
@@ -171,12 +177,13 @@ def parse_match_page_blocks(body) -> dict:
 
     Text-derived only: this records what the page showed (H2H record and rows,
     last-results rows with their own block label, and the league table), never
-    what it means. The H2H list and the standings table are kept as the page
-    served them — the "Show more matches" and "Show full table" controls are
-    client-side toggles — up to a bound for a pathological page. Missing
-    structures stay missing; nothing here is consumed by pricing, cards, or
-    ML, so an unverified selector can never become a price, and no team name
-    is invented for an unlabelled row.
+    what it means. Everything is kept exactly as the fetched response served
+    it, up to a bound for a pathological page: the H2H list arrives at its own
+    length, and the form block carries only its active view (measured on a
+    live page: "5 results", five dated rows per side — the 10/15/all views are
+    not in the response). Missing structures stay missing; nothing here is
+    consumed by pricing, cards, or ML, so an unverified selector can never
+    become a price, and no team name is invented for an unlabelled row.
     """
     text = flatten_text(body)
     out: dict = {"blocks": []}
