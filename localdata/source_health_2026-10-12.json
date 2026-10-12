@@ -44,19 +44,18 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 7,
-      "be_raw": 39,
-      "be_usable": 36,
+      "be_matched": 1,
+      "be_raw": 42,
+      "be_usable": 39,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 6,
+      "join_matched_rows": 1,
       "join_miss_counts": {
-        "fixture_key_miss": 26,
-        "no_pick_for_fixture": 4
+        "fixture_key_miss": 38
       },
       "reason": null,
       "status": "cache_only"
@@ -182,12 +181,12 @@
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 13,
+      "join_matched_rows": 6,
       "join_miss_counts": {
-        "fixture_key_miss": 23465,
-        "no_pick_for_fixture": 42
+        "fixture_key_miss": 23476,
+        "no_pick_for_fixture": 38
       },
-      "pa_matched": 8,
+      "pa_matched": 2,
       "pa_raw": 23520,
       "pa_scored": 23520,
       "reason": null,
@@ -275,7 +274,7 @@
           "unsupported_market:draw_no_bet": 2,
           "unsupported_market:team_total_points_odd_even": 4
         },
-        "card_fixture_count": 17,
+        "card_fixture_count": 18,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 166
@@ -336,14 +335,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 64,
+      "join_matched_rows": 19,
       "join_miss_counts": {
-        "fixture_key_miss": 114,
+        "fixture_key_miss": 241,
         "no_pick_for_fixture": 60
       },
-      "oa_matched": 4,
-      "oa_raw": 238,
-      "oa_usable": 238,
+      "oa_matched": 1,
+      "oa_raw": 320,
+      "oa_usable": 320,
       "reason": null,
       "status": "cache_only"
     },
