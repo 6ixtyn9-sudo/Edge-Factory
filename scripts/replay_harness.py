@@ -494,20 +494,29 @@ def enh_records(root=None):
             rows.append({"market": market, "date": str(rec.get("date") or "")[:10],
                          "price": float(price), "hit": bool(rec.get("hit")),
                          "bucket": rec.get("bucket") or "", "rule": rec.get("rule") or "",
-                         "source": rec.get("source") or ""})
+                         "source": rec.get("source") or "",
+                         # The card model below pairs legs per day, so it needs
+                         # the same two facts the live card ranks and de-dupes
+                         # on: the fixture and the stated probability.
+                         "match": str(rec.get("match") or ""),
+                         "stated": rec.get("stated")})
     return rows
 
 
 def enh_day_growth(records, floors, *, stake_frac=None):
     """{day: {"growth": factor, "log_growth": x, "bets": n, "hits": k}}.
 
-    The lane deploys ``stake_frac`` of free bank per bet-day split evenly across
-    that day's firing tickets (one leg per ticket), so a leg's fraction of the
-    day's deployment is 1/n_firing — the same sizing discipline the acca lane
-    uses, expressed for singles. A market with no floor does not fire.
+    The lane's own card, modelled by the lane's own code: the day's
+    floor-cleared legs go through THE selection recipe and the shared staking
+    arithmetic (``auto_tickets.plan_day``), so the replay pairs, de-dupes and
+    sizes exactly as the live card does — 2-leg accas, and a day that cannot
+    form one is a NO BET day, never a single. ``bets``/``hits`` count ACCAS.
+    A market with no floor does not fire; a record without a fixture string
+    cannot be de-duplicated, so it is kept as its own identity rather than
+    merged with an unrelated leg.
     """
     from edgefactory.enh_registry import clears_floor
-    stake = at.STAKE_FRAC if stake_frac is None else float(stake_frac)
+    stake = at.ENHANCEMENT_LANE.stake_frac if stake_frac is None else float(stake_frac)
     by_day = {}
     for rec in records:
         floor = floors.get(rec["market"]) if floors else None
@@ -517,15 +526,37 @@ def enh_day_growth(records, floors, *, stake_frac=None):
             continue
         by_day.setdefault(rec["date"], []).append(rec)
     out = {}
-    for day, legs in by_day.items():
-        if not day or not legs:
+    for day, recs in by_day.items():
+        if not day or not recs:
             continue
-        f = stake / len(legs)                          # per-ticket fraction of bank
+        pool = []
+        for i, rec in enumerate(recs):
+            parts = str(rec.get("match") or "").split(" vs ")
+            home, away = (parts[0], parts[1]) if len(parts) == 2 else (f"leg {i}", "")
+            stated = rec.get("stated")
+            if not isinstance(stated, (int, float)) or isinstance(stated, bool):
+                stated = 0.0
+            pool.append({"match": rec.get("match") or f"{home} vs {away}",
+                         "pick": rec["market"], "prob": float(stated),
+                         "odds": rec["price"], "hit": bool(rec["hit"]),
+                         "row": {"date": day, "home": home, "away": away}})
+        plan = at.plan_day(pool, 100.0, stake_frac=stake)
+        if not plan:
+            continue                                   # MIN_ACCAS: NO BET
+        # plan_day copies the four card keys, so the leg's own settled hit is
+        # read back off the pool. (match, pick) identifies a carded leg: the
+        # recipe has already dropped same-fixture duplicates, so no two legs
+        # on the card share one.
+        hit_of = {(str(l["match"]), str(l["pick"])): bool(l["hit"]) for l in pool}
         factor = 1.0
-        for leg in legs:
-            factor *= (1.0 + f * (leg["price"] - 1.0)) if leg["hit"] else (1.0 - f)
+        hits = 0
+        for acca in plan:
+            won = all(hit_of[(str(l["match"]), str(l["pick"]))] for l in acca["legs"])
+            hits += 1 if won else 0
+            f = acca["stake_pct"] / 100.0              # the day's per-acca fraction
+            factor *= (1.0 + f * (acca["odds"] - 1.0)) if won else (1.0 - f)
         out[day] = {"growth": factor, "log_growth": math.log(factor) if factor > 0 else float("-inf"),
-                    "bets": len(legs), "hits": sum(1 for l in legs if l["hit"])}
+                    "bets": len(plan), "hits": hits}
     return out
 
 

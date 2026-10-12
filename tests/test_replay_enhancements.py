@@ -26,9 +26,10 @@ FLOORS = {"match_over_25": 1.60, "btts_yes": 1.85}
 
 
 def _rec(market="match_over_25", date="2026-10-12", price=1.72, hit=True,
-         bucket="", rule=""):
+         bucket="", rule="", match="", stated=None):
     return {"market": market, "date": date, "price": price, "hit": hit,
-            "bucket": bucket, "rule": rule, "source": "oddspapi"}
+            "bucket": bucket, "rule": rule, "source": "oddspapi",
+            "match": match, "stated": stated}
 
 
 def test_enh_records_flattens_the_registry(tmp_path):
@@ -53,28 +54,44 @@ def test_enh_records_flattens_the_registry(tmp_path):
 
 
 def test_the_floor_is_the_only_gate_on_a_settled_leg():
-    records = [_rec(price=1.59), _rec(price=1.60), _rec(price=1.72)]
+    records = [_rec(price=1.59, match="A vs B"), _rec(price=1.60, match="C vs D"),
+               _rec(price=1.72, match="E vs F")]
     days = rh.enh_day_growth(records, {"match_over_25": 1.60})
-    # 1.59 does not fire; 1.60 and 1.72 are one bet-day with two tickets
-    assert days["2026-10-12"]["bets"] == 2
-    assert days["2026-10-12"]["hits"] == 2
+    # 1.59 does not fire; 1.60 and 1.72 pair into ONE bet-day acca
+    assert days["2026-10-12"]["bets"] == 1
+    assert days["2026-10-12"]["hits"] == 1
     # a market with no floor never fires
     assert rh.enh_day_growth(records, {}) == {}
     assert rh.enh_day_growth([_rec(market="away_under_35", price=1.02)], FLOORS) == {}
 
 
-def test_one_leg_per_ticket_sizing_matches_the_acca_lane_discipline():
-    stake = at.STAKE_FRAC                       # 25% of free bank per bet-day
-    records = [_rec(price=2.00, hit=True), _rec(price=2.00, hit=False)]
+def test_a_lone_firing_leg_is_a_no_bet_day_not_a_single():
+    assert rh.enh_day_growth([_rec(price=1.72)], {"match_over_25": 1.60}) == {}
+
+
+def test_the_acca_card_prices_the_day_the_way_the_lane_would():
+    stake = at.ENHANCEMENT_LANE.stake_frac       # 25% of free bank per bet-day
+    f = stake / 2                                # MAX_ACCAS: the lane's split
+    records = [_rec(price=2.00, hit=True, match="A vs B"),
+               _rec(price=2.00, hit=True, match="C vs D")]
     day = rh.enh_day_growth(records, FLOORS)["2026-10-12"]
-    f = stake / 2                               # split across the day's tickets
-    assert day["growth"] == pytest.approx((1.0 + f) * (1.0 - f))
+    # one acca, both legs home, odds 2.00 x 2.00 — the whole day's stake rides
+    assert (day["bets"], day["hits"]) == (1, 1)
+    assert day["growth"] == pytest.approx(1.0 + f * (4.00 - 1.0))
     assert day["log_growth"] == pytest.approx(math.log(day["growth"]))
+    # one leg missing loses the acca: the day keeps the whole -f
+    lost = rh.enh_day_growth([_rec(price=2.00, hit=True, match="A vs B"),
+                              _rec(price=2.00, hit=False, match="C vs D")],
+                             FLOORS)["2026-10-12"]
+    assert (lost["bets"], lost["hits"]) == (1, 0)
+    assert lost["growth"] == pytest.approx(1.0 - f)
 
 
 def test_enh_arm_reports_the_harnesss_primary_metric():
-    records = [_rec(date="2026-10-12", price=2.00, hit=True),
-               _rec(date="2026-10-13", price=2.00, hit=False)]
+    records = [_rec(date="2026-10-12", price=2.00, hit=True, match="A vs B"),
+               _rec(date="2026-10-12", price=2.00, hit=True, match="C vs D"),
+               _rec(date="2026-10-13", price=2.00, hit=True, match="E vs F"),
+               _rec(date="2026-10-13", price=2.00, hit=False, match="G vs H")]
     arm = rh.enh_arm(records, FLOORS)
     assert (arm["days"], arm["bets"], arm["hits"]) == (2, 2, 1)
     assert arm["rate"] == pytest.approx(0.5)
@@ -108,8 +125,11 @@ def test_the_report_runs_on_a_registry_and_flags_small_n(tmp_path, monkeypatch, 
 
 
 def test_the_report_compares_two_uniform_floor_variants(tmp_path, monkeypatch, capsys):
-    records = [_rec(date=f"2026-09-{d:02d}", price=1.50 + 0.05 * d, hit=(d % 2 == 0))
-               for d in range(1, 11)]
+    # two fixtures a day: the lane's card needs a partner before it bets
+    records = [_rec(date=f"2026-09-{d:02d}", price=1.50 + 0.05 * d,
+                    hit=(d % 2 == 0), match=f"Home{d} vs Away{d}") for d in range(1, 11)]
+    records += [_rec(date=f"2026-09-{d:02d}", price=1.50 + 0.05 * d, hit=True,
+                     match=f"City{d} vs Town{d}") for d in range(1, 11)]
     monkeypatch.setattr(rh, "enh_records", lambda root=None: records)
     args = type("A", (), {"ab": ("live", "floor=1.70")})()
     assert rh.cmd_enhancements(args) == 0
