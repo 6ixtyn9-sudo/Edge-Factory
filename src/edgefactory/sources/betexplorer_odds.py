@@ -64,6 +64,16 @@ CACHE_FRESHNESS_H = float(os.environ.get("EDGE_FACTORY_BE_CACHE_FRESHNESS_H", "2
 _be_429 = 0
 _be_cooling_down = False
 _be_cached = 0
+# Row-level identity refusals for the current run, keyed by reason. Reset by
+# reset_fetch_count() and surfaced through run_stats() so a refused row is
+# visible in the run receipt (silently dropped prices are the failure mode the
+# 2026-10-12 Forge vs York United receipt came from).
+_be_rows_rejected: dict[str, int] = {}
+
+
+def _record_row_rejections(rejected: dict[str, int]) -> None:
+    for reason, count in (rejected or {}).items():
+        _be_rows_rejected[reason] = _be_rows_rejected.get(reason, 0) + int(count)
 
 LAST_RESULTS_RECEIPT: dict[str, object] = {}
 _LAST_RESPONSE_META: dict[str, object] = {}
@@ -99,6 +109,8 @@ def run_stats() -> dict[str, int | bool]:
         "be_429": _be_429,
         "be_cooling_down": _be_cooling_down,
         "be_cached": _be_cached,
+        "be_rows_rejected": sum(_be_rows_rejected.values()),
+        "be_rows_rejected_reasons": dict(_be_rows_rejected),
     }
 
 
@@ -527,19 +539,39 @@ def _write_fixture_cache(pick: dict, day: str, rows: list[dict]) -> None:
         print(f"  betexplorer_odds: cache write skipped: {exc}", file=sys.stderr)
 
 
+def cached_fixture_present(pick: dict, day: str) -> bool:
+    """True when this fixture already has a cache entry for `day`.
+
+    An EMPTY entry is a cached answer (a refusal, or a day with no odds on the
+    page), not a miss — the caller must not re-request a fixture it already
+    resolved. Distinguishing the two is what keeps the reordered enrichment loop
+    byte-for-byte identical to the old short-circuit on empty entries.
+    """
+    return (_fixture_cache_key(pick, day) in _fixture_cache
+            or _read_fixture_cache(pick, day) is not None)
+
+
 def cached_odds_rows_for_pick(pick: dict, day: str) -> list[dict]:
-    """Return only a fresh cached fixture, without making a network request."""
+    """Return only a fresh cached fixture, without making a network request.
+
+    Identity-guarded: a cached row whose teams or date do not belong to this
+    pick is dropped and censused rather than returned (2026-10-12 receipt — the
+    "forge|yorkunited" key held Forge vs Inter Toronto rows).
+    """
     global _be_cached
     key = _fixture_cache_key(pick, day)
     if key in _fixture_cache:
         _be_cached += 1
-        return list(_fixture_cache[key])
-    rows = _read_fixture_cache(pick, day)
-    if rows is None:
-        return []
-    _fixture_cache[key] = list(rows)
-    _be_cached += 1
-    return list(rows)
+        rows = list(_fixture_cache[key])
+    else:
+        rows = _read_fixture_cache(pick, day)
+        if rows is None:
+            return []
+        _fixture_cache[key] = list(rows)
+        _be_cached += 1
+    kept, rejected = filter_rows_for_pick(rows, pick, day)
+    _record_row_rejections(rejected)
+    return kept
 
 
 def _orientation_marker_clean_guard(matched: dict, pick: dict) -> bool:
@@ -555,6 +587,153 @@ def _orientation_marker_clean_guard(matched: dict, pick: dict) -> bool:
             and not squad_marker_mismatch(matched_away, pick_away)) or \
            (not squad_marker_mismatch(matched_home, pick_away)
             and not squad_marker_mismatch(matched_away, pick_home))
+
+
+# ---------------------------------------------------------------------------
+# Row-level fixture-identity guard (2026-10-12).
+#
+# Receipt: the committed 2026-10-12 odds cache held the key
+# "2026-10-12|forge|yorkunited" (fixture home "Forge", away "York United") whose
+# three rows are Forge vs INTER TORONTO 1.35/4.80/6.40 — a different match. The
+# cache key is built from the PICK's teams, but the rows are built from the
+# matched PAGE's teams, so when the matcher accepts a one-sided partial match
+# the wrong fixture's prices land under the right key. The squad-marker veto
+# (``_orientation_marker_clean_guard``) cannot see this: "York United" and
+# "Inter Toronto" carry no squad markers, they are simply different clubs.
+#
+# ``match_pick_to_betexplorer`` accepts a partial match when exactly one
+# candidate has one side matching (the "Buriram" vs "Buriram United" display
+# variant is a legitimate case that must keep working). The guard therefore runs
+# on the ROWS, at the seam where a row is about to price a pick, and requires
+# BOTH teams to agree in one orientation — a strictly stronger condition than the
+# one-sided partial match it backstops, so no legitimate row is lost.
+# ---------------------------------------------------------------------------
+ROW_REJECT_TEAMS = "row teams do not both match the pick"
+ROW_REJECT_DATE = "row date outside the pick's +/-1 day window"
+
+# Shortest normalised form allowed to match by prefix containment. "Arda" for
+# "Arda Kardzhali" is a real same-date receipt (2026-10-12, captured 01:06Z) and
+# must survive; it is 4 characters, which is why the tolerant width-9 relation
+# accepts from 4 and not from the 5 the token-subset rule uses.
+_TEAM_PREFIX_MIN = 4
+# The fetch path deliberately searches the pick date and its neighbours for
+# timezone offsets (Australian fixtures land on the previous UTC date), so a row
+# dated within one day of the pick is in-window by construction.
+_DATE_WINDOW_DAYS = 1
+
+
+def _default_norm_team(name: object, width: int = 9) -> str:
+    try:
+        from edgefactory.util import norm_team as _norm
+        return _norm(name, width=width)
+    except Exception:
+        return re.sub(r"[^a-z]", "", str(name or "").lower())[:width]
+
+
+def team_names_agree(row_name: object, pick_name: object, *, norm_team_fn=None) -> bool:
+    """True when a row's team name and the pick's team name denote one club.
+
+    Reuses the cross-feed equivalence the rest of the pipeline trusts
+    (``theoddsapi._team_names_match``: width-9 keys, prefix containment,
+    significant-token subset) and adds width-9 prefix containment down to
+    ``_TEAM_PREFIX_MIN`` characters, which is what keeps short display forms
+    ("Arda" for "Arda Kardzhali") pricing their own fixture without letting
+    "Inter Toronto" stand in for "York United".
+    """
+    try:
+        from edgefactory.sources.theoddsapi import _team_names_match
+        if _team_names_match(pick_name, row_name):
+            return True
+    except Exception:
+        pass
+    norm = norm_team_fn or _default_norm_team
+    try:
+        na = norm(pick_name, width=9)
+        nb = norm(row_name, width=9)
+    except TypeError:  # caller supplied a 1-arg norm_fn
+        na = norm(pick_name)
+        nb = norm(row_name)
+    if not na or not nb:
+        return False
+    if na == nb:
+        return True
+    shorter, longer = sorted((str(na), str(nb)), key=len)
+    return len(shorter) >= _TEAM_PREFIX_MIN and longer.startswith(shorter)
+
+
+def _kickoff_agrees(row: dict, pick: dict) -> bool:
+    """Kickoff agreement, judged ONLY when both sides are provable instants.
+
+    BetExplorer rows carry a bare ``HH:MM`` kickoff, and bare times are
+    region-relative in this pipeline (see picks_today's
+    ``_REMOTE_CLOCK_REGION_HINTS`` / ``kickoff_clock_region_is_remote``): the
+    same fixture legitimately reads "18:00" on the page and "13:00" on the pick
+    row. Judging those would drop the same-day Ludogorets/Elfsborg rows this
+    guard exists to protect, so an unprovable pair fails OPEN (never a
+    rejection basis) exactly like ``_fresh_row`` in enh_pricing.
+    """
+    row_ko, pick_ko = str(row.get("kickoff") or ""), str(pick.get("kickoff") or "")
+    if "T" not in row_ko or "T" not in pick_ko:
+        return True
+    try:
+        r = datetime.fromisoformat(row_ko.replace("Z", "+00:00"))
+        p = datetime.fromisoformat(pick_ko.replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return True
+    if r.tzinfo is None or p.tzinfo is None:
+        return True
+    return r == p
+
+
+def row_belongs_to_pick(row: dict, pick: dict, day: str, *,
+                        norm_team_fn=None) -> tuple[bool, str]:
+    """(ok, reason) — may this row price this pick?
+
+    Requires both teams to agree in one orientation (home/home + away/away, or
+    the swapped orientation), the row's date to sit inside the pick's
+    +/-1-day window, and — when both are provable instants — the kickoff to
+    agree. ``reason`` is "" when the row is accepted.
+    """
+    row_home, row_away = row.get("home"), row.get("away")
+    pick_home, pick_away = pick.get("home"), pick.get("away")
+    straight = (team_names_agree(row_home, pick_home, norm_team_fn=norm_team_fn)
+                and team_names_agree(row_away, pick_away, norm_team_fn=norm_team_fn))
+    swapped = (team_names_agree(row_home, pick_away, norm_team_fn=norm_team_fn)
+               and team_names_agree(row_away, pick_home, norm_team_fn=norm_team_fn))
+    if not (straight or swapped):
+        return False, ROW_REJECT_TEAMS
+    row_day = str(row.get("date") or "")[:10]
+    if row_day:
+        try:
+            delta = abs((date.fromisoformat(row_day) - date.fromisoformat(str(day)[:10])).days)
+        except ValueError:
+            delta = 0  # unparseable date: fail open, the teams already agreed
+        if delta > _DATE_WINDOW_DAYS:
+            return False, ROW_REJECT_DATE
+    if not _kickoff_agrees(row, pick):
+        return False, ROW_REJECT_DATE
+    return True, ""
+
+
+def filter_rows_for_pick(rows: list[dict], pick: dict, day: str, *,
+                         norm_team_fn=None) -> tuple[list[dict], dict[str, int]]:
+    """Keep only rows that belong to `pick`; return (kept, rejection census).
+
+    The census is folded into ``run_stats()`` so a refused row is visible in the
+    run receipt instead of vanishing.
+    """
+    kept: list[dict] = []
+    rejected: dict[str, int] = {}
+    for row in rows or []:
+        try:
+            ok, reason = row_belongs_to_pick(row, pick, day, norm_team_fn=norm_team_fn)
+        except Exception:
+            ok, reason = False, ROW_REJECT_TEAMS
+        if ok:
+            kept.append(row)
+        else:
+            rejected[reason] = rejected.get(reason, 0) + 1
+    return kept, rejected
 
 
 def betexplorer_odds_rows_for_pick(
@@ -577,16 +756,12 @@ def betexplorer_odds_rows_for_pick(
     if _be_cooling_down or _fetch_count >= _MAX_FETCHES_PER_RUN:
         return []
 
+    # Cached rows take the SAME identity-guarded, network-free reader the
+    # caller's cache seam uses — one code path for cached rows, so a poisoned
+    # key cannot price a pick through this door either.
     cache_key = _fixture_cache_key(pick, day)
-    if cache_key in _fixture_cache:
-        global _be_cached
-        _be_cached += 1
-        return list(_fixture_cache[cache_key])
-    cached = _read_fixture_cache(pick, day)
-    if cached is not None:
-        _fixture_cache[cache_key] = list(cached)
-        _be_cached += 1
-        return list(cached)
+    if cache_key in _fixture_cache or _read_fixture_cache(pick, day) is not None:
+        return cached_odds_rows_for_pick(pick, day)
 
     # Search adjacent dates for the match (timezone offset)
     pick_date = str(pick.get("date") or day)[:10]
@@ -667,6 +842,20 @@ def betexplorer_odds_rows_for_pick(
             if v is not None:
                 rows.append({**base, "market": market, "selection": selection, "odds": v})
 
+    # Final identity gate before these rows are cached or returned: the matcher
+    # may have accepted a one-sided partial match, and the rows carry the PAGE's
+    # teams. Refuse rather than persist a wrong-fixture price (2026-10-12 Forge
+    # vs York United receipt).
+    rows, rejected = filter_rows_for_pick(rows, pick, day, norm_team_fn=norm_team_fn)
+    if rejected:
+        _record_row_rejections(rejected)
+        print(
+            f"  betexplorer_odds: refused {sum(rejected.values())} row(s) for "
+            f"{pick.get('home')} vs {pick.get('away')}: "
+            f"{', '.join(f'{v}x {k}' for k, v in sorted(rejected.items()))}",
+            file=sys.stderr,
+        )
+
     _fixture_cache[cache_key] = list(rows)
     _write_fixture_cache(pick, day, rows)
     return rows
@@ -680,6 +869,7 @@ def reset_fetch_count():
     _be_429 = 0
     _be_cooling_down = False
     _be_cached = 0
+    _be_rows_rejected.clear()
     _LAST_RESPONSE_BYTES = b""
     _match_cache.clear()
     _fixture_cache.clear()

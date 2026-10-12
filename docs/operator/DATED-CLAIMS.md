@@ -57,6 +57,8 @@ recollection.
 | `src/edgefactory/sources/pinnapi_odds.py` | 2026-10-11/13 capture held a three-way money_line book beside two-way groups under the same container name; a group without all three sides is now a named drop | `localdata/picks_2026-10-13.json` |
 | `scripts/picks_today.py` | 2026-10-11 coherent-book incident: per-fixture/per-book/per-second 1x2 quotes partition into one three-way book (1.0415) and two-way pairs (1.0293, 1.0468); the maximum-odds tie-break chose the two-way quote | `localdata/picks_2026-10-13.json` |
 
+| `tests/test_betexplorer_row_join_guard.py` | committed 2026-10-12 odds cache holds the fixture key built from Forge and York United whose rows are Forge v INTER TORONTO 1.35/4.80/6.40, and separately caches Ludogorets-Arda 1.50/4.00/6.50 and Elfsborg-Halmstad 1.36/5.25/8.00 while the 2026-10-12 board published those legs with odds=None; the test's row fixtures are those cached rows verbatim, with only `captured_at` regenerated so the 24h freshness guard cannot time-rot them | `localdata/betexplorer_odds_cache_2026-10-12.json` |
+
 ## What this does not catch
 
 It catches a claim about the **outside world** stated without backing. It
