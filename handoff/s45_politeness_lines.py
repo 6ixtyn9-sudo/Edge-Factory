@@ -17,6 +17,13 @@ the shipped code's network surface is the one the operator dispatches.
 """
 from __future__ import annotations
 
+
+import pathlib as _pl
+import sys as _sys
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from handoff.scratch_localdata import guard_localdata  # noqa: E402
+guard_localdata()   # every localdata write goes to scratch (incident 2026-10-12)
+
 import json
 import pathlib
 import re
