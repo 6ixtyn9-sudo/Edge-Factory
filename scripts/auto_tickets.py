@@ -90,6 +90,7 @@ from edgefactory.assay import context_verdict_league                # noqa: E402
 from edgefactory.assay import grade as assay_grade                  # noqa: E402
 from edgefactory.assay import wilson_lb                              # noqa: E402
 from edgefactory.config import GATES                                 # noqa: E402
+from edgefactory.enh_registry import check_enhancement_hit           # noqa: E402
 from edgefactory import price_sources as psrc                        # noqa: E402
 
 # Audit-only scored-candidate shadow grading ledger (observability only).
@@ -1885,17 +1886,21 @@ _SETTLED_SOURCES = [
 ]
 
 
-def _collect_settled_facts() -> tuple[dict, dict]:
-    """(key_to_outcome, entries_by_date) from warehouse donors + shared overlay.
+def _collect_settled_facts() -> tuple[dict, dict, dict]:
+    """(key_to_outcome, entries_by_date, scores_by_key) from the same donors.
 
     key_to_outcome is the exact-lookup map (warehouse wins on conflict, then
     overlay fills gaps). entries_by_date keeps the FULL home/away names per
     date so alias-conflict detection can see every spelling of a fixture.
+    scores_by_key carries the (hs, gs) behind those outcomes on exactly the
+    keys that survive the ambiguity guard, for legs whose outcome is decided
+    by the SCORE and not by the 1x2 verdict (the enhancement lane's markets).
     """
     from edgefactory.util import norm_team
 
     key_to: dict = {}
     entries: dict[str, list[dict]] = {}
+    scores: dict = {}
     EMPTY_KEY_TIERS_DROPPED.clear()
     EMPTY_KEY_FIXTURES.clear()
     wh = LOCALDATA / "warehouse.duckdb"
@@ -1914,15 +1919,16 @@ def _collect_settled_facts() -> tuple[dict, dict]:
                         continue
                     try:
                         rows = con.execute(
-                            f"SELECT date, home, away, outcome FROM {name} "
+                            f"SELECT date, home, away, outcome, hs, gs FROM {name} "
                             "WHERE hs IS NOT NULL AND gs IS NOT NULL"
                         ).fetchall()
                     except Exception:
                         continue
-                    for day, home, away, outcome in rows:
+                    for day, home, away, outcome, hs, gs in rows:
                         d = str(day)[:10]
                         for hk, ak in _result_write_keys(home, away):
                             key_to.setdefault((d, hk, ak), str(outcome))
+                            scores.setdefault((d, hk, ak), _goal_pair(hs, gs))
                         entries.setdefault(d, []).append(
                             {"home": str(home), "away": str(away), "outcome": str(outcome)}
                         )
@@ -1940,8 +1946,11 @@ def _collect_settled_facts() -> tuple[dict, dict]:
         for r in data.get("rows", []):
             d = str(r.get("date") or "")[:10]
             home, away = r.get("home"), r.get("away")
+            pair = _goal_pair(r.get("hs"), r.get("gs"))
             for hk, ak in _result_write_keys(home, away):
                 key_to.setdefault((d, hk, ak), r.get("outcome"))
+                if pair is not None:
+                    scores.setdefault((d, hk, ak), pair)
             sig = (d, str(home or "").lower(), str(away or "").lower())
             if sig not in seen_sigs:
                 seen_sigs.add(sig)
@@ -1962,14 +1971,20 @@ def _collect_settled_facts() -> tuple[dict, dict]:
         for donor in alias_entries:
             for hkey, akey in _result_write_keys(donor.get("home"), donor.get("away")):
                 key_to[(d, hkey, akey)] = v["outcome"]
+                scores[(d, hkey, akey)] = (v["hs"], v["gs"])
         for h9, a9 in _result_write_keys(v["home"], v["away"]):
             key_to[(d, h9, a9)] = v["outcome"]
+            scores[(d, h9, a9)] = (v["hs"], v["gs"])
         alias_ids = {id(e) for e in alias_entries}
         entries[d] = [e for e in entries.get(d, []) if id(e) not in alias_ids]
         entries.setdefault(d, []).append(
             {"home": v["home"], "away": v["away"], "outcome": v["outcome"]}
         )
     dropped, detail = _drop_ambiguous_result_keys(key_to, entries)
+    # A score may only be read on a key the outcome map itself still trusts:
+    # an ambiguous key was refused outright, and a refused key must never
+    # answer a market either.
+    scores = {k: v for k, v in scores.items() if k in key_to}
     SETTLED_KEY_NAMES.clear()
     for day, rows in entries.items():
         for e in rows:
@@ -1993,7 +2008,7 @@ def _collect_settled_facts() -> tuple[dict, dict]:
     if EMPTY_KEY_FIXTURES:
         print(f"settlement_nameless_fixture={len(EMPTY_KEY_FIXTURES)}",
               file=sys.stderr)
-    return key_to, entries
+    return key_to, entries, scores
 
 
 # Keys that covered two different real fixtures in the last load; kept for
@@ -2268,6 +2283,26 @@ def load_settled():
 def load_settled_entries():
     """Per-date list of {home, away, outcome} for alias-conflict detection."""
     return _collect_settled_facts()[1]
+
+
+def load_settled_scores():
+    """{(day, home_key, away_key): (hs, gs)} — the scores behind load_settled().
+
+    Same donors, same key space and the same ambiguity refusal as the outcome
+    map, so a market that grades from it cannot settle a fixture the 1x2 map
+    would have refused.
+    """
+    return _collect_settled_facts()[2]
+
+
+def _goal_pair(hs, gs):
+    """(int hs, int gs) or None — a half score is no score at all."""
+    if hs is None or gs is None:
+        return None
+    try:
+        return (int(hs), int(gs))
+    except (TypeError, ValueError):
+        return None
 
 
 @lru_cache(maxsize=200_000)
@@ -3315,8 +3350,57 @@ def _slip_day_anchor(slip_date):
         return None
 
 
+def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
+    """win / loss / "conflict" / None for one enhancement leg, from its score.
+
+    ``loss`` is honest the moment the score is in: the market did not land.
+    ``None`` means "not known yet" — the caller holds the leg and lets the
+    existing void timer close it out, so a missing score behaves exactly
+    like a missing 1x2 row. A fixture filed under spellings whose outcomes
+    disagree is refused as "conflict" and held, fail-closed, like the 1x2
+    path; nothing here ever guesses which spelling was meant.
+    """
+    home, away = leg.get("home"), leg.get("away")
+    if not (home and away):
+        row = leg.get("row") or {}
+        home, away = row.get("home"), row.get("away")
+    if not (home and away):
+        parts = str(leg.get("match") or "").split(" vs ")
+        if len(parts) != 2:
+            return None
+        home, away = parts
+    day = str(slip_date)[:10]
+    stored = leg.get("fixture_key")
+    if isinstance(stored, (list, tuple)) and len(stored) >= 3 and (stored[1] or stored[2]):
+        day = str(stored[0] or day)[:10]
+        home, away = stored[1], stored[2]
+    if entries_by_date and alias_outcome_conflict(
+            {"date": day, "home": home, "away": away}, entries_by_date):
+        return "conflict"
+    market = leg.get("market")
+    selection = str(leg.get("pick") or "")
+    candidates = [day]
+    try:
+        base = datetime.strptime(day, "%Y-%m-%d").date()
+        candidates = [(base + timedelta(days=o)).strftime("%Y-%m-%d")
+                      for o in range(-RESCHEDULE_WINDOW_DAYS,
+                                     RESCHEDULE_WINDOW_DAYS + 1)]
+    except ValueError:
+        pass
+    for d in candidates:
+        for hk, ak in _result_write_keys(home, away):
+            pair = scores.get((d, hk, ak))
+            if pair is None:
+                continue
+            hit = check_enhancement_hit(market, selection, pair[0], pair[1])
+            if hit is None:
+                return None          # no scoring rule for this market: hold it
+            return "win" if hit else "loss"
+    return None
+
+
 def settle_open_slips(st, settled, archives=None, entries_by_date=None,
-                      lane: "Lane | None" = None):
+                      lane: "Lane | None" = None, scores=None):
     """Grade every acca whose outcome is decided; the bank moves per acca.
 
     An acca settles as soon as all its legs resolve — a single stuck leg no
@@ -3327,6 +3411,11 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
     several spellings with differing outcomes is held open (fail-closed) and
     surfaced as a conflict — unless another leg is already a settled loss,
     which decides the acca regardless; a conflict never counts as a loss.
+
+    Two leg shapes resolve here, decided by the leg itself, never by which
+    lane called: a leg carrying ``market`` is an enhancement leg and is
+    graded by its MARKET's score (``scores``, loaded on demand); every other
+    leg is the 1x2 leg the archive index has always graded.
     """
     if archives is None:
         archives = load_archived_picks()
@@ -3343,12 +3432,22 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
             legres = []
             conflicts = []
             for l in a["legs"]:
-                key = leg_lookup_key(slip["date"], l)
-                p = index.get(key) if key is not None else None
+                p = index.get(leg_lookup_key(slip["date"], l))
                 if p is None:
                     r = None
+                    if l.get("market"):
+                        # An enhancement leg: its market is the bet, so the
+                        # archived 1x2 row cannot grade it. Grade the market
+                        # from the score behind the fixture; no score means
+                        # "not known yet", exactly like a missing row.
+                        if scores is None:
+                            scores = load_settled_scores()
+                        r = enhancement_leg_result(l, slip["date"], scores,
+                                                   entries_by_date)
+                        if r == "conflict":
+                            conflicts.append(l["match"])
                     anchor = _slip_day_anchor(slip["date"])
-                    if anchor is not None and (datetime.now(TZ) - anchor).days >= 5:
+                    if r is None and anchor is not None and (datetime.now(TZ) - anchor).days >= 5:
                         # Missing archive row AND slip older than the void
                         # horizon: fail closed on the slip-date timer.
                         r = "void"
@@ -3412,7 +3511,11 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
             slip["staked_pct"] = round(sum(a["stake_pct"] for a in open_accas), 4)
             still_open.append(slip)
     st["open_slips"] = still_open
-    save_state(st)
+    # Route the write the same way the read was routed: a lane settles into
+    # its OWN state file. (Caught by the §5 run-1-freezes/run-2-settles
+    # proof: without the lane here the settlement landed in the main lane's
+    # bank and the lane's own file kept its pre-settle numbers.)
+    save_state(st, lane)
     return lines
 
 
@@ -3474,16 +3577,23 @@ def _stamp_fixture_keys(plan, target):
             leg["fixture_key"] = [day, str(home or ""), str(away or "")]
 
 
-def upsert_slip(st, target, plan, freeze_at=None):
+def upsert_slip(st, target, plan, freeze_at=None, lane: "Lane | None" = None):
     """Persist the card. When ``freeze_at`` is given the write-once freeze
     entry for ``target`` is recorded in the SAME state write, so a card can
-    never be persisted for a date whose lock lands later (or not at all)."""
+    never be persisted for a date whose lock lands later (or not at all).
+
+    ``lane`` routes the write to that lane's state file and freeze book. The
+    default is the main lane, so every existing call site keeps its exact
+    behaviour; the enhancement lane passes itself, which is what keeps its
+    card, its lock and its bank in its own file.
+    """
     st["open_slips"] = [s for s in st["open_slips"] if s["date"] != target]
     _stamp_fixture_keys(plan, target)
     st["open_slips"].append({"date": target, "accas": plan,
                              "staked_pct": round(sum(a["stake_pct"] for a in plan), 4)})
-    entry = record_freeze(st, target, freeze_at) if freeze_at is not None else None
-    save_state(st)
+    entry = (record_freeze(st, target, freeze_at, lane)
+             if freeze_at is not None else None)
+    save_state(st, lane)
     return entry
 
 
@@ -4114,6 +4224,9 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None) ->
         legs.append({
             "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
             "home": pick.get("home"), "away": pick.get("away"),
+            # The source row travels with the leg: the recipe's same-fixture
+            # guard reads ``row``, and the freeze stamps identity from it.
+            "row": pick,
             "fixture_key": _folded_leg_key(
                 pick.get("date") or "", pick.get("home"), pick.get("away"), "HOME"),
             "market": market,
@@ -4168,13 +4281,90 @@ def _enh_slice_lines(root: Path | None = None) -> list[str]:
     return lines
 
 
-def render_enhancement_tickets(st: dict, target: str, legs: list[dict], now,
-                               *, should_freeze: bool, freeze_record: dict | None,
-                               bank_eff: float, root: Path | None = None) -> str:
-    """The lane's artifact — same header/footer conventions as the main slip."""
-    from edgefactory.enh_registry import market_track_record, slice_for_market
+def _market_selection(market: str | None) -> str:
+    """The selection a market's name carries.
+
+    ``match_over_35`` -> ``over``; ``btts_yes`` -> ``yes``; ``home_over_15``
+    -> ``home``. The scorer reads it (it decides orientation for the team
+    totals) and the card prints it, so it cannot be a guess.
+    """
+    name = str(market or "")
+    if name.startswith("btts_"):
+        return name.split("_", 1)[1]
+    for side in ("home", "away"):
+        if name.startswith(side + "_"):
+            return side
+    for sel in ("over", "under"):
+        if f"_{sel}_" in name:
+            return sel
+    return name
+
+
+def enhancement_pool(legs: list[dict]) -> list[dict]:
+    """The firing legs, in the shared recipe's own leg shape.
+
+    The recipe reads ``match``/``pick``/``prob``/``odds`` and the same-fixture
+    guard reads ``row``; those five keys are the whole contract, so this pool
+    is the same shape the main lane feeds the recipe. The rest travels with
+    the leg because the card prints it as that leg's evidence.
+    """
+    pool = []
+    for leg in legs or []:
+        if leg.get("verdict") != "fire":
+            continue
+        prob = leg.get("probability")
+        if not isinstance(prob, (int, float)) or isinstance(prob, bool):
+            prob = 0.0
+        pool.append({
+            "match": leg.get("match"),
+            "pick": _market_selection(leg.get("market")),
+            "prob": float(prob),
+            "odds": leg.get("price"),
+            "row": leg.get("row") or {},
+            "market": leg.get("market"),
+            "label": leg.get("label"),
+            "floor": leg.get("floor"),
+            "price_book": leg.get("price_book"),
+            "shadow": bool(leg.get("shadow")),
+        })
+    return pool
+
+
+def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
+    """Restore the lane's own per-leg facts on the card legs.
+
+    The recipe ships the four keys a ticket needs and drops everything else,
+    so without this the market, the floor and the book would be gone before
+    the slip freezes — and the settle grades a leg BY ITS MARKET, so losing
+    that field is losing the bet itself. ``(match, pick)`` identifies a
+    carded leg: the recipe has already dropped same-fixture duplicates, so
+    no two legs on the card share one.
+    """
+    by_key = {(str(l.get("match")), str(l.get("pick"))): l for l in pool}
+    for acca in plan or []:
+        for leg in acca.get("legs", []):
+            meta = by_key.get((str(leg.get("match")), str(leg.get("pick"))))
+            if not meta:
+                continue
+            for key in ("market", "label", "floor", "price_book", "shadow"):
+                leg[key] = meta.get(key)
+
+
+def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
+                               plan: list[dict], now, *,
+                               should_freeze: bool, freeze_record: dict | None,
+                               bank_eff: float, fixture_report: dict | None = None,
+                               root: Path | None = None) -> str:
+    """The lane's artifact — autobets' acca card, on the lane's own bank.
+
+    Same header, same acca block, same stake line and same footer as the main
+    lane's slip, because the operator's ruling is that the lane IS autobets
+    with enhancement legs. The per-leg line adds what this lane knows that
+    the main lane does not: the market's registry record, its floor and the
+    book its price came from.
+    """
+    from edgefactory.enh_registry import market_track_record
     root = root or ROOT
-    firing = [l for l in legs if l["verdict"] == "fire"]
     committed = st["bank"] - bank_eff
     lines = [f"{ENHANCEMENT_LANE.label} — {target}", "=" * 62,
              f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
@@ -4183,28 +4373,35 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict], now,
              f"{take_profit_target(st):.1f}%"]
     lines.extend(_enh_slice_lines(root))
     lines.append("")
-
-    day_deploy = ENHANCEMENT_LANE.stake_frac * bank_eff
-    stake_pct = (day_deploy / len(firing)) if firing else 0.0
-    for i, leg in enumerate(firing, 1):
-        share = (stake_pct / bank_eff) if bank_eff else 0.0
-        lines.append(f"[ENH #{i}] @{leg['price']:.2f} — stake {stake_pct:.1f}% of capital "
-                     f"({share:.1%} of free bank){ENH_SHADOW_TAG if leg['shadow'] else ''}")
-        prob = leg["probability"]
-        stated = f" (stated {float(prob):.0%})" if isinstance(prob, (int, float)) else ""
-        registry = next((r for r in market_track_record(root)
-                         if r["market"] == leg["market"]), None)
-        bits = []
-        if registry and registry["n"]:
-            bits.append(f"registry {registry['rate']:.0%} n={registry['n']}")
-        if leg["floor"] is not None:
-            bits.append(f"floor {leg['floor']:.2f}")
-        if leg["price_book"]:
-            bits.append(str(leg["price_book"]))
-        elif leg["price_source"]:
-            bits.append(str(leg["price_source"]))
-        detail = f" [{' · '.join(bits)}]" if bits else ""
-        lines.append(f"   {leg['match']:44s} {leg['label']} @ {leg['price']:.2f}{stated}{detail}")
+    registry = {r["market"]: r for r in market_track_record(root)}
+    dropped = list((fixture_report or {}).get("dropped") or [])
+    # Eligibility is B-1's own wording: priced AND clearing the floor AND not
+    # a same-fixture duplicate. The no-bet line must count what could ride.
+    eligible = sum(1 for l in legs if l.get("verdict") == "fire") - len(dropped)
+    if plan:
+        for i, a in enumerate(plan, 1):
+            shadow = any(l.get("shadow") for l in a["legs"])
+            lines.append(
+                f"[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
+                f"({a['stake_pct'] / bank_eff:.1%} of free bank)"
+                + (ENH_SHADOW_TAG if shadow else ""))
+            for l in a["legs"]:
+                rec = registry.get(l.get("market")) or {}
+                bits = []
+                if rec.get("n"):
+                    bits.append(f"registry {rec['rate']:.0%} n={rec['n']}")
+                if l.get("floor") is not None:
+                    bits.append(f"floor {l['floor']:.2f}")
+                if l.get("price_book"):
+                    bits.append(str(l["price_book"]))
+                detail = f" [{' · '.join(bits)}]" if bits else ""
+                lines.append(f"   {str(l.get('match')):46s} {l.get('label')} "
+                             f"@ {l['odds']:.2f}  (stated {l['prob']:.0%}){detail}")
+            lines.append("")
+    else:
+        lines.append(f"NO BET — only {eligible} eligible leg(s), "
+                     f"need {LEGS_PER_ACCA} for an acca")
+        lines.append("(bank stays unbet; a lone leg is never a single)")
         lines.append("")
 
     # Legs the gate refused are shown for audit, never as instructions.
@@ -4227,11 +4424,18 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict], now,
         lines.append(f"   [NO BET] {leg['match']:40s} {leg['label']}{price}{stated} — {reason}")
     if any(l["verdict"] != "fire" for l in legs):
         lines.append("")
-
-    lines.append(f"deploying {ENHANCEMENT_LANE.stake_frac:.0%} of free bank today "
-                 f"= {sum(stake_pct for _ in firing):.1f}% of capital · take-profit "
-                 f"NOTIFICATION at +{TAKE_PROFIT_GAIN:.0%} per cycle "
-                 f"(performance-based; you act on it).")
+    if dropped:
+        lines.append("same-fixture duplicate(s) dropped (one fixture rides a card once): "
+                     + ", ".join(str(d) for d in dropped))
+    if plan:
+        left_over = eligible - LEGS_PER_ACCA * len(plan)
+        if left_over > 0:
+            lines.append(f"{left_over} eligible leg(s) left over without an acca "
+                         f"partner (never a single)")
+        day_staked = sum(a["stake_pct"] for a in plan)
+        lines.append(f"deploying {ENHANCEMENT_LANE.stake_frac:.0%} of free bank today "
+                     f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
+                     f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
     lines.append("All figures are percentages of capital. Round to your bookmaker's "
                  "minimum stake. Bet only what you can afford to lose.")
     if should_freeze and freeze_record:
@@ -4241,8 +4445,7 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict], now,
 
 
 def cmd_enhancement(args, st) -> int:
-    """Draft / freeze / re-print the enhancement lane's slip for `args.date`."""
-    from edgefactory.enh_registry import market_track_record, slice_for_market
+    """Draft / freeze / re-print the enhancement lane's card for `args.date`."""
     now = datetime.now(TZ)
     target = args.date or now.strftime("%Y-%m-%d")
     slip_txt = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}.txt"
@@ -4271,30 +4474,34 @@ def cmd_enhancement(args, st) -> int:
     except Exception:
         slate = []
     legs = enhancement_legs(slate)
+    pool = enhancement_pool(legs)
     bank_eff = effective_bank(st, exclude_date=target)
     should_freeze = (str(target) == now.strftime("%Y-%m-%d")
                      and now.hour >= FREEZE_HOUR and not args.force)
-    freeze_record = record_freeze(st, target, now, ENHANCEMENT_LANE) if should_freeze else None
-    if should_freeze:
-        st.setdefault("open_slips", [])
-        firing = [l for l in legs if l["verdict"] == "fire"]
-        stake_pct = ((ENHANCEMENT_LANE.stake_frac * bank_eff) / len(firing)) if firing else 0.0
-        existing = next((s for s in st["open_slips"] if str(s.get("date")) == target), None)
-        entry = {"date": target,
-                 "tickets": [{"odds": l["price"], "stake_pct": round(stake_pct, 4),
-                              "market": l["market"], "match": l["match"],
-                              "shadow": l["shadow"]} for l in firing],
-                 "staked_pct": round(stake_pct * len(firing), 4)}
-        if existing is None:
-            st["open_slips"].append(entry)
-        else:
-            st["open_slips"][st["open_slips"].index(existing)] = entry
-    txt = render_enhancement_tickets(st, target, legs, now,
+    fixture_report: dict = {}
+    # THE recipe and the shared staking arithmetic: the same two calls the
+    # main lane makes, so the pairing and the percentages cannot drift from
+    # it. The enhancement lane's own part is the pool (floor-cleared
+    # enhancement legs) and nothing else.
+    plan = plan_day(pool, bank_eff, stake_frac=ENHANCEMENT_LANE.stake_frac,
+                    fixture_report=fixture_report)
+    _carry_lane_evidence(plan, pool)
+    freeze_record = None
+    if plan:
+        # Same write path as the main lane, routed to this lane's state and
+        # freeze book. A no-bet day writes no card (and no lock), exactly
+        # like the main lane.
+        freeze_record = upsert_slip(st, target, plan,
+                                    freeze_at=now if should_freeze else None,
+                                    lane=ENHANCEMENT_LANE)
+    txt = render_enhancement_tickets(st, target, legs, plan, now,
                                      should_freeze=should_freeze,
-                                     freeze_record=freeze_record, bank_eff=bank_eff)
+                                     freeze_record=freeze_record,
+                                     bank_eff=bank_eff,
+                                     fixture_report=fixture_report)
     print(txt)
-    slip_txt.write_text(txt)
-    save_state(st, ENHANCEMENT_LANE)
+    if plan:
+        slip_txt.write_text(txt)
     if should_freeze and freeze_record:
         print(f"\nSTATUS: ✅ {freeze_footer(freeze_record)} enhancement slip; later runs "
               f"re-print unchanged (write-once lock in "
@@ -4303,6 +4510,7 @@ def cmd_enhancement(args, st) -> int:
         print(f"\nSTATUS: ⏳ DRAFT — regenerates each run until the "
               f"{FREEZE_HOUR:02d}:00 freeze.")
     return 0
+
 
 
 def main():
@@ -4323,19 +4531,37 @@ def main():
     # Additive lane, own state: it shares the lifecycle functions but never the
     # main lane's state file or artifact. Without the flag every command below
     # behaves exactly as before.
+    if args.enhancements and not enhancement_board_enabled():
+        # `--enhancements` means the enhancement lane, full stop. Falling through
+        # to the main lane (which is what an unflagged flag used to do here) would
+        # print the MAIN lane's status under the enhancement lane's name and tell
+        # the operator a lane is live when it is off — the exact confusion the
+        # enablement step must not create. Say why, change nothing.
+        print(f"enhancement lane disabled — set {ENH_BOARD_FLAG}=1 to enable; "
+              f"nothing done.")
+        return 0
+
     if args.enhancements and enhancement_board_enabled():
         st = load_state(ENHANCEMENT_LANE)
-        if not st:
+        # The lane's command semantics are the main lane's, exactly: a bare
+        # `--enhancements` (what the wired daily step runs) settles open
+        # slips first and then builds/freezes today's card; `--settle` alone
+        # settles and reports; `--status` only reports. A frozen card is
+        # re-printed, never rewritten.
+        lane_argv = [a for a in sys.argv[1:] if a != "--enhancements"]
+        wants_today = args.today or args.force or not lane_argv
+        if not st and (wants_today or args.settle):
             st = fresh_state()
-        if args.settle or args.today or args.force or not sys.argv[1:]:
+            save_state(st, ENHANCEMENT_LANE)
+        if args.settle or wants_today:
             for line in settle_open_slips(st, load_settled(), lane=ENHANCEMENT_LANE):
                 print(line)
-        if args.status and not (args.today or args.force):
-            print_status(st)
-            return 0
-        rc = cmd_enhancement(args, st)
-        save_state(st, ENHANCEMENT_LANE)
-        return rc
+            if not wants_today:
+                print_status(st)
+                return 0
+            return cmd_enhancement(args, st)
+        print_status(st)
+        return 0
 
     st = load_state()
     if args.backfill:
