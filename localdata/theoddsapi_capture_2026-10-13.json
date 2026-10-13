@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 14,
-  "captured_at": "2026-10-13T16:16:14+00:00",
+  "captured_at": "2026-10-13T19:13:27+00:00",
   "date": "2026-10-13",
   "due_reasons": {},
   "errors": [],
@@ -15,11 +15,11 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 2,
+    "kickoff_already_passed": 6,
     "kickoff_mismatch": 5,
     "priced": 2,
     "priced_close_window_not_open": 5,
-    "retry_cooldown": 5
+    "retry_cooldown": 1
   },
   "skipped": [
     "WARN kickoff-mismatch Viking|Bayern M\u00fcnchen: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
@@ -33,13 +33,13 @@
     "Germany W|Japan W (kickoff already passed)",
     "WARN kickoff-mismatch Galatasaray|Barcelona: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Galatasaray|Barcelona (priced, close window not open)",
-    "Wolves|Bolton (retry cooldown (6h after failed attempt))",
-    "Hansa Rostock|SV Meppen (retry cooldown (6h after failed attempt))",
+    "Wolves|Bolton (kickoff already passed)",
+    "Hansa Rostock|SV Meppen (kickoff already passed)",
     "WARN kickoff-mismatch Cardiff|Watford: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Cardiff|Watford (priced, close window not open)",
     "Birmingham|Preston (priced)",
-    "USM Alger|JS Saoura (retry cooldown (6h after failed attempt))",
-    "Eichst\u00e4tt|Vilzing (retry cooldown (6h after failed attempt))",
+    "USM Alger|JS Saoura (kickoff already passed)",
+    "Eichst\u00e4tt|Vilzing (kickoff already passed)",
     "Ballkani|Drita (kickoff already passed)"
   ],
   "source": "theoddsapi",
