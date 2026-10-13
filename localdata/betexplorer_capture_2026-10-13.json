@@ -2,14 +2,24 @@
   "attempted": 11,
   "attempted_fixtures": [
     {
-      "avg_p": 80.4,
+      "avg_p": 82.8,
       "away": "Bayern M\u00fcnchen",
       "date": "2026-10-13",
       "home": "Viking",
       "league": "World UEFA Champions League",
       "market": "1x2",
       "pick": "away",
-      "w_score": 1.4128
+      "w_score": 1.574
+    },
+    {
+      "avg_p": 75.1,
+      "away": "Club Brugge KV",
+      "date": "2026-10-13",
+      "home": "Inter",
+      "league": "World UEFA Champions League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.1053
     },
     {
       "avg_p": 74.0,
@@ -22,17 +32,7 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 73.3,
-      "away": "Club Brugge",
-      "date": "2026-10-13",
-      "home": "Inter",
-      "league": "International,Champions League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0085
-    },
-    {
-      "avg_p": 73.0,
+      "avg_p": 73.8,
       "away": "Lille",
       "date": "2026-10-13",
       "home": "Arsenal",
@@ -40,6 +40,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 73.4,
+      "away": "Barcelona",
+      "date": "2026-10-13",
+      "home": "Galatasaray",
+      "league": "World UEFA Champions League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0168
     },
     {
       "avg_p": 71.1,
@@ -52,16 +62,6 @@
       "w_score": 0.9023
     },
     {
-      "avg_p": 70.1,
-      "away": "Barcelona",
-      "date": "2026-10-13",
-      "home": "Galatasaray",
-      "league": "International,Champions League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
       "avg_p": 68.8,
       "away": "Bolton",
       "date": "2026-10-13",
@@ -72,11 +72,11 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 63.3,
-      "away": "Preston",
+      "avg_p": 64.2,
+      "away": "Watford",
       "date": "2026-10-13",
-      "home": "Birmingham",
-      "league": "England,Championship",
+      "home": "Cardiff",
+      "league": "England Championship",
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
@@ -90,16 +90,6 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5451
-    },
-    {
-      "avg_p": 62.0,
-      "away": "Watford",
-      "date": "2026-10-13",
-      "home": "Cardiff",
-      "league": "England,Championship",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
     },
     {
       "avg_p": 61.0,
@@ -110,27 +100,37 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 0.4471
+    },
+    {
+      "avg_p": 60.4,
+      "away": "Drita",
+      "date": "2026-10-13",
+      "home": "Ballkani",
+      "league": "Kosovo Superliga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.4224
     }
   ],
   "be_429": 0,
-  "be_cached": 11,
+  "be_cached": 2,
   "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "candidate_fixtures": 11,
-  "captured_at": "2026-10-13T06:26:08.239007+00:00",
+  "captured_at": "2026-10-13T10:04:51.989139+00:00",
   "date": "2026-10-13",
   "errors": [],
-  "fixtures_with_rows": 9,
+  "fixtures_with_rows": 8,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 40,
   "match_detail": {
-    "bookmakers": 17,
+    "bookmakers": 127,
     "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 29,
-    "markets": 11,
-    "named_rows": 29,
+    "fixtures": 8,
+    "market_rows": 348,
+    "markets": 47,
+    "named_rows": 348,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -139,27 +139,27 @@
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
-      "avg_p": 80.4,
+      "avg_p": 82.8,
       "away": "Bayern M\u00fcnchen",
       "date": "2026-10-13",
       "home": "Viking",
       "league": "World UEFA Champions League",
       "market": "1x2",
       "pick": "away",
-      "w_score": 1.4128
+      "w_score": 1.574
     },
     {
-      "avg_p": 73.3,
-      "away": "Club Brugge",
+      "avg_p": 75.1,
+      "away": "Club Brugge KV",
       "date": "2026-10-13",
       "home": "Inter",
-      "league": "International,Champions League",
+      "league": "World UEFA Champions League",
       "market": "1x2",
       "pick": "home",
-      "w_score": 1.0085
+      "w_score": 1.1053
     },
     {
-      "avg_p": 73.0,
+      "avg_p": 73.8,
       "away": "Lille",
       "date": "2026-10-13",
       "home": "Arsenal",
@@ -167,6 +167,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 73.4,
+      "away": "Barcelona",
+      "date": "2026-10-13",
+      "home": "Galatasaray",
+      "league": "World UEFA Champions League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0168
     },
     {
       "avg_p": 71.1,
@@ -179,16 +189,6 @@
       "w_score": 0.9023
     },
     {
-      "avg_p": 70.1,
-      "away": "Barcelona",
-      "date": "2026-10-13",
-      "home": "Galatasaray",
-      "league": "International,Champions League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
       "avg_p": 68.8,
       "away": "Bolton",
       "date": "2026-10-13",
@@ -199,11 +199,11 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 63.3,
-      "away": "Preston",
+      "avg_p": 64.2,
+      "away": "Watford",
       "date": "2026-10-13",
-      "home": "Birmingham",
-      "league": "England,Championship",
+      "home": "Cardiff",
+      "league": "England Championship",
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
@@ -217,20 +217,10 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5451
-    },
-    {
-      "avg_p": 62.0,
-      "away": "Watford",
-      "date": "2026-10-13",
-      "home": "Cardiff",
-      "league": "England,Championship",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
     }
   ],
-  "requests": 0,
-  "rows": 27,
+  "requests": 60,
+  "rows": 24,
   "schema": 1,
   "status": "ok"
 }
