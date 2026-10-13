@@ -136,7 +136,7 @@
       "status": null
     },
     "futbolpronosticos": {
-      "blocker": "settled-count coverage mismatch: {'captured': 78, 'settled': 0, 'unmatched': 78, 'mismatch': True, 'settlement_source': 'existing warehouse-score backfill'}",
+      "blocker": "settled-count coverage mismatch: {'captured': 79, 'settled': 0, 'unmatched': 79, 'mismatch': True, 'settlement_source': 'existing warehouse-score backfill'}",
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
@@ -144,7 +144,7 @@
       "freshness_h": 0.0,
       "raw": 244,
       "reason": null,
-      "scored": 78,
+      "scored": 79,
       "status": null
     },
     "oddspapi_odds": {
@@ -177,9 +177,9 @@
       "coherence_withheld_fixtures": 0,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 3,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 17389,
+        "fixture_key_miss": 17390,
         "no_pick_for_fixture": 42
       },
       "pa_matched": 1,
@@ -368,10 +368,10 @@
       "status": null
     },
     "zulubet": {
-      "blocker": null,
+      "blocker": "fetch returned zero rows",
       "can_fetch_today": true,
-      "can_price": true,
-      "can_vote": true,
+      "can_price": false,
+      "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
