@@ -105,11 +105,11 @@ ODDSPAPI_MIN_SCHEMA_VERSION = 3
 
 DIVERGENCE_MIN_SPREAD = 0.10  # flag when max/min best-source prices differ by >10%
 # Governance N4 (Addendum 27.11, 2026-08-05): max pre-kickoff capture age in
-# hours for OddsPapi rows. Rows captured outside [kickoff - 72h, kickoff] are
-# dropped at the merge. The capture pipeline is same-day/next-2-days, so
-# nothing legit drops; post-kickoff rows are lookahead artifacts that must
-# never price a settled pick.
-ODDSPAPI_MAX_AGE_H = 72
+# hours for OddsPapi rows. Rows captured outside [kickoff - 6h, kickoff] are
+# dropped at the merge. scripts/capture_oddspapi captures each fixture once,
+# inside this same window, so every row it writes is fresh enough to price.
+# Post-kickoff rows are lookahead artifacts that must never price a settled pick.
+ODDSPAPI_MAX_AGE_H = 6
 
 BETEXPLORER_SOURCE = "betexplorer"
 # SharpAPI named-book totals (total_goals -> ou_X.Y). Shadow ledger, prematch
@@ -117,7 +117,7 @@ BETEXPLORER_SOURCE = "betexplorer"
 # board flag gates it like BetExplorer: a source only the board consumes prices
 # nothing while the board is off. Same freshness guard as OddsPapi.
 SHARPAPI_SOURCE = "sharpapi_odds"
-SHARPAPI_MAX_AGE_H = ODDSPAPI_MAX_AGE_H
+SHARPAPI_MAX_AGE_H = 72  # own knob; was tied to OddsPapi's 72h before the 6h change
 # The enhancement board's own switch. scripts/auto_tickets reads the same
 # variable for the board builder; when it is unset the board does not exist, so
 # a source that ONLY the board consumes must not price anything either — one

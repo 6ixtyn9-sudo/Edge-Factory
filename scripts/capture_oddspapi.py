@@ -9,10 +9,12 @@ OddsPapi odds into the unified schema used by `enh_pricing`:
     localdata/oddspapi_odds_YYYY-MM.csv.gz
 
 Safety rails (operator-approved):
-- FREE-TIER BOUNDED: OddsPapi free quota is small. Capture is limited to a
-  bounded set of fixtures per run (--max-fixtures, default 20) and never
-  broad-polls the whole day. Unmatched same-day picks are prioritized first,
-  then enhancement-relevant fixtures.
+- MONTHLY BUDGET: OddsPapi's free plan is 250 requests a month per key. Every
+  HTTP attempt (board, /markets, /odds) is charged to the day it was spent,
+  and each day may spend an even share of what is left in the month
+  (see FREE_REQUESTS_PER_KEY_MONTH). Slate fixtures are priced first; the
+  budget, not a fixed fixture count, is the real limit. --max-fixtures is a
+  ceiling only.
 - FLAG-GATED: daily.py invokes this only when
   EDGE_FACTORY_ODDSPAPI_PRICES=1. It follows the non-ticketable candidate
   build and can be used only by the final timestamp-qualified pricing pass,
@@ -26,18 +28,19 @@ Safety rails (operator-approved):
   price source for the enhancement overlay only.
 
 Usage:
-  PYTHONPATH=src python3 scripts/capture_oddspapi.py --date 2026-08-05 [--max-fixtures 20]
+  PYTHONPATH=src python3 scripts/capture_oddspapi.py --date 2026-08-05 [--max-fixtures 200]
   PYTHONPATH=src python3 scripts/capture_oddspapi.py --self-test
 """
 from __future__ import annotations
 
 import argparse
+import calendar
 import csv
 import gzip
 import hashlib
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from edgefactory.sources.oddspapi_odds import (
@@ -46,12 +49,15 @@ from edgefactory.sources.oddspapi_odds import (
     api_keys,
     fetch_fixtures,
     fetch_odds,
+    last_markets_payload,
     load_market_type_map,
     market_catalog,
     market_catalog_entries,
     rate_limit_diagnostics,
+    request_count,
     rows_from_odds_response,
 )
+from edgefactory.enh_pricing import ODDSPAPI_MAX_AGE_H as CAPTURE_WINDOW_H
 from edgefactory.util import fold_ascii
 import urllib.error
 
@@ -267,6 +273,176 @@ def _receipt_path(day: str) -> Path:
     return OUT_DIR / f"oddspapi_capture_{str(day)[:10]}.json"
 
 
+# Capture state survives between runs. The receipt is rewritten every run, so
+# it cannot say which fixtures were already captured; this file can.
+#   boards:   day -> {fetched_at, fixtures}   (the fixtures board, cached)
+#   captured: fixture_id -> {captured_at, day} (one snapshot per fixture)
+BOARD_REFRESH_H = CAPTURE_WINDOW_H  # the board is re-read at most once per window
+
+
+def _state_path() -> Path:
+    # Resolved at call time so tests that redirect OUT_DIR never touch localdata.
+    return OUT_DIR / "oddspapi_fixture_state.json"
+
+
+def _load_state() -> dict:
+    try:
+        data = json.loads(_state_path().read_text())
+        if isinstance(data, dict):
+            data.setdefault("boards", {})
+            data.setdefault("captured", {})
+            return data
+    except Exception:  # noqa: BLE001 - a missing or corrupt state starts clean
+        pass
+    return {"boards": {}, "captured": {}}
+
+
+def _save_state(state: dict, now: datetime) -> None:
+    # Keep the file small: drop boards and captures older than two days,
+    # measured from the run's own clock.
+    cutoff = (now - timedelta(days=2)).date().isoformat()
+    state["boards"] = {d: v for d, v in state.get("boards", {}).items() if d >= cutoff}
+    state["captured"] = {f: v for f, v in state.get("captured", {}).items()
+                         if str(v.get("day", "")) >= cutoff}
+    # Budget usage must cover the whole month, so keep from the 1st of last month.
+    today = _spend_day(now)
+    prev_first = (date.fromisoformat(today).replace(day=1) - timedelta(days=1)).replace(day=1)
+    state["usage"] = {d: v for d, v in state.get("usage", {}).items()
+                      if str(d) >= prev_first.isoformat()}
+    path = _state_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(state, indent=2, sort_keys=True))
+    tmp.replace(path)
+
+
+# OddsPapi's free plan: 250 requests a month per key (vendor-stated, Oct 2026).
+# The month's budget is the key count times this figure, shared evenly over the
+# days left in the month, so one heavy weekend cannot spend the whole month.
+FREE_REQUESTS_PER_KEY_MONTH = 250
+# South Africa keeps SAST (UTC+2) all year round, so a fixed offset is exact.
+SPEND_UTC_OFFSET_H = 2
+# Ceiling on fixtures per run. The budget is the real limit, not this number.
+MAX_FIXTURES_CEILING = 200
+
+
+def _spend_day(now: datetime) -> str:
+    """The SAST calendar day a provider call is charged to."""
+    return (now + timedelta(hours=SPEND_UTC_OFFSET_H)).date().isoformat()
+
+
+def _budget_remaining(state: dict, now: datetime, n_keys: int) -> int:
+    """Requests still allowed today: this month's budget, less what the
+    earlier days spent, spread evenly over today and the days left, less what
+    today has already spent."""
+    today = _spend_day(now)
+    usage = state.get("usage", {})
+    month = today[:7]
+    used_month = sum(int(n) for d, n in usage.items() if str(d)[:7] == month)
+    used_today = int(usage.get(today, 0))
+    used_before_today = used_month - used_today
+    budget = max(0, n_keys) * FREE_REQUESTS_PER_KEY_MONTH
+    year, mon = int(today[:4]), int(today[5:7])
+    days_left = calendar.monthrange(year, mon)[1] - int(today[8:10]) + 1
+    allowance = max(0, budget - used_before_today) // days_left
+    return max(0, allowance - used_today)
+
+
+def _budget_stats(state: dict, now: datetime, n_keys: int) -> dict:
+    today = _spend_day(now)
+    usage = state.get("usage", {})
+    used_month = sum(int(n) for d, n in usage.items() if str(d)[:7] == today[:7])
+    return {"day": today, "keys": n_keys,
+            "month_budget": n_keys * FREE_REQUESTS_PER_KEY_MONTH,
+            "month_spent": used_month,
+            "spent_today": int(usage.get(today, 0)),
+            "remaining_today": _budget_remaining(state, now, n_keys)}
+
+
+def _spend(state: dict, now: datetime, mark: int, stats: dict) -> int:
+    """Charge every HTTP attempt since `mark` to today. Returns the new mark."""
+    current = request_count()
+    if current > mark:
+        usage = state.setdefault("usage", {})
+        today = _spend_day(now)
+        usage[today] = int(usage.get(today, 0)) + (current - mark)
+    stats["budget"] = _budget_stats(state, now, int(stats.get("keys") or 0))
+    return current
+
+
+def _markets_cache_path(spend_day: str) -> Path:
+    return OUT_DIR / f"oddspapi_markets_{spend_day}.json.gz"
+
+
+def _read_markets_cache(spend_day: str) -> object:
+    """Today's /markets payload, or None. Compressed: the catalog is ~33k
+    entries, about 450 KB gzipped against many MB as plain JSON."""
+    try:
+        with gzip.open(_markets_cache_path(spend_day), "rt", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        return payload if payload else None
+    except Exception:  # noqa: BLE001 - a missing or corrupt cache is a miss
+        return None
+
+
+def _write_markets_cache(spend_day: str, payload: object) -> None:
+    """Store today's payload and drop older ones, so the cache stays one file."""
+    try:
+        path = _markets_cache_path(spend_day)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        for old in OUT_DIR.glob("oddspapi_markets_*.json.gz"):
+            if old != path:
+                old.unlink(missing_ok=True)
+        tmp = path.with_suffix(".tmp")
+        with gzip.open(tmp, "wt", encoding="utf-8") as fh:
+            json.dump(payload, fh)
+        tmp.replace(path)
+    except Exception:  # noqa: BLE001 - the cache is an optimisation only
+        pass
+
+
+def _parse_utc(value: object) -> datetime | None:
+    try:
+        dt = datetime.fromisoformat(str(value or "").strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def _board_entry(fixture: dict) -> dict:
+    """The fields the capture needs, kept small for the state file."""
+    return {
+        "fixtureId": str(fixture.get("fixtureId") or fixture.get("id") or ""),
+        "startTime": fixture.get("startTime") or "",
+        "participant1Name": fixture.get("participant1Name") or fixture.get("home") or "",
+        "participant2Name": fixture.get("participant2Name") or fixture.get("away") or "",
+    }
+
+
+def _board_stale(state: dict, day: str, now: datetime) -> bool:
+    board = state.get("boards", {}).get(day)
+    if not board:
+        return True
+    fetched = _parse_utc(board.get("fetched_at"))
+    return fetched is None or (now - fetched) >= timedelta(hours=BOARD_REFRESH_H)
+
+
+def _pending_fixtures(fixtures: list[dict], state: dict, now: datetime) -> list[dict]:
+    """Fixtures whose one snapshot is still due: inside the window before
+    kickoff, not yet captured, and not yet started."""
+    out = []
+    for fx in fixtures:
+        fid = str(fx.get("fixtureId") or fx.get("id") or "")
+        start = _parse_utc(fx.get("startTime"))
+        if not fid or start is None:
+            continue
+        if fid in state.get("captured", {}):
+            continue
+        if start - timedelta(hours=CAPTURE_WINDOW_H) <= now < start:
+            out.append(fx)
+    return out
+
+
 def _fixture_receipt(fixture: dict) -> dict:
     return {
         "fixture_id": str(fixture.get("fixtureId") or fixture.get("id") or ""),
@@ -467,8 +643,14 @@ def _append_rows(rows: list[dict], day: str) -> int:
     return added
 
 
-def capture(day: str, max_fixtures: int = 20) -> dict:
-    """Bounded capture for one day. Returns a stats dict; never raises."""
+def capture(day: str, max_fixtures: int = MAX_FIXTURES_CEILING,
+            now_utc: datetime | None = None) -> dict:
+    """Bounded capture for one day. Returns a stats dict; never raises.
+
+    Each fixture gets at most one snapshot, taken inside its window before
+    kickoff (CAPTURE_WINDOW_H). Runs outside every window make no provider
+    calls. The board is re-read at most once per window.
+    """
     stats = {"keys": 0, "fixtures": 0, "attempted": 0, "matched": 0, "rows": 0, "added": 0,
              "errors": [], "markets": {}, "attempted_fixtures": [], "quoted_fixtures": []}
     try:
@@ -478,9 +660,34 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             stats["errors"].append("no ODDSPAPI_API_KEYS configured")
             _write_receipt(day, stats)
             return stats
+        now = now_utc or datetime.now(timezone.utc)
+        state = _load_state()
+        mark = request_count()
+        stats["budget"] = _budget_stats(state, now, len(keys))
+        if _budget_remaining(state, now, len(keys)) <= 0:
+            # Today's share of the month's budget is spent: no provider calls.
+            stats["status"] = "budget"
+            _save_state(state, now)
+            _write_receipt(day, stats)
+            return stats
         try:
-            fixtures = fetch_fixtures(day) or []
+            if _board_stale(state, day, now):
+                board = fetch_fixtures(day) or []
+                mark = _spend(state, now, mark, stats)
+                # Hold the fixtures in a local: _save_state prunes old boards,
+                # so the state entry cannot be read back after the save (this
+                # was the KeyError on '2026-10-10').
+                fixtures = [_board_entry(fx) for fx in board]
+                state["boards"][day] = {
+                    "fetched_at": now.isoformat(timespec="seconds"),
+                    "fixtures": fixtures,
+                }
+                _save_state(state, now)
+            else:
+                fixtures = state["boards"][day]["fixtures"]
         except urllib.error.HTTPError as exc:
+            mark = _spend(state, now, mark, stats)
+            _save_state(state, now)
             # Auth/quota rejection on the fixtures board. Record what the
             # provider said (Retry-After / X-RateLimit-*), classify the day,
             # and STOP: the free-tier quota is daily, so continuing into the
@@ -512,7 +719,27 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
         fixtures = fixtures or []
         stats["fixtures"] = len(fixtures)
         stats.update(_slate_overlap_diagnostic(fixtures, day))
-        type_map = load_market_type_map()
+        pending = _pending_fixtures(fixtures, state, now)
+        stats["pending_fixtures"] = len(pending)
+        if not pending:
+            # Nothing is due in any window: no odds calls and no /markets call.
+            stats["status"] = "nothing_pending"
+            _save_state(state, now)
+            _write_receipt(day, stats)
+            return stats
+        # /markets is read at most once per SAST day: a later run the same day
+        # uses the cached payload and charges nothing for the catalog.
+        cached_markets = _read_markets_cache(_spend_day(now))
+        if cached_markets is not None:
+            type_map = load_market_type_map(cached_markets)
+            stats["markets_source"] = "cache"
+        else:
+            type_map = load_market_type_map()
+            mark = _spend(state, now, mark, stats)
+            stats["markets_source"] = "fetch"
+            fetched = last_markets_payload()
+            if fetched is not None:
+                _write_markets_cache(_spend_day(now), fetched)
         catalog = market_catalog()
         catalog_entries = market_catalog_entries()
         # The day's slate fixtures go first (stable order): the bounded budget
@@ -520,7 +747,7 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
         # 2026-10-03 the provider-ordered first 20 fixtures contained no slate
         # fixture at all, which is why even healthy rows landed in
         # fixture_key_miss.
-        fixtures, slate_n = _prioritise_slate_fixtures(fixtures, day)
+        pending, slate_n = _prioritise_slate_fixtures(pending, day)
         stats["slate_priority_fixtures"] = slate_n
         # Market-id census: every id actually present in the payloads, with
         # its classification and catalog label, persisted for the month. This
@@ -528,15 +755,24 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
         # the run log previously showed only partially (and masked).
         census: dict[str, dict] = {}
         unresolved_samples: list = []
-        for fx in fixtures[:max_fixtures]:
+        candidates = pending[:max_fixtures]
+        for idx, fx in enumerate(candidates):
             fid = str(fx.get("fixtureId") or fx.get("id") or "")
             if not fid:
                 continue
+            if _budget_remaining(state, now, len(keys)) <= 0:
+                # Today's share is spent. The unpriced fixtures stay pending and
+                # the next run inside their window picks them up.
+                stats["status"] = "budget"
+                stats["budget_deferred"] = len(candidates) - idx
+                break
             stats["attempted"] += 1
             stats["attempted_fixtures"].append(_fixture_receipt(fx))
             try:
                 odds = fetch_odds(fid)
+                mark = _spend(state, now, mark, stats)
             except urllib.error.HTTPError as exc:
+                mark = _spend(state, now, mark, stats)
                 if exc.code in (401, 402, 403, 429, 430, 509):
                     # Same quota/auth family as the board call: record the
                     # provider's rate-limit headers and stop the whole pass.
@@ -550,13 +786,19 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
                     stats["status"] = "quota" if exc.code in (429, 402, 430, 509) else "auth"
                     stats["errors"].append(
                         f"fetch {fid}: HTTP {exc.code} ({stats['status']}); capture stopped")
+                    _save_state(state, now)
                     _write_receipt(day, stats)
                     return stats
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
                 continue
             except Exception as exc:  # noqa: BLE001 - fail-soft
+                mark = _spend(state, now, mark, stats)
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
                 continue
+            # One snapshot per fixture: a successful fetch, even one with no
+            # rows, is recorded so later runs in the window do not re-call it.
+            state["captured"][fid] = {
+                "captured_at": now.isoformat(timespec="seconds"), "day": day}
             if odds:
                 books = (odds or {}).get("bookmakerOdds") or {}
                 for _b, bd in books.items():
@@ -613,6 +855,7 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             stats["odds_vocabulary"] = _persist_vocabulary_snapshot(day, catalog_entries)
         except Exception as exc:  # noqa: BLE001 - vocabulary must never break capture
             stats["errors"].append(f"vocabulary: {type(exc).__name__}")
+        _save_state(state, now)
         _write_receipt(day, stats)
         return stats
     except Exception as exc:  # noqa: BLE001 - never raises
@@ -712,7 +955,7 @@ def self_test() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--date", default=datetime.now(timezone.utc).date().isoformat())
-    ap.add_argument("--max-fixtures", type=int, default=20)
+    ap.add_argument("--max-fixtures", type=int, default=MAX_FIXTURES_CEILING)
     ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
     if args.self_test:

@@ -61,11 +61,22 @@ def api_keys() -> tuple[str, ...]:
     return tuple(out)
 
 
+# Every HTTP attempt that leaves this process, retries included. The capture
+# reads the delta around each provider call to charge its monthly budget.
+REQUEST_COUNT = 0
+
+
+def request_count() -> int:
+    return REQUEST_COUNT
+
+
 def _get_json(url: str, retries: int = 3):
     """One authenticated request. Key rotation belongs to fetch_json()."""
+    global REQUEST_COUNT
     last: Exception | None = None
     for attempt in range(retries):
         try:
+            REQUEST_COUNT += 1
             req = urllib.request.Request(url, headers=HEADERS)
             with urllib.request.urlopen(req, timeout=30) as resp:
                 return json.loads(resp.read().decode("utf-8", "replace"))
@@ -377,8 +388,18 @@ def _market_catalog_entries(payload: object) -> dict[str, dict]:
     return out
 
 
-def load_market_type_map() -> dict[str, str]:
-    """Fetch the /markets catalog once and map ids -> types.
+# The raw /markets payload from the last network fetch, so the capture can
+# store it and skip the call on later runs the same day. None when the last
+# call was served from a supplied payload or failed.
+_LAST_MARKETS_PAYLOAD: object = None
+
+
+def last_markets_payload() -> object:
+    return _LAST_MARKETS_PAYLOAD
+
+
+def load_market_type_map(payload: object = None) -> dict[str, str]:
+    """Map /markets ids -> types, from ``payload`` when given, else one fetch.
 
     Types are the priced kinds ("1x2", "btts", "totals", "team_totals_home",
     "team_totals_away"), explicit ``unsupported_<family>`` markers for
@@ -387,8 +408,12 @@ def load_market_type_map() -> dict[str, str]:
     Never raises: any failure keeps the fallback (101 -> 1x2 only).
     """
     global _MARKET_ID_TO_TYPE, _MARKET_CATALOG, _MARKET_CATALOG_ENTRIES
+    global _LAST_MARKETS_PAYLOAD
     try:
-        payload = fetch_json("/markets", {"sportId": SPORT_ID_SOCCER, "language": "en"})
+        if payload is None:
+            _LAST_MARKETS_PAYLOAD = None
+            payload = fetch_json("/markets", {"sportId": SPORT_ID_SOCCER, "language": "en"})
+            _LAST_MARKETS_PAYLOAD = payload
         catalog = _market_catalog_map(payload)
         entries = _market_catalog_entries(payload)
         mapped: dict[str, str] = {}
