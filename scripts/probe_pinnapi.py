@@ -201,6 +201,42 @@ def _period_sample(data: Any) -> dict[str, Any]:
     return {"periods": "no nonempty periods found"}
 
 
+def _shape(item: Any, depth: int = 0) -> Any:
+    """Structure of a provider value: keys and numbers only; strings become their type name."""
+    if item is None or isinstance(item, (bool, int, float)):
+        return item
+    if depth >= 3:
+        return type(item).__name__
+    if isinstance(item, dict):
+        return {str(key): _shape(item[key], depth + 1) for key in list(item)[:6]}
+    if isinstance(item, list):
+        return {"list_len": len(item), "first": _shape(item[0], depth + 1) if item else None}
+    return type(item).__name__
+
+
+def _team_total_sample(data: Any, slate_dates: set[str]) -> dict[str, Any]:
+    """Count events whose num_0 period carries populated team totals; shape of the first one."""
+    counts: Counter = Counter()
+    shapes: dict[str, Any] = {}
+    for event in _events(data):
+        if not isinstance(event, dict) or not isinstance(event.get("periods"), dict):
+            continue
+        main = event["periods"].get("num_0")
+        if not isinstance(main, dict):
+            continue
+        counts["events_with_num_0"] += 1
+        starts = str(event.get("starts") or event.get("start_at") or event.get("starts_at") or "")[:10]
+        for name in ("team_total", "team_totals"):
+            item = main.get(name)
+            if not item:
+                continue
+            counts[name + "_populated"] += 1
+            if starts in slate_dates:
+                counts[name + "_populated_on_slate_date"] += 1
+            shapes.setdefault(name, _shape(item))
+    return {**dict(counts), "shapes": shapes}
+
+
 def _format(name: str, url: str, result: dict[str, Any], secret: str = "") -> str:
     mark = "OK" if result.get("ok") else "ERR"
     lines = [f"[{mark}] {name}  status={result.get('status')}", f"  endpoint={_sanitize(url)}"]
@@ -271,6 +307,7 @@ def main() -> int:
                         for e in events if isinstance(e, dict))
     print(f"events_on_slate_date_utc_prefix={on_slate_date} slate_dates={sorted(slate_dates)[:3]}")
     print(f"period_sample={_period_sample(markets_result.get('data'))}")
+    print(f"team_total_probe={_team_total_sample(markets_result.get('data'), slate_dates)}")
     cov = coverage_report(markets_result.get("data"), slate)
     print(f"coverage_pct={cov['coverage_pct']} slate={cov['slate']} matched={cov['matched']} listed_matches={cov['listed_matches']}")
     print(f"unmatched_examples={cov['unmatched_examples']}")
