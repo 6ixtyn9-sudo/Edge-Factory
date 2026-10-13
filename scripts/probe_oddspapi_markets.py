@@ -239,6 +239,9 @@ def run_probe(start: str, days: int, picks_path: Path, limit: int, wanted_books:
         "days": days,
         "targets_requested": len(targets),
         "fixtures_returned": len(fixtures),
+        "provider_fixture_names": sorted(
+            f"{h} v {a}" for h, a in (_fixture_names(f) for f in fixtures)
+        ),
         "market_catalog_labels": len(catalog),
         "wanted_bookmakers": sorted(wanted_books),
         "matched": matched,
@@ -302,6 +305,8 @@ def main() -> int:
     print(f"OddsPapi keys available: {report['key_count']} (values hidden)")
     print(f"Targets requested: {report['targets_requested']} | provider fixtures: {report['fixtures_returned']}")
     print(f"Matched exact pairs: {len(report['matched'])} | unmatched/ambiguous: {len(report['unmatched'])}")
+    for name in report["provider_fixture_names"]:
+        print(f"PROVIDER {name}")
     print(f"Market catalog labels resolved: {report['market_catalog_labels']}")
     for item in report["matched"]:
         top = item["bookmakers"][:5]
