@@ -37,7 +37,7 @@ import gzip
 import hashlib
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from edgefactory.sources.oddspapi_odds import (
@@ -52,6 +52,7 @@ from edgefactory.sources.oddspapi_odds import (
     rate_limit_diagnostics,
     rows_from_odds_response,
 )
+from edgefactory.enh_pricing import ODDSPAPI_MAX_AGE_H as CAPTURE_WINDOW_H
 from edgefactory.util import fold_ascii
 import urllib.error
 
@@ -267,6 +268,86 @@ def _receipt_path(day: str) -> Path:
     return OUT_DIR / f"oddspapi_capture_{str(day)[:10]}.json"
 
 
+# Capture state survives between runs. The receipt is rewritten every run, so
+# it cannot say which fixtures were already captured; this file can.
+#   boards:   day -> {fetched_at, fixtures}   (the fixtures board, cached)
+#   captured: fixture_id -> {captured_at, day} (one snapshot per fixture)
+BOARD_REFRESH_H = CAPTURE_WINDOW_H  # the board is re-read at most once per window
+
+
+def _state_path() -> Path:
+    # Resolved at call time so tests that redirect OUT_DIR never touch localdata.
+    return OUT_DIR / "oddspapi_fixture_state.json"
+
+
+def _load_state() -> dict:
+    try:
+        data = json.loads(_state_path().read_text())
+        if isinstance(data, dict):
+            data.setdefault("boards", {})
+            data.setdefault("captured", {})
+            return data
+    except Exception:  # noqa: BLE001 - a missing or corrupt state starts clean
+        pass
+    return {"boards": {}, "captured": {}}
+
+
+def _save_state(state: dict, now: datetime) -> None:
+    # Keep the file small: drop boards and captures older than two days,
+    # measured from the run's own clock.
+    cutoff = (now - timedelta(days=2)).date().isoformat()
+    state["boards"] = {d: v for d, v in state.get("boards", {}).items() if d >= cutoff}
+    state["captured"] = {f: v for f, v in state.get("captured", {}).items()
+                         if str(v.get("day", "")) >= cutoff}
+    path = _state_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(state, indent=2, sort_keys=True))
+    tmp.replace(path)
+
+
+def _parse_utc(value: object) -> datetime | None:
+    try:
+        dt = datetime.fromisoformat(str(value or "").strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def _board_entry(fixture: dict) -> dict:
+    """The fields the capture needs, kept small for the state file."""
+    return {
+        "fixtureId": str(fixture.get("fixtureId") or fixture.get("id") or ""),
+        "startTime": fixture.get("startTime") or "",
+        "participant1Name": fixture.get("participant1Name") or fixture.get("home") or "",
+        "participant2Name": fixture.get("participant2Name") or fixture.get("away") or "",
+    }
+
+
+def _board_stale(state: dict, day: str, now: datetime) -> bool:
+    board = state.get("boards", {}).get(day)
+    if not board:
+        return True
+    fetched = _parse_utc(board.get("fetched_at"))
+    return fetched is None or (now - fetched) >= timedelta(hours=BOARD_REFRESH_H)
+
+
+def _pending_fixtures(fixtures: list[dict], state: dict, now: datetime) -> list[dict]:
+    """Fixtures whose one snapshot is still due: inside the window before
+    kickoff, not yet captured, and not yet started."""
+    out = []
+    for fx in fixtures:
+        fid = str(fx.get("fixtureId") or fx.get("id") or "")
+        start = _parse_utc(fx.get("startTime"))
+        if not fid or start is None:
+            continue
+        if fid in state.get("captured", {}):
+            continue
+        if start - timedelta(hours=CAPTURE_WINDOW_H) <= now < start:
+            out.append(fx)
+    return out
+
+
 def _fixture_receipt(fixture: dict) -> dict:
     return {
         "fixture_id": str(fixture.get("fixtureId") or fixture.get("id") or ""),
@@ -467,8 +548,13 @@ def _append_rows(rows: list[dict], day: str) -> int:
     return added
 
 
-def capture(day: str, max_fixtures: int = 20) -> dict:
-    """Bounded capture for one day. Returns a stats dict; never raises."""
+def capture(day: str, max_fixtures: int = 20, now_utc: datetime | None = None) -> dict:
+    """Bounded capture for one day. Returns a stats dict; never raises.
+
+    Each fixture gets at most one snapshot, taken inside its window before
+    kickoff (CAPTURE_WINDOW_H). Runs outside every window make no provider
+    calls. The board is re-read at most once per window.
+    """
     stats = {"keys": 0, "fixtures": 0, "attempted": 0, "matched": 0, "rows": 0, "added": 0,
              "errors": [], "markets": {}, "attempted_fixtures": [], "quoted_fixtures": []}
     try:
@@ -478,8 +564,17 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             stats["errors"].append("no ODDSPAPI_API_KEYS configured")
             _write_receipt(day, stats)
             return stats
+        now = now_utc or datetime.now(timezone.utc)
+        state = _load_state()
         try:
-            fixtures = fetch_fixtures(day) or []
+            if _board_stale(state, day, now):
+                board = fetch_fixtures(day) or []
+                state["boards"][day] = {
+                    "fetched_at": now.isoformat(timespec="seconds"),
+                    "fixtures": [_board_entry(fx) for fx in board],
+                }
+                _save_state(state, now)
+            fixtures = state["boards"][day]["fixtures"]
         except urllib.error.HTTPError as exc:
             # Auth/quota rejection on the fixtures board. Record what the
             # provider said (Retry-After / X-RateLimit-*), classify the day,
@@ -512,6 +607,14 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
         fixtures = fixtures or []
         stats["fixtures"] = len(fixtures)
         stats.update(_slate_overlap_diagnostic(fixtures, day))
+        pending = _pending_fixtures(fixtures, state, now)
+        stats["pending_fixtures"] = len(pending)
+        if not pending:
+            # Nothing is due in any window: no odds calls and no /markets call.
+            stats["status"] = "nothing_pending"
+            _save_state(state, now)
+            _write_receipt(day, stats)
+            return stats
         type_map = load_market_type_map()
         catalog = market_catalog()
         catalog_entries = market_catalog_entries()
@@ -520,7 +623,7 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
         # 2026-10-03 the provider-ordered first 20 fixtures contained no slate
         # fixture at all, which is why even healthy rows landed in
         # fixture_key_miss.
-        fixtures, slate_n = _prioritise_slate_fixtures(fixtures, day)
+        pending, slate_n = _prioritise_slate_fixtures(pending, day)
         stats["slate_priority_fixtures"] = slate_n
         # Market-id census: every id actually present in the payloads, with
         # its classification and catalog label, persisted for the month. This
@@ -528,7 +631,7 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
         # the run log previously showed only partially (and masked).
         census: dict[str, dict] = {}
         unresolved_samples: list = []
-        for fx in fixtures[:max_fixtures]:
+        for fx in pending[:max_fixtures]:
             fid = str(fx.get("fixtureId") or fx.get("id") or "")
             if not fid:
                 continue
@@ -550,6 +653,7 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
                     stats["status"] = "quota" if exc.code in (429, 402, 430, 509) else "auth"
                     stats["errors"].append(
                         f"fetch {fid}: HTTP {exc.code} ({stats['status']}); capture stopped")
+                    _save_state(state, now)
                     _write_receipt(day, stats)
                     return stats
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
@@ -557,6 +661,10 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             except Exception as exc:  # noqa: BLE001 - fail-soft
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
                 continue
+            # One snapshot per fixture: a successful fetch, even one with no
+            # rows, is recorded so later runs in the window do not re-call it.
+            state["captured"][fid] = {
+                "captured_at": now.isoformat(timespec="seconds"), "day": day}
             if odds:
                 books = (odds or {}).get("bookmakerOdds") or {}
                 for _b, bd in books.items():
@@ -613,6 +721,7 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             stats["odds_vocabulary"] = _persist_vocabulary_snapshot(day, catalog_entries)
         except Exception as exc:  # noqa: BLE001 - vocabulary must never break capture
             stats["errors"].append(f"vocabulary: {type(exc).__name__}")
+        _save_state(state, now)
         _write_receipt(day, stats)
         return stats
     except Exception as exc:  # noqa: BLE001 - never raises

@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 from edgefactory.sources import oddspapi_odds as op
@@ -111,8 +112,8 @@ def test_a_429_raised_at_the_seam_still_leaves_its_evidence(tmp_path, monkeypatc
 def test_429_on_a_fixture_call_stops_the_whole_pass(tmp_path, monkeypatch):
     monkeypatch.setattr(cap, "OUT_DIR", tmp_path)  # keep receipts out of repo localdata
     monkeypatch.setattr(cap, "api_keys", lambda: ("k1",))
-    fixtures = [{"fixtureId": f"f{i}", "participant1Name": "A", "participant2Name": "B"}
-                for i in range(5)]
+    fixtures = [{"fixtureId": f"f{i}", "participant1Name": "A", "participant2Name": "B",
+                 "startTime": "2026-10-10T19:00:00Z"} for i in range(5)]
     monkeypatch.setattr(cap, "fetch_fixtures", lambda day: fixtures)
     odds_calls = {"n": 0}
 
@@ -121,7 +122,7 @@ def test_429_on_a_fixture_call_stops_the_whole_pass(tmp_path, monkeypatch):
         raise _http_error(429)
 
     monkeypatch.setattr(cap, "fetch_odds", boom)
-    receipt = cap.capture("2026-10-10")
+    receipt = cap.capture("2026-10-10", now_utc=datetime(2026, 10, 10, 14, 0, tzinfo=timezone.utc))
     # exactly ONE per-fixture call, then the pass stops: a daily bucket does
     # not recover mid-run and continuing would multiply requests.
     assert odds_calls["n"] == 1
