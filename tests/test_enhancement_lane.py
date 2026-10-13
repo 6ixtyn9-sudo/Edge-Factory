@@ -68,7 +68,7 @@ def _tmp_lane(tmp_path, monkeypatch):
     localdata.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(at, "LOCALDATA", localdata)
     monkeypatch.setattr(at, "ENHANCEMENT_LANE", at.Lane(
-        localdata / "enhancement_tickets_state.json", "enhancement_tickets",
+        localdata / "enhancement_tickets_state.json", "autobets_enh_tickets",
         "ENHANCEMENT TICKETS (ROLLING)", at.STAKE_FRAC))
     # Main-lane paths must never be touched by these tests either.
     monkeypatch.setattr(at, "STATE_FILE", localdata / "auto_tickets_state.json")
@@ -366,7 +366,7 @@ def _freeze_now(localdata):
 def test_the_freeze_is_write_once_and_force_cannot_rewrite_it(tmp_path, _tmp_lane):
     _board(_tmp_lane, _distinct(2))
     path = _tmp_lane / "enhancement_tickets_state.json"
-    art = _tmp_lane / f"enhancement_tickets_{DAY}.txt"
+    art = _tmp_lane / f"autobets_enh_tickets_{DAY}.txt"
     monkey = pytest.MonkeyPatch()
     monkey.setattr(at, "FREEZE_HOUR", 0)                  # past the 09:00 boundary
     try:
@@ -401,7 +401,7 @@ def test_before_the_freeze_hour_the_card_is_a_draft(tmp_path, _tmp_lane):
     # a draft is already the acca shape, so --status and settle read it
     assert [s["date"] for s in state["open_slips"]] == [DAY]
     assert (at.ENHANCEMENT_LANE.state_file).exists()
-    assert (_tmp_lane / f"enhancement_tickets_{DAY}.txt").exists()
+    assert (_tmp_lane / f"autobets_enh_tickets_{DAY}.txt").exists()
 
 
 def test_the_lane_keeps_its_own_state_and_the_main_state_file_alone(tmp_path, _tmp_lane):
@@ -601,7 +601,7 @@ def test_take_profit_uses_the_shared_rule_and_its_own_marker(tmp_path, _tmp_lane
     assert st["bank"] == pytest.approx(200.0)
     assert events and "TAKE-PROFIT" in events[0]
     assert at.take_profit_target(st) == pytest.approx(400.0)   # new cycle baseline
-    assert (_tmp_lane / f"enhancement_tickets_takeprofit_{DAY}.json").exists()
+    assert (_tmp_lane / f"autobets_enh_tickets_takeprofit_{DAY}.json").exists()
     assert not (_tmp_lane / f"auto_tickets_takeprofit_{DAY}.json").exists()
 
 
@@ -928,3 +928,24 @@ def test_a_team_slice_is_never_consulted_for_a_leg(tmp_path, _tmp_lane, monkeypa
     pick = _pick(price=round(applied + 0.02, 2))
     assert at.enhancement_legs([pick], floors=floors)[0]["verdict"] == "fire"
     assert pt.enhancement_board_line(pick, floors=floors).startswith("     🔬 ")
+
+
+def test_enhancement_slips_are_named_and_tracked_beside_autobets():
+    """The enhancement slip is autobets_enh_tickets_<day>.txt and is NOT ignored
+    by git, so it is committed to main like the main lane's auto_tickets slip.
+    The state file stays ignored (runtime state)."""
+    import subprocess
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    # The autouse fixture patches ENHANCEMENT_LANE, so read the production
+    # declaration from the module source instead of the patched constant.
+    src = Path(at.__file__).read_text(encoding="utf-8")
+    assert 'Lane(ENHANCEMENT_STATE_FILE, "autobets_enh_tickets"' in src
+    slip = f"localdata/{at.ENHANCEMENT_LANE.slip_prefix}_{DAY}.txt"
+    state = "localdata/enhancement_tickets_state.json"
+    if not (root / ".git").exists():
+        pytest.skip("not a git checkout")
+    ign = subprocess.run(["git", "check-ignore", "-q", slip], cwd=root)
+    assert ign.returncode == 1, "enhancement slip must not be gitignored"
+    ign_state = subprocess.run(["git", "check-ignore", "-q", state], cwd=root)
+    assert ign_state.returncode == 0, "enhancement state file stays ignored"
