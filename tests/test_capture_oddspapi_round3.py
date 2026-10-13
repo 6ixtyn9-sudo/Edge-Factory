@@ -210,13 +210,14 @@ def test_capture_persists_the_market_census(tmp_path, monkeypatch):
     assert receipt["quoted_fixtures"][0]["away"] == "England"
     assert "apiKey" not in json.dumps(receipt) and "http" not in json.dumps(receipt)
     # The served catalog is persisted for source_health, provider data only.
-    vocab_path = tmp_path / "source_health" / "odds_vocabulary" / "2026-10-03+oddspapi.json"
+    vocab_path = tmp_path / "source_health" / "odds_vocabulary" / "2026-10-03+oddspapi.json.gz"
     assert vocab_path.exists()
-    vocab = json.loads(vocab_path.read_text())
+    vocab = cap._read_vocabulary_snapshot(vocab_path)
     assert vocab["catalog_size"] == len(catalog)
     assert vocab["markets"]["101"]["outcomes"] == {"101": "1", "102": "X", "103": "2"}
     assert stats["odds_vocabulary"] == "written"
-    assert "http" not in vocab_path.read_text() and "apiKey" not in vocab_path.read_text()
+    raw_text = json.dumps(vocab)
+    assert "http" not in raw_text and "apiKey" not in raw_text
 
 
 def test_vocabulary_snapshot_is_content_deduped(tmp_path, monkeypatch):
@@ -226,14 +227,14 @@ def test_vocabulary_snapshot_is_content_deduped(tmp_path, monkeypatch):
     assert cap._persist_vocabulary_snapshot("2026-10-03", catalog) == "written"
     assert cap._persist_vocabulary_snapshot("2026-10-04", catalog) == "unchanged"
     vdir = tmp_path / "source_health" / "odds_vocabulary"
-    assert [p.name for p in sorted(vdir.glob("*+oddspapi.json"))] == [
-        "2026-10-03+oddspapi.json"]
+    assert [p.name for p in sorted(vdir.glob("*+oddspapi.json.gz"))] == [
+        "2026-10-03+oddspapi.json.gz"]
     # A catalog that changed (new market) writes a new snapshot.
     grown = dict(catalog)
     grown["108"] = {"name": "Draw No Bet", "marketType": "x", "period": "fulltime",
                     "handicap": None, "playerProp": False, "outcomes": {}}
     assert cap._persist_vocabulary_snapshot("2026-10-04", grown) == "written"
-    assert len(list((vdir).glob("*+oddspapi.json"))) == 2
+    assert len(list((vdir).glob("*+oddspapi.json.gz"))) == 2
 
 
 def test_vocabulary_snapshot_absent_without_a_catalog(tmp_path, monkeypatch):
@@ -259,7 +260,7 @@ def test_census_and_vocabulary_are_state_commit_persistable():
     for path in ("localdata/theoddsapi_capture_2026-10-03.json",
                  "localdata/oddspapi_capture_2026-10-03.json",
                  "localdata/oddspapi_market_census_2026-10.json",
-                 "localdata/source_health/odds_vocabulary/2026-10-03+oddspapi.json"):
+                 "localdata/source_health/odds_vocabulary/2026-10-03+oddspapi.json.gz"):
         result = subprocess.run(
             ["git", "check-ignore", "--no-index", "-v", path],
             cwd=Path(__file__).resolve().parents[1],
