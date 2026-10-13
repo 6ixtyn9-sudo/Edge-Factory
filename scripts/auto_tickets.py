@@ -257,6 +257,10 @@ ENHANCEMENT_STATE_FILE = LOCALDATA / "enhancement_tickets_state.json"
 ENH_BOARD_FLAG = "EDGE_FACTORY_ENH_BOARD"
 ENHANCEMENT_LANE = Lane(ENHANCEMENT_STATE_FILE, "autobets_enh_tickets",
                         "ENHANCEMENT TICKETS (ROLLING)", STAKE_FRAC)
+# Enhancement legs are ranked by the hit rate their floor encodes (approved
+# 2026-10-13), not by the model's stated probability. The main lane stays on
+# "prob"; its selection is untouched.
+ENHANCEMENT_RANK = "hitrate"
 
 
 def enhancement_board_enabled() -> bool:
@@ -2979,6 +2983,21 @@ def _rank_capped_probability(leg, rank_caps):
     return min(raw, float(spec))
 
 
+def _implied_hit_chance(leg) -> float:
+    """The settled hit chance a leg's floor was derived from.
+
+    Every enhancement floor is ``1 / Wilson-LB95(hit rate) + ENHANCEMENT_FLOOR_MARGIN``
+    (enh_registry / enh_team_floors), so inverting the floor recovers the hit
+    rate. A leg with no usable floor has no evidence and ranks last (0.0).
+    """
+    from edgefactory.enh_registry import ENHANCEMENT_FLOOR_MARGIN
+    floor = leg.get("floor")
+    if not isinstance(floor, (int, float)) or isinstance(floor, bool) \
+            or float(floor) <= ENHANCEMENT_FLOOR_MARGIN:
+        return 0.0
+    return 1.0 / (float(floor) - ENHANCEMENT_FLOOR_MARGIN)
+
+
 def rank_legs(pool, rank="prob", rank_caps=None):
     """Order the pool. ``rank_caps=None`` is the live identity path.
 
@@ -2998,7 +3017,9 @@ def rank_legs(pool, rank="prob", rank_caps=None):
             "rank='probcap' without rank_caps is an identity order: it cannot "
             "differ from rank='prob'. Pass rank_caps (the ladder's caps) or "
             "drop the rank.")
-    if rank == "ev":
+    if rank == "hitrate":
+        key = lambda l: (_implied_hit_chance(l), l["prob"], l["odds"])  # noqa: E731
+    elif rank == "ev":
         key = lambda l: (l["prob"] * l["odds"], l["prob"], l["odds"])   # noqa: E731
     elif rank == "rule3way":
         key = lambda l: (_rule_of(l).startswith("3way"),                # noqa: E731
@@ -4767,7 +4788,7 @@ def cmd_enhancement(args, st) -> int:
     # it. The enhancement lane's own part is the pool (floor-cleared
     # enhancement legs) and nothing else.
     plan = plan_day(pool, bank_eff, stake_frac=ENHANCEMENT_LANE.stake_frac,
-                    fixture_report=fixture_report)
+                    rank=ENHANCEMENT_RANK, fixture_report=fixture_report)
     _carry_lane_evidence(plan, pool)
     freeze_record = None
     if plan:
