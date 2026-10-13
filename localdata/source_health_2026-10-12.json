@@ -24,9 +24,10 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
+        "fixture_key_miss": 1,
         "market_unmapped": 123,
         "market_unsupported": 480,
-        "out_of_window": 36,
+        "out_of_window": 35,
         "selection_unmapped": 587
       },
       "reason": null,
@@ -43,18 +44,18 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 0,
-      "be_raw": 30,
-      "be_usable": 30,
+      "be_matched": 1,
+      "be_raw": 42,
+      "be_usable": 42,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 1,
       "join_miss_counts": {
-        "out_of_window": 30
+        "fixture_key_miss": 41
       },
       "reason": null,
       "status": "cache_only"
@@ -94,7 +95,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 8,
+        "fixture_key_miss": 8,
         "selection_unsupported": 5
       },
       "reason": null,
@@ -180,11 +181,12 @@
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 3,
       "join_miss_counts": {
-        "out_of_window": 23520
+        "fixture_key_miss": 23497,
+        "no_pick_for_fixture": 20
       },
-      "pa_matched": 0,
+      "pa_matched": 1,
       "pa_raw": 23520,
       "pa_scored": 23520,
       "reason": null,
@@ -272,7 +274,7 @@
           "unsupported_market:draw_no_bet": 2,
           "unsupported_market:team_total_points_odd_even": 4
         },
-        "card_fixture_count": 14,
+        "card_fixture_count": 18,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 166
@@ -286,7 +288,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 20
+        "fixture_key_miss": 20
       },
       "reason": "cache_rows_pending_join",
       "sa_matched": 0,
@@ -333,13 +335,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 19,
       "join_miss_counts": {
-        "out_of_window": 160
+        "fixture_key_miss": 241,
+        "no_pick_for_fixture": 60
       },
-      "oa_matched": 0,
-      "oa_raw": 160,
-      "oa_usable": 160,
+      "oa_matched": 1,
+      "oa_raw": 320,
+      "oa_usable": 320,
       "reason": null,
       "status": "cache_only"
     },
