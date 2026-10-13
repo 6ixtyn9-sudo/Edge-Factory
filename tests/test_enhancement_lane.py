@@ -644,8 +644,10 @@ def test_the_floor_boundary_is_inclusive_across_every_floored_market():
         assert reg.clears_floor(market, reg.floor_for(market) + 5.0) is True, market
     # The floors are the stated literals, in one place, not scattered calls.
     assert reg.ENHANCEMENT_PRICE_FLOORS == {
-        "match_over_25": 1.60, "match_over_15": 1.45,
-        "match_over_35": 3.30, "btts_yes": 1.85}
+            "match_over_25": 1.60, "match_over_15": 1.45,
+            "match_over_35": 3.30, "btts_yes": 1.85,
+            "match_under_15": 4.45, "match_under_25": 2.38,
+            "match_under_35": 1.64}
 
 
 def test_the_board_shows_a_bet_above_the_floor_and_no_bet_below_it():
@@ -755,9 +757,10 @@ def test_an_under_is_priced_as_readily_as_an_over(tmp_path):
     assert (under["enhancement_price"], under["enhancement_price_source"]) == (2.30, "theoddsapi")
     assert over["enhancement_priced"] is True and under["enhancement_priced"] is True
     # The under is a real product with a real price; it is gated by the floor
-    # table (no floor for match_under_25 today), never by the pricing path.
-    assert reg.floor_for("match_under_25") is None
+    # table (base-rate floor 2.38 for match_under_25), never by the pricing path.
+    assert reg.floor_for("match_under_25") == 2.38
     assert reg.clears_floor("match_under_25", 2.30) is False
+    assert reg.clears_floor("match_under_25", 2.40) is True
 
 
 def test_the_track_record_render_quotes_floor_and_breakeven_per_market(tmp_path):
