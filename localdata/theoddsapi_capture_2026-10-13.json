@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 14,
-  "captured_at": "2026-10-13T13:14:17+00:00",
+  "captured_at": "2026-10-13T16:16:14+00:00",
   "date": "2026-10-13",
   "due_reasons": {},
   "errors": [],
@@ -15,11 +15,11 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
+    "kickoff_already_passed": 2,
     "kickoff_mismatch": 5,
     "priced": 2,
     "priced_close_window_not_open": 5,
-    "retry_cooldown": 6
+    "retry_cooldown": 5
   },
   "skipped": [
     "WARN kickoff-mismatch Viking|Bayern M\u00fcnchen: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
@@ -30,7 +30,7 @@
     "Inter|Club Brugge (priced)",
     "WARN kickoff-mismatch Arsenal|Lille: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Arsenal|Lille (priced, close window not open)",
-    "Germany W|Japan W (retry cooldown (6h after failed attempt))",
+    "Germany W|Japan W (kickoff already passed)",
     "WARN kickoff-mismatch Galatasaray|Barcelona: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Galatasaray|Barcelona (priced, close window not open)",
     "Wolves|Bolton (retry cooldown (6h after failed attempt))",
