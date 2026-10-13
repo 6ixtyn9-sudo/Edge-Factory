@@ -26,6 +26,9 @@ in the unified schema. Those sources now feed one merged index:
                  multi-book comparison responses the priced lane already
                  fetched: O/U lines, BTTS, double chance. Day-scoped evidence,
                  written and read in the same run)
+    sharpapi     localdata/sharpapi_odds_shadow_<day>.json (named-book
+                 total_goals -> ou_X.Y over/under only; prematch rows; board
+                 flag-gated, same as betexplorer)
 
 Merge semantics: best price across sources per (date, pair, market, selection)
 with SOURCE ATTRIBUTION on the winning price, and when >=2 sources price the same
@@ -108,6 +111,12 @@ DIVERGENCE_MIN_SPREAD = 0.10  # flag when max/min best-source prices differ by >
 ODDSPAPI_MAX_AGE_H = 72
 
 BETEXPLORER_SOURCE = "betexplorer"
+# SharpAPI named-book totals (total_goals -> ou_X.Y). Shadow ledger, prematch
+# rows only (the adapter refuses in-play prices before they are written). The
+# board flag gates it like BetExplorer: a source only the board consumes prices
+# nothing while the board is off. Same freshness guard as OddsPapi.
+SHARPAPI_SOURCE = "sharpapi_odds"
+SHARPAPI_MAX_AGE_H = ODDSPAPI_MAX_AGE_H
 # The enhancement board's own switch. scripts/auto_tickets reads the same
 # variable for the board builder; when it is unset the board does not exist, so
 # a source that ONLY the board consumes must not price anything either — one
@@ -414,6 +423,44 @@ def _accumulate_betexplorer(path: Path, *, day: str, out: dict[str, Any]) -> Non
         return
 
 
+def _accumulate_sharpapi(path: Path, *, day: str, out: dict[str, Any]) -> None:
+    """Read the day's SharpAPI shadow ledger (JSON: {"rows": [...]}). Only the
+    over/under totals ladder is consumed; moneyline rows are not read here.
+    Fail-soft on any error; a row outside the freshness window is dropped."""
+    try:
+        if not path.exists():
+            return
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict) or payload.get("date") not in (None, day):
+            return
+        for row in payload.get("rows") or []:
+            if not isinstance(row, dict):
+                continue
+            if row.get("source") != SHARPAPI_SOURCE or row.get("date") != day:
+                continue
+            mkt = str(row.get("market") or "")
+            if not mkt.startswith("ou_"):
+                continue
+            sel = str(row.get("selection") or "")
+            if sel not in ("over", "under"):
+                continue
+            home, away = row.get("home"), row.get("away")
+            if not home or not away:
+                continue
+            if not _fresh_row(row, SHARPAPI_MAX_AGE_H):
+                continue
+            price = _parse_price(row.get("odds"))
+            if price is None:
+                continue
+            nh, na = norm_team(home), norm_team(away)
+            _put(out, nh, na, mkt, sel, price,
+                 row.get("bookmaker") or row.get("book") or "",
+                 row.get("captured_at") or "", SHARPAPI_SOURCE)
+            out["names"].setdefault((nh, na), (home, away))
+    except Exception:
+        return
+
+
 def load_prices_index(root: Path, day: str) -> dict[str, Any]:
     """Merge all local price sources for `day` into
     {"pairs":  {(nh,na): {(market,sel): (best_price, book, at, source)}},
@@ -443,6 +490,9 @@ def load_prices_index(root: Path, day: str) -> dict[str, Any]:
     if enhancement_board_enabled():
         _accumulate_betexplorer(
             localdata / f"betexplorer_match_detail_{str(day)[:10]}.json",
+            day=day, out=out)
+        _accumulate_sharpapi(
+            localdata / f"sharpapi_odds_shadow_{str(day)[:10]}.json",
             day=day, out=out)
     # Operator override 2026-08-05 (Addendum 27.7): OddsPapi prices team
     # totals / double chance / totals / btts for the enhancement overlay.
