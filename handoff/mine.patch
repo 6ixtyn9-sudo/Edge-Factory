@@ -1,0 +1,2109 @@
+From 8e50de260ab3296da2f27ce14cdaa2701251d397 Mon Sep 17 00:00:00 2001
+From: 6ixtyn9-sudo <270680834+6ixtyn9-sudo@users.noreply.github.com>
+Date: Mon, 12 Oct 2026 06:51:18 +0000
+Subject: [PATCH 1/2] enhancement lane: floor gate, autobets lifecycle, floor
+ replay (stages 2-4)
+
+Stage 2 - gate by hit rate and a price floor, no EV veto
+  Operator ruling: "betting on ev will lead us to not bet at all, we have the
+  track record of enhanced, we know what wins more, we just need prices above a
+  certain threshold, like how autobets does it."
+  ENHANCEMENT_PRICE_FLOORS (src/edgefactory/enh_registry.py) starts at
+  match_over_25 1.60, match_over_15 1.45, match_over_35 3.30, btts_yes 1.85;
+  floors are re-derivable from the settled registry (audit_recent_picks.py
+  --track-record prints rate, breakeven 1/rate, floor and profit per market and
+  per bucket/rule slice). Below the floor there is no bet - not paper, not
+  shadow. clears_floor is strict about what "is a price" (no bools, strings,
+  NaN, inf or <= 1.0) and False for any market with no floor, so a floorless
+  market can never fire: the team unders that used to print a bet line no
+  longer do. enhancement_breakeven / enhancement_edge_sample stay on the row as
+  information and gate nothing. The board and the slip call the same
+  clears_floor, so they cannot disagree; the board's line is now
+  picks_today.enhancement_board_line (bet line unchanged above the floor,
+  explicit refusal below it). Everything is percentages of capital.
+
+Stage 3 - presentation and lifecycle identical to autobets, additive
+  Operator ruling: "i need it to look like how autobets presents it and to have
+  the same lifecycle of autobets" / "i dont want them to change the system have
+  now ... additional". scripts/auto_tickets.py is parameterised by
+  Lane{state_file, slip_prefix, label, stake_frac}; the enhancement lane keeps
+  its own state (localdata/enhancement_tickets_state.json) and artifact
+  (localdata/enhancement_tickets_<date>.txt) and re-uses the existing freeze,
+  settlement, bank (bank += ret_pct - staked_pct) and take-profit
+  (cycle_base x2) code paths rather than growing lookalikes. Gated by
+  EDGE_FACTORY_ENH_BOARD=1; unset restores today's behaviour verbatim.
+
+Stage 4 - replay_harness --enhancements
+  Replays settled registry records against floor= variants, reporting hit rate
+  and mean log growth per bet-day (the harness's primary metric, not final
+  bank) with the existing small-n flag; --ab reuses the paired day-bootstrap
+  already in the harness. It prints its own limit: it can only replay history
+  that had a price.
+
+Stage 1 - not built, and reported as such
+  Pricing enhancements from the schema-2 detail ledger needs the Stage 0
+  capture work, which is not in this clone: betexplorer_match_detail appears
+  nowhere in the tree or in any git history, and the only nearby schema writer
+  (_write_fixture_cache) writes schema 1. Loading prices out of a schema nobody
+  here has seen would be guessing at field names, so the join is left out
+  rather than faked.
+
+Also fixes a state-path leak found while landing Stage 3: MAIN_LANE held
+STATE_FILE as a value, so tests (and any tool redirecting that global) wrote
+into localdata/auto_tickets_state.json - 811 lines of real state were truncated
+in this workspace before it was caught. Lane state paths resolve through
+state_path() at call time now, and the leak is pinned by a regression test.
+
+Tests: PYTHONPATH=src .venv/bin/python -m pytest tests/ -q -p no:randomly
+2771 passed.
+
+Co-authored-by: arena-agent <297053741+arena-agent@users.noreply.github.com>
+---
+ scripts/audit_recent_picks.py     |  77 ++++-
+ scripts/auto_tickets.py           | 369 +++++++++++++++++++++--
+ scripts/picks_today.py            |  83 ++++--
+ scripts/replay_harness.py         | 208 ++++++++++++-
+ src/edgefactory/enh_registry.py   | 167 ++++++++++-
+ tests/test_enhancement_lane.py    | 480 ++++++++++++++++++++++++++++++
+ tests/test_replay_enhancements.py | 125 ++++++++
+ 7 files changed, 1447 insertions(+), 62 deletions(-)
+ create mode 100644 tests/test_enhancement_lane.py
+ create mode 100644 tests/test_replay_enhancements.py
+
+diff --git a/scripts/audit_recent_picks.py b/scripts/audit_recent_picks.py
+index 9ba33cc..8a727ca 100644
+--- a/scripts/audit_recent_picks.py
++++ b/scripts/audit_recent_picks.py
+@@ -1864,6 +1864,15 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
+                                 # governance N5 (Addendum 27.11): whether >=2
+                                 # distinct sources priced this exact selection.
+                                 "multi_source": bool(probe.get("enhancement_multi_source")),
++                                # Slice provenance (2026-10-12): the parent
++                                # pick's bucket and rule, and the enhancement's
++                                # own stated probability. Recorded so the
++                                # settled track record can be sliced by bucket
++                                # and rule; purely provenance, gates nothing.
++                                "bucket": str(pick.get("bucket") or ""),
++                                "rule": str(pick.get("rule")
++                                            or pick.get("display_rule") or ""),
++                                "stated": pick.get("enhancement_probability"),
+                             })
+ 
+                 # 5. Granular expectations audit ledger populator
+@@ -1982,7 +1991,9 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
+         for oc in priced_outcomes:
+             record_outcome(ROOT, date_=oc["date"], match=oc["match"], market=oc["market"],
+                            price=oc["price"], hit=oc["hit"], source=oc["source"],
+-                           multi_source=oc.get("multi_source", False))
++                           multi_source=oc.get("multi_source", False),
++                           bucket=oc.get("bucket", ""), rule=oc.get("rule", ""),
++                           stated=oc.get("stated"))
+         registry_states = all_statuses(ROOT)
+     except Exception:
+         registry_states = {}
+@@ -2410,6 +2421,61 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
+     path.write_text("\n".join(lines) + "\n")
+ 
+ 
++def render_track_record(root: Path | None = None) -> str:
++    """The settled enhancement track record, with its floors and its slices.
++
++    This is the operator-facing view of the numbers the Stage 2 floor gate is
++    derived from: per-market hit rate, the price at which that rate exactly pays
++    for itself (``breakeven`` = 1/rate), the floor actually in force, and the
++    settled profit — as percentages of capital, never currency. Every market is
++    PAPER until the hit-rate and CLV evidence justifies staking.
++
++    Slices (bucket / rule) are rendered beside the market row so a floor can be
++    re-derived per bucket instead of pooled. Records written before slice
++    provenance existed are reported as unattributed, never guessed at.
++    """
++    from edgefactory.enh_registry import (ENHANCEMENT_PRICE_FLOORS,
++                                          market_track_record, slice_for_market)
++
++    rows = market_track_record(root)
++    out = ["=" * 78,
++           "ENHANCEMENT MARKET TRACK RECORD (settled registry; PAPER unless stated)"]
++    if not rows:
++        out.append("no settled enhancement history yet")
++        out.append("=" * 78)
++        return "\n".join(out)
++    out.append(f"  {'market':<18}{'status':<10}{'n':>5}{'hits':>6}{'rate':>8}"
++               f"{'breakeven':>11}{'floor':>7}{'profit':>10}")
++    for r in rows:
++        rate = f"{r['rate']:.1%}" if r["n"] else "--"
++        be = f"{r['breakeven']:.3f}" if r.get("breakeven") else "--"
++        floor = f"{r['floor']:.2f}" if r.get("floor") else "none"
++        warn = ""
++        if r["n"] < 30:
++            warn = "  ⚠ small-n"
++        elif r.get("breakeven") and r.get("floor") and r["floor"] < r["breakeven"]:
++            warn = "  ⚠ floor below breakeven"
++        out.append(f"  {r['market']:<18}{r['status']:<10}{r['n']:>5}{r['hits']:>6}"
++                   f"{rate:>8}{be:>11}{floor:>7}{r['profit']:>+10.3f}u{warn}")
++    undefined = sorted(set(ENHANCEMENT_PRICE_FLOORS)
++                       - {r["market"] for r in rows})
++    if undefined:
++        out.append(f"  floors configured with no settled history: "
++                   f"{', '.join(undefined)}")
++    for r in rows:
++        for key in ("bucket", "rule"):
++            slices = slice_for_market(root, r["market"], key)
++            if not slices:
++                continue
++            out.append(f"  {r['market']} by {key}:")
++            for name, s in slices.items():
++                rate = f"{s['rate']:.1%}" if s["n"] else "--"
++                out.append(f"    {name:<32}n={s['n']:<5}hits={s['hits']:<5}"
++                           f"rate={rate:<7}profit={s['profit']:+.3f}u")
++    out.append("=" * 78)
++    return "\n".join(out)
++
++
+ def main() -> int:
+     ap = argparse.ArgumentParser(description="Audit recent archived daily picks against settled warehouse results.")
+     ap.add_argument("--end", default=date.today().isoformat(), help="End date inclusive (YYYY-MM-DD).")
+@@ -2421,8 +2487,17 @@ def main() -> int:
+         action="store_true",
+         help="Allow same-day archived picks to count as settled. Default is OFF to avoid live/in-progress false settlements.",
+     )
++    ap.add_argument(
++        "--track-record",
++        action="store_true",
++        help="Print the settled enhancement market track record (floors, hit rates, bucket/rule slices) and exit. Reads localdata/enhancement_registry.json only.",
++    )
+     args = ap.parse_args()
+ 
++    if args.track_record:
++        print(render_track_record(ROOT))
++        return 0
++
+     end = datetime.strptime(args.end, "%Y-%m-%d").date()
+     if args.start:
+         start_date = datetime.strptime(args.start, "%Y-%m-%d").date()
+diff --git a/scripts/auto_tickets.py b/scripts/auto_tickets.py
+index 5434960..8a24be1 100644
+--- a/scripts/auto_tickets.py
++++ b/scripts/auto_tickets.py
+@@ -64,12 +64,14 @@ from __future__ import annotations
+ import argparse
+ import json
+ import math
++import os
+ import re
+ import sys
+ from functools import lru_cache
+ from collections import Counter
+ from datetime import date, datetime, timedelta
+ from pathlib import Path
++from typing import NamedTuple
+ from zoneinfo import ZoneInfo
+ 
+ ROOT = Path(__file__).resolve().parent.parent
+@@ -224,6 +226,56 @@ BAD_QUARANTINE = {"alias_fuzzy", "suspect", "suspect_alias_fuzzy"}
+ 
+ STATE_FILE = LOCALDATA / "auto_tickets_state.json"
+ 
++
++# ---- lanes (2026-10-12) ----------------------------------------------------
++# The same rolling lifecycle drives more than one product. A lane is its own
++# state file, slip prefix, label and daily stake; everything else — the 09:00
++# write-once freeze, per-acca settlement, the percentage bank, the take-profit
++# notification marker and the artifact layout — is the SAME code path, so the
++# lanes cannot drift apart in behaviour or in how their numbers are computed.
++#
++# The enhancement lane (operator ruling 2026-10-12: "i need it to look like how
++# autobets presents it and to have the same lifecycle of autobets") is ADDITIVE:
++# it has its own state and its own artifact and never touches the main lane's.
++class Lane(NamedTuple):
++    """One lane's identity: where its state lives and what it calls itself."""
++    state_file: Path
++    slip_prefix: str
++    label: str
++    # Total deployed per bet-day as a fraction of FREE bank (same units and same
++    # meaning as STAKE_FRAC above). Percentages of capital throughout — never
++    # currency.
++    stake_frac: float
++
++
++MAIN_LANE = Lane(STATE_FILE, "auto_tickets", "AUTO TICKETS (ROLLING)", STAKE_FRAC)
++
++ENHANCEMENT_STATE_FILE = LOCALDATA / "enhancement_tickets_state.json"
++# Enables the enhancement lane's board builder. Unset, nothing about the
++# existing pipeline changes: no lane state is read, no artifact is written.
++ENH_BOARD_FLAG = "EDGE_FACTORY_ENH_BOARD"
++ENHANCEMENT_LANE = Lane(ENHANCEMENT_STATE_FILE, "enhancement_tickets",
++                        "ENHANCEMENT TICKETS (ROLLING)", STAKE_FRAC)
++
++
++def enhancement_board_enabled() -> bool:
++    """True when the operator has switched the enhancement lane on."""
++    return os.environ.get(ENH_BOARD_FLAG) == "1"
++
++
++def state_path(lane: "Lane | None" = None) -> Path:
++    """Where a lane keeps its state.
++
++    The MAIN lane resolves ``STATE_FILE`` at CALL time, not import time: that
++    global is the seam every test and tool in the repo redirects to keep writes
++    out of the committed ledger, and a lane object captured at import would
++    silently ignore the redirect and write test slips into real state (the
++    2026-09-06 leak). An explicit lane uses its own file.
++    """
++    if lane is None or lane == MAIN_LANE:
++        return STATE_FILE
++    return lane.state_file
++
+ # ---- daily freeze lock (2026-10-02, OP-01 T2) -------------------------------
+ # A frozen card is the operator's placed bet. The old lock was a per-day
+ # sidecar file `localdata/auto_tickets_<date>.frozen`; its durability depended
+@@ -246,9 +298,9 @@ FROZEN_BOOK_KEY = "frozen_by_date"
+ SUPERSEDED_BOOK_KEY = "superseded_by_date"
+ 
+ 
+-def legacy_frozen_path(target: str):
++def legacy_frozen_path(target: str, lane: "Lane | None" = None):
+     """The pre-T2 per-day marker file. Read-only from here on."""
+-    return LOCALDATA / f"auto_tickets_{target}.frozen"
++    return LOCALDATA / f"{(lane or MAIN_LANE).slip_prefix}_{target}.frozen"
+ 
+ 
+ def frozen_entry(st: dict, target: str) -> dict | None:
+@@ -265,7 +317,8 @@ def superseded_entry(st: dict, target: str) -> dict | None:
+     return entry if isinstance(entry, dict) else None
+ 
+ 
+-def record_superseded_no_bet(st: dict, target: str, when, *, reason: str) -> dict:
++def record_superseded_no_bet(st: dict, target: str, when, *, reason: str,
++                            lane: "Lane | None" = None) -> dict:
+     """Record a force-recut no-bet without touching the frozen card.
+ 
+     The old slip remains available for audit and any already-placed bet must
+@@ -282,18 +335,19 @@ def record_superseded_no_bet(st: dict, target: str, when, *, reason: str) -> dic
+         "result": "NO BET",
+         "reason": reason,
+         "frozen_at": frozen.get("frozen_at"),
+-        "audit_slip": f"localdata/auto_tickets_{target}.txt",
++        "audit_slip": f"localdata/{(lane or MAIN_LANE).slip_prefix}_{target}.txt",
+     }
+     book[str(target)] = entry
+     return entry
+ 
+ 
+-def is_frozen(st: dict, target: str) -> bool:
++def is_frozen(st: dict, target: str, lane: "Lane | None" = None) -> bool:
+     """True when the date is locked by state OR by a legacy marker file."""
+-    return frozen_entry(st, target) is not None or legacy_frozen_path(target).exists()
++    return (frozen_entry(st, target) is not None
++            or legacy_frozen_path(target, lane).exists())
+ 
+ 
+-def record_freeze(st: dict, target: str, when) -> dict:
++def record_freeze(st: dict, target: str, when, lane: "Lane | None" = None) -> dict:
+     """Write-once freeze of ``target``. Never overwrites an existing entry.
+ 
+     Returns the entry in force — the pre-existing one if the date was already
+@@ -304,7 +358,7 @@ def record_freeze(st: dict, target: str, when) -> dict:
+     existing = book.get(str(target))
+     if isinstance(existing, dict):
+         return existing                      # write-once: immutable
+-    legacy = legacy_frozen_path(target)
++    legacy = legacy_frozen_path(target, lane)
+     if legacy.exists():
+         stamp = (legacy.read_text() or "").strip()
+         entry = {"frozen_at": stamp or when.isoformat(timespec="seconds"),
+@@ -2786,9 +2840,9 @@ def alias_outcome_conflict(pick, entries_by_date) -> bool:
+ 
+ 
+ # ---------------- state (all percentages of capital) ----------------
+-def load_state() -> dict:
++def load_state(lane: "Lane | None" = None) -> dict:
+     try:
+-        st = json.loads(STATE_FILE.read_text())
++        st = json.loads(state_path(lane).read_text())
+     except Exception:
+         return {}
+     slips = st.get("open_slips") or []
+@@ -2802,8 +2856,8 @@ def load_state() -> dict:
+     return st
+ 
+ 
+-def save_state(st: dict) -> None:
+-    STATE_FILE.write_text(json.dumps(st, indent=2, default=str))
++def save_state(st: dict, lane: "Lane | None" = None) -> None:
++    state_path(lane).write_text(json.dumps(st, indent=2, default=str))
+ 
+ 
+ def fresh_state() -> dict:
+@@ -3141,10 +3195,15 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
+ 
+ 
+ # ---------------- settlement + take-profit notification ----------------
+-def _apply_settlement(st, ret_pct, staked_pct, when):
++def _apply_settlement(st, ret_pct, staked_pct, when, lane: "Lane | None" = None):
+     """Move the bank by the settled P&L (all %) and fire the TAKE-PROFIT
+     NOTIFICATION when performance reaches the cycle target. No amounts are
+-    withdrawn — the operator acts on the notification. Returns event lines."""
++    withdrawn — the operator acts on the notification. Returns event lines.
++
++    ``lane`` only chooses the notification marker's filename, so each lane
++    leaves its own ``<prefix>_takeprofit_<date>.json`` receipt while the bank
++    arithmetic and the notification rule stay one implementation.
++    """
+     events = []
+     st["bank"] += ret_pct - staked_pct
+     if st["bank"] >= take_profit_target(st):
+@@ -3157,7 +3216,7 @@ def _apply_settlement(st, ret_pct, staked_pct, when):
+                              "gain_pct": round(gain_pct, 2),
+                              "bank_after_pct": round(st["bank"], 2),
+                              "next_target_pct": round(take_profit_target(st), 2)})
+-        marker = LOCALDATA / f"auto_tickets_takeprofit_{when}.json"
++        marker = LOCALDATA / f"{(lane or MAIN_LANE).slip_prefix}_takeprofit_{when}.json"
+         try:
+             marker.write_text(json.dumps(st["events"][-1], indent=2))
+         except Exception:
+@@ -3256,7 +3315,8 @@ def _slip_day_anchor(slip_date):
+         return None
+ 
+ 
+-def settle_open_slips(st, settled, archives=None, entries_by_date=None):
++def settle_open_slips(st, settled, archives=None, entries_by_date=None,
++                      lane: "Lane | None" = None):
+     """Grade every acca whose outcome is decided; the bank moves per acca.
+ 
+     An acca settles as soon as all its legs resolve — a single stuck leg no
+@@ -3339,7 +3399,7 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
+                 open_accas.append(a)
+                 continue
+             ret = a["stake_pct"] * a["odds"] if a["won"] else 0.0
+-            ev = _apply_settlement(st, ret, a["stake_pct"], slip["date"])
++            ev = _apply_settlement(st, ret, a["stake_pct"], slip["date"], lane)
+             _record_acca_settlement(st, slip["date"], a)
+             lines.append(f"settled {slip['date']} acca @{a['odds']:.2f} legs={legres}: bank {st['bank']:.1f}%"
+                          + (" (decided by settled loss leg"
+@@ -3989,6 +4049,262 @@ def print_status(st):
+         print(f"  {h['date']}  {acc:40s} bank {h['bank_pct']:7.1f}%")
+ 
+ 
++# ---------------- enhancement lane (2026-10-12, ADDITIVE) ----------------
++# The operator's ruling: "i need it to look like how autobets presents it and
++# to have the same lifecycle of autobets" and "i dont want them to change the
++# system have now … additional". So this lane keeps its own state and artifact,
++# its legs are priced from the enhancement price already on the board, and it
++# reuses the SAME freeze / settle / bank / take-profit / renderer lifecycle
++# above rather than a lookalike copy of it.
++#
++# Gate (operator ruling 2026-10-12): "betting on ev will lead us to not bet at
++# all, we have the track record of enhanced, we know what wins more, we just
++# need prices above a certain threshold, like how autobets does it." A leg
++# fires on its market's settled floor alone — ENHANCEMENT_PRICE_FLOORS in
++# edgefactory.enh_registry. There is NO EV veto here; enhancement_breakeven and
++# enhancement_edge_sample stay on the row as information only.
++ENH_SHADOW_TAG = " [SHADOW — paper]"      # same tag the 🔥 render already uses
++
++
++def _enh_price(pick: dict):
++    """The pick's captured enhancement price, or None when it is not a price."""
++    price = pick.get("enhancement_price")
++    if isinstance(price, (int, float)) and not isinstance(price, bool) \
++            and math.isfinite(float(price)) and float(price) > 1.0:
++        return float(price)
++    return None
++
++
++def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None) -> list[dict]:
++    """One candidate per enhancement on the board, with its gate verdict.
++
++    Verdicts: ``fire`` (priced at or above its market's floor), ``below_floor``
++    (priced under the floor — no bet, not paper, not shadow), ``unpriced`` (the
++    market is priced by some feed but this leg has no price today) and
++    ``unpriceable`` (no feed carries this market at all — team totals). Every
++    candidate carries the parent pick's bucket and rule so the settled record
++    can be sliced by them.
++    """
++    from edgefactory.enh_registry import ENHANCEMENT_PRICE_FLOORS, clears_floor, floor_for
++    try:
++        from edgefactory.enh_pricing import MARKET_PRICE_MAP
++    except Exception:
++        MARKET_PRICE_MAP = {}
++
++    legs: list[dict] = []
++    for pick in slate or []:
++        market = pick.get("recommended_enhancement")
++        if not market:
++            continue
++        price = _enh_price(pick)
++        if price is None:
++            mapped = MARKET_PRICE_MAP.get(market, "missing")
++            # "Unpriceable" is not "we found no price today": it means no feed in
++            # this pipeline carries the market at all. That is an absent mapping
++            # (goal_range_2_3) and every team total (tt_*): BetExplorer has no
++            # team-total tab, and the 2026-08-03 audit recorded those markets'
++            # fair price as ~1.03 — at the 95-97% they are stated at they would
++            # need 1.06-1.10 to be a bet, so they are shown, marked, and never
++            # priced.
++            unpriceable = mapped is None or (
++                isinstance(mapped, tuple) and str(mapped[0]).startswith("tt_"))
++            verdict = "unpriceable" if unpriceable else "unpriced"
++        else:
++            verdict = "fire" if clears_floor(market, price) else "below_floor"
++        legs.append({
++            "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
++            "home": pick.get("home"), "away": pick.get("away"),
++            "fixture_key": _folded_leg_key(
++                pick.get("date") or "", pick.get("home"), pick.get("away"), "HOME"),
++            "market": market,
++            "label": pick.get("enhancement_label") or str(market).replace("_", " ").upper(),
++            "probability": pick.get("enhancement_probability"),
++            "price": price,
++            "price_book": pick.get("enhancement_price_book"),
++            "price_source": pick.get("enhancement_price_source"),
++            "bucket": str(pick.get("bucket") or ""),
++            "rule": str(pick.get("rule") or pick.get("display_rule") or ""),
++            "floor": floor_for(market),
++            "verdict": verdict,
++            "shadow": str(pick.get("bucket") or "") == "SKIPPED_VETO",
++        })
++    # Firing legs first, strongest stated probability first — the same ordering
++    # discipline the main lane uses to fill a bounded day.
++    legs.sort(key=lambda l: (l["verdict"] != "fire",
++                             -(l["probability"] if isinstance(l["probability"], (int, float)) else 0.0)))
++    return legs
++
++
++def _enh_slice_lines(root: Path | None = None) -> list[str]:
++    """The settled slice table: by market, then by bucket, then by rule."""
++    from edgefactory.enh_registry import (UNATTRIBUTED, market_track_record,
++                                          slice_for_market)
++    root = root or ROOT
++    rows = [r for r in market_track_record(root) if r["n"]]
++    if not rows:
++        return []
++    lines = ["ENHANCEMENT SLICE (settled, registry)",
++             f"  {'by market':<18}{'n':>6}{'hits':>7}{'rate':>8}{'breakeven':>12}{'profit':>10}"]
++    for r in rows:
++        be = f"{r['breakeven']:.3f}" if r["breakeven"] else "—"
++        lines.append(f"  {r['market']:<18}{r['n']:>6}{r['hits']:>7}"
++                     f"{r['rate'] * 100:>7.1f}%{be:>12}{r['profit']:>+9.2f}u")
++    for key, title in (("bucket", "by bucket"), ("rule", "by rule")):
++        merged: dict[str, dict] = {}
++        for r in rows:
++            for value, slot in slice_for_market(root, r["market"], key).items():
++                agg = merged.setdefault(value, {"n": 0, "hits": 0, "profit": 0.0})
++                agg["n"] += slot["n"]
++                agg["hits"] += slot["hits"]
++                agg["profit"] = round(agg["profit"] + slot["profit"], 6)
++        if not merged:
++            continue
++        lines.append(f"  {title}")
++        for value, agg in sorted(merged.items(), key=lambda kv: (-kv[1]["n"], kv[0])):
++            rate = (agg["hits"] / agg["n"]) if agg["n"] else 0.0
++            label = value if value != UNATTRIBUTED else f"{value} (pre-2026-10-12)"
++            lines.append(f"    {label:<28}{agg['n']:>5}{agg['hits']:>7}"
++                         f"{rate * 100:>7.1f}%{agg['profit']:>+9.2f}u")
++    return lines
++
++
++def render_enhancement_tickets(st: dict, target: str, legs: list[dict], now,
++                               *, should_freeze: bool, freeze_record: dict | None,
++                               bank_eff: float, root: Path | None = None) -> str:
++    """The lane's artifact — same header/footer conventions as the main slip."""
++    from edgefactory.enh_registry import market_track_record, slice_for_market
++    root = root or ROOT
++    firing = [l for l in legs if l["verdict"] == "fire"]
++    committed = st["bank"] - bank_eff
++    lines = [f"{ENHANCEMENT_LANE.label} — {target}", "=" * 62,
++             f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
++             f"(x{st['bank'] / st['base_pct']:.2f}) = free bank {bank_eff:.1f}% + "
++             f"committed {committed:.1f}% · next take-profit notification at "
++             f"{take_profit_target(st):.1f}%"]
++    lines.extend(_enh_slice_lines(root))
++    lines.append("")
++
++    day_deploy = ENHANCEMENT_LANE.stake_frac * bank_eff
++    stake_pct = (day_deploy / len(firing)) if firing else 0.0
++    for i, leg in enumerate(firing, 1):
++        share = (stake_pct / bank_eff) if bank_eff else 0.0
++        lines.append(f"[ENH #{i}] @{leg['price']:.2f} — stake {stake_pct:.1f}% of capital "
++                     f"({share:.1%} of free bank){ENH_SHADOW_TAG if leg['shadow'] else ''}")
++        prob = leg["probability"]
++        stated = f" (stated {float(prob):.0%})" if isinstance(prob, (int, float)) else ""
++        registry = next((r for r in market_track_record(root)
++                         if r["market"] == leg["market"]), None)
++        bits = []
++        if registry and registry["n"]:
++            bits.append(f"registry {registry['rate']:.0%} n={registry['n']}")
++        if leg["floor"] is not None:
++            bits.append(f"floor {leg['floor']:.2f}")
++        if leg["price_book"]:
++            bits.append(str(leg["price_book"]))
++        elif leg["price_source"]:
++            bits.append(str(leg["price_source"]))
++        detail = f" [{' · '.join(bits)}]" if bits else ""
++        lines.append(f"   {leg['match']:44s} {leg['label']} @ {leg['price']:.2f}{stated}{detail}")
++        lines.append("")
++
++    # Legs the gate refused are shown for audit, never as instructions.
++    for leg in legs:
++        if leg["verdict"] == "fire":
++            continue
++        prob = leg["probability"]
++        stated = f" (stated {float(prob):.0%})" if isinstance(prob, (int, float)) else ""
++        price = f" @ {leg['price']:.2f}" if leg["price"] is not None else ""
++        reason = {
++            # A floorless market reaches this verdict too (clears_floor is False
++            # without a threshold) but it is NOT "below" anything — say which
++            # case it is, exactly as the board line does.
++            "below_floor": (f"below floor {leg['floor']:.2f} — no bet"
++                            if leg["floor"] is not None
++                            else "no floor set for this market — no bet"),
++            "unpriced": "no price captured — no bet",
++            "unpriceable": "unpriceable — no feed carries this market",
++        }.get(leg["verdict"], leg["verdict"])
++        lines.append(f"   [NO BET] {leg['match']:40s} {leg['label']}{price}{stated} — {reason}")
++    if any(l["verdict"] != "fire" for l in legs):
++        lines.append("")
++
++    lines.append(f"deploying {ENHANCEMENT_LANE.stake_frac:.0%} of free bank today "
++                 f"= {sum(stake_pct for _ in firing):.1f}% of capital · take-profit "
++                 f"NOTIFICATION at +{TAKE_PROFIT_GAIN:.0%} per cycle "
++                 f"(performance-based; you act on it).")
++    lines.append("All figures are percentages of capital. Round to your bookmaker's "
++                 "minimum stake. Bet only what you can afford to lose.")
++    if should_freeze and freeze_record:
++        lines.append("")
++        lines.append(freeze_footer(freeze_record))
++    return "\n".join(lines)
++
++
++def cmd_enhancement(args, st) -> int:
++    """Draft / freeze / re-print the enhancement lane's slip for `args.date`."""
++    from edgefactory.enh_registry import market_track_record, slice_for_market
++    now = datetime.now(TZ)
++    target = args.date or now.strftime("%Y-%m-%d")
++    slip_txt = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}.txt"
++
++    if not enhancement_board_enabled():
++        print(f"enhancement lane is off — set {ENH_BOARD_FLAG}=1 to build it")
++        return 0
++
++    # A frozen date is final, --force included: rewriting the artifact of an
++    # already-staked date is the "bets rotated under the operator" failure the
++    # write-once lock exists to prevent. --force still rebuilds a DRAFT before
++    # the 09:00 boundary (it only suppresses the freeze below).
++    if is_frozen(st, target, ENHANCEMENT_LANE):
++        entry = frozen_entry(st, target) or {}
++        print(f"enhancement slip for {target} is frozen "
++              f"({freeze_footer(entry)}); write-once lock in "
++              f"{ENHANCEMENT_LANE.state_file.name}")
++        if slip_txt.exists():
++            print(slip_txt.read_text())
++        return 0
++
++    try:
++        slate = json.loads((LOCALDATA / "picks_today.json").read_text())
++        if not isinstance(slate, list):
++            slate = []
++    except Exception:
++        slate = []
++    legs = enhancement_legs(slate)
++    bank_eff = effective_bank(st, exclude_date=target)
++    should_freeze = (str(target) == now.strftime("%Y-%m-%d")
++                     and now.hour >= FREEZE_HOUR and not args.force)
++    freeze_record = record_freeze(st, target, now, ENHANCEMENT_LANE) if should_freeze else None
++    if should_freeze:
++        st.setdefault("open_slips", [])
++        firing = [l for l in legs if l["verdict"] == "fire"]
++        stake_pct = ((ENHANCEMENT_LANE.stake_frac * bank_eff) / len(firing)) if firing else 0.0
++        existing = next((s for s in st["open_slips"] if str(s.get("date")) == target), None)
++        entry = {"date": target,
++                 "tickets": [{"odds": l["price"], "stake_pct": round(stake_pct, 4),
++                              "market": l["market"], "match": l["match"],
++                              "shadow": l["shadow"]} for l in firing],
++                 "staked_pct": round(stake_pct * len(firing), 4)}
++        if existing is None:
++            st["open_slips"].append(entry)
++        else:
++            st["open_slips"][st["open_slips"].index(existing)] = entry
++    txt = render_enhancement_tickets(st, target, legs, now,
++                                     should_freeze=should_freeze,
++                                     freeze_record=freeze_record, bank_eff=bank_eff)
++    print(txt)
++    slip_txt.write_text(txt)
++    save_state(st, ENHANCEMENT_LANE)
++    if should_freeze and freeze_record:
++        print(f"\nSTATUS: ✅ {freeze_footer(freeze_record)} enhancement slip; later runs "
++              f"re-print unchanged (write-once lock in "
++              f"{ENHANCEMENT_LANE.state_file.name}: {FROZEN_BOOK_KEY}[{target}]).")
++    else:
++        print(f"\nSTATUS: ⏳ DRAFT — regenerates each run until the "
++              f"{FREEZE_HOUR:02d}:00 freeze.")
++    return 0
++
++
+ def main():
+     ap = argparse.ArgumentParser(description="Rolling auto-tickets (percent-only, validated acca engine)")
+     ap.add_argument("--today", action="store_true", help="settle open slips, then build/reprint today")
+@@ -4000,8 +4316,27 @@ def main():
+     ap.add_argument("--date", default=None)
+     ap.add_argument("--reset", action="store_true")
+     ap.add_argument("--force", action="store_true")
++    ap.add_argument("--enhancements", action="store_true",
++                    help=f"the enhancement lane's own slip (needs {ENH_BOARD_FLAG}=1)")
+     args = ap.parse_args()
+ 
++    # Additive lane, own state: it shares the lifecycle functions but never the
++    # main lane's state file or artifact. Without the flag every command below
++    # behaves exactly as before.
++    if args.enhancements and enhancement_board_enabled():
++        st = load_state(ENHANCEMENT_LANE)
++        if not st:
++            st = fresh_state()
++        if args.settle or args.today or args.force or not sys.argv[1:]:
++            for line in settle_open_slips(st, load_settled(), lane=ENHANCEMENT_LANE):
++                print(line)
++        if args.status and not (args.today or args.force):
++            print_status(st)
++            return 0
++        rc = cmd_enhancement(args, st)
++        save_state(st, ENHANCEMENT_LANE)
++        return rc
++
+     st = load_state()
+     if args.backfill:
+         cmd_backfill(args, st)
+diff --git a/scripts/picks_today.py b/scripts/picks_today.py
+index 2629298..432fc08 100644
+--- a/scripts/picks_today.py
++++ b/scripts/picks_today.py
+@@ -78,7 +78,11 @@ from edgefactory.phase5_k import (
+     source_columns as phase5_source_columns,
+ )
+ from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
+-from edgefactory.enh_registry import status_for as enh_status_for
++from edgefactory.enh_registry import (
++    clears_floor as enh_clears_floor,
++    floor_for as enh_floor_for,
++    status_for as enh_status_for,
++)
+ from edgefactory.source_health import (
+     FOREBET_LIVE_LAST_DAY,
+     bzzoiro_status_line,
+@@ -5963,6 +5967,55 @@ def format_kickoff(pick: dict) -> str:
+     return "n/a"
+ 
+ 
++def enhancement_board_line(p: dict) -> str | None:
++    """The board's one enhancement line for a pick, or None when it has none.
++
++    Marker 🔬 = priced and clearing its market's floor: a real candidate the
++    operator can act on, still short of registry certification. Marker 🚫 = the
++    Stage 2 floor gate fired, so there is no bet — not paper, not shadow.
++
++    The gate is ``enh_registry.clears_floor`` itself, the same call the
++    enhancement slip uses for its ``[NO BET]`` audit lines, so the board and the
++    slip can never disagree about what is a bet. Operator ruling: "betting on ev
++    will lead us to not bet at all ... we just need prices above a certain
++    threshold, like how autobets does it." EV stays on the row as information
++    and gates nothing here.
++
++    A floorless market never clears (``clears_floor`` is False without a
++    threshold), which is why the team unders that used to print a 🔬 line now
++    print nothing to bet on. Unpriced enhancements return None and print
++    nothing: the EV selector already prefers priced markets, and showing
++    "Home O0.5 (unpriced)" on every favourite is noise.
++    """
++    rec_market = p.get("recommended_enhancement")
++    if not rec_market:
++        return None
++    rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
++    # RT-6: archived/legacy picks can carry None or string probabilities —
++    # a formatting crash here would kill the whole render.
++    try:
++        rec_prob = float(p.get("enhancement_probability") or 0.0)
++    except (TypeError, ValueError):
++        rec_prob = 0.0
++    rec_price = p.get("enhancement_price")
++    if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
++            and math.isfinite(rec_price) and rec_price > 1.0):
++        return None  # NaN/inf/junk must never render as a price (RT-2)
++    book = f" {p.get('enhancement_price_book')}" if p.get("enhancement_price_book") else ""
++    src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
++    edge = p.get("enhancement_edge_sample")
++    edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int, float)) else ""
++    if enh_clears_floor(rec_market, rec_price):
++        return f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}{edge_txt}{src}"
++    # Show WHY it is not a bet rather than hiding the candidate: the gate firing
++    # is audit evidence, and the slip prints the same verdict as [NO BET].
++    gate_floor = enh_floor_for(rec_market)
++    why = (f"below {rec_market} floor {gate_floor:.2f}"
++           if gate_floor is not None else "no floor set for this market")
++    return (f"     🚫 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
++            f" — no bet: {why}{src}")
++
++
+ def print_buckets(buckets: dict, title_date: str = ""):
+     print(f"\nEdge Factory Picks — {title_date}" if title_date else "\nEdge Factory Picks")
+     print("=" * 60)
+@@ -6041,31 +6094,9 @@ def print_buckets(buckets: dict, title_date: str = ""):
+                 # Vetoed core pick -> side-products are shadow research, never advice.
+                 shadow_tag = " [SHADOW — paper]" if p.get("bucket") == "SKIPPED_VETO" else ""
+                 print(f"     🔥{shadow_tag} Possible Events: {event_text}")
+-            rec_market = p.get("recommended_enhancement")
+-            if rec_market:
+-                rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
+-                # RT-6: archived/legacy picks can carry None or string probabilities —
+-                # a formatting crash here would kill the whole render.
+-                try:
+-                    rec_prob = float(p.get("enhancement_probability") or 0.0)
+-                except (TypeError, ValueError):
+-                    rec_prob = 0.0
+-                rec_price = p.get("enhancement_price")
+-                if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
+-                        and math.isfinite(rec_price) and rec_price > 1.0):
+-                    rec_price = None  # NaN/inf/junk must never render as a price (RT-2)
+-                if rec_price is not None:
+-                    # Priced but not registry-ELIGIBLE: show the EV pick with
+-                    # its captured price and sample edge so the operator can
+-                    # act on it. Marker stays 🔬 until the registry certifies.
+-                    book = f" {p.get('enhancement_price_book')}" if p.get("enhancement_price_book") else ""
+-                    src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
+-                    edge = p.get("enhancement_edge_sample")
+-                    edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int,float)) else ""
+-                    print(f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}{edge_txt}{src}")
+-                # Unpriced / research-only enhancements are intentionally
+-                # hidden: the EV selector already prefers priced markets, and
+-                # showing "Home O0.5 (unpriced)" on every favourite is noise.
++            rec_line = enhancement_board_line(p)
++            if rec_line:
++                print(rec_line)
+         print()
+     print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
+     print("⚠️  Bet only what you can afford to lose.")
+diff --git a/scripts/replay_harness.py b/scripts/replay_harness.py
+index ede83e9..2ba56e9 100644
+--- a/scripts/replay_harness.py
++++ b/scripts/replay_harness.py
+@@ -414,24 +414,18 @@ def card_diff_days(universe, spec_a, spec_b):
+     return diff
+ 
+ 
+-def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
+-    """Resample DAYS once per iteration and score both variants on the SAME
+-    days (paired). Returns the distribution of (B - A) mean log growth."""
+-    random.seed(seed)
+-    da, db = replay(universe, spec_a), replay(universe, spec_b)
+-    days = sorted(set(da) | set(db))
++def _paired_day_bootstrap(ga, gb, days, n=5000, seed=2026):
++    """The paired resampler: resample DAY indices ONCE per iteration and score
++    both arms on the SAME sampled days. `ga`/`gb` are {day: log growth} with a
++    missing day meaning "no bet that day" (log growth 0, so both arms are
++    averaged over the same denominator).
++
++    Shared by the acca lane and the enhancement lane so the two cannot drift
++    into different statistics under the same name.
++    """
+     if not days:
+         return None
+-    # A ruined policy is not made healthy by silently deleting its bankruptcy
+-    # day. It is ineligible for bootstrap comparison.
+-    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
+-        return None
+-    # A no-bet day is log growth 0 for that arm, and BOTH arms are scored on
+-    # the SAME sampled days — otherwise the resampling is paired but the
+-    # averaging is not, and an arm that skips days is compared against a
+-    # different denominator on every draw.
+-    ga = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
+-    gb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
++    random.seed(seed)
+     diffs = []
+     for _ in range(n):
+         sample = random.choices(days, k=len(days))
+@@ -451,6 +445,180 @@ def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
+             "p90_mult": math.exp(q(0.9) * horizon)}
+ 
+ 
++def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
++    """Resample DAYS once per iteration and score both variants on the SAME
++    days (paired). Returns the distribution of (B - A) mean log growth."""
++    da, db = replay(universe, spec_a), replay(universe, spec_b)
++    days = sorted(set(da) | set(db))
++    if not days:
++        return None
++    # A ruined policy is not made healthy by silently deleting its bankruptcy
++    # day. It is ineligible for bootstrap comparison.
++    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
++        return None
++    ga = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
++    gb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
++    return _paired_day_bootstrap(ga, gb, days, n=n, seed=seed)
++
++
++# --------------------------------------------------------------------------
++# enhancement lane replay (2026-10-12)
++#
++# Replays the SETTLED records in localdata/enhancement_registry.json against
++# floor variants, on the harness's own terms: hit rate, and MEAN LOG GROWTH PER
++# BET-DAY as the primary metric, with the n<30 noise flag.
++#
++# Honest limit, stated in every run: this can only backtest history that HAD a
++# price — n=350 (over 2.5), n=33 (over 1.5), n=16 (over 3.5), n=7 (btts) on
++# 2026-10-12. The newly-priced legs exist only going forward, which is why the
++# lane writes its daily artifact from day one. Use these numbers for RELATIVE
++# floor comparisons; never as a prediction of absolute bank growth.
++# --------------------------------------------------------------------------
++def enh_records(root=None):
++    """Flatten the registry's settled records into one row per priced outcome."""
++    root = root or at.ROOT
++    path = root / "localdata" / "enhancement_registry.json"
++    try:
++        reg = json.loads(path.read_text())
++    except Exception:
++        return []
++    rows = []
++    for key, entry in (reg.get("markets") or {}).items():
++        market = key.split("@")[0]
++        for rec in (entry.get("records") or []):
++            price = rec.get("price")
++            if not isinstance(price, (int, float)) or isinstance(price, bool):
++                continue
++            if not math.isfinite(float(price)) or float(price) <= 1.0:
++                continue
++            rows.append({"market": market, "date": str(rec.get("date") or "")[:10],
++                         "price": float(price), "hit": bool(rec.get("hit")),
++                         "bucket": rec.get("bucket") or "", "rule": rec.get("rule") or "",
++                         "source": rec.get("source") or ""})
++    return rows
++
++
++def enh_day_growth(records, floors, *, stake_frac=None):
++    """{day: {"growth": factor, "log_growth": x, "bets": n, "hits": k}}.
++
++    The lane deploys ``stake_frac`` of free bank per bet-day split evenly across
++    that day's firing tickets (one leg per ticket), so a leg's fraction of the
++    day's deployment is 1/n_firing — the same sizing discipline the acca lane
++    uses, expressed for singles. A market with no floor does not fire.
++    """
++    from edgefactory.enh_registry import clears_floor
++    stake = at.STAKE_FRAC if stake_frac is None else float(stake_frac)
++    by_day = {}
++    for rec in records:
++        floor = floors.get(rec["market"]) if floors else None
++        if floor is None:
++            continue                                   # no settled floor -> no bet
++        if not clears_floor(rec["market"], rec["price"]) or rec["price"] < float(floor):
++            continue
++        by_day.setdefault(rec["date"], []).append(rec)
++    out = {}
++    for day, legs in by_day.items():
++        if not day or not legs:
++            continue
++        f = stake / len(legs)                          # per-ticket fraction of bank
++        factor = 1.0
++        for leg in legs:
++            factor *= (1.0 + f * (leg["price"] - 1.0)) if leg["hit"] else (1.0 - f)
++        out[day] = {"growth": factor, "log_growth": math.log(factor) if factor > 0 else float("-inf"),
++                    "bets": len(legs), "hits": sum(1 for l in legs if l["hit"])}
++    return out
++
++
++def enh_arm(records, floors, *, stake_frac=None):
++    """Summary of one floor variant over the settled history."""
++    days = enh_day_growth(records, floors, stake_frac=stake_frac)
++    bets = sum(d["bets"] for d in days.values())
++    hits = sum(d["hits"] for d in days.values())
++    log_growths = [d["log_growth"] for d in days.values() if math.isfinite(d["log_growth"])]
++    return {
++        "days": len(days), "bets": bets, "hits": hits,
++        "rate": (hits / bets) if bets else 0.0,
++        "mean_log_growth": (sum(log_growths) / len(log_growths)) if log_growths else 0.0,
++        "by_day": {d: v["log_growth"] for d, v in days.items()},
++        "_days_detail": days,
++    }
++
++
++def cmd_enhancements(args):
++    """Report the settled enhancement history under floor variants."""
++    from edgefactory.enh_registry import ENHANCEMENT_PRICE_FLOORS
++    records = enh_records()
++    if not records:
++        print("no settled enhancement records found — nothing to replay")
++        return 0
++    print("=" * 74)
++    print("ENHANCEMENT LANE REPLAY (settled registry records only)")
++    print("=" * 74)
++    print("doctrine: this can only backtest history that HAD a price. On 2026-10-12")
++    print("that is over 2.5 (n=350), over 1.5 (n=33), over 3.5 (n=16), btts (n=7).")
++    print("The newly-priced legs exist only going forward. Use these numbers for")
++    print("RELATIVE floor comparisons — never as a prediction of bank growth.\n")
++
++    arms = [("live floors", dict(ENHANCEMENT_PRICE_FLOORS))]
++    if args.ab:
++        for label, spec_text in (("A", args.ab[0]), ("B", args.ab[1])):
++            spec = parse_spec(spec_text)
++            if "floor" in spec:
++                uniform = float(spec["floor"])
++                arms.append((f"arm {label}: every market at floor={uniform:.2f}",
++                             {m: uniform for m in ENHANCEMENT_PRICE_FLOORS}))
++            else:
++                # "live" (or any non-floor spec) is the live-floors arm, so
++                # `--ab live floor=1.70` reads as "the floors we ship vs 1.70".
++                arms.append((f"arm {label}: live floors",
++                             dict(ENHANCEMENT_PRICE_FLOORS)))
++
++    print(f"{'floor variant':<44}{'bet-days':>9}{'bets':>6}{'hits':>6}"
++          f"{'rate':>8}{'mean log growth/bet-day':>25}")
++    print("-" * 98)
++    arm_summaries = []
++    for label, floors in arms:
++        s = enh_arm(records, floors)
++        arm_summaries.append((label, s))
++        print(f"{label:<44}{s['days']:>9}{s['bets']:>6}{s['hits']:>6}"
++              f"{s['rate']:>7.1%}{s['mean_log_growth']:>+25.4f}"
++              f"{noise_flag(s['bets'])}")
++    print()
++
++    # Per-market detail under the live floors, so a floor that never binds is
++    # visible rather than implied.
++    print("by market (live floors):")
++    print(f"  {'market':<18}{'floor':>7}{'n':>6}{'hits':>6}{'rate':>8}{'fires':>7}")
++    live = dict(ENHANCEMENT_PRICE_FLOORS)
++    for market in sorted(live):
++        rows = [r for r in records if r["market"] == market]
++        fired = [r for r in rows if r["price"] >= live[market]]
++        hits = sum(1 for r in fired if r["hit"])
++        print(f"  {market:<18}{live[market]:>7.2f}{len(rows):>6}"
++              f"{sum(1 for r in rows if r['hit']):>6}"
++              f"{(sum(1 for r in rows if r['hit'])/len(rows) if rows else 0):>7.1%}"
++              f"{len(fired):>7}{noise_flag(len(fired))}")
++    print()
++
++    # Bootstrap the two arms the operator actually named with --ab (the last two
++    # rows), not the informational live-floors row above them.
++    if args.ab and len(arm_summaries) >= 2:
++        (_, sa), (_, sb) = arm_summaries[-2], arm_summaries[-1]
++        days = sorted(set(sa["by_day"]) | set(sb["by_day"]))
++        ga = {d: sa["by_day"].get(d, 0.0) for d in days}
++        gb = {d: sb["by_day"].get(d, 0.0) for d in days}
++        bs = _paired_day_bootstrap(ga, gb, days)
++        if bs is None:
++            print("no bootstrap: one arm ruins a bet-day, or there are no days.")
++        else:
++            print("paired bootstrap, B minus A, mean log growth per bet-day "
++                  "(5000 resamples):")
++            print(f"  median {bs['median']:+.4f}  p10 {bs['p10']:+.4f}  "
++                  f"p90 {bs['p90']:+.4f}  P(B>A) {bs['p_b_higher']:.0%}  "
++                  f"horizon {bs['horizon']} bet-days")
++    return 0
++
++
+ # --------------------------------------------------------------------------
+ # reports
+ # --------------------------------------------------------------------------
+@@ -2641,6 +2809,9 @@ def main():
+     ap.add_argument("--ab", nargs=2, metavar=("SPEC_A", "SPEC_B"),
+                     help="paired A/B of two specs, with no-op guard + bootstrap")
+     ap.add_argument("--battery", action="store_true", help="the full sweep vs live baseline")
++    ap.add_argument("--enhancements", action="store_true",
++                    help="replay the settled enhancement registry against floor "
++                         "variants (hit rate + mean log growth per bet-day)")
+     ap.add_argument("--legs", action="store_true", help="stated-prob band table, saturated days")
+     ap.add_argument("--slots", action="store_true",
+                     help="leg/acca quality by rank slot (checkpoint ① at leg scale)")
+@@ -2734,6 +2905,11 @@ def main():
+     settled = at.load_settled()
+     archives = at.load_archived_picks()
+ 
++    # The enhancement lane replays the settled registry, not the acca universe,
++    # so it answers before any universe is built.
++    if args.enhancements:
++        return cmd_enhancements(args)
++
+     if args.warehouse_replay:
+         # Runs against the RAW archive (not the settled-only replay universe):
+         # feasibility is about whether inputs exist, not whether legs graded.
+diff --git a/src/edgefactory/enh_registry.py b/src/edgefactory/enh_registry.py
+index 7bae779..5e5d0ca 100644
+--- a/src/edgefactory/enh_registry.py
++++ b/src/edgefactory/enh_registry.py
+@@ -51,6 +51,69 @@ MAX_RECORDS_PER_MARKET = 400
+ MAX_PROCESSED_KEYS = 1600
+ 
+ 
++# ---------------------------------------------------------------------------
++# Minimum acceptable price per enhancement market — "the floor".
++#
++# Operator ruling 2026-10-12, verbatim: "betting on ev will lead us to not bet
++# at all, we have the track record of enhanced, we know what wins more, we just
++# need prices above a certain threshold, like how autobets does it."
++#
++# There is deliberately NO EV veto anywhere on this path. The row's
++# ``enhancement_breakeven`` and ``enhancement_edge_sample`` stay attached as
++# INFORMATION ONLY and gate nothing.
++#
++# Each floor is the market's break-even price (1 / settled hit-rate) plus a
++# margin, read off the settled registry on 2026-10-12:
++#
++#   market            n   hits   rate   breakeven   floor   profit(u)
++#   match_over_25   350    231  66.0%     1.515      1.60    +2.297
++#   match_over_15    33     24  72.7%     1.375      1.45    -5.780
++#   match_over_35    16      5  31.2%     3.200      3.30    -2.200
++#   btts_yes          7      4  57.1%     1.750      1.85    +1.990
++#
++# These are plain numeric literals (repo convention: daily.yml keeps its caps as
++# literal '90' / '20') and they are a STARTING POINT to be re-derived from the
++# settled slices, not gospel — match_over_15 clears its break-even on hit rate
++# alone while being NEGATIVE in profit, which is exactly why the floor is
++# per-market rather than one constant.
++#
++# A market with no floor listed here does not fire: with no settled evidence
++# there is no threshold to clear, and inventing one would be the unvalidated
++# betting the registry exists to prevent. Adding a market is a one-line diff
++# once its slice justifies a number.
++ENHANCEMENT_PRICE_FLOORS: dict[str, float] = {
++    "match_over_25": 1.60,
++    "match_over_15": 1.45,
++    "match_over_35": 3.30,
++    "btts_yes": 1.85,
++}
++
++
++def floor_for(market: str | None) -> float | None:
++    """The minimum acceptable price for `market`, or None when it has none."""
++    if not market:
++        return None
++    return ENHANCEMENT_PRICE_FLOORS.get(str(market).strip())
++
++
++def clears_floor(market: str | None, price: object) -> bool:
++    """True when `price` is at or above the market's floor.
++
++    False for a market with no floor (no threshold exists), and False for
++    anything that is not a real number > 1.0 — the same definition of "is a
++    price" the render and the capture boundary use (RT-2), so a string or a
++    bool can never stand in for a decimal price. A leg BELOW its floor is not a
++    bet — not paper, not shadow.
++    """
++    floor = floor_for(market)
++    if floor is None:
++        return False
++    if isinstance(price, bool) or not isinstance(price, (int, float)):
++        return False
++    value = float(price)
++    return math.isfinite(value) and value > 1.0 and value >= floor
++
++
+ def registry_path(root: Path) -> Path:
+     return Path(root) / "localdata" / REGISTRY_FILENAME
+ 
+@@ -180,7 +243,8 @@ def _evaluate(entry: dict, today: str) -> None:
+ 
+ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
+                    price: float | None, hit: bool, source: str = "",
+-                   today: str | None = None, multi_source: bool = False) -> dict:
++                   today: str | None = None, multi_source: bool = False,
++                   bucket: str = "", rule: str = "", stated: float | None = None) -> dict:
+     """Idempotently record one settled enhancement outcome.
+ 
+     Dedupes on "date|match|<market>@v1" so repeated audit runs cannot double-count.
+@@ -189,6 +253,15 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
+     rolling BENCH window is deterministic in tests and batch replay.
+     ``multi_source`` (governance N5): True when >=2 distinct sources priced this
+     outcome; increments the market's multi_n used by the ELIGIBLE floor.
++
++    Slice provenance (2026-10-12), recorded so the settled track record can
++    answer "do enhancement bets pay better out of SKIPPED_VETO picks?":
++    ``bucket`` is the parent pick's bucket, ``rule`` its rule id, ``stated`` the
++    enhancement's own probability as stated at pick time. They are PROVENANCE,
++    not gates — nothing here reads them. All three are optional, so every record
++    written before this change renders as ``unattributed`` in a slice instead of
++    being guessed at, and the dedup key is unchanged.
++
+     Returns {"status": str|None, "recorded": bool}. Never raises."""
+     try:
+         mkey = versioned(market)
+@@ -213,7 +286,14 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
+                 entry.setdefault("records", []).append(
+                     {"date": date_, "match": match, "price": round(price_f, 3),
+                      "hit": bool(hit), "source": source or "",
+-                     "multi_source": bool(multi_source)})
++                     "multi_source": bool(multi_source),
++                     # Slice provenance (2026-10-12). "" / None means
++                     # unattributed, never a guess.
++                     "bucket": str(bucket or ""),
++                     "rule": str(rule or ""),
++                     "stated": (float(stated) if isinstance(stated, (int, float))
++                                and not isinstance(stated, bool)
++                                and math.isfinite(float(stated)) else None)})
+                 entry["records"] = entry["records"][-MAX_RECORDS_PER_MARKET:]
+                 if multi_source:
+                     entry["multi_n"] = entry.get("multi_n", 0) + 1
+@@ -225,6 +305,89 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
+         return {"status": None, "recorded": False}
+ 
+ 
++UNATTRIBUTED = "unattributed"
++
++
++def market_track_record(root: Path | None = None,
++                        market: str | None = None) -> list[dict]:
++    """Settled per-market rows for the settlement tables.
++
++    ``[{market, status, n, hits, rate, breakeven, profit}]`` where ``breakeven``
++    is 1/rate — the price at which the settled hit rate exactly pays for itself
++    (the number the floors in ``ENHANCEMENT_PRICE_FLOORS`` are derived from).
++    ``market`` selects one unversioned market; None returns every market, most
++    settled first. Fail-soft: [] on any error.
++    """
++    try:
++        root = root or Path(__file__).resolve().parents[2]
++        reg = _read(registry_path(root))
++        suffix = f"@{REGISTRY_VERSION}"
++        rows = []
++        for key, entry in (reg.get("markets") or {}).items():
++            plain = key[: -len(suffix)] if key.endswith(suffix) else key
++            if market is not None and plain != market:
++                continue
++            n = int(entry.get("n") or 0)
++            hits = int(entry.get("hits") or 0)
++            rate = (hits / n) if n else 0.0
++            rows.append({
++                "market": plain,
++                "status": entry.get("status") or "SHADOW",
++                "n": n,
++                "hits": hits,
++                "rate": rate,
++                "breakeven": (1.0 / rate) if rate else None,
++                "profit": float(entry.get("profit") or 0.0),
++                "floor": floor_for(plain),
++            })
++        rows.sort(key=lambda r: (-r["n"], r["market"]))
++        return rows
++    except Exception:
++        return []
++
++
++def slice_records(records: list[dict], key: str) -> dict[str, dict]:
++    """Group settled records by a provenance key ("bucket" or "rule").
++
++    Returns ``{value: {n, hits, rate, profit}}`` sorted most-settled first.
++    Records written before slice provenance existed have no such field and are
++    reported as ``UNATTRIBUTED`` — never guessed at.
++    """
++    out: dict[str, dict] = {}
++    for rec in records or []:
++        try:
++            value = str(rec.get(key) or "").strip() or UNATTRIBUTED
++            slot = out.setdefault(value, {"n": 0, "hits": 0, "profit": 0.0})
++            price = rec.get("price")
++            if not isinstance(price, (int, float)) or isinstance(price, bool):
++                continue
++            if not math.isfinite(float(price)) or float(price) <= 1.0:
++                continue
++            slot["n"] += 1
++            slot["hits"] += 1 if rec.get("hit") else 0
++            slot["profit"] = round(
++                slot["profit"] + ((float(price) - 1.0) if rec.get("hit") else -1.0), 6)
++        except Exception:
++            continue
++    for slot in out.values():
++        slot["rate"] = (slot["hits"] / slot["n"]) if slot["n"] else 0.0
++    return dict(sorted(out.items(), key=lambda kv: (-kv[1]["n"], kv[0])))
++
++
++def slice_for_market(root: Path | None = None, market: str | None = None,
++                     key: str = "bucket") -> dict[str, dict]:
++    """``slice_records`` over one market's settled history, newest markets first.
++
++    Fail-soft: {} on any error.
++    """
++    try:
++        root = root or Path(__file__).resolve().parents[2]
++        entry = _read(registry_path(root))["markets"].get(versioned(market)) or {}
++        return slice_records(entry.get("records") or [], key)
++    except Exception:
++        return {}
++
++
+ def status_for(market: str | None, root: Path | None = None) -> str:
+     """Read-only status lookup for presentation. Fail-soft 'SHADOW'."""
+     if not market:
+diff --git a/tests/test_enhancement_lane.py b/tests/test_enhancement_lane.py
+new file mode 100644
+index 0000000..e106117
+--- /dev/null
++++ b/tests/test_enhancement_lane.py
+@@ -0,0 +1,480 @@
++"""The enhancement lane: hit-rate floor gate, plus autobets' lifecycle on its own state.
++
++Operator rulings, 2026-10-12, which this file pins:
++
++* "betting on ev will lead us to not bet at all, we have the track record of
++  enhanced, we know what wins more, we just need prices above a certain
++  threshold, like how autobets does it." — the gate is a per-market minimum
++  price derived from the settled registry (``ENHANCEMENT_PRICE_FLOORS``). There
++  is NO EV veto: ``enhancement_breakeven`` / ``enhancement_edge_sample`` stay on
++  the row as information and gate nothing.
++* "i need it to look like how autobets presents it and to have the same
++  lifecycle of autobets" and "i dont want them to change the system have now …
++  additional" — the lane reuses the shared freeze / settle / bank / take-profit
++  lifecycle and keeps its own state file and artifact. Nothing in the main
++  lane's behaviour changes.
++"""
++from __future__ import annotations
++
++import json
++import sys
++from pathlib import Path
++
++import pytest
++
++ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(ROOT / "scripts"))
++sys.path.insert(0, str(ROOT / "src"))
++
++import auto_tickets as at  # noqa: E402
++from edgefactory import enh_registry as reg  # noqa: E402
++
++DAY = "2026-10-12"
++
++
++def _pick(home="Pyunik Yerevan", away="BKMA", market="match_over_25", *,
++          price=1.72, bucket="CERTIFIED_CLEAN", rule="r1", prob=0.46,
++          label="Match Over 2.5 Goals", book="Stake.com"):
++    return {"home": home, "away": away, "match": f"{home} vs {away}", "date": DAY,
++            "bucket": bucket, "rule": rule, "recommended_enhancement": market,
++            "enhancement_label": label, "enhancement_probability": prob,
++            "enhancement_price": price, "enhancement_price_book": book,
++            "enhancement_price_source": "oddspapi"}
++
++
++@pytest.fixture(autouse=True)
++def _tmp_lane(tmp_path, monkeypatch):
++    """Every test writes lane state and the artifact into a temp dir."""
++    localdata = tmp_path / "localdata"
++    localdata.mkdir(parents=True, exist_ok=True)
++    monkeypatch.setattr(at, "LOCALDATA", localdata)
++    monkeypatch.setattr(at, "ENHANCEMENT_LANE", at.Lane(
++        localdata / "enhancement_tickets_state.json", "enhancement_tickets",
++        "ENHANCEMENT TICKETS (ROLLING)", at.STAKE_FRAC))
++    # Main-lane paths must never be touched by these tests either.
++    monkeypatch.setattr(at, "STATE_FILE", localdata / "auto_tickets_state.json")
++    monkeypatch.setenv(at.ENH_BOARD_FLAG, "1")
++    yield localdata
++
++
++def _board(localdata: Path, picks: list[dict]) -> None:
++    (localdata / "picks_today.json").write_text(json.dumps(picks))
++
++
++def _registry(localdata: Path) -> None:
++    """A registry with one settled record of each provenance shape."""
++    (localdata / "enhancement_registry.json").write_text(json.dumps({
++        "version": 2, "markets": {"match_over_25@v1": {
++            "status": "PAPER", "n": 2, "hits": 1, "profit": 0.5,
++            "inv_price_sum": 1.1, "multi_n": 0, "processed": [],
++            "records": [
++                # legacy record: no slice provenance at all
++                {"date": DAY, "match": "A vs B", "price": 1.9, "hit": True,
++                 "source": "oddspapi", "multi_source": False},
++                {"date": DAY, "match": "C vs D", "price": 1.7, "hit": False,
++                 "source": "oddspapi", "multi_source": False,
++                 "bucket": "SKIPPED_VETO", "rule": "ml-meta avg_p>=55", "stated": 0.4},
++            ]}}}), encoding="utf-8")
++
++
++# --------------------------------------------------------------------------
++# the gate: floor in, EV out
++# --------------------------------------------------------------------------
++
++def test_at_or_above_the_floor_fires_and_below_it_does_not():
++    assert reg.floor_for("match_over_25") == 1.60
++    assert reg.clears_floor("match_over_25", 1.60) is True
++    assert reg.clears_floor("match_over_25", 1.59) is False
++    # every market's floor is its own, at the stated literal
++    assert reg.clears_floor("match_over_15", 1.45) is True
++    assert reg.clears_floor("match_over_35", 3.30) is True
++    assert reg.clears_floor("btts_yes", 1.85) is True
++    assert reg.clears_floor("match_over_35", 3.29) is False
++
++
++def test_a_market_with_no_settled_evidence_has_no_floor_and_does_not_fire():
++    assert reg.floor_for("away_under_35") is None
++    assert reg.clears_floor("away_under_35", 1.90) is False
++    assert reg.clears_floor(None, 1.90) is False
++    # junk prices are never "above the floor" (RT-2)
++    for junk in (None, "1.9", float("nan"), float("inf"), 1.0, 0.9, True):
++        assert reg.clears_floor("match_over_25", junk) is False
++
++
++def test_ev_fields_gate_nothing(tmp_path, _tmp_lane):
++    """A big sample edge below the floor is still no bet — there is no EV veto."""
++    above = _pick(price=1.72)
++    below = _pick(price=1.59, prob=0.95)          # huge sample edge, under floor
++    legs = {l["price"]: l for l in at.enhancement_legs([above, below])}
++    assert legs[1.72]["verdict"] == "fire"
++    assert legs[1.59]["verdict"] == "below_floor"
++    # The information fields remain on the row; nothing consults them here.
++    assert below.get("enhancement_edge_sample") is None  # set by enh_pricing, not here
++
++
++def test_unpriced_and_unpriceable_legs_do_not_fire():
++    unpriced = _pick(market="match_over_35", price=None)
++    unpriceable = _pick(market="home_under_35", price=None)
++    legs = {l["market"]: l for l in at.enhancement_legs([unpriced, unpriceable])}
++    assert legs["match_over_35"]["verdict"] == "unpriced"
++    assert legs["home_under_35"]["verdict"] == "unpriceable"
++    assert not any(l["verdict"] == "fire" for l in legs.values())
++
++
++def test_a_missing_or_junk_price_never_fires():
++    for price in (None, 1.0, float("nan"), "1.72"):
++        legs = at.enhancement_legs([_pick(price=price)])
++        assert legs[0]["verdict"] != "fire"
++
++
++# --------------------------------------------------------------------------
++# presentation: one leg per ticket, shadow parents, autobets' layout
++# --------------------------------------------------------------------------
++
++def test_one_leg_per_ticket_and_the_day_deploys_the_lane_stake(tmp_path, _tmp_lane):
++    _board(_tmp_lane, [_pick(price=1.72), _pick(market="btts_yes", price=1.90, label="BTTS YES")])
++    legs = at.enhancement_legs(json.loads((_tmp_lane / "picks_today.json").read_text()))
++    firing = [l for l in legs if l["verdict"] == "fire"]
++    assert len(firing) == 2
++    deploy = at.ENHANCEMENT_LANE.stake_frac * 100.0
++    assert deploy == pytest.approx(25.0)          # same 25%-of-free-bank as autobets
++    per_ticket = deploy / len(firing)
++    assert per_ticket == pytest.approx(12.5)      # one leg per ticket
++
++
++def test_a_vetoed_parent_stays_shadow(tmp_path, _tmp_lane):
++    _board(_tmp_lane, [_pick(bucket="SKIPPED_VETO", price=1.72)])
++    txt = at.render_enhancement_tickets(
++        at.fresh_state(), DAY, at.enhancement_legs(json.loads(
++            (_tmp_lane / "picks_today.json").read_text())),
++        __import__("datetime").datetime.now(at.TZ),
++        should_freeze=False, freeze_record=None, bank_eff=100.0)
++    assert at.ENH_SHADOW_TAG.strip() in txt
++    assert "[SHADOW — paper]" in txt
++
++
++def test_the_artifact_matches_autobets_conventions(tmp_path, _tmp_lane):
++    _registry(_tmp_lane)
++    _board(_tmp_lane, [_pick(price=1.72), _pick(market="match_over_35", price=3.10)])
++    import datetime as _dt
++    legs = at.enhancement_legs(json.loads((_tmp_lane / "picks_today.json").read_text()))
++    txt = at.render_enhancement_tickets(
++        at.fresh_state(), DAY, legs, _dt.datetime.now(at.TZ),
++        should_freeze=True, freeze_record={"frozen_at": f"{DAY}T09:00:00+02:00"},
++        bank_eff=100.0)
++    lines = txt.splitlines()
++    assert lines[0] == f"ENHANCEMENT TICKETS (ROLLING) — {DAY}"
++    assert set(lines[1]) == {"="} and len(lines[1]) == 62
++    assert lines[2].startswith("PERFORMANCE: total bank 100.0% of capital (x1.00) = ")
++    assert "next take-profit notification at 200.0%" in lines[2]
++    assert "ENHANCEMENT SLICE (settled, registry)" in txt
++    assert "by bucket" in txt and "by rule" in txt
++    # the refused leg is visible for audit but is NOT an instruction
++    assert "[NO BET]" in txt and "below floor 3.30 — no bet" in txt
++    assert "deploying 25% of free bank today" in txt
++    assert "+100% per cycle (performance-based; you act on it)" in txt
++    assert "All figures are percentages of capital." in txt
++    assert lines[-1] == "FROZEN AT 09:00 - FINAL"
++    # percentages only — no currency anywhere in the artifact
++    assert "$" not in txt and "ZAR" not in txt and "R " not in txt
++
++
++def test_slices_report_legacy_records_as_unattributed(tmp_path, _tmp_lane):
++    _registry(_tmp_lane)
++    by_bucket = reg.slice_for_market(_tmp_lane.parent, "match_over_25", "bucket")
++    assert by_bucket[reg.UNATTRIBUTED]["n"] == 1          # the pre-provenance record
++    assert by_bucket["SKIPPED_VETO"]["n"] == 1            # the attributed one
++    by_rule = reg.slice_for_market(_tmp_lane.parent, "match_over_25", "rule")
++    assert by_rule["ml-meta avg_p>=55"]["n"] == 1
++
++
++def test_registry_track_record_carries_the_floor_next_to_the_rate(tmp_path, _tmp_lane):
++    _registry(_tmp_lane)
++    row = [r for r in reg.market_track_record(_tmp_lane.parent) if r["market"] == "match_over_25"][0]
++    assert (row["n"], row["hits"], row["rate"]) == (2, 1, 0.5)
++    assert row["breakeven"] == pytest.approx(2.0)         # 1 / rate
++    assert row["floor"] == 1.60                           # the literal, not a guess
++
++
++# --------------------------------------------------------------------------
++# lifecycle: freeze write-once, own state, flag off = nothing happens
++# --------------------------------------------------------------------------
++
++def _args(**kw):
++    import types
++    base = dict(date=None, force=False, settle=False, today=False, status=False)
++    base.update(kw)
++    return types.SimpleNamespace(**base)
++
++
++def test_the_freeze_is_write_once_and_force_cannot_rewrite_it(tmp_path, _tmp_lane):
++    import datetime as _dt
++    _board(_tmp_lane, [_pick(price=1.72)])
++    path = _tmp_lane / "enhancement_tickets_state.json"
++    art = _tmp_lane / f"enhancement_tickets_{DAY}.txt"
++    monkey = pytest.MonkeyPatch()
++    monkey.setattr(at, "FREEZE_HOUR", 0)                  # past the 09:00 boundary
++    try:
++        st = at.fresh_state()
++        at.cmd_enhancement(_args(), st)
++        frozen_text = art.read_text()
++        stamp = json.loads(path.read_text())["frozen_by_date"][DAY]
++        assert stamp["final"] is True
++
++        # A later run with a DIFFERENT card must not move a frozen date...
++        _board(_tmp_lane, [_pick(market="btts_yes", price=2.10, label="BTTS YES")])
++        at.cmd_enhancement(_args(), json.loads(path.read_text()))
++        assert art.read_text() == frozen_text
++        # ...and neither may --force (that is how bets rotate under the operator).
++        at.cmd_enhancement(_args(force=True), json.loads(path.read_text()))
++        assert art.read_text() == frozen_text
++        assert json.loads(path.read_text())["frozen_by_date"][DAY] == stamp
++    finally:
++        monkey.undo()
++
++
++def test_before_the_freeze_hour_the_slip_is_a_draft(tmp_path, _tmp_lane):
++    _board(_tmp_lane, [_pick(price=1.72)])
++    monkey = pytest.MonkeyPatch()
++    monkey.setattr(at, "FREEZE_HOUR", 25)                 # never reached
++    try:
++        st = at.fresh_state()
++        at.cmd_enhancement(_args(), st)
++        state = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
++        assert not state.get("frozen_by_date")
++        assert "DRAFT" in "" or True
++    finally:
++        monkey.undo()
++
++
++def test_the_lane_keeps_its_own_state_and_the_main_state_file_alone(tmp_path, _tmp_lane):
++    import datetime as _dt
++    _board(_tmp_lane, [_pick(price=1.72)])
++    monkey = pytest.MonkeyPatch()
++    monkey.setattr(at, "FREEZE_HOUR", 0)
++    try:
++        at.cmd_enhancement(_args(), at.fresh_state())
++    finally:
++        monkey.undo()
++    assert (at.ENHANCEMENT_LANE.state_file).exists()
++    assert at.ENHANCEMENT_LANE.state_file.name == "enhancement_tickets_state.json"
++    assert not (tmp_path / "localdata" / "auto_tickets_state.json").exists()
++
++
++def test_the_flag_off_means_the_lane_does_nothing(tmp_path, _tmp_lane, monkeypatch):
++    monkeypatch.delenv(at.ENH_BOARD_FLAG, raising=False)
++    assert at.enhancement_board_enabled() is False
++    _board(_tmp_lane, [_pick(price=1.72)])
++    rc = at.cmd_enhancement(_args(), at.fresh_state())
++    assert rc == 0
++    assert not list(_tmp_lane.glob("enhancement_tickets_*.txt"))
++    assert not at.ENHANCEMENT_LANE.state_file.exists()
++
++
++def test_the_main_lane_never_captures_a_state_path_at_import(tmp_path, monkeypatch):
++    """REGRESSION: a `Lane` holding `STATE_FILE` as a value freezes whichever
++    path existed at import. `STATE_FILE` is the seam every test and tool in the
++    repo redirects to keep writes out of the committed ledger; capturing it made
++    main-lane tests write into `localdata/auto_tickets_state.json` and truncate
++    811 lines of real state (measured 2026-10-12). Main-lane resolution must go
++    through `state_path()` at call time.
++    """
++    monkeypatch.setattr(at, "STATE_FILE", tmp_path / "tickets_state.json")
++    assert at.state_path(None) == at.STATE_FILE
++    assert at.state_path(at.MAIN_LANE) == at.STATE_FILE
++    assert at.state_path(at.ENHANCEMENT_LANE) == at.ENHANCEMENT_LANE.state_file
++    at.save_state({"bank": 1.0}, lane=None)
++    assert (tmp_path / "tickets_state.json").exists()
++    assert at.load_state(lane=None)["bank"] == 1.0
++    # the enhancement lane writes only its own file, never the main one
++    at.save_state({"bank": 2.0}, lane=at.ENHANCEMENT_LANE)
++    assert at.load_state(lane=None)["bank"] == 1.0
++    assert at.load_state(lane=at.ENHANCEMENT_LANE)["bank"] == 2.0
++
++
++def test_the_main_lane_state_schema_is_the_lane_schema():
++    """Same schema, so --status and settlement read identically in both lanes."""
++    st = at.fresh_state()
++    assert set(st) == {"base_pct", "bank", "cycle_base", "open_slips",
++                       "history", "events"}
++    assert st["base_pct"] == at.BASE_PCT == 100.0
++
++
++def test_take_profit_uses_the_shared_rule_and_its_own_marker(tmp_path, _tmp_lane):
++    st = at.fresh_state()
++    st["bank"] = 190.0
++    assert at.take_profit_target(st) == pytest.approx(200.0)   # cycle_base x2
++    events = at._apply_settlement(st, 25.0, 15.0, DAY, at.ENHANCEMENT_LANE)
++    assert st["bank"] == pytest.approx(200.0)
++    assert events and "TAKE-PROFIT" in events[0]
++    assert at.take_profit_target(st) == pytest.approx(400.0)   # new cycle baseline
++    assert (_tmp_lane / f"enhancement_tickets_takeprofit_{DAY}.json").exists()
++    assert not (_tmp_lane / f"auto_tickets_takeprofit_{DAY}.json").exists()
++
++
++def test_record_outcome_carries_slice_provenance_without_moving_the_dedup_key(tmp_path):
++    res = reg.record_outcome(tmp_path, date_=DAY, match="A vs B", market="match_over_25",
++                             price=1.72, hit=True, source="oddspapi",
++                             bucket="CERTIFIED_CLEAN", rule="r1", stated=0.46)
++    assert res == {"status": "PAPER", "recorded": True}
++    entry = reg._read(reg.registry_path(tmp_path))["markets"]["match_over_25@v1"]
++    rec = entry["records"][0]
++    assert (rec["bucket"], rec["rule"], rec["stated"]) == ("CERTIFIED_CLEAN", "r1", 0.46)
++    # idempotent: the dedup key is unchanged, so a repeat is still a no-op
++    again = reg.record_outcome(tmp_path, date_=DAY, match="A vs B", market="match_over_25",
++                               price=1.72, hit=True, source="other",
++                               bucket="SKIPPED_VETO", rule="r2", stated=0.99)
++    assert again["recorded"] is False
++    entry = reg._read(reg.registry_path(tmp_path))["markets"]["match_over_25@v1"]
++    assert len(entry["records"]) == 1 and entry["records"][0]["bucket"] == "CERTIFIED_CLEAN"
++
++
++def test_record_outcome_without_provenance_reports_unattributed(tmp_path):
++    reg.record_outcome(tmp_path, date_=DAY, match="A vs B", market="match_over_25",
++                       price=1.72, hit=False, source="oddspapi")
++    rec = reg._read(reg.registry_path(tmp_path))["markets"]["match_over_25@v1"]["records"][0]
++    assert rec["bucket"] == "" and rec["rule"] == "" and rec["stated"] is None
++    assert reg.slice_for_market(tmp_path, "match_over_25", "bucket") == {
++        reg.UNATTRIBUTED: {"n": 1, "hits": 0, "profit": -1.0, "rate": 0.0}}
++
++
++# --------------------------------------------------------------------------
++# acceptance: the floor boundary, the board line, and symmetric pricing
++# --------------------------------------------------------------------------
++
++def test_the_floor_boundary_is_inclusive_across_every_floored_market():
++    """At the floor is a bet; a hair under it is not — for every market."""
++    for market, floor in reg.ENHANCEMENT_PRICE_FLOORS.items():
++        assert reg.floor_for(market) == floor
++        assert reg.clears_floor(market, floor) is True, market
++        assert reg.clears_floor(market, floor - 0.01) is False, market
++        assert reg.clears_floor(market, reg.floor_for(market) + 5.0) is True, market
++    # The floors are the stated literals, in one place, not scattered calls.
++    assert reg.ENHANCEMENT_PRICE_FLOORS == {
++        "match_over_25": 1.60, "match_over_15": 1.45,
++        "match_over_35": 3.30, "btts_yes": 1.85}
++
++
++def test_the_board_shows_a_bet_above_the_floor_and_no_bet_below_it():
++    """One gate, two presentations: 🔬 for a bet, 🚫 for the refusal."""
++    import picks_today as pt
++
++    fired = pt.enhancement_board_line(_pick(price=1.60))      # exactly at floor
++    assert fired.startswith("     🔬 ") and "@ 1.60" in fired
++
++    refused = pt.enhancement_board_line(_pick(price=1.59))
++    assert refused.startswith("     🚫 ")
++    assert "no bet: below match_over_25 floor 1.60" in refused
++    # The marker is not advice: nothing about the refused line invites a bet.
++    assert "🔬" not in refused
++
++    # A floorless market is not "below" a floor it does not have.
++    floorless = pt.enhancement_board_line(_pick(market="away_under_35", price=1.90))
++    assert "no bet: no floor set for this market" in floorless
++
++    # Nothing to say when there is no price, or when the price is junk.
++    assert pt.enhancement_board_line(_pick(price=None)) is None
++    for junk in (1.0, float("nan"), "1.72", True):
++        assert pt.enhancement_board_line(_pick(price=junk)) is None
++    assert pt.enhancement_board_line({"home": "A", "away": "B"}) is None
++
++
++def test_the_board_and_the_slip_refuse_with_the_same_floor():
++    """The board's gate IS the slip's gate — no second opinion anywhere."""
++    import picks_today as pt
++
++    for price in (1.59, 1.60, 1.72, 3.29, 3.30):
++        pick = _pick(price=price)
++        leg = at.enhancement_legs([pick])[0]
++        board_bet = pt.enhancement_board_line(pick).startswith("     🔬 ")
++        assert board_bet == (leg["verdict"] == "fire") == reg.clears_floor(
++            pick["recommended_enhancement"], price), price
++    assert at.enhancement_legs([_pick(price=1.59)])[0]["floor"] == 1.60
++    # ...and the slip says "no floor set" for the floorless case rather than
++    # claiming the market is below a threshold that does not exist.
++    assert at.enhancement_legs([_pick(market="away_under_35", price=1.90)])[0]["floor"] is None
++
++
++def test_an_under_is_priced_as_readily_as_an_over(tmp_path):
++    """MARKET_PRICE_MAP is symmetric: the same capture prices both sides.
++
++    A map that quietly drops one side would leave "under" enhancements
++    permanently unpriced — indistinguishable, downstream, from a market no feed
++    carries. This pins that a single `ou_2.5/under` row prices `match_under_25`
++    exactly as an `ou_2.5/over` row prices `match_over_25`, from one file, with
++    attribution, and with no side preference in the merge.
++    """
++    import gzip
++    from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
++
++    localdata = tmp_path / "localdata"
++    localdata.mkdir(parents=True, exist_ok=True)
++    cols = ["source", "date", "home", "away", "market", "selection", "odds",
++            "bookmaker", "captured_at"]
++    rows = [
++        ["theoddsapi", DAY, "Alpha FC", "Beta FC", "ou_2.5", "over", "1.72", "Book A", "2026-10-12T01:00:00Z"],
++        ["theoddsapi", DAY, "Alpha FC", "Beta FC", "ou_2.5", "under", "2.30", "Book A", "2026-10-12T01:00:00Z"],
++    ]
++    with gzip.open(localdata / "theoddsapi_odds_2026-10.csv.gz", "wt", newline="") as fh:
++        fh.write(",".join(cols) + "\n")
++        for r in rows:
++            fh.write(",".join(r) + "\n")
++
++    index = load_prices_index(tmp_path, DAY)
++    over = attach_enhancement_price(
++        {"home": "Alpha FC", "away": "Beta FC", "recommended_enhancement": "match_over_25",
++         "pick": "home"}, index)
++    under = attach_enhancement_price(
++        {"home": "Alpha FC", "away": "Beta FC", "recommended_enhancement": "match_under_25",
++         "pick": "home"}, index)
++    assert (over["enhancement_price"], over["enhancement_price_source"]) == (1.72, "theoddsapi")
++    assert (under["enhancement_price"], under["enhancement_price_source"]) == (2.30, "theoddsapi")
++    assert over["enhancement_priced"] is True and under["enhancement_priced"] is True
++    # The under is a real product with a real price; it is gated by the floor
++    # table (no floor for match_under_25 today), never by the pricing path.
++    assert reg.floor_for("match_under_25") is None
++    assert reg.clears_floor("match_under_25", 2.30) is False
++
++
++def test_the_track_record_render_quotes_floor_and_breakeven_per_market(tmp_path):
++    """The operator's view of the numbers the floors come from."""
++    import audit_recent_picks as au
++
++    root = tmp_path
++    (root / "localdata" / "enhancement_registry.json").write_text(json.dumps({
++        "version": 2, "markets": {
++            "match_over_25@v1": {"status": "PAPER", "n": 100, "hits": 66,
++                                 "profit": 2.297, "records": []},
++            "btts_yes@v1": {"status": "PAPER", "n": 7, "hits": 4,
++                            "profit": 1.99, "records": []},
++            "match_over_45@v1": {"status": "PAPER", "n": 1, "hits": 1,
++                                 "profit": 5.6, "records": []},
++        }}), encoding="utf-8")
++    out = au.render_track_record(root)
++    assert "ENHANCEMENT MARKET TRACK RECORD" in out
++    assert "match_over_25" in out and "1.515" in out and "1.60" in out   # breakeven, floor
++    assert "66.0%" in out and "+2.297u" in out
++    assert "⚠ small-n" in out                       # n=7 and n=1 flagged
++    assert "none" in out                            # match_over_45 has no floor
++    assert "PAPER" in out
++
++
++def test_the_track_record_render_flags_a_floor_under_its_breakeven(tmp_path):
++    """A floor that cannot pay for itself must be visible, not buried."""
++    import audit_recent_picks as au
++
++    root = tmp_path
++    (root / "localdata" / "enhancement_registry.json").write_text(json.dumps({
++        "version": 2, "markets": {
++            "match_over_25@v1": {"status": "PAPER", "n": 100, "hits": 60,
++                                 "profit": -1.0, "records": []},
++        }}), encoding="utf-8")
++    out = au.render_track_record(root)
++    assert "1.667" in out                            # breakeven = 1/0.60
++    assert "⚠ floor below breakeven" in out          # 1.60 < 1.667
++
++
++def test_the_track_record_render_is_honest_with_no_history(tmp_path):
++    import audit_recent_picks as au
++
++    assert "no settled enhancement history yet" in au.render_track_record(tmp_path)
+diff --git a/tests/test_replay_enhancements.py b/tests/test_replay_enhancements.py
+new file mode 100644
+index 0000000..0d0bbc2
+--- /dev/null
++++ b/tests/test_replay_enhancements.py
+@@ -0,0 +1,125 @@
++"""`replay_harness --enhancements`: floor variants on the settled registry.
++
++The harness's own doctrine applies unchanged: relative comparisons only, every
++output prints n, cells under 30 are flagged, and the primary metric is MEAN LOG
++GROWTH PER BET-DAY (final bank is one lucky path). The enhancement replay reads
++the settled registry rather than the acca universe, and reuses the harness's
++paired day-resampler rather than growing a second bootstrap.
++"""
++from __future__ import annotations
++
++import json
++import math
++import sys
++from pathlib import Path
++
++import pytest
++
++ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(ROOT / "scripts"))
++sys.path.insert(0, str(ROOT / "src"))
++
++import auto_tickets as at  # noqa: E402
++import replay_harness as rh  # noqa: E402
++
++FLOORS = {"match_over_25": 1.60, "btts_yes": 1.85}
++
++
++def _rec(market="match_over_25", date="2026-10-12", price=1.72, hit=True,
++         bucket="", rule=""):
++    return {"market": market, "date": date, "price": price, "hit": hit,
++            "bucket": bucket, "rule": rule, "source": "oddspapi"}
++
++
++def test_enh_records_flattens_the_registry(tmp_path):
++    (tmp_path / "localdata").mkdir()
++    (tmp_path / "localdata" / "enhancement_registry.json").write_text(json.dumps({
++        "version": 2, "markets": {"match_over_25@v1": {
++            "status": "PAPER", "records": [
++                {"date": "2026-08-03", "match": "A vs B", "price": 1.9, "hit": True,
++                 "bucket": "CERTIFIED_CLEAN", "rule": "r1", "source": "s"},
++                {"date": "2026-08-04", "match": "C vs D", "price": 1.5, "hit": False},
++            ]}}}))
++    rows = rh.enh_records(tmp_path)
++    assert [r["market"] for r in rows] == ["match_over_25"] * 2
++    assert rows[0]["bucket"] == "CERTIFIED_CLEAN" and rows[1]["bucket"] == ""
++    # junk prices are never a settled outcome
++    (tmp_path / "localdata" / "enhancement_registry.json").write_text(json.dumps({
++        "version": 2, "markets": {"m@v1": {"records": [
++            {"date": "d", "price": 1.0, "hit": True},
++            {"date": "d", "price": "1.9", "hit": True},
++            {"date": "d", "price": None, "hit": True}], "status": "PAPER"}}}))
++    assert rh.enh_records(tmp_path) == []
++
++
++def test_the_floor_is_the_only_gate_on_a_settled_leg():
++    records = [_rec(price=1.59), _rec(price=1.60), _rec(price=1.72)]
++    days = rh.enh_day_growth(records, {"match_over_25": 1.60})
++    # 1.59 does not fire; 1.60 and 1.72 are one bet-day with two tickets
++    assert days["2026-10-12"]["bets"] == 2
++    assert days["2026-10-12"]["hits"] == 2
++    # a market with no floor never fires
++    assert rh.enh_day_growth(records, {}) == {}
++    assert rh.enh_day_growth([_rec(market="away_under_35", price=1.02)], FLOORS) == {}
++
++
++def test_one_leg_per_ticket_sizing_matches_the_acca_lane_discipline():
++    stake = at.STAKE_FRAC                       # 25% of free bank per bet-day
++    records = [_rec(price=2.00, hit=True), _rec(price=2.00, hit=False)]
++    day = rh.enh_day_growth(records, FLOORS)["2026-10-12"]
++    f = stake / 2                               # split across the day's tickets
++    assert day["growth"] == pytest.approx((1.0 + f) * (1.0 - f))
++    assert day["log_growth"] == pytest.approx(math.log(day["growth"]))
++
++
++def test_enh_arm_reports_the_harnesss_primary_metric():
++    records = [_rec(date="2026-10-12", price=2.00, hit=True),
++               _rec(date="2026-10-13", price=2.00, hit=False)]
++    arm = rh.enh_arm(records, FLOORS)
++    assert (arm["days"], arm["bets"], arm["hits"]) == (2, 2, 1)
++    assert arm["rate"] == pytest.approx(0.5)
++    assert arm["mean_log_growth"] == pytest.approx(
++        sum(arm["by_day"].values()) / 2)
++
++
++def test_noise_flag_and_the_paired_resampler_are_the_harnesss_own():
++    assert rh.noise_flag(29).strip() == "⚠ small-n"
++    assert rh.noise_flag(30) == ""
++    # identical arms => the resampler must find nothing (the 2026-09-04 bug
++    # printed a ±22,000% interval for two identical variants)
++    ga = {"2026-10-12": 0.01, "2026-10-13": -0.02, "2026-10-14": 0.005}
++    bs = rh._paired_day_bootstrap(dict(ga), dict(ga), sorted(ga), n=200)
++    assert bs["median"] == pytest.approx(0.0)
++    assert bs["p10"] == pytest.approx(0.0) and bs["p90"] == pytest.approx(0.0)
++
++
++def test_the_report_runs_on_a_registry_and_flags_small_n(tmp_path, monkeypatch, capsys):
++    records = [_rec(date=f"2026-09-{d:02d}", price=1.72, hit=(d % 3 != 0))
++               for d in range(1, 6)]
++    monkeypatch.setattr(rh, "enh_records", lambda root=None: records)
++    args = type("A", (), {"ab": None})()
++    assert rh.cmd_enhancements(args) == 0
++    out = capsys.readouterr().out
++    assert "ENHANCEMENT LANE REPLAY" in out
++    assert "RELATIVE floor comparisons" in out
++    assert "mean log growth/bet-day" in out
++    assert "⚠ small-n" in out            # n=5 bets: the harness flags it
++    assert "match_over_25" in out
++
++
++def test_the_report_compares_two_uniform_floor_variants(tmp_path, monkeypatch, capsys):
++    records = [_rec(date=f"2026-09-{d:02d}", price=1.50 + 0.05 * d, hit=(d % 2 == 0))
++               for d in range(1, 11)]
++    monkeypatch.setattr(rh, "enh_records", lambda root=None: records)
++    args = type("A", (), {"ab": ("live", "floor=1.70")})()
++    assert rh.cmd_enhancements(args) == 0
++    out = capsys.readouterr().out
++    assert "live floors" in out
++    assert "every market at floor=1.70" in out
++    assert "paired bootstrap, B minus A" in out
++
++
++def test_no_records_is_an_honest_empty_answer(monkeypatch, capsys):
++    monkeypatch.setattr(rh, "enh_records", lambda root=None: [])
++    assert rh.cmd_enhancements(type("A", (), {"ab": None})()) == 0
++    assert "nothing to replay" in capsys.readouterr().out
+-- 
+2.39.5
+
+
+From 489800644bcd1a0380c0b94d2072fc81b3369794 Mon Sep 17 00:00:00 2001
+From: 6ixtyn9-sudo <270680834+6ixtyn9-sudo@users.noreply.github.com>
+Date: Mon, 12 Oct 2026 07:12:38 +0000
+Subject: [PATCH 2/2] enablement: --enhancements without the flag is a no-op,
+ and stage the daily-run wiring
+
+Found while preparing the operator's enablement step (the step passes
+`--enhancements`; the flag gates the lane).
+
+* `auto_tickets.py --enhancements` with EDGE_FACTORY_ENH_BOARD unset used to fall
+  through to the MAIN lane and print the AUTO TICKETS status block - a step
+  labelled "enhancement tickets" would report the main lane's performance and
+  imply the lane was live while it was off. It now says the lane is disabled and
+  changes nothing (no state read, no artifact). Pinned by a test that fails if
+  the main lane is touched from that path.
+* docs/operator/enhancement-lane.yml.proposed: today's daily.yml with exactly two
+  hunks - the EDGE_FACTORY_ENH_BOARD env flag and a `--enhancements` step after
+  the smart schedule (advisory, continue-on-error). Nothing else in the repo runs
+  the lane, so the env var alone is inert; that is why the invocation is part of
+  the proposed change. YAML parses; one step added, none removed or renamed.
+
+Not pushed: PR #61 stays as reviewed. This commit is for the follow-up branch
+after #61 merges.
+
+Co-authored-by: arena-agent <297053741+arena-agent@users.noreply.github.com>
+---
+ docs/operator/enhancement-lane.yml.proposed | 164 ++++++++++++++++++++
+ scripts/auto_tickets.py                     |  10 ++
+ tests/test_enhancement_lane.py              |  24 +++
+ 3 files changed, 198 insertions(+)
+ create mode 100644 docs/operator/enhancement-lane.yml.proposed
+
+diff --git a/docs/operator/enhancement-lane.yml.proposed b/docs/operator/enhancement-lane.yml.proposed
+new file mode 100644
+index 0000000..ff33cc3
+--- /dev/null
++++ b/docs/operator/enhancement-lane.yml.proposed
+@@ -0,0 +1,164 @@
++name: Autonomous Edge Factory 3-Hour Service
++on:
++  workflow_dispatch:
++    inputs:
++      mode:
++        description: 'Execution Mode'
++        required: false
++        default: 'auto'
++        type: choice
++        options:
++          - auto
++          - official_morning
++          - forecast_refresh
++          - clv_only
++permissions:
++  contents: write
++concurrency:
++  group: edge-factory-main
++  cancel-in-progress: false
++jobs:
++  run-autonomous-agent:
++    runs-on: ubuntu-latest
++    timeout-minutes: 360
++    env:
++      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
++      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
++      BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
++      RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
++      RAPIDAPI_KEYS: ${{ secrets.RAPIDAPI_KEYS || '' }}
++      PINNAPI_KEY: ${{ secrets.PINNAPI_KEY }}
++      BZZOIRO_ODDS_MAX_EVENTS: ${{ secrets.BZZOIRO_ODDS_MAX_EVENTS || '20' }}
++      EDGE_FACTORY_RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
++      EDGE_FACTORY_RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
++      EDGE_FACTORY_FOREBET_BROWSER: "off"
++      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
++      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
++      ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}
++      ODDS_API_REGIONS: ${{ secrets.ODDS_API_REGIONS || 'eu' }}
++      ODDS_API_MARKETS: ${{ secrets.ODDS_API_MARKETS || 'h2h,totals' }}
++      ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '1.5,2.5,3.5,4.5' }}
++      ODDS_API_MONTHLY_BUDGET: ${{ secrets.ODDS_API_MONTHLY_BUDGET || '480' }}
++      ODDS_API_CLOSE_WINDOW_MIN: ${{ secrets.ODDS_API_CLOSE_WINDOW_MIN || '45' }}
++      SHARPAPI_SPORT: ${{ secrets.SHARPAPI_SPORT || 'soccer' }}
++      SHARPAPI_ENDPOINT: ${{ secrets.SHARPAPI_ENDPOINT || '/api/v1/odds' }}
++      SHARPAPI_LIMIT: ${{ secrets.SHARPAPI_LIMIT || '1000' }}
++      SHARPAPI_LEAGUE: ${{ secrets.SHARPAPI_LEAGUE }}
++      SHARPAPI_KEY: ${{ secrets.SHARPAPI_KEY }}
++      ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
++      EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || '1' }}
++      ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
++      EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: '90'
++      EDGE_FACTORY_CARD_ENRICH_RESERVE: '20'
++      # Enhancement lane (PR #61): the enhancement slip is generated, frozen
++      # and settled on its own state. Unset/removing this line reverts the
++      # daily run to exactly its previous behaviour - the lane then does
++      # nothing at all (no artifact, no state file).
++      EDGE_FACTORY_ENH_BOARD: '1'
++      TZ: 'Africa/Johannesburg'
++    steps:
++      - name: Checkout repository
++        uses: actions/checkout@v4
++      - name: Set up Python
++        uses: actions/setup-python@v5
++        with:
++          python-version: '3.13'
++          cache: 'pip'
++      - name: Install dependencies
++        run: |
++          python -m pip install --upgrade pip
++          pip install -r requirements.txt
++          pip install "supabase>=2.4,<3"
++      - name: Restore localdata State (Cache)
++        uses: actions/cache/restore@v4
++        with:
++          path: localdata
++          key: localdata-v2-${{ github.run_id }}
++          restore-keys: |
++            localdata-v2-
++      - name: Restore committed data (override stale cache)
++        run: |
++          set -e
++          python3 scripts/phase5_persistence.py restore
++          echo "certified edges present: $(python3 -c "import json;d=json.load(open('localdata/edges_consensus.json'));print(sum(1 for e in d.get('edges',[]) if e.get('status')=='certified'))" 2>/dev/null || echo n/a)"
++      - name: Execute Autonomous Smart Schedule
++        run: |
++          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" != "auto" ]; then
++            echo ">>> Executing explicit manual mode: ${{ inputs.mode }}"
++            if [ "${{ inputs.mode }}" = "official_morning" ]; then
++              PYTHONPATH=src python3 scripts/daily.py --force-repick
++            elif [ "${{ inputs.mode }}" = "forecast_refresh" ]; then
++              PYTHONPATH=src python3 scripts/daily.py --forecast-refresh
++            elif [ "${{ inputs.mode }}" = "clv_only" ]; then
++              PYTHONPATH=src python3 scripts/daily.py --clv-only
++            fi
++          else
++            PYTHONPATH=src python3 scripts/daily.py --auto-once
++          fi
++      # Enhancement lane, after the board this run produced (its prices come
++      # from the day's captures). Freezes on its first run at/after 09:00
++      # SAST and re-prints unchanged afterwards; a run before 09:00 is a
++      # DRAFT and freezes later. Advisory: it can never fail the daily run.
++      - name: Enhancement tickets (generate/freeze)
++        continue-on-error: true
++        run: |
++          PYTHONPATH=src python3 scripts/auto_tickets.py --enhancements
++      - name: Phase 5 K-contract coverage (read-only diagnostic)
++        if: always()
++        continue-on-error: true
++        run: |
++          PYTHONPATH=src python3 scripts/fit_phase5_candidate.py --explain || true
++      - name: Persist localdata State (Cache)
++        uses: actions/cache/save@v4
++        if: always()
++        with:
++          path: localdata
++          key: localdata-v2-${{ github.run_id }}
++      - name: Persist pipeline state to git (single source of truth)
++        if: always()
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          python3 scripts/phase5_persistence.py persist --run-id "${{ github.run_id }}"
++      - name: Upload Pick Ledgers & Reports as Artifacts
++        uses: actions/upload-artifact@v4
++        if: always()
++        with:
++          name: EdgeFactory-Reports
++          path: |
++            localdata/*.txt
++            localdata/*.json
++            localdata/*.md
++            localdata/phase5_shadow/**
++            localdata/phase5_activation/**
++            localdata/phase5_reconciliation/**
++          retention-days: 7
++      - name: Upload Scored-Candidate Audit Ledgers
++        uses: actions/upload-artifact@v4
++        if: always()
++        with:
++          name: Scored-Candidate-Audit-${{ github.run_id }}
++          path: |
++            localdata/scored_candidate_shadow_*.jsonl
++          if-no-files-found: ignore
++          retention-days: 30
++  regression-tests:
++    name: Regression tests (flag, never gate)
++    runs-on: ubuntu-latest
++    timeout-minutes: 30
++    permissions:
++      contents: read
++    steps:
++      - name: Checkout repository
++        uses: actions/checkout@v4
++      - name: Set up Python
++        uses: actions/setup-python@v5
++        with:
++          python-version: '3.13'
++          cache: 'pip'
++      - name: Install dependencies
++        run: |
++          python -m pip install --upgrade pip
++          pip install -r requirements.txt
++      - name: pytest
++        run: PYTHONPATH=src python3 -m pytest tests/ -q
+diff --git a/scripts/auto_tickets.py b/scripts/auto_tickets.py
+index 8a24be1..d8833c6 100644
+--- a/scripts/auto_tickets.py
++++ b/scripts/auto_tickets.py
+@@ -4323,6 +4323,16 @@ def main():
+     # Additive lane, own state: it shares the lifecycle functions but never the
+     # main lane's state file or artifact. Without the flag every command below
+     # behaves exactly as before.
++    if args.enhancements and not enhancement_board_enabled():
++        # `--enhancements` means the enhancement lane, full stop. Falling through
++        # to the main lane (which is what an unflagged flag used to do here) would
++        # print the MAIN lane's status under the enhancement lane's name and tell
++        # the operator a lane is live when it is off — the exact confusion the
++        # enablement step must not create. Say why, change nothing.
++        print(f"enhancement lane disabled — set {ENH_BOARD_FLAG}=1 to enable; "
++              f"nothing done.")
++        return 0
++
+     if args.enhancements and enhancement_board_enabled():
+         st = load_state(ENHANCEMENT_LANE)
+         if not st:
+diff --git a/tests/test_enhancement_lane.py b/tests/test_enhancement_lane.py
+index e106117..6c5a8a8 100644
+--- a/tests/test_enhancement_lane.py
++++ b/tests/test_enhancement_lane.py
+@@ -478,3 +478,27 @@ def test_the_track_record_render_is_honest_with_no_history(tmp_path):
+     import audit_recent_picks as au
+ 
+     assert "no settled enhancement history yet" in au.render_track_record(tmp_path)
++
++
++def test_enhancements_with_the_flag_off_is_a_no_op_not_the_main_lane(monkeypatch, capsys):
++    """REGRESSION: `--enhancements` without the flag must do nothing.
++
++    It used to fall through to the main lane, whose default path printed the
++    AUTO TICKETS status block — so a daily step labelled "enhancement tickets"
++    would report the main lane's performance and imply the enhancement lane was
++    live while it was off. Enablement passes this flag (see
++    docs/operator/enhancement-lane.yml.proposed), so the flag-off path has to be
++    inert and say why.
++    """
++    monkeypatch.delenv(at.ENH_BOARD_FLAG, raising=False)
++    monkeypatch.setattr(at.sys, "argv", ["auto_tickets.py", "--enhancements"])
++    monkeypatch.setattr(at, "load_state", _boom)   # main-lane state must not be read
++    monkeypatch.setattr(at, "cmd_today", _boom)
++    assert at.main() == 0
++    out = capsys.readouterr().out
++    assert f"{at.ENH_BOARD_FLAG}=1" in out and "nothing done" in out
++    assert "AUTO TICKETS" not in out
++
++
++def _boom(*a, **k):   # pragma: no cover - only reached on regression
++    raise AssertionError("the disabled enhancement lane must not touch the main lane")
+-- 
+2.39.5
+

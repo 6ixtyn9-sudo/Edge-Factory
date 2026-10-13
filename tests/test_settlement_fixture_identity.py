@@ -21,6 +21,7 @@ as a fallback so slips frozen before the field existed still settle.
 """
 from __future__ import annotations
 
+import json
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -246,3 +247,211 @@ def test_unmatched_fixture_expiry_is_not_an_alias_match(
         assert st["open_slips"][0]["accas"][0]["results"] == [None]
         assert st["history"] == []
     assert st["bank"] == 100.0
+
+
+# --- a key persisted before a WORD fold still resolves ---------------------
+
+
+def test_a_key_stored_before_the_utd_fold_resolves_across_it():
+    """A lane slip frozen before the 2026-10-12 fold stores the OLD key.
+
+    ``enhancement_legs`` stamps ``fixture_key`` from ``_folded_leg_key``, so
+    an enhancement leg carries glued seam keys, not display text - and
+    re-folding a glued key cannot recover the current spelling (there is no
+    separate ``utd`` token left to fold). The leg must still find its archive
+    row: the primary key is the old spelling, the compatibility key is the
+    current one, and the index is built with the current rule.
+    """
+    slip_date = "2026-10-05"
+    leg = {"match": "Coventry vs Newcastle Utd", "pick": "AWAY", "market": "",
+           "fixture_key": ["2026-10-05", "coventry", "newcastleutd", "AWAY"]}
+    archive_key = at._folded_leg_key(slip_date, "Coventry", "Newcastle Utd", "AWAY")
+    assert archive_key == ("2026-10-05", "coventry", "newcastleunited", "AWAY")
+
+    primary = at.leg_lookup_key(slip_date, leg)
+    assert primary == ("2026-10-05", "coventry", "newcastleutd", "AWAY")
+    keys = at.leg_lookup_keys(slip_date, leg)
+    assert keys[0] == primary and archive_key in keys[1:]
+    index = {archive_key: {"home": "Coventry", "away": "Newcastle Utd"}}
+    assert index.get(keys[0]) is None            # the old key alone misses
+    assert next(index[k] for k in keys if k in index)["home"] == "Coventry"
+
+
+def test_the_primary_key_stays_first_and_alone_when_nothing_moved():
+    """A leg written after the fold, or one carrying raw spellings, gets the
+    recomputed key and no extra candidates - settlement behaviour is
+    unchanged wherever identity did not move."""
+    raw = {"match": "Italy vs Turkey", "pick": "HOME",
+           "fixture_key": ["2026-10-05", "Italy", "Türkiye"]}
+    assert at.leg_lookup_keys("2026-10-05", raw) == [
+        ("2026-10-05", "italy", "turkey", "HOME")]
+    current = {"match": "Coventry vs Newcastle Utd", "pick": "AWAY",
+               "fixture_key": ["2026-10-05", "coventry", "newcastleunited"]}
+    assert at.leg_lookup_keys("2026-10-05", current) == [
+        ("2026-10-05", "coventry", "newcastleunited", "AWAY")]
+
+
+def test_a_leg_with_no_usable_identity_still_yields_no_keys():
+    assert at.leg_lookup_keys("2026-10-05", {"pick": "HOME"}) == []
+    assert at.leg_lookup_keys("2026-10-05", {"match": "no separator",
+                                             "pick": "HOME"}) == []
+
+
+def test_the_migration_is_bounded_to_the_folded_tail():
+    from edgefactory.identity import migrate_folded_key
+    assert migrate_folded_key("newcastleutd") == "newcastleunited"
+    assert migrate_folded_key("ayrutd") == "ayrunited"
+    assert migrate_folded_key("utd") == "utd"            # nothing before it
+    assert migrate_folded_key("newcastleunited") == "newcastleunited"
+    assert migrate_folded_key("scunthorpe") == "scunthorpe"
+    assert migrate_folded_key("") == ""
+
+
+def test_settlement_records_that_a_compatibility_key_answered(monkeypatch, tmp_path):
+    """The migration must not be silent: a leg that settled through a stored
+    pre-fold key is recorded, so the operator can see stored evidence ageing
+    out of the current key space."""
+    monkeypatch.setattr(at, "load_archived_picks", lambda: [
+        {"date": "2026-10-05", "home": "Coventry", "away": "Newcastle Utd",
+         "pick": "AWAY", "outcome": "away"}])
+    monkeypatch.setattr(at, "load_settled_entries", lambda: {})
+    monkeypatch.setattr(at, "load_settled_scores", lambda: {})
+    # the archive row is the one the compat key must find; how it grades is
+    # not this test's subject (grading it at all proves the row was reached)
+    monkeypatch.setattr(at, "pick_result", lambda p, s: "win")
+    at.LEGACY_KEY_HITS.clear()
+    st = {"bank": 100.0, "base_pct": 10.0, "cycle_base": 10.0,
+          "history": [], "events": [],
+          "open_slips": [{"date": "2026-10-05", "staked_pct": 10.0, "accas": [{
+              "odds": 1.47, "stake_pct": 10.0, "results": [None], "won": None,
+              "legs": [{"match": "Coventry vs Newcastle Utd", "pick": "AWAY",
+                        "prob": 0.64, "odds": 1.47, "result": None,
+                        "fixture_key": ["2026-10-05", "coventry",
+                                        "newcastleutd", "AWAY"]}]}]}]}
+    at.settle_open_slips(st, {})
+    assert st["open_slips"] == []           # resolved, so the slip left the book
+    assert st["history"][-1]["accas"][0]["won"] is True
+    assert len(at.LEGACY_KEY_HITS) == 1
+    record = at.LEGACY_KEY_HITS[0]
+    assert record["slip_date"] == "2026-10-05"
+    assert record["stored"][1:] == ("coventry", "newcastleutd", "AWAY")
+    assert record["primary"][1:] == ("coventry", "newcastleutd", "AWAY")
+    assert record["matched"][1:] == ("coventry", "newcastleunited", "AWAY")
+    assert record["fixture"] == ["2026-10-05", "Coventry", "Newcastle Utd"]
+    assert record["pick"] == "AWAY"
+    at.LEGACY_KEY_HITS.clear()
+
+
+# --- A1: the compatibility tier's guards -----------------------------------
+#
+# N-1(d)-(e) of the 2026-10-12 close-out: a hit must be a trail, not a
+# counter; the tier must be refused when the matched row belongs to a
+# different fixture; and the whole thing must have a removal criterion.
+
+def _slip(day, stored, *, pick="AWAY", match="Coventry vs Newcastle Utd"):
+    return {"date": day, "staked_pct": 10.0, "accas": [{
+        "odds": 1.47, "stake_pct": 10.0, "results": [None], "won": None,
+        "legs": [{"match": match, "pick": pick, "prob": 0.64, "odds": 1.47,
+                  "result": None, "fixture_key": stored}]}]}
+
+
+def _state(slip):
+    return {"bank": 100.0, "base_pct": 10.0, "cycle_base": 10.0,
+            "history": [], "events": [], "open_slips": [slip]}
+
+
+def _archive(day, home, away, *, pick="AWAY", outcome="away"):
+    return {"date": day, "home": home, "away": away, "pick": pick,
+            "outcome": outcome}
+
+
+def _wire(monkeypatch, rows):
+    monkeypatch.setattr(at, "load_archived_picks", lambda: rows)
+    monkeypatch.setattr(at, "load_settled_entries", lambda: {})
+    monkeypatch.setattr(at, "load_settled_scores", lambda: {})
+    monkeypatch.setattr(at, "pick_result", lambda p, s: "win")
+    at.LEGACY_KEY_HITS.clear()
+    at.LEGACY_KEY_REFUSED.clear()
+
+
+def test_a_compat_candidate_never_grades_another_fixture(monkeypatch, capsys):
+    """A same-day pair whose keys collide: 'Newcastle Utd' and a different
+    club 'Newcastle United' fold onto ONE key. The compat tier finds the
+    other club's row - and must refuse it, because the row's own spelling
+    does not reproduce the stored pre-fold key. The leg is held for the void
+    timer instead, exactly like a missing row; nothing is re-attributed."""
+    _wire(monkeypatch, [_archive("2026-10-05", "Coventry", "Newcastle United")])
+    st = _state(_slip("2026-10-05",
+                      ["2026-10-05", "coventry", "newcastleutd", "AWAY"]))
+    lines = at.settle_open_slips(st, {})
+    assert at.LEGACY_KEY_HITS == []                    # the other score was not taken
+    assert len(at.LEGACY_KEY_REFUSED) == 1             # and the refusal is on the trail
+    record = at.LEGACY_KEY_REFUSED[0]
+    assert record["primary"][1:] == ("coventry", "newcastleutd", "AWAY")
+    assert record["matched"][1:] == ("coventry", "newcastleunited", "AWAY")
+    assert record["fixture"] == ["2026-10-05", "Coventry", "Newcastle United"]
+    assert record["slip_date"] == "2026-10-05"
+    assert "refused_because" in record
+    assert st["open_slips"], "the leg must be held, never graded from another fixture"
+    assert st["open_slips"][0]["accas"][0]["results"] == [None]
+    assert any(line.startswith("compat key REFUSED") for line in lines)
+    assert not any(line.startswith("compat key matched") for line in lines)
+
+
+def test_the_same_collision_settles_when_the_row_is_the_leg_s_own_fixture(monkeypatch):
+    """The control for the test above: the guard refuses the OTHER club, not
+    compatibility in general. The identical slip settles when the archive row
+    is its own fixture ('Newcastle Utd' - the spelling the fold moved)."""
+    _wire(monkeypatch, [_archive("2026-10-05", "Coventry", "Newcastle Utd")])
+    st = _state(_slip("2026-10-05",
+                      ["2026-10-05", "coventry", "newcastleutd", "AWAY"]))
+    lines = at.settle_open_slips(st, {})
+    assert len(at.LEGACY_KEY_HITS) == 1 and at.LEGACY_KEY_REFUSED == []
+    assert st["open_slips"] == []                      # settled
+    matched = [line for line in lines if line.startswith("compat key matched")]
+    assert len(matched) == 1
+    # the journal names BOTH keys and the resolved fixture identity
+    assert "newcastleutd" in matched[0] and "newcastleunited" in matched[0]
+    assert "Newcastle Utd" in matched[0] and "2026-10-05" in matched[0]
+
+
+def test_the_compat_tier_leaves_stored_keys_untouched(monkeypatch):
+    """A1(c): the tier is read-only. The lookup must not mutate the leg, and
+    the migrated spelling must never reach a state file - it is a candidate
+    for comparison, never a value that gets written back."""
+    leg = {"match": "Coventry vs Newcastle Utd", "pick": "AWAY", "prob": 0.64,
+           "odds": 1.47, "result": None,
+           "fixture_key": ["2026-10-05", "coventry", "newcastleutd", "AWAY"]}
+    before = json.loads(json.dumps(leg))
+    keys = at.leg_lookup_keys("2026-10-05", leg)
+    assert keys[0][1:] == ("coventry", "newcastleutd", "AWAY")
+    assert keys[1][1:] == ("coventry", "newcastleunited", "AWAY")
+    assert leg == before, "the lookup must never rewrite the stored identity"
+
+    _wire(monkeypatch, [_archive("2026-10-05", "Coventry", "Newcastle Utd")])
+    st = _state(_slip("2026-10-05",
+                      ["2026-10-05", "coventry", "newcastleutd", "AWAY"]))
+    at.settle_open_slips(st, {})
+    written = at.STATE_FILE.read_text()
+    assert "newcastleunited" not in written, "the candidate was written back"
+    assert "newcastleutd" in written or st["open_slips"] == []
+
+
+def test_every_settlement_run_prints_a_compat_summary(monkeypatch, capsys):
+    """A1(e): the sunset criterion is 'no hits for N consecutive runs', which
+    is only checkable if every run states its count. The scalar prints even
+    when there was no compatibility work at all, and the human trail stays out
+    of `lines` unless a leg actually used the tier."""
+    _wire(monkeypatch, [_archive("2026-10-05", "Coventry", "Newcastle Utd")])
+    st = _state(_slip("2026-10-05", None))          # a text-path leg: no stored key
+    lines = at.settle_open_slips(st, {})
+    assert "settlement_compat_key_hits=0 refused=0" in capsys.readouterr().err
+    assert not any(line.startswith("compat key") for line in lines)
+
+
+def test_the_compat_tier_carries_a_dated_sunset_criterion():
+    """A1(e): the criterion is written where the tier lives, not in a memo."""
+    src = (ROOT / "scripts" / "auto_tickets.py").read_text()
+    assert "Sunset (dated TODO, 2026-10-12)" in src
+    assert "0 hit(s) for 14" in src
+    assert "no open slip's stored fixture_key fails the current fold" in src

@@ -414,24 +414,18 @@ def card_diff_days(universe, spec_a, spec_b):
     return diff
 
 
-def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
-    """Resample DAYS once per iteration and score both variants on the SAME
-    days (paired). Returns the distribution of (B - A) mean log growth."""
-    random.seed(seed)
-    da, db = replay(universe, spec_a), replay(universe, spec_b)
-    days = sorted(set(da) | set(db))
+def _paired_day_bootstrap(ga, gb, days, n=5000, seed=2026):
+    """The paired resampler: resample DAY indices ONCE per iteration and score
+    both arms on the SAME sampled days. `ga`/`gb` are {day: log growth} with a
+    missing day meaning "no bet that day" (log growth 0, so both arms are
+    averaged over the same denominator).
+
+    Shared by the acca lane and the enhancement lane so the two cannot drift
+    into different statistics under the same name.
+    """
     if not days:
         return None
-    # A ruined policy is not made healthy by silently deleting its bankruptcy
-    # day. It is ineligible for bootstrap comparison.
-    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
-        return None
-    # A no-bet day is log growth 0 for that arm, and BOTH arms are scored on
-    # the SAME sampled days — otherwise the resampling is paired but the
-    # averaging is not, and an arm that skips days is compared against a
-    # different denominator on every draw.
-    ga = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
-    gb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
+    random.seed(seed)
     diffs = []
     for _ in range(n):
         sample = random.choices(days, k=len(days))
@@ -449,6 +443,290 @@ def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
             "median_mult": math.exp(q(0.5) * horizon),
             "p10_mult": math.exp(q(0.1) * horizon),
             "p90_mult": math.exp(q(0.9) * horizon)}
+
+
+def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
+    """Resample DAYS once per iteration and score both variants on the SAME
+    days (paired). Returns the distribution of (B - A) mean log growth."""
+    da, db = replay(universe, spec_a), replay(universe, spec_b)
+    days = sorted(set(da) | set(db))
+    if not days:
+        return None
+    # A ruined policy is not made healthy by silently deleting its bankruptcy
+    # day. It is ineligible for bootstrap comparison.
+    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
+        return None
+    ga = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
+    gb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
+    return _paired_day_bootstrap(ga, gb, days, n=n, seed=seed)
+
+
+# --------------------------------------------------------------------------
+# enhancement lane replay (2026-10-12)
+#
+# Replays the SETTLED records in localdata/enhancement_registry.json against
+# floor variants, on the harness's own terms: hit rate, and MEAN LOG GROWTH PER
+# BET-DAY as the primary metric, with the n<30 noise flag.
+#
+# Honest limit, stated in every run: this can only backtest history that HAD a
+# price — n=350 (over 2.5), n=33 (over 1.5), n=16 (over 3.5), n=7 (btts) on
+# 2026-10-12. The newly-priced legs exist only going forward, which is why the
+# lane writes its daily artifact from day one. Use these numbers for RELATIVE
+# floor comparisons; never as a prediction of absolute bank growth.
+# --------------------------------------------------------------------------
+def enh_records(root=None):
+    """Flatten the registry's settled records into one row per priced outcome."""
+    root = root or at.ROOT
+    path = root / "localdata" / "enhancement_registry.json"
+    try:
+        reg = json.loads(path.read_text())
+    except Exception:
+        return []
+    rows = []
+    for key, entry in (reg.get("markets") or {}).items():
+        market = key.split("@")[0]
+        for rec in (entry.get("records") or []):
+            price = rec.get("price")
+            if not isinstance(price, (int, float)) or isinstance(price, bool):
+                continue
+            if not math.isfinite(float(price)) or float(price) <= 1.0:
+                continue
+            rows.append({"market": market, "date": str(rec.get("date") or "")[:10],
+                         "price": float(price), "hit": bool(rec.get("hit")),
+                         "bucket": rec.get("bucket") or "", "rule": rec.get("rule") or "",
+                         "source": rec.get("source") or "",
+                         # The card model below pairs legs per day, so it needs
+                         # the same two facts the live card ranks and de-dupes
+                         # on: the fixture and the stated probability.
+                         "match": str(rec.get("match") or ""),
+                         "stated": rec.get("stated"),
+                         # Floor-slice inputs (round 6, R2): the league the
+                         # settled pick belonged to, when the registry recorded
+                         # it. "" means unattributed — inherit, never guess.
+                         "league": str(rec.get("league") or "")})
+    return rows
+
+
+def derived_floors_for_records(records, day):
+    """The floors a day's card would be gated against, from records before it.
+
+    The slice-aware arm's resolver: it rebuilds the registry payload from the
+    settled records dated STRICTLY BEFORE ``day`` and runs the shipped
+    ``derive_floors`` on it — no lookahead, no re-implementation, and the same
+    margin and gate the live lane uses. Cached by the caller when a whole
+    replay is needed.
+    """
+    from edgefactory.enh_registry import (ENHANCEMENT_FLOOR_MARGIN,
+                                          ENHANCEMENT_PRICE_FLOORS, derive_floors)
+    payload = {"version": 2, "markets": {}}
+    for rec in records:
+        if str(rec.get("date") or "") >= str(day):
+            continue
+        entry = payload["markets"].setdefault(f"{rec['market']}@v1", {"records": []})
+        entry["records"].append({"date": rec["date"], "price": rec["price"],
+                                 "hit": rec["hit"], "league": rec.get("league") or ""})
+    return derive_floors(payload, day, parent_floors=ENHANCEMENT_PRICE_FLOORS,
+                         margin=ENHANCEMENT_FLOOR_MARGIN)
+
+
+def _firing_by_day(records, floors, *, derived=False):
+    """{day: [floor-cleared records]} under either floor resolver.
+
+    ``derived=False``: ``floors`` is a plain {market: floor} table (the live
+    table, or a uniform arm). ``derived=True``: each day is gated by the floors
+    derived from the records BEFORE it, resolved per slice (league, else the
+    market root). One filter, two resolvers — the same ``clears_floor`` call
+    either way, so an arm cannot be gated differently from the live card.
+    """
+    from edgefactory.enh_registry import clears_floor, floor_for_slice
+    by_day: dict[str, list[dict]] = {}
+    per_day: dict[str, dict] = {}
+    for rec in records:
+        if derived:
+            day = rec["date"]
+            if day not in per_day:
+                per_day[day] = derived_floors_for_records(records, day)
+            floor, _basis = floor_for_slice(per_day[day], rec["market"],
+                                            rec.get("league"))
+        else:
+            floor = floors.get(rec["market"]) if floors else None
+        if floor is None:
+            continue                                   # no settled floor -> no bet
+        if not clears_floor(rec["market"], rec["price"]) or rec["price"] < float(floor):
+            continue
+        by_day.setdefault(rec["date"], []).append(rec)
+    return by_day
+
+
+def enh_firing_days(records, floors, *, derived=False) -> set:
+    """The days with at least one floor-cleared leg — the NO BET denominator."""
+    return set(_firing_by_day(records, floors, derived=derived))
+
+
+def enh_day_growth(records, floors, *, stake_frac=None, derived=False):
+    """{day: {"growth": factor, "log_growth": x, "bets": n, "hits": k}}.
+
+    The lane's own card, modelled by the lane's own code: the day's
+    floor-cleared legs go through THE selection recipe and the shared staking
+    arithmetic (``auto_tickets.plan_day``), so the replay pairs, de-dupes and
+    sizes exactly as the live card does — 2-leg accas, and a day that cannot
+    form one is a NO BET day, never a single. ``bets``/``hits`` count ACCAS.
+    A market with no floor does not fire; a record without a fixture string
+    cannot be de-duplicated, so it is kept as its own identity rather than
+    merged with an unrelated leg.
+
+    ``derived=True`` gates each day by the floors derived from the records
+    before it (slice-aware), instead of a static table.
+    """
+    stake = at.ENHANCEMENT_LANE.stake_frac if stake_frac is None else float(stake_frac)
+    by_day = _firing_by_day(records, floors, derived=derived)
+    out = {}
+    for day, recs in by_day.items():
+        if not day or not recs:
+            continue
+        pool = []
+        for i, rec in enumerate(recs):
+            parts = str(rec.get("match") or "").split(" vs ")
+            home, away = (parts[0], parts[1]) if len(parts) == 2 else (f"leg {i}", "")
+            stated = rec.get("stated")
+            if not isinstance(stated, (int, float)) or isinstance(stated, bool):
+                stated = 0.0
+            pool.append({"match": rec.get("match") or f"{home} vs {away}",
+                         "pick": rec["market"], "prob": float(stated),
+                         "odds": rec["price"], "hit": bool(rec["hit"]),
+                         "row": {"date": day, "home": home, "away": away}})
+        plan = at.plan_day(pool, 100.0, stake_frac=stake)
+        if not plan:
+            continue                                   # MIN_ACCAS: NO BET
+        # plan_day copies the four card keys, so the leg's own settled hit is
+        # read back off the pool. (match, pick) identifies a carded leg: the
+        # recipe has already dropped same-fixture duplicates, so no two legs
+        # on the card share one.
+        hit_of = {(str(l["match"]), str(l["pick"])): bool(l["hit"]) for l in pool}
+        factor = 1.0
+        hits = 0
+        for acca in plan:
+            won = all(hit_of[(str(l["match"]), str(l["pick"]))] for l in acca["legs"])
+            hits += 1 if won else 0
+            f = acca["stake_pct"] / 100.0              # the day's per-acca fraction
+            factor *= (1.0 + f * (acca["odds"] - 1.0)) if won else (1.0 - f)
+        out[day] = {"growth": factor, "log_growth": math.log(factor) if factor > 0 else float("-inf"),
+                    "bets": len(plan), "hits": hits}
+    return out
+
+
+def enh_arm(records, floors, *, stake_frac=None, derived=False):
+    """Summary of one floor variant over the settled history.
+
+    ``mean_log_growth`` is the acceptance metric — the mean over BET-DAYS, so a
+    day the card cannot form (MIN_ACCAS: NO BET) never dilutes it. Those days
+    are reported beside it as ``no_bet_freq``: a floor variant that only wins by
+    refusing to bet must show that in the same row.
+    """
+    days = enh_day_growth(records, floors, stake_frac=stake_frac, derived=derived)
+    firing = enh_firing_days(records, floors, derived=derived)
+    bets = sum(d["bets"] for d in days.values())
+    hits = sum(d["hits"] for d in days.values())
+    bet_days = {d: v for d, v in days.items() if v["bets"] > 0}
+    log_growths = [d["log_growth"] for d in bet_days.values()
+                   if math.isfinite(d["log_growth"])]
+    no_bet_days = sorted(firing - set(days))
+    return {
+        "days": len(bet_days), "bets": bets, "hits": hits,
+        "rate": (hits / bets) if bets else 0.0,
+        "mean_log_growth": (sum(log_growths) / len(log_growths)) if log_growths else 0.0,
+        "firing_days": len(firing), "no_bet_days": len(no_bet_days),
+        "no_bet_freq": (len(no_bet_days) / len(firing)) if firing else 0.0,
+        "by_day": {d: v["log_growth"] for d, v in days.items()},
+        "_days_detail": days,
+    }
+
+
+def cmd_enhancements(args):
+    """Report the settled enhancement history under floor variants."""
+    from edgefactory.enh_registry import ENHANCEMENT_PRICE_FLOORS
+    records = enh_records()
+    if not records:
+        print("no settled enhancement records found — nothing to replay")
+        return 0
+    print("=" * 74)
+    print("ENHANCEMENT LANE REPLAY (settled registry records only)")
+    print("=" * 74)
+    print("doctrine: this can only backtest history that HAD a price. On 2026-10-12")
+    print("that is over 2.5 (n=350), over 1.5 (n=33), over 3.5 (n=16), btts (n=7).")
+    print("The newly-priced legs exist only going forward. Use these numbers for")
+    print("RELATIVE floor comparisons — never as a prediction of bank growth.\n")
+
+    def _arm_spec(spec_text: str):
+        """(label, floors, derived) for one --ab spec, or a floor= override."""
+        text = str(spec_text).strip().lower()
+        # A bare keyword is not a key=value spec, so it is matched first.
+        if text in {"derived", "slice", "slice-aware"}:
+            # Each day gated by the floors derived from the records before it.
+            return ("derived slice floors (day-by-day)", None, True)
+        if text.startswith("floor") or "floor=" in text:
+            uniform = float(parse_spec(spec_text)["floor"])
+            return (f"every market at floor={uniform:.2f}",
+                    {m: uniform for m in ENHANCEMENT_PRICE_FLOORS}, False)
+        return ("live floors", dict(ENHANCEMENT_PRICE_FLOORS), False)
+
+    arms = [("live floors", dict(ENHANCEMENT_PRICE_FLOORS), False),
+            ("derived slice floors (day-by-day, no lookahead)", None, True)]
+    if args.ab:
+        specs = [_arm_spec(t) for t in (args.ab[0], args.ab[1])]
+        arms = [(f"arm {chr(65 + i)}: {lbl}", fl, dv)
+                for i, (lbl, fl, dv) in enumerate(specs)]
+
+    print(f"{'floor variant':<52}{'bet-days':>9}{'bets':>6}{'hits':>6}"
+          f"{'rate':>8}{'mean log growth/bet-day':>25}{'no-bet days':>13}")
+    print("-" * 120)
+    arm_summaries = []
+    for label, floors, derived in arms:
+        s = enh_arm(records, floors, derived=derived)
+        arm_summaries.append((label, s))
+        print(f"{label:<52}{s['days']:>9}{s['bets']:>6}{s['hits']:>6}"
+              f"{s['rate']:>7.1%}{s['mean_log_growth']:>+25.4f}"
+              f"{str(s['no_bet_days']) + '/' + str(s['firing_days']):>13}"
+              f"{noise_flag(s['bets'])}")
+    print()
+    note = arm_summaries[1][1]
+    print(f"NO BET frequency (MIN_ACCAS/LEGS_PER_ACCA: a day without a {at.LEGS_PER_ACCA}-leg")
+    print(f"card is skipped, never a single) — live {arm_summaries[0][1]['no_bet_freq']:.0%}, "
+          f"derived {note['no_bet_freq']:.0%}; every mean above is per BET-day.")
+    print()
+
+    # Per-market detail under the live floors, so a floor that never binds is
+    # visible rather than implied.
+    print("by market (live floors):")
+    print(f"  {'market':<18}{'floor':>7}{'n':>6}{'hits':>6}{'rate':>8}{'fires':>7}")
+    live = dict(ENHANCEMENT_PRICE_FLOORS)
+    for market in sorted(live):
+        rows = [r for r in records if r["market"] == market]
+        fired = [r for r in rows if r["price"] >= live[market]]
+        hits = sum(1 for r in fired if r["hit"])
+        print(f"  {market:<18}{live[market]:>7.2f}{len(rows):>6}"
+              f"{sum(1 for r in rows if r['hit']):>6}"
+              f"{(sum(1 for r in rows if r['hit'])/len(rows) if rows else 0):>7.1%}"
+              f"{len(fired):>7}{noise_flag(len(fired))}")
+    print()
+
+    # Bootstrap the two arms the operator actually named with --ab (the last two
+    # rows), not the informational live-floors row above them.
+    if args.ab and len(arm_summaries) >= 2:
+        (_, sa), (_, sb) = arm_summaries[-2], arm_summaries[-1]
+        days = sorted(set(sa["by_day"]) | set(sb["by_day"]))
+        ga = {d: sa["by_day"].get(d, 0.0) for d in days}
+        gb = {d: sb["by_day"].get(d, 0.0) for d in days}
+        bs = _paired_day_bootstrap(ga, gb, days)
+        if bs is None:
+            print("no bootstrap: one arm ruins a bet-day, or there are no days.")
+        else:
+            print("paired bootstrap, B minus A, mean log growth per bet-day "
+                  "(5000 resamples):")
+            print(f"  median {bs['median']:+.4f}  p10 {bs['p10']:+.4f}  "
+                  f"p90 {bs['p90']:+.4f}  P(B>A) {bs['p_b_higher']:.0%}  "
+                  f"horizon {bs['horizon']} bet-days")
+    return 0
 
 
 # --------------------------------------------------------------------------
@@ -2641,6 +2919,9 @@ def main():
     ap.add_argument("--ab", nargs=2, metavar=("SPEC_A", "SPEC_B"),
                     help="paired A/B of two specs, with no-op guard + bootstrap")
     ap.add_argument("--battery", action="store_true", help="the full sweep vs live baseline")
+    ap.add_argument("--enhancements", action="store_true",
+                    help="replay the settled enhancement registry against floor "
+                         "variants (hit rate + mean log growth per bet-day)")
     ap.add_argument("--legs", action="store_true", help="stated-prob band table, saturated days")
     ap.add_argument("--slots", action="store_true",
                     help="leg/acca quality by rank slot (checkpoint ① at leg scale)")
@@ -2733,6 +3014,11 @@ def main():
 
     settled = at.load_settled()
     archives = at.load_archived_picks()
+
+    # The enhancement lane replays the settled registry, not the acca universe,
+    # so it answers before any universe is built.
+    if args.enhancements:
+        return cmd_enhancements(args)
 
     if args.warehouse_replay:
         # Runs against the RAW archive (not the settled-only replay universe):

@@ -1,0 +1,60 @@
+== incident (a): outbound requests of the 2026-10-12 demo run ==
+
+-- static: the ordering, read off the shipped source (file + symbol) --
+  capture.reset    'source.reset_fetch_count()' at line(s) [201]
+  capture.stats    'source.request_stats()' at line(s) [219]
+  fetch.increment  '_request_count += 1' at line(s) [185]
+  fetch.reset      'def reset_fetch_count' at line(s) [1402]
+  capture() order   : reset at 201, stats at 219 (one window: reset -> loop -> stats, nothing in between)
+  the loop sits at line 203, i.e. strictly between the two, so a dial inside the loop
+                    cannot be hidden from this receipt; only a dial AFTER the stats read could be
+  second dial site  : betexplorer_match_snapshot.fetch_page at line [249], NOT counted by request_stats
+                    and not on the capture path (capture imports parse_match_page_blocks only)
+
+-- dynamic: the same two sections, network blocked and counted --
+  _run_pick: the test helper's own stub recorded 9 fetch(es) to its canned transport
+             (be._fetch is patched by the helper, so the real counter never runs): ['https://www.betexplorer.com/football/results/?year=2026&month=10&day=11', 'https://www.betexplorer.com/football/results/?year=2026&month=10&day=12', 'https://www.betexplorer.com/football/england/premier-league/coventry-newcastle-utd/tW4rOkzg/', 'https://www.betexplorer.com/match-odds/tW4rOkzg/1/1x2/bestOdds/?lang=en', 'https://www.betexplorer.com/match-odds/tW4rOkzg/1/ou/bestOdds/?lang=en', 'https://www.betexplorer.com/match-odds/tW4rOkzg/1/ah/bestOdds/?lang=en', 'https://www.betexplorer.com/match-odds/tW4rOkzg/1/ha/bestOdds/?lang=en', 'https://www.betexplorer.com/match-odds/tW4rOkzg/1/dc/bestOdds/?lang=en', 'https://www.betexplorer.com/match-odds/tW4rOkzg/1/bts/bestOdds/?lang=en']
+  request_stats() after the stub-fed pick: {"market_budget_stop": false, "market_requests": 5, "requests": 0}
+  capture(max_fixtures=1) receipt stats, the demo's own rendering:
+    {
+      "be_429": 0,
+      "be_cached": 1,
+      "be_cooling_down": false,
+      "be_rows_rejected": 0,
+      "be_rows_rejected_reasons": {},
+      "market_budget_stop": false,
+      "market_requests": 0,
+      "requests": 0
+    }
+  2026-10-12 demo run's receipt (from its stdout, verbatim):
+    {
+      "be_429": 0,
+      "be_cached": 1,
+      "be_cooling_down": false,
+      "be_rows_rejected": 0,
+      "be_rows_rejected_reasons": {},
+      "market_budget_stop": false,
+      "market_requests": 0,
+      "requests": 0
+    }
+  byte-identical to the demo run's receipt: True
+  cache hits in that capture (be_cached): 1
+
+  urlopen attempts during the probe      : 0 []
+  match_snapshot.fetch_page calls        : 0 []
+
+-- the answer --
+   VERDICT: 0 outbound requests: the receipt's zeros are consistent, not masked.
+   The capture window holds exactly one fixture (max_fixtures=1), it was
+   answered from the same-day cache (`be_cached: 1`) - the one path that
+   returns before `_fetch` is ever called - and the only other call in the
+   run that reaches a fetch site (`_run_pick`) has `be._fetch` patched by
+   the test helper's canned transport. The probe's blocking counters
+   recorded none, and a blocked dial would have been counted, not
+   swallowed.
+
+-- bounds, had it dialed (stated for the blast radius, not as a count) --
+   _MAX_FETCHES_PER_RUN = _MAX_FETCHES_PER_RUN: int = 12
+   _MARKET_INTERVAL     = _MARKET_INTERVAL = 5.1
+   every market fetch passes min_interval=_MARKET_INTERVAL, so n dials cost >= (n-1) * 5.1 s
+   `requests` counts odds-module `_fetch` attempts only; a `betexplorer_match_snapshot.fetch_page` number would be a different counter.

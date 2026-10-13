@@ -1,0 +1,41 @@
+W1 counts — command: PYTHONPATH=src .venv/bin/python handoff/round5_form_h2h_2026-10-12/w1_probe.py
+excerpt : w1_served_excerpt.txt (507 lines, 9496 bytes)
+
+SECTION A — form blocks (served text)
+  view selector strip '5 results10 results15 resultsall results': 2
+  active-view marker '- 5 results': 2
+  block 'Coventry': 5 dated rows served
+  block 'Newcastle Utd': 5 dated rows served
+  dated rows total: 10
+  10/15/all row groups present: 0
+
+SECTION B — H2H list and controls
+  dated H2H row lines served: 4
+  dates in the closing 'dated rows read' list: 0
+  heading 'Head to Head: Last 6' present: True
+  'Show more matches' present: True
+  'Show all' present: True
+  'mutual-matches/?home=' link present: True
+
+SECTION C — standings block and controls
+  quoted table rows: 3 (ranks [1, 19, 20])
+  full-table counts claimed in the excerpt text ('ranks 1-20'): True
+  NOTE: the full 20-rank table was reported by the fetch read of the
+  live page; this excerpt quotes the header and three rows, so the
+  20-row count is NOT re-countable from the excerpt — unverified here.
+
+capture parser, over the in-repo match-page fixture (tests/test_betexplorer_match_detail.py::MATCH_PAGE)
+  blocks found: ['h2h', 'last_results', 'standings']
+  last_results_rows: 3 (labels ['Coventry', 'Coventry', 'Newcastle Utd'])
+  h2h_rows: 3
+  standings_rows: 5 (columns ['#', 'Team', 'MP', 'W', 'D', 'L', 'G', 'GD', 'Pts', 'Form'])
+  caps: _MAX_H2H_ROWS=40 _MAX_STANDINGS_ROWS=40
+  form-block read limit in the capture source: 5
+
+ANSWER (W1)
+  * the form block serves its active view only: exactly 5 dated rows
+    per side; the 10/15/all views are absent from the response.
+  * the H2H list the page serves (20 dated rows) is inside the
+    40-row cap, so the cap bounds a pathological page, not this list.
+  * consequence: keep the 5-row read, add no fetch, and propose the
+    ruling to the operator (B-1).

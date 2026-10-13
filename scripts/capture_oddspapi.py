@@ -42,6 +42,7 @@ from pathlib import Path
 
 from edgefactory.sources.oddspapi_odds import (
     EXPECTED_PARSE_SKIPS,
+    _record_rate_limit,
     api_keys,
     fetch_fixtures,
     fetch_odds,
@@ -490,6 +491,13 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             # A server-side 5xx must NOT read as a credential problem, so the
             # classification mirrors source_health: quota / auth / unavailable.
             stats["http_status"] = int(exc.code)
+            # Record the headers we just caught. Production reaches this seam
+            # through the transport, which records first - so in production this
+            # call re-records identical values. It is here so that a 429 raised
+            # directly here (a stub, a caller change, a future refactor) cannot
+            # leave the receipt with no quota evidence: that is the 2026-10-10
+            # failure, where a quota day read as a quiet slate.
+            _record_rate_limit(exc)
             stats["rate_limit"] = rate_limit_diagnostics()
             if exc.code in (429, 402, 430, 509):
                 stats["status"] = "quota"
@@ -534,6 +542,10 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
                     # provider's rate-limit headers and stop the whole pass.
                     # A daily bucket does not recover mid-run.
                     stats["http_status"] = int(exc.code)
+                    # Same belt-and-braces as the board handler above: the
+                    # transport records first in production, and a 429 raised at
+                    # this seam must still leave its evidence on the receipt.
+                    _record_rate_limit(exc)
                     stats["rate_limit"] = rate_limit_diagnostics()
                     stats["status"] = "quota" if exc.code in (429, 402, 430, 509) else "auth"
                     stats["errors"].append(

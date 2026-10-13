@@ -1,0 +1,1908 @@
+From 32344f9a54f7e93945181cf76843bddd2828d246 Mon Sep 17 00:00:00 2001
+From: 6ixtyn9-sudo <270680834+6ixtyn9-sudo@users.noreply.github.com>
+Date: Mon, 12 Oct 2026 07:02:12 +0000
+Subject: [PATCH] Retain every BetExplorer match's detail and every market the
+ odds lane already fetches
+
+For every fixture the BetExplorer odds lane prices, keep the match page's detail
+(H2H, recent results, whole league table, multi-book 1x2) and all six market tabs
+(1x2, O/U, AH, DNB, DC, BTTS) from responses the lane already fetches: one GET per
+market at >=5.1s spacing, per-run request budget, kill switch, schema-2 detail
+ledger localdata/betexplorer_match_detail_<day>.json. The standings reading is the
+page's whole table (never a truncated excerpt); the H2H list is read to 40 rows.
+Observational only; a cache hit makes no request and writes nothing.
+
+Co-authored-by: arena-agent <297053741+arena-agent@users.noreply.github.com>
+---
+ .gitignore                                    |   6 +
+ docs/operator/BETEXPLORER-LICENSING.md        | 122 ++++
+ scripts/capture_betexplorer.py                |  56 +-
+ scripts/clean_localdata.py                    |   7 +-
+ scripts/picks_today.py                        |   3 +
+ .../sources/betexplorer_match_snapshot.py     | 170 ++++-
+ src/edgefactory/sources/betexplorer_odds.py   | 609 ++++++++++++++++-
+ tests/test_betexplorer_match_detail.py        | 630 ++++++++++++++++++
+ tests/test_betexplorer_politeness.py          |  40 +-
+ 9 files changed, 1597 insertions(+), 46 deletions(-)
+ create mode 100644 tests/test_betexplorer_match_detail.py
+
+diff --git a/.gitignore b/.gitignore
+index 5c88132..936d908 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -87,6 +87,12 @@ dist/
+ # The bounded BetExplorer snapshot is the raw receipt for its final-card rows.
+ !localdata/betexplorer_odds_cache_20*.json
+ !localdata/betexplorer_capture_20*.json
++# Per-match BetExplorer detail for priced fixtures: match-page blocks (H2H,
++# last results, standings excerpt) and one comparison response per market
++# (1X2, O/U, AH, DNB, DC, BTTS) with its per-bookmaker rows and handicap
++# lines. No raw HTML; markets/rows/text are capped, and the capture receipt
++# is its only reader - pricing never touches this file.
++!localdata/betexplorer_match_detail_20*.json
+ # Compact source-health receipts are the auditable attempt/join trail.  Raw
+ # shadow ledgers stay ignored: they can be large and are not needed to prove
+ # whether a source supplied a price.
+diff --git a/docs/operator/BETEXPLORER-LICENSING.md b/docs/operator/BETEXPLORER-LICENSING.md
+index 3407441..9bdb175 100644
+--- a/docs/operator/BETEXPLORER-LICENSING.md
++++ b/docs/operator/BETEXPLORER-LICENSING.md
+@@ -22,6 +22,128 @@ Only the match page is fetched. No bookmaker redirects, tab traversal, query pag
+ 3. Until/unless Livesport replies otherwise, the wire operates strictly within
+    the bounds described in the outreach email — no more.
+ 
++## Operator directive — 2026-10-12: retain the match detail of every match we price
++
++Verbatim: *"no i want us to get more of bet explorer, every single match where
++it gets its odds, it should click the match link in order to get the match
++details"*, with the Coventry - Newcastle match page pasted as the example of
++what "match details" means (H2H, the per-bookmaker odds comparison, standings,
++last results).
++
++What was built, inside the standing bounds (own-card fixtures, <=1
++fetch/fixture/day, >=5.1s spacing, explicit user-agent, bounded retention, no
++tab traversal, no retries-hammering):
++
++- The live odds lane **already** fetched each matched fixture's match page (to
++  read its layout key) and its 1x2 comparison response; both were collapsed to
++  a single best-price triple and thrown away. The same two responses are now
++  retained: per-bookmaker 1x2 rows (label, the three prices, each price's rank,
++  movement arrow, when it was set, the page's own best-price flag), the average
++  line, and the match page's own blocks (H2H record and meetings, last-results
++  rows, a bounded standings excerpt, response digest).
++- **Zero new requests.** Two requests per matched fixture, exactly as before,
++  under the existing 12-default / 24-ceiling fixture budget. No market tabs
++  (O/U, AH, DNB, DC, BTTS), no bookmaker redirect, no raw HTML stored, no
++  retry policy change.
++- Retention: `localdata/betexplorer_match_detail_YYYY-MM-DD.json` — capped
++  lists (24 books, 8 H2H rows, 10 last-result rows, 96-char excerpts), a
++  30-day local prune, committed alongside the other BetExplorer receipts.
++- Consumption: none. Pricing still reads the best triple only; the ledger is
++  read by the capture receipt for counts and by nothing else. A row whose
++  markup carries no bookmaker is stored with no bookmaker, never a guess.
++
++Robots state re-verified 2026-10-12 against
++`https://www.betexplorer.com/robots.txt`: the path-only match page and the
++`match-odds/...?lang=en` comparison are allowed; `?year=`, `?month=`, `?page=`,
++`?t=`, `?match=`, `/bookmaker/` and `/redirect/` are disallowed. The
++retained-detail build adds no disallowed request, but it exposes one: our
++day-listing discovery step (`/football/results/?year=&month=&day=`) uses a
++disallowed query form, and the historical archive builder did the same. That is
++now an operator decision, not a silent one — either keep discovery as-is and
++accept the robots conflict, or switch it to match URLs the run already holds
++(the detail ledger stores event_id and match_url per fixture, so a fixture seen
++once can be revisited on a later day without any listing query).
++
++Build-time inspection (disclosed): a handful of read-only fetches of the one
++public example fixture the operator pasted, to learn the markup before writing
++the parser. Nothing was bypassed: no cookie, redirect, age-gate or challenge
++handling was added or attempted. The listing fetch already refuses
++challenge/age markers; the match-page observation now records a `challenge`
++flag instead of reading through such a surface.
++
++## Operator directive — 2026-10-12 (later): keep every market the page shows
++
++Verbatim: *"no i want it to also get the info when we click the match link maybe
++all matches should be fetched i dont mind if takes a bit longer as the
++automated runs happen overnight anyways"*, following the earlier *"every single
++match where it gets its odds, it should click the match link in order to get the
++match details"* and the pasted Coventry - Newcastle page, whose Odds Comparison
++and market tabs (1X2 / O/U / AH / DNB / DC / BTTS) are what "the info" means.
++The runtime sentence is the authorization for the added requests below; the
++"all matches" reading taken here is every fixture the odds lane matches and
++prices (each one now yields all six markets). Sweeping the day's whole board —
++fixtures we do not price — is NOT done and would need its own ruling.
++
++What was built — the "click more" the page shows, made explicit:
++
++- The page's own tab menu carries the codes: `1x2`, `ou` (Over/Under), `ah`
++  (Asian Handicap), `ha` (Draw No Bet — the menu attribute says `dnb` while the
++  click code and the URL use `ha`), `dc` (Double Chance), `bts` (Both Teams To
++  Score). The parser reads the codes the page uses; labels are noted here, not
++  hardcoded.
++- Each market tab is exactly one response
++  (`/match-odds/<event>/<page>/<market>/bestOdds/?lang=en`). Every handicap
++  line of that market arrives inside that one response; the per-line sub-tabs
++  (ALL, 1.5 … 6.5 for O/U; -0.5 … -3.5 for AH) are client-side toggles and are
++  NOT requests. Added cost: five requests per priced fixture, six market
++  responses per fixture in total (page + 1x2 + the five tabs).
++- Retained per market: the page's own column labels (1/X/2, Over/Under, 1/2,
++  1X/12/X2, Yes/No), one row per bookmaker and handicap line (price, the
++  page's own rank kept exactly as written — including two-place codes such as
++  `02` and the letter ranks `y`/`n` — movement arrow, creation stamp, the
++  page's best-price flag), and the page's own average line, per handicap
++  section (a single flat average only when one line makes it unambiguous).
++- Bounds unchanged: own-card priced fixtures only, one visit per fixture per
++  day, >=5.1s between requests for the added tabs (`_MARKET_INTERVAL`; the
++  priced lane's own 3s remains), a per-run request budget (default 180 network
++  attempts, `EDGE_FACTORY_BE_MAX_REQUESTS_PER_RUN`) that stops detail tabs and
++  never the priced lane, the existing 12-default fixture budget, and an opt-out
++  switch (`EDGE_FACTORY_BE_MARKET_TABS=0`) restoring exactly the previous
++  two-request behaviour. No `/bookmaker/` link, no `/redirect/`, and no
++  `?page=`/`?t=`/`?match=`/`?year=` query form is requested for a market (the
++  day-listing query decision above is untouched).
++- Retention: `localdata/betexplorer_match_detail_YYYY-MM-DD.json`, schema 2 —
++  per fixture `{event_id, match_url, kickoff, home, away, league, page_param,
++  best_1x2, markets{...}, market_failures, page{...}}`. Caps: 24 books on
++  single-line markets, the 10 lines nearest level x 6 books (48 rows) on
++  multi-line markets, the match page's whole H2H meeting list (up to 40 rows),
++  10 last-result rows (the page serves 5 per team), and its whole league table
++  (`standings_columns` + `standings_rows`, up to 40 rows). Local prune window
++  30 days (`scripts/clean_localdata.py`).
++- Correction (same day): the first build kept a 240-character "standings
++  excerpt". That was wrong and the operator caught it — *"the standing excerpt
++  is not short, you did not click show more"*. The match page serves the
++  **entire league table** (all 20 rows for the example fixture) and the whole
++  H2H meeting list; "Show full table" and "Show more matches" are client-side
++  toggles, so both are now read in full from the same response — no new
++  request. Standings are stored as the page's own column labels plus per-row
++  rank, team, MP, W, D, L, goals for/against, goal difference and points; the
++  Form column is icons and is not stored. The standings sub-tables the page
++  offers (Form, O/U, HT/FT, Top scorers; Overall/Home/Away) are each a
++  separate AJAX request and are NOT fetched; the last-results selector
++  (5/10/15/all) also stays at what the page serves (5 per team).
++- Consumption: still none. Pricing reads the 1x2 best triple only. A tab that
++  fails, is budget-stopped or is switched off is recorded (`market_failures`)
++  rather than papered over, and a detail-write failure never touches pricing.
++
++Build-time inspection (disclosed, this round): read-only fetches of the public
++`ou` and `bts` endpoints for the same one example fixture the operator pasted,
++to learn the thead labels, tbody ids and rank formats before writing the
++parser, and one read-only fetch of the same public match page to confirm what
++the standings block serves and what "Show full table" does. Nothing was
++bypassed: no cookie, redirect, age-gate or challenge handling was added or
++attempted.
++
+ ## Livesport replies
+ 
+ None recorded. Checked 2026-10-10 by the continuation session: no reply had been
+diff --git a/scripts/capture_betexplorer.py b/scripts/capture_betexplorer.py
+index 8cd8d2f..3de4b3d 100644
+--- a/scripts/capture_betexplorer.py
++++ b/scripts/capture_betexplorer.py
+@@ -119,6 +119,49 @@ def _fixture_receipt(pick: dict) -> dict:
+     }
+ 
+ 
++def _detail_summary(day: str) -> dict:
++    """Counts for the same-day retained-detail ledger the adapter writes.
++
++    Read-only: this wrapper never writes the ledger, and a missing or
++    unreadable file reports zeros rather than failing a capture run. Counts
++    per market: retained markets, retained rows, named rows and the distinct
++    bookmakers each market names.
++    """
++    empty = {"fixtures": 0, "markets": 0, "market_rows": 0, "named_rows": 0,
++             "bookmakers": 0, "standings_rows": 0, "with_h2h": 0,
++             "with_last_results": 0, "with_standings": 0, "challenge_pages": 0}
++    path = LOCALDATA / f"betexplorer_match_detail_{str(day)[:10]}.json"
++    try:
++        payload = json.loads(path.read_text())
++    except (OSError, ValueError, TypeError):
++        return empty
++    fixtures = payload.get("fixtures") if isinstance(payload, dict) else None
++    if not isinstance(fixtures, dict):
++        return empty
++    summary = dict(empty)
++    for entry in fixtures.values():
++        if not isinstance(entry, dict):
++            continue
++        summary["fixtures"] += 1
++        markets = entry.get("markets") if isinstance(entry.get("markets"), dict) else {}
++        for market in markets.values():
++            if not isinstance(market, dict):
++                continue
++            summary["markets"] += 1
++            rows = market.get("rows") if isinstance(market.get("rows"), list) else []
++            summary["market_rows"] += len(rows)
++            summary["named_rows"] += int(market.get("named_rows") or 0)
++            summary["bookmakers"] += len(market.get("bookmakers") or [])
++        page = entry.get("page") or {}
++        blocks = set(page.get("blocks") or [])
++        summary["standings_rows"] += len(page.get("standings_rows") or [])
++        summary["with_h2h"] += 1 if "h2h" in blocks else 0
++        summary["with_last_results"] += 1 if "last_results" in blocks else 0
++        summary["with_standings"] += 1 if "standings" in blocks else 0
++        summary["challenge_pages"] += 1 if page.get("challenge") else 0
++    return summary
++
++
+ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
+     """Populate bounded fixture caches and return a secret-free receipt."""
+     limit = max(0, min(MAX_FIXTURES_CEILING, int(max_fixtures)))
+@@ -159,9 +202,13 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
+                 receipt["rows"] += len(rows)
+                 receipt["quoted_fixtures"].append(_fixture_receipt(pick))
+         receipt.update({
+-            key: value for key, value in source.run_stats().items()
+-            if key in {"be_429", "be_cooling_down", "be_cached", "be_fetches"}
++            key: value
++            for stats in (source.run_stats(), source.request_stats())
++            for key, value in stats.items()
++            if key in {"be_429", "be_cooling_down", "be_cached", "be_fetches",
++                       "requests", "market_requests", "market_budget_stop"}
+         })
++        receipt["match_detail"] = _detail_summary(day)
+         receipt["status"] = "ok" if receipt["rows"] else "empty"
+     except Exception as exc:  # noqa: BLE001 — a missing adapter must not break daily
+         receipt["status"] = "unavailable"
+@@ -176,11 +223,14 @@ def main() -> int:
+     parser.add_argument("--max-fixtures", type=int, default=DEFAULT_MAX_FIXTURES)
+     args = parser.parse_args()
+     receipt = capture(args.date, max_fixtures=args.max_fixtures)
++    detail = receipt.get("match_detail") or {}
+     print(
+         "betexplorer snapshot "
+         f"{receipt['date']}: candidates={receipt['candidate_fixtures']} "
+         f"attempted={receipt['attempted']} fixtures={receipt['fixtures_with_rows']} "
+-        f"rows={receipt['rows']} status={receipt['status']}"
++        f"rows={receipt['rows']} detail={detail.get('fixtures', 0)}fixtures/"
++        f"{detail.get('markets', 0)}markets/{detail.get('market_rows', 0)}rows "
++        f"status={receipt['status']}"
+     )
+     return 0
+ 
+diff --git a/scripts/clean_localdata.py b/scripts/clean_localdata.py
+index 694b843..7b14974 100644
+--- a/scripts/clean_localdata.py
++++ b/scripts/clean_localdata.py
+@@ -13,8 +13,10 @@ What is pruned (exact filename shapes only, see ``TELEMETRY_PATTERNS``):
+   discovery_sent_ledger_DATE.json,
+   notify_delivery_failures_DATE.json                     notification ledgers
+   theoddsapi_attempts_DATE.json                          odds-attempt logs
+-  betexplorer_capture_DATE.json, betexplorer_odds_cache_DATE.json
+-                                                        bounded price snapshots
++  betexplorer_capture_DATE.json, betexplorer_odds_cache_DATE.json,
++  betexplorer_match_detail_DATE.json                    bounded price snapshots
++                                                        and per-match, per-market
++                                                        detail
+   supabase_sync_manifest_DATE.json                       sync manifests
+   official_run_DATE.json                                 official-run markers
+   picks_DATE.txt                                         pick text reports
+@@ -85,6 +87,7 @@ TELEMETRY_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
+         rf"^theoddsapi_attempts_{_DATE}\.json$",
+         rf"^betexplorer_capture_{_DATE}\.json$",
+         rf"^betexplorer_odds_cache_{_DATE}\.json$",
++        rf"^betexplorer_match_detail_{_DATE}\.json$",
+         rf"^supabase_sync_manifest_{_DATE}\.json$",
+         rf"^official_run_{_DATE}\.json$",
+         rf"^picks_{_DATE}\.txt$",
+diff --git a/scripts/picks_today.py b/scripts/picks_today.py
+index 01b6efc..5e5e75d 100644
+--- a/scripts/picks_today.py
++++ b/scripts/picks_today.py
+@@ -5975,6 +5975,9 @@ def enrich_unmatched_with_betexplorer(
+ 
+     if stats is not None:
+         stats.update(_be_mod.run_stats())
++        # Network-attempt counters (priced lane + market-tab detail requests),
++        # so the run log shows what BetExplorer actually saw.
++        stats.update(_be_mod.request_stats())
+         stats["be_priced_before"] = priced_before
+         stats["be_priced_after"] = priced
+         stats["be_target_legs"] = target
+diff --git a/src/edgefactory/sources/betexplorer_match_snapshot.py b/src/edgefactory/sources/betexplorer_match_snapshot.py
+index bb8af42..bc940bc 100644
+--- a/src/edgefactory/sources/betexplorer_match_snapshot.py
++++ b/src/edgefactory/sources/betexplorer_match_snapshot.py
+@@ -55,16 +55,176 @@ def identity_match(card: dict, page: dict) -> bool:
+             source_team_key(card.get("league")) == source_team_key(page.get("league")))
+ 
+ 
+-def parse_page(body: str) -> dict:
+-    """Conservative observation: uncertain fields stay null, never inferred from tabs."""
++def flatten_text(body: str) -> str:
++    """Collapse a page body to single-spaced visible text.
++
++    One flattener for every text-derived reading, so the odds adapter and this
++    module observe the same strings (the page's own markup, not a re-render).
++    """
+     parser = _Text()
+     parser.feed(body)
+-    text = html.unescape(" ".join(parser.parts))
+-    text = re.sub(r"\s+", " ", text)
++    return re.sub(r"\s+", " ", html.unescape(" ".join(parser.parts)))
++
++
++_H2H_NAME = re.compile(r"Head to Head: Last (\d+)")
++# The record line reads "0 wins 1 draw 5 wins" on a live page (singular
++# "draw" for one) — the older plural-only grammar missed that row entirely.
++_H2H_RECORD = re.compile(r"(\d+) wins?\s+(\d+) draws?\s+(\d+) wins?")
++_RESULT_DATE = re.compile(r"\b(\d{2})\.(\d{2})\.(\d{4})\b")
++_RESULT_SCORE = re.compile(r"\b(\d{1,2})\s*:\s*(\d{1,2})\b")
++_RESULT_ODDS = re.compile(r"\b(\d{1,2}\.\d{2})\s+(\d{1,2}\.\d{2})\s+(\d{1,2}\.\d{2})\b")
++_H2H_STOPS = ("Show more matches", "Odds Comparison", "Standings")
++_BLOCK_TEXT_CHARS = 96
++# The page serves the whole H2H list and the whole league table; the
++# "Show more matches" and "Show full table" controls are client-side toggles,
++# so these caps only bound a pathological page, not the page's own view.
++_MAX_H2H_ROWS = 40
++_MAX_STANDINGS_ROWS = 40
++# The standings header is the page's own column list (e.g.
++# "# Team MP W D L G GD Pts Form"), read as labels, never as values.
++_STANDINGS_HEADER = re.compile(r"#\s*Team\b.{0,80}?\bPts\b(?:\s+Form)?", re.S)
++# One table row: rank. Team, then the page's own numeric tail
++# (MP W D L GF:GA GD Pts). The team group is lazy so digit-leading club
++# names ("1899 Hoffenheim", "1. FC Koln") stay in the team field.
++_STANDINGS_ROW = re.compile(
++    r"(?P<rank>\d{1,2})\.\s+(?P<team>.{2,60}?)\s+"
++    r"(?P<mp>\d{1,3})\s+(?P<wins>\d{1,3})\s+(?P<draws>\d{1,3})\s+(?P<losses>\d{1,3})\s+"
++    r"(?P<goals>\d{1,3})\s*:\s*(?P<conceded>\d{1,3})\s+"
++    r"(?P<gd>-?\d{1,3})\s+(?P<points>\d{1,3})\b",
++    re.S,
++)
++
++
++def _result_rows(region: str, *, limit: int) -> list[dict]:
++    """Date/score/(optional odds) rows out of a results-style text region.
++
++    Rows are keyed on the page's date marker so a malformed stretch is skipped
++    instead of shifting every later row; ``text`` is a bounded excerpt of what
++    was read, never a reconstruction.
++    """
++    marks = list(_RESULT_DATE.finditer(region))
++    rows: list[dict] = []
++    for index, mark in enumerate(marks):
++        if len(rows) >= limit:
++            break
++        end = marks[index + 1].start() if index + 1 < len(marks) else len(region)
++        chunk = region[mark.start():min(end, mark.start() + 240)]
++        score = _RESULT_SCORE.search(chunk)
++        if score is None:
++            continue
++        odds = _RESULT_ODDS.search(chunk, score.end())
++        rows.append({
++            "date": f"{mark.group(3)}-{mark.group(2)}-{mark.group(1)}",
++            "score": [int(score.group(1)), int(score.group(2))],
++            "odds": [float(odds.group(1)), float(odds.group(2)), float(odds.group(3))]
++                    if odds else None,
++            "text": re.sub(r"\s+", " ", chunk).strip()[:_BLOCK_TEXT_CHARS],
++        })
++    return rows
++
++
++def _standings_block(text: str) -> dict:
++    """The league table the page serves, read from the page's own columns.
++
++    The match page holds the whole table ("Show full table" only toggles it),
++    so rows are read in full, capped at _MAX_STANDINGS_ROWS for a pathological
++    page. Column labels come from the page's own header; the numeric tail of
++    each row (MP W D L GF:GA GD Pts) is what makes a row a row, so an
++    unlabelled digit run is skipped rather than guessed into a column.
++    """
++    start = text.find("Standings")
++    if start == -1:
++        return {}
++    end = len(text)
++    for marker in ("Show full table", "Last results:"):
++        found = text.find(marker, start)
++        if found != -1:
++            end = min(end, found)
++    region = text[start:end]
++    header = _STANDINGS_HEADER.search(region)
++    if header is None:
++        return {}
++    rows: list[dict] = []
++    for match in _STANDINGS_ROW.finditer(region[header.end():]):
++        if len(rows) >= _MAX_STANDINGS_ROWS:
++            break
++        rows.append({
++            "rank": int(match.group("rank")),
++            "team": re.sub(r"\s+", " ", match.group("team")).strip(),
++            "mp": int(match.group("mp")),
++            "wins": int(match.group("wins")),
++            "draws": int(match.group("draws")),
++            "losses": int(match.group("losses")),
++            "goals_for": int(match.group("goals")),
++            "goals_against": int(match.group("conceded")),
++            "goal_difference": int(match.group("gd")),
++            "points": int(match.group("points")),
++        })
++    if not rows:
++        return {}
++    return {"standings_columns": header.group(0).split(),
++            "standings_rows": rows}
++
++
++def parse_match_page_blocks(body) -> dict:
++    """Match-page observations from the page the odds lane fetches anyway.
++
++    Text-derived only: this records what the page showed (H2H record and rows,
++    last-results rows with their own block label, and the league table), never
++    what it means. The H2H list and the standings table are kept as the page
++    served them — the "Show more matches" and "Show full table" controls are
++    client-side toggles — up to a bound for a pathological page. Missing
++    structures stay missing; nothing here is consumed by pricing, cards, or
++    ML, so an unverified selector can never become a price, and no team name
++    is invented for an unlabelled row.
++    """
++    text = flatten_text(body)
++    out: dict = {"blocks": []}
++
++    h2h_head = _H2H_NAME.search(text)
++    if h2h_head is not None:
++        out["blocks"].append("h2h")
++        out["h2h_meetings"] = int(h2h_head.group(1))
++        stop = len(text)
++        for marker in _H2H_STOPS:
++            found = text.find(marker, h2h_head.end())
++            if found != -1:
++                stop = min(stop, found)
++        record = _H2H_RECORD.search(text, h2h_head.end(), stop)
++        if record is not None:
++            out["h2h_record"] = {"home_wins": int(record.group(1)),
++                                 "draws": int(record.group(2)),
++                                 "away_wins": int(record.group(3))}
++        out["h2h_rows"] = _result_rows(text[h2h_head.end():stop], limit=_MAX_H2H_ROWS)
++
++    # Last-results blocks are found by their own "Last results: <team>" labels,
++    # so the observation never needs the caller's spelling of either side.
++    labels = list(re.finditer(r"Last results:\s*([^0-9]{2,40})", text))
++    last_rows: list[dict] = []
++    for index, label in enumerate(labels):
++        end = labels[index + 1].start() if index + 1 < len(labels) else len(text)
++        heading = re.sub(r"\s+", " ", label.group(1)).split(" Show")[0].strip()[:40]
++        for row in _result_rows(text[label.end():end], limit=5):
++            last_rows.append({**row, "label": heading})
++    if last_rows:
++        out["blocks"].append("last_results")
++        out["last_results_rows"] = last_rows
++
++    standings = _standings_block(text)
++    if standings:
++        out["blocks"].append("standings")
++        out.update(standings)
++
++    return out
++
++
++def parse_page(body: str) -> dict:
++    """Conservative observation: uncertain fields stay null, never inferred from tabs."""
++    text = flatten_text(body)
+     # Only the match header, not H2H or standings, can identify the fixture.
+     header = re.search(r"Home\s+Football\s+(.{2,90}?)\s+(.{2,90}?)\s+-\s+(.{2,90}?)\s+(\d{2}\.\d{2}\.\d{4})", text)
+     score = re.search(r"\b(\d{1,2}):(\d{1,2})\b", text[:1200])
+-    h2h = re.search(r"Head to Head: Last \d+.*?(\d+) wins\s+(\d+) draws\s+(\d+) win", text)
++    h2h = re.search(r"Head to Head: Last \d+.*?(\d+) wins?\s+(\d+) draws?\s+(\d+) wins?", text)
+     # Prices and positions require independently verified HTML selectors; labels alone are not values.
+     return {"score": [int(score[1]), int(score[2])] if score else None,
+             "h2h_record": [int(h2h[1]), int(h2h[2]), int(h2h[3])] if h2h else None,
+diff --git a/src/edgefactory/sources/betexplorer_odds.py b/src/edgefactory/sources/betexplorer_odds.py
+index ac51df2..bf5c86d 100644
+--- a/src/edgefactory/sources/betexplorer_odds.py
++++ b/src/edgefactory/sources/betexplorer_odds.py
+@@ -9,6 +9,14 @@ Usage pattern:
+   2. match_pick_to_betexplorer(pick, matches) → matched match dict or None
+   3. fetch_match_odds(match_url, event_id) → {odd1, oddx, odd2} or None
+ 
++While doing (3) the adapter also retains, in ``LAST_MATCH_DETAIL``, what the
++responses it already holds spell out: one comparison response per market
++(1x2 and the O/U, AH, DNB, DC, BTTS tabs — one request each, the same hop the
++page makes when the tab is clicked) with every handicap line, per-bookmaker
++price, rank, movement, creation stamp and the page's own best-price flag, plus
++the match page's H2H, last-results and standings blocks.  That detail is
++written to a same-day ledger and is never read by pricing, cards or ML.
++
+ The picks_today.py enrichment layer calls betexplorer_enrich_unmatched()
+ for picks that failed bzzoiro + scoutingstats enrichment.  It only
+ fetches odds for the specific unmatched picks (typically 5-10 per day),
+@@ -64,6 +72,11 @@ CACHE_FRESHNESS_H = float(os.environ.get("EDGE_FACTORY_BE_CACHE_FRESHNESS_H", "2
+ _be_429 = 0
+ _be_cooling_down = False
+ _be_cached = 0
++# Network-attempt counters for the run: every attempt inside _fetch() counts,
++# including retries, so the receipt shows what the site actually saw.
++_request_count = 0
++_market_requests = 0
++_market_budget_stop = False
+ 
+ LAST_RESULTS_RECEIPT: dict[str, object] = {}
+ _LAST_RESPONSE_META: dict[str, object] = {}
+@@ -102,6 +115,13 @@ def run_stats() -> dict[str, int | bool]:
+     }
+ 
+ 
++def request_stats() -> dict[str, int | bool]:
++    """Network-attempt counters for the run (priced lane + tab requests)."""
++    return {"requests": _request_count,
++            "market_requests": _market_requests,
++            "market_budget_stop": _market_budget_stop}
++
++
+ def _retry_after_seconds(exc: urllib.error.HTTPError) -> float | None:
+     value = exc.headers.get("Retry-After") if exc.headers else None
+     if not value:
+@@ -118,16 +138,18 @@ def _retry_after_seconds(exc: urllib.error.HTTPError) -> float | None:
+             return None
+ 
+ 
+-def _throttle():
+-    """Enforce minimum interval between requests."""
++def _throttle(min_interval: float | None = None):
++    """Enforce minimum interval between requests (never below _MIN_INTERVAL)."""
+     global _last_request_time
++    interval = _MIN_INTERVAL if min_interval is None else max(_MIN_INTERVAL, float(min_interval))
+     elapsed = time.monotonic() - _last_request_time
+-    if elapsed < _MIN_INTERVAL:
+-        time.sleep(_MIN_INTERVAL - elapsed)
++    if elapsed < interval:
++        time.sleep(interval - elapsed)
+     _last_request_time = time.monotonic()
+ 
+ 
+-def _fetch(url: str, referer: str | None = None, retries: int = 3, timeout: int = 20) -> str:
++def _fetch(url: str, referer: str | None = None, retries: int = 3, timeout: int = 20,
++           *, min_interval: float | None = None) -> str:
+     """Fetch one URL, single-flight, with respectful 429 handling.
+ 
+     The first 429 sleeps for a default 30 seconds and a second retry sleeps
+@@ -135,7 +157,7 @@ def _fetch(url: str, referer: str | None = None, retries: int = 3, timeout: int
+     60 seconds). The second 429 trips run-scoped cooling and raises before any
+     third request can be attempted.
+     """
+-    global _be_429, _be_cooling_down, _LAST_RESPONSE_META, _LAST_RESPONSE_BYTES
++    global _be_429, _be_cooling_down, _LAST_RESPONSE_META, _LAST_RESPONSE_BYTES, _request_count
+     headers = {"User-Agent": UA}
+     if referer:
+         headers["Referer"] = referer
+@@ -145,7 +167,8 @@ def _fetch(url: str, referer: str | None = None, retries: int = 3, timeout: int
+         for attempt in range(retries):
+             if _be_cooling_down:
+                 raise BetExplorerCoolingDown("betexplorer_odds: run cooling down after 2 HTTP 429 responses")
+-            _throttle()
++            _throttle(min_interval)
++            _request_count += 1
+             try:
+                 req = urllib.request.Request(url, headers=headers)
+                 with urllib.request.urlopen(req, timeout=timeout) as r:
+@@ -412,48 +435,455 @@ def match_pick_to_betexplorer(
+     return None
+ 
+ 
+-def fetch_match_odds(match_url: str, event_id: str) -> dict | None:
+-    """Fetch best 1x2 odds for a single match from BetExplorer.
++def parse_best_1x2(odds_html: str) -> dict | None:
++    """Best (max) 1x2 price across the comparison rows — the priced lane's contract.
+ 
+-    Returns {"odd1": float, "oddx": float, "odd2": float} or None.
++    Unchanged: the row set is the ``best-odds-0`` tbody and the value kept is
++    the maximum per column.
+     """
++    block = re.search(r'<tbody id="best-odds-0">(.*?)</tbody>', odds_html or "", re.S)
++    if not block:
++        return None
++
++    best = [None, None, None]
++    rows = re.findall(r"<tr\b.*?</tr>", block.group(1), re.S)
++    for row in rows:
++        cells = re.findall(r'data-odd="([0-9.]+)"', row)
++        if len(cells) >= 3:
++            for i in range(3):
++                v = _ffloat(cells[i])
++                if v is not None and (best[i] is None or v > best[i]):
++                    best[i] = v
++
++    if all(v is not None for v in best):
++        return {"odd1": best[0], "oddx": best[1], "odd2": best[2]}
++    return None
++
++
++# --- retained match detail: the SAME two responses, more of what they hold ---
++#
++# Observed markup (public match-odds response, inspected 2026-10-12): every
++# comparison row carries the bookmaker itself — data-bookie="stake.com" on the
++# price elements, a <span class="in-bookmaker-logo ..." title="Stake.com"> in
++# the narrow cell, and the link text in the wide cell — plus data-odd,
++# data-created (dd,mm,yyyy,hh,mm), data-pos (rank of that price) and an
++# icon__decreasing / icon__increasing movement arrow.  The response also
++# carries the hidden all-bookmakers block (div.oddsComparisonAll__rowBookie)
++# and the average line (div.oddsComparisonAll__average_text).  The priced lane
++# keeps the best triple only; this parse keeps what the row markup spells out.
++_MAX_BOOKS_RETAINED = 24
++# The match page serves the whole H2H list and the whole league table; the
++# "Show more matches" and "Show full table" controls only toggle them, so the
++# caps bound a pathological page, not the page's own view.
++_MAX_H2H_ROWS = 40
++_MAX_LAST_RESULT_ROWS = 10
++_MAX_STANDINGS_ROWS = 40
++
++# One comparison response per market — exactly the AJAX hop the page makes when
++# that tab is clicked (observed on the public match-odds endpoints 2026-10-12).
++# Every handicap line of that market AND its hidden all-bookmakers block travel
++# inside the single response, so the per-line and ALL/2.5/3.5 "clicks" the page
++# shows are client-side toggles, not additional requests.
++#: The page's own tab codes, in the page's own order (ha is DNB: the menu's
++#: data attribute says dnb while its click code and the URL say ha).
++MARKETS: tuple[str, ...] = ("1x2", "ou", "ah", "ha", "dc", "bts")
++#: Everything beyond the priced 1x2 lane: fetched only for priced fixtures.
++DETAIL_MARKETS: tuple[str, ...] = tuple(slug for slug in MARKETS if slug != "1x2")
++MARKET_TABS_ENABLED = (os.environ.get("EDGE_FACTORY_BE_MARKET_TABS", "1")
++                       not in {"0", "false", "False", "no"})
++#: The priced path keeps the lane's 3s throttle; the opt-in tab requests take
++#: the wider gap the operator's bounds used for additional collection.
++_MARKET_INTERVAL = 5.1
++_MAX_REQUESTS_PER_RUN = int(
++    os.environ.get("EDGE_FACTORY_BE_MAX_REQUESTS_PER_RUN", "180") or 180)
++#: Bounds for one market's retained rows: single-line markets keep up to 24
++#: rows (all of their bookmakers), multi-line markets keep the 10 lines nearest
++#: level with up to 6 bookmakers each. Column labels and line labels come from
++#: the response markup; nothing is padded, renamed or guessed.
++_MAX_MARKET_ROWS = 48
++_MAX_MARKET_LINES = 10
++_MAX_MARKET_BOOKS_PER_LINE = 6
++
++LAST_MATCH_DETAIL: dict | None = None
++
++_ODDS_BLOCK_RE = re.compile(
++    r'<(?:td|div)\b(?P<attrs>[^>]*\bdata-odd="[0-9]+(?:\.[0-9]+)?"[^>]*)>(?P<body>.*?)</(?:td|div)>',
++    re.S,
++)
++_BEST_TBODY_RE = re.compile(
++    r'<tbody\b[^>]*id="best-odds-(?P<hcap>[^"]+)"[^>]*>(?P<body>.*?)</tbody>', re.S)
++# Rows are captured WITH their opening tag: the row-level data-bo flag and the
++# data-bookie-id attribute live there, and the cells alone cannot show them.
++_ROW_RE = re.compile(r"<tr\b[^>]*>.*?</tr>", re.S)
++_ALL_ROW_RE = re.compile(
++    r'<div class="oddsComparisonAll__rowBookie[^"]*"[^>]*>.*?'
++    r'(?=<div class="oddsComparisonAll__rowBookie|\Z)',
++    re.S,
++)
++_AVERAGE_RE = re.compile(r'class="oddsComparisonAll__average_text"[^>]*data-odd="([0-9.]+)"')
++# Column labels are the table head's own odds columns, in order.
++_TH_LABEL_RE = re.compile(
++    r'<th\b[^>]*class="[^"]*table-main__detail-odds[^"]*"[^>]*>(.*?)</th>', re.S)
++# Display name first (the site's own title/link label), the lowercase
++# data-bookie key only as a fallback when neither display form is present.
++_BOOK_LABEL_RES = (
++    r'<span class="in-bookmaker-logo[^"]*"\s+title="([^"]+)"',
++    r'class="in-bookmaker-logo-link[^"]*"[^>]*>([^<]+)</a>',
++    r'data-bookie="([^"]+)"',
++)
++# The id the row markup attaches to the bookmaker itself: the bookie id on the
++# row, or the name link's bid. The operation id in data-bookmaker-id (a
++# different id space, e.g. 549 for bet365.us' 1105) is deliberately not used.
++_BOOK_ID_RES = (
++    r'data-bookie-id="([^"]+)"',
++    r'class="in-bookmaker-logo-link[^"]*"[^>]*data-bid="([^"]+)"',
++)
++
++
++def _clean_attr(value: object) -> str:
++    return html.unescape(str(value or "")).strip()
++
++
++def _attr_map(attrs: str) -> dict:
++    return {key: _clean_attr(value)
++            for key, value in re.findall(r'data-([a-z0-9-]+)="([^"]*)"', attrs)}
++
++
++def _created_stamp(raw: object) -> str | None:
++    """'12,10,2026,05,52' -> '2026-10-12T05:52' (site-local stamp, no zone claim)."""
++    parts = str(raw or "").split(",")
++    if len(parts) != 5 or not all(part.strip().isdigit() for part in parts):
++        return None
++    day, month, year, hour, minute = (int(part) for part in parts)
++    if not (1 <= month <= 12 and 1 <= day <= 31 and hour <= 23 and minute <= 59):
++        return None
++    return f"{year:04d}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}"
++
++
++def _odds_cell(attrs: str, body: str) -> dict:
++    data = _attr_map(attrs)
++    movement = None
++    if "icon__decreasing" in attrs or "icon__decreasing" in body:
++        movement = "down"
++    elif "icon__increasing" in attrs or "icon__increasing" in body:
++        movement = "up"
++    return {
++        "odds": _ffloat(data.get("odd")),
++        # Kept as the page spelled it: some markets use two-place codes
++        # ("02"), so casting to int would invent a rank the page never wrote.
++        "pos": data.get("pos") or None,
++        "created": _created_stamp(data.get("created")),
++        "movement": movement,
++        "best": "archiveOddsMovement__odds_best" in attrs,
++    }
++
++
++def _book_field(segment: str, patterns: tuple) -> str | None:
++    for pattern in patterns:
++        match = re.search(pattern, segment)
++        if match:
++            value = _clean_attr(match.group(1))
++            if value:
++                return value
++    return None
++
++
++def _line_label(raw: object) -> str | None:
++    """Handicap label as the markup spells it ("handicap-0.50" -> "0.50")."""
++    text = _clean_attr(raw).removeprefix("handicap-")
++    return text or None
++
++
++def _line_sort_key(label: str):
++    try:
++        value = float(str(label).replace("+", ""))
++    except (TypeError, ValueError):
++        return (1, 0.0, str(label))
++    return (0, abs(value), value)
++
++
++def _columns_from_thead(html_text: str) -> list[str]:
++    """The market's own column labels, longest head wins."""
++    columns: list[str] = []
++    for thead in re.findall(r"<thead\b[^>]*>(.*?)</thead>", html_text, re.S):
++        labels = [_clean_attr(re.sub(r"<[^>]+>", " ", cell))
++                  for cell in _TH_LABEL_RE.findall(thead)]
++        labels = [label for label in labels if label]
++        if len(labels) > len(columns):
++            columns = labels
++    return columns
++
++
++def _row_from_segment(segment: str, *, line: str | None, source: str, width: int) -> dict | None:
++    """One comparison row (bookmaker x line) from its own markup."""
++    cells = [_odds_cell(match.group("attrs"), match.group("body"))
++             for match in _ODDS_BLOCK_RE.finditer(segment)]
++    if not cells:
++        return None
++    pad = max(0, width - len(cells))
++    return {
++        "bookmaker": _book_field(segment, _BOOK_LABEL_RES),
++        "bookmaker_id": _book_field(segment, _BOOK_ID_RES),
++        # The line comes from the section the row sits in (its own tbody id or
++        # the data-all-handicap group), never from a guessed cell class.
++        "line": line,
++        "source": source,
++        "odds": [cell["odds"] for cell in cells[:width]] + [None] * pad,
++        "pos": [cell["pos"] for cell in cells[:width]] + [None] * pad,
++        "created": [cell["created"] for cell in cells[:width]] + [None] * pad,
++        "movement": [cell["movement"] for cell in cells[:width]] + [None] * pad,
++        # The page's own flags: data-bo on the row ("offers a best price"),
++        # or the best-price class on a price element.
++        "best": 'data-bo="true"' in segment or any(cell["best"] for cell in cells[:width]),
++    }
++
++
++def _all_block_chunks(html_text: str) -> list[tuple[str | None, str]]:
++    """(line label, chunk) per data-all-handicap section of the response."""
++    parts = re.split(r'data-all-handicap="([^"]*)"', html_text)
++    return [(_line_label(parts[index]), parts[index + 1])
++            for index in range(1, len(parts) - 1, 2)]
++
++
++def _collect_market_rows(html_text: str, width: int) -> list[dict]:
++    rows: list[dict] = []
++    for tbody in _BEST_TBODY_RE.finditer(html_text):
++        line = _line_label(tbody.group("hcap"))
++        for segment in _ROW_RE.findall(tbody.group("body")):
++            row = _row_from_segment(segment, line=line, source="table", width=width)
++            if row:
++                rows.append(row)
++    for chunk_line, chunk in _all_block_chunks(html_text):
++        for match in _ALL_ROW_RE.finditer(chunk):
++            row = _row_from_segment(match.group(0), line=chunk_line, source="all", width=width)
++            if row:
++                rows.append(row)
++    return rows
++
++
++def _cap_market_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
++    """Bound one market's rows, keeping the lines nearest level first."""
++    lines: list[str] = []
++    for row in rows:
++        label = row.get("line")
++        if label and label not in lines:
++            lines.append(label)
++    lines = sorted(lines, key=_line_sort_key)
++    if len(lines) <= 1:
++        return rows[:_MAX_BOOKS_RETAINED], lines
++    keep_lines = lines[:_MAX_MARKET_LINES]
++    kept: list[dict] = []
++    for label in keep_lines:
++        on_line = 0
++        for row in rows:
++            if row.get("line") != label:
++                continue
++            if on_line >= _MAX_MARKET_BOOKS_PER_LINE or len(kept) >= _MAX_MARKET_ROWS:
++                break
++            kept.append(row)
++            on_line += 1
++    # Report the lines that survived the cap: `lines` always describes what
++    # `rows` holds, never a line whose rows the budget pushed out.
++    kept_lines = [label for label in keep_lines
++                  if any(row.get("line") == label for row in kept)]
++    return kept, kept_lines
++
++
++def _averages_from_sections(html_text: str, columns: list[str]) -> tuple[list[float] | None, dict]:
++    """The site's own average line — per handicap section, flat when unambiguous.
++
++    Every hidden all-bookmakers section carries its own average figures, so a
++    multi-line market reads the averages of each line; a flat ``average`` is
++    only reported when the single line leaves no room for confusion.
++    """
++    width = len(columns)
++    by_line: dict[str, list[float]] = {}
++    flat: list[float] | None = None
++    for line, chunk in _all_block_chunks(html_text):
++        values = [value for value in (_ffloat(raw) for raw in _AVERAGE_RE.findall(chunk))
++                  if value is not None]
++        if not values or not width or len(values) != width:
++            continue
++        if line:
++            by_line[line] = values
++        if flat is None:
++            flat = values
++    if len(by_line) > 1:
++        flat = None
++    return flat, by_line
++
++
++def parse_market_response(odds_html: str) -> dict:
++    """Columns, handicap lines and per-book rows for one market's response.
++
++    Everything is read from the response's own markup: column labels from the
++    table head, the line from the section each row sits in (its tbody id or
++    the data-all-handicap group), prices, ranks, movement and creation stamps
++    from each price element, and the bookmaker from the row's own label
++    markup. A row whose markup
++    carries no bookmaker keeps ``bookmaker: None`` — a label is never invented
++    from a position, an index or a lookalike. For a line the hidden
++    all-bookmakers block covers, its rows win over the table's, because that
++    block is the site's own "every bookmaker" view; what is left is
++    deduplicated on (bookmaker, line, odds).
++    """
++    html_text = odds_html or ""
++    columns = _columns_from_thead(html_text)
++    width = len(columns) if len(columns) >= 2 else 3
++    rows = _collect_market_rows(html_text, width)
++    all_lines = {row["line"] for row in rows if row["source"] == "all" and row["line"]}
++
++    deduped: dict[tuple, dict] = {}
++    for row in rows:
++        if row["source"] == "table" and row["line"] in all_lines:
++            continue
++        key = (row["bookmaker"], row["line"], tuple(row["odds"]))
++        deduped.setdefault(key, row)
++
++    kept, lines = _cap_market_rows(list(deduped.values()))
++    average, average_by_line = _averages_from_sections(html_text, columns)
++    return {
++        "columns": columns,
++        "lines": lines,
++        "rows": kept,
++        "rows_count": len(kept),
++        "named_rows": sum(1 for row in kept if row["bookmaker"]),
++        "bookmakers": sorted({row["bookmaker"] for row in kept if row["bookmaker"]}),
++        "average": average,
++        "average_by_line": average_by_line,
++    }
++
++
++def _market_rows_present(markets: dict) -> bool:
++    """True when at least one market response produced retained rows."""
++    return any(isinstance(market, dict) and market.get("rows") for market in markets.values())
++
++
++def _market_url(event_id: str, page_param: str, slug: str) -> str:
++    return f"{BASE}/match-odds/{event_id}/{page_param}/{slug}/bestOdds/?lang=en"
++
++
++def fetch_market_responses(event_id: str, page_param: str, *,
++                           referer: str | None = None) -> dict[str, dict | None]:
++    """One comparison response per detail market tab, bounded and spaced.
++
++    Each market costs exactly the request the page itself makes when that tab
++    is clicked, and every handicap line of the market travels inside that one
++    response — the collapsed per-line tables are client-side toggles. Tab
++    requests take the wider spacing, stop at the run's request budget, and stop
++    early when the lane is cooling down after repeated 429s. A market that
++    answers with nothing is recorded as None, never as an empty market.
++    """
++    global _market_requests, _market_budget_stop
++    markets: dict[str, dict | None] = {}
++    if not MARKET_TABS_ENABLED:
++        return markets
++    for slug in DETAIL_MARKETS:
++        if _be_cooling_down:
++            break
++        if _request_count >= _MAX_REQUESTS_PER_RUN:
++            _market_budget_stop = True
++            print(f"  betexplorer_odds: request budget reached "
++                  f"({_MAX_REQUESTS_PER_RUN}); remaining markets skipped", file=sys.stderr)
++            break
++        _market_requests += 1
++        try:
++            payload = json.loads(_fetch(_market_url(event_id, page_param, slug),
++                                        referer=referer, min_interval=_MARKET_INTERVAL))
++        except BetExplorerCoolingDown:
++            markets[slug] = None
++            break
++        except Exception as exc:  # noqa: BLE001 - one market never breaks the rest
++            print(f"  betexplorer_odds: market {slug} unavailable: {exc}", file=sys.stderr)
++            markets[slug] = None
++            continue
++        markets[slug] = parse_market_response(str(payload.get("odds") or ""))
++    return markets
++
++
++def _match_page_blocks(match_html: str, *, page_meta: dict | None = None) -> dict | None:
++    """Bounded match-page text blocks plus the response digest, or None."""
++    try:
++        from edgefactory.sources.betexplorer_match_snapshot import parse_match_page_blocks
++    except ImportError:  # pragma: no cover - the adapter stays usable standalone
++        return None
++    try:
++        blocks = parse_match_page_blocks(match_html)
++    except Exception:  # noqa: BLE001 - observation only; never break a capture
++        return None
++    meta = page_meta or {}
++    blocks["page_sha256"] = meta.get("sha256")
++    blocks["page_bytes"] = meta.get("response_bytes")
++    lowered = match_html.lower()
++    blocks["challenge"] = any(marker in lowered for marker in _CHALLENGE_MARKERS)
++    return blocks
++
++
++def fetch_match_odds_full(match_url: str, event_id: str) -> dict:
++    """Fetch the match page and one comparison response per market.
++
++    Two requests carry the priced lane: the match page (for ``page_param`` and
++    the page's own blocks) and the 1x2 comparison response. The remaining
++    market tabs (O/U, AH, DNB, DC, BTTS) each cost one more request — the same
++    hop the page makes when the operator clicks that tab — spaced at the wider
++    interval and bounded by the run's request budget. ``odds`` is the only
++    field pricing reads; every market failure is contained to the detail.
++    """
++    out: dict = {"odds": None, "markets": {}, "page": None, "page_param": None}
+     try:
+         match_html = _fetch(match_url)
+         if not match_html:
+-            return None
++            return out
++        out["page"] = _match_page_blocks(match_html, page_meta=dict(_LAST_RESPONSE_META))
+ 
+-        # Extract page_param for odds API
++        # Extract page_param for the odds response
+         m = re.search(
+             r"match_load_tabs\('\w+',\s*'1x2',\s*'[^']*',\s*'[^']*',\s*'([^']+)'",
+             match_html,
+         )
+         page_param = m.group(1) if m else "1"
++        out["page_param"] = page_param
+ 
+         odds_url = f"{BASE}/match-odds/{event_id}/{page_param}/1x2/bestOdds/?lang=en"
+         data = json.loads(_fetch(odds_url, referer=match_url))
+         odds_html = data.get("odds", "")
+-
+-        # Parse best odds from the first tbody
+-        block = re.search(r'<tbody id="best-odds-0">(.*?)</tbody>', odds_html, re.S)
+-        if not block:
+-            return None
+-
+-        best = [None, None, None]
+-        rows = re.findall(r"<tr\b.*?</tr>", block.group(1), re.S)
+-        for row in rows:
+-            cells = re.findall(r'data-odd="([0-9.]+)"', row)
+-            if len(cells) >= 3:
+-                for i in range(3):
+-                    v = _ffloat(cells[i])
+-                    if v is not None and (best[i] is None or v > best[i]):
+-                        best[i] = v
+-
+-        if all(v is not None for v in best):
+-            return {"odd1": best[0], "oddx": best[1], "odd2": best[2]}
+-        return None
++        out["markets"] = {"1x2": parse_market_response(odds_html)}
++        out["odds"] = parse_best_1x2(odds_html)
+     except Exception as exc:
+         print(f"  betexplorer_odds: failed to fetch odds for {match_url}: {exc}", file=sys.stderr)
+-        return None
++    # Detail tabs only once the priced response proved the fixture answers,
++    # and never at the cost of the priced lane.
++    if out["page_param"] and (out["odds"] is not None or _market_rows_present(out["markets"])):
++        try:
++            out["markets"].update(
++                fetch_market_responses(event_id, out["page_param"], referer=match_url))
++        except Exception as exc:  # noqa: BLE001 - retention must never break a capture
++            print(f"  betexplorer_odds: market tabs skipped: {exc}", file=sys.stderr)
++    return out
++
++
++def fetch_match_odds(match_url: str, event_id: str) -> dict | None:
++    """Best 1x2 odds for a single match (unchanged contract).
++
++    Returns {"odd1": float, "oddx": float, "odd2": float} or None, and leaves
++    the retained detail — one comparison response per market and the match
++    page's own blocks — in the module receipt ``LAST_MATCH_DETAIL`` for the
++    same-day ledger.
++    """
++    global LAST_MATCH_DETAIL
++    full = fetch_match_odds_full(match_url, event_id)
++    markets = full.get("markets") or {}
++    page = full.get("page") or {}
++    if _market_rows_present(markets) or page.get("blocks") or page.get("challenge"):
++        LAST_MATCH_DETAIL = {
++            "markets": markets,
++            "page": page or None,
++            "page_param": full.get("page_param"),
++            "captured_at": datetime.now(timezone.utc).isoformat(),
++        }
++    else:
++        LAST_MATCH_DETAIL = None
++    return full.get("odds")
+ 
+ 
+ # --- bounded per-run state and same-day fixture cache ----------------------
+@@ -527,6 +957,103 @@ def _write_fixture_cache(pick: dict, day: str, rows: list[dict]) -> None:
+         print(f"  betexplorer_odds: cache write skipped: {exc}", file=sys.stderr)
+ 
+ 
++def _match_detail_path(day: str) -> Path:
++    return LOCALDATA / f"betexplorer_match_detail_{str(day)[:10]}.json"
++
++
++def _market_block(market: object) -> dict | None:
++    """One market's retained evidence, or None when the response held none."""
++    if not isinstance(market, dict):
++        return None
++    rows = [row for row in (market.get("rows") or []) if isinstance(row, dict)]
++    columns = [str(column) for column in (market.get("columns") or []) if column]
++    if not rows and not columns:
++        return None
++    return {
++        "columns": columns,
++        "lines": [str(line) for line in (market.get("lines") or []) if line is not None],
++        "rows": rows,
++        "rows_count": len(rows),
++        "named_rows": sum(1 for row in rows if row.get("bookmaker")),
++        "bookmakers": sorted({str(row["bookmaker"]) for row in rows if row.get("bookmaker")}),
++        "average": market.get("average"),
++        "average_by_line": market.get("average_by_line") or None,
++    }
++
++
++def _persist_match_detail(pick: dict, day: str, matched: dict, detail: dict,
++                          odds: dict | None) -> None:
++    """Merge one fixture's retained detail into the same-day ledger.
++
++    Evidence only, from the responses this fixture's fetch already holds: the
++    match page's own blocks (H2H, last results, a bounded standings excerpt)
++    and one comparison response per market — 1x2 and the detail tabs — each
++    with its own column labels, handicap lines and bounded per-bookmaker
++    rows. The match page's H2H list and league table are kept as the page
++    served them (the "Show more matches" / "Show full table" controls are
++    client-side toggles), not as their collapsed views. No raw HTML is stored,
++    every list is capped, and nothing in this file is read by pricing, cards,
++    or ML.
++    """
++    markets = detail.get("markets") or {}
++    blocks: dict[str, dict] = {}
++    failures: list[str] = []
++    for slug, market in markets.items():
++        block = _market_block(market)
++        if block is None:
++            failures.append(str(slug))
++        else:
++            blocks[str(slug)] = block
++    page = detail.get("page") or {}
++    page_block = None
++    if page:
++        page_block = {
++            "page_sha256": page.get("page_sha256"),
++            "page_bytes": page.get("page_bytes"),
++            "challenge": bool(page.get("challenge")),
++            "blocks": page.get("blocks", []),
++            "h2h_meetings": page.get("h2h_meetings"),
++            "h2h_record": page.get("h2h_record"),
++            "h2h_rows": (page.get("h2h_rows") or [])[:_MAX_H2H_ROWS],
++            "last_results_rows": (page.get("last_results_rows") or [])[:_MAX_LAST_RESULT_ROWS],
++            "standings_columns": (page.get("standings_columns") or [])[:12],
++            "standings_rows": (page.get("standings_rows") or [])[:_MAX_STANDINGS_ROWS],
++            "standings_rows_count": len((page.get("standings_rows") or [])[:_MAX_STANDINGS_ROWS]),
++        }
++    entry = {
++        "event_id": matched.get("event_id"),
++        "match_url": matched.get("match_url"),
++        "kickoff": matched.get("kickoff"),
++        "home": matched.get("home"),
++        "away": matched.get("away"),
++        "league": f"{matched.get('country', '')}: {matched.get('league', '')}".strip(": "),
++        "captured_at": detail.get("captured_at"),
++        "page_param": detail.get("page_param"),
++        "best_1x2": odds,
++        "markets": blocks,
++        "market_failures": sorted(failures),
++        "page": page_block,
++    }
++    path = _match_detail_path(day)
++    payload: dict = {"schema": 2, "date": str(day)[:10], "fixtures": {}}
++    if path.exists():
++        try:
++            loaded = json.loads(path.read_text())
++            if isinstance(loaded, dict) and isinstance(loaded.get("fixtures"), dict):
++                payload["fixtures"] = loaded["fixtures"]
++        except (OSError, ValueError, TypeError):
++            pass
++    payload["captured_at"] = datetime.now(timezone.utc).isoformat()
++    payload["fixtures"][_fixture_cache_key(pick, day)] = entry
++    try:
++        path.parent.mkdir(parents=True, exist_ok=True)
++        tmp = path.with_suffix(path.suffix + ".tmp")
++        tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
++        tmp.replace(path)
++    except OSError as exc:
++        print(f"  betexplorer_odds: match detail write skipped: {exc}", file=sys.stderr)
++
++
+ def cached_odds_rows_for_pick(pick: dict, day: str) -> list[dict]:
+     """Return only a fresh cached fixture, without making a network request."""
+     global _be_cached
+@@ -573,7 +1100,7 @@ def betexplorer_odds_rows_for_pick(
+       {date, kickoff, league, home, away, market, selection, odds,
+        bookmaker, captured_at}
+     """
+-    global _fetch_count
++    global _fetch_count, LAST_MATCH_DETAIL
+     if _be_cooling_down or _fetch_count >= _MAX_FETCHES_PER_RUN:
+         return []
+ 
+@@ -639,7 +1166,16 @@ def betexplorer_odds_rows_for_pick(
+         _write_fixture_cache(pick, day, [])
+         return []
+ 
++    # Clear the receipt before the fetch so a stub, a cache path, or a failed
++    # request can never leave a previous fixture's detail behind.
++    LAST_MATCH_DETAIL = None
+     odds = fetch_match_odds(matched["match_url"], matched["event_id"])
++    detail = LAST_MATCH_DETAIL
++    if detail is not None:
++        try:
++            _persist_match_detail(pick, day, matched, detail, odds)
++        except Exception as exc:  # noqa: BLE001 - retention must never break a capture
++            print(f"  betexplorer_odds: match detail skipped: {exc}", file=sys.stderr)
+     if odds is None:
+         _fixture_cache[cache_key] = []
+         _write_fixture_cache(pick, day, [])
+@@ -674,12 +1210,17 @@ def betexplorer_odds_rows_for_pick(
+ 
+ 
+ def reset_fetch_count():
+     """Reset all run-scoped state before one enrichment run."""
+-    global _fetch_count, _last_request_time, _be_429, _be_cooling_down, _be_cached, _LAST_RESPONSE_BYTES
++    global _fetch_count, _last_request_time, _be_429, _be_cooling_down, _be_cached, _LAST_RESPONSE_BYTES, LAST_MATCH_DETAIL
++    global _request_count, _market_requests, _market_budget_stop
+     _fetch_count = 0
+     _last_request_time = 0.0
+     _be_429 = 0
+     _be_cooling_down = False
+     _be_cached = 0
++    _request_count = 0
++    _market_requests = 0
++    _market_budget_stop = False
+     _LAST_RESPONSE_BYTES = b""
++    LAST_MATCH_DETAIL = None
+     _match_cache.clear()
+     _fixture_cache.clear()
+diff --git a/tests/test_betexplorer_match_detail.py b/tests/test_betexplorer_match_detail.py
+new file mode 100644
+index 0000000..7f4b5cb
+--- /dev/null
++++ b/tests/test_betexplorer_match_detail.py
+@@ -0,0 +1,630 @@
++"""Retained BetExplorer match detail: one comparison response per market.
++
++The priced lane must stay bit-identical (its best-1x2 triple, its call list,
++its cache); everything else here is bounded evidence written to
++localdata/betexplorer_match_detail_YYYY-MM-DD.json. Markup shapes are taken
++from live public match-odds responses inspected 2026-10-12 — bookmaker label
++in the span title / link text / data-bookie, data-odd + data-created +
++data-pos + movement arrow on every price, the hidden all-bookmakers block
++with its own average line, the per-market thead labels, the per-handicap
++tbody ids (`best-odds-<line>`) and the two-place / letter ranks the site
++writes (`data-pos="02"`, `data-pos="y"`) — and from the rendered match page,
++whose standings block serves the whole league table behind its client-side
++"Show full table" toggle.
++"""
++from __future__ import annotations
++
++import json
++import re
++import sys
++from collections import Counter
++from pathlib import Path
++from unittest import mock
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "src"))
++
++import pytest  # noqa: E402
++
++import scripts.capture_betexplorer as capture  # noqa: E402
++from edgefactory.sources import betexplorer_match_snapshot as snap  # noqa: E402
++from edgefactory.sources import betexplorer_odds as be  # noqa: E402
++
++MATCH_URL = "https://www.betexplorer.com/football/england/premier-league/coventry-newcastle-utd/tW4rOkzg/"
++ODDS_URL = "https://www.betexplorer.com/match-odds/tW4rOkzg/1/1x2/bestOdds/?lang=en"
++MARKET_URL = "https://www.betexplorer.com/match-odds/tW4rOkzg/1/{slug}/bestOdds/?lang=en"
++LISTING_URLS = [
++    "https://www.betexplorer.com/football/results/?year=2026&month=10&day=11",
++    "https://www.betexplorer.com/football/results/?year=2026&month=10&day=12",
++]
++
++ODDS_HTML = """
++<table class="table-main oddsComparison__table best-odds-0" id="sortable-1">
++<thead><tr><th class="unsortable over-s-only"></th><th class="unsortable under-s-only"></th>
++<th class="unsortable tablet-desktop-only"></th>
++<th class="table-main__detail-odds" data-okey="">1</th>
++<th class="table-main__detail-odds" data-okey="">X</th>
++<th class="table-main__detail-odds" data-okey="">2</th></tr></thead>
++<tbody id="best-odds-0">
++<tr  data-bo="true" data-bid="549" data-bookie-id="1105 " data-originid="29">
++<td class="h-text-left over-s-only h-text-pl10"><a href="/bookmaker/1105/https://www.bet365.com/x" class="in-bookmaker-logo-link in-bookmaker-logo-link--primary l549" rel="nofollow" data-bid="1105">bet365.us</a></td>
++<td class="h-text-left under-s-only h-text-pl10"><a href="/bookmaker/1105/https://www.bet365.com/x" rel="nofollow"><span class="in-bookmaker-logo l549" title="bet365.us"></span></a></td>
++<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds" data-odd="3.10" data-created="12,10,2026,05,52" data-pos="1" data-bookie="bet365.us" data-bt="1"><i class="icon icon__decreasing table-main__icon"></i> <img src="/res/icon.svg" alt="Redirect"/></td>
++<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds colored js-has-aodds archiveOddsMovement__odds_best" data-odd="3.60" data-created="10,10,2026,05,13" data-pos="0" data-bookie="bet365.us" data-bt="1"><i class="icon icon__decreasing table-main__icon"></i> <img src="/res/icon.svg" alt="Redirect"/></td>
++<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds colored js-has-aodds archiveOddsMovement__odds_best" data-odd="2.20" data-created="12,10,2026,05,52" data-pos="2" data-bookie="bet365.us" data-bt="1"><i class="icon icon__increasing table-main__icon"></i> <img src="/res/icon.svg" alt="Redirect"/></td>
++</tr>
++</tbody></table>
++<input data-handicap="0" type="hidden" value="4" id="bcount-0"/>
++<div data-all-handicap="0" class="hidden oddsComparisonAll__fullTable oddsComparisonAll__bestOdds" >
++<div class="oddsComparisonAll__contentDiv">
++<div class="oddsComparisonAll__odds_heads">
++<div class="oddsComparisonAll__average_text" data-odd="3.06"></div><div class="oddsComparisonAll__average_text" data-odd="3.53"></div><div class="oddsComparisonAll__average_text" data-odd="2.17"></div>
++</div>
++<div class="hidden oddsComparisonAll__content collapse-0">
++<div class="oddsComparisonAll__rowBookie"  data-bo="true" data-bid="549" data-originid="29">
++<div class="over-s-only"><a href="/bookmaker/1105/x" class="in-bookmaker-logo-link in-bookmaker-logo-link--primary l549" rel="nofollow" data-bid="1105">bet365.us</a></div>
++<div class="under-s-only"><a href="/bookmaker/1105/x" rel="nofollow"><span class="in-bookmaker-logo l549" title="bet365.us"></span></a></div>
++<div class="oddsComparisonAll__odds_heads ">
++<div data-bookmaker-id="549" class="archiveOddsMovement__odds oddsComparisonAll__odds table-main__detail-odds" data-odd="3.10" data-created="12,10,2026,05,52" data-pos="1" data-bookie="bet365.us"><i class="icon icon__decreasing"></i></div>
++<div data-bookmaker-id="549" class="archiveOddsMovement__odds oddsComparisonAll__odds table-main__detail-odds" data-odd="3.60" data-created="10,10,2026,05,13" data-pos="0" data-bookie="bet365.us"><i class="icon icon__decreasing"></i></div>
++<div data-bookmaker-id="549" class="archiveOddsMovement__odds oddsComparisonAll__odds table-main__detail-odds" data-odd="2.20" data-created="12,10,2026,05,52" data-pos="2" data-bookie="bet365.us"><i class="icon icon__increasing"></i></div>
++</div>
++</div>
++<div class="oddsComparisonAll__rowBookie"  data-bo="true" data-bid="997" data-originid="1">
++<div class="over-s-only"><a href="/bookmaker/1089/x" class="in-bookmaker-logo-link in-bookmaker-logo-link--primary l997" rel="nofollow" data-bid="1089">Stake.com</a></div>
++<div class="under-s-only"><a href="/bookmaker/1089/x" rel="nofollow"><span class="in-bookmaker-logo l997" title="Stake.com"></span></a></div>
++<div class="oddsComparisonAll__odds_heads ">
++<div data-bookmaker-id="997" class="archiveOddsMovement__odds oddsComparisonAll__odds table-main__detail-odds" data-odd="3.15" data-created="12,10,2026,05,03" data-pos="1" data-bookie="stake.com"></div>
++<div data-bookmaker-id="997" class="archiveOddsMovement__odds oddsComparisonAll__odds table-main__detail-odds" data-odd="3.60" data-created="12,10,2026,05,03" data-pos="0" data-bookie="stake.com"></div>
++<div data-bookmaker-id="997" class="archiveOddsMovement__odds oddsComparisonAll__odds table-main__detail-odds" data-odd="2.19" data-created="12,10,2026,05,53" data-pos="2" data-bookie="stake.com"></div>
++</div>
++</div>
++</div></div></div>
++<input type="hidden" value="3" id="best-odds-limit"/>
++"""
++
++UNNAMED_HTML = """
++<table class="table-main oddsComparison__table best-odds-0"><tbody id="best-odds-0">
++<tr data-bid="1"><td data-odd="2.00" data-created="12,10,2026,04,00" data-pos="0"></td>
++<td data-odd="3.40" data-created="12,10,2026,04,00" data-pos="0"></td>
++<td data-odd="3.50" data-created="12,10,2026,04,00" data-pos="0"></td></tr>
++</tbody></table>
++"""
++
++
++def _table_head(*labels: str) -> str:
++    cells = "".join(f'<th class="unsortable"></th>' for _ in range(3))
++    odds = "".join(f'<th class="table-main__detail-odds" data-okey="">{label}</th>'
++                   for label in labels)
++    return f"<thead><tr>{cells}{odds}</tr></thead>"
++
++
++def _ou_table(line: str, book: str, bid: str, odds: tuple[float, float]) -> str:
++    return (
++        f'<table data-handicap="{line}" class="table-main sortable oddsComparison__table '
++        f'table-collapse-{line} best-odds-{line}" id="sortable-1">'
++        f'{_table_head("Over", "Under")}'
++        f'<tbody id="best-odds-{line}">'
++        f'<tr data-bo="true" data-bid="{bid}" data-bookie-id="{bid} ">'
++        f'<td class="h-text-left over-s-only h-text-pl10"><a href="/bookmaker/{bid}/x" '
++        f'class="in-bookmaker-logo-link in-bookmaker-logo-link--primary" rel="nofollow" '
++        f'data-bid="{bid}">{book}</a></td>'
++        f'<td class="h-text-left under-s-only h-text-pl10"><a href="/bookmaker/{bid}/x" '
++        f'rel="nofollow"><span class="in-bookmaker-logo" title="{book}"></span></a></td>'
++        f'<td class="h-text-left tablet-desktop-only"></td>'
++        f'<td class="table-main__doubleparameter">{line.lstrip("0")}</td>'
++        f'<td data-bookmaker-id="{bid}" class="archiveOddsMovement__odds table-main__detail-odds '
++        f'table-main__detail-odds--first colored js-has-aodds" data-odd="{odds[0]:.2f}" '
++        f'data-created="11,10,2026,12,24" data-pos="1" data-bookie="{book}" data-bt="2" '
++        f'data-hcp="E-2-2-0-{line}-0"><i class="icon icon__increasing table-main__icon"></i></td>'
++        f'<td data-bookmaker-id="{bid}" class="archiveOddsMovement__odds table-main__detail-odds '
++        f'colored js-has-aodds" data-odd="{odds[1]:.2f}" data-created="11,10,2026,12,24" '
++        f'data-pos="2" data-bookie="{book}" data-bt="2" data-hcp="E-2-2-0-{line}-0">'
++        f'<i class="icon icon__decreasing table-main__icon"></i></td>'
++        f'</tr></tbody></table>'
++    )
++
++
++def _all_section(line: str, book: str, bid: str, odds: tuple[float, float],
++                 averages: tuple[float, float]) -> str:
++    return (
++        f'<div data-all-handicap="{line}" class="hidden oddsComparisonAll__fullTable oddsComparisonAll__bestOdds">'
++        f'<div class="oddsComparisonAll__contentDiv"><div class="oddsComparisonAll__odds_heads">'
++        f'<div class="oddsComparisonAll__average_text" data-odd="{averages[0]:.2f}"></div>'
++        f'<div class="oddsComparisonAll__average_text" data-odd="{averages[1]:.2f}"></div>'
++        f'</div><div class="hidden oddsComparisonAll__content collapse-{line}">'
++        f'<div class="oddsComparisonAll__rowBookie" data-bo="true" data-bid="{bid}" data-originid="1">'
++        f'<div class="over-s-only"><a href="/bookmaker/{bid}/x" class="in-bookmaker-logo-link '
++        f'in-bookmaker-logo-link--primary" rel="nofollow" data-bid="{bid}">{book}</a></div>'
++        f'<div class="under-s-only"><a href="/bookmaker/{bid}/x" rel="nofollow">'
++        f'<span class="in-bookmaker-logo" title="{book}"></span></a></div>'
++        f'<div class="oddsComparisonAll__odds_heads ">'
++        f'<div data-bookmaker-id="{bid}" class="archiveOddsMovement__odds oddsComparisonAll__odds '
++        f'table-main__detail-odds" data-odd="{odds[0]:.2f}" data-created="12,10,2026,05,03" '
++        f'data-pos="1" data-bookie="{book.lower()}"></div>'
++        f'<div data-bookmaker-id="{bid}" class="archiveOddsMovement__odds oddsComparisonAll__odds '
++        f'table-main__detail-odds" data-odd="{odds[1]:.2f}" data-created="12,10,2026,05,03" '
++        f'data-pos="2" data-bookie="{book.lower()}"></div>'
++        f'</div></div></div></div>'
++    )
++
++
++OU_HTML = (
++    _ou_table("0.50", "bet365.us", "1105", (1.04, 13.00))
++    + _ou_table("2.50", "BetMGM.us", "1103", (3.30, 1.35))
++    + _all_section("0.50", "Unibet", "1088", (1.04, 13.00), (1.04, 13.00))
++    + _all_section("2.50", "Stake.com", "1089", (3.40, 1.30), (3.40, 1.30))
++)
++
++AH_HTML = (
++    f'<table data-handicap="-1.50" class="table-main sortable oddsComparison__table '
++    f'table-collapse--1.50 best-odds--1.50" id="sortable-1">{_table_head("1", "2")}'
++    f'<tbody id="best-odds--1.50"><tr data-bid="549" data-bookie-id="1105 ">'
++    f'<td class="h-text-left over-s-only h-text-pl10"><a href="/bookmaker/1105/x" '
++    f'class="in-bookmaker-logo-link in-bookmaker-logo-link--primary" rel="nofollow" '
++    f'data-bid="1105">bet365.us</a></td>'
++    f'<td class="table-main__doubleparameter">-1.5</td>'
++    f'<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds" '
++    f'data-odd="2.10" data-created="12,10,2026,05,52" data-pos="1" data-bookie="bet365.us" '
++    f'data-bt="5" data-hcp="E-5-2-0--1.5-0"></td>'
++    f'<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds" '
++    f'data-odd="1.75" data-created="12,10,2026,05,52" data-pos="2" data-bookie="bet365.us" '
++    f'data-bt="5" data-hcp="E-5-2-0--1.5-0"></td>'
++    f'</tr></tbody></table>'
++)
++
++HA_HTML = (
++    f'<table data-handicap="0" class="table-main sortable best-odds-0" id="sortable-1">'
++    f'{_table_head("1", "2")}<tbody id="best-odds-0">'
++    f'<tr data-bid="997" data-bookie-id="1089 ">'
++    f'<td class="h-text-left over-s-only h-text-pl10"><a href="/bookmaker/1089/x" '
++    f'class="in-bookmaker-logo-link in-bookmaker-logo-link--primary" rel="nofollow" '
++    f'data-bid="1089">Stake.com</a></td>'
++    f'<td data-bookmaker-id="997" class="archiveOddsMovement__odds table-main__detail-odds" '
++    f'data-odd="1.90" data-created="12,10,2026,05,53" data-pos="1" data-bookie="stake.com" '
++    f'data-bt="6" data-hcp="E-6-2-0-0-0"></td>'
++    f'<td data-bookmaker-id="997" class="archiveOddsMovement__odds table-main__detail-odds" '
++    f'data-odd="2.05" data-created="12,10,2026,05,53" data-pos="2" data-bookie="stake.com" '
++    f'data-bt="6" data-hcp="E-6-2-0-0-0"></td>'
++    f'</tr></tbody></table>'
++)
++
++DC_HTML = (
++    f'<table data-handicap="0" class="table-main sortable best-odds-0" id="sortable-1">'
++    f'{_table_head("1X", "12", "X2")}<tbody id="best-odds-0">'
++    f'<tr data-bid="549" data-bookie-id="1105 ">'
++    f'<td class="h-text-left over-s-only h-text-pl10"><a href="/bookmaker/1105/x" '
++    f'class="in-bookmaker-logo-link in-bookmaker-logo-link--primary" rel="nofollow" '
++    f'data-bid="1105">bet365.us</a></td>'
++    f'<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds" '
++    f'data-odd="1.26" data-created="12,10,2026,05,52" data-pos="10" data-bookie="bet365.us" '
++    f'data-bt="4"></td>'
++    f'<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds" '
++    f'data-odd="1.36" data-created="12,10,2026,05,52" data-pos="12" data-bookie="bet365.us" '
++    f'data-bt="4"></td>'
++    f'<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds" '
++    f'data-odd="2.05" data-created="12,10,2026,05,52" data-pos="02" data-bookie="bet365.us" '
++    f'data-bt="4"></td>'
++    f'</tr></tbody></table>'
++)
++
++BTS_HTML = (
++    f'<table data-handicap="0" class="table-main sortable best-odds-0" id="sortable-1">'
++    f'{_table_head("Yes", "No")}<tbody id="best-odds-0">'
++    f'<tr data-bid="549" data-bookie-id="1105 ">'
++    f'<td class="h-text-left over-s-only h-text-pl10"><a href="/bookmaker/1105/x" '
++    f'class="in-bookmaker-logo-link in-bookmaker-logo-link--primary" rel="nofollow" '
++    f'data-bid="1105">bet365.us</a></td>'
++    f'<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds '
++    f'table-main__detail-odds--first js-has-aodds" data-odd="1.57" data-created="12,09,2026,18,41" '
++    f'data-pos="y" data-bookie="bet365.us" data-bt="13"></td>'
++    f'<td data-bookmaker-id="549" class="archiveOddsMovement__odds table-main__detail-odds '
++    f'js-has-aodds" data-odd="2.25" data-created="12,09,2026,18,41" data-pos="n" '
++    f'data-bookie="bet365.us" data-bt="13"></td>'
++    f'</tr></tbody></table>'
++)
++
++MARKET_HTML = {"1x2": ODDS_HTML, "ou": OU_HTML, "ah": AH_HTML,
++               "ha": HA_HTML, "dc": DC_HTML, "bts": BTS_HTML}
++
++MATCH_PAGE = """
++<div>Home Football England Premier League 2026/2027 Coventry - Newcastle 12.10.2026</div>
++<h2>Head to Head: Last 6</h2>
++<div>Coventry Newcastle Utd 0 wins 1 draw 5 wins 0% 17% 83%</div>
++<div>Championship 2009/2010 1 X 2 17.02.2010 <a href="/x/">Newcastle 4 : 1 Coventry</a></div>
++<div>13.01.2001 <a href="/y/">Newcastle 3 : 1 Coventry</a> 1.68 3.40 4.20</div>
++<div>06.09.2000 <a href="/z/">Coventry 0 : 2 Newcastle</a> 2.50 2.90 2.70</div>
++<a href="/more/">Show more matches</a>
++<h2>Standings</h2>
++<div># Team MP W D L G GD Pts Form</div>
++<div>1. Manchester City 6 6 0 0 16:5 11 18</div>
++<div>2. Arsenal 6 5 0 1 10:5 5 15</div>
++<div>11. Newcastle 5 2 2 1 9:9 0 8</div>
++<div>19. Coventry 5 1 0 4 1:10 -9 3</div>
++<div>20. Fulham 6 0 2 4 6:10 -4 2</div>
++<a href="/full/">Show full table</a>
++<div>Last results: Coventry Show: Premier League 2026/2027 all tournaments</div>
++<div>19.09.2026 <a href="/a/">Nottingham 0 : 1 Coventry</a> 1.64 3.87 5.52</div>
++<div>13.09.2026 <a href="/b/">Coventry 0 : 5 Brighton</a></div>
++<div>Last results: Newcastle Utd Show: Premier League 2026/2027 all tournaments</div>
++<div>19.09.2026 <a href="/c/">Newcastle 2 : 1 Hull</a> 1.60 4.31 5.15</div>
++"""
++
++LISTING_PAGE = """
++<tr class="js-tournament"><td class="table-main__tournament">England: Premier League</a></td></tr>
++<tr data-dt="12,10,2026,21,0">
++  <td class="table-main__tt"><a href="/football/england/premier-league/coventry-newcastle-utd/tW4rOkzg/">Coventry - Newcastle Utd</a></td>
++</tr>
++"""
++
++PICK = {"date": "2026-10-12", "home": "Coventry", "away": "Newcastle Utd", "market": "1x2"}
++LEDGER = "betexplorer_match_detail_2026-10-12.json"
++
++
++@pytest.fixture(autouse=True)
++def _reset_be(tmp_path, monkeypatch):
++    monkeypatch.setattr(be, "LOCALDATA", tmp_path)
++    be.reset_fetch_count()
++    yield
++    be.reset_fetch_count()
++
++
++def _slug_of(url: str) -> str | None:
++    match = re.search(r"/match-odds/[^/]+/[^/]+/([a-z0-9]+)/bestOdds/", url)
++    return match.group(1) if match else None
++
++
++def _transport(calls: list[str], *, seen: list | None = None):
++    def fake_fetch(url, referer=None, retries=3, timeout=20, **kwargs):
++        calls.append(url)
++        if seen is not None:
++            seen.append((_slug_of(url), kwargs.get("min_interval")))
++        slug = _slug_of(url)
++        if slug:
++            return json.dumps({"odds": MARKET_HTML.get(slug, "")})
++        if url == MATCH_URL:
++            return MATCH_PAGE
++        return LISTING_PAGE
++    return fake_fetch
++
++
++def _run_pick(pick: dict = PICK, *, calls: list[str] | None = None):
++    be._match_cache.clear()
++    be._fixture_cache.clear()
++    transport = _transport(calls if calls is not None else [])
++    with mock.patch.object(be, "_fetch", transport):
++        return be.betexplorer_odds_rows_for_pick(pick, "2026-10-12")
++
++
++# --- the per-market parse ---------------------------------------------------
++
++def test_market_columns_lines_and_prices_come_from_the_response():
++    market = be.parse_market_response(OU_HTML)
++    # Labels are the page's own thead; lines are the page's own tbody ids,
++    # ordered nearest level first.
++    assert market["columns"] == ["Over", "Under"]
++    assert market["lines"] == ["0.50", "2.50"]
++    # Both lines are covered by their own all-bookmakers section, so the
++    # site's "every bookmaker" view wins there.
++    assert [(row["bookmaker"], row["line"], row["source"]) for row in market["rows"]] == [
++        ("Unibet", "0.50", "all"), ("Stake.com", "2.50", "all")]
++    unibet = market["rows"][0]
++    assert unibet["bookmaker_id"] == "1088"
++    assert unibet["odds"] == [1.04, 13.00]
++    assert unibet["pos"] == ["1", "2"]
++    assert unibet["created"] == ["2026-10-12T05:03", "2026-10-12T05:03"]
++    assert market["named_rows"] == 2
++    assert market["bookmakers"] == ["Stake.com", "Unibet"]
++    # Several lines mean several average lines: per line, never a flat guess.
++    assert market["average"] is None
++    assert market["average_by_line"] == {"0.50": [1.04, 13.00], "2.50": [3.40, 1.30]}
++
++
++def test_a_line_the_all_block_does_not_cover_keeps_the_table_rows():
++    market = be.parse_market_response(
++        _ou_table("0.50", "bet365.us", "1105", (1.04, 13.00))
++        + _all_section("2.50", "Stake.com", "1089", (3.40, 1.30), (3.40, 1.30)))
++    assert [(row["bookmaker"], row["line"], row["source"]) for row in market["rows"]] == [
++        ("bet365.us", "0.50", "table"), ("Stake.com", "2.50", "all")]
++
++
++def test_single_line_markets_keep_the_pages_own_columns_and_ranks():
++    btts = be.parse_market_response(BTS_HTML)
++    assert btts["columns"] == ["Yes", "No"]
++    assert btts["lines"] == ["0"]
++    assert btts["rows"][0]["pos"] == ["y", "n"]
++    assert btts["rows"][0]["odds"] == [1.57, 2.25]
++    assert btts["rows"][0]["created"] == ["2026-09-12T18:41", "2026-09-12T18:41"]
++
++    chance = be.parse_market_response(DC_HTML)
++    assert chance["columns"] == ["1X", "12", "X2"]
++    # Two-place ranks stay as the page wrote them ("02" is not rank 2).
++    assert chance["rows"][0]["pos"] == ["10", "12", "02"]
++
++    handicap = be.parse_market_response(AH_HTML)
++    assert handicap["columns"] == ["1", "2"]
++    assert handicap["lines"] == ["-1.50"]
++    assert handicap["rows"][0]["odds"] == [2.10, 1.75]
++
++
++def test_unnamed_rows_are_never_given_a_bookmaker():
++    market = be.parse_market_response(UNNAMED_HTML)
++    assert market["rows_count"] == 1
++    assert market["named_rows"] == 0
++    assert market["rows"][0]["bookmaker"] is None
++    assert market["rows"][0]["odds"] == [2.00, 3.40, 3.50]
++
++
++def test_multi_line_markets_are_capped_to_the_lines_nearest_level():
++    lines = [f"{0.5 * step:.2f}" for step in range(1, 13)]           # 0.50 .. 6.00
++    books = [f"bk{index}" for index in range(9)]                     # 9 books per line
++    html_text = "".join(
++        _ou_table(line, book, book.lstrip("bk"), (1.0 + index / 10, 2.0 + index / 10))
++        for line in lines for index, book in enumerate(books))
++    market = be.parse_market_response(html_text)
++    # 12 lines x 9 books arrive; the cap keeps the lines nearest level with at
++    # most six books each, and `lines` always describes the rows that remain.
++    assert market["rows_count"] == be._MAX_MARKET_ROWS == 48
++    counts = Counter(row["line"] for row in market["rows"])
++    assert set(counts) == set(market["lines"])
++    assert market["lines"] == lines[:len(market["lines"])]
++    assert len(market["lines"]) <= be._MAX_MARKET_LINES
++    assert set(counts.values()) == {be._MAX_MARKET_BOOKS_PER_LINE}
++
++
++def test_single_line_markets_keep_up_to_24_bookmakers():
++    books = [f"bk{index}" for index in range(30)]
++    html_text = "".join(
++        _ou_table("0", book, book.lstrip("bk"), (1.5 + index / 100, 2.5))
++        for index, book in enumerate(books))
++    market = be.parse_market_response(html_text)
++    assert market["rows_count"] == be._MAX_BOOKS_RETAINED == 24
++
++
++def test_best_triple_contract_is_unchanged():
++    assert be.parse_best_1x2(ODDS_HTML) == {"odd1": 3.10, "oddx": 3.60, "odd2": 2.20}
++    assert be.parse_best_1x2("") is None
++
++
++# --- the match-page blocks --------------------------------------------------
++
++def test_match_page_blocks_read_h2h_last_results_and_standings():
++    blocks = snap.parse_match_page_blocks(MATCH_PAGE)
++    assert blocks["blocks"] == ["h2h", "last_results", "standings"]
++    assert blocks["h2h_meetings"] == 6
++    # "1 draw" (singular) must parse; the old plural-only grammar missed it.
++    assert blocks["h2h_record"] == {"home_wins": 0, "draws": 1, "away_wins": 5}
++    first, second = blocks["h2h_rows"][0], blocks["h2h_rows"][1]
++    assert first["date"] == "2010-02-17" and first["score"] == [4, 1]
++    assert first["odds"] is None
++    assert second["odds"] == [1.68, 3.40, 4.20]
++    # One row per played match, each carrying the label of its own block.
++    results = blocks["last_results_rows"]
++    assert [row["label"] for row in results] == ["Coventry", "Coventry", "Newcastle Utd"]
++    assert [row["date"] for row in results] == ["2026-09-19", "2026-09-13", "2026-09-19"]
++    assert results[0]["score"] == [0, 1]
++    assert results[0]["odds"] == [1.64, 3.87, 5.52]
++    assert results[1]["odds"] is None
++    # The standings block is the page's whole table, read from its own
++    # columns — never a text excerpt that truncates it.
++    assert blocks["standings_columns"] == ["#", "Team", "MP", "W", "D", "L",
++                                           "G", "GD", "Pts", "Form"]
++    assert [row["rank"] for row in blocks["standings_rows"]] == [1, 2, 11, 19, 20]
++    assert blocks["standings_rows"][0] == {
++        "rank": 1, "team": "Manchester City", "mp": 6, "wins": 6, "draws": 0,
++        "losses": 0, "goals_for": 16, "goals_against": 5, "goal_difference": 11,
++        "points": 18,
++    }
++    coventry = blocks["standings_rows"][3]
++    assert (coventry["team"], coventry["goal_difference"], coventry["points"]) == \
++        ("Coventry", -9, 3)
++    assert "standings_excerpt" not in blocks
++
++
++def test_the_whole_table_and_h2h_list_are_read_not_the_collapsed_view():
++    """The page's "Show full table" / "Show more matches" only toggle rows
++    that are already served, so the whole list is read — bounded, never
++    truncated to the collapsed view."""
++    rows = "".join(
++        f"<div>{rank}. Club {rank:02d} 6 3 1 2 {10 + rank}:{rank} {10} {rank * 3}</div>"
++        for rank in range(1, 25))
++    table = ("<h2>Standings</h2><div># Team MP W D L G GD Pts Form</div>"
++             + rows + "<a href='/full/'>Show full table</a><div>Last results: Club 01</div>")
++    blocks = snap.parse_match_page_blocks(table)
++    assert len(blocks["standings_rows"]) == 24
++    assert blocks["standings_rows"][-1]["team"] == "Club 24"
++
++    meetings = "".join(f"<div>{day:02d}.01.200{index % 10} A {index}:0 B</div>"
++                       for index, day in enumerate(range(1, 46)))
++    h2h = ("<h2>Head to Head: Last 6</h2><div>A B 0 wins 1 draw 5 wins</div>"
++           + meetings + "<a>Show more matches</a>")
++    assert len(snap.parse_match_page_blocks(h2h)["h2h_rows"]) == be._MAX_H2H_ROWS == 40
++
++
++def test_a_digit_leading_club_name_stays_in_the_team_field():
++    table = ("<h2>Standings</h2><div># Team MP W D L G GD Pts Form</div>"
++             "<div>8. 1899 Hoffenheim 6 2 3 1 8:6 2 9</div>"
++             "<div>9. 1. FC Koln 6 1 0 5 4:14 -10 3</div>"
++             "<a href='/full/'>Show full table</a>")
++    rows = snap.parse_match_page_blocks(table)["standings_rows"]
++    assert [row["team"] for row in rows] == ["1899 Hoffenheim", "1. FC Koln"]
++    assert rows[1]["goal_difference"] == -10
++
++
++# --- the wired capture ------------------------------------------------------
++
++def test_capture_retains_every_market_from_one_response_per_market(tmp_path):
++    calls: list[str] = []
++    rows = _run_pick(calls=calls)
++
++    # The priced lane is exactly what it was: three best-price rows.
++    assert [row["selection"] for row in rows] == ["home", "draw", "away"]
++    assert [row["odds"] for row in rows] == [3.10, 3.60, 2.20]
++    assert {row["bookmaker"] for row in rows} == {"betexplorer_best"}
++
++    # Two adjacent-day listing probes (the second one matches), the match page,
++    # then one comparison response per market, in the page's own tab order.
++    assert calls == LISTING_URLS + [MATCH_URL, ODDS_URL] + [
++        MARKET_URL.format(slug=slug) for slug in ("ou", "ah", "ha", "dc", "bts")]
++    assert not any("/bookmaker/" in url for url in calls)
++
++    payload = json.loads((tmp_path / LEDGER).read_text())
++    assert payload["schema"] == 2 and payload["date"] == "2026-10-12"
++    (entry,) = payload["fixtures"].values()
++    assert entry["event_id"] == "tW4rOkzg"
++    assert entry["page_param"] == "1"
++    assert entry["best_1x2"] == {"odd1": 3.10, "oddx": 3.60, "odd2": 2.20}
++    assert entry["market_failures"] == []
++    assert sorted(entry["markets"]) == ["1x2", "ah", "bts", "dc", "ha", "ou"]
++
++    one_x_two = entry["markets"]["1x2"]
++    assert one_x_two["columns"] == ["1", "X", "2"]
++    assert one_x_two["average"] == [3.06, 3.53, 2.17]
++    assert one_x_two["bookmakers"] == ["Stake.com", "bet365.us"]
++    assert {row["bookmaker"] for row in one_x_two["rows"]} == {"bet365.us", "Stake.com"}
++
++    over_under = entry["markets"]["ou"]
++    assert over_under["lines"] == ["0.50", "2.50"]
++    assert over_under["average"] is None
++    assert over_under["average_by_line"] == {"0.50": [1.04, 13.00], "2.50": [3.40, 1.30]}
++
++    assert entry["markets"]["bts"]["columns"] == ["Yes", "No"]
++    assert entry["markets"]["ha"]["lines"] == ["0"]
++    assert entry["markets"]["dc"]["rows"][0]["pos"] == ["10", "12", "02"]
++
++    assert entry["page"]["blocks"] == ["h2h", "last_results", "standings"]
++    assert entry["page"]["h2h_record"] == {"home_wins": 0, "draws": 1, "away_wins": 5}
++    assert entry["page"]["challenge"] is False
++    standings = entry["page"]["standings_rows"]
++    assert entry["page"]["standings_rows_count"] == len(standings) == 5
++    assert [row["rank"] for row in standings] == [1, 2, 11, 19, 20]
++    assert standings[3]["team"] == "Coventry" and standings[3]["points"] == 3
++    assert entry["page"]["standings_columns"] == ["#", "Team", "MP", "W", "D", "L",
++                                                  "G", "GD", "Pts", "Form"]
++    # No raw HTML is ever retained.
++    assert "<td" not in json.dumps(payload) and "<div" not in json.dumps(payload)
++
++
++def test_market_tab_requests_take_the_wider_interval():
++    seen: list[tuple] = []
++    be._match_cache.clear()
++    be._fixture_cache.clear()
++    with mock.patch.object(be, "_fetch", _transport([], seen=seen)):
++        be.betexplorer_odds_rows_for_pick(PICK, "2026-10-12")
++    intervals = dict(seen)
++    assert be._MARKET_INTERVAL >= 5.1
++    for slug in ("ou", "ah", "ha", "dc", "bts"):
++        assert intervals[slug] == be._MARKET_INTERVAL
++    # The priced lane's own requests keep their existing spacing.
++    assert intervals["1x2"] is None and intervals[None] is None
++
++
++def test_market_tabs_can_be_turned_off(tmp_path, monkeypatch):
++    monkeypatch.setattr(be, "MARKET_TABS_ENABLED", False)
++    calls: list[str] = []
++    rows = _run_pick(calls=calls)
++    assert [row["odds"] for row in rows] == [3.10, 3.60, 2.20]
++    assert calls == LISTING_URLS + [MATCH_URL, ODDS_URL]
++    (entry,) = json.loads((tmp_path / LEDGER).read_text())["fixtures"].values()
++    assert sorted(entry["markets"]) == ["1x2"]
++
++
++def test_market_tabs_stop_at_the_run_request_budget(tmp_path, monkeypatch):
++    monkeypatch.setattr(be, "_MAX_REQUESTS_PER_RUN", 4)
++    be._request_count = 4
++    calls: list[str] = []
++    rows = _run_pick(calls=calls)
++    assert [row["odds"] for row in rows] == [3.10, 3.60, 2.20]
++    assert calls == LISTING_URLS + [MATCH_URL, ODDS_URL]
++    assert be.request_stats()["market_budget_stop"] is True
++    (entry,) = json.loads((tmp_path / LEDGER).read_text())["fixtures"].values()
++    assert sorted(entry["markets"]) == ["1x2"]
++
++
++def test_market_failures_are_recorded_without_touching_the_priced_lane(tmp_path):
++    def flaky_fetch(url, referer=None, retries=3, timeout=20, **kwargs):
++        if _slug_of(url) == "bts":
++            raise RuntimeError("gone")
++        return _transport([])(url, referer=referer, retries=retries, timeout=timeout, **kwargs)
++
++    be._match_cache.clear()
++    be._fixture_cache.clear()
++    with mock.patch.object(be, "_fetch", flaky_fetch):
++        rows = be.betexplorer_odds_rows_for_pick(PICK, "2026-10-12")
++    assert [row["odds"] for row in rows] == [3.10, 3.60, 2.20]
++    (entry,) = json.loads((tmp_path / LEDGER).read_text())["fixtures"].values()
++    assert entry["market_failures"] == ["bts"]
++    assert sorted(entry["markets"]) == ["1x2", "ah", "dc", "ha", "ou"]
++    assert be.request_stats()["market_requests"] == 5
++
++
++def test_cache_hit_makes_no_request_and_adds_no_detail(tmp_path):
++    calls: list[str] = []
++    first = _run_pick(calls=calls)
++    ledger = tmp_path / LEDGER
++    before = ledger.read_text()
++
++    be._match_cache.clear()
++    be._fixture_cache.clear()
++    calls.clear()
++    be.reset_fetch_count()
++    transport = _transport(calls)
++    with mock.patch.object(be, "_fetch", transport):
++        second = be.betexplorer_odds_rows_for_pick(PICK, "2026-10-12")
++
++    assert second == first
++    assert calls == []
++    assert ledger.read_text() == before
++
++
++def test_detail_write_failure_never_breaks_the_priced_lane(monkeypatch):
++    def explode(*_args, **_kwargs):
++        raise RuntimeError("disk full")
++
++    monkeypatch.setattr(be, "_persist_match_detail", explode)
++    rows = _run_pick()
++    assert [row["odds"] for row in rows] == [3.10, 3.60, 2.20]
++
++
++def test_a_stub_fetch_leaves_no_stale_detail(monkeypatch):
++    match = {"date": "2026-10-12", "kickoff": "21:00", "country": "England",
++             "league": "Premier League", "home": "Coventry", "away": "Newcastle Utd",
++             "match_url": MATCH_URL, "event_id": "tW4rOkzg"}
++    monkeypatch.setattr(be, "fetch_day_matches", lambda day: [match] if day == "2026-10-12" else [])
++    monkeypatch.setattr(be, "fetch_match_odds", lambda url, event_id: {"odd1": 1.9, "oddx": 3.3, "odd2": 4.4})
++    be._match_cache.clear()
++    be._fixture_cache.clear()
++    be.LAST_MATCH_DETAIL = {"markets": {"1x2": {"rows": [{"bookmaker": "Leftover"}]}},
++                            "page": None, "captured_at": "2026-10-12T00:00:00+00:00"}
++    rows = be.betexplorer_odds_rows_for_pick(PICK, "2026-10-12")
++    assert [row["odds"] for row in rows] == [1.9, 3.3, 4.4]
++    assert not (Path(be.LOCALDATA) / LEDGER).exists()
++
++
++# --- the receipt ------------------------------------------------------------
++
++def test_wrapper_receipt_summarises_the_detail_ledger(tmp_path, monkeypatch):
++    monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
++    (tmp_path / LEDGER).write_text(json.dumps({
++        "schema": 2, "date": "2026-10-12",
++        "fixtures": {
++            "2026-10-12|coventry|newcastleutd": {
++                "markets": {
++                    "1x2": {"rows": [{}, {}], "named_rows": 2, "bookmakers": ["a", "b"]},
++                    "ou": {"rows": [{}], "named_rows": 1, "bookmakers": ["a"]},
++                },
++                "page": {"blocks": ["h2h", "standings"], "challenge": False,
++                         "standings_rows": [{}, {}]},
++            },
++            "2026-10-12|other|side": {
++                "markets": {"1x2": {"rows": [], "named_rows": 0, "bookmakers": []}},
++                "page": {"blocks": ["last_results"], "challenge": True},
++            },
++        },
++    }))
++    summary = capture._detail_summary("2026-10-12")
++    assert summary == {"fixtures": 2, "markets": 3, "market_rows": 3, "named_rows": 3,
++                       "bookmakers": 3, "standings_rows": 2, "with_h2h": 1,
++                       "with_last_results": 1, "with_standings": 1,
++                       "challenge_pages": 1}
++    assert capture._detail_summary("2026-10-11")["fixtures"] == 0
+diff --git a/tests/test_betexplorer_politeness.py b/tests/test_betexplorer_politeness.py
+index a1d21da..761c1f6 100644
+--- a/tests/test_betexplorer_politeness.py
++++ b/tests/test_betexplorer_politeness.py
+@@ -66,7 +66,7 @@ def test_first_429_honors_retry_after_and_uses_30_second_floor(monkeypatch):
+         return Response()
+ 
+     monkeypatch.setattr(be.urllib.request, "urlopen", urlopen)
+-    monkeypatch.setattr(be, "_throttle", lambda: None)
++    monkeypatch.setattr(be, "_throttle", lambda *_args, **_kwargs: None)
+     monkeypatch.setattr(be.time, "sleep", lambda seconds: sleeps.append(seconds))
+ 
+     assert be._fetch("https://www.betexplorer.com/example") == "ok"
+@@ -83,7 +83,7 @@ def test_second_429_cools_run_and_makes_no_third_request(monkeypatch):
+         raise _http_429()
+ 
+     monkeypatch.setattr(be.urllib.request, "urlopen", urlopen)
+-    monkeypatch.setattr(be, "_throttle", lambda: None)
++    monkeypatch.setattr(be, "_throttle", lambda *_args, **_kwargs: None)
+     monkeypatch.setattr(be.time, "sleep", lambda _seconds: None)
+ 
+     with pytest.raises(be.BetExplorerCoolingDown):
+@@ -135,3 +135,39 @@ def test_same_day_fixture_cache_dedupes_requests_and_survives_run_reset(monkeypa
+     monkeypatch.setattr(be, "fetch_day_matches", lambda _day: (_ for _ in ()).throw(AssertionError("network")))
+     assert be.betexplorer_odds_rows_for_pick(pick, "2026-10-02") == first
+     assert be.run_stats()["be_cached"] == 1
++
++
++def test_request_counts_track_every_attempt_for_the_receipt(monkeypatch):
++    """The receipt reports what the site saw: every attempt, retries included.
++
++    The tab requests the detail lane adds are counted separately, so a run log
++    can tell priced-lane traffic from retained-detail traffic.
++    """
++    attempts = []
++
++    class Response:
++        def __enter__(self):
++            return self
++
++        def __exit__(self, *args):
++            return False
++
++        def read(self):
++            return b"ok"
++
++    def urlopen(_request, timeout=20):
++        attempts.append(timeout)
++        if len(attempts) == 1:
++            raise _http_429("1")
++        return Response()
++
++    monkeypatch.setattr(be.urllib.request, "urlopen", urlopen)
++    monkeypatch.setattr(be, "_throttle", lambda *_args, **_kwargs: None)
++    monkeypatch.setattr(be.time, "sleep", lambda _seconds: None)
++
++    assert be._fetch("https://www.betexplorer.com/example") == "ok"
++    assert be.request_stats() == {"requests": 2, "market_requests": 0,
++                                  "market_budget_stop": False}
++    be.reset_fetch_count()
++    assert be.request_stats() == {"requests": 0, "market_requests": 0,
++                                  "market_budget_stop": False}
+-- 
+2.39.5

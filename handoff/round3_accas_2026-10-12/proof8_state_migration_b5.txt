@@ -1,0 +1,15 @@
+=== §5(8) state migration (B-5): is there an old 'tickets'-shaped lane state? ===
+$ git ls-files localdata/ | grep -iE 'enhancement|tickets_state'   # tracked lane state
+localdata/auto_tickets_state.json
+localdata/enhancement_registry.json
+
+$ ls localdata/ | grep -i enhancement   # working tree
+enhancement_registry.json
+
+$ python -c "..."   # any tickets-shaped lane state anywhere under localdata/? 
+  lane-state files with open slips: [('auto_tickets_state.json', ['accas', 'date', 'staked_pct'])]
+  -> nothing to delete: the round-2 freeze demos ran in scratch worktrees;
+     the lane creates its own state file on its first run (proof2_run1).
+
+$ the runtime donors checked by _collect_settled_facts, for the record:
+settled_results.json

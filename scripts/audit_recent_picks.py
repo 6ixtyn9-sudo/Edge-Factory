@@ -30,6 +30,7 @@ from edgefactory.settlement import (  # noqa: E402
     terminal_event_disposition,
 )
 from edgefactory.util import ledger_team_key, norm_team  # noqa: E402
+from edgefactory.enh_registry import check_enhancement_hit  # noqa: E402
 
 
 @dataclass
@@ -1059,120 +1060,6 @@ def parse_statistical_comment(comment: str) -> dict[str, Any]:
     return out
 
 
-def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bool | None:
-    if hs is None or gs is None:
-        return None
-    sel = selection.lower()
-    if enh_type == "match_over_15":
-        # FIX-2 (2026-08-03, Addendum 12): plain-market scoring. The promised %
-        # rendered for this market and the price captured for it are both the
-        # PLAIN total, so the hit must be selection-independent. The removed
-        # Win+Over combo branches measured a different market than the one
-        # priced, deflating every hit-rate (and any future registry
-        # certification) built on them.
-        return (hs + gs) >= 2
-    elif enh_type == "match_over_25":
-        # FIX-2: plain-market scoring (see match_over_15).
-        return (hs + gs) >= 3
-    elif enh_type == "match_under_15":
-        return (hs + gs) <= 1
-    elif enh_type == "match_under_25":
-        return (hs + gs) <= 2
-    elif enh_type == "match_under_35":
-        return (hs + gs) <= 3
-    elif enh_type == "btts_yes":
-        # FIX-2: plain-market scoring (see match_over_15).
-        return hs > 0 and gs > 0
-    elif enh_type == "btts_no":
-        return hs == 0 or gs == 0
-    elif enh_type in ("team_over_05", "home_over_05"):
-        return hs >= 1 if (enh_type == "home_over_05" or sel == "home") else gs >= 1
-    elif enh_type in ("team_over_15", "home_over_15"):
-        return hs >= 2 if (enh_type == "home_over_15" or sel == "home") else gs >= 2
-    elif enh_type == "home_over_25":
-        return hs >= 3
-    elif enh_type == "home_over_35":
-        return hs >= 4
-    elif enh_type == "home_over_45":
-        return hs >= 5
-    elif enh_type == "home_under_05":
-        return hs == 0
-    elif enh_type == "home_under_15":
-        return hs <= 1
-    elif enh_type == "home_under_25":
-        return hs <= 2
-    elif enh_type == "home_under_35":
-        return hs <= 3
-    elif enh_type == "home_under_45":
-        return hs <= 4
-    elif enh_type == "away_over_05":
-        return gs >= 1
-    elif enh_type == "away_over_15":
-        return gs >= 2
-    elif enh_type == "away_over_25":
-        return gs >= 3
-    elif enh_type == "away_over_35":
-        return gs >= 4
-    elif enh_type == "away_over_45":
-        return gs >= 5
-    elif enh_type == "away_under_05":
-        return gs == 0
-    elif enh_type == "away_under_15":
-        return gs <= 1
-    elif enh_type == "away_under_25":
-        return gs <= 2
-    elif enh_type == "away_under_35":
-        return gs <= 3
-    elif enh_type == "away_under_45":
-        return gs <= 4
-    elif enh_type == "goal_range_0_1":
-        return (hs + gs) in [0, 1]
-    elif enh_type == "goal_range_2_3":
-        return (hs + gs) in [2, 3]
-    elif enh_type == "goal_range_4_5":
-        return (hs + gs) in [4, 5]
-    elif enh_type == "goal_range_4_6":
-        return (hs + gs) in [4, 5, 6]
-    elif enh_type == "goal_range_6_plus":
-        return (hs + gs) >= 6
-    elif enh_type == "goal_range_7_plus":
-        return (hs + gs) >= 7
-    elif enh_type == "exact_0":
-        return (hs + gs) == 0
-    elif enh_type == "exact_1":
-        return (hs + gs) == 1
-    elif enh_type == "exact_2":
-        return (hs + gs) == 2
-    elif enh_type == "exact_3":
-        return (hs + gs) == 3
-    elif enh_type == "exact_4":
-        return (hs + gs) == 4
-    elif enh_type == "exact_5":
-        return (hs + gs) == 5
-    elif enh_type == "match_over_05":
-        return (hs + gs) >= 1
-    elif enh_type == "match_over_35":
-        return (hs + gs) >= 4
-    elif enh_type == "match_over_45":
-        return (hs + gs) >= 5
-    elif enh_type == "match_over_55":
-        return (hs + gs) >= 6
-    elif enh_type == "match_under_05":
-        return (hs + gs) == 0
-    elif enh_type == "match_under_45":
-        return (hs + gs) <= 4
-    elif enh_type == "match_under_55":
-        return (hs + gs) <= 5
-    elif enh_type == "double_chance":
-        if sel == "home": # 1X
-            return hs >= gs
-        elif sel == "away": # X2
-            return gs >= hs
-        elif sel == "draw": # 12
-            return hs != gs
-    return None
-
-
 # ---------------------------------------------------------------------------
 # Full-surface audit (2026-08-03, Addendum 12)
 #
@@ -1670,10 +1557,15 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "total_recommended": 0,
         "total_hits": 0,
         "by_enhancement": defaultdict(lambda: {"recommended": 0, "hits": 0,
-                                               "priced_n": 0, "priced_hits": 0,
+                                               "settled": 0, "priced_n": 0, "priced_hits": 0,
                                                "priced_profit": 0.0})
     }
     priced_outcomes: list[dict] = []  # settled outcomes with REAL captured prices (registry feed)
+    # Round 6D: settled outcomes with NO captured price. They carry the same
+    # provenance and are fed to the registry's processed-only path, where they
+    # dedupe but never advance certification - so the measurement ledger and the
+    # certification ledger finally cover the same universe of settled picks.
+    unpriced_outcomes: list[dict] = []
 
     # Full-surface audit collectors (Addendum 12): every 🔥 note and every 📊
     # promised metric on every settled pick — not just the one recommendation.
@@ -1851,20 +1743,44 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                             _enh_pricing.attach_enhancement_price(probe, _prices_by_day[pick_date])
                             price = probe.get("enhancement_price")
                             price_source = probe.get("enhancement_price_source") or ""
+                        slot["settled"] += 1
+                        # Built once for BOTH ledgers (round 6D): `price` is the
+                        # only field that differs, and None means the registry
+                        # records it processed-only.
+                        outcome = {
+                                "date": str(pick_date), "match": pick.get("match") or "",
+                                "market": enh_type, "price": None, "hit": bool(hit),
+                                "source": price_source,
+                                # governance N5 (Addendum 27.11): whether >=2
+                                # distinct sources priced this exact selection.
+                                "multi_source": bool(probe.get("enhancement_multi_source")),
+                                # Slice provenance (2026-10-12): the parent
+                                # pick's bucket and rule, and the enhancement's
+                                # own stated probability. Recorded so the
+                                # settled track record can be sliced by bucket
+                                # and rule; purely provenance, gates nothing.
+                                "bucket": str(pick.get("bucket") or ""),
+                                "rule": str(pick.get("rule")
+                                            or pick.get("display_rule") or ""),
+                                "stated": pick.get("enhancement_probability"),
+                                # Floor-slice provenance (round 6, R2): the
+                                # parent pick's league and the fixture's teams,
+                                # so the settled record can be sliced for the
+                                # per-slice floors. Additive; gates nothing.
+                                "league": str(pick.get("league") or ""),
+                                "home": str(pick.get("home") or ""),
+                                "away": str(pick.get("away") or ""),
+                        }
                         if (isinstance(price, (int, float)) and not isinstance(price, bool)
                                 and math.isfinite(price) and price > 1.0):
                             slot["priced_n"] += 1
                             if hit:
                                 slot["priced_hits"] += 1
                             slot["priced_profit"] += (price - 1.0) if hit else -1.0
-                            priced_outcomes.append({
-                                "date": str(pick_date), "match": pick.get("match") or "",
-                                "market": enh_type, "price": float(price), "hit": bool(hit),
-                                "source": price_source,
-                                # governance N5 (Addendum 27.11): whether >=2
-                                # distinct sources priced this exact selection.
-                                "multi_source": bool(probe.get("enhancement_multi_source")),
-                            })
+                            outcome["price"] = float(price)
+                            priced_outcomes.append(outcome)
+                        else:
+                            unpriced_outcomes.append(outcome)
 
                 # 5. Granular expectations audit ledger populator
                 # (full-surface: score the pick's 🔥 notes ONCE here so the
@@ -1951,19 +1867,82 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                         and math.isfinite(avg_goals_promised)):
                     goal_forecasts.append((float(avg_goals_promised), float(hs + gs)))
 
+    # Enhancement certification registry (round 6D): feed BOTH ledgers - the
+    # priced settled outcomes (they advance certification) and the unpriced ones
+    # (processed-only; they dedupe and are measurable, but never certify:
+    # probability without price is not evidence of value). Idempotent, fail-soft.
+    # This runs before the serialization below so the reconciliation can print
+    # the registry's own processed counts beside the measurement counts.
+    registry_states: dict[str, str] = {}
+    registry_processed: dict[str, int] = {}
+    try:
+        from edgefactory.enh_registry import all_statuses, record_outcome, versioned
+        for oc in (*priced_outcomes, *unpriced_outcomes):
+            record_outcome(ROOT, date_=oc["date"], match=oc["match"], market=oc["market"],
+                           price=oc["price"], hit=oc["hit"], source=oc["source"],
+                           multi_source=oc.get("multi_source", False),
+                           bucket=oc.get("bucket", ""), rule=oc.get("rule", ""),
+                           stated=oc.get("stated"),
+                           league=oc.get("league", ""), home=oc.get("home", ""),
+                           away=oc.get("away", ""))
+        registry_states = all_statuses(ROOT)
+        # Reconciliation read: what the certification ledger now holds per market,
+        # so `recommended` / `settled` / `processed` / `priced_n` are printed side
+        # by side instead of diverging silently.
+        try:
+            from edgefactory.enh_registry import registry_path
+            _reg = json.loads(registry_path(ROOT).read_text())
+            for _mkey, _entry in (_reg.get("markets") or {}).items():
+                registry_processed[str(_mkey)] = len(_entry.get("processed") or [])
+        except Exception:
+            registry_processed = {}
+    except Exception:
+        registry_states = {}
+
+    def _price_class(market: str, priced_n: int) -> tuple[str, str]:
+        """Why a market is (or is not) priced — measured, never assumed.
+
+        ``no_price_source``: the mapping says no captured feed quotes it (the
+        absence is a decision). ``no_price_observed``: a feed is mapped, but no
+        price arrived for it inside this window. Both are hit-rate-only here.
+        """
+        try:
+            from edgefactory.enh_pricing import MARKET_PRICE_MAP
+            mapped = MARKET_PRICE_MAP.get(market, "missing")
+        except Exception:
+            return ("unknown", "")
+        if mapped is None or mapped == "missing":
+            return ("no_price_source", "hit-rate only: no captured feed quotes this market")
+        if priced_n == 0:
+            return ("no_price_observed",
+                    "hit-rate only: a mapped feed quoted no price for it in this window")
+        return ("priced", "")
+
     serialized_by_enhancement = {}
     for enh, stats in enh_stats["by_enhancement"].items():
         rec = stats["recommended"]
         hits = stats["hits"]
         p_n = stats.get("priced_n", 0)
         p_profit = stats.get("priced_profit", 0.0)
+        cls, note = _price_class(enh, p_n)
+        try:
+            _mk = versioned(enh) or enh
+        except Exception:
+            _mk = enh
         serialized_by_enhancement[enh] = {
             "recommended": rec,
             "hits": hits,
+            "settled": stats.get("settled", 0),
             "hit_rate": round(hits / rec, 6) if rec else 0.0,
             "priced_n": p_n,
             "priced_hits": stats.get("priced_hits", 0),
             "priced_roi": round(p_profit / p_n, 6) if p_n else None,
+            # Round 6D reconciliation: the certification ledger's own count of
+            # processed keys for this market (priced + unpriced), beside the
+            # measurement counts above.
+            "registry_processed": registry_processed.get(_mk, 0),
+            "price_source_class": cls,
+            "price_note": note,
         }
 
     serialized_enh_audit = {
@@ -1972,20 +1951,6 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "hit_rate": round(enh_stats["total_hits"] / enh_stats["total_recommended"], 6) if enh_stats["total_recommended"] else None,
         "by_enhancement": serialized_by_enhancement
     }
-
-    # Enhancement certification registry: feed priced settled outcomes (idempotent,
-    # fail-soft) and snapshot states for the report. Unpriced outcomes never advance
-    # certification — probability without price is not evidence of value.
-    registry_states: dict[str, str] = {}
-    try:
-        from edgefactory.enh_registry import all_statuses, record_outcome
-        for oc in priced_outcomes:
-            record_outcome(ROOT, date_=oc["date"], match=oc["match"], market=oc["market"],
-                           price=oc["price"], hit=oc["hit"], source=oc["source"],
-                           multi_source=oc.get("multi_source", False))
-        registry_states = all_statuses(ROOT)
-    except Exception:
-        registry_states = {}
 
     return {
         "start": start,
@@ -2142,7 +2107,15 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 rec = summary.get("recommended", 0)
                 hits = summary.get("hits", 0)
                 hr = summary.get("hit_rate", 0.0)
-                lines.append(f"- `{key}`: recommended={rec}, hits={hits}, hit_rate={hr:.1%}")
+                settled = summary.get("settled", 0)
+                p_n = summary.get("priced_n", 0)
+                proc = summary.get("registry_processed", 0)
+                cls = summary.get("price_source_class", "")
+                note = summary.get("price_note") or ""
+                lines.append(
+                    f"- `{key}`: recommended={rec}, settled={settled}, hit_rate={hr:.1%}, "
+                    f"priced_n={p_n}, registry_processed={proc}, class={cls}"
+                    + (f" — {note}" if note else ""))
         lines.append("")
 
     # Full-surface audit sections (Addendum 12)
@@ -2410,6 +2383,61 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
     path.write_text("\n".join(lines) + "\n")
 
 
+def render_track_record(root: Path | None = None) -> str:
+    """The settled enhancement track record, with its floors and its slices.
+
+    This is the operator-facing view of the numbers the Stage 2 floor gate is
+    derived from: per-market hit rate, the price at which that rate exactly pays
+    for itself (``breakeven`` = 1/rate), the floor actually in force, and the
+    settled profit — as percentages of capital, never currency. Every market is
+    PAPER until the hit-rate and CLV evidence justifies staking.
+
+    Slices (bucket / rule) are rendered beside the market row so a floor can be
+    re-derived per bucket instead of pooled. Records written before slice
+    provenance existed are reported as unattributed, never guessed at.
+    """
+    from edgefactory.enh_registry import (ENHANCEMENT_PRICE_FLOORS,
+                                          market_track_record, slice_for_market)
+
+    rows = market_track_record(root)
+    out = ["=" * 78,
+           "ENHANCEMENT MARKET TRACK RECORD (settled registry; PAPER unless stated)"]
+    if not rows:
+        out.append("no settled enhancement history yet")
+        out.append("=" * 78)
+        return "\n".join(out)
+    out.append(f"  {'market':<18}{'status':<10}{'n':>5}{'hits':>6}{'rate':>8}"
+               f"{'breakeven':>11}{'floor':>7}{'profit':>10}")
+    for r in rows:
+        rate = f"{r['rate']:.1%}" if r["n"] else "--"
+        be = f"{r['breakeven']:.3f}" if r.get("breakeven") else "--"
+        floor = f"{r['floor']:.2f}" if r.get("floor") else "none"
+        warn = ""
+        if r["n"] < 30:
+            warn = "  ⚠ small-n"
+        elif r.get("breakeven") and r.get("floor") and r["floor"] < r["breakeven"]:
+            warn = "  ⚠ floor below breakeven"
+        out.append(f"  {r['market']:<18}{r['status']:<10}{r['n']:>5}{r['hits']:>6}"
+                   f"{rate:>8}{be:>11}{floor:>7}{r['profit']:>+10.3f}u{warn}")
+    undefined = sorted(set(ENHANCEMENT_PRICE_FLOORS)
+                       - {r["market"] for r in rows})
+    if undefined:
+        out.append(f"  floors configured with no settled history: "
+                   f"{', '.join(undefined)}")
+    for r in rows:
+        for key in ("bucket", "rule"):
+            slices = slice_for_market(root, r["market"], key)
+            if not slices:
+                continue
+            out.append(f"  {r['market']} by {key}:")
+            for name, s in slices.items():
+                rate = f"{s['rate']:.1%}" if s["n"] else "--"
+                out.append(f"    {name:<32}n={s['n']:<5}hits={s['hits']:<5}"
+                           f"rate={rate:<7}profit={s['profit']:+.3f}u")
+    out.append("=" * 78)
+    return "\n".join(out)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Audit recent archived daily picks against settled warehouse results.")
     ap.add_argument("--end", default=date.today().isoformat(), help="End date inclusive (YYYY-MM-DD).")
@@ -2421,7 +2449,16 @@ def main() -> int:
         action="store_true",
         help="Allow same-day archived picks to count as settled. Default is OFF to avoid live/in-progress false settlements.",
     )
+    ap.add_argument(
+        "--track-record",
+        action="store_true",
+        help="Print the settled enhancement market track record (floors, hit rates, bucket/rule slices) and exit. Reads localdata/enhancement_registry.json only.",
+    )
     args = ap.parse_args()
+
+    if args.track_record:
+        print(render_track_record(ROOT))
+        return 0
 
     end = datetime.strptime(args.end, "%Y-%m-%d").date()
     if args.start:

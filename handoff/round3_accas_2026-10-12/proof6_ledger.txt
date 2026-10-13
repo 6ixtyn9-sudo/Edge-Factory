@@ -1,0 +1,52 @@
+{
+ "date": "2026-10-12",
+ "fixtures": {
+  "2026-10-12|coventry|newcastleutd": {
+   "away": "Newcastle Utd",
+   "blocks": {
+    "bts": {
+     "books": [
+      "BetMGM.us",
+      "Stake.com",
+      "bet365.us"
+     ],
+     "columns": [
+      "Yes",
+      "No"
+     ],
+     "lines": [
+      "0"
+     ],
+     "rows": 3
+    }
+   },
+   "home": "Coventry"
+  },
+  "2026-10-12|jselbiar|crbelouizdad": {
+   "away": "CR Belouizdad",
+   "blocks": {
+    "ou": {
+     "books": [
+      "BetMGM.us"
+     ],
+     "columns": [
+      "Over",
+      "Under"
+     ],
+     "lines": [
+      "0.50",
+      "1.50",
+      "2.50",
+      "3.50",
+      "4.50",
+      "ou"
+     ],
+     "rows": 6
+    }
+   },
+   "home": "JS El Biar"
+  }
+ },
+ "ledger": "localdata/betexplorer_match_detail_2026-10-12.json",
+ "schema": 2
+}
