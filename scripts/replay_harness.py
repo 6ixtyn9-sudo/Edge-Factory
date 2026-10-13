@@ -554,7 +554,9 @@ def _firing_by_day(records, floors, *, derived=False):
             continue                                   # no settled floor -> no bet
         if not clears_floor(rec["market"], rec["price"]) or rec["price"] < float(floor):
             continue
-        by_day.setdefault(rec["date"], []).append(rec)
+        # Carry the floor the leg cleared: the shipped enhancement ranking
+        # (hit rate implied by the floor) needs it, and the live lane has it.
+        by_day.setdefault(rec["date"], []).append({**rec, "floor": float(floor)})
     return by_day
 
 
@@ -594,8 +596,11 @@ def enh_day_growth(records, floors, *, stake_frac=None, derived=False):
             pool.append({"match": rec.get("match") or f"{home} vs {away}",
                          "pick": rec["market"], "prob": float(stated),
                          "odds": rec["price"], "hit": bool(rec["hit"]),
+                         "floor": rec.get("floor"),
                          "row": {"date": day, "home": home, "away": away}})
-        plan = at.plan_day(pool, 100.0, stake_frac=stake)
+        # The live lane ranks by hit rate (auto_tickets.ENHANCEMENT_RANK). The
+        # replay must rank the same way, or it tests a rule that never ships.
+        plan = at.plan_day(pool, 100.0, stake_frac=stake, rank=at.ENHANCEMENT_RANK)
         if not plan:
             continue                                   # MIN_ACCAS: NO BET
         # plan_day copies the four card keys, so the leg's own settled hit is
