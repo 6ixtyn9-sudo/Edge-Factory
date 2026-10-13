@@ -14,6 +14,7 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from edgefactory.util import honest_display_label
@@ -26,20 +27,30 @@ BUCKET_WL_UNCORROBORATED_PRICE = "WATCHLIST_UNCORROBORATED_PRICE"
 BUCKET_WL_SUSPECT_PRICE = "WATCHLIST_SUSPECT_PRICE"
 
 
-def format_kickoff(pick: dict[str, Any]) -> str:
-    """The kickoff to SHOW a human.
+_SAST = timezone(timedelta(hours=2))  # South Africa has no DST: SAST is UTC+2.
 
-    ``kickoff_sast`` is preferred because it is rendered from the
-    authoritative zone-bearing ``kickoff_utc``; the raw feed strings it
-    replaces are two incompatible local renderings ("03-10, 17:00" from a
-    UK-local source, bare "09:00" from an Americas-local one) that differ
-    from the true SAST wall clock by -60 to -540 minutes. This is display
-    only: no guard, gate or join reads it.
+
+def format_kickoff(pick: dict[str, Any]) -> str:
+    """The kickoff to SHOW a human. The only kickoff display in the repo.
+
+    It is always the SAST wall clock derived from the zone-bearing
+    ``kickoff_utc``. The raw feed strings are never shown: they are local
+    renderings ("13-10, 16:45" UK-local, bare "12:00" Americas-local) that
+    disagree with each other, so showing them put two kickoff times on one
+    fixture. The raw text stays the pre-match guard's input and is untouched.
+    Display only: no guard, gate or join reads this.
     """
-    for key in ("kickoff_sast", "kickoff", "time", "start_time", "ko"):
-        value = pick.get(key)
-        if value not in (None, ""):
-            return str(value)
+    value = pick.get("kickoff_sast")
+    if value not in (None, ""):
+        return str(value)
+    utc_text = str(pick.get("kickoff_utc") or "").strip()
+    if utc_text:
+        try:
+            stamp = datetime.fromisoformat(utc_text)
+        except ValueError:
+            stamp = None
+        if stamp is not None and stamp.tzinfo is not None:
+            return stamp.astimezone(_SAST).strftime("%Y-%m-%d %H:%M SAST")
     return "n/a"
 
 
