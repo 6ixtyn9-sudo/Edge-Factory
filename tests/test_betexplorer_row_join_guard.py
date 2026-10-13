@@ -88,19 +88,39 @@ def _stamp(rows):
 
 def _write_cache(localdata: Path, key: str, fixture_home: str, fixture_away: str,
                  rows: list[dict]) -> None:
+    """Add one fixture to the day's cache file (merging with the entries there).
+
+    The reader treats the file as a multi-fixture map, so a second call must add
+    its entry alongside the first rather than replace the whole file.
+    """
     localdata.mkdir(parents=True, exist_ok=True)
-    (localdata / f"betexplorer_odds_cache_{DAY}.json").write_text(json.dumps({
-        "schema": 1, "date": DAY,
-        "fixtures": {key: {"home": fixture_home, "away": fixture_away,
-                           "cached_at": datetime.now(timezone.utc).isoformat(),
-                           "rows": rows}},
-    }))
+    path = localdata / f"betexplorer_odds_cache_{DAY}.json"
+    payload = {"schema": 1, "date": DAY, "fixtures": {}}
+    if path.exists():
+        payload["fixtures"] = json.loads(path.read_text())["fixtures"]
+    payload["fixtures"][key] = {
+        "home": fixture_home, "away": fixture_away,
+        "cached_at": datetime.now(timezone.utc).isoformat(),
+        "rows": rows,
+    }
+    path.write_text(json.dumps(payload))
 
 
 @pytest.fixture(autouse=True)
 def _isolated_localdata(tmp_path, monkeypatch):
-    """The adapter resolves LOCALDATA at import time from this env var."""
-    monkeypatch.setenv("EDGE_FACTORY_LOCALDATA", str(tmp_path / "localdata"))
+    """Point the adapter's cache root at this test's own temp localdata.
+
+    ``betexplorer_odds.LOCALDATA`` is resolved ONCE, at import time, from
+    EDGE_FACTORY_LOCALDATA (and conftest strips that variable before any test
+    runs). Setting the env var here therefore does not move the adapter: the
+    tests would write their cache under tmp_path while the reader looked in the
+    repository's localdata/, find nothing, and see empty rows. Patch the module
+    attribute the reader actually uses, as the other BetExplorer suites do.
+    """
+    localdata = tmp_path / "localdata"
+    localdata.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(be, "LOCALDATA", localdata)
+    monkeypatch.setenv("EDGE_FACTORY_LOCALDATA", str(localdata))
     monkeypatch.delenv("EDGE_FACTORY_BE_RESCUE_TARGET_LEGS", raising=False)
     be.reset_fetch_count()
     yield

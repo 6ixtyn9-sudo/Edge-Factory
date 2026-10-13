@@ -304,6 +304,12 @@ def test_the_archived_boards_replay_to_the_coherent_price():
     if not path.exists():
         pytest.skip("picks archive not in this checkout")
     picks = json.loads(path.read_text())
+    # The three expected prices are the Pinnacle full-time book (the incident's
+    # subject), so the replay reads the Pinnacle rows. The pick's own
+    # ``odds_source`` is NOT the right filter: the archive is regenerated daily,
+    # and the Arsenal and Galatasaray picks now carry ``betexplorer_odds`` as
+    # their chosen source while the Pinnacle rows are still on the board.
+    book = "pinnapi_odds"
     expected = {
         "Viking vs Bayern Munich": 1.088,
         "Galatasaray vs Barcelona": 1.2703,
@@ -321,8 +327,8 @@ def test_the_archived_boards_replay_to_the_coherent_price():
             "raw_market": e.get("raw_market"), "odds": e.get("odds"),
             "bookmaker": e.get("bookmaker"), "captured_at": e.get("captured_at"),
         } for e in pick.get("price_board") or []
-            if str(e.get("source") or "") == str(pick.get("odds_source") or "")]
-        bundle = pt._odds_bundle_from_rows(rows, provider=str(pick.get("odds_source") or ""))
+            if str(e.get("source") or "") == book]
+        bundle = pt._odds_bundle_from_rows(rows, provider=book)
         row, _method = pt.find_side_keyed_odds_row(pick, bundle)
         assert (row or {}).get("odds") == expected[pick["match"]], (
             f"{pick['match']}: picked {(row or {}).get('odds')}, "
