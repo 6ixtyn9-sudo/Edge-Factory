@@ -4346,7 +4346,9 @@ def print_status(st):
 # fires on its market's settled floor alone — ENHANCEMENT_PRICE_FLOORS in
 # edgefactory.enh_registry. There is NO EV veto here; enhancement_breakeven and
 # enhancement_edge_sample stay on the row as information only.
-ENH_SHADOW_TAG = " [SHADOW — paper]"      # same tag the 🔥 render already uses
+# A SKIPPED_VETO parent is ticket-eligible under BUCKETS, so these legs ARE
+# staked. The tag only says where the leg came from; it does not mean paper.
+ENH_SHADOW_TAG = " [SKIPPED_VETO parent]"
 
 
 def _enh_price(pick: dict):
@@ -4374,7 +4376,7 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
     root — never a team slice (report-only). Without it the operator's static
     table applies, which is the pre-R2 behaviour, byte for byte.
     """
-    from edgefactory.enh_registry import clears_floor, floor_for, floor_for_slice
+    from edgefactory.enh_registry import ceiling_for, clears_floor, floor_for, floor_for_slice
     try:
         from edgefactory.enh_pricing import MARKET_PRICE_MAP
     except Exception:
@@ -4403,7 +4405,13 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                 isinstance(mapped, tuple) and str(mapped[0]).startswith("tt_"))
             verdict = "unpriceable" if unpriceable else "unpriced"
         else:
-            verdict = "fire" if clears_floor(market, price, floor=leg_floor) else "below_floor"
+            ceiling = ceiling_for(market)
+            if not clears_floor(market, price, floor=leg_floor):
+                verdict = "below_floor"
+            elif ceiling is not None and price > ceiling:
+                verdict = "above_ceiling"       # priced past its band: no bet
+            else:
+                verdict = "fire"
         legs.append({
             "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
             "home": pick.get("home"), "away": pick.get("away"),
@@ -4423,6 +4431,7 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
             "league": str(pick.get("league") or ""),
             "floor": leg_floor,
             "floor_basis": leg_basis,
+            "ceiling": ceiling_for(market),
             "verdict": verdict,
             "shadow": str(pick.get("bucket") or "") == "SKIPPED_VETO",
         })
@@ -4659,6 +4668,8 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                             else "no floor set for this market — no bet"),
             "unpriced": "no price captured — no bet",
             "unpriceable": "unpriceable — no feed carries this market",
+            "above_ceiling": (f"above {leg['market']} ceiling {leg['ceiling']:.2f} — no bet"
+                              if leg.get("ceiling") is not None else "above ceiling — no bet"),
         }.get(leg["verdict"], leg["verdict"])
         lines.append(f"   [NO BET] {leg['match']:40s} {leg['label']}{price}{stated} — {reason}")
     if any(l["verdict"] != "fire" for l in legs):

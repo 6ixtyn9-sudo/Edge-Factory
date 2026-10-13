@@ -79,6 +79,7 @@ from edgefactory.phase5_k import (
 )
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
 from edgefactory.enh_registry import (
+    ceiling_for as enh_ceiling_for,
     clears_floor as enh_clears_floor,
     floor_for as enh_floor_for,
     status_for as enh_status_for,
@@ -6039,12 +6040,15 @@ def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     floor, basis = floor_for_slice(table, rec_market, p.get("league"))
     if floor is None:                      # no derived row: the operator's table
         floor, basis = enh_floor_for(rec_market), "inherited"
-    if enh_clears_floor(rec_market, rec_price, floor=floor):
+    ceiling = enh_ceiling_for(rec_market)
+    above_ceiling = ceiling is not None and rec_price > ceiling
+    if enh_clears_floor(rec_market, rec_price, floor=floor) and not above_ceiling:
         return (f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
                 f"{edge_txt}{src} — floor {floor:.2f} ({basis})")
     # Show WHY it is not a bet rather than hiding the candidate: the gate firing
     # is audit evidence, and the slip prints the same verdict as [NO BET].
-    why = (f"below {rec_market} floor {floor:.2f} ({basis})"
+    why = (f"above {rec_market} ceiling {ceiling:.2f}" if above_ceiling
+           else f"below {rec_market} floor {floor:.2f} ({basis})"
            if floor is not None else "no floor set for this market")
     return (f"     🚫 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
             f" — no bet: {why}{src}")
