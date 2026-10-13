@@ -3787,6 +3787,9 @@ def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, 
         pa_rows, pa_stats = pinnapi.capture_day(day)
         pinnapi.persist_shadow(day, pa_rows, pa_stats, localdata=LOCALDATA)
         stats["pinnapi_odds"] = pa_stats
+        # Read-only: how much of today's card the Pinnacle team totals cover.
+        stats["pinnapi_odds"]["card_team_totals"] = pinnapi.card_team_total_coverage(
+            day, card, localdata=LOCALDATA)
     except Exception as exc:
         stats["pinnapi_odds"]["blocker"] = str(exc)[:180]
     try:

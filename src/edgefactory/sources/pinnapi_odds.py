@@ -1101,6 +1101,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
                 f"pinnapi: HTTP 200 for sport_id={sport_id()} event_type={EVENT_TYPE} "
                 f"produced zero rows [{kind}] - {_ZERO_ROW_DIAGNOSIS[kind]}")
             return [], _set_diag(stats)
+        _persist_team_total_evidence(day, payload, localdata=localdata)
         stats["pa_raw"] = len({(row["home"], row["away"]) for row in rows})
         stats["pa_matched"] = len(rows)
         stats["status"] = "ok" if rows else "empty"
@@ -1143,6 +1144,144 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["blocker"] = message[:180]
         stats["errors"].append(message[:180])
         return [], _set_diag(stats)
+
+
+# READ-ONLY team-total evidence (approved 2026-10-13). Pinnacle team totals are
+# written to their own shadow file so their value can be compared against the
+# other team-total sources. They never enter the price ledger (``rows``), the
+# enhancement quote list, or the team-under gate.
+TEAM_TOTAL_EVIDENCE_SOURCE = "pinnapi_odds_team_totals"
+
+
+def team_total_rows(payload: Any, *, day: str) -> list[dict[str, Any]]:
+    """Team-total prices from a prematch snapshot, one row per side/line/selection.
+
+    Reads ``periods.num_0.team_totals`` (``{"home": {"2.5": {points, over, under,
+    max}}, "away": {...}}``), falling back to ``team_total`` (one line per side,
+    same entry shape). Markets are named like the other team-total sources:
+    ``tt_home_<line>`` / ``tt_away_<line>``. Unreadable entries are skipped.
+    """
+    events, _key = _envelope(payload)
+    if not isinstance(events, list):
+        return []
+    captured_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    out: list[dict[str, Any]] = []
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        home = _team_name(event.get("home") or event.get("team_home"))
+        away = _team_name(event.get("away") or event.get("team_away"))
+        periods = event.get("periods")
+        main = periods.get("num_0") if isinstance(periods, dict) else None
+        if not home or not away or not isinstance(main, dict):
+            continue
+        totals = main.get("team_totals") or main.get("team_total")
+        if not isinstance(totals, dict):
+            continue
+        kickoff = (event.get("start_at") or event.get("kickoff")
+                   or event.get("starts_at") or event.get("starts"))
+        event_id = event.get("id") if event.get("id") is not None else event.get("event_id")
+        for side_key in ("home", "away"):
+            block = totals.get(side_key)
+            if not isinstance(block, dict):
+                continue
+            if "over" in block or "under" in block:
+                entries = [(block.get("points"), block)]
+            else:
+                entries = list(block.items())
+            for line_key, entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                points = _num(entry.get("points") if entry.get("points") is not None else line_key)
+                if points is None:
+                    continue
+                for selection in ("over", "under"):
+                    price = _num(entry.get(selection))
+                    if price is None or price <= 1.0:
+                        continue
+                    out.append({
+                        "source": TEAM_TOTAL_EVIDENCE_SOURCE, "date": day,
+                        "home": home, "away": away, "kickoff": kickoff,
+                        "event_id": event_id,
+                        "market": f"tt_{side_key}_{points:g}", "selection": selection,
+                        "line": points, "odds": price, "bookmaker": SOURCE,
+                        "captured_at": captured_at,
+                    })
+    return out
+
+
+def _persist_team_total_evidence(day: str, payload: Any, *, localdata: Path | None) -> None:
+    """Write the day's team-total evidence file. Never raises: evidence must not
+    fail the capture, and the picks path never reads this file."""
+    try:
+        rows = team_total_rows(payload, day=day)
+        target = _resolve_localdata(localdata)
+        target.mkdir(parents=True, exist_ok=True)
+        fixtures = {(r["home"], r["away"]) for r in rows}
+        body = {
+            "schema": 1,
+            "source": TEAM_TOTAL_EVIDENCE_SOURCE,
+            "date": day,
+            "role": ("read-only evidence: Pinnacle team totals; never a price, never a "
+                     "quote-list vote, never input to the team-under gate"),
+            "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "counts": {
+                "fixtures_with_team_totals": len(fixtures),
+                "rows": len(rows),
+                "markets": sorted({r["market"] for r in rows}),
+            },
+            "rows": rows,
+        }
+        path = target / f"{SOURCE}_team_totals_shadow_{day}.json"
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps(body, indent=2, sort_keys=True))
+        tmp.replace(path)
+    except Exception:
+        return
+
+
+def card_team_total_coverage(day: str, card: list | None, *, localdata: Path | None = None) -> dict[str, Any]:
+    """How much of the day's card the team-total evidence covers. Read-only; never raises.
+
+    A card fixture is matched when the evidence holds the same two teams in either
+    orientation (identity-folded, as the probe does). ``with_both_sides`` needs
+    both home and away totals on the fixture, which a team-under leg requires.
+    """
+    try:
+        from edgefactory.identity import source_team_key
+        path = _resolve_localdata(localdata) / f"{SOURCE}_team_totals_shadow_{day}.json"
+        if not path.exists():
+            return {"status": "no_evidence_file"}
+        rows = json.loads(path.read_text()).get("rows") or []
+        sides: dict[tuple[str, str], set[str]] = {}
+        for row in rows:
+            key = (source_team_key(row.get("home")), source_team_key(row.get("away")))
+            sides.setdefault(key, set()).add(str(row.get("market") or "").split("_")[1])
+        seen: set[tuple[str, str]] = set()
+        out = {"status": "ok", "card_fixtures": 0, "matched": 0, "with_team_totals": 0,
+               "with_both_sides": 0, "evidence_fixtures": len(sides), "unmatched_examples": []}
+        for row in card or []:
+            if not isinstance(row, dict) or not row.get("home") or not row.get("away"):
+                continue
+            key = (source_team_key(row.get("home")), source_team_key(row.get("away")))
+            if key in seen:
+                continue
+            seen.add(key)
+            out["card_fixtures"] += 1
+            found = sides.get(key)
+            if found is None and (key[1], key[0]) in sides:
+                found = {"away" if side == "home" else "home"
+                         for side in sides[(key[1], key[0])]}
+            if found is None:
+                if len(out["unmatched_examples"]) < 5:
+                    out["unmatched_examples"].append(f"{row['home']} v {row['away']}")
+                continue
+            out["matched"] += 1
+            out["with_team_totals"] += bool(found)
+            out["with_both_sides"] += {"home", "away"} <= found
+        return out
+    except Exception as exc:  # evidence must never fail the run
+        return {"status": "error", "error": type(exc).__name__}
 
 
 def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], *, localdata: Path | None = None) -> Path:
