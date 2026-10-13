@@ -45,6 +45,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.notifier import format_kickoff  # noqa: E402
 from edgefactory.util import (  # noqa: E402
     kickoff_date,
     ledger_team_key,
@@ -513,15 +514,6 @@ def restore_target_picks(target_picks_text: str | None) -> None:
         return
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     PICKS_TODAY_FILE.write_text(target_picks_text)
-
-
-def format_kickoff(pick: dict[str, Any]) -> str:
-    """Human report kickoff display. Always show missing kickoff explicitly."""
-    for key in ("kickoff", "time", "start_time", "ko"):
-        value = pick.get(key)
-        if value not in (None, ""):
-            return str(value)
-    return "n/a"
 
 
 def generate_daily_report(
