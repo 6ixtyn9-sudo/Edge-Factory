@@ -20,8 +20,12 @@ TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
             (date + folded side-pair incl. '&'->'and') are dropped and the
             highest-stated twin survives (2026-09-22 Dagenham-and/& incident;
             upstream ledger identity untouched — the guard protects the card).
-  ACCAS     2 legs each, consecutive pairs of the top 6, up to 3 per day.
-  STAKE     1/3 of the bank per day, split across the accas built
+  ACCAS     2 legs each, barbell pairs of the top 6 (1+6, 2+5, 3+4), up to
+            2 accas per day (MAX_ACCAS=2; revert = 3). Pairing = barbell.
+  STAKE     1/4 of the free bank per day (STAKE_FRAC=0.25), split across the
+            accas built: per_acca mode gives each acca 1/8 (STAKE_FRAC /
+            MAX_ACCAS), capped at 1/4 in total. The sizing history below is
+            the audit that set the fraction, not the current value.
             (2026-09-04 sizing audit: on the 52-day replay the growth-optimal
             fraction is ~40%, and the growth curve is FLAT from 30-50% while
             max drawdown climbs 62% -> 87%. 50% was past the peak: LOWER
