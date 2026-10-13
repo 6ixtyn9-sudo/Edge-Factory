@@ -49,6 +49,7 @@ from edgefactory.sources.oddspapi_odds import (
     api_keys,
     fetch_fixtures,
     fetch_odds,
+    last_markets_payload,
     load_market_type_map,
     market_catalog,
     market_catalog_entries,
@@ -367,6 +368,37 @@ def _spend(state: dict, now: datetime, mark: int, stats: dict) -> int:
         usage[today] = int(usage.get(today, 0)) + (current - mark)
     stats["budget"] = _budget_stats(state, now, int(stats.get("keys") or 0))
     return current
+
+
+def _markets_cache_path(spend_day: str) -> Path:
+    return OUT_DIR / f"oddspapi_markets_{spend_day}.json.gz"
+
+
+def _read_markets_cache(spend_day: str) -> object:
+    """Today's /markets payload, or None. Compressed: the catalog is ~33k
+    entries, about 450 KB gzipped against many MB as plain JSON."""
+    try:
+        with gzip.open(_markets_cache_path(spend_day), "rt", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        return payload if payload else None
+    except Exception:  # noqa: BLE001 - a missing or corrupt cache is a miss
+        return None
+
+
+def _write_markets_cache(spend_day: str, payload: object) -> None:
+    """Store today's payload and drop older ones, so the cache stays one file."""
+    try:
+        path = _markets_cache_path(spend_day)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        for old in OUT_DIR.glob("oddspapi_markets_*.json.gz"):
+            if old != path:
+                old.unlink(missing_ok=True)
+        tmp = path.with_suffix(".tmp")
+        with gzip.open(tmp, "wt", encoding="utf-8") as fh:
+            json.dump(payload, fh)
+        tmp.replace(path)
+    except Exception:  # noqa: BLE001 - the cache is an optimisation only
+        pass
 
 
 def _parse_utc(value: object) -> datetime | None:
@@ -695,10 +727,21 @@ def capture(day: str, max_fixtures: int = MAX_FIXTURES_CEILING,
             _save_state(state, now)
             _write_receipt(day, stats)
             return stats
-        type_map = load_market_type_map()
+        # /markets is read at most once per SAST day: a later run the same day
+        # uses the cached payload and charges nothing for the catalog.
+        cached_markets = _read_markets_cache(_spend_day(now))
+        if cached_markets is not None:
+            type_map = load_market_type_map(cached_markets)
+            stats["markets_source"] = "cache"
+        else:
+            type_map = load_market_type_map()
+            mark = _spend(state, now, mark, stats)
+            stats["markets_source"] = "fetch"
+            fetched = last_markets_payload()
+            if fetched is not None:
+                _write_markets_cache(_spend_day(now), fetched)
         catalog = market_catalog()
         catalog_entries = market_catalog_entries()
-        mark = _spend(state, now, mark, stats)
         # The day's slate fixtures go first (stable order): the bounded budget
         # must price picks before it prices enhancement-only coverage. On
         # 2026-10-03 the provider-ordered first 20 fixtures contained no slate
