@@ -47,7 +47,7 @@ jobs:
       SHARPAPI_KEY: ${{ secrets.SHARPAPI_KEY }}
       ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
       EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || '1' }}
-      ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
+      ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '70' }}
       EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: '90'
       EDGE_FACTORY_CARD_ENRICH_RESERVE: '20'
       # Enhancement lane (PR #61): the enhancement slip is generated, frozen
