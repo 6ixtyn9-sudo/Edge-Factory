@@ -235,3 +235,41 @@ def test_usage_survives_a_save_within_the_month_and_prunes_older_months(tmp_path
     cap._save_state(state, datetime(2026, 10, 13, 12, 0, tzinfo=timezone.utc))
     kept = json.loads(cap._state_path().read_text())["usage"]
     assert kept == {"2026-09-15": 3, "2026-10-01": 2}
+
+
+# --- /markets cache: one fetch per SAST day --------------------------------
+
+def test_markets_is_fetched_once_per_sast_day(env, monkeypatch, tmp_path):
+    monkeypatch.setattr(cap, "load_market_type_map", odds_mod.load_market_type_map)
+    monkeypatch.setattr(cap, "market_catalog", odds_mod.market_catalog)
+    monkeypatch.setattr(cap, "market_catalog_entries", odds_mod.market_catalog_entries)
+    payload = {"data": [{"marketId": 101, "marketName": "Match Result",
+                         "marketType": "1x2", "outcomes": []}]}
+    calls = []
+
+    def fake_fetch_json(path, params, **kw):
+        calls.append(path)
+        return payload if path == "/markets" else None
+
+    monkeypatch.setattr(odds_mod, "fetch_json", fake_fetch_json)
+    # f1 is due first; f2 opens its window only after the first run.
+    env["board"] = [_fx("f1"), _fx("f2", START + timedelta(hours=3))]
+    first = _run(START - timedelta(hours=5))
+    assert first["markets_source"] == "fetch"
+    assert calls.count("/markets") == 1
+    assert cap._markets_cache_path("2026-10-13").exists()
+
+    second = _run(START - timedelta(hours=1))
+    assert second["markets_source"] == "cache"
+    assert calls.count("/markets") == 1
+    assert env["odds"] == ["f1", "f2"]
+
+
+def test_markets_cache_keeps_only_the_current_day(tmp_path, monkeypatch):
+    monkeypatch.setattr(cap, "OUT_DIR", tmp_path)
+    cap._write_markets_cache("2026-10-12", {"data": [1]})
+    cap._write_markets_cache("2026-10-13", {"data": [2]})
+    names = sorted(p.name for p in tmp_path.glob("oddspapi_markets_*.json.gz"))
+    assert names == ["oddspapi_markets_2026-10-13.json.gz"]
+    assert cap._read_markets_cache("2026-10-13") == {"data": [2]}
+    assert cap._read_markets_cache("2026-10-12") is None
