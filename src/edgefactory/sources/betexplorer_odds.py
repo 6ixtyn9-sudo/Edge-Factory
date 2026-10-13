@@ -62,6 +62,8 @@ _request_lock = threading.Lock()
 # In-memory cache for the daily match-list page (fetched once per date per run)
 _match_cache: dict[str, list[dict]] = {}
 _fixture_cache: dict[str, list[dict]] = {}
+# Fixture keys already re-read this run for their match detail (one try each).
+_detail_attempted: set[str] = set()
 
 BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
 LOCALDATA = Path(os.environ.get("EDGE_FACTORY_LOCALDATA", Path(__file__).resolve().parents[3] / "localdata"))
@@ -944,7 +946,7 @@ def _read_fixture_cache(pick: dict, day: str) -> list[dict] | None:
     return None
 
 
-def _write_fixture_cache(pick: dict, day: str, rows: list[dict]) -> None:
+def _write_fixture_cache(pick: dict, day: str, rows: list[dict], *, detail: bool = False) -> None:
     """Atomically persist one same-day fixture result without synthetic rows."""
     path = _cache_path(day)
     try:
@@ -963,6 +965,9 @@ def _write_fixture_cache(pick: dict, day: str, rows: list[dict]) -> None:
             "home": pick.get("home"),
             "away": pick.get("away"),
             "rows": rows,
+            # True when a live visit ran under the detail tabs. Such an entry is
+            # served from cache for the rest of the day; it is not re-visited.
+            "detail": bool(detail),
         }
         tmp = path.with_suffix(path.suffix + ".tmp")
         tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
@@ -1265,11 +1270,63 @@ def filter_rows_for_pick(rows: list[dict], pick: dict, day: str, *,
     return kept, rejected
 
 
+def _entry_detail_visited(pick: dict, day: str) -> bool:
+    """True when this fixture's cache entry came from a visit under the detail tabs."""
+    try:
+        payload = json.loads(_cache_path(day).read_text())
+        entry = (payload.get("fixtures") or {}).get(_fixture_cache_key(pick, day))
+        return isinstance(entry, dict) and entry.get("detail") is True
+    except (OSError, ValueError, TypeError, AttributeError):
+        return False
+
+
+def _detail_refetch_due(pick: dict, day: str) -> bool:
+    """A priced cache entry written before its match detail was retained.
+
+    Cache hits return before the match page is fetched, so a price cached by an
+    earlier run (before the detail tabs existed) never gets its O/U, BTTS or DC
+    tabs retained. Such an entry gets one re-read; entries written by a visit
+    under the detail tabs are served from cache, which keeps the one-visit-per-
+    fixture-per-day bound. Only priced entries qualify: an empty entry is a
+    refusal or a day with no odds. A re-read is attempted at most once per run.
+    """
+    if not MARKET_TABS_ENABLED:
+        return False
+    key = _fixture_cache_key(pick, day)
+    if key in _detail_attempted:
+        return False
+    rows = _fixture_cache[key] if key in _fixture_cache else _read_fixture_cache(pick, day)
+    if not rows:
+        return False
+    return not _entry_detail_visited(pick, day)
+
+
+def _refetch_for_detail(pick: dict, day: str, *, norm_team_fn=None) -> list[dict]:
+    """Re-read a cached priced fixture so its match detail is retained.
+
+    The cached price is the fallback: if the live re-read yields nothing (a
+    failed request, budget stop, or a refusal), the prior cache entry is restored
+    rather than overwritten with an empty answer.
+    """
+    key = _fixture_cache_key(pick, day)
+    _detail_attempted.add(key)
+    prior = list(_fixture_cache[key]) if key in _fixture_cache else (
+        _read_fixture_cache(pick, day) or [])
+    rows = betexplorer_odds_rows_for_pick(
+        pick, day, norm_team_fn=norm_team_fn, refresh_detail=True)
+    if rows:
+        return rows
+    _fixture_cache[key] = list(prior)
+    _write_fixture_cache(pick, day, prior)
+    return cached_odds_rows_for_pick(pick, day)
+
+
 def betexplorer_odds_rows_for_pick(
     pick: dict,
     day: str,
     *,
     norm_team_fn=None,
+    refresh_detail: bool = False,
 ) -> list[dict]:
     """Fetch BetExplorer odds for a single unmatched pick.
 
@@ -1282,14 +1339,21 @@ def betexplorer_odds_rows_for_pick(
        bookmaker, captured_at}
     """
     global _fetch_count, LAST_MATCH_DETAIL
-    if _be_cooling_down or _fetch_count >= _MAX_FETCHES_PER_RUN:
+    # A detail re-read (refresh_detail) is bounded by the day's priced cache
+    # entries and by the request budget, not by the fixture budget: the cache
+    # check below returns nothing once that budget is spent, so letting re-reads
+    # use it would blank the prices of fixtures not yet read.
+    if _be_cooling_down or (_fetch_count >= _MAX_FETCHES_PER_RUN and not refresh_detail):
         return []
 
     # Cached rows take the SAME identity-guarded, network-free reader the
     # caller's cache seam uses — one code path for cached rows, so a poisoned
     # key cannot price a pick through this door either.
     cache_key = _fixture_cache_key(pick, day)
-    if cache_key in _fixture_cache or _read_fixture_cache(pick, day) is not None:
+    if not refresh_detail and (
+            cache_key in _fixture_cache or _read_fixture_cache(pick, day) is not None):
+        if _detail_refetch_due(pick, day):
+            return _refetch_for_detail(pick, day, norm_team_fn=norm_team_fn)
         return cached_odds_rows_for_pick(pick, day)
 
     # Search adjacent dates for the match (timezone offset)
@@ -1358,7 +1422,8 @@ def betexplorer_odds_rows_for_pick(
         _write_fixture_cache(pick, day, [])
         return []
 
-    _fetch_count += 1
+    if not refresh_detail:
+        _fetch_count += 1
     captured_at = datetime.now(timezone.utc).isoformat()
 
     base = {
@@ -1395,7 +1460,7 @@ def betexplorer_odds_rows_for_pick(
         )
 
     _fixture_cache[cache_key] = list(rows)
-    _write_fixture_cache(pick, day, rows)
+    _write_fixture_cache(pick, day, rows, detail=True)
     return rows
 
 
@@ -1404,6 +1469,7 @@ def reset_fetch_count():
     global _fetch_count, _last_request_time, _be_429, _be_cooling_down, _be_cached, _LAST_RESPONSE_BYTES, LAST_MATCH_DETAIL
     global _request_count, _market_requests, _market_budget_stop
     _fetch_count = 0
+    _detail_attempted.clear()
     _last_request_time = 0.0
     _be_429 = 0
     _be_cooling_down = False
