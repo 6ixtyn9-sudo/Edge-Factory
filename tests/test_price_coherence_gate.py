@@ -300,18 +300,21 @@ def test_the_archived_boards_replay_to_the_coherent_price():
     Rebuilds each source's bundle from the rows the archived board recorded
     and asks the engine for the price it would choose today.
     """
-    path = ROOT / "localdata" / "picks_2026-10-13.json"
-    if not path.exists():
-        pytest.skip("picks archive not in this checkout")
+    # Frozen copy of the incident slate. The live localdata archive is rewritten
+    # by every daily run (the 10-13 Viking pick has since lost its price board
+    # and its name changed), so pinning the live file made this test fail on
+    # main with nothing wrong in the engine. The fixture keeps the two picks
+    # that still carry their Pinnacle rows; the Viking pin (1.088) can no longer
+    # be reproduced from any file in the repo and is not asserted.
+    path = ROOT / "tests" / "fixtures" / "picks_2026-10-13_coherence.json"
     picks = json.loads(path.read_text())
-    # The three expected prices are the Pinnacle full-time book (the incident's
+    # The expected prices are the Pinnacle full-time book (the incident's
     # subject), so the replay reads the Pinnacle rows. The pick's own
-    # ``odds_source`` is NOT the right filter: the archive is regenerated daily,
-    # and the Arsenal and Galatasaray picks now carry ``betexplorer_odds`` as
-    # their chosen source while the Pinnacle rows are still on the board.
+    # ``odds_source`` is NOT the right filter: the Arsenal and Galatasaray picks
+    # carry ``betexplorer_odds`` as their chosen source while the Pinnacle rows
+    # are still on the board.
     book = "pinnapi_odds"
     expected = {
-        "Viking vs Bayern Munich": 1.088,
         "Galatasaray vs Barcelona": 1.2703,
         "Arsenal vs Lille": 1.2358,
     }
