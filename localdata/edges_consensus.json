@@ -1125,20 +1125,21 @@
       "where": "ml_p*100 >= 75"
     },
     {
+      "benched_at": "2026-10-13",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.8823,
         "checked_at": "2026-10-13",
         "recent": {
-          "n": 16,
-          "wins": 14,
           "hit": 0.875,
+          "n": 16,
+          "roi": 0.6444,
           "wilson_lb": 0.6398,
-          "roi": 0.6444
+          "wins": 14
         },
-        "baseline_lb": 0.8823,
         "recent_lb": 0.6398,
-        "recent_ub": 0.965
+        "recent_ub": 0.965,
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "market": "1x2",
       "rule": "ml-meta avg_p>=80",
@@ -1163,8 +1164,7 @@
         "wins": 344
       },
       "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 80",
-      "benched_at": "2026-10-13"
+      "where": "ml_p*100 >= 80"
     },
     {
       "market": "1x2",

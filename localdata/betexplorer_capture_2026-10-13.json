@@ -1,5 +1,5 @@
 {
-  "attempted": 6,
+  "attempted": 9,
   "attempted_fixtures": [
     {
       "avg_p": 80.6,
@@ -10,6 +10,16 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 1.4224
+    },
+    {
+      "avg_p": 74.0,
+      "away": "AFC Totton",
+      "date": "2026-10-13",
+      "home": "Ebbsfleet United",
+      "league": "England: National League - South",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
     },
     {
       "avg_p": 73.3,
@@ -42,11 +52,31 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 67.7,
+      "avg_p": 68.8,
       "away": "Bolton",
       "date": "2026-10-13",
       "home": "Wolves",
       "league": "England Championship",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 63.3,
+      "away": "Preston",
+      "date": "2026-10-13",
+      "home": "Birmingham",
+      "league": "England,Championship",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 62.0,
+      "away": "Watford",
+      "date": "2026-10-13",
+      "home": "Cardiff",
+      "league": "England,Championship",
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
@@ -63,13 +93,13 @@
     }
   ],
   "be_429": 0,
-  "be_cached": 0,
+  "be_cached": 6,
   "be_cooling_down": false,
-  "candidate_fixtures": 6,
-  "captured_at": "2026-10-12T22:09:10.105652+00:00",
+  "candidate_fixtures": 9,
+  "captured_at": "2026-10-13T01:05:20.448223+00:00",
   "date": "2026-10-13",
   "errors": [],
-  "fixtures_with_rows": 5,
+  "fixtures_with_rows": 7,
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
@@ -113,7 +143,7 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 67.7,
+      "avg_p": 68.8,
       "away": "Bolton",
       "date": "2026-10-13",
       "home": "Wolves",
@@ -121,9 +151,29 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 63.3,
+      "away": "Preston",
+      "date": "2026-10-13",
+      "home": "Birmingham",
+      "league": "England,Championship",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 62.0,
+      "away": "Watford",
+      "date": "2026-10-13",
+      "home": "Cardiff",
+      "league": "England,Championship",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
     }
   ],
-  "rows": 15,
+  "rows": 21,
   "schema": 1,
   "status": "ok"
 }
