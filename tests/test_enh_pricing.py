@@ -1,10 +1,17 @@
 """Enhancement pricing join tests — real-price attachment, constraints, fail-soft."""
 import csv
 import gzip
+import json
 import math
+from pathlib import Path
 
-from edgefactory.enh_pricing import (MARKET_PRICE_MAP, attach_enhancement_price,
+import pytest
+
+from edgefactory.enh_pricing import (BETEXPLORER_SOURCE, ENH_BOARD_FLAG,
+                                     MARKET_PRICE_MAP, attach_enhancement_price,
                                      load_prices_index)
+
+ROOT = Path(__file__).resolve().parents[1]
 
 COLS = ["source", "source_type", "sport", "date", "kickoff", "league", "home", "away",
         "market", "selection", "odds", "bookmaker", "captured_at"]
@@ -311,3 +318,323 @@ def test_unmapped_types_stay_unpriced_despite_feeds(tmp_path):
     for mkt in ("goal_range_2_3",):
         p = attach_enhancement_price(_pick(recommended_enhancement=mkt), idx)
         assert p["enhancement_mapped"] is False and p["enhancement_price"] is None, mkt
+
+
+# ------------------------------------------------------------- betexplorer ---
+# Stage 1: the schema-2 detail ledger the BetExplorer lane writes for every
+# fixture it prices (localdata/betexplorer_match_detail_<day>.json) is a price
+# source in its own right — multi-book O/U lines, BTTS and double chance from
+# the comparison responses the priced lane already fetched. Reader:
+# enh_pricing._accumulate_betexplorer. Zero network: the file is local.
+
+BE_DAY = "2026-10-12"
+BE_HOME, BE_AWAY = "Coventry", "Newcastle Utd"
+
+
+@pytest.fixture(autouse=True)
+def _enhancement_board_on(monkeypatch):
+    """The board's own switch is ON for this module's assertions.
+
+    Everything here describes what the board does; the switch itself is pinned
+    by ``test_betexplorer_prices_are_behind_the_enhancement_board_flag`` below.
+    """
+    monkeypatch.setenv(ENH_BOARD_FLAG, "1")
+
+
+def _be_key():
+    from edgefactory.util import norm_team
+    return (norm_team(BE_HOME), norm_team(BE_AWAY))
+
+
+def _be_row(book, line, odds, *, best=False, created=None):
+    return {"bookmaker": book, "bookmaker_id": None, "line": line, "source": "table",
+            "odds": list(odds), "pos": [None] * len(odds),
+            "created": list(created or [None] * len(odds)),
+            "movement": [None] * len(odds), "best": best}
+
+
+def _be_block(columns, lines, rows):
+    return {"columns": list(columns), "lines": list(lines), "rows": list(rows),
+            "rows_count": len(rows), "named_rows": len(rows),
+            "bookmakers": sorted({row["bookmaker"] for row in rows}),
+            "average": None, "average_by_line": None}
+
+
+def _be_fixture(markets, *, home=BE_HOME, away=BE_AWAY, league="England: Premier League"):
+    return {"event_id": "tW4rOkzg", "match_url": "https://www.betexplorer.com/x/",
+            "kickoff": f"{BE_DAY}T16:30:00", "home": home, "away": away, "league": league,
+            "captured_at": f"{BE_DAY}T09:05:00+00:00", "page_param": "1",
+            "best_1x2": {"odd1": 3.10, "oddx": 3.60, "odd2": 2.20},
+            "markets": markets, "market_failures": [], "page": None}
+
+
+def _write_be_ledger(root, fixtures, *, day=BE_DAY, schema=2):
+    ld = root / "localdata"
+    ld.mkdir(parents=True, exist_ok=True)
+    path = ld / f"betexplorer_match_detail_{day}.json"
+    path.write_text(json.dumps({"schema": schema, "date": day,
+                                "captured_at": f"{day}T09:05:00+00:00",
+                                "fixtures": fixtures}))
+    return path
+
+
+def _be_pick(market, **kw):
+    base = {"home": BE_HOME, "away": BE_AWAY, "date": BE_DAY,
+            "match": f"{BE_HOME} vs {BE_AWAY}", "recommended_enhancement": market,
+            "enhancement_probability": 0.62}
+    base.update(kw)
+    return base
+
+
+FULL_BE_MARKETS = {
+    "1x2": _be_block(["1", "X", "2"], ["0"], [_be_row("Stake.com", "0", [3.10, 3.60, 2.20])]),
+    "ou": _be_block(["Over", "Under"], ["2.50"], [_be_row("Stake.com", "2.50", [3.40, 1.30],
+                                                          best=True)]),
+    "bts": _be_block(["Yes", "No"], ["0"], [_be_row("bet365.us", "0", [1.57, 2.25])]),
+    "dc": _be_block(["1X", "12", "X2"], ["0"], [_be_row("bet365.us", "0", [1.26, 1.36, 2.05])]),
+}
+
+
+def test_betexplorer_ledger_prices_totals_btts_and_double_chance(tmp_path):
+    _write_be_ledger(tmp_path, {"2026-10-12|coventry|newcastleutd": _be_fixture(FULL_BE_MARKETS)})
+    index = load_prices_index(tmp_path, BE_DAY)
+    key = _be_key()
+
+    over = index["pairs"][key][("ou_2.5", "over")]
+    assert over[0] == 3.40 and over[1] == "Stake.com" and over[3] == BETEXPLORER_SOURCE
+    assert index["pairs"][key][("ou_2.5", "under")][:2] == (1.30, "Stake.com")
+    assert index["pairs"][key][("btts", "yes")][:2] == (1.57, "bet365.us")
+    assert index["pairs"][key][("btts", "no")][:2] == (2.25, "bet365.us")
+    assert index["pairs"][key][("dc", "1x")][:2] == (1.26, "bet365.us")
+    # 1x2 / ah / ha are retained evidence only: no enhancement maps to them.
+    assert not [slot for slot in index["pairs"][key] if slot[0] in {"1x2", "ah", "ha"}]
+
+    for market, price, book in (("match_over_25", 3.40, "Stake.com"),
+                               ("match_under_25", 1.30, "Stake.com"),
+                               ("btts_yes", 1.57, "bet365.us"),
+                               ("double_chance", 1.26, "bet365.us")):
+        pick = attach_enhancement_price(_be_pick(market, pick="home"), index)
+        assert pick["enhancement_priced"] is True, market
+        assert pick["enhancement_price"] == price, market
+        assert pick["enhancement_price_source"] == BETEXPLORER_SOURCE, market
+        assert pick["enhancement_price_book"] == book, market
+
+
+def test_betexplorer_best_flagged_row_wins_else_the_highest_retained_row(tmp_path):
+    """The site's own best-price flag decides; without one, the highest wins."""
+    _write_be_ledger(tmp_path, {"k": _be_fixture({"ou": _be_block(
+        ["Over", "Under"], ["2.50", "3.50"], [
+            _be_row("BookHigh", "2.50", [4.20, 1.22]),               # higher, unflagged
+            _be_row("BookFlagged", "2.50", [3.60, 1.32], best=True),  # the flag wins
+            _be_row("BookLow", "3.50", [2.20, 1.70]),
+            _be_row("BookTop", "3.50", [2.50, 1.55]),                # no flag on 3.50
+        ])})})
+    index = load_prices_index(tmp_path, BE_DAY)
+    key = _be_key()
+    assert index["pairs"][key][("ou_2.5", "over")][:2] == (3.60, "BookFlagged")
+    assert index["pairs"][key][("ou_2.5", "under")][:2] == (1.32, "BookFlagged")
+    assert index["pairs"][key][("ou_3.5", "over")][:2] == (2.50, "BookTop")
+    assert index["pairs"][key][("ou_3.5", "under")][:2] == (1.70, "BookLow")
+
+
+def test_betexplorer_column_order_comes_from_the_blocks_own_columns(tmp_path):
+    # Reversed column order, same prices: positional reading would swap Over
+    # and Under. The capture keeps the site's labels, so the labels decide.
+    _write_be_ledger(tmp_path, {"k": _be_fixture({"ou": _be_block(["Under", "Over"], ["2.50"], [
+        _be_row("BookA", "2.50", [1.30, 3.40])])})})
+    index = load_prices_index(tmp_path, BE_DAY)
+    key = _be_key()
+    assert index["pairs"][key][("ou_2.5", "over")][:2] == (3.40, "BookA")
+    assert index["pairs"][key][("ou_2.5", "under")][:2] == (1.30, "BookA")
+
+    # An unrecognised label is skipped, never read by position (9.90 is a
+    # price under a label this module does not know).
+    _write_be_ledger(tmp_path, {"k": _be_fixture({"bts": _be_block(["GG", "Yes"], ["0"], [
+        _be_row("BookA", "0", [9.90, 1.80])])})})
+    index = load_prices_index(tmp_path, BE_DAY)
+    assert index["pairs"][key][("btts", "yes")][:2] == (1.80, "BookA")
+    assert [slot for slot in index["pairs"][key] if slot[0] == "btts"] == [("btts", "yes")]
+
+
+def test_betexplorer_line_outside_the_blocks_lines_prices_nothing(tmp_path):
+    """A line the capture did not retain has no evidence to price from.
+
+    ``lines`` is the capture's own record of what survived its per-market cap;
+    a row whose line is absent from it is dropped here, so nothing is priced
+    off a line the ledger does not claim to hold.
+    """
+    _write_be_ledger(tmp_path, {"k": _be_fixture({"ou": _be_block(["Over", "Under"], ["2.50"], [
+        _be_row("BookA", "2.50", [3.30, 1.35]),
+        _be_row("BookB", "4.50", [9.00, 1.06]),
+    ])})})
+    index = load_prices_index(tmp_path, BE_DAY)
+    key = _be_key()
+    assert ("ou_2.5", "over") in index["pairs"][key]
+    assert ("ou_4.5", "over") not in index["pairs"][key]
+    assert load_prices_index(tmp_path, BE_DAY)["pairs"][key].get(("ou_4.5", "under")) is None
+
+
+def test_betexplorer_ledger_cannot_price_team_totals(tmp_path):
+    """Team totals are not among the six retained tabs — they stay unpriced.
+
+    Nothing in this source may price them: the slots the overlay maps team
+    totals to (tt_home_0.5, tt_away_1.5, ...) are never written here, and a
+    slug the ledger does not define is ignored outright.
+    """
+    markets = dict(FULL_BE_MARKETS)
+    markets["tt"] = _be_block(["Over", "Under"], ["0.50"], [_be_row("BookA", "0.50", [1.10, 7.5])])
+    _write_be_ledger(tmp_path, {"k": _be_fixture(markets)})
+    index = load_prices_index(tmp_path, BE_DAY)
+    key = _be_key()
+    assert not [slot for slot in index["pairs"][key] if slot[0].startswith("tt_")]
+    for market in ("home_over_05", "away_over_15", "home_under_25", "away_under_35"):
+        pick = attach_enhancement_price(_be_pick(market), index)
+        assert pick["enhancement_mapped"] is True, market   # a real market, just not from here
+        assert pick["enhancement_priced"] is False, market
+        assert pick["enhancement_price_source"] is None, market
+
+
+def test_betexplorer_ledger_fail_soft_on_missing_corrupt_or_foreign_files(tmp_path):
+    # No ledger at all.
+    assert load_prices_index(tmp_path, BE_DAY)["pairs"] == {}
+    ld = tmp_path / "localdata"
+    ld.mkdir(parents=True, exist_ok=True)
+    ledger = ld / f"betexplorer_match_detail_{BE_DAY}.json"
+    # Unreadable JSON.
+    ledger.write_text("{not json")
+    assert load_prices_index(tmp_path, BE_DAY)["pairs"] == {}
+    # A foreign schema generation is not read (the capture writes 2).
+    _write_be_ledger(tmp_path, {"k": _be_fixture(FULL_BE_MARKETS)}, schema=1)
+    assert load_prices_index(tmp_path, BE_DAY)["pairs"] == {}
+    # Right file name, wrong day inside: another day's fixtures price nothing.
+    ledger.write_text(json.dumps({"schema": 2, "date": "2026-10-11",
+                                  "fixtures": {"k": _be_fixture(FULL_BE_MARKETS)}}))
+    assert load_prices_index(tmp_path, BE_DAY)["pairs"] == {}
+    # fixtures missing / not a mapping / an entry without teams.
+    ledger.write_text(json.dumps({"schema": 2, "date": BE_DAY}))
+    assert load_prices_index(tmp_path, BE_DAY)["pairs"] == {}
+    ledger.write_text(json.dumps({"schema": 2, "date": BE_DAY, "fixtures": []}))
+    assert load_prices_index(tmp_path, BE_DAY)["pairs"] == {}
+    ledger.write_text(json.dumps({"schema": 2, "date": BE_DAY, "fixtures": {
+        "k": {"markets": FULL_BE_MARKETS}}}))
+    assert load_prices_index(tmp_path, BE_DAY)["pairs"] == {}
+
+
+def test_betexplorer_price_merges_with_the_other_sources_by_best_price(tmp_path):
+    """One index, several sources: the best price wins and keeps its own book."""
+    _write_month(tmp_path, [_row(date=BE_DAY, home=BE_HOME, away=BE_AWAY,
+                                 odds=2.60, bookmaker="BookA")], month="2026-10")
+    _write_be_ledger(tmp_path, {"k": _be_fixture(FULL_BE_MARKETS)})
+    index = load_prices_index(tmp_path, BE_DAY)
+    key = _be_key()
+    over = index["pairs"][key][("ou_2.5", "over")]
+    assert (over[0], over[1], over[3]) == (3.40, "Stake.com", BETEXPLORER_SOURCE)
+    assert index["spread"][key][("ou_2.5", "over")] == {"theoddsapi": 2.60,
+                                                        BETEXPLORER_SOURCE: 3.40}
+
+
+def test_betexplorer_below_floor_price_is_priced_but_refused_by_the_gate(tmp_path):
+    """The reader carries no EV or floor veto; the floor gate is the arbiter.
+
+    A real 1.55 over-2.5 price is attached with its attribution and then
+    refused by the Stage 2 gate — betting on EV "will lead us to not bet at
+    all", so the floor decides, not the reader.
+    """
+    from edgefactory.enh_registry import clears_floor
+    _write_be_ledger(tmp_path, {"k": _be_fixture({"ou": _be_block(["Over", "Under"], ["2.50"], [
+        _be_row("BookA", "2.50", [1.55, 2.45], best=True)])})})
+    index = load_prices_index(tmp_path, BE_DAY)
+    pick = attach_enhancement_price(_be_pick("match_over_25"), index)
+    assert pick["enhancement_priced"] is True and pick["enhancement_price"] == 1.55
+    assert pick["enhancement_price_source"] == BETEXPLORER_SOURCE
+    assert clears_floor("match_over_25", pick["enhancement_price"]) is False
+
+
+def test_betexplorer_ledger_round_trips_through_the_capture_writer(tmp_path, monkeypatch):
+    """Producer -> consumer: the capture lane's own ledger, read by this reader.
+
+    The reader must not be trusted because it matches a written spec. This test
+    drives the REAL producer — the capture lane's recorded markup through
+    betexplorer_odds_rows_for_pick, which retains the ledger as a side effect —
+    and then the REAL reader, and asserts the prices that come out are the ones
+    the markup showed. It also proves the read adds no request: the adapter's
+    transport is replaced by one that fails the test if called.
+    """
+    import test_betexplorer_match_detail as produced
+
+    from edgefactory.sources import betexplorer_odds as be
+    monkeypatch.setattr(be, "LOCALDATA", tmp_path / "localdata")
+    rows = produced._run_pick()
+    assert [row["market"] for row in rows] == ["1x2"] * 3       # the priced lane is unchanged
+    assert (tmp_path / "localdata" / produced.LEDGER).exists()
+
+    def _no_request(*args, **kwargs):  # pragma: no cover - must never run
+        raise AssertionError("pricing from the ledger must make no request")
+
+    monkeypatch.setattr(be, "_fetch", _no_request)
+    index = load_prices_index(tmp_path, BE_DAY)
+    key = _be_key()
+
+    over = index["pairs"][key][("ou_2.5", "over")]
+    # Line 2.50 from the capture's all-bookmakers block (Stake.com 3.40/1.30).
+    assert (over[0], over[1], over[3]) == (3.40, "Stake.com", BETEXPLORER_SOURCE)
+    assert index["pairs"][key][("ou_2.5", "under")][:2] == (1.30, "Stake.com")
+    assert index["pairs"][key][("btts", "yes")][:2] == (1.57, "bet365.us")
+    assert index["pairs"][key][("btts", "no")][:2] == (2.25, "bet365.us")
+    assert index["pairs"][key][("dc", "1x")][:2] == (1.26, "bet365.us")
+    # The fixture's page carries no 1.5 line: nothing is invented for it.
+    assert ("ou_1.5", "over") not in index["pairs"][key]
+
+    pick = attach_enhancement_price(
+        _be_pick("match_over_25", home=produced.PICK["home"], away=produced.PICK["away"]), index)
+    assert pick["enhancement_priced"] is True
+    assert pick["enhancement_price"] == 3.40
+    assert pick["enhancement_price_source"] == BETEXPLORER_SOURCE
+
+
+def test_picks_today_loads_the_price_index_after_the_betexplorer_rescue():
+    """Same-run ordering, pinned where it matters: at the call site.
+
+    The rescue's fetch retains the day's detail ledger; the ledger is a price
+    source. Loading the index before the rescue would read the file as it stood
+    when the run started, so a fixture rescued in this very run could never
+    price — and no later step re-reads the index. Pinned by source position
+    because the alternative (driving the whole main() card build) measures
+    everything except this ordering.
+    """
+    source = (ROOT / "scripts/picks_today.py").read_text()
+    rescue = source.index("be_enriched = enrich_unmatched_with_betexplorer(")
+    load = source.index("prices_index = load_prices_index(ROOT, day)")
+    assert rescue < load
+
+
+def test_betexplorer_prices_are_behind_the_enhancement_board_flag(tmp_path, monkeypatch):
+    """Round-2 ruling (2026-10-12): the ledger prices only while the board is on.
+
+    Same input, same bytes. With EDGE_FACTORY_ENH_BOARD unset the day's detail
+    ledger contributes nothing at all — the index is exactly the index the
+    pipeline built before this source existed, so the board renders as it does
+    today. With the switch on the same file prices the same cells.
+    """
+    _write_be_ledger(tmp_path, {"2026-10-12|coventry|newcastleutd": _be_fixture(FULL_BE_MARKETS)})
+    key = _be_key()
+
+    monkeypatch.setenv(ENH_BOARD_FLAG, "1")
+    on = load_prices_index(tmp_path, BE_DAY)
+    monkeypatch.delenv(ENH_BOARD_FLAG)
+    off = load_prices_index(tmp_path, BE_DAY)
+
+    assert on["pairs"][key][("ou_2.5", "over")][0] == 3.40
+    assert on["spread"][key][("ou_2.5", "over")][BETEXPLORER_SOURCE] == 3.40
+    assert off["pairs"] == {} and off["spread"] == {} and off["names"] == {}
+
+    # And the gate is the price path itself, not just the index shape: the same
+    # pick is priced from the ledger with the switch on, and unpriced with it off.
+    priced = attach_enhancement_price(_be_pick("match_over_25"), on)
+    assert priced["enhancement_priced"] is True
+    assert priced["enhancement_price"] == 3.40
+    assert priced["enhancement_price_source"] == BETEXPLORER_SOURCE
+    unpriced = attach_enhancement_price(_be_pick("match_over_25"), off)
+    assert unpriced["enhancement_price"] is None
+    assert unpriced["enhancement_priced"] is False
+    assert unpriced["enhancement_mapped"] is True

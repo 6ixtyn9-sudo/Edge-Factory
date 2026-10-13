@@ -94,6 +94,19 @@ def _candidate_rows(day: str) -> list[dict]:
     return unique
 
 
+# Receipt stat whitelist: which of the adapter's run and request counters reach
+# the capture receipt. The row-refusal census (`be_rows_rejected` and its
+# reasons) belongs here beside the request counters: it is the evidence the
+# 2026-10-12 row-join guard is audited from (round-2 §2.2), and in the
+# delivered patch the whitelist dropped it, so the census never reached the
+# receipt. Everything not listed stays in the run log only.
+RECEIPT_STAT_KEYS = frozenset({
+    "be_429", "be_cooling_down", "be_cached", "be_fetches",
+    "requests", "market_requests", "market_budget_stop",
+    "be_rows_rejected", "be_rows_rejected_reasons",
+})
+
+
 def _receipt_path(day: str) -> Path:
     return LOCALDATA / f"betexplorer_capture_{str(day)[:10]}.json"
 
@@ -117,6 +130,49 @@ def _fixture_receipt(pick: dict) -> dict:
         "avg_p": pick.get("avg_p"),
         "w_score": pick.get("w_score"),
     }
+
+
+def _detail_summary(day: str) -> dict:
+    """Counts for the same-day retained-detail ledger the adapter writes.
+
+    Read-only: this wrapper never writes the ledger, and a missing or
+    unreadable file reports zeros rather than failing a capture run. Counts
+    per market: retained markets, retained rows, named rows and the distinct
+    bookmakers each market names.
+    """
+    empty = {"fixtures": 0, "markets": 0, "market_rows": 0, "named_rows": 0,
+             "bookmakers": 0, "standings_rows": 0, "with_h2h": 0,
+             "with_last_results": 0, "with_standings": 0, "challenge_pages": 0}
+    path = LOCALDATA / f"betexplorer_match_detail_{str(day)[:10]}.json"
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, ValueError, TypeError):
+        return empty
+    fixtures = payload.get("fixtures") if isinstance(payload, dict) else None
+    if not isinstance(fixtures, dict):
+        return empty
+    summary = dict(empty)
+    for entry in fixtures.values():
+        if not isinstance(entry, dict):
+            continue
+        summary["fixtures"] += 1
+        markets = entry.get("markets") if isinstance(entry.get("markets"), dict) else {}
+        for market in markets.values():
+            if not isinstance(market, dict):
+                continue
+            summary["markets"] += 1
+            rows = market.get("rows") if isinstance(market.get("rows"), list) else []
+            summary["market_rows"] += len(rows)
+            summary["named_rows"] += int(market.get("named_rows") or 0)
+            summary["bookmakers"] += len(market.get("bookmakers") or [])
+        page = entry.get("page") or {}
+        blocks = set(page.get("blocks") or [])
+        summary["standings_rows"] += len(page.get("standings_rows") or [])
+        summary["with_h2h"] += 1 if "h2h" in blocks else 0
+        summary["with_last_results"] += 1 if "last_results" in blocks else 0
+        summary["with_standings"] += 1 if "standings" in blocks else 0
+        summary["challenge_pages"] += 1 if page.get("challenge") else 0
+    return summary
 
 
 def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
@@ -159,9 +215,12 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
                 receipt["rows"] += len(rows)
                 receipt["quoted_fixtures"].append(_fixture_receipt(pick))
         receipt.update({
-            key: value for key, value in source.run_stats().items()
-            if key in {"be_429", "be_cooling_down", "be_cached", "be_fetches"}
+            key: value
+            for stats in (source.run_stats(), source.request_stats())
+            for key, value in stats.items()
+            if key in RECEIPT_STAT_KEYS
         })
+        receipt["match_detail"] = _detail_summary(day)
         receipt["status"] = "ok" if receipt["rows"] else "empty"
     except Exception as exc:  # noqa: BLE001 — a missing adapter must not break daily
         receipt["status"] = "unavailable"
@@ -176,11 +235,14 @@ def main() -> int:
     parser.add_argument("--max-fixtures", type=int, default=DEFAULT_MAX_FIXTURES)
     args = parser.parse_args()
     receipt = capture(args.date, max_fixtures=args.max_fixtures)
+    detail = receipt.get("match_detail") or {}
     print(
         "betexplorer snapshot "
         f"{receipt['date']}: candidates={receipt['candidate_fixtures']} "
         f"attempted={receipt['attempted']} fixtures={receipt['fixtures_with_rows']} "
-        f"rows={receipt['rows']} status={receipt['status']}"
+        f"rows={receipt['rows']} detail={detail.get('fixtures', 0)}fixtures/"
+        f"{detail.get('markets', 0)}markets/{detail.get('market_rows', 0)}rows "
+        f"status={receipt['status']}"
     )
     return 0
 

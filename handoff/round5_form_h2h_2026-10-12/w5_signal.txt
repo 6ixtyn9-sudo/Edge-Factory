@@ -1,0 +1,100 @@
+join coverage: 409/409 settled records carry the model's stated probability
+  reasons for the other 0:
+    (none)
+
+identity: source_team_key (canonical, curated aliases); archive rows 150314
+
+features tested here are ARCHIVE-derived (deep where old, stale where
+recent). The page-block variant (5 rows per team, fresh, league-scoped)
+is untested by construction: the match-page ledger is not in production.
+
+== over_25 (match_over_25) — settled n=350  hits 231/350
+  model p joined: 350/350   form estimate available: 322/350
+  w* = 1.00 chosen on train 2026-08-01..2026-09-15 (n=224); evaluated on 2026-09-16..2026-10-11 (n=126)
+  TEST rows (out-of-sample):
+  model (a)            n=126  Brier 0.2562 [0.2502,0.2618]   log loss 0.7055 [0.6935,0.7169]
+  model+form (b)       n=126  Brier 0.2564 [0.2324,0.2810]   log loss 0.7075 [0.6546,0.7606]
+  market 1/price (c)   n=126  Brier 0.2342 [0.2014,0.2677]   log loss 0.6671 [0.5925,0.7447]
+  paired delta Brier (b)-(a): +0.0003 [-0.0260,+0.0267] n=126
+  paired delta Brier (c)-(a): -0.0220 [-0.0566,+0.0137] n=126
+  base rate on the same slice: hits 80/126 -> constant-predictor Brier h(1-h) = 0.2318  (the minimum bar; above it is a calibration red flag)
+  base rate on the TRAINING slice: hits 151/224 -> constant-predictor Brier h(1-h) = 0.2197  (the same bar on the window w* was chosen on)
+  reading: (b) vs (a) blend no better; (c) vs (a) market scores better, not significantly on this sample.
+
+== over_15 (match_over_15) — settled n=33  hits 24/33
+  model p joined: 33/33   form estimate available: 32/33
+  w* = 0.60 chosen on train 2026-08-04..2026-09-04 (n=21); evaluated on 2026-09-05..2026-10-06 (n=12)
+  TEST rows (out-of-sample):
+  model (a)            n=12   Brier 0.2497 [0.0813,0.4392]   log loss 0.7212 [0.3089,1.1914]
+  model+form (b)       n=12   Brier 0.2337 [0.0806,0.4094]   log loss 0.6720 [0.3108,1.0858]
+  market 1/price (c)   n=12   Brier 0.2726 [0.0750,0.4957]   log loss 0.8290 [0.2747,1.4692]
+  paired delta Brier (b)-(a): -0.0160 [-0.0522,+0.0079] n=12
+  paired delta Brier (c)-(a): +0.0229 [-0.0157,+0.0740] n=12
+  base rate on the same slice: hits 8/12 -> constant-predictor Brier h(1-h) = 0.2222  (the minimum bar; above it is a calibration red flag)
+  base rate on the TRAINING slice: hits 16/21 -> constant-predictor Brier h(1-h) = 0.1814  (the same bar on the window w* was chosen on)
+  reading: (b) vs (a) blend better, not significant on this sample; (c) vs (a) market no better.
+
+== over_35 (match_over_35) — settled n=16  hits 5/16   [NOISE: n<30, no conclusion]
+  model p joined: 16/16   form estimate available: 13/16
+  w* = 0.10 chosen on train 2026-08-09..2026-09-10 (n=9); evaluated on 2026-09-11..2026-09-12 (n=7)
+  TEST rows (out-of-sample):
+  model (a)            n=7    Brier 0.2680 [0.1673,0.3655]   log loss 0.7293 [0.5217,0.9306]
+  model+form (b)       n=7    Brier 0.2623 [0.1611,0.3664]   log loss 0.7177 [0.5082,0.9329]
+  market 1/price (c)   n=7    Brier 0.2803 [0.1556,0.4141]   log loss 0.7625 [0.4925,1.0516]
+  paired delta Brier (b)-(a): -0.0057 [-0.0164,+0.0030] n=7
+  paired delta Brier (c)-(a): +0.0123 [-0.0616,+0.0853] n=7
+  base rate on the same slice: hits 3/7 -> constant-predictor Brier h(1-h) = 0.2449  (the minimum bar; above it is a calibration red flag)
+  base rate on the TRAINING slice: hits 2/9 -> constant-predictor Brier h(1-h) = 0.1728  (the same bar on the window w* was chosen on)
+  reading: (b) vs (a) blend better, not significant on this sample; (c) vs (a) market no better.
+
+== btts_yes (btts_yes) — settled n=7  hits 4/7   [NOISE: n<30, no conclusion]
+  model p joined: 7/7   form estimate available: 6/7
+  split not possible; blend evaluated in-sample at w=0.50
+  ALL rows (split not possible):
+  model (a)            n=7    Brier 0.2584 [0.2378,0.2785]   log loss 0.7100 [0.6688,0.7503]
+  model+form (b)       n=7    Brier 0.2576 [0.2063,0.3185]   log loss 0.7093 [0.6050,0.8335]
+  market 1/price (c)   n=7    Brier 0.2576 [0.1763,0.3473]   log loss 0.7088 [0.5410,0.8954]
+  paired delta Brier (b)-(a): -0.0008 [-0.0453,+0.0536] n=7
+  paired delta Brier (c)-(a): -0.0008 [-0.0833,+0.0848] n=7
+  base rate on the same slice: hits 4/7 -> constant-predictor Brier h(1-h) = 0.2449  (the minimum bar; above it is a calibration red flag)
+  base rate on the TRAINING slice: not applicable (the split is not possible for this market)
+  reading: (b) vs (a) blend better, not significant on this sample; (c) vs (a) market scores better, not significantly on this sample.
+
+== away_under_25 (away_under_25) — settled n=1  hits 1/1   [NOISE: n<30, no conclusion]
+  model p joined: 1/1   form estimate available: 0/1
+  split not possible; blend evaluated in-sample at w=0.50
+  ALL rows (split not possible):
+  model (a)            n=1    Brier 0.0113 [0.0113,0.0113]   log loss 0.1122 [0.1122,0.1122]
+  model+form (b)       n=1    Brier 0.0113 [0.0113,0.0113]   log loss 0.1122 [0.1122,0.1122]
+  market 1/price (c)   n=1    Brier 0.2244 [0.2244,0.2244]   log loss 0.6419 [0.6419,0.6419]
+  paired delta Brier (b)-(a): +0.0000 [+0.0000,+0.0000] n=1
+  paired delta Brier (c)-(a): +0.2131 [+0.2131,+0.2131] n=1
+  base rate on the same slice: hits 1/1 -> constant-predictor Brier h(1-h) = 0.0000  (the minimum bar; above it is a calibration red flag)
+  base rate on the TRAINING slice: not applicable (the split is not possible for this market)
+  reading: (b) vs (a) blend identical; (c) vs (a) market no better.
+
+== away_under_35 (away_under_35) — settled n=1  hits 1/1   [NOISE: n<30, no conclusion]
+  model p joined: 1/1   form estimate available: 0/1
+  split not possible; blend evaluated in-sample at w=0.50
+  ALL rows (split not possible):
+  model (a)            n=1    Brier 0.0015 [0.0015,0.0015]   log loss 0.0393 [0.0393,0.0393]
+  model+form (b)       n=1    Brier 0.0015 [0.0015,0.0015]   log loss 0.0393 [0.0393,0.0393]
+  market 1/price (c)   n=1    Brier 0.0919 [0.0919,0.0919]   log loss 0.3612 [0.3612,0.3612]
+  paired delta Brier (b)-(a): +0.0000 [+0.0000,+0.0000] n=1
+  paired delta Brier (c)-(a): +0.0904 [+0.0904,+0.0904] n=1
+  base rate on the same slice: hits 1/1 -> constant-predictor Brier h(1-h) = 0.0000  (the minimum bar; above it is a calibration red flag)
+  base rate on the TRAINING slice: not applicable (the split is not possible for this market)
+  reading: (b) vs (a) blend identical; (c) vs (a) market no better.
+
+== over_45 (match_over_45) — settled n=1  hits 1/1   [NOISE: n<30, no conclusion]
+  model p joined: 1/1   form estimate available: 1/1
+  split not possible; blend evaluated in-sample at w=0.50
+  ALL rows (split not possible):
+  model (a)            n=1    Brier 0.4659 [0.4659,0.4659]   log loss 1.1476 [1.1476,1.1476]
+  model+form (b)       n=1    Brier 0.5231 [0.5231,0.5231]   log loss 1.2846 [1.2846,1.2846]
+  market 1/price (c)   n=1    Brier 0.7199 [0.7199,0.7199]   log loss 1.8871 [1.8871,1.8871]
+  paired delta Brier (b)-(a): +0.0571 [+0.0571,+0.0571] n=1
+  paired delta Brier (c)-(a): +0.2540 [+0.2540,+0.2540] n=1
+  base rate on the same slice: hits 1/1 -> constant-predictor Brier h(1-h) = 0.0000  (the minimum bar; above it is a calibration red flag)
+  base rate on the TRAINING slice: not applicable (the split is not possible for this market)
+  reading: (b) vs (a) blend no better; (c) vs (a) market no better.

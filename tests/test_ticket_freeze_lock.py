@@ -192,14 +192,17 @@ def test_freeze_is_colocated_with_state_persist_and_not_rewritten_later(lane, mo
     snapshots = []
     real_save = at.save_state
 
-    def spy(st):
-        snapshots.append(json.loads(json.dumps(
-            (st.get("frozen_by_date") or {}), default=str)))
-        real_save(st)
+    def spy(st, lane=None):
+        snapshots.append((lane, json.loads(json.dumps(
+            (st.get("frozen_by_date") or {}), default=str))))
+        real_save(st, lane)
 
     monkeypatch.setattr(at, "save_state", spy)
     st = _run()
     assert snapshots, "cmd_today must persist state"
+    # The main lane's own writes are never routed into a lane's state file.
+    assert all(save_lane is None for save_lane, _ in snapshots)
+    snapshots = [snap for _, snap in snapshots]
     # The very first persist that carries the card already carries the lock...
     locked = [i for i, s in enumerate(snapshots) if DAY in s]
     assert locked, "freeze entry never reached a state write"
@@ -218,10 +221,10 @@ def test_state_write_carries_slip_and_lock_together(lane, monkeypatch):
     monkeypatch.setattr(at, "datetime", _clock(2026, 9, 6, 9, 13))
     seen = []
     real_save = at.save_state
-    monkeypatch.setattr(at, "save_state", lambda st: (
+    monkeypatch.setattr(at, "save_state", lambda st, lane=None: (
         seen.append((bool((st.get("frozen_by_date") or {}).get(DAY)),
                      [s["date"] for s in st.get("open_slips") or []])),
-        real_save(st))[-1])
+        real_save(st, lane))[-1])
     _run()
     locked = [slips for has, slips in seen if has]
     assert locked and DAY in locked[0]

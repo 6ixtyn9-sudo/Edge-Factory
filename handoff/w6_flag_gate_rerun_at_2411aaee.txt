@@ -1,0 +1,161 @@
+=== W6 flag-gate re-run at round-5 HEAD (2411aaee) ===
+commands per handoff/flag_gate_2026-10-12/README.md, scratch root /tmp/gate_r5
+baseline = pre-stage-1 code (worktree /tmp/base_wt @ 979f7fb7 = the parent of 24b04d0aaed0fb8a406327e341e110dd4891287a,
+           this chain's stage-1 pricing commit, found by subject);
+off = current code, flag unset; on = current code, flag=1
+tree check:
+$ PYTHONPATH=/tmp/base_wt/src /home/user/Edge-Factory/.venv/bin/python -c 'import edgefactory; print(edgefactory.__file__)'
+/tmp/base_wt/src/edgefactory/__init__.py
+$ PYTHONPATH=src /home/user/Edge-Factory/.venv/bin/python -c 'import edgefactory; print(edgefactory.__file__)'
+/home/user/Edge-Factory/src/edgefactory/__init__.py
+
+$ env PYTHONPATH=src /home/user/Edge-Factory/.venv/bin/python /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/prove_flag_gate.py ledger --root /tmp/gate_r5 --archived /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/../live_2026-10-12
+scratch_localdata: guard active (mode=mirror, 13 path(s) redirected)
+{
+ "date": "2026-10-12",
+ "fixtures": {
+  "2026-10-12|coventry|newcastleutd": {
+   "away": "Newcastle Utd",
+   "blocks": {
+    "bts": {
+     "books": [
+      "BetMGM.us",
+      "Stake.com",
+      "bet365.us"
+     ],
+     "columns": [
+      "Yes",
+      "No"
+     ],
+     "lines": [
+      "0"
+     ],
+     "rows": 3
+    }
+   },
+   "home": "Coventry"
+  },
+  "2026-10-12|jselbiar|crbelouizdad": {
+   "away": "CR Belouizdad",
+   "blocks": {
+    "ou": {
+     "books": [
+      "BetMGM.us"
+     ],
+     "columns": [
+      "Over",
+      "Under"
+     ],
+     "lines": [
+      "0.50",
+      "1.50",
+      "2.50",
+      "3.50",
+      "4.50",
+      "ou"
+     ],
+     "rows": 6
+    }
+   },
+   "home": "JS El Biar"
+  }
+ },
+ "ledger": "localdata/betexplorer_match_detail_2026-10-12.json",
+ "schema": 2
+}
+scratch_localdata: mode=mirror scratch=/tmp/edgefactory_scratch_localdata_8l7mzsvp
+scratch_localdata: git status --porcelain -- localdata/ -> (empty: the driver wrote no real state)
+$ env PYTHONPATH=/tmp/base_wt/src /home/user/Edge-Factory/.venv/bin/python /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/prove_flag_gate.py attach --root /tmp/gate_r5 --mode baseline --out /tmp/gate_r5/board.baseline.json
+scratch_localdata: guard active (mode=mirror, 5 path(s) redirected)
+wrote /tmp/gate_r5/board.baseline.json (mode=baseline)
+scratch_localdata: mode=mirror scratch=/tmp/edgefactory_scratch_localdata_q8te81q_
+scratch_localdata: git status --porcelain -- localdata/ -> (empty: the driver wrote no real state)
+$ env PYTHONPATH=src /home/user/Edge-Factory/.venv/bin/python /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/prove_flag_gate.py attach --root /tmp/gate_r5 --mode off --out /tmp/gate_r5/board.off.json
+scratch_localdata: guard active (mode=mirror, 13 path(s) redirected)
+wrote /tmp/gate_r5/board.off.json (mode=off)
+scratch_localdata: mode=mirror scratch=/tmp/edgefactory_scratch_localdata_jpjvakvb
+scratch_localdata: git status --porcelain -- localdata/ -> (empty: the driver wrote no real state)
+$ env PYTHONPATH=src /home/user/Edge-Factory/.venv/bin/python /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/prove_flag_gate.py attach --root /tmp/gate_r5 --mode on --out /tmp/gate_r5/board.on.json
+scratch_localdata: guard active (mode=mirror, 13 path(s) redirected)
+wrote /tmp/gate_r5/board.on.json (mode=on)
+scratch_localdata: mode=mirror scratch=/tmp/edgefactory_scratch_localdata_zr2pzwxi
+scratch_localdata: git status --porcelain -- localdata/ -> (empty: the driver wrote no real state)
+$ env PYTHONPATH=src /home/user/Edge-Factory/.venv/bin/python /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/prove_flag_gate.py slip --board /tmp/gate_r5/attached/picks_today.json.off.json --scripts scripts --root /tmp/gate_r5 --out /tmp/gate_r5/slip.today.off.txt
+scratch_localdata: guard active (mode=mirror, 13 path(s) redirected)
+wrote /tmp/gate_r5/slip.today.off.txt (14 legs, 0 accas)
+scratch_localdata: mode=mirror scratch=/tmp/edgefactory_scratch_localdata_tk7h8byn
+scratch_localdata: git status --porcelain -- localdata/ -> (empty: the driver wrote no real state)
+$ env PYTHONPATH=src /home/user/Edge-Factory/.venv/bin/python /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/prove_flag_gate.py slip --board /tmp/gate_r5/attached/picks_today.json.on.json --scripts scripts --root /tmp/gate_r5 --out /tmp/gate_r5/slip.today.on.txt
+scratch_localdata: guard active (mode=mirror, 13 path(s) redirected)
+wrote /tmp/gate_r5/slip.today.on.txt (14 legs, 0 accas)
+scratch_localdata: mode=mirror scratch=/tmp/edgefactory_scratch_localdata_z_vmcddx
+scratch_localdata: git status --porcelain -- localdata/ -> (empty: the driver wrote no real state)
+$ env PYTHONPATH=src /home/user/Edge-Factory/.venv/bin/python /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/prove_flag_gate.py slip --board /tmp/gate_r5/attached/picks_probe_2026-10-12.json.off.json --scripts scripts --root /tmp/gate_r5 --out /tmp/gate_r5/slip.probe.off.txt
+scratch_localdata: guard active (mode=mirror, 13 path(s) redirected)
+wrote /tmp/gate_r5/slip.probe.off.txt (2 legs, 0 accas)
+scratch_localdata: mode=mirror scratch=/tmp/edgefactory_scratch_localdata_g3qhghjs
+scratch_localdata: git status --porcelain -- localdata/ -> (empty: the driver wrote no real state)
+$ env PYTHONPATH=src /home/user/Edge-Factory/.venv/bin/python /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/prove_flag_gate.py slip --board /tmp/gate_r5/attached/picks_probe_2026-10-12.json.on.json --scripts scripts --root /tmp/gate_r5 --out /tmp/gate_r5/slip.probe.on.txt
+scratch_localdata: guard active (mode=mirror, 13 path(s) redirected)
+wrote /tmp/gate_r5/slip.probe.on.txt (2 legs, 0 accas)
+scratch_localdata: mode=mirror scratch=/tmp/edgefactory_scratch_localdata_6fq4g3xi
+scratch_localdata: git status --porcelain -- localdata/ -> (empty: the driver wrote no real state)
+
+$ sha256sum (freshly written ledger) and the round-2 committed ledger
+567d8cf30c7115a55b50725aade48e4f7311b2349a56dce9bbdb740f773e4fe8  /tmp/gate_r5/localdata/betexplorer_match_detail_2026-10-12.json
+e62be353296a253a9176fb8814f7ac9c1871b00fee8a0289f0e38f356c1e617f  /home/user/Edge-Factory/handoff/flag_gate_2026-10-12/ledger.betexplorer_match_detail_2026-10-12.json
+$ diff <fresh ledger> <round-2 ledger>   # the only difference today
+2c2
+<   "captured_at": "2026-10-12T19:02:49.660747+00:00",
+---
+>   "captured_at": "2026-10-12T08:53:59.237846+00:00",
+
+$ diff -q board.baseline.json board.off.json  ->  IDENTICAL   (flag off vs pre-stage-1)
+$ diff -q slip.today.off.txt slip.today.on.txt  ->  IDENTICAL   (committed board card off vs on)
+$ diff -q board.off.json board.on.json  ->  DIFFERS   (flag on vs off (expected to differ))
+2c2,15
+<  "betexplorer_pairs": [],
+---
+>  "betexplorer_pairs": [
+>   "coventry|newcastle|btts|no|2.36|Stake.com",
+>   "coventry|newcastle|btts|yes|1.57|bet365.us",
+>   "jselbiar|crbelouiz|ou_0.5|over|1.09|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_0.5|under|6.75|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_1.5|over|1.49|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_1.5|under|2.45|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_2.5|over|2.55|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_2.5|under|1.44|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_3.5|over|5.0|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_3.5|under|1.14|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_4.5|over|11.0|BetMGM.us",
+>   "jselbiar|crbelouiz|ou_4.5|under|1.04|BetMGM.us"
+>  ],
+310,313c323,326
+<     "enhancement_price": null,
+<     "enhancement_price_book": null,
+$ diff -q slip.probe.off.txt slip.probe.on.txt  ->  DIFFERS   (labelled probe card off vs on)
+20c20
+< NO BET — only 0 eligible leg(s), need 2 for an acca
+---
+> NO BET — only 1 eligible leg(s), need 2 for an acca
+23,24c23
+<    [NO BET] JS El Biar vs CR Belouizdad              Match Over 3.5 Goals (stated 34%) — no price captured — no bet
+<    [NO BET] Coventry vs Newcastle Utd                Both Teams To Score (stated 34%) — no price captured — no bet
+---
+>    [NO BET] Coventry vs Newcastle Utd                Both Teams To Score @ 1.57 (stated 34%) — below floor 1.85 [inherited] — no bet
+
+$ diff board.off.json board.on.json | grep -c '^[<>]'   # content lines changed
+55
+$ diff board.off.json board.on.json | wc -l   # including hunk headers (the round-3 proof's metric)
+67
+
+$ diff slip.probe.off.txt slip.probe.on.txt
+20c20
+< NO BET — only 0 eligible leg(s), need 2 for an acca
+---
+> NO BET — only 1 eligible leg(s), need 2 for an acca
+23,24c23
+<    [NO BET] JS El Biar vs CR Belouizdad              Match Over 3.5 Goals (stated 34%) — no price captured — no bet
+<    [NO BET] Coventry vs Newcastle Utd                Both Teams To Score (stated 34%) — no price captured — no bet
+---
+>    [NO BET] Coventry vs Newcastle Utd                Both Teams To Score @ 1.57 (stated 34%) — below floor 1.85 [inherited] — no bet

@@ -1,0 +1,17 @@
+=== W3/W5 under the width-9 rule (scratch tree /tmp/w9_rule) ===
+the seam key replaced by norm_team(name, width=9); everything else identical
+
+$ (cd /tmp/w9_rule && PYTHONPATH=/tmp/w9_rule/src /home/user/Edge-Factory/.venv/bin/python /tmp/w9_rule/intel_report.py)
+archive rows: 147709
+registry records: 409  join: {'joined': 409, 'from_evening': 335, 'plain_label': 406, 'from_morning': 74, 'combo_label': 3}
+form estimate available: 374/409
+wrote w3_coverage.txt and w5_signal.txt
+
+$ write the header, then the scratch outputs -> *_width9_rule.txt
+comparison run: the same driver with the identity read as the width-9
+norm_team bucket (scratch tree /tmp/w9_rule, patched at import: source_team_key =
+norm_team(name, width=9)), every other change of this round held constant.
+Reproduce with handoff/round5_form_h2h_2026-10-12/w35_width9_rule.sh (it
+copies src/ and this bundle's intel_report.py to a scratch root, links
+localdata and Config into it, swaps the key, and runs it from that root -
+the driver puts its own src first on sys.path, so the working directory

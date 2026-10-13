@@ -1,0 +1,117 @@
+
+=== §4 V1–V8 over the committed live pages ===
+$ PYTHONPATH=src .venv/bin/python handoff/live_2026-10-12/verify_live_pages.py
+BetExplorer live verification, fetched 2026-10-12 through the fetch_page tool
+(bash in this sandbox has no BetExplorer egress: curl -> SSL_ERROR_SYSCALL/HTTP 000)
+module under test: /home/user/Edge-Factory/src/edgefactory/sources/betexplorer_odds.py
+_BE_SLUGS (ledger slug -> index market): {'ou': 'ou', 'bts': 'btts', 'dc': 'dc'}
+
+==============================================================================
+Algeria Ligue 1: JS El Biar vs CR Belouizdad - today-board pick (match_over_35)
+  file: ou_lKAT82nf.json
+  url:  https://www.betexplorer.com/match-odds/lKAT82nf/1/ou/bestOdds/?lang=en
+  served-json sha256: 74b68191c85c4122aa7c5f7c36a8a32f995e03271eeec0d501955ec234f1cee5
+  html sha256:        07f65165c8db911ef08ecfd8ce76873fa7fe10223f004d8ff1b4fccf17947ff8  (40153 chars)
+  parse_market_response -> columns=['Over', 'Under'] lines=['0.50', '1.50', '2.50', '3.50', '4.50', 'ou'] rows_count=6 named_rows=6
+  bookmakers: ['BetMGM.us']
+  average: None  average_by_line: {'0.50': [1.09, 6.75], '1.50': [1.49, 2.45], '2.50': [2.55, 1.44], '3.50': [5.0, 1.14], '4.50': [11.0, 1.04]}
+
+-- V1 columns == the page's own <thead>
+   page thead labels (non-decorative): ['Over', 'Under']
+   V1 PASS  parser columns: ['Over', 'Under']
+
+-- V3 sampled prices appear verbatim in the served markup
+   distinct parsed prices: [1.04, 1.09, 1.14, 1.44, 1.49, 2.45, 2.55, 5.0, 6.75, 11.0]
+   V3 PASS  not found verbatim: []
+
+-- V4 no price <= 1.0, no NaN/inf, no invented bookmakers
+   V4 PASS  bad prices: []  invented books: []
+   bookmaker titles found in markup: ['1X2', 'Asian Handicap', 'BetMGM.us', 'Both Teams To Score', 'Double Chance', 'Draw No Bet', 'Over/Under']
+
+-- V2 per-line chosen price == the page's own best row (data-bo="true", else max)
+   line 0.50: parser rows=[('BetMGM.us', [1.09, 6.75])]
+              page rows =[('BetMGM.us', 1.09, 6.75)]
+              V2 over PASS: parser chose BetMGM.us 1.09 (best=True)
+              V6 PASS: 1/1.09 + 1/6.75 = 1.0656
+              V7 PASS: page average_text=[1.09, 6.75] parser average_by_line=[1.09, 6.75]
+   line 1.50: parser rows=[('BetMGM.us', [1.49, 2.45])]
+              page rows =[('BetMGM.us', 1.49, 2.45)]
+              V2 over PASS: parser chose BetMGM.us 1.49 (best=True)
+              V6 PASS: 1/1.49 + 1/2.45 = 1.0793
+              V7 PASS: page average_text=[1.49, 2.45] parser average_by_line=[1.49, 2.45]
+   line 2.50: parser rows=[('BetMGM.us', [2.55, 1.44])]
+              page rows =[('BetMGM.us', 2.55, 1.44)]
+              V2 over PASS: parser chose BetMGM.us 2.55 (best=True)
+              V6 PASS: 1/2.55 + 1/1.44 = 1.0866
+              V7 PASS: page average_text=[2.55, 1.44] parser average_by_line=[2.55, 1.44]
+   line 3.50: parser rows=[('BetMGM.us', [5.0, 1.14])]
+              page rows =[('BetMGM.us', 5.0, 1.14)]
+              V2 over PASS: parser chose BetMGM.us 5.00 (best=True)
+              V6 PASS: 1/5.00 + 1/1.14 = 1.0772
+              V7 PASS: page average_text=[5.0, 1.14] parser average_by_line=[5.0, 1.14]
+   line 4.50: parser rows=[('BetMGM.us', [11.0, 1.04])]
+              page rows =[('BetMGM.us', 11.0, 1.04)]
+              V2 over PASS: parser chose BetMGM.us 11.00 (best=True)
+              V6 PASS: 1/11.00 + 1/1.04 = 1.0524
+              V7 PASS: page average_text=[11.0, 1.04] parser average_by_line=[11.0, 1.04]
+   line ou: parser rows=[('BetMGM.us', [2.55, 1.44])]
+              page rows =[]
+              V2 over FAIL: parser chose BetMGM.us 2.55 (best=True)
+              V6 PASS: 1/2.55 + 1/1.44 = 1.0866
+              V7 FAIL: page average_text=[] parser average_by_line=None
+
+-- V5 over/under direction: swapping the thead labels in a copy must fail the same check
+   original columns=['Over', 'Under'] row odds=[1.09, 6.75]
+   swapped  columns=['Under', 'Over'] row odds=[1.09, 6.75]
+   V5 PASS: the parser reads the cell under the page's own <th>; the assertion columns==['Over','Under'] FAILS on the swapped copy (it reports ['Under', 'Over'] for the same cell values [1.09, 6.75])
+
+==============================================================================
+BTTS market page (Coventry vs Newcastle, section 4.6 reference)
+  file: bts_tW4rOkzg.json
+  url:  https://www.betexplorer.com/match-odds/tW4rOkzg/1/bts/bestOdds/?lang=en
+  served-json sha256: 2fd0f1877d70a4b54c3b11cf0ec096e0933884a73f786e6b0fbdc72266f67f8c
+  html sha256:        4a45fa3cf536eced4aabb02c17aa1be5bc5669dcc85dc83872716ce797e9a7ee  (21303 chars)
+  parse_market_response -> columns=['Yes', 'No'] lines=['0'] rows_count=3 named_rows=3
+  bookmakers: ['BetMGM.us', 'Stake.com', 'bet365.us']
+  average: [1.56, 2.3]  average_by_line: {'0': [1.56, 2.3]}
+
+-- V1 columns == the page's own <thead>
+   page thead labels (non-decorative): ['Yes', 'No']
+   V1 PASS  parser columns: ['Yes', 'No']
+
+-- V3 sampled prices appear verbatim in the served markup
+   distinct parsed prices: [1.53, 1.57, 2.25, 2.3, 2.36]
+   V3 PASS  not found verbatim: []
+
+-- V4 no price <= 1.0, no NaN/inf, no invented bookmakers
+   V4 PASS  bad prices: []  invented books: []
+   bookmaker titles found in markup: ['1X2', 'Asian Handicap', 'BetMGM.us', 'Both Teams To Score', 'Double Chance', 'Draw No Bet', 'Over/Under', 'Stake.com', 'bet365.us']
+
+-- V2/V6/V7 for a two-way market without handicap lines
+   bet365.us: [1.57, 2.25]  1/yes+1/no = 1.0814  PASS
+   BetMGM.us: [1.53, 2.3]  1/yes+1/no = 1.0884  PASS
+   Stake.com: [1.57, 2.36]  1/yes+1/no = 1.0607  PASS
+   V7 page average_text=[1.56, 2.3]  parser average=[1.56, 2.3] PASS
+   V7 chosen price != average where they differ: best row = [('bet365.us', [1.57, 2.25]), ('Stake.com', [1.57, 2.36])]
+
+==============================================================================
+-- V8 bts slug path end to end
+   _BE_SLUGS          = {'ou': 'ou', 'bts': 'btts', 'dc': 'dc'}
+   bts -> ledger slug = btts
+   ledger key for btts= ['bts']
+   page /bts/ parsed rows: [('bet365.us', [1.57, 2.25]), ('BetMGM.us', [1.53, 2.3]), ('Stake.com', [1.57, 2.36])]
+   bts columns=['Yes', 'No'] (Yes/No) -> index market 'btts' takes the Yes price
+=== bts page structural audit (committed handoff/live_2026-10-12/bts_tW4rOkzg.json) ===
+json keys            : ['odds']
+html bytes           : 21303  chars: 21303
+html sha256          : 4a45fa3cf536eced4aabb02c17aa1be5bc5669dcc85dc83872716ce797e9a7ee
+json file sha256     : 2fd0f1877d70a4b54c3b11cf0ec096e0933884a73f786e6b0fbdc72266f67f8c
+  <table     count: 2
+  </table>   count: 2
+  <tbody     count: 1
+  </tbody>   count: 1
+  <thead     count: 1
+  </thead>   count: 1
+  <tr        count: 4
+  </tr>      count: 4
+unbalanced tr/tbody/table: 0 0 0

@@ -1,0 +1,241 @@
+identity checks — command: PYTHONPATH=src .venv/bin/python handoff/round5_form_h2h_2026-10-12/a_identity_checks.py
+== A-3/A-2 layer table: which layer carries the join?
+name                     | base                   | source key             | ledger key | markers
+Ludogorets III           | ludogoretsiii          | ludogoretsiii          | ludogoret_c | []
+Ludogorets II            | ludogoretsii           | ludogoretsii           | ludogoret_b | ['reserve']
+Ludogorets               | ludogorets             | ludogoretsrazgrad      | ludogoret  | []
+Ludogorets Razgrad       | ludogoretsrazgrad      | ludogoretsrazgrad      | ludogoret  | []
+Kongsvinger 2            | kongsvinger2           | kongsvinger2           | kongsving_b | []
+Kongsvinger II           | kongsvingerii          | kongsvingerii          | kongsving_b | ['reserve']
+Kongsvinger              | kongsvinger            | kongsvinger            | kongsving  | []
+Newcastle U23s           | newcastleu23s          | newcastleu23s          | newcastle_u23 | []
+FC Porto B               | portob                 | portoii                | porto_b    | ['reserve']
+Porto II                 | portoii                | portoii                | porto_b    | ['reserve']
+Porto                    | porto                  | porto                  | porto      | []
+Scunthorpe Utd           | scunthorpeunited       | scunthorpeunited       | scunthorp  | []
+Scunthorpe United        | scunthorpeunited       | scunthorpeunited       | scunthorp  | []
+Scunthorpe               | scunthorpe             | scunthorpeunited       | scunthorp  | []
+Newcastle Utd            | newcastleunited        | newcastleunited        | newcastle  | []
+Newcastle United         | newcastleunited        | newcastleunited        | newcastle  | []
+Newcastle                | newcastle              | newcastleunited        | newcastle  | []
+Real Betis               | realbetis              | realbetis              | betis      | []
+Betis                    | betis                  | realbetis              | betis      | []
+FC Basel 1893            | basel1893              | basel1893              | basel      | []
+Basel                    | basel                  | basel1893              | basel      | []
+Al-Ittihad Alexandria    | alittihadalexandria    | alittihadalexandria    | alittihad  | []
+Al Ittihad               | alittihad              | alittihad              | alittihad  | []
+Al-Ittihad               | alittihad              | alittihad              | alittihad  | []
+
+  reading: the join happens when the SOURCE KEY matches. The ledger key
+  (width-9 norm_team) is the operational layer and is coarser; the source
+  key is the voter-row seam form_intel reads.
+
+== A-3 reserve check (the Ludogorets III question)
+  team_rows('Ludogorets Razgrad') = 42 rows; of those, rows whose fixture names a reserve-looking side: 1
+      2026-07-27 Dunav 2010 0-2 Ludogorets
+  team_rows('Kongsvinger') = 35 rows; of those, rows whose fixture names a reserve-looking side: 0
+  team_rows('FC Porto') = 40 rows; of those, rows whose fixture names a reserve-looking side: 0
+  team_rows('Porto') = 40 rows; of those, rows whose fixture names a reserve-looking side: 0
+
+  directly:
+    source_team_key('Ludogorets III') = 'ludogoretsiii'  vs 'Ludogorets Razgrad' = 'ludogoretsrazgrad'  -> distinct  (marker mismatch False)
+    source_team_key('Ludogorets II') = 'ludogoretsii'  vs 'Ludogorets Razgrad' = 'ludogoretsrazgrad'  -> distinct  (marker mismatch True)
+    source_team_key('Kongsvinger 2') = 'kongsvinger2'  vs 'Kongsvinger' = 'kongsvinger'  -> distinct  (marker mismatch False)
+    source_team_key('Newcastle U23s') = 'newcastleu23s'  vs 'Newcastle' = 'newcastleunited'  -> distinct  (marker mismatch False)
+
+== A-2 the utd -> united fold and the per-pair additions
+  archive: 23229 distinct spellings; 135 carry a 'utd' token
+  top by rows:
+    Sheffield Utd                      x37
+    Boston Utd                         x35
+    Cambridge Utd                      x35
+    Nomme Utd                          x35
+    Tampere Utd                        x31
+    Dundee Utd                         x31
+    Sydney Utd                         x31
+    Heidelberg Utd                     x30
+  spellings whose seam key changes: 148
+  key groups that merge two or more previous keys: 83
+  of those, groups whose members are NOT one club (a wrong merge): 0
+  every key group holding a Utd spelling: 68; of those, wrong: 0
+  the new merges, in full (a wrong one is visible, not asserted away):
+    nasarawaunited           <- ['Nasarawa United', 'Nasarawa Utd']
+    inglewoodunited          <- ['Inglewood United', 'Inglewood Utd']
+    sydneyunited             <- ['Sydney United', 'Sydney Utd']
+    belconnenunited          <- ['Belconnen United', 'Belconnen Utd.']
+    goldcoastunited          <- ['Gold Coast United', 'Gold Coast Utd']
+    hantharwadyunited        <- ['Hantharwady United', 'Hantharwady Utd']
+    charltonathletic         <- ['Charlton', 'Charlton Athletic']
+    lincolnunited            <- ['Lincoln United', 'Lincoln Utd.']
+    chippaunited             <- ['Chippa United', 'Chippa Utd.']
+    droghedaunited           <- ['Drogheda United', 'Drogheda Utd']
+    unitedofmanchester       <- ['FC Utd Of Manchester', 'United of Manchester']
+    shanunited               <- ['Shan United', 'Shan Utd']
+    atlantaunited            <- ['Atlanta United', 'Atlanta United FC', 'Atlanta Utd']
+    ebbsfleetunited          <- ['Ebbsfleet United', 'Ebbsfleet Utd']
+    newcastleunitedu21       <- ['Newcastle United U21', 'Newcastle Utd U21']
+    lucanunited              <- ['Lucan United', 'Lucan Utd']
+    kidderminsterharriers    <- ['Kidderminster', 'Kidderminster Ha']
+    chiangraiunited          <- ['Chiangrai United', 'Chiangrai Utd']
+    maidenheadunited         <- ['Maidenhead United', 'Maidenhead Utd']
+    heidelbergunited         <- ['Heidelberg United', 'Heidelberg Utd']
+    turriffunited            <- ['Turriff United', 'Turriff Utd']
+    fukuiunited              <- ['Fukui United', 'Fukui Utd.']
+    ayrunited                <- ['Ayr United', 'Ayr Utd', 'Ayr Utd.']
+    sekhukhuneunited         <- ['Sekhukhune United', 'Sekhukhune Utd']
+    basel1893                <- ['Basel', 'FC Basel', 'FC Basel 1893']
+    dundeeunitedb            <- ['Dundee United B', 'Dundee Utd B']
+    capsunited               <- ['CAPS United FC', 'CAPS Utd']
+    manchesterunitedw        <- ['Manchester United W', 'Manchester Utd W']
+    ferroviariasp            <- ['Ferroviaria', 'Ferroviaria SP', 'Ferroviária', 'Ferroviária SP']
+    aylesburyunited          <- ['Aylesbury United', 'Aylesbury Utd']
+    northeastunited          <- ['North East Utd', 'NorthEast United']
+    carlisleunited           <- ['Carlisle United', 'Carlisle Utd']
+    montegobayunited         <- ['Montego Bay United', 'Montego Bay Utd']
+    newcastleunited          <- ['Newcastle', 'Newcastle United']
+    tampereunited            <- ['Tampere United', 'Tampere Utd']
+    sheffieldunited          <- ['Sheffield United', 'Sheffield Utd']
+    wellingunited            <- ['Welling United', 'Welling Utd']
+    ayutthayaunited          <- ['Ayutthaya United', 'Ayutthaya Utd']
+    dundeeunited             <- ['Dundee United', 'Dundee Utd']
+    scunthorpeunited         <- ['Scunthorpe', 'Scunthorpe Unite', 'Scunthorpe United', 'Scunthorpe Utd']
+    eskilstunaunitedw        <- ['Eskilstuna United W', 'Eskilstuna Utd W']
+    bostonunited             <- ['Boston United', 'Boston Utd']
+    carraresecalcio          <- ['Carrarese', 'Carrarese Calcio']
+    sheffieldunitedu21       <- ['Sheffield United U21', 'Sheffield Utd U21']
+    yangonunited             <- ['Yangon United', 'Yangon Utd']
+    manlyunited              <- ['Manly United', 'Manly United FC', 'Manly Utd']
+    flinttownunited          <- ['Flint Town', 'Flint Town United', 'Flint Town Utd']
+    katsinaunited            <- ['Katsina United', 'Katsina Utd']
+    goytreunited             <- ['Goytre United', 'Goytre Utd']
+    fulhamunited             <- ['Fulham United', 'Fulham Utd.']
+    redditchunited           <- ['Redditch United', 'Redditch Utd']
+    tuggeranongunited        <- ['Tuggeranong United', 'Tuggeranong Utd']
+    fukushimaunited          <- ['Fukushima United', 'Fukushima Utd']
+    gaboroneunited           <- ['Gaborone United', 'Gaborone Utd']
+    ashtonunited             <- ['Ashton United', 'Ashton Utd']
+    realbetis                <- ['Betis', 'Real Betis']
+    afctelfordunited         <- ['AFC Telford United', 'AFC Telford Utd']
+    suttonunited             <- ['Sutton United', 'Sutton Utd']
+    chiangmaiunited          <- ['Chiangmai United', 'Chiangmai Utd']
+    rasisalaiunited          <- ['Rasi Salai United', 'Rasisalai Utd']
+    southendunited           <- ['Southend United', 'Southend Utd']
+    herefordunited           <- ['Hereford United', 'Hereford Utd']
+    kagoshimaunited          <- ['Kagoshima United', 'Kagoshima Utd']
+    nommeunited              <- ['FC Nomme United', 'Nomme Utd', 'Nõmme United']
+    realmallorca             <- ['Mallorca', 'Real Mallorca']
+    baldoyleunited           <- ['Baldoyle United', 'Baldoyle Utd.']
+    yorkunited               <- ['York United', 'York Utd']
+    salisburyunited          <- ['Salisbury United', 'Salisbury Utd.']
+    colchesterunited         <- ['Colchester United', 'Colchester Utd']
+    oxfordunited             <- ['Oxford United', 'Oxford Utd']
+    maidstoneunited          <- ['Maidstone United', 'Maidstone Utd']
+    khonkaenunited           <- ['Khon Kaen United', 'Khonkaen Utd.']
+    eveshamunited            <- ['Evesham United', 'Evesham Utd']
+    accringtonstanley        <- ['Accrington', 'Accrington ST', 'Accrington St', 'Accrington Stanley']
+    newcastleunitedw         <- ['Newcastle United W', 'Newcastle Utd W']
+    civounited               <- ['CIVO United', 'Civo Utd']
+    alandunitedw             <- ['Aland United W', 'Aland Utd W']
+    bangkokunited            <- ['Bangkok United', 'Bangkok Utd']
+    cambridgeunited          <- ['Cambridge United', 'Cambridge Utd']
+    formartineunited         <- ['Formartine United', 'Formartine Utd']
+    treatyunitedw            <- ['Treaty United W', 'Treaty Utd W']
+    muangthongunited         <- ['Muang Thong Utd', 'Muangthong United']
+    crumlinunited            <- ['Crumlin United', 'Crumlin Utd']
+
+  W3 census (fixture sides from the settled registry):
+    before = the same key builder with the token fold off and this
+             round's spellings removed (a model of the old key)
+    after  = the SHIPPED source_team_key
+    authoritative before/after, running the real old code from a
+    worktree at the parent commit: a_census_worktree.txt
+    before: prior rows  21198   sides with >=5 priors  765/814
+    after : prior rows  21605   sides with >=5 priors  776/814
+
+== A-2 refusal check: is 'Al Ittihad' one club?
+  'Al Ittihad': 75 rows
+      Saudi Professional League    x 27   opponents: Al Kholood x3, Al Qadsiah x3, Al Hazem x3, Al Taawon x2
+      Premier League               x 22   opponents: Ceramica Cleopatra x2, Haras El Hodood x2, El Gaish x2, Petrojet x2
+      (no league label)            x 16   opponents: Las Palmas x1, Bangladesh Polic x1, Al Najma x1, Al Hazm x1
+      AFC Champions League         x  4   opponents: Al-Gharafa x1, Al-Sadd x1, Machida x1, Al Jazira x1
+      League Cup                   x  3   opponents: Zamalek x1, ZED x1, Haras El Hodood x1
+      Club Friendly                x  3   opponents: Orlando Pirates x1, Malaga x1, Mallorca x1
+  'Al-Ittihad': 34 rows
+      Premier League               x 21   opponents: Olympic Azzaweya x3, Al Ittihad Misurata x3, Al Shomooa x2, Shabab Al-Ghar x2
+      Division 1                   x 12   opponents: Al Oruba Zabid x1, Al Hilal x1, Al Wahda x1, Mukallah x1
+      King's Cup                   x  1   opponents: Al-Ittifaq x1
+  'Al-Ittihad Alexandria': 2 rows
+      (no league label)            x  2   opponents: Zamalek SC x1, Asyut Petroleum x1
+
+== A-2 per-pair evidence (raw files, pre-dedup)
+  spelling              rows  mutual  leagues / top opponents
+  Betis                   42       7  LaLiga x24, Europa League x6, Club Friendly x6
+                                      vs Real Madrid x2, Oviedo x2, Elche x2
+  Basel                   41       1  Super League x23, Club Friendly x9, no label x5
+                                      vs Thun x4, Sion x3, Zurich x3
+  Accrington              38       0  League Two x26, no label x7, Club Friendly x4
+                                      vs Walsall x3, Crewe x3, Colchester x3
+  Accrington St           12       4  no label x12
+                                      vs Chorley x1, Sheffield Wed x1, Crewe x1
+  Borussia Monchen        11       2  no label x11
+                                      vs Wuppertaler x1, Hansa Rostock x1, SSVg Velbert x1
+  Carrarese               37       4  Serie B x22, no label x12, Club Friendly x2
+                                      vs Mantova x3, Entella x3, Bari x2
+  Charlton                43       3  Championship x26, no label x9, Club Friendly x5
+                                      vs Derby x3, Preston x3, West Brom x2
+  Ferroviaria             45       2  Paulista A2 x25, Serie C x17, no label x3
+                                      vs Juventus-SP x5, Ituano x4, Sertaozinho x3
+  JEF United               9       8  no label x9
+                                      vs Sanfrecce Hiroshima x1, Machida Zelvia x1, FC Tokyo x1
+  JEF United Ichih        13       6  no label x13
+                                      vs Fagiano Okayama x2, Kashiwa Reysol x1, Hiroshima Sanfre x1
+  Kidderminster           56       2  National League North x24, no label x23, National League x5
+                                      vs Macclesfield x2, South Shields x2, Halesowen x2
+  Kidderminster Ha        17       0  no label x17
+                                      vs Halesowen Town x1, Stratford Town x1, Alvechurch x1
+  Scunthorpe Unite        17       0  no label x17
+                                      vs Skegness Town x1, Spalding United x1, Buxton FC x1
+  Zeljeznicar             41       3  WWIN Liga BiH x20, no label x13, Club Friendly x6
+                                      vs Zrinjski x4, Siroki Brijeg x4, Sloga Meridian x3
+  Mallorca                39       0  LaLiga x21, no label x12, Club Friendly x3
+                                      vs Girona x3, Rayo Vallecano x2, Al Ittihad x2
+  Flint Town              12       5  no label x12
+                                      vs Llandudno x1, Barry Town AFC x1, Cambrian Clydach x1
+  Omonia Nicosia F        13       7  no label x13
+                                      vs FC Kairat Almaty x2, Lincoln Red Imps x2, Sint Truiden x2
+  Aris Thessalonik        10       0  no label x10
+                                      vs Monza x1, Napoli x1, Anagenisi Kardit x1
+  Corvinul Hunedoa         7       0  no label x7
+                                      vs Csikszereda x1, Sepsi x1, CFR Cluj x1
+  Newcastle               51      11  Premier League x21, no label x13, Champions League x6
+                                      vs Manchester City x4, Liverpool x3, Tottenham x3
+  classes: 14 pair(s) with mutual fixtures, 6 on the row case alone (of 20)
+
+  class per pair: mutual>0 -> 'mutual' evidence; mutual=0 -> the row
+  case above must show one club's own competition (checked by eye in
+  the curated file's comments, which name the fixtures). Pairs with
+  neither are not added: 'Al Ittihad' (three countries' leagues) is
+  refused, and the bare forms that only repeat the club's own league
+  are the ones listed above.
+
+== A-2 same-club evidence for the per-pair additions
+  read from the RAW committed files (pre-dedup): a mutual fixture is
+  the same date + opponent served under both spellings
+  Real Betis / Betis: 7 same-date same-opponent fixture(s) under both
+      2026-07-29  vs Lyon                         league=Club Friendly
+      2026-08-01  vs Almeria                      league=Club Friendly
+      2026-08-05  vs Arsenal                      league=Club Friendly
+      2026-08-08  vs Bournemouth                  league=Club Friendly
+      2026-08-21  vs Real Sociedad                league=LaLiga
+      2026-08-25  vs Valencia                     league=LaLiga
+  FC Basel 1893 / Basel: 1 same-date same-opponent fixture(s) under both
+      2026-08-01  vs Lausanne                     league=Super League
+  Scunthorpe Utd / Scunthorpe: 4 same-date same-opponent fixture(s) under both
+      2026-08-22  vs Eastleigh                    league=National League
+      2026-08-28  vs Solihull Moors               league=National League
+      2026-09-05  vs Harrogate Town               league=no label
+      2026-09-16  vs Boreham Wood                 league=no label
+  Scunthorpe Utd / Scunthorpe United: 1 same-date same-opponent fixture(s) under both
+      2026-09-19  vs AFC Hornchurch               league=no label
+  Newcastle Utd / Newcastle: 0 same-date same-opponent fixture(s) under both
+

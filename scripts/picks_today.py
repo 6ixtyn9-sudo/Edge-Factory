@@ -78,7 +78,11 @@ from edgefactory.phase5_k import (
     source_columns as phase5_source_columns,
 )
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
-from edgefactory.enh_registry import status_for as enh_status_for
+from edgefactory.enh_registry import (
+    clears_floor as enh_clears_floor,
+    floor_for as enh_floor_for,
+    status_for as enh_status_for,
+)
 from edgefactory.source_health import (
     FOREBET_LIVE_LAST_DAY,
     bzzoiro_status_line,
@@ -5963,6 +5967,89 @@ def format_kickoff(pick: dict) -> str:
     return "n/a"
 
 
+_ENH_FLOORS_CACHE: dict[str, dict] = {}
+
+
+def _enh_floor_table(day: str) -> dict:
+    """The day's derived floor table, computed once per render (cached).
+
+    Read-only, and resolved through THIS module's ``LOCALDATA`` at call time —
+    the same constant the picks themselves come from — so a scratch or test root
+    derives from its own registry, never from the repository's. An unreadable
+    registry yields an empty table and every line falls back to the operator's
+    static floor, which is the pre-R2 render.
+    """
+    key = str(day or "")[:10] or date.today().isoformat()
+    if key not in _ENH_FLOORS_CACHE:
+        try:
+            from edgefactory.enh_registry import derive_floors_for_day
+            _ENH_FLOORS_CACHE[key] = derive_floors_for_day(LOCALDATA.parent, key)
+        except Exception:
+            _ENH_FLOORS_CACHE[key] = {"floors": {}, "rows": []}
+    return _ENH_FLOORS_CACHE[key]
+
+
+def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
+    """The board's one enhancement line for a pick, or None when it has none.
+
+    Marker 🔬 = priced and clearing its market's floor: a real candidate the
+    operator can act on, still short of registry certification. Marker 🚫 = the
+    Stage 2 floor gate fired, so there is no bet — not paper, not shadow.
+
+    The gate is ``enh_registry.clears_floor`` itself, the same call the
+    enhancement slip uses for its ``[NO BET]`` audit lines, so the board and the
+    slip can never disagree about what is a bet. The floor is the pick's slice
+    floor — its LEAGUE slice's when the derived table has one, else the market
+    root, exactly what ``auto_tickets.enhancement_legs`` applies — and the line
+    says which basis it came from (``inherited`` still means the operator's
+    table, where a team slice always stays). Operator ruling: "betting on ev
+    will lead us to not bet at all ... we just need prices above a certain
+    threshold, like how autobets does it." EV stays on the row as information
+    and gates nothing here.
+
+    A floorless market never clears (``clears_floor`` is False without a
+    threshold), which is why the team unders that used to print a 🔬 line now
+    print nothing to bet on. Unpriced enhancements return None and print
+    nothing: the EV selector already prefers priced markets, and showing
+    "Home O0.5 (unpriced)" on every favourite is noise.
+    """
+    rec_market = p.get("recommended_enhancement")
+    if not rec_market:
+        return None
+    rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
+    # RT-6: archived/legacy picks can carry None or string probabilities —
+    # a formatting crash here would kill the whole render.
+    try:
+        rec_prob = float(p.get("enhancement_probability") or 0.0)
+    except (TypeError, ValueError):
+        rec_prob = 0.0
+    rec_price = p.get("enhancement_price")
+    if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
+            and math.isfinite(rec_price) and rec_price > 1.0):
+        return None  # NaN/inf/junk must never render as a price (RT-2)
+    book = f" {p.get('enhancement_price_book')}" if p.get("enhancement_price_book") else ""
+    src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
+    edge = p.get("enhancement_edge_sample")
+    edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int, float)) else ""
+    from edgefactory.enh_registry import floor_for_slice
+    # None: derive the day's table from this workspace's registry. An explicit
+    # table (including one with no rows) is used as given — the lane passes its
+    # own, so the board and the slip can never consult different numbers.
+    table = _enh_floor_table(p.get("date")) if floors is None else floors
+    floor, basis = floor_for_slice(table, rec_market, p.get("league"))
+    if floor is None:                      # no derived row: the operator's table
+        floor, basis = enh_floor_for(rec_market), "inherited"
+    if enh_clears_floor(rec_market, rec_price, floor=floor):
+        return (f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
+                f"{edge_txt}{src} — floor {floor:.2f} ({basis})")
+    # Show WHY it is not a bet rather than hiding the candidate: the gate firing
+    # is audit evidence, and the slip prints the same verdict as [NO BET].
+    why = (f"below {rec_market} floor {floor:.2f} ({basis})"
+           if floor is not None else "no floor set for this market")
+    return (f"     🚫 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
+            f" — no bet: {why}{src}")
+
+
 def print_buckets(buckets: dict, title_date: str = ""):
     print(f"\nEdge Factory Picks — {title_date}" if title_date else "\nEdge Factory Picks")
     print("=" * 60)
@@ -6041,31 +6128,9 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 # Vetoed core pick -> side-products are shadow research, never advice.
                 shadow_tag = " [SHADOW — paper]" if p.get("bucket") == "SKIPPED_VETO" else ""
                 print(f"     🔥{shadow_tag} Possible Events: {event_text}")
-            rec_market = p.get("recommended_enhancement")
-            if rec_market:
-                rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
-                # RT-6: archived/legacy picks can carry None or string probabilities —
-                # a formatting crash here would kill the whole render.
-                try:
-                    rec_prob = float(p.get("enhancement_probability") or 0.0)
-                except (TypeError, ValueError):
-                    rec_prob = 0.0
-                rec_price = p.get("enhancement_price")
-                if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
-                        and math.isfinite(rec_price) and rec_price > 1.0):
-                    rec_price = None  # NaN/inf/junk must never render as a price (RT-2)
-                if rec_price is not None:
-                    # Priced but not registry-ELIGIBLE: show the EV pick with
-                    # its captured price and sample edge so the operator can
-                    # act on it. Marker stays 🔬 until the registry certifies.
-                    book = f" {p.get('enhancement_price_book')}" if p.get("enhancement_price_book") else ""
-                    src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
-                    edge = p.get("enhancement_edge_sample")
-                    edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int,float)) else ""
-                    print(f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}{edge_txt}{src}")
-                # Unpriced / research-only enhancements are intentionally
-                # hidden: the EV selector already prefers priced markets, and
-                # showing "Home O0.5 (unpriced)" on every favourite is noise.
+            rec_line = enhancement_board_line(p)
+            if rec_line:
+                print(rec_line)
         print()
     print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
     print("⚠️  Bet only what you can afford to lose.")
@@ -6100,6 +6165,59 @@ def _append_betexplorer_board_rows(pick: dict, rows: list[dict], source: str) ->
             seen.add(key)
     board.sort(key=_price_board_sort_key)
     pick["price_board"] = board
+
+
+def _betexplorer_matching_row(rows: list[dict], pick: dict) -> dict | None:
+    """The row that prices this pick's own selection on this pick's market."""
+    sel = str(pick.get("pick") or "")
+    market = str(pick.get("market") or "")
+    return next(
+        (r for r in rows
+         if str(r.get("selection") or "") == sel
+         and str(r.get("market") or "") == market),
+        None,
+    )
+
+
+def _apply_betexplorer_row(pick: dict, matching_row: dict, rows: list[dict], *,
+                           bundles: tuple | None, source: str) -> bool:
+    """Attach one BetExplorer row to `pick`; True when the pick was priced.
+
+    ONE code path for both the network-free cache read and the bounded rescue
+    fetch (repo doctrine: "One code path, or the harness lies"), so a cached
+    price and a fetched price always land an identical field set. Returns False
+    (leaving the pick untouched) when the row carries no usable decimal price.
+    """
+    new_odds = _valid_decimal_odds(matching_row.get("odds"))
+    if new_odds is None:
+        return False
+    previous_odds = pick.get("odds")
+    previous_source = pick.get("odds_source")
+    pick["odds"] = new_odds
+    pick["odds_source"] = source
+    pick["odds_match_method"] = "betexplorer"
+    pick["bookmaker"] = matching_row.get("bookmaker")
+    pick["odds_captured_at"] = matching_row.get("captured_at")
+    pick["odds_league"] = matching_row.get("league")
+    pick["price_evidence"] = PRICE_EVIDENCE_BETEXPLORER_RESCUE
+    pick["price_push_eligible"] = True
+    pick.pop("price_quarantine_reason", None)
+    pick.pop("suspect_price", None)
+    if previous_odds is not None and previous_source != pick["odds_source"]:
+        pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+    be_bundle = _odds_bundle_from_rows(rows, provider=source)
+    if bundles is not None:
+        # Keep every BetExplorer 1X2 row on the board; the selected row is
+        # marked while the other sides remain corroboration candidates.
+        _stamp_price_board(
+            pick, (*bundles, be_bundle), chosen_row=matching_row,
+            chosen_source=source, chosen_method="betexplorer",
+        )
+    else:
+        _append_betexplorer_board_rows(pick, rows, source)
+    # Idempotent normalisation hook (BetExplorer rows are bare HH:MM today).
+    resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=source)
+    return True
 
 
 def enrich_unmatched_with_betexplorer(
@@ -6146,70 +6264,60 @@ def enrich_unmatched_with_betexplorer(
     for pick in picks:
         method = str(pick.get("odds_match_method") or "")
 
-        # A live source already priced this fixture: do not rescue it. A fresh
-        # same-day BetExplorer cache is still useful as a second-source board
-        # candidate, so reading cache is explicitly network-free.
-        if method not in ("fallback", "none", "alias_fuzzy"):
-            cached_rows = _be_mod.cached_odds_rows_for_pick(pick, day)
+        # (1) NETWORK-FREE SEAM FIRST, and for EVERY pick. A fresh same-day
+        # cache read costs nothing, so no budget decision may skip it. Before
+        # 2026-10-12 the rescue budget was checked first and `break` returned
+        # from the whole loop, so once four legs were priced by any source every
+        # later leg was abandoned — including legs whose prices were already on
+        # disk. Receipt: Ludogorets-Arda (1.50/4.00/6.50) and Elfsborg-Halmstad
+        # (1.36/5.25/8.00) were captured at 01:05Z and cached under this run's
+        # own key, yet the board published them with odds=None /
+        # odds_match_status="unmatched". A leg may be unpriced because there is
+        # no price — never because of ordering.
+        cached_rows = _be_mod.cached_odds_rows_for_pick(pick, day)
+        if cached_rows or _be_mod.cached_fixture_present(pick, day):
             if cached_rows:
-                _append_betexplorer_board_rows(pick, cached_rows, _BE_SOURCE)
+                matching_row = _betexplorer_matching_row(cached_rows, pick)
+                if pick.get("odds") is None and matching_row is not None:
+                    if _apply_betexplorer_row(pick, matching_row, cached_rows,
+                                              bundles=bundles, source=_BE_SOURCE):
+                        enriched += 1
+                        priced += 1
+                else:
+                    # Not this pick's selection, or already priced by a live
+                    # source (which is never overwritten): keep the rows as
+                    # board corroboration only.
+                    _append_betexplorer_board_rows(pick, cached_rows, _BE_SOURCE)
+            # The cache is authoritative for this fixture this run — an empty
+            # entry is a resolved answer, not a miss.
             continue
 
-        # The current ticket surface needs at most four priced legs. Once that
-        # bounded supply exists, abstain from further rescue requests.
+        # (2) A live source already priced this fixture: do not rescue it.
+        if method not in ("fallback", "none", "alias_fuzzy"):
+            continue
+
+        # (3) Bounded rescue. `continue`, never `break`: once the target is met
+        # no further REQUEST is made, but every later pick still reaches its free
+        # cache read at (1) on this pass.
         if priced >= target:
-            break
+            continue
 
         rows = betexplorer_odds_rows_for_pick(pick, day, norm_team_fn=_norm_team)
         if not rows:
             continue
-
-        sel = str(pick.get("pick") or "")
-        market = str(pick.get("market") or "")
-        matching_row = next(
-            (r for r in rows
-             if str(r.get("selection") or "") == sel
-             and str(r.get("market") or "") == market),
-            None,
-        )
+        matching_row = _betexplorer_matching_row(rows, pick)
         if matching_row is None:
             continue
-
-        new_odds = _valid_decimal_odds(matching_row.get("odds"))
-        if new_odds is None:
-            continue
-
-        previous_odds = pick.get("odds")
-        previous_source = pick.get("odds_source")
-        pick["odds"] = new_odds
-        pick["odds_source"] = _BE_SOURCE
-        pick["odds_match_method"] = "betexplorer"
-        pick["bookmaker"] = matching_row.get("bookmaker")
-        pick["odds_captured_at"] = matching_row.get("captured_at")
-        pick["odds_league"] = matching_row.get("league")
-        pick["price_evidence"] = PRICE_EVIDENCE_BETEXPLORER_RESCUE
-        pick["price_push_eligible"] = True
-        pick.pop("price_quarantine_reason", None)
-        pick.pop("suspect_price", None)
-        if previous_odds is not None and previous_source != pick["odds_source"]:
-            pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
-        be_bundle = _odds_bundle_from_rows(rows, provider=_BE_SOURCE)
-        if bundles is not None:
-            # Keep every BetExplorer 1X2 row on the board; the selected row is
-            # marked while the other sides remain corroboration candidates.
-            _stamp_price_board(
-                pick, (*bundles, be_bundle), chosen_row=matching_row,
-                chosen_source=_BE_SOURCE, chosen_method="betexplorer",
-            )
-        else:
-            _append_betexplorer_board_rows(pick, rows, _BE_SOURCE)
-        # Idempotent normalisation hook (BetExplorer rows are bare HH:MM today).
-        resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=_BE_SOURCE)
-        enriched += 1
-        priced += 1
+        if _apply_betexplorer_row(pick, matching_row, rows,
+                                  bundles=bundles, source=_BE_SOURCE):
+            enriched += 1
+            priced += 1
 
     if stats is not None:
         stats.update(_be_mod.run_stats())
+        # Network-attempt counters (priced lane + market-tab detail requests),
+        # so the run log shows what BetExplorer actually saw.
+        stats.update(_be_mod.request_stats())
         stats["be_priced_before"] = priced_before
         stats["be_priced_after"] = priced
         stats["be_target_legs"] = target
@@ -6365,7 +6473,6 @@ def main():
             cached_rows=list(data.get("scoutingstats", {}).values()),
             stats=scouting_stats,
         )
-        prices_index = load_prices_index(ROOT, day)
         # TheOddsAPI is a cached named-book board, not another live request.
         # Its cutoff is this pick build's ``as_of`` so a later CLV snapshot
         # cannot time-travel into an already-generated card.
@@ -6459,6 +6566,14 @@ def main():
         else:
             be_stats["status"] = "snapshot_only"
             be_enriched = 0
+
+        # Load the price index AFTER the rescue above, on purpose: the
+        # rescue's fetch writes today's BetExplorer detail ledger, and that
+        # ledger is itself a price source for the enhancement board
+        # (schema 2, merged behind EDGE_FACTORY_ENH_BOARD). Loading the
+        # index earlier would leave a fixture rescued in this very run
+        # unpriced on the board.
+        prices_index = load_prices_index(ROOT, day)
 
         # Shadow stats were captured above, before bundle construction.
         fp_shadow_stats = shadow_stats.get("futbolpronosticos", {})
