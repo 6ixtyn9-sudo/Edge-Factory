@@ -487,7 +487,7 @@ def _classify_parse_skips(parse_skips: dict) -> dict:
 def _persist_vocabulary_snapshot(day: str, catalog_entries: dict) -> str:
     """Persist the provider's served market vocabulary for source_health.
 
-    ``localdata/source_health/odds_vocabulary/<day>+oddspapi.json`` holds
+    ``localdata/source_health/odds_vocabulary/<day>+oddspapi.json.gz`` holds
     the /markets catalog EXACTLY as served (id -> name / marketType /
     period / handicap / playerProp / outcomes), so a future classification
     change is rebuilt from captured evidence, never from guesswork. Content
@@ -503,9 +503,9 @@ def _persist_vocabulary_snapshot(day: str, catalog_entries: dict) -> str:
     digest = hashlib.sha256(
         json.dumps(catalog_entries, sort_keys=True).encode("utf-8")
     ).hexdigest()
-    for path in sorted(vdir.glob("*+oddspapi.json")):
+    for path in _vocabulary_snapshots(vdir):
         try:
-            previous = json.loads(path.read_text())
+            previous = _read_vocabulary_snapshot(path)
         except (OSError, ValueError):
             continue
         if previous.get("digest") == digest:
@@ -519,11 +519,28 @@ def _persist_vocabulary_snapshot(day: str, catalog_entries: dict) -> str:
         "catalog_size": len(catalog_entries),
         "markets": dict(sorted(catalog_entries.items())),
     }
-    path = vdir / f"{str(day)[:10]}+oddspapi.json"
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
+    # Compressed: the catalog is ~33k entries, ~450 KB gzipped against 8.7 MB
+    # as plain JSON. mtime=0 keeps the file bytes reproducible.
+    path = vdir / f"{str(day)[:10]}+oddspapi.json.gz"
+    tmp = vdir / f"{path.name}.tmp"
+    with open(tmp, "wb") as raw, gzip.GzipFile(
+            filename="", mode="wb", fileobj=raw, mtime=0) as fh:
+        fh.write(json.dumps(payload, sort_keys=True).encode("utf-8"))
     tmp.replace(path)
     return "written"
+
+
+def _vocabulary_snapshots(vdir: Path) -> list[Path]:
+    """Snapshots, plain (legacy) or gzipped, oldest name first."""
+    return sorted(p for p in vdir.iterdir()
+                  if p.name.endswith(("+oddspapi.json", "+oddspapi.json.gz")))
+
+
+def _read_vocabulary_snapshot(path: Path) -> dict:
+    if path.name.endswith(".gz"):
+        with gzip.open(path, "rt", encoding="utf-8") as fh:
+            return json.load(fh)
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _persist_market_census(day: str, census: dict, parse_skips: dict,

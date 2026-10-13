@@ -46,6 +46,7 @@ from edgefactory.util import (
     honest_display_label,
     strip_retired_top_scores,
 )
+from edgefactory.notifier import format_kickoff
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.odds_normalization import (
     canonicalize_row,
@@ -5961,14 +5962,6 @@ def merge_day_archive_rows(existing: list, fresh: list, day: str) -> list:
                                        canonical_team(row.get("away"))))
         merged.append(row)
     return merged
-
-
-def format_kickoff(pick: dict) -> str:
-    for key in ("kickoff", "time", "start_time", "ko"):
-        value = pick.get(key)
-        if value not in (None, ""):
-            return str(value)
-    return "n/a"
 
 
 _ENH_FLOORS_CACHE: dict[str, dict] = {}
