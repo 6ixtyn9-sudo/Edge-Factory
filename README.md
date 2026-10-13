@@ -309,8 +309,10 @@ OddsPapi market-coverage probe and bounded price board
 The repository includes a read-only market-coverage probe and an **opt-in**
 bounded capture for OddsPapi. It is never a consensus vote. When
 `EDGE_FACTORY_ODDSPAPI_PRICES=1`, the official daily run captures at most
-`ODDSPAPI_MAX_FIXTURES` (default 20, currently hard-bounded at 20) after a
-non-ticketable candidate shortlist is built. The final priced pass may use only
+a monthly request budget (250 requests per key, shared evenly over the days left
+in the month, slate fixtures first) after a non-ticketable candidate shortlist
+is built. Board, `/markets` and `/odds` calls all count against it. No secret
+sets the cap. The final priced pass may use only
 persisted, timestamp-qualified canonical named-book rows; a ticketed card is
 never rewritten. Missing keys, a disabled flag, absent rows, unknown markets, or a
 post-cutoff timestamp all fail closed.
@@ -320,7 +322,6 @@ Keep real keys only in `.env`:
 ```text
 ODDSPAPI_API_KEYS=key1,key2,key3,key4
 EDGE_FACTORY_ODDSPAPI_PRICES=off
-ODDSPAPI_MAX_FIXTURES=20
 ```
 
 The comma-separated ring is tried only on auth/quota rejection; values are never

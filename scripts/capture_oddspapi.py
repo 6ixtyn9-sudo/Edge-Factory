@@ -9,10 +9,12 @@ OddsPapi odds into the unified schema used by `enh_pricing`:
     localdata/oddspapi_odds_YYYY-MM.csv.gz
 
 Safety rails (operator-approved):
-- FREE-TIER BOUNDED: OddsPapi free quota is small. Capture is limited to a
-  bounded set of fixtures per run (--max-fixtures, default 20) and never
-  broad-polls the whole day. Unmatched same-day picks are prioritized first,
-  then enhancement-relevant fixtures.
+- MONTHLY BUDGET: OddsPapi's free plan is 250 requests a month per key. Every
+  HTTP attempt (board, /markets, /odds) is charged to the day it was spent,
+  and each day may spend an even share of what is left in the month
+  (see FREE_REQUESTS_PER_KEY_MONTH). Slate fixtures are priced first; the
+  budget, not a fixed fixture count, is the real limit. --max-fixtures is a
+  ceiling only.
 - FLAG-GATED: daily.py invokes this only when
   EDGE_FACTORY_ODDSPAPI_PRICES=1. It follows the non-ticketable candidate
   build and can be used only by the final timestamp-qualified pricing pass,
@@ -26,18 +28,19 @@ Safety rails (operator-approved):
   price source for the enhancement overlay only.
 
 Usage:
-  PYTHONPATH=src python3 scripts/capture_oddspapi.py --date 2026-08-05 [--max-fixtures 20]
+  PYTHONPATH=src python3 scripts/capture_oddspapi.py --date 2026-08-05 [--max-fixtures 200]
   PYTHONPATH=src python3 scripts/capture_oddspapi.py --self-test
 """
 from __future__ import annotations
 
 import argparse
+import calendar
 import csv
 import gzip
 import hashlib
 import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from edgefactory.sources.oddspapi_odds import (
@@ -50,6 +53,7 @@ from edgefactory.sources.oddspapi_odds import (
     market_catalog,
     market_catalog_entries,
     rate_limit_diagnostics,
+    request_count,
     rows_from_odds_response,
 )
 from edgefactory.enh_pricing import ODDSPAPI_MAX_AGE_H as CAPTURE_WINDOW_H
@@ -299,11 +303,70 @@ def _save_state(state: dict, now: datetime) -> None:
     state["boards"] = {d: v for d, v in state.get("boards", {}).items() if d >= cutoff}
     state["captured"] = {f: v for f, v in state.get("captured", {}).items()
                          if str(v.get("day", "")) >= cutoff}
+    # Budget usage must cover the whole month, so keep from the 1st of last month.
+    today = _spend_day(now)
+    prev_first = (date.fromisoformat(today).replace(day=1) - timedelta(days=1)).replace(day=1)
+    state["usage"] = {d: v for d, v in state.get("usage", {}).items()
+                      if str(d) >= prev_first.isoformat()}
     path = _state_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(state, indent=2, sort_keys=True))
     tmp.replace(path)
+
+
+# OddsPapi's free plan: 250 requests a month per key (vendor-stated, Oct 2026).
+# The month's budget is the key count times this figure, shared evenly over the
+# days left in the month, so one heavy weekend cannot spend the whole month.
+FREE_REQUESTS_PER_KEY_MONTH = 250
+# South Africa keeps SAST (UTC+2) all year round, so a fixed offset is exact.
+SPEND_UTC_OFFSET_H = 2
+# Ceiling on fixtures per run. The budget is the real limit, not this number.
+MAX_FIXTURES_CEILING = 200
+
+
+def _spend_day(now: datetime) -> str:
+    """The SAST calendar day a provider call is charged to."""
+    return (now + timedelta(hours=SPEND_UTC_OFFSET_H)).date().isoformat()
+
+
+def _budget_remaining(state: dict, now: datetime, n_keys: int) -> int:
+    """Requests still allowed today: this month's budget, less what the
+    earlier days spent, spread evenly over today and the days left, less what
+    today has already spent."""
+    today = _spend_day(now)
+    usage = state.get("usage", {})
+    month = today[:7]
+    used_month = sum(int(n) for d, n in usage.items() if str(d)[:7] == month)
+    used_today = int(usage.get(today, 0))
+    used_before_today = used_month - used_today
+    budget = max(0, n_keys) * FREE_REQUESTS_PER_KEY_MONTH
+    year, mon = int(today[:4]), int(today[5:7])
+    days_left = calendar.monthrange(year, mon)[1] - int(today[8:10]) + 1
+    allowance = max(0, budget - used_before_today) // days_left
+    return max(0, allowance - used_today)
+
+
+def _budget_stats(state: dict, now: datetime, n_keys: int) -> dict:
+    today = _spend_day(now)
+    usage = state.get("usage", {})
+    used_month = sum(int(n) for d, n in usage.items() if str(d)[:7] == today[:7])
+    return {"day": today, "keys": n_keys,
+            "month_budget": n_keys * FREE_REQUESTS_PER_KEY_MONTH,
+            "month_spent": used_month,
+            "spent_today": int(usage.get(today, 0)),
+            "remaining_today": _budget_remaining(state, now, n_keys)}
+
+
+def _spend(state: dict, now: datetime, mark: int, stats: dict) -> int:
+    """Charge every HTTP attempt since `mark` to today. Returns the new mark."""
+    current = request_count()
+    if current > mark:
+        usage = state.setdefault("usage", {})
+        today = _spend_day(now)
+        usage[today] = int(usage.get(today, 0)) + (current - mark)
+    stats["budget"] = _budget_stats(state, now, int(stats.get("keys") or 0))
+    return current
 
 
 def _parse_utc(value: object) -> datetime | None:
@@ -548,7 +611,8 @@ def _append_rows(rows: list[dict], day: str) -> int:
     return added
 
 
-def capture(day: str, max_fixtures: int = 20, now_utc: datetime | None = None) -> dict:
+def capture(day: str, max_fixtures: int = MAX_FIXTURES_CEILING,
+            now_utc: datetime | None = None) -> dict:
     """Bounded capture for one day. Returns a stats dict; never raises.
 
     Each fixture gets at most one snapshot, taken inside its window before
@@ -566,16 +630,32 @@ def capture(day: str, max_fixtures: int = 20, now_utc: datetime | None = None) -
             return stats
         now = now_utc or datetime.now(timezone.utc)
         state = _load_state()
+        mark = request_count()
+        stats["budget"] = _budget_stats(state, now, len(keys))
+        if _budget_remaining(state, now, len(keys)) <= 0:
+            # Today's share of the month's budget is spent: no provider calls.
+            stats["status"] = "budget"
+            _save_state(state, now)
+            _write_receipt(day, stats)
+            return stats
         try:
             if _board_stale(state, day, now):
                 board = fetch_fixtures(day) or []
+                mark = _spend(state, now, mark, stats)
+                # Hold the fixtures in a local: _save_state prunes old boards,
+                # so the state entry cannot be read back after the save (this
+                # was the KeyError on '2026-10-10').
+                fixtures = [_board_entry(fx) for fx in board]
                 state["boards"][day] = {
                     "fetched_at": now.isoformat(timespec="seconds"),
-                    "fixtures": [_board_entry(fx) for fx in board],
+                    "fixtures": fixtures,
                 }
                 _save_state(state, now)
-            fixtures = state["boards"][day]["fixtures"]
+            else:
+                fixtures = state["boards"][day]["fixtures"]
         except urllib.error.HTTPError as exc:
+            mark = _spend(state, now, mark, stats)
+            _save_state(state, now)
             # Auth/quota rejection on the fixtures board. Record what the
             # provider said (Retry-After / X-RateLimit-*), classify the day,
             # and STOP: the free-tier quota is daily, so continuing into the
@@ -618,6 +698,7 @@ def capture(day: str, max_fixtures: int = 20, now_utc: datetime | None = None) -
         type_map = load_market_type_map()
         catalog = market_catalog()
         catalog_entries = market_catalog_entries()
+        mark = _spend(state, now, mark, stats)
         # The day's slate fixtures go first (stable order): the bounded budget
         # must price picks before it prices enhancement-only coverage. On
         # 2026-10-03 the provider-ordered first 20 fixtures contained no slate
@@ -631,15 +712,24 @@ def capture(day: str, max_fixtures: int = 20, now_utc: datetime | None = None) -
         # the run log previously showed only partially (and masked).
         census: dict[str, dict] = {}
         unresolved_samples: list = []
-        for fx in pending[:max_fixtures]:
+        candidates = pending[:max_fixtures]
+        for idx, fx in enumerate(candidates):
             fid = str(fx.get("fixtureId") or fx.get("id") or "")
             if not fid:
                 continue
+            if _budget_remaining(state, now, len(keys)) <= 0:
+                # Today's share is spent. The unpriced fixtures stay pending and
+                # the next run inside their window picks them up.
+                stats["status"] = "budget"
+                stats["budget_deferred"] = len(candidates) - idx
+                break
             stats["attempted"] += 1
             stats["attempted_fixtures"].append(_fixture_receipt(fx))
             try:
                 odds = fetch_odds(fid)
+                mark = _spend(state, now, mark, stats)
             except urllib.error.HTTPError as exc:
+                mark = _spend(state, now, mark, stats)
                 if exc.code in (401, 402, 403, 429, 430, 509):
                     # Same quota/auth family as the board call: record the
                     # provider's rate-limit headers and stop the whole pass.
@@ -659,6 +749,7 @@ def capture(day: str, max_fixtures: int = 20, now_utc: datetime | None = None) -
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
                 continue
             except Exception as exc:  # noqa: BLE001 - fail-soft
+                mark = _spend(state, now, mark, stats)
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
                 continue
             # One snapshot per fixture: a successful fetch, even one with no
@@ -821,7 +912,7 @@ def self_test() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--date", default=datetime.now(timezone.utc).date().isoformat())
-    ap.add_argument("--max-fixtures", type=int, default=20)
+    ap.add_argument("--max-fixtures", type=int, default=MAX_FIXTURES_CEILING)
     ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
     if args.self_test:
