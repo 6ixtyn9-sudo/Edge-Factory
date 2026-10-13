@@ -48,6 +48,7 @@ import json
 import os
 import gzip
 import math
+import statistics
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -185,6 +186,10 @@ def _put(out: dict[str, Any], nh: str, na: str, mkt: str, sel: str,
     key = (nh, na)
     pairs = out["pairs"].setdefault(key, {})
     slot = (mkt, sel)
+    if mkt.startswith("tt_"):
+        # Every team-total quote, so the gate can test the consensus (median)
+        # as well as the best quote: a single top-of-market quote is not a price.
+        out.setdefault("quotes", {}).setdefault(key, {}).setdefault(slot, []).append(float(price))
     cur = pairs.get(slot)
     if cur is None or price > cur[0]:
         pairs[slot] = (price, book, at, source)
@@ -539,6 +544,7 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
     pick.pop("enhancement_edge_sample", None)
     pick.pop("enhancement_price_divergence", None)
     pick["enhancement_multi_source"] = False  # governance N5: True when >=2 sources priced this selection
+    pick["enhancement_consensus_price"] = None  # median of every team-total quote for the selection
     market = pick.get("recommended_enhancement")
     mapping = MARKET_PRICE_MAP.get(market)
     if market == "double_chance" and mapping and mapping[1] is None:
@@ -556,6 +562,7 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
         pairs = index.get("pairs") or {}
         names = index.get("names") or {}
         hit_key = (norm_team(pick.get("home")), norm_team(pick.get("away")))
+        swapped = False
         if hit_key not in pairs:
             hit_key = None
             mfn = match_fn or _default_match_fn()
@@ -565,9 +572,15 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
                     swap = (mfn(pick.get("home"), raw_a) and mfn(pick.get("away"), raw_h))
                     if both or swap:
                         hit_key = (nh, na)
+                        swapped = bool(swap and not both)
                         break
         if hit_key is None:
             return pick
+        if swapped and mapping[0].startswith("tt_home_"):
+            # The feed lists the fixture the other way round: its home total is our away.
+            mapping = ("tt_away_" + mapping[0][len("tt_home_"):], mapping[1])
+        elif swapped and mapping[0].startswith("tt_away_"):
+            mapping = ("tt_home_" + mapping[0][len("tt_away_"):], mapping[1])
         got = pairs.get(hit_key, {}).get(mapping)
         if not got:
             return pick
@@ -578,6 +591,10 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
         pick["enhancement_price_source"] = source
         pick["enhancement_priced"] = True
         pick["enhancement_breakeven"] = round(1.0 / float(price), 4)
+        quotes = [q for q in ((index.get("quotes") or {}).get(hit_key, {}).get(mapping) or [])
+                  if q > 1.0]
+        if quotes:
+            pick["enhancement_consensus_price"] = round(statistics.median(quotes), 3)
         prob = pick.get("enhancement_probability")
         if prob:
             pick["enhancement_edge_sample"] = round(float(prob) * float(price) - 1.0, 4)
