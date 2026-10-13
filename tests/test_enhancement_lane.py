@@ -183,7 +183,7 @@ def _legs_and_plan(localdata, bank_eff=100.0, fixture_report=None):
     report = {} if fixture_report is None else fixture_report
     pool = at.enhancement_pool(legs)
     plan = at.plan_day(pool, bank_eff, stake_frac=at.ENHANCEMENT_LANE.stake_frac,
-                       fixture_report=report)
+                       rank=at.ENHANCEMENT_RANK, fixture_report=report)
     at._carry_lane_evidence(plan, pool)      # what cmd_enhancement does
     return legs, plan
 
@@ -955,3 +955,60 @@ def test_enhancement_slips_are_named_and_tracked_beside_autobets():
     assert ign.returncode == 1, "enhancement slip must not be gitignored"
     ign_state = subprocess.run(["git", "check-ignore", "-q", state], cwd=root)
     assert ign_state.returncode == 0, "enhancement state file stays ignored"
+
+
+# ---- ranking by hit rate (approved 2026-10-13) ------------------------------
+# Every floor is 1 / Wilson-LB95(hit rate) + ENHANCEMENT_FLOOR_MARGIN, so the
+# enhancement lane ranks by the hit rate the floor encodes, not by the model's
+# stated probability. Stated probability only breaks ties.
+
+def _ranked_leg(match, market_floor, *, prob, odds=2.0):
+    home, away = match.split(" vs ")
+    return {"match": match, "pick": "over", "prob": prob, "odds": odds,
+            "row": {"home": home, "away": away, "date": "2026-10-13"},
+            "floor": market_floor, "market": "x"}
+
+
+def test_the_implied_hit_rate_is_recovered_from_the_floor():
+    from edgefactory.enh_registry import ENHANCEMENT_FLOOR_MARGIN
+    assert ENHANCEMENT_FLOOR_MARGIN == pytest.approx(0.10)
+    # match_over_25: floor 1.60 <-> 1 / 1.50 = 66.7% hit rate
+    assert at._implied_hit_chance({"floor": 1.60}) == pytest.approx(1 / 1.50)
+    # match_under_15: floor 4.45 <-> 1 / 4.35 = 23.0% hit rate
+    assert at._implied_hit_chance({"floor": 4.45}) == pytest.approx(1 / 4.35)
+    assert at._implied_hit_chance({"floor": None}) == 0.0
+    assert at._implied_hit_chance({}) == 0.0
+
+
+def test_enhancement_ranks_by_hit_rate_not_stated_probability():
+    # The under is stated at 0.90 but its floor says only ~23% hit rate; the
+    # over 1.5 is stated at 0.60 but its floor says ~74%. Hit rate wins.
+    under = _ranked_leg("Alpha FC vs Beta FC", 4.45, prob=0.90, odds=4.6)
+    over = _ranked_leg("Gamma FC vs Delta FC", 1.45, prob=0.60, odds=1.8)
+    pool = [under, over]
+    assert [l["match"] for l in at.rank_legs(pool, "hitrate")] == [
+        "Gamma FC vs Delta FC", "Alpha FC vs Beta FC"]
+    # the default (main lane) order is still stated probability
+    assert [l["match"] for l in at.rank_legs(pool)] == [
+        "Alpha FC vs Beta FC", "Gamma FC vs Delta FC"]
+
+
+def test_stated_probability_only_breaks_ties_on_equal_hit_rate():
+    a = _ranked_leg("Alpha FC vs Beta FC", 1.60, prob=0.55)
+    b = _ranked_leg("Gamma FC vs Delta FC", 1.60, prob=0.70)
+    assert [l["match"] for l in at.rank_legs([a, b], "hitrate")] == [
+        "Gamma FC vs Delta FC", "Alpha FC vs Beta FC"]
+
+
+def test_a_leg_with_no_floor_ranks_last_under_hitrate():
+    nofloor = _ranked_leg("Alpha FC vs Beta FC", None, prob=0.99)
+    floored = _ranked_leg("Gamma FC vs Delta FC", 3.30, prob=0.10)
+    assert [l["match"] for l in at.rank_legs([nofloor, floored], "hitrate")] == [
+        "Gamma FC vs Delta FC", "Alpha FC vs Beta FC"]
+
+
+def test_the_enhancement_lane_is_the_only_caller_on_hitrate():
+    assert at.ENHANCEMENT_RANK == "hitrate"
+    # main lane selection default is untouched
+    import inspect
+    assert inspect.signature(at.select_accas).parameters["rank"].default == "prob"
