@@ -171,6 +171,10 @@ TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
     ("Cabo Verde", "Cape Verde"),
     # pinnapi probe 2026-10-10 run#4: Manchester United–Tottenham, England Premier League
     ("Tottenham", "Tottenham Hotspur"),
+    # 2026-10-13 picks card: the same UCL fixture (Inter v Club Brugge, 13-10,
+    # 19:00Z) was listed twice, once as "Club Brugge KV" (the club's official
+    # name) and once as "Club Brugge". Same date, opponent and competition.
+    ("Club Brugge KV", "Club Brugge"),
     # pinnapi probe 2026-10-10 run#4: Rizespor–Fenerbahçe, Turkey Super League (not U19)
     ("Rizespor", "Caykur Rizespor"),
     # pinnapi probe 2026-10-10 run#4: SC Paderborn 07–VfB Stuttgart, Germany Bundesliga

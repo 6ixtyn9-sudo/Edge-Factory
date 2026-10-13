@@ -110,3 +110,20 @@ def test_format_kickoff_derives_sast_from_utc_when_the_display_field_is_missing(
 def test_format_kickoff_is_n_a_without_an_instant_rather_than_a_raw_guess():
     assert notifier.format_kickoff({"kickoff": "12:00"}) == "n/a"
     assert notifier.format_kickoff({"kickoff": "12:00", "kickoff_utc": "not-a-time"}) == "n/a"
+
+
+def test_club_brugge_kv_and_club_brugge_collapse_to_one_pick():
+    """The 2026-10-13 card listed one UCL fixture twice: 'Club Brugge KV' and
+    'Club Brugge' (Inter at home). The curated alias must join them."""
+    def row(away: str, kickoff: str) -> dict:
+        return {"date": "2026-10-13", "home": "Inter", "away": away,
+                "match": f"Inter vs {away}", "market": "1x2", "pick": "home",
+                "kickoff": kickoff, "kickoff_utc": "2026-10-13T19:00:00+00:00",
+                "kickoff_sast": "2026-10-13 21:00 SAST", "bucket": "SKIPPED_VETO",
+                "rule": "ml-meta avg_p>=60", "odds": 1.25, "avg_p": 74.0,
+                "w_score": 1.0, "league": "World UEFA Champions League"}
+
+    out, removed = pt.collapse_final_operational_picks(
+        [row("Club Brugge KV", "13-10, 20:00"), row("Club Brugge", "12:00")])
+    assert removed == 1
+    assert len(out) == 1
