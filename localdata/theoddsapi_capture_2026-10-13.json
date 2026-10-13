@@ -1,48 +1,39 @@
 {
-  "added": 72,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Bayern M\u00fcnchen",
-      "date": "2026-10-13",
-      "home": "Viking",
-      "kickoff": "13-10, 20:00",
-      "league": "World UEFA Champions League"
-    }
-  ],
-  "candidate_fixtures": 7,
-  "captured_at": "2026-10-12T22:16:23+00:00",
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 10,
+  "captured_at": "2026-10-13T01:12:19+00:00",
   "date": "2026-10-13",
-  "due_reasons": {
-    "first_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
-  "fixtures_with_rows": 1,
-  "kickoff_mismatch_detail": {},
-  "quoted_fixtures": [
-    {
-      "away": "Bayern Munich",
-      "date": "2026-10-13",
-      "home": "Viking FK",
-      "kickoff": "2026-10-13T19:00:00Z",
-      "league": "World UEFA Champions League"
-    }
-  ],
-  "rows": 72,
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "retry_cooldown": 6
+    "kickoff_mismatch": 1,
+    "priced": 2,
+    "priced_close_window_not_open": 1,
+    "retry_cooldown": 7
   },
   "skipped": [
+    "WARN kickoff-mismatch Viking|Bayern M\u00fcnchen: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Viking|Bayern M\u00fcnchen (priced, close window not open)",
+    "Ebbsfleet United|AFC Totton (retry cooldown (6h after failed attempt))",
     "Inter|Club Brugge (retry cooldown (6h after failed attempt))",
     "Arsenal|Lille (retry cooldown (6h after failed attempt))",
     "Galatasaray|Barcelona (retry cooldown (6h after failed attempt))",
     "Wolves|Bolton (retry cooldown (6h after failed attempt))",
+    "Birmingham|Preston (priced)",
+    "Cardiff|Watford (priced)",
     "Hansa Rostock|SV Meppen (retry cooldown (6h after failed attempt))",
     "Eichst\u00e4tt|Vilzing (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [],
+  "status": "not_due",
   "unmatched_reasons": {}
 }

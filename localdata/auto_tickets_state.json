@@ -1,50 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 178.4882280000001,
+  "bank": 201.4366980000001,
   "cycle_base": 203.9865280000001,
-  "open_slips": [
-    {
-      "date": "2026-10-12",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Pyunik Yerevan vs BKMA",
-              "pick": "HOME",
-              "prob": 0.785,
-              "odds": 1.21,
-              "result": null,
-              "fixture_key": [
-                "2026-10-12",
-                "Pyunik Yerevan",
-                "BKMA"
-              ]
-            },
-            {
-              "match": "Club Universidad de Chile vs Nublense",
-              "pick": "HOME",
-              "prob": 0.72,
-              "odds": 1.57,
-              "result": null,
-              "fixture_key": [
-                "2026-10-12",
-                "Club Universidad de Chile",
-                "Nublense"
-              ]
-            }
-          ],
-          "odds": 1.9,
-          "stake_pct": 25.4983,
-          "results": [
-            "win",
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 25.4983
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -760,15 +718,19 @@
     },
     {
       "date": "2026-10-12",
-      "staked_pct": 25.4983,
-      "returned_pct": 0.0,
+      "staked_pct": 50.9966,
+      "returned_pct": 48.4468,
       "accas": [
         {
           "odds": 1.73,
           "won": false
+        },
+        {
+          "odds": 1.9,
+          "won": true
         }
       ],
-      "bank_pct": 178.4882
+      "bank_pct": 201.4367
     }
   ],
   "events": [

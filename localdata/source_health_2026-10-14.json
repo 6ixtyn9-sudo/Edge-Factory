@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 4,
@@ -30,7 +30,7 @@
         "selection_unmapped": 653
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-14' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -137,7 +137,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
-      "raw": 238,
+      "raw": 244,
       "reason": null,
       "scored": 79,
       "status": null
@@ -158,13 +158,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -176,19 +171,19 @@
       },
       "coherence_withheld_fixtures": 0,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 3,
       "join_miss_counts": {
         "fixture_key_miss": 17389,
         "no_pick_for_fixture": 42
       },
-      "pa_matched": 2,
-      "pa_raw": 975,
+      "pa_matched": 1,
+      "pa_raw": 17434,
       "pa_scored": 17434,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -232,59 +227,76 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 7,
-        "board_league_count": 7,
+        "board_fixtures": 8,
+        "board_league_count": 6,
         "board_leagues": {
-          "argentina_-_primera_division": 28,
-          "bolivia_-_liga_profesional": 104,
-          "bolivia_-_primera_division": 44,
-          "canada_-_premier_league": 3,
-          "chile_-_primera_b": 8,
-          "chile_-_primera_division": 12,
-          "portugal_-_primeira_liga": 1
+          "bolivia_-_primera_division": 1,
+          "brazil_-_serie_a": 57,
+          "brazil_-_serie_b": 29,
+          "jamaica_-_premier_league": 31,
+          "paraguay_-_primera_division": 2,
+          "world_-_international_friendlies_women": 80
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 89,
+        "board_priced_rows": 19,
         "board_rows": 200,
-        "board_team_count": 13,
+        "board_team_count": 15,
         "board_team_names": {
-          "Alverca": 1,
-          "Always Ready": 148,
-          "Cavalry FC": 3,
-          "Club Independiente Petrolero": 104,
-          "Deportes Iquique": 8,
-          "FC Famalicao": 1,
-          "Gimnasia Mendoza": 28,
-          "HFX Wanderers FC": 3,
-          "Independiente Petrolero": 44,
-          "Newells Old Boys": 28,
-          "Nublense": 12,
-          "Uni De Chile": 12,
-          "Union Espanola": 8
+          "Always Ready": 1,
+          "Botafogo SP": 29,
+          "Ceara CE": 20,
+          "Ceara SC Fortaleza": 9,
+          "Cruzeiro": 33,
+          "Cruzeiro MG": 24,
+          "Deportivo Recoleta": 2,
+          "El Salvador (W)": 80,
+          "Independiente Petrolero": 1,
+          "Nacional Asuncion": 2,
+          "Paraguay (W)": 80,
+          "RB Bragantino": 33,
+          "Red Bull Bragantino": 24,
+          "Tru-Juice FC": 31,
+          "Waterhouse FC": 31
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_correct_score": 21,
+          "unknown_market:1st_half_moneyline": 6,
+          "unknown_market:1st_half_total_goals": 1,
+          "unknown_market:2nd_half_total_goals": 1,
+          "unknown_market:both_halves_goal_scored": 2,
+          "unknown_market:point_spread": 2,
+          "unsupported_market:correct_score": 50,
+          "unsupported_market:double_chance": 3,
+          "unsupported_market:draw_no_bet": 2,
+          "unsupported_market:team_total_points_odd_even": 4
+        },
         "card_fixture_count": 2,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 89
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "card_fixtures_unmatched_on_board",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "fixture_key_miss": 19
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 2,
+      "sa_scored": 19,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
