@@ -3038,9 +3038,16 @@ def _fixture_fold(s) -> str:
     card guard and the upstream capture seam use ONE fold definition
     ('&' -> 'and' -> dropped glue token, accent/case folding). See
     edgefactory/identity.py."""
-    from edgefactory.identity import team_identity_words
+    from edgefactory.identity import TEAM_STRUCTURE_NOISE, team_identity_words
 
-    return team_identity_words(s)
+    # Club-structure tokens ("FC", "SK", "Club", ...) and "KV" (Belgian
+    # "Koninklijke Voetbalclub") do not change which club is meant, so they
+    # are dropped for the guard only. The shared identity fold keeps them:
+    # global removal would merge distinct squads such as "Arsenal" and
+    # "Arsenal W". A name made only of such tokens is kept as-is.
+    words = team_identity_words(s).split()
+    kept = [w for w in words if w not in TEAM_STRUCTURE_NOISE and w != "kv"]
+    return " ".join(kept or words)
 
 
 def _fixture_key(leg) -> tuple[str, str, str]:
