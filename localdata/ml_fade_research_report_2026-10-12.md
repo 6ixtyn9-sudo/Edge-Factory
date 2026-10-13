@@ -8,7 +8,7 @@ Checkpoint due because: settled fade rows grew by 166 (>= 50).
 
 | family | rows | settled | pending | conflict | unmatched | new |
 |---|---|---|---|---|---|---|
-| ml-meta | 1791 | 1670 | 121 | 0 | 0 | +105 |
+| ml-meta | 1790 | 1669 | 121 | 0 | 0 | +104 |
 | ml-fade | 1590 | 1477 | 113 | 0 | 0 | +101 |
 
 ## Fixed price variants (first-seen bet-time quotes)
@@ -17,8 +17,8 @@ Checkpoint due because: settled fade rows grew by 166 (>= 50).
 
 | variant | settled | wins | hit | Wilson LB | priced | ROI |
 |---|---|---|---|---|---|---|
-| zb-only | 1670 | 846 | 50.7% | 48.3% | 207 | -1.7% |
-| fb-only | 1670 | 846 | 50.7% | 48.3% | 526 | -8.8% |
+| zb-only | 1669 | 845 | 50.6% | 48.2% | 206 | -2.6% |
+| fb-only | 1669 | 845 | 50.6% | 48.2% | 526 | -8.8% |
 
 ### ml-fade
 
@@ -31,18 +31,18 @@ Checkpoint due because: settled fade rows grew by 166 (>= 50).
 
 | family | grid | variant | rows | settled | priced | hit | ROI | Wilson LB |
 |---|---|---|---|---|---|---|---|---|
-| ml-meta | avg_p>=55 | zb-only | 231 | 212 | 35 | 73.6% | 0.3% | 67.3% |
-| ml-meta | avg_p>=55 | fb-only | 231 | 212 | 29 | 73.6% | -17.5% | 67.3% |
-| ml-meta | avg_p>=60 | zb-only | 147 | 134 | 27 | 76.9% | 14.0% | 69.0% |
-| ml-meta | avg_p>=60 | fb-only | 147 | 134 | 14 | 76.9% | -22.6% | 69.0% |
+| ml-meta | avg_p>=55 | zb-only | 230 | 212 | 35 | 73.6% | 0.3% | 67.3% |
+| ml-meta | avg_p>=55 | fb-only | 230 | 212 | 29 | 73.6% | -17.5% | 67.3% |
+| ml-meta | avg_p>=60 | zb-only | 148 | 134 | 27 | 76.9% | 14.0% | 69.0% |
+| ml-meta | avg_p>=60 | fb-only | 148 | 134 | 14 | 76.9% | -22.6% | 69.0% |
 | ml-meta | avg_p>=65 | zb-only | 80 | 74 | 14 | 82.4% | 4.0% | 72.2% |
 | ml-meta | avg_p>=65 | fb-only | 80 | 74 | 9 | 82.4% | -9.3% | 72.2% |
 | ml-meta | avg_p>=70 | zb-only | 42 | 38 | 4 | 86.8% | -19.0% | 72.7% |
 | ml-meta | avg_p>=70 | fb-only | 42 | 38 | 5 | 86.8% | 11.2% | 72.7% |
-| ml-fade | parent avg_p>=55 | zb-only | 236 | 217 | 35 | 8.3% | -77.9% | 5.3% |
-| ml-fade | parent avg_p>=55 | fb-only | 236 | 217 | 29 | 8.3% | -11.7% | 5.3% |
-| ml-fade | parent avg_p>=60 | zb-only | 150 | 137 | 27 | 5.8% | -88.9% | 3.0% |
-| ml-fade | parent avg_p>=60 | fb-only | 150 | 137 | 14 | 5.8% | 14.3% | 3.0% |
+| ml-fade | parent avg_p>=55 | zb-only | 235 | 217 | 35 | 8.3% | -77.9% | 5.3% |
+| ml-fade | parent avg_p>=55 | fb-only | 235 | 217 | 29 | 8.3% | -11.7% | 5.3% |
+| ml-fade | parent avg_p>=60 | zb-only | 151 | 137 | 27 | 5.8% | -88.9% | 3.0% |
+| ml-fade | parent avg_p>=60 | fb-only | 151 | 137 | 14 | 5.8% | 14.3% | 3.0% |
 | ml-fade | parent avg_p>=65 | zb-only | 80 | 74 | 14 | 1.4% | -100.0% | 0.2% |
 | ml-fade | parent avg_p>=65 | fb-only | 80 | 74 | 9 | 1.4% | -5.6% | 0.2% |
 | ml-fade | parent avg_p>=70 | zb-only | 42 | 38 | 4 | 0.0% | -100.0% | 0.0% |
