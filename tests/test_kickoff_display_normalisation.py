@@ -89,3 +89,24 @@ def test_display_normalisation_never_moves_the_guard_input_later():
     guard_dt = pt.parse_kickoff_dt(pt._kickoff_value(pick), pick["date"])
     true_dt = pt.parse_kickoff_dt(pick["kickoff_utc"], pick["date"])
     assert guard_dt <= true_dt
+
+
+def test_printers_never_show_the_raw_feed_string_when_the_instant_is_known():
+    """The 2026-10-13 card printed two kickoffs for one fixture: 'KO 13-10, 20:00'
+    and 'KO 12:00', both for Inter v Club Brugge. Both now show the instant."""
+    raw_pick = _pick("12:00", "2026-10-13T19:00:00+00:00")
+    kv_pick = _pick("13-10, 20:00", "2026-10-13T19:00:00+00:00")
+    for pick in (raw_pick, kv_pick):
+        pt.attach_kickoff_display(pick)
+    assert notifier.format_kickoff(raw_pick) == "2026-10-13 21:00 SAST"
+    assert notifier.format_kickoff(kv_pick) == "2026-10-13 21:00 SAST"
+
+
+def test_format_kickoff_derives_sast_from_utc_when_the_display_field_is_missing():
+    pick = {"kickoff": "12:00", "kickoff_utc": "2026-10-13T19:00:00+00:00"}
+    assert notifier.format_kickoff(pick) == "2026-10-13 21:00 SAST"
+
+
+def test_format_kickoff_is_n_a_without_an_instant_rather_than_a_raw_guess():
+    assert notifier.format_kickoff({"kickoff": "12:00"}) == "n/a"
+    assert notifier.format_kickoff({"kickoff": "12:00", "kickoff_utc": "not-a-time"}) == "n/a"
