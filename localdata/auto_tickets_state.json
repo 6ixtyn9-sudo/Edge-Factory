@@ -2,7 +2,84 @@
   "base_pct": 100.0,
   "bank": 201.4366980000001,
   "cycle_base": 203.9865280000001,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-10-13",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Arsenal vs Lille",
+              "pick": "HOME",
+              "prob": 0.73,
+              "odds": 1.22,
+              "result": null,
+              "fixture_key": [
+                "2026-10-13",
+                "Arsenal",
+                "Lille"
+              ]
+            },
+            {
+              "match": "Wolves vs Bolton",
+              "pick": "HOME",
+              "prob": 0.688,
+              "odds": 1.43,
+              "result": null,
+              "fixture_key": [
+                "2026-10-13",
+                "Wolves",
+                "Bolton"
+              ]
+            }
+          ],
+          "odds": 1.74,
+          "stake_pct": 25.1796,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
+              "match": "Germany W vs Japan W",
+              "pick": "HOME",
+              "prob": 0.711,
+              "odds": 1.74,
+              "result": null,
+              "fixture_key": [
+                "2026-10-13",
+                "Germany W",
+                "Japan W"
+              ]
+            },
+            {
+              "match": "Galatasaray vs Barcelona",
+              "pick": "AWAY",
+              "prob": 0.701,
+              "odds": 1.29,
+              "result": null,
+              "fixture_key": [
+                "2026-10-13",
+                "Galatasaray",
+                "Barcelona"
+              ]
+            }
+          ],
+          "odds": 2.24,
+          "stake_pct": 25.1796,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        }
+      ],
+      "staked_pct": 50.3592
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
