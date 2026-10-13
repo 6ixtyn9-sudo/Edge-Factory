@@ -1,42 +1,60 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 12,
-  "captured_at": "2026-10-13T06:32:50+00:00",
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Drita",
+      "date": "2026-10-13",
+      "home": "Ballkani",
+      "kickoff": "13-10, 13:00",
+      "league": "Kosovo Superliga"
+    }
+  ],
+  "candidate_fixtures": 14,
+  "captured_at": "2026-10-13T10:16:04+00:00",
   "date": "2026-10-13",
-  "due_reasons": {},
+  "due_reasons": {
+    "close_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 2
+    "kickoff_mismatch_display_fallback_overridden": 4
   },
   "quoted_fixtures": [],
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_mismatch": 2,
+    "kickoff_mismatch": 4,
     "priced": 2,
-    "priced_close_window_not_open": 2,
-    "retry_cooldown": 8
+    "priced_close_window_not_open": 4,
+    "retry_cooldown": 7
   },
   "skipped": [
     "WARN kickoff-mismatch Viking|Bayern M\u00fcnchen: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Viking|Bayern M\u00fcnchen (priced, close window not open)",
+    "WARN kickoff-mismatch Inter|Club Brugge KV: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Inter|Club Brugge KV (priced, close window not open)",
     "Ebbsfleet United|AFC Totton (retry cooldown (6h after failed attempt))",
-    "Inter|Club Brugge (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Arsenal|Lille: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Arsenal|Lille (priced, close window not open)",
-    "Germany W|Japan W (retry cooldown (6h after failed attempt))",
     "Galatasaray|Barcelona (retry cooldown (6h after failed attempt))",
+    "Inter|Club Brugge (priced)",
+    "Germany W|Japan W (retry cooldown (6h after failed attempt))",
     "Wolves|Bolton (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Cardiff|Watford: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Cardiff|Watford (priced, close window not open)",
     "Birmingham|Preston (priced)",
     "USM Alger|JS Saoura (retry cooldown (6h after failed attempt))",
-    "Cardiff|Watford (priced)",
     "Hansa Rostock|SV Meppen (retry cooldown (6h after failed attempt))",
     "Eichst\u00e4tt|Vilzing (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Ballkani vs Drita (league not covered: Kosovo Superliga)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Kosovo Superliga": 1
+  }
 }
