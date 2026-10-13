@@ -45,7 +45,7 @@
     },
     "betexplorer": {
       "be_matched": 13,
-      "be_raw": 30,
+      "be_raw": 33,
       "be_usable": 30,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
@@ -181,12 +181,12 @@
       "coherence_withheld_fixtures": 6,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 20,
+      "join_matched_rows": 23,
       "join_miss_counts": {
-        "fixture_key_miss": 16538,
+        "fixture_key_miss": 16535,
         "no_pick_for_fixture": 70
       },
-      "pa_matched": 10,
+      "pa_matched": 12,
       "pa_raw": 16628,
       "pa_scored": 16628,
       "reason": null,
@@ -346,14 +346,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 86,
+      "join_matched_rows": 108,
       "join_miss_counts": {
         "fixture_key_miss": 237,
-        "no_pick_for_fixture": 50
+        "no_pick_for_fixture": 100
       },
-      "oa_matched": 7,
-      "oa_raw": 373,
-      "oa_usable": 373,
+      "oa_matched": 9,
+      "oa_raw": 445,
+      "oa_usable": 445,
       "reason": null,
       "status": "cache_only"
     },
