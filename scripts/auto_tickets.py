@@ -255,7 +255,7 @@ ENHANCEMENT_STATE_FILE = LOCALDATA / "enhancement_tickets_state.json"
 # Enables the enhancement lane's board builder. Unset, nothing about the
 # existing pipeline changes: no lane state is read, no artifact is written.
 ENH_BOARD_FLAG = "EDGE_FACTORY_ENH_BOARD"
-ENHANCEMENT_LANE = Lane(ENHANCEMENT_STATE_FILE, "enhancement_tickets",
+ENHANCEMENT_LANE = Lane(ENHANCEMENT_STATE_FILE, "autobets_enh_tickets",
                         "ENHANCEMENT TICKETS (ROLLING)", STAKE_FRAC)
 
 
