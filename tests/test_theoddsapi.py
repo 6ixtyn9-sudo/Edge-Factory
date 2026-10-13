@@ -589,3 +589,28 @@ def test_argentina_top_flight_resolves_and_tiers_stay_unmapped():
     # Primera División key — stays unmapped rather than guessed.
     assert theoddsapi.sport_key_for_league(
         "Argentina,Clausura", CATALOGUE_2026_10_10) is None
+
+
+def test_team_totals_parse_in_both_outcome_shapes():
+    # v4 shape: name="Over"/"Under", team in description, line in point.
+    # Older shape: team embedded in the name ("Halmstads BK Under 2.5").
+    payload = {
+        "id": "evt_right", "sport_key": "soccer_sweden_allsvenskan", "sport_title": "Allsvenskan",
+        "bookmakers": [
+            {"key": "pinnacle", "title": "Pinnacle", "markets": [
+                {"key": "team_totals", "outcomes": [
+                    {"name": "Over", "description": "Halmstads BK", "price": 1.90, "point": 1.5},
+                    {"name": "Under", "description": "Halmstads BK", "price": 1.95, "point": 1.5},
+                    {"name": "Under", "description": "IK Sirius", "price": 1.80, "point": 2.5}]}]},
+            {"key": "betsson", "title": "Betsson", "markets": [
+                {"key": "team_totals", "outcomes": [
+                    {"name": "Halmstads BK Under 2.5", "price": 1.85, "point": 2.5}]}]},
+        ],
+    }
+    rows = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], payload)
+    tt = {(r["market"], r["selection"], r["bookmaker"]): r["odds"]
+          for r in rows if r["market"].startswith("tt_")}
+    assert tt[("tt_home_1.5", "over", "Pinnacle")] == 1.90
+    assert tt[("tt_home_1.5", "under", "Pinnacle")] == 1.95
+    assert tt[("tt_away_2.5", "under", "Pinnacle")] == 1.80
+    assert tt[("tt_home_2.5", "under", "Betsson")] == 1.85
