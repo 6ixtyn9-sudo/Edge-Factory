@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -42,9 +43,27 @@ def _pick(home="Pyunik Yerevan", away="BKMA", market="match_over_25", *,
             "enhancement_price_source": "oddspapi"}
 
 
+class _PinnedDatetime(datetime):
+    """``datetime`` whose ``now()`` is fixed to the test's DAY, 08:00 local.
+
+    The lane's target day is "today" on the wall clock (``cmd_enhancement``
+    reads ``datetime.now(TZ)``), while every fixture in this file is written for
+    ``DAY``. Left on the real clock the tests passed only on the day DAY was
+    today and failed on every later run. Pinning the clock to DAY keeps the
+    fixtures and the run on the same day, and 08:00 keeps the default run before
+    the 09:00 freeze, so the draft/freeze tests still exercise both branches.
+    """
+
+    @classmethod
+    def now(cls, tz=None):
+        pinned = datetime.fromisoformat(f"{DAY}T08:00:00").replace(tzinfo=at.TZ)
+        return pinned if tz is None else pinned.astimezone(tz)
+
+
 @pytest.fixture(autouse=True)
 def _tmp_lane(tmp_path, monkeypatch):
     """Every test writes lane state and the artifact into a temp dir."""
+    monkeypatch.setattr(at, "datetime", _PinnedDatetime)
     localdata = tmp_path / "localdata"
     localdata.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(at, "LOCALDATA", localdata)
