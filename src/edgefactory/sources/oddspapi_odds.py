@@ -61,11 +61,22 @@ def api_keys() -> tuple[str, ...]:
     return tuple(out)
 
 
+# Every HTTP attempt that leaves this process, retries included. The capture
+# reads the delta around each provider call to charge its monthly budget.
+REQUEST_COUNT = 0
+
+
+def request_count() -> int:
+    return REQUEST_COUNT
+
+
 def _get_json(url: str, retries: int = 3):
     """One authenticated request. Key rotation belongs to fetch_json()."""
+    global REQUEST_COUNT
     last: Exception | None = None
     for attempt in range(retries):
         try:
+            REQUEST_COUNT += 1
             req = urllib.request.Request(url, headers=HEADERS)
             with urllib.request.urlopen(req, timeout=30) as resp:
                 return json.loads(resp.read().decode("utf-8", "replace"))
