@@ -1,46 +1,11 @@
 {
   "base_pct": 100.0,
-  "bank": 201.4366980000001,
+  "bank": 176.2570980000001,
   "cycle_base": 203.9865280000001,
   "open_slips": [
     {
       "date": "2026-10-13",
       "accas": [
-        {
-          "legs": [
-            {
-              "match": "Inter vs Club Brugge KV",
-              "pick": "HOME",
-              "prob": 0.7509999999999999,
-              "odds": 1.25,
-              "result": null,
-              "fixture_key": [
-                "2026-10-13",
-                "Inter",
-                "Club Brugge KV"
-              ]
-            },
-            {
-              "match": "Germany W vs Japan W",
-              "pick": "HOME",
-              "prob": 0.711,
-              "odds": 1.62,
-              "result": null,
-              "fixture_key": [
-                "2026-10-13",
-                "Germany W",
-                "Japan W"
-              ]
-            }
-          ],
-          "odds": 2.03,
-          "stake_pct": 25.1796,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
         {
           "legs": [
             {
@@ -71,13 +36,13 @@
           "odds": 1.6,
           "stake_pct": 25.1796,
           "results": [
-            null,
-            null
+            "conflict",
+            "win"
           ],
           "won": null
         }
       ],
-      "staked_pct": 50.3592
+      "staked_pct": 25.1796
     }
   ],
   "history": [
@@ -808,6 +773,18 @@
         }
       ],
       "bank_pct": 201.4367
+    },
+    {
+      "date": "2026-10-13",
+      "staked_pct": 25.1796,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.03,
+          "won": false
+        }
+      ],
+      "bank_pct": 176.2571
     }
   ],
   "events": [
