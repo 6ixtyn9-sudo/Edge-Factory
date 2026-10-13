@@ -1,15 +1,15 @@
 {
-  "attempted": 9,
+  "attempted": 11,
   "attempted_fixtures": [
     {
-      "avg_p": 80.6,
+      "avg_p": 80.4,
       "away": "Bayern M\u00fcnchen",
       "date": "2026-10-13",
       "home": "Viking",
       "league": "World UEFA Champions League",
       "market": "1x2",
       "pick": "away",
-      "w_score": 1.4224
+      "w_score": 1.4128
     },
     {
       "avg_p": 74.0,
@@ -32,7 +32,7 @@
       "w_score": 1.0085
     },
     {
-      "avg_p": 72.7,
+      "avg_p": 73.0,
       "away": "Lille",
       "date": "2026-10-13",
       "home": "Arsenal",
@@ -40,6 +40,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 71.1,
+      "away": "Japan W",
+      "date": "2026-10-13",
+      "home": "Germany W",
+      "league": "World Friendlies Women",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.9023
     },
     {
       "avg_p": 70.1,
@@ -72,6 +82,16 @@
       "w_score": 1.0
     },
     {
+      "avg_p": 63.3,
+      "away": "JS Saoura",
+      "date": "2026-10-13",
+      "home": "USM Alger",
+      "league": "Algeria Ligue 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5451
+    },
+    {
       "avg_p": 62.0,
       "away": "Watford",
       "date": "2026-10-13",
@@ -82,35 +102,51 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 60.3,
+      "avg_p": 61.0,
       "away": "Vilzing",
       "date": "2026-10-13",
       "home": "Eichst\u00e4tt",
       "league": "Germany Regionalliga - Bayern",
       "market": "1x2",
       "pick": "away",
-      "w_score": 0.418
+      "w_score": 0.4471
     }
   ],
-  "be_429": 0,
-  "be_cached": 6,
+  "be_429": 1,
+  "be_cached": 9,
   "be_cooling_down": false,
-  "candidate_fixtures": 9,
-  "captured_at": "2026-10-13T01:05:20.448223+00:00",
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "candidate_fixtures": 11,
+  "captured_at": "2026-10-13T05:15:48.864369+00:00",
   "date": "2026-10-13",
   "errors": [],
-  "fixtures_with_rows": 7,
+  "fixtures_with_rows": 9,
+  "market_budget_stop": false,
+  "market_requests": 10,
+  "match_detail": {
+    "bookmakers": 17,
+    "challenge_pages": 0,
+    "fixtures": 2,
+    "market_rows": 29,
+    "markets": 11,
+    "named_rows": 29,
+    "standings_rows": 0,
+    "with_h2h": 0,
+    "with_last_results": 0,
+    "with_standings": 0
+  },
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
-      "avg_p": 80.6,
+      "avg_p": 80.4,
       "away": "Bayern M\u00fcnchen",
       "date": "2026-10-13",
       "home": "Viking",
       "league": "World UEFA Champions League",
       "market": "1x2",
       "pick": "away",
-      "w_score": 1.4224
+      "w_score": 1.4128
     },
     {
       "avg_p": 73.3,
@@ -123,7 +159,7 @@
       "w_score": 1.0085
     },
     {
-      "avg_p": 72.7,
+      "avg_p": 73.0,
       "away": "Lille",
       "date": "2026-10-13",
       "home": "Arsenal",
@@ -131,6 +167,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 71.1,
+      "away": "Japan W",
+      "date": "2026-10-13",
+      "home": "Germany W",
+      "league": "World Friendlies Women",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.9023
     },
     {
       "avg_p": 70.1,
@@ -163,6 +209,16 @@
       "w_score": 1.0
     },
     {
+      "avg_p": 63.3,
+      "away": "JS Saoura",
+      "date": "2026-10-13",
+      "home": "USM Alger",
+      "league": "Algeria Ligue 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5451
+    },
+    {
       "avg_p": 62.0,
       "away": "Watford",
       "date": "2026-10-13",
@@ -173,7 +229,8 @@
       "w_score": 1.0
     }
   ],
-  "rows": 21,
+  "requests": 17,
+  "rows": 27,
   "schema": 1,
   "status": "ok"
 }

@@ -19,12 +19,12 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-13",
-      "n_last_window": 115,
+      "n_last_window": 125,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     }
   ],
-  "generated_at": "2026-10-13T03:31:46",
+  "generated_at": "2026-10-13T08:01:27",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
@@ -80,7 +80,7 @@
     },
     {
       "name": "predictz",
-      "newest_date": "2026-10-10",
+      "newest_date": "2026-10-13",
       "newest_file": "predictz_2026-10.csv.gz",
       "retired": null,
       "role": "shadow",
@@ -88,7 +88,7 @@
     },
     {
       "name": "windrawwin",
-      "newest_date": "2026-10-13",
+      "newest_date": "2026-10-14",
       "newest_file": "windrawwin_2026-10.csv.gz",
       "retired": null,
       "role": "shadow",
@@ -112,7 +112,7 @@
     },
     {
       "name": "freesupertips",
-      "newest_date": "2026-10-12",
+      "newest_date": "2026-10-13",
       "newest_file": "freesupertips_2026-10.csv.gz",
       "retired": null,
       "role": "not_ready",
@@ -128,7 +128,7 @@
     },
     {
       "name": "bzzoiro",
-      "newest_date": "2026-10-19",
+      "newest_date": "2026-10-21",
       "newest_file": "bzzoiro_2026-10.csv.gz",
       "retired": null,
       "role": "model_voter",
