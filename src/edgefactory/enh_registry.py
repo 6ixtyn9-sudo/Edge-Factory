@@ -88,6 +88,23 @@ ENHANCEMENT_PRICE_FLOORS: dict[str, float] = {
     "btts_yes": 1.85,
 }
 
+# Price CEILINGS (added 2026-10-13 for a small-stake live test): a leg priced above
+# its market's ceiling does not fire. Tighten-only, like the derived floors.
+# Evidence: match_over_25 priced at 1.85 or more, 52 settled legs, flat ROI
+# -14.9%, losing in both halves of the record (-14.2% / -15.6%). The 1.85 cut
+# was chosen after looking at that record, so it is a forward test, not a
+# validated edge: judge it on legs settled after 2026-10-13.
+ENHANCEMENT_PRICE_CEILINGS: dict[str, float] = {
+    "match_over_25": 1.85,
+}
+
+
+def ceiling_for(market: str | None) -> float | None:
+    """The maximum acceptable price for `market`, or None when it has none."""
+    if not market:
+        return None
+    return ENHANCEMENT_PRICE_CEILINGS.get(str(market).strip())
+
 # The absolute margin over break-even that ``derive_floors`` adds to a slice's
 # derived price (1 / wilson_lb + margin). It is the SAME margin the operator's
 # table above already implies — 1.60 over a 1.515 break-even is +0.085, 1.45

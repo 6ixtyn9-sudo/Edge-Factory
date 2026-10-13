@@ -161,7 +161,7 @@ def _now():
     return _dt.datetime.now(at.TZ)
 
 
-def _distinct(n, market="match_over_25", price=1.90, **kw):
+def _distinct(n, market="match_over_25", price=1.80, **kw):
     """`n` firing picks on `n` DIFFERENT fixtures.
 
     Distinct on purpose: the same-fixture guard is itself a gate, and a test
@@ -248,7 +248,7 @@ def test_three_eligible_legs_drop_the_leftover_never_a_single(tmp_path, _tmp_lan
 def test_a_same_fixture_duplicate_is_dropped_and_reported(tmp_path, _tmp_lane):
     """B-1's eligibility: priced, clearing its floor, and not a fixture dupe."""
     _board(_tmp_lane, [
-        _pick(market="match_over_25", price=1.90, prob=0.40),
+        _pick(market="match_over_25", price=1.80, prob=0.40),
         _pick(market="btts_yes", price=1.90, prob=0.60,
               label="Both Teams to Score - Yes (BTTS-Yes)")])
     report = {}
@@ -268,15 +268,22 @@ def test_a_same_fixture_duplicate_is_dropped_and_reported(tmp_path, _tmp_lane):
     assert "NO BET — only 1 eligible leg(s), need 2 for an acca" in txt
 
 
-def test_a_vetoed_parent_stays_shadow(tmp_path, _tmp_lane):
+def test_a_vetoed_parent_is_staked_and_not_called_paper(tmp_path, _tmp_lane):
+    """SKIPPED_VETO is ticket-eligible under BUCKETS, so its legs are real stakes.
+
+    The old tag said \"paper\" while the plan staked the same legs. The tag now
+    only names the parent bucket, and the stake is what the plan computed.
+    """
     _board(_tmp_lane, _distinct(2, bucket="SKIPPED_VETO"))
     legs, plan = _legs_and_plan(_tmp_lane)
+    assert plan and all(a["stake_pct"] > 0 for a in plan)
+    assert all(l.get("shadow") for a in plan for l in a["legs"])
     txt = at.render_enhancement_tickets(at.fresh_state(), DAY, legs, plan, _now(),
                                         should_freeze=False, freeze_record=None,
                                         bank_eff=100.0)
     acca_line = next(l for l in txt.splitlines() if l.startswith("[ACCA #1]"))
     assert acca_line.endswith(at.ENH_SHADOW_TAG)
-    assert "[SHADOW — paper]" in txt
+    assert "paper" not in txt.lower()
 
 
 def test_the_artifact_matches_autobets_conventions(tmp_path, _tmp_lane):
@@ -665,16 +672,47 @@ def test_the_board_shows_a_bet_above_the_floor_and_no_bet_below_it():
     assert pt.enhancement_board_line({"home": "A", "away": "B"}) is None
 
 
+def test_the_ceiling_refuses_a_price_above_its_band_on_both_surfaces(tmp_path, _tmp_lane):
+    """match_over_25: 1.85 is inside the band, 1.86 is a refused no-bet."""
+    import picks_today as pt
+    assert reg.ceiling_for("match_over_25") == 1.85
+    assert reg.ceiling_for("away_under_35") is None       # floorless / no ceiling
+
+    inside = _pick(price=1.85)                             # inclusive, like the floor
+    assert at.enhancement_legs([inside])[0]["verdict"] == "fire"
+    assert pt.enhancement_board_line(inside).startswith("     🔬 ")
+
+    above = _pick(price=1.86)
+    leg = at.enhancement_legs([above])[0]
+    assert leg["verdict"] == "above_ceiling" and leg["ceiling"] == 1.85
+    board = pt.enhancement_board_line(above)
+    assert board.startswith("     🚫 ") and "above match_over_25 ceiling 1.85" in board
+    assert "🔬" not in board
+
+    # Above the ceiling it never reaches the pool, so it can never be staked.
+    assert at.enhancement_pool([leg]) == []
+    _board(_tmp_lane, [above])
+    _, plan = _legs_and_plan(_tmp_lane)
+    assert plan == []
+    txt = at.render_enhancement_tickets(at.fresh_state(), DAY,
+                                        at.enhancement_legs([above]), [], _now(),
+                                        should_freeze=False, freeze_record=None,
+                                        bank_eff=100.0)
+    assert "above match_over_25 ceiling 1.85 — no bet" in txt
+
+
 def test_the_board_and_the_slip_refuse_with_the_same_floor():
     """The board's gate IS the slip's gate — no second opinion anywhere."""
     import picks_today as pt
 
-    for price in (1.59, 1.60, 1.72, 3.29, 3.30):
+    for price in (1.59, 1.60, 1.72, 1.85, 1.86, 3.29, 3.30):
         pick = _pick(price=price)
         leg = at.enhancement_legs([pick])[0]
         board_bet = pt.enhancement_board_line(pick).startswith("     🔬 ")
-        assert board_bet == (leg["verdict"] == "fire") == reg.clears_floor(
-            pick["recommended_enhancement"], price), price
+        in_band = reg.clears_floor(pick["recommended_enhancement"], price) and (
+            reg.ceiling_for(pick["recommended_enhancement"]) is None
+            or price <= reg.ceiling_for(pick["recommended_enhancement"]))
+        assert board_bet == (leg["verdict"] == "fire") == in_band, price
     assert at.enhancement_legs([_pick(price=1.59)])[0]["floor"] == 1.60
     # ...and the slip says "no floor set" for the floorless case rather than
     # claiming the market is below a threshold that does not exist.
@@ -815,8 +853,9 @@ def _tightened_registry(localdata: Path) -> dict:
     return payload
 
 
-def test_the_derived_floor_tightens_the_market_and_the_slip_and_the_board_agree(tmp_path, _tmp_lane):
+def test_the_derived_floor_tightens_the_market_and_the_slip_and_the_board_agree(tmp_path, _tmp_lane, monkeypatch):
     import picks_today as pt
+    monkeypatch.setattr(reg, "ENHANCEMENT_PRICE_CEILINGS", {})   # floor-only test
     _tightened_registry(_tmp_lane)
     floors = reg.derive_floors_for_day(_tmp_lane.parent, DAY)
     market_row = [r for r in floors["rows"] if r["level"] == "market"][0]
@@ -843,7 +882,8 @@ def test_the_derived_floor_tightens_the_market_and_the_slip_and_the_board_agree(
     assert f"floor {derived:.2f} (market)" in pt.enhancement_board_line(above, floors=floors)
 
 
-def test_the_lane_artifact_and_state_carry_the_days_derivation(_tmp_lane):
+def test_the_lane_artifact_and_state_carry_the_days_derivation(_tmp_lane, monkeypatch):
+    monkeypatch.setattr(reg, "ENHANCEMENT_PRICE_CEILINGS", {})   # floor-only test
     _tightened_registry(_tmp_lane)
     _board(_tmp_lane, _distinct(4, price=4.10))
     st = at.fresh_state()
@@ -868,9 +908,10 @@ def test_the_lane_artifact_and_state_carry_the_days_derivation(_tmp_lane):
     assert table["coverage"]["with_league"] == 40
 
 
-def test_a_team_slice_is_never_consulted_for_a_leg(tmp_path, _tmp_lane):
+def test_a_team_slice_is_never_consulted_for_a_leg(tmp_path, _tmp_lane, monkeypatch):
     """The report-only rule, through the shipped entry points."""
     import picks_today as pt
+    monkeypatch.setattr(reg, "ENHANCEMENT_PRICE_CEILINGS", {})   # floor-only test
     payload = _tightened_registry(_tmp_lane)
     recs = payload["markets"]["match_over_25@v1"]["records"]
     for rec in recs[:30]:                       # Team T0 rides 30 of the 40 records
