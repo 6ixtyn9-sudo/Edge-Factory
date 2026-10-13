@@ -139,10 +139,13 @@ def test_ev_fields_gate_nothing(tmp_path, _tmp_lane):
 
 def test_unpriced_and_unpriceable_legs_do_not_fire():
     unpriced = _pick(market="match_over_35", price=None)
-    unpriceable = _pick(market="home_under_35", price=None)
-    legs = {l["market"]: l for l in at.enhancement_legs([unpriced, unpriceable])}
+    # A market no feed maps is unpriceable; a mapped team total is merely unpriced.
+    unpriceable = _pick(market="goal_range_2_3", price=None)
+    team_total = _pick(market="home_under_35", price=None)
+    legs = {l["market"]: l for l in at.enhancement_legs([unpriced, unpriceable, team_total])}
     assert legs["match_over_35"]["verdict"] == "unpriced"
-    assert legs["home_under_35"]["verdict"] == "unpriceable"
+    assert legs["goal_range_2_3"]["verdict"] == "unpriceable"
+    assert legs["home_under_35"]["verdict"] == "unpriced"
     assert not any(l["verdict"] == "fire" for l in legs.values())
 
 

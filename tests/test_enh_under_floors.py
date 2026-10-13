@@ -25,8 +25,9 @@ def test_match_under_35_clears_at_its_floor():
     assert reg.clears_floor("match_under_35", 1.64) is True
 
 
-def test_team_unders_stay_floorless_because_they_have_no_price_feed():
-    # Team totals are unpriceable (no feed), so a floor would never bind.
+def test_team_unders_have_no_static_floor_their_floors_are_evidence_derived():
+    # The operator's static table has no team entries: team-under floors come
+    # from the side-keyed pick evidence (enh_team_floors), never from here.
     assert reg.floor_for("home_under_35") is None
     assert reg.floor_for("away_under_35") is None
     assert reg.clears_floor("away_under_35", 1.90) is False
