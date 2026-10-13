@@ -50,6 +50,11 @@ jobs:
       ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
       EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: '90'
       EDGE_FACTORY_CARD_ENRICH_RESERVE: '20'
+      # Enhancement lane (PR #61): the enhancement slip is generated, frozen
+      # and settled on its own state. Unset/removing this line reverts the
+      # daily run to exactly its previous behaviour - the lane then does
+      # nothing at all (no artifact, no state file).
+      EDGE_FACTORY_ENH_BOARD: '1'
       TZ: 'Africa/Johannesburg'
     steps:
       - name: Checkout repository
@@ -90,6 +95,19 @@ jobs:
           else
             PYTHONPATH=src python3 scripts/daily.py --auto-once
           fi
+      # Enhancement lane, after the board this run produced (its prices come
+      # from the day's captures). Main-lane command semantics: the run first
+      # SETTLES every open enhancement slip on the shared lifecycle, then
+      # builds the day's 2-leg acca card exactly as autobets does and
+      # freezes it on the first run at/after 09:00 SAST (a run before that
+      # prints a DRAFT and freezes later). A frozen day re-prints unchanged
+      # (write-once; --force cannot rewrite it) and a day that cannot form
+      # an acca writes NO card and NO lock. Advisory: it can never fail the
+      # daily run.
+      - name: Enhancement tickets (generate/freeze)
+        continue-on-error: true
+        run: |
+          PYTHONPATH=src python3 scripts/auto_tickets.py --enhancements
       - name: Phase 5 K-contract coverage (read-only diagnostic)
         if: always()
         continue-on-error: true
