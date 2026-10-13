@@ -1087,7 +1087,10 @@ def rows_from_event_odds(pick: dict, event: dict, payload: dict) -> list[dict]:
                         sel = m2.group(1).lower() if m2 else None
                         if sel not in ("over", "under"):
                             continue
-                        team_part = name[:m2.start()].strip()
+                        # The v4 props/team shape carries the team in ``description``
+                        # with name="Over"/"Under"; the older shape embeds it in name.
+                        desc = str(oc.get("description") or "").strip()
+                        team_part = (desc or name[:m2.start()]).strip()
                     if TOTAL_POINTS and pstr not in TOTAL_POINTS:
                         continue
                     n = _norm_full(team_part)

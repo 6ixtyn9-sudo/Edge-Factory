@@ -4361,10 +4361,12 @@ def _enh_price(pick: dict):
 
 
 def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
-                     floors: dict | None = None) -> list[dict]:
+                     floors: dict | None = None, team_floors: dict | None = None) -> list[dict]:
     """One candidate per enhancement on the board, with its gate verdict.
 
-    Verdicts: ``fire`` (priced at or above its slice's floor), ``below_floor``
+    Verdicts: ``fire`` (priced at or above its slice's floor), ``no_floor`` (a
+    team under with no evidence for its side), ``outlier_price`` (the best quote
+    clears the floor but the median quote does not), ``below_floor``
     (priced under the floor — no bet, not paper, not shadow), ``unpriced`` (the
     market is priced by some feed but this leg has no price today) and
     ``unpriceable`` (no feed carries this market at all — team totals). Every
@@ -4375,8 +4377,13 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
     the leg's floor is its LEAGUE slice's when one is known, else the market
     root — never a team slice (report-only). Without it the operator's static
     table applies, which is the pre-R2 behaviour, byte for byte.
+
+    ``team_floors`` is the day's team-under table (``enh_team_floors``), keyed
+    ``market|side`` where side is ``1`` (home 1X2 pick) or ``2`` (away). A team
+    under leg with no entry for its side has no floor and does not fire.
     """
     from edgefactory.enh_registry import ceiling_for, clears_floor, floor_for, floor_for_slice
+    from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS as TEAM_UNDERS
     try:
         from edgefactory.enh_pricing import MARKET_PRICE_MAP
     except Exception:
@@ -4388,25 +4395,38 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
         if not market:
             continue
         price = _enh_price(pick)
-        if floors:
+        is_team_under = market in TEAM_UNDERS
+        entry: dict = {}
+        if is_team_under:
+            # Team unders take their floor from the side-keyed evidence table
+            # (enh_team_floors); the static table has no team entries by design.
+            side = "1" if str(pick.get("pick") or "").lower() == "home" else "2"
+            entry = (team_floors or {}).get(f"{market}|{side}") or {}
+            leg_floor = entry.get("floor")
+            leg_basis = entry.get("basis") or "none"
+        elif floors:
             leg_floor, leg_basis = floor_for_slice(floors, market, pick.get("league"))
         else:
             leg_floor, leg_basis = floor_for(market), "inherited"
         if price is None:
             mapped = MARKET_PRICE_MAP.get(market, "missing")
-            # "Unpriceable" is not "we found no price today": it means no feed in
-            # this pipeline carries the market at all. That is an absent mapping
-            # (goal_range_2_3) and every team total (tt_*): BetExplorer has no
-            # team-total tab, and the 2026-08-03 audit recorded those markets'
-            # fair price as ~1.03 — at the 95-97% they are stated at they would
-            # need 1.06-1.10 to be a bet, so they are shown, marked, and never
-            # priced.
-            unpriceable = mapped is None or (
-                isinstance(mapped, tuple) and str(mapped[0]).startswith("tt_"))
-            verdict = "unpriceable" if unpriceable else "unpriced"
+            # "Unpriceable" means no feed maps the market at all (goal_range_2_3,
+            # or a missing mapping). A team total IS mapped (tt_*, OddsPapi), so
+            # when it has no price today it is "unpriced": OddsPapi answered HTTP
+            # 429 from 2026-10-04, so later days are unpriced, not unpriceable.
+            verdict = "unpriceable" if mapped is None else "unpriced"
         else:
             ceiling = ceiling_for(market)
-            if not clears_floor(market, price, floor=leg_floor):
+            consensus = pick.get("enhancement_consensus_price")
+            if is_team_under and leg_floor is None:
+                verdict = "no_floor"             # no evidence for this side: not a bet
+            elif is_team_under and (not isinstance(consensus, (int, float))
+                                    or consensus < leg_floor):
+                # The best quote clears the floor but the market's median does not:
+                # one top-of-market quote is not a price anyone else will take.
+                verdict = ("outlier_price" if clears_floor(market, price, floor=leg_floor)
+                           else "below_floor")
+            elif not clears_floor(market, price, floor=leg_floor):
                 verdict = "below_floor"
             elif ceiling is not None and price > ceiling:
                 verdict = "above_ceiling"       # priced past its band: no bet
@@ -4667,6 +4687,9 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                             if leg["floor"] is not None
                             else "no floor set for this market — no bet"),
             "unpriced": "no price captured — no bet",
+            "no_floor": "no price floor for this side (no settled evidence) — no bet",
+            "outlier_price": (f"best quote clears floor {leg['floor']:.2f} but the median quote "
+                              f"does not — no bet"),
             "unpriceable": "unpriceable — no feed carries this market",
             "above_ceiling": (f"above {leg['market']} ceiling {leg['ceiling']:.2f} — no bet"
                               if leg.get("ceiling") is not None else "above ceiling — no bet"),
@@ -4731,7 +4754,9 @@ def cmd_enhancement(args, st) -> int:
     # lane's own state and slate resolve through), so a scratch/test root derives
     # from its own registry and never from the repository's.
     floors = derive_floors_for_day(LOCALDATA.parent, target)
-    legs = enhancement_legs(slate, floors=floors)
+    from edgefactory.enh_team_floors import team_under_floors
+    team_floors = team_under_floors(LOCALDATA.parent, target)
+    legs = enhancement_legs(slate, floors=floors, team_floors=team_floors)
     pool = enhancement_pool(legs)
     bank_eff = effective_bank(st, exclude_date=target)
     should_freeze = (str(target) == now.strftime("%Y-%m-%d")

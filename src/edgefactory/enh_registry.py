@@ -86,6 +86,18 @@ ENHANCEMENT_PRICE_FLOORS: dict[str, float] = {
     "match_over_15": 1.45,
     "match_over_35": 3.30,
     "btts_yes": 1.85,
+    # Match unders (added 2026-10-13). The registry holds ZERO under records, so
+    # these cannot come from settled evidence. They are the base-rate floor:
+    # 1 / Wilson-LB95 of the realised hit rate in the 2026-01..09 BetExplorer
+    # results (107,356 matches) + ENHANCEMENT_FLOOR_MARGIN (0.10). Base rates:
+    # under 1.5 = 23.2% (LB 23.0%), under 2.5 = 44.2% (LB 43.9%), under 3.5 =
+    # 65.3% (LB 65.0%). A price below the floor means the under does not pay
+    # for its base-rate hit chance. The model's stated under probabilities
+    # (85%+) sit far above these rates, so the floor is the control, not the
+    # stated probability.
+    "match_under_15": 4.45,
+    "match_under_25": 2.38,
+    "match_under_35": 1.64,
 }
 
 # Price CEILINGS (added 2026-10-13 for a small-stake live test): a leg priced above
@@ -590,6 +602,12 @@ def floor_for_slice(derived: dict, market: str | None,
     slot = floors.get(market)
     if isinstance(slot, dict) and slot.get("floor") is not None:
         return float(slot["floor"]), str(slot.get("basis") or FLOOR_BASIS_INHERITED)
+    # No derived row for this market (no settled records, e.g. the match unders):
+    # the operator's root floor applies. Without this fallback a parent floor
+    # with no registry row would silently never bind.
+    parent = floor_for(market)
+    if parent is not None:
+        return float(parent), FLOOR_BASIS_INHERITED
     return None, FLOOR_BASIS_INHERITED
 
 
