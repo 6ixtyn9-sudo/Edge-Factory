@@ -503,6 +503,7 @@ def enh_records(root=None):
                          # Floor-slice inputs (round 6, R2): the league the
                          # settled pick belonged to, when the registry recorded
                          # it. "" means unattributed — inherit, never guess.
+                         "cohort_rate": rec.get("cohort_rate"),
                          "league": str(rec.get("league") or "")})
     return rows
 
@@ -603,11 +604,13 @@ def enh_day_growth(records, floors, *, stake_frac=None, derived=False):
         for i, rec in enumerate(recs):
             parts = str(rec.get("match") or "").split(" vs ")
             home, away = (parts[0], parts[1]) if len(parts) == 2 else (f"leg {i}", "")
-            stated = rec.get("stated")
-            if not isinstance(stated, (int, float)) or isinstance(stated, bool):
-                stated = 0.0
+            # Rank on the REALIZED cohort rate, the input the live card uses.
+            # Stated is never a ranking input; an unrated leg ranks last (0.0).
+            rank_prob = rec.get("cohort_rate")
+            if not isinstance(rank_prob, (int, float)) or isinstance(rank_prob, bool):
+                rank_prob = 0.0
             pool.append({"match": rec.get("match") or f"{home} vs {away}",
-                         "pick": rec["market"], "prob": float(stated),
+                         "pick": rec["market"], "prob": float(rank_prob),
                          "odds": rec["price"], "hit": bool(rec["hit"]),
                          "floor": rec.get("floor"),
                          "row": {"date": day, "home": home, "away": away}})

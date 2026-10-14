@@ -1109,6 +1109,8 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 "market": market,
                 "probability": prob_adjusted,
                 "raw_probability": prob,
+                # Realized cohort rate the card ranks on; None when no cohort.
+                "cohort_rate": (round(cohort_rate, 4) if cohort_rate is not None else None),
                 "label": label,
                 "reason": reason + (
                     f" (realized cohort {cohort_rate:.1%}, n={cohort['n']}; stated {prob:.1%})"
@@ -1182,6 +1184,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 "recommended_enhancement": best["market"],
                 "enhancement_probability": round(best["probability"], 4),
                 "enhancement_stated_probability": round(best["raw_probability"], 4),
+                "enhancement_cohort_rate": best.get("cohort_rate"),
                 "enhancement_reason": best["reason"],
                 "enhancement_label": best["label"],
             })

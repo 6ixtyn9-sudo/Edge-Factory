@@ -768,7 +768,8 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                    today: str | None = None, multi_source: bool = False,
                    bucket: str = "", rule: str = "", stated: float | None = None,
                    league: str = "", home: str = "", away: str = "",
-                   home_key: str = "", away_key: str = "") -> dict:
+                   home_key: str = "", away_key: str = "",
+                   cohort_rate: float | None = None) -> dict:
     """Idempotently record one settled enhancement outcome.
 
     Dedupes on "date|match|<market>@v1" so repeated audit runs cannot double-count.
@@ -839,7 +840,13 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                      "home": str(home or ""),
                      "away": str(away or ""),
                      "home_key": str(home_key or ""),
-                     "away_key": str(away_key or "")})
+                     "away_key": str(away_key or ""),
+                     # Realized cohort rate (forward-only). Never the stated probability.
+                     "cohort_rate": (round(float(cohort_rate), 4)
+                                    if isinstance(cohort_rate, (int, float))
+                                    and not isinstance(cohort_rate, bool)
+                                    and math.isfinite(float(cohort_rate))
+                                    and 0.0 < float(cohort_rate) < 1.0 else None)})
                 entry["records"] = entry["records"][-MAX_RECORDS_PER_MARKET:]
                 if multi_source:
                     entry["multi_n"] = entry.get("multi_n", 0) + 1

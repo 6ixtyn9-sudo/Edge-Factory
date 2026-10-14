@@ -87,6 +87,28 @@ def test_the_acca_card_prices_the_day_the_way_the_lane_would():
     assert lost["growth"] == pytest.approx(1.0 - f)
 
 
+def test_record_outcome_stores_the_cohort_rate_and_nothing_else_stated(tmp_path):
+    from edgefactory.enh_registry import record_outcome, registry_path
+    record_outcome(tmp_path, date_="2026-10-14", match="A vs B", market="match_over_25",
+                   price=1.50, hit=True, cohort_rate=0.6214)
+    record_outcome(tmp_path, date_="2026-10-14", match="C vs D", market="match_over_25",
+                   price=1.50, hit=False, cohort_rate=1.7)   # not a rate: stored as None
+    recs = json.loads(registry_path(tmp_path).read_text())["markets"]["match_over_25@v1"]["records"]
+    assert [r["cohort_rate"] for r in recs] == [0.6214, None]
+
+
+def test_replay_reads_the_cohort_rate_as_its_ranking_input(tmp_path):
+    (tmp_path / "localdata").mkdir()
+    (tmp_path / "localdata" / "enhancement_registry.json").write_text(json.dumps({
+        "version": 2, "markets": {"match_over_25@v1": {"status": "PAPER", "records": [
+            {"date": "2026-10-14", "match": "A vs B", "price": 1.5, "hit": True,
+             "cohort_rate": 0.62},
+            {"date": "2026-10-14", "match": "C vs D", "price": 1.5, "hit": True}]}}}))
+    rows = rh.enh_records(tmp_path)
+    assert sorted((r["cohort_rate"] is None, r["cohort_rate"] or 0.0) for r in rows) == \
+        [(False, 0.62), (True, 0.0)]
+
+
 def test_enh_arm_reports_the_harnesss_primary_metric():
     records = [_rec(date="2026-10-12", price=2.00, hit=True, match="A vs B"),
                _rec(date="2026-10-12", price=2.00, hit=True, match="C vs D"),
