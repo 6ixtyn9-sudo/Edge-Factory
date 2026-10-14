@@ -19,12 +19,12 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-14",
-      "n_last_window": 127,
+      "n_last_window": 153,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     }
   ],
-  "generated_at": "2026-10-14T06:56:12",
+  "generated_at": "2026-10-14T10:20:10",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
@@ -111,7 +111,7 @@
     },
     {
       "name": "freesupertips",
-      "newest_date": "2026-10-13",
+      "newest_date": "2026-10-14",
       "newest_file": "freesupertips_2026-10.csv.gz",
       "retired": null,
       "role": "not_ready",
