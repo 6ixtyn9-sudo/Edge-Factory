@@ -137,15 +137,15 @@
       "status": null
     },
     "futbolpronosticos": {
-      "blocker": "settled-count coverage mismatch: {'captured': 79, 'settled': 0, 'unmatched': 79, 'mismatch': True, 'settlement_source': 'existing warehouse-score backfill'}",
-      "can_fetch_today": true,
+      "blocker": "futbolpronosticos: HTTP 500",
+      "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
-      "raw": 231,
+      "freshness_h": null,
+      "raw": 0,
       "reason": null,
-      "scored": 79,
+      "scored": 0,
       "status": null
     },
     "oddspapi_odds": {

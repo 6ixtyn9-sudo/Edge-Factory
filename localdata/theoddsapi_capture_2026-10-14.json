@@ -1,28 +1,11 @@
 {
   "added": 0,
-  "attempted": 2,
-  "attempted_fixtures": [
-    {
-      "away": "Sandnes ULF",
-      "date": "2026-10-14",
-      "home": "Stabaek",
-      "kickoff": "14-10, 18:00",
-      "league": "Norway 1. Division"
-    },
-    {
-      "away": "Kongsvinger",
-      "date": "2026-10-14",
-      "home": "Stromsgodset",
-      "kickoff": "14-10, 18:00",
-      "league": "Norway 1. Division"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 18,
-  "captured_at": "2026-10-14T16:13:51+00:00",
+  "captured_at": "2026-10-14T19:08:13+00:00",
   "date": "2026-10-14",
-  "due_reasons": {
-    "first_at": 2
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -32,23 +15,24 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 6,
+    "kickoff_already_passed": 10,
     "kickoff_mismatch": 5,
     "priced_close_window_not_open": 5,
-    "retry_cooldown": 4,
-    "too_close_for_first_capture": 1
+    "retry_cooldown": 3
   },
   "skipped": [
-    "Junior|Deportivo Pereira (retry cooldown (6h after failed attempt))",
     "Atletico Mineiro|Montevideo City Torque (retry cooldown (6h after failed attempt))",
     "Dukagjini|Vushtrria (kickoff already passed)",
     "\u00dcmraniyespor|Boluspor (kickoff already passed)",
-    "FC Viktoria K\u00f6ln|SG Sonnenhof Grossaspach (retry cooldown (6h after failed attempt))",
+    "FC Viktoria K\u00f6ln|SG Sonnenhof Grossaspach (kickoff already passed)",
     "Mito Hollyhock|FC Tokyo (kickoff already passed)",
     "Spartakos Kitiou|Digenis Ypsonas (kickoff already passed)",
+    "Junior|Deportivo Pereira (retry cooldown (6h after failed attempt))",
     "Kheybar Khorramabad|Persepolis FC (kickoff already passed)",
+    "Stabaek|Sandnes ULF (kickoff already passed)",
     "CS Cartagines|Puntarenas FC (retry cooldown (6h after failed attempt))",
-    "Lask Linz|Liverpool (too close to kickoff for first capture)",
+    "Lask Linz|Liverpool (kickoff already passed)",
+    "Stromsgodset|Kongsvinger (kickoff already passed)",
     "WARN kickoff-mismatch Lincoln|West Ham: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Lincoln|West Ham (priced, close window not open)",
     "WARN kickoff-mismatch Slovan Bratislava|VfB Stuttgart: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
@@ -62,12 +46,6 @@
     "Aston Villa|Fenerbah\u00e7e (priced, close window not open)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Stabaek vs Sandnes ULF (league not covered: Norway 1. Division)",
-    "Stromsgodset vs Kongsvinger (league not covered: Norway 1. Division)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Norway 1. Division": 2
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
