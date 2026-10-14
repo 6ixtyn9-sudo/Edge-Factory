@@ -1134,74 +1134,63 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         # see the same filtered candidate set.
         candidates = [c for c in candidates if c["market"] not in EXCLUDED_MARKETS]
 
-        # Hard filters for the EV-ranked layer:
-        #   - must map to a captured market (kills goal_range_*)
-        #   - must have a captured price (zero network, zero credits — the
-        #     prices_index was built from cached captures earlier in the run)
-        #   - must offer >= +3% edge at the best captured price
-        #   - probability must sit in [25%, 90%]: sub-25% is lotto noise,
-        #     >90% is an obvious outcome with no real value even at best odds
-        MIN_EDGE = 0.05
+        # Selection rule (operator, 2026-10-14): a candidate is eligible only when
+        # it is priced at or above MIN_LEG_ODDS, the same minimum the slip uses,
+        # and its realized cohort hit rate sits inside [MIN_PROB, MAX_PROB]. The
+        # highest realized hit rate wins. There is no edge gate: an edge test
+        # rewards long prices with low hit rates. Nothing eligible means no
+        # recommendation (no bet). The probability band is a hit-rate band, not
+        # an edge test.
+        _scripts_dir = str(ROOT / "scripts")
+        if _scripts_dir not in sys.path:
+            sys.path.insert(0, _scripts_dir)
+        from auto_tickets import MIN_LEG_ODDS  # one minimum for both lanes
         MIN_PROB = 0.25
         MAX_PROB = 0.90
 
-        ev_candidates = []
-        for c in candidates:
-            market = c["market"]
-            if prices_index is not None:
-                # Price this candidate in a throwaway probe without mutating
-                # the real pick. attach_enhancement_price only reads home/away
-                # and recommended_enhancement.
+        eligible = []
+        if prices_index is not None:
+            for c in candidates:
+                market = c["market"]
+                # Price this candidate in a throwaway probe without mutating the
+                # real pick. attach_enhancement_price reads only home/away and
+                # recommended_enhancement.
                 probe = dict(pick)
                 probe["recommended_enhancement"] = market
                 attach_enhancement_price(probe, prices_index)
                 if not probe.get("enhancement_priced"):
                     continue
                 price = float(probe["enhancement_price"])
-                edge = float(c["probability"]) * price - 1.0
+                if price < MIN_LEG_ODDS:
+                    continue
+                prob = float(c["probability"])
+                if prob < MIN_PROB or prob > MAX_PROB:
+                    continue
                 c = dict(c)
                 c["enhancement_price"] = round(price, 3)
                 c["enhancement_price_source"] = probe.get("enhancement_price_source")
                 c["enhancement_price_book"] = probe.get("enhancement_price_book")
-                c["enhancement_edge_sample"] = round(edge, 4)
-            else:
-                edge = 0.0  # legacy offline path: no price available
-            prob = float(c["probability"])
-            if prob < MIN_PROB or prob > MAX_PROB:
-                continue
-            if edge < MIN_EDGE:
-                continue
-            c["ev_rank_key"] = (edge, prob)
-            ev_candidates.append(c)
+                # Informational only: never used to choose.
+                c["enhancement_edge_sample"] = round(prob * price - 1.0, 4)
+                eligible.append(c)
 
-        if ev_candidates:
-            ev_candidates.sort(key=lambda x: x["probability"], reverse=True)
-            out["event_notes"] = ev_candidates
-            best = ev_candidates[0]
-        else:
-            # Nothing passed the EV / hard filters. Rank by probability (the
-            # realized cohort rate when a cohort exists).
-            candidates.sort(
-                key=lambda x: x["probability"],
-                reverse=True,
-            )
-            out["event_notes"] = candidates
-            best = candidates[0]
-
-        out.update({
-            "recommended_enhancement": best["market"],
-            "enhancement_probability": round(best["probability"], 4),
-            "enhancement_stated_probability": round(best["raw_probability"], 4),
-            "enhancement_reason": best["reason"],
-            "enhancement_label": best["label"],
-        })
-        # Carry EV / price metadata through when known. The subsequent
-        # attach_enhancement_price call in main() is idempotent and will
-        # re-derive the same fields.
-        for k in ("enhancement_price", "enhancement_price_source",
-                  "enhancement_price_book", "enhancement_edge_sample"):
-            if k in best:
-                out[k] = best[k]
+        eligible.sort(key=lambda x: (x["probability"], x["enhancement_price"]), reverse=True)
+        out["event_notes"] = eligible
+        if eligible:
+            best = eligible[0]
+            out.update({
+                "recommended_enhancement": best["market"],
+                "enhancement_probability": round(best["probability"], 4),
+                "enhancement_stated_probability": round(best["raw_probability"], 4),
+                "enhancement_reason": best["reason"],
+                "enhancement_label": best["label"],
+            })
+            # Carry the price metadata through. The subsequent attach_enhancement_price
+            # call in main() is idempotent and re-derives the same fields.
+            for k in ("enhancement_price", "enhancement_price_source",
+                      "enhancement_price_book", "enhancement_edge_sample"):
+                if k in best:
+                    out[k] = best[k]
 
     return out
 
