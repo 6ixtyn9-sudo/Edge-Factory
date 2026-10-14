@@ -604,7 +604,6 @@ def generate_daily_report(
                         f"{note['label'].replace(' Goals', '')}: {note['probability']:.1%}"
                         for note in notes
                     )
-                    lines.append(f"     🔥 Possible Events: {event_text}")
 
         rendered_count = sum(len(buckets.get(b, [])) for b in bucket_order)
         if rendered_count != len(picks):
