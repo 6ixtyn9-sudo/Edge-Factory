@@ -193,6 +193,7 @@ STAKE_MODE = "per_acca"     # "per_day" preserves the validated fixed day risk;
 STAKE_PER_ACCA = None      # None -> STAKE_FRAC / MAX_ACCAS
 STAKE_WEIGHTS = None       # None -> equal; e.g. "3,2,1" changes sizing, never selection
 MAX_ACCAS = 2              # ARMED 2026-09-09 (barbell x2). Revert = 3.
+ENH_MAX_ACCAS = 3         # enhancement lane only (operator, 2026-10-14). Main stays MAX_ACCAS.
 MIN_ACCAS = 1              # cards with fewer accas are NO BET (1 preserves live)
 LEGS_PER_ACCA = 2          # 2-leg beat 3-leg out-of-sample
 MAX_LEGS = MAX_ACCAS * LEGS_PER_ACCA
@@ -4651,7 +4652,6 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
     realized rate — no registry brackets, no floor brackets, no [SKIPPED_VETO]
     tag. One summary no-bet line when nothing qualifies.
     """
-    from edgefactory.enh_registry import market_track_record
     root = root or ROOT
     committed = st["bank"] - bank_eff
     lines = [f"{ENHANCEMENT_LANE.label} — {target}",
@@ -4670,27 +4670,115 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                 f"({a['stake_pct'] / bank_eff:.1%} of free bank)" + (ENH_SHADOW_TAG if shadow else ""))
             for l in a["legs"]:
                 # realized cohort rate from the card, not the registry
-                prob = l.get("probability")
+                prob = l.get("prob")
                 realized = prob if isinstance(prob, (int, float)) and not isinstance(prob, bool) else 0.0
                 detail = f" @ {l['odds']:.2f} (realized {realized:.0%})"
                 lines.append(f"   {str(l.get('match')):46s} {l.get('label')}{detail}")
             lines.append("")
     else:
-        # Single no-bet line matching main-lane style; no per-leg [NO BET] lines.
-        lines.append(f"No bet: no leg priced at or above {MIN_LEG_ODDS:.2f}")
+        # Eligibility = priced at or above the minimum, not a fixture duplicate.
+        dropped = list((fixture_report or {}).get("dropped") or [])
+        eligible = sum(1 for l in legs if l.get("verdict") == "fire") - len(dropped)
+        lines.append(f"NO BET — only {eligible} eligible leg(s), need {LEGS_PER_ACCA} for an acca")
         lines.append("(bank stays unbet; a lone leg is never a single)")
         lines.append("")
     # Deploy line, footer — identical to main slip.
-    day_staked = sum(a["stake_pct"] for a in plan) if plan else 0.0
-    lines.append(f"deploying {ENHANCEMENT_LANE.stake_frac:.0%} of free bank today "
-                 f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
-                 f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
+    if plan:   # a no-bet card states no deployment
+        day_staked = sum(a["stake_pct"] for a in plan)
+        lines.append(f"deploying {ENHANCEMENT_LANE.stake_frac:.0%} of free bank today "
+                     f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
+                     f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
     lines.append("All figures are percentages of capital. Round to your bookmaker's "
                  "minimum stake. Bet only what you can afford to lose.")
     if should_freeze and freeze_record:
         lines.append("")
         lines.append(freeze_footer(freeze_record))
-    return "".join(lines)
+    return "\n".join(lines)
+def _frozen_text_on_disk(slip_txt: Path) -> bool:
+    """A frozen slip on disk locks its date even when the state file is absent.
+
+    The enhancement state is gitignored, so a fresh checkout has no freeze book.
+    The frozen slip is the one artifact that always persists, and its
+    ``FROZEN AT`` footer is the lock of last resort.
+    """
+    return slip_txt.exists() and "FROZEN AT " in slip_txt.read_text(encoding="utf-8")
+
+
+def _enhancement_recut(st: dict, target: str, now, slip_txt: Path, legs: list[dict],
+                       plan: list[dict], bank_eff: float, fixture_report: dict,
+                       floors: dict) -> int:
+    """--force on a frozen date: supersede it with a recut report, never a rewrite.
+
+    The frozen slip and its open acca stay exactly as staked, so settlement
+    still grades what was placed. The corrected card goes to a sibling
+    ``_force_recut.txt`` with the legs that moved shown against the frozen card.
+    A superseded marker tells later ordinary runs that a recut exists.
+    """
+    frozen_rec = frozen_entry(st, target) or {}
+    frozen_text = slip_txt.read_text(encoding="utf-8") if slip_txt.exists() else ""
+    footer = re.search(r"FROZEN AT (\d\d:\d\d)", frozen_text)
+    frozen_at = str(frozen_rec.get("frozen_at")
+                    or (f"{footer.group(1)} (from the slip)" if footer else "unknown"))
+    card = render_enhancement_tickets(
+        st, target, legs, plan, now, should_freeze=False, freeze_record=None,
+        bank_eff=bank_eff, fixture_report=fixture_report, floors=floors)
+    result = "RECUT" if plan else "NO BET"
+    lines = [
+        f"ENHANCEMENT FORCE RE-CUT — {target}",
+        "=" * 62,
+        f"SUPERSEDES the frozen card (frozen_at {frozen_at}). The frozen slip was NOT edited:",
+        f"  localdata/{slip_txt.name}",
+        "  the frozen card is what was staked and stays the settlement record.",
+        "  nothing was placed or settled from this re-cut; it is for the operator's decision.",
+    ]
+    # The staked legs come from the frozen slip itself, the one artifact that
+    # always persists; the state file is gitignored and absent in a fresh run.
+    # Key = the leg text before its price, whitespace-collapsed, so the frozen
+    # slip's rendering and the re-cut's compare exactly.
+    def _norm(s: str) -> str:
+        return " ".join(s.split())
+    frozen_legs: dict[str, str] = {}
+    for line in frozen_text.splitlines():
+        if line.startswith("   ") and " @ " in line and "[NO BET]" not in line:
+            frozen_legs.setdefault(_norm(line.split(" @ ")[0]), line.strip())
+    recut_legs: dict[str, str] = {}
+    for a_ in plan:
+        for l in a_.get("legs", []):
+            recut_legs.setdefault(
+                _norm(f"{l['match']} {l.get('label')}"),
+                f"{l['match']}  {l.get('label')} @ {l['odds']:.2f}")
+    if not frozen_text:
+        lines.append("  frozen slip text missing; leg diff not computed")
+    else:
+        only_frozen = [k for k in frozen_legs if k not in recut_legs]
+        only_recut = [k for k in recut_legs if k not in frozen_legs]
+        lines.append(f"  STAKED on the frozen card, NOT on the re-cut ({len(only_frozen)}) "
+                     "— still graded as placed:")
+        for k in only_frozen:
+            lines.append(f"      {frozen_legs[k]}")
+        lines.append(f"  ON THE RE-CUT ONLY ({len(only_recut)}) — not on the frozen card:")
+        for k in only_recut:
+            lines.append(f"      {recut_legs[k]}")
+    lines += ["", card]
+    text = "\n".join(lines)
+    recut_path = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}_force_recut.txt"
+    recut_path.write_text(text, encoding="utf-8")
+    print(text)
+    # Latest forced run wins the marker; the frozen book is never touched.
+    st.setdefault(SUPERSEDED_BOOK_KEY, {})[str(target)] = {
+        "recorded_at": now.isoformat(timespec="seconds"),
+        "result": result,
+        "reason": "operator --force re-cut of a frozen enhancement card",
+        "frozen_at": frozen_rec.get("frozen_at"),
+        "audit_slip": f"localdata/{slip_txt.name}",
+        "recut_slip": f"localdata/{recut_path.name}",
+    }
+    save_state(st, ENHANCEMENT_LANE)
+    print(f"\nSTATUS: SUPERSEDED — frozen card retained; re-cut ({result}) written to "
+          f"localdata/{recut_path.name}")
+    return 0
+
+
 def cmd_enhancement(args, st) -> int:
     """Draft / freeze / re-print the enhancement lane's card for `args.date`."""
     now = datetime.now(TZ)
@@ -4701,17 +4789,26 @@ def cmd_enhancement(args, st) -> int:
         print(f"enhancement lane is off — set {ENH_BOARD_FLAG}=1 to build it")
         return 0
 
-    # A frozen date is final, --force included: rewriting the artifact of an
-    # already-staked date is the "bets rotated under the operator" failure the
-    # write-once lock exists to prevent. --force still rebuilds a DRAFT before
-    # the 09:00 boundary (it only suppresses the freeze below).
-    if is_frozen(st, target, ENHANCEMENT_LANE):
+    # A frozen date is final. --force no longer rewrites it: a forced run writes
+    # a re-cut report beside the frozen slip (see _enhancement_recut). The lock is
+    # the state's freeze book OR the frozen slip on disk, because the state file
+    # is gitignored and a fresh checkout has no freeze book.
+    frozen_here = is_frozen(st, target, ENHANCEMENT_LANE) or _frozen_text_on_disk(slip_txt)
+    if frozen_here and not args.force:
         entry = frozen_entry(st, target) or {}
+        basis = freeze_footer(entry) if entry else "frozen slip on disk"
         print(f"enhancement slip for {target} is frozen "
-              f"({freeze_footer(entry)}); write-once lock in "
+              f"({basis}); write-once lock in "
               f"{ENHANCEMENT_LANE.state_file.name}")
         if slip_txt.exists():
             print(slip_txt.read_text())
+        recut_file = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}_force_recut.txt"
+        sup = superseded_entry(st, target)
+        if sup is not None or recut_file.exists():
+            result = (sup or {}).get("result") or "see re-cut file"
+            print(f"\nSUPERSEDED — a forced re-cut ({result}) was recorded for this date. "
+                  f"The card above is still what was staked; review the re-cut before "
+                  f"acting: localdata/{recut_file.name}")
         return 0
 
     try:
@@ -4741,8 +4838,12 @@ def cmd_enhancement(args, st) -> int:
     # it. The enhancement lane's own part is the pool (floor-cleared
     # enhancement legs) and nothing else.
     plan = plan_day(pool, bank_eff, stake_frac=ENHANCEMENT_LANE.stake_frac,
-                    rank=ENHANCEMENT_RANK, fixture_report=fixture_report)
+                    max_accas=ENH_MAX_ACCAS, rank=ENHANCEMENT_RANK,
+                    fixture_report=fixture_report)
     _carry_lane_evidence(plan, pool)
+    if frozen_here:          # --force on a frozen date: supersede, never rewrite
+        return _enhancement_recut(st, target, now, slip_txt, legs, plan,
+                                  bank_eff, fixture_report, floors)
     freeze_record = None
     if plan:
         # Same write path as the main lane, routed to this lane's state and
