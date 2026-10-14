@@ -95,7 +95,8 @@ def test_kickoff_utc_mismatch_warning_still_fires_on_row_disagreement():
         [fixture], [_row("2026-10-05T19:45:00Z")], {}, now=now,
         kickoff_fn=_pick_kickoff_utc, match_fn=_team_names_match)
     assert any(s.startswith("WARN kickoff-mismatch") for s in skips)
-    assert any("pick lists 18:45Z" in s and "captured rows say 19:45Z" in s
+    # operator log lines show SAST (UTC+2): 18:45Z -> 20:45 SAST, 19:45Z -> 21:45 SAST
+    assert any("pick lists 20:45 SAST" in s and "captured rows say 21:45 SAST" in s
                and "Δ=60m" in s for s in skips)
     assert due and updates.get("Halmstad|Sirius") == "close_at"
 
@@ -128,7 +129,7 @@ def test_provenance_strict_case_still_fail_closed_on_two_real_utc_witnesses():
     due, updates, skips = _plan_with_source(
         fixture, "2026-10-05T19:20:00Z", [_row("2026-10-05T19:45:00Z")])
     assert any(s.startswith("WARN kickoff-mismatch") for s in skips)
-    assert any("pick kickoff_utc says 18:45Z" in s and "captured rows say 19:45Z" in s
+    assert any("pick kickoff_utc says 20:45 SAST" in s and "captured rows say 21:45 SAST" in s
                and "earlier real UTC witness" in s for s in skips)
     assert due == []
     assert any("kickoff already passed" in s for s in skips)
@@ -148,7 +149,7 @@ def test_provenance_overrides_legacy_display_fallback_to_avoid_starvation():
     due, updates, skips = _plan_with_source(
         fixture, "2026-10-05T18:05:00Z", [_row("2026-10-05T18:45:00Z")])
     assert any(s.startswith("WARN kickoff-mismatch") for s in skips)
-    assert any("pick legacy display says 17:45Z" in s and "captured rows say 18:45Z" in s
+    assert any("pick legacy display says 19:45 SAST" in s and "captured rows say 20:45 SAST" in s
                and "display-fallback override" in s for s in skips)
     assert not any("kickoff already passed" in s for s in skips)
     assert due and updates.get("Halmstad|Sirius") == "close_at"
