@@ -220,30 +220,56 @@ def test_btts_is_a_recommendable_market_after_the_opt_out_was_lifted(monkeypatch
     assert "btts_yes" in markets
 
 
-def test_cohort_rank_rates_maps_the_realized_cohort_to_match_over_markets():
-    """Market choice ranks on the realized outcome-unconditioned cohort rate.
-    No cohort (no warehouse, thin cohort, draw pick) means no rates, so ranking
-    falls back to stated probability alone."""
-    assert pt.cohort_rank_rates(None) == {}
-    cohort = {"n": 500, "over15": 0.80, "over25": 0.61, "over35": 0.38,
-              "over45": 0.19, "btts": 0.41}
-    assert pt.cohort_rank_rates(cohort) == {
-        "match_over_15": 0.80, "match_over_25": 0.61,
-        "match_over_35": 0.38, "match_over_45": 0.19,
-    }
+COHORT = {"n": 400, "avg_goals": 2.6, "over15": 0.60, "over25": 0.55,
+          "over35": 0.85, "over45": 0.30, "btts": 0.50,
+          "h_o05": 0.90, "h_o15": 0.60, "h_o25": 0.30, "h_o35": 0.10,
+          "a_o05": 0.70, "a_o15": 0.30, "a_o25": 0.10, "a_o35": 0.02}
+
+
+def test_cohort_realized_rate_reads_overs_directly_and_unders_as_complements():
+    """The realized cohort is the probability for every market it can speak to.
+    Unders are the complement of the matching over or score rate."""
+    assert pt.cohort_realized_rate(None, "match_over_25") is None
+    assert pt.cohort_realized_rate(COHORT, "match_over_25") == pytest.approx(0.55)
+    assert pt.cohort_realized_rate(COHORT, "match_under_25") == pytest.approx(0.45)
+    assert pt.cohort_realized_rate(COHORT, "home_under_35") == pytest.approx(0.90)
+    assert pt.cohort_realized_rate(COHORT, "btts_no") == pytest.approx(0.50)
+    # outside the cohort's columns: no realized rate
+    assert pt.cohort_realized_rate(COHORT, "double_chance") is None
+    assert pt.cohort_realized_rate(COHORT, "exact_2") is None
 
 
 def test_event_notes_are_ordered_by_realized_cohort_rate(monkeypatch):
-    """The survivors of the stated-probability gates come back sorted by their
-    realized cohort rate, highest first, not by the enhancement registry."""
+    """The survivors come back sorted by realized cohort rate, highest first,
+    not by the enhancement registry or by stated probability."""
     con = _empty_warehouse()
-    cohort = {"n": 400, "avg_goals": 2.6, "over15": 0.60, "over25": 0.55,
-              "over35": 0.85, "over45": 0.30, "btts": 0.50,
-              "h_o05": 0.90, "h_o15": 0.60, "h_o25": 0.30, "h_o35": 0.10,
-              "a_o05": 0.70, "a_o15": 0.30, "a_o25": 0.10, "a_o35": 0.02}
-    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: COHORT)
     notes = pt.compute_dynamic_enhancement(con, _pick())["event_notes"]
-    rates = pt.cohort_rank_rates(cohort)
-    ranked = [rates[n["market"]] for n in notes if n["market"] in rates]
-    assert len(ranked) >= 2, "need at least two cohort-rated candidates to order"
+    ranked = [pt.cohort_realized_rate(COHORT, n["market"]) for n in notes]
+    assert len(ranked) >= 2, "need at least two candidates to order"
     assert ranked == sorted(ranked, reverse=True)
+
+
+def test_with_a_cohort_every_candidate_is_its_realized_rate(monkeypatch):
+    """Cohort replaces stated: each candidate's probability is the cohort rate
+    for its market, the stated value is kept as raw_probability, and markets the
+    cohort cannot speak to (double chance, exact scores) are not candidates."""
+    con = _empty_warehouse()
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: COHORT)
+    notes = pt.compute_dynamic_enhancement(con, _pick())["event_notes"]
+    assert notes, "the cohort should leave at least one candidate"
+    for n in notes:
+        assert n["probability"] == pytest.approx(
+            pt.cohort_realized_rate(COHORT, n["market"]))
+        assert n["raw_probability"] is not None  # stated value kept for audit
+        assert n["market"] not in {"double_chance"} and not n["market"].startswith("exact_")
+
+
+def test_without_a_cohort_the_stated_path_is_unchanged(monkeypatch):
+    """No cohort (no warehouse, thin cohort, draw pick) keeps the legacy stated
+    probability path, so no candidate is dropped for lack of a realized rate."""
+    con = _empty_warehouse()
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: None)
+    out = pt.compute_dynamic_enhancement(con, _pick())
+    for n in out["event_notes"]:
+        assert "realized cohort" not in n["reason"]

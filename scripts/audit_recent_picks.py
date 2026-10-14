@@ -1762,7 +1762,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                                 "bucket": str(pick.get("bucket") or ""),
                                 "rule": str(pick.get("rule")
                                             or pick.get("display_rule") or ""),
-                                "stated": pick.get("enhancement_probability"),
+                                "stated": pick.get("enhancement_stated_probability", pick.get("enhancement_probability")),
                                 # Floor-slice provenance (round 6, R2): the
                                 # parent pick's league and the fixture's teams,
                                 # so the settled record can be sliced for the

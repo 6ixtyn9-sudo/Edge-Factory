@@ -25,13 +25,14 @@ def _leg(tag, prob, odds, result="win"):
 
 
 def _universe(n_days=8):
-    """Deterministic universe: 14 legs/day (saturated), alternating outcomes."""
+    """Deterministic universe: 14 legs/day (saturated), alternating outcomes.
+    Odds start at 1.31, above the 1.30 main-lane minimum, so every leg is eligible."""
     u = {}
     for d in range(n_days):
         day = f"2026-08-{d+1:02d}"
         legs = []
         for i in range(14):
-            legs.append(_leg(f"{d}_{i}", 0.75 - i * 0.02, 1.25 + i * 0.05,
+            legs.append(_leg(f"{d}_{i}", 0.75 - i * 0.02, 1.31 + i * 0.05,
                              "win" if (d + i) % 3 else "loss"))
         u[day] = at.rank_legs(legs)
     return u
