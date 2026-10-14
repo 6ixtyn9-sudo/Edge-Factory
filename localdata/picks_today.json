@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-10-14T03:07:56+02:00",
+    "as_of": "2026-10-14T06:08:46+02:00",
     "avg_p": 73.1,
     "away": "Montevideo City Torque",
     "bookmaker": "Pinnacle",
@@ -68,7 +68,7 @@
       }
     ],
     "home": "Atletico Mineiro",
-    "kickoff": "15:00",
+    "kickoff": "17:00",
     "kickoff_sast": "2026-10-15 00:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-14T22:00:00+00:00",
@@ -248,7 +248,7 @@
     "w_score": 1.0013
   },
   {
-    "as_of": "2026-10-14T03:07:56+02:00",
+    "as_of": "2026-10-14T06:08:46+02:00",
     "avg_p": 63.7,
     "away": "Persepolis FC",
     "bookmaker": "betexplorer_best",
@@ -438,7 +438,7 @@
     ],
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=467): Avg Goals: 3.54 | Over 2.5: 69.6% | BTTS: 41.3% | Home Over 1.5 Goals: 11.1% | Away Over 1.5 Goals: 86.3%",
-    "vitibet_index": -1.99,
+    "vitibet_index": -1.98,
     "w_score": 1.0
   },
   {
@@ -14005,7 +14005,128 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-14T03:07:56+02:00",
+    "as_of": "2026-10-14T06:08:46+02:00",
+    "avg_p": 81.5,
+    "away": "Vushtrria",
+    "bookmaker": null,
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "vushtrria",
+      "comp_type_name": "league",
+      "competition_type": "VETO",
+      "home_norm": "dukagjini",
+      "league": "UNKNOWN",
+      "league_key": "kosovo superliga",
+      "league_raw": "Kosovo: Superliga",
+      "niche": "UNKNOWN",
+      "odds_band": "UNKNOWN",
+      "odds_band_name": "NO_ODDS",
+      "resolution_original_verdict": "UNKNOWN",
+      "resolution_path": "unresolved",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "unresolved by O1/O2",
+      "resolution_verdict": "UNKNOWN",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-10-14",
+    "decay_verdict": "WATCH",
+    "display_rule": "unanimous[betclan+vitibet] avg_p>=70",
+    "draw_risk_flag": "UNKNOWN",
+    "edge_n_way": 2,
+    "edge_rule": "unanimous[betclan+vitibet] avg_p>=70",
+    "edge_status": "certified",
+    "enhancement_consensus_price": null,
+    "enhancement_label": "Away Team Under 3.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": null,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.987,
+    "enhancement_reason": "Combined Under 3.5 is 98.8% (ML-calibrated 95.1%->97.9%, n=378) (Performance feedback: HR=97.2%, Adjusted Prob: 98.7%)",
+    "enhancement_state": "PAPER",
+    "event_notes": [
+      {
+        "cohort_n": null,
+        "engine": "model",
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9870283729969543,
+        "raw_probability": 0.9883817427385893,
+        "reason": "Combined Under 3.5 is 98.8% (ML-calibrated 95.1%->97.9%, n=378) (Performance feedback: HR=97.2%, Adjusted Prob: 98.7%)"
+      },
+      {
+        "cohort_n": null,
+        "engine": "model",
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9435245219173444,
+        "raw_probability": 0.9439834024896265,
+        "reason": "Combined Under 3.5 is 94.4% (ML-calibrated 94.5%->97.1%, n=139) (Performance feedback: HR=97.4%, Adjusted Prob: 94.4%)"
+      },
+      {
+        "cohort_n": null,
+        "engine": "model",
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.8847134186129223,
+        "raw_probability": 0.8694724362774156,
+        "reason": "Combined Under 2.5 is 86.9% (ML-calibrated 90.3%->92.1%, n=354)"
+      }
+    ],
+    "home": "Dukagjini",
+    "kickoff": "2026-10-14T18:00:00+02:00",
+    "kickoff_sast": "2026-10-14 18:00 SAST",
+    "kickoff_source": "offset_passthrough",
+    "kickoff_utc": "2026-10-14T16:00:00+00:00",
+    "kickoff_witness": "own kickoff '2026-10-14T18:00:00+02:00'",
+    "league": "Kosovo: Superliga",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "no odds available",
+    "market_type": "1x2",
+    "match": "Dukagjini vs Vushtrria",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": null,
+    "odds_match_method": "none",
+    "odds_match_status": "unmatched",
+    "odds_source": null,
+    "odds_tier": "low",
+    "pick": "home",
+    "price_board": [],
+    "price_corroborated": false,
+    "price_corroborating_families": [],
+    "price_corroboration_sufficient": true,
+    "price_corroborators": [],
+    "price_evidence": "UNMATCHED",
+    "price_named_book_corroborated": false,
+    "price_push_eligible": false,
+    "recommended_enhancement": "away_under_35",
+    "recommended_market": "unknown",
+    "rule": "unanimous[betclan+vitibet] avg_p>=70",
+    "source_weights": {
+      "forebet": 0.0
+    },
+    "sources_used": [
+      "vitibet",
+      "betclan"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=76): Avg Goals: 4.26 | Over 2.5: 75.0% | BTTS: 40.8% | Home Over 1.5 Goals: 94.7% | Away Over 1.5 Goals: 10.5%",
+    "veto_reason": "context VETO in ['competition_type']",
+    "vitibet_index": 5.83,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-10-14T06:08:46+02:00",
     "avg_p": 74.5,
     "away": "Deportivo Pereira",
     "bookmaker": "betexplorer_best",
@@ -14160,16 +14281,16 @@
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=461): Avg Goals: 3.84 | Over 2.5: 74.6% | BTTS: 40.6% | Home Over 1.5 Goals: 87.9% | Away Over 1.5 Goals: 8.9%",
     "veto_reason": "context VETO in ['team_a', 'competition_type']",
-    "vitibet_index": 2.91,
+    "vitibet_index": 2.9,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-14T03:07:56+02:00",
+    "as_of": "2026-10-14T06:08:46+02:00",
     "avg_p": 60.1,
     "away": "VfB Stuttgart",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "confidence": 0.7344,
+    "confidence": 0.7316,
     "ctx": {
       "away_norm": "vfbstuttgart",
       "comp_type_name": "league",
@@ -14269,7 +14390,7 @@
       }
     ],
     "home": "Slovan Bratislava",
-    "kickoff": "12:00",
+    "kickoff": "14:00",
     "kickoff_sast": "2026-10-14 21:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-14T19:00:00+00:00",
@@ -14385,12 +14506,12 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-14T03:07:56+02:00",
+    "as_of": "2026-10-14T06:08:46+02:00",
     "avg_p": 62.4,
     "away": "Borussia Dortmund",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "confidence": 0.4567,
+    "confidence": 0.4535,
     "ctx": {
       "away_norm": "borussiadortmund",
       "comp_type_name": "league",
@@ -14490,7 +14611,7 @@
       }
     ],
     "home": "Bodo/Glimt",
-    "kickoff": "12:00",
+    "kickoff": "14:00",
     "kickoff_sast": "2026-10-14 21:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-14T19:00:00+00:00",
@@ -14588,7 +14709,7 @@
         "line": null,
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 3.0,
+        "odds": 3.1,
         "odds_kind": "provider_average",
         "price_coherence": null,
         "price_independence_family": "scoutingstats_average",
@@ -14608,7 +14729,7 @@
         "line": null,
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 4.1,
+        "odds": 4.2,
         "odds_kind": "provider_average",
         "price_coherence": null,
         "price_independence_family": "scoutingstats_average",
@@ -14628,7 +14749,7 @@
         "line": null,
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 2.1,
+        "odds": 2.05,
         "odds_kind": "provider_average",
         "price_coherence": null,
         "price_independence_family": "scoutingstats_average",
@@ -14672,7 +14793,7 @@
     "w_score": 0.5048
   },
   {
-    "as_of": "2026-10-14T03:07:56+02:00",
+    "as_of": "2026-10-14T06:08:46+02:00",
     "avg_p": 60.2,
     "away": "Kuressaare",
     "bookmaker": null,
@@ -14796,37 +14917,33 @@
     "price_board": [
       {
         "away": "Kuressaare",
-        "bookmaker": "Pinnacle",
-        "captured_at": "2026-10-12T22:15:36+00:00",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-14T01:07:56.157310+00:00",
         "chosen": true,
-        "home": "Narva Trans",
-        "kickoff": "2026-10-14T13:00:00Z",
-        "league": "Estonia - Meistriliiga",
+        "home": "Narva",
+        "kickoff": "14:00",
+        "league": "Estonia: Meistriliiga",
         "line": null,
         "market": "1x2",
         "match_method": "alias_fuzzy",
         "named_bookmaker": true,
-        "odds": 2.23,
+        "odds": 1.94,
         "odds_kind": "bookmaker",
         "price_coherence": null,
-        "price_independence_family": "pinnacle_book",
+        "price_independence_family": "betexplorer_book",
         "provider_role": "named_bookmaker",
-        "raw_market": "money_line",
+        "raw_market": "1x2",
         "raw_selection": "home",
         "selection": "home",
-        "source": "pinnapi_odds"
+        "source": "betexplorer_odds"
       }
     ],
-    "price_corroborated": true,
-    "price_corroborating_families": [
-      "pinnacle_book"
-    ],
+    "price_corroborated": false,
+    "price_corroborating_families": [],
     "price_corroboration_sufficient": true,
-    "price_corroborators": [
-      "pinnapi_odds"
-    ],
+    "price_corroborators": [],
     "price_evidence": "SUSPECT_ALIAS_FUZZY",
-    "price_named_book_corroborated": true,
+    "price_named_book_corroborated": false,
     "price_push_eligible": false,
     "price_quarantine_reason": "alias_fuzzy",
     "recommended_enhancement": "match_over_35",
@@ -14843,15 +14960,15 @@
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1587): Avg Goals: 3.27 | Over 2.5: 64.7% | BTTS: 42.2% | Home Over 1.5 Goals: 82.3% | Away Over 1.5 Goals: 10.1%",
     "suspect_price": {
-      "bookmaker": "Pinnacle",
-      "captured_at": "2026-10-12T22:15:36+00:00",
-      "league": "Estonia - Meistriliiga",
+      "bookmaker": "betexplorer_best",
+      "captured_at": "2026-10-14T01:07:56.157310+00:00",
+      "league": "Estonia: Meistriliiga",
       "match_method": "alias_fuzzy",
-      "odds": 2.23,
-      "source": "pinnapi_odds"
+      "odds": 1.94,
+      "source": "betexplorer_odds"
     },
     "veto_reason": "context VETO in ['odds_band']",
-    "vitibet_index": -0.29,
+    "vitibet_index": -0.3,
     "w_score": 0.4127
   }
 ]
