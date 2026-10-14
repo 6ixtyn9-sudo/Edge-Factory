@@ -66,6 +66,7 @@ Usage (daily.py runs this bare — same entry point as always):
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -4790,6 +4791,41 @@ def _frozen_text_on_disk(slip_txt: Path) -> bool:
     return slip_txt.exists() and "FROZEN AT " in slip_txt.read_text(encoding="utf-8")
 
 
+_RECUT_SLATE_RE = re.compile(r"^  slate sha256: ([0-9a-f]{12}|none)$", re.M)
+
+
+def _slate_sha() -> str | None:
+    """Fingerprint of today's picks_today.json (the slate a re-cut is built from)."""
+    try:
+        return hashlib.sha256((LOCALDATA / "picks_today.json").read_bytes()).hexdigest()[:12]
+    except OSError:
+        return None
+
+
+def _recut_notice(recut_file: Path) -> str:
+    """The SUPERSEDED pointer, with the re-cut's provenance checked against today's slate.
+
+    A re-cut is only as current as the slate it was built from. A file with no
+    slate stamp, or a stamp from a different picks_today.json, is shown as such,
+    so an old re-cut is never presented as the corrected card.
+    """
+    text = recut_file.read_text(encoding="utf-8")
+    result = "RECUT" if "[ACCA #" in text else "NO BET"
+    stamp = _RECUT_SLATE_RE.search(text)
+    now_sha = _slate_sha()
+    if stamp is None:
+        status = ("UNVERIFIED — this re-cut carries no slate stamp, so it cannot be "
+                  "matched to today's picks. Do not act on its legs until it is re-cut.")
+    elif stamp.group(1) != now_sha:
+        status = (f"STALE — built from a different picks_today.json (sha {stamp.group(1)}; "
+                  f"now {now_sha or 'missing'}). Its legs may no longer match the slate.")
+    else:
+        status = "CURRENT — built from today's picks_today.json."
+    return (f"\nSUPERSEDED — a forced re-cut ({result}) was recorded for this date. "
+            f"The card above is still what was staked. {status} "
+            f"Review before acting: localdata/{recut_file.name}")
+
+
 def _enhancement_recut(st: dict, target: str, now, slip_txt: Path, legs: list[dict],
                        plan: list[dict], bank_eff: float, fixture_report: dict,
                        floors: dict) -> int:
@@ -4816,6 +4852,7 @@ def _enhancement_recut(st: dict, target: str, now, slip_txt: Path, legs: list[di
         f"  localdata/{slip_txt.name}",
         "  the frozen card is what was staked and stays the settlement record.",
         "  nothing was placed or settled from this re-cut; it is for the operator's decision.",
+        f"  slate sha256: {_slate_sha() or 'none'}",
     ]
     recut_legs: dict[str, str] = {}
     for a_ in plan:
@@ -4861,12 +4898,9 @@ def cmd_enhancement(args, st) -> int:
         if recut_file.exists():
             # The re-cut file is the durable record (it is tracked). The state
             # is gitignored and absent in a fresh run, so the notice reads only
-            # the file, and takes RECUT / NO BET from its content.
-            recut_text = recut_file.read_text(encoding="utf-8")
-            result = "RECUT" if "[ACCA #" in recut_text else "NO BET"
-            print(f"\nSUPERSEDED — a forced re-cut ({result}) was recorded for this date. "
-                  f"The card above is still what was staked; review the re-cut before "
-                  f"acting: localdata/{recut_file.name}")
+            # the file, takes RECUT / NO BET from its content, and says whether
+            # the re-cut still matches today's slate.
+            print(_recut_notice(recut_file))
         return 0
 
     try:

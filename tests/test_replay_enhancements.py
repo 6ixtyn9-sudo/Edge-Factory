@@ -87,6 +87,62 @@ def test_the_acca_card_prices_the_day_the_way_the_lane_would():
     assert lost["growth"] == pytest.approx(1.0 - f)
 
 
+def test_record_outcome_stores_the_cohort_rate_and_nothing_else_stated(tmp_path):
+    from edgefactory.enh_registry import record_outcome, registry_path
+    record_outcome(tmp_path, date_="2026-10-14", match="A vs B", market="match_over_25",
+                   price=1.50, hit=True, cohort_rate=0.6214)
+    record_outcome(tmp_path, date_="2026-10-14", match="C vs D", market="match_over_25",
+                   price=1.50, hit=False, cohort_rate=1.7)   # not a rate: stored as None
+    recs = json.loads(registry_path(tmp_path).read_text())["markets"]["match_over_25@v1"]["records"]
+    assert [r["cohort_rate"] for r in recs] == [0.6214, None]
+
+
+def test_replay_reads_the_cohort_rate_as_its_ranking_input(tmp_path):
+    (tmp_path / "localdata").mkdir()
+    (tmp_path / "localdata" / "enhancement_registry.json").write_text(json.dumps({
+        "version": 2, "markets": {"match_over_25@v1": {"status": "PAPER", "records": [
+            {"date": "2026-10-14", "match": "A vs B", "price": 1.5, "hit": True,
+             "cohort_rate": 0.62},
+            {"date": "2026-10-14", "match": "C vs D", "price": 1.5, "hit": True}]}}}))
+    rows = rh.enh_records(tmp_path)
+    assert sorted((r["cohort_rate"] is None, r["cohort_rate"] or 0.0) for r in rows) == \
+        [(False, 0.62), (True, 0.0)]
+
+
+def test_stake_fraction_and_mode_reach_the_enhancement_card():
+    records = [_rec(price=2.00, hit=True, match="A vs B"),
+               _rec(price=2.00, hit=True, match="C vs D")]
+    # one acca: per_acca sizing risks f / MAX_ACCAS of the bank on the day
+    small = rh.enh_day_growth(records, FLOORS, stake_frac=0.10)["2026-10-12"]
+    big = rh.enh_day_growth(records, FLOORS, stake_frac=0.25)["2026-10-12"]
+    assert small["growth"] == pytest.approx(1.0 + (0.10 / at.MAX_ACCAS) * 3.0)
+    assert big["growth"] == pytest.approx(1.0 + (0.25 / at.MAX_ACCAS) * 3.0)
+    assert big["log_growth"] > small["log_growth"]
+    # per_day risks the full fraction on the day
+    pd = rh.enh_day_growth(records, FLOORS, stake_frac=0.10,
+                           stake_mode="per_day")["2026-10-12"]
+    assert pd["growth"] == pytest.approx(1.0 + 0.10 * 3.0)
+
+
+def test_stake_only_spec_moves_the_stake_and_the_report_sweeps_it(tmp_path, monkeypatch, capsys):
+    records = [_rec(date=f"2026-09-{d:02d}", price=1.50 + 0.05 * d, hit=(d % 2 == 0),
+                    match=f"Home{d} vs Away{d}") for d in range(1, 11)]
+    records += [_rec(date=f"2026-09-{d:02d}", price=1.50 + 0.05 * d, hit=True,
+                     match=f"City{d} vs Town{d}") for d in range(1, 11)]
+    monkeypatch.setattr(rh, "enh_records", lambda root=None: records)
+    args = type("A", (), {"ab": ("stake_frac=0.10", "stake_frac=0.25")})()
+    assert rh.cmd_enhancements(args) == 0
+    out = capsys.readouterr().out
+    assert "arm A: live (MIN_LEG_ODDS) | stake_frac=0.1" in out
+    assert "arm B: live (MIN_LEG_ODDS) | stake_frac=0.25" in out
+    assert "stake sweep" in out and "<- live" in out
+    # the two stake-only arms gate identically: same bet-days and bets
+    a = rh.enh_arm(records, rh._root_floors(records), stake_frac=0.10)
+    b = rh.enh_arm(records, rh._root_floors(records), stake_frac=0.25)
+    assert (a["days"], a["bets"], a["hits"]) == (b["days"], b["bets"], b["hits"])
+    assert a["mean_log_growth"] != b["mean_log_growth"]
+
+
 def test_enh_arm_reports_the_harnesss_primary_metric():
     records = [_rec(date="2026-10-12", price=2.00, hit=True, match="A vs B"),
                _rec(date="2026-10-12", price=2.00, hit=True, match="C vs D"),
@@ -134,9 +190,43 @@ def test_the_report_compares_two_uniform_floor_variants(tmp_path, monkeypatch, c
     args = type("A", (), {"ab": ("live", "floor=1.70")})()
     assert rh.cmd_enhancements(args) == 0
     out = capsys.readouterr().out
-    assert "live floors" in out
+    assert "live (MIN_LEG_ODDS)" in out
     assert "every market at floor=1.70" in out
     assert "paired bootstrap, B minus A" in out
+
+
+def test_uniform_arm_gates_on_its_own_floor_not_the_static_table():
+    # Two priced 1.40 over-2.5 legs on one day: the static table (1.60) would
+    # block them, so a 1.30 arm must bet and a 1.60 arm must not.
+    records = [_rec(price=1.40, hit=True, match="A vs B"),
+               _rec(price=1.40, hit=True, match="C vs D")]
+    assert rh.enh_day_growth(records, {"match_over_25": 1.30})["2026-10-12"]["bets"] == 1
+    assert rh.enh_day_growth(records, {"match_over_25": 1.60}) == {}
+    # and the two uniform arms must differ, or the replay is blind to the floor
+    lo = rh.enh_arm(records, {"match_over_25": 1.00})
+    hi = rh.enh_arm(records, {"match_over_25": 1.60})
+    assert lo["bets"] == 1 and hi["bets"] == 0
+
+
+def test_live_arm_is_the_shared_minimum_on_every_market():
+    records = [_rec(market="match_over_25", price=1.40),
+               _rec(market="away_under_35", price=1.35)]
+    assert rh._root_floors(records) == {"away_under_35": at.MIN_LEG_ODDS,
+                                        "match_over_25": at.MIN_LEG_ODDS}
+
+
+def test_derive_floors_honours_its_parent_table_and_defaults_to_static():
+    from edgefactory import enh_registry as er
+    # one priced record: below the evidence minimum, so the market inherits its parent
+    reg = {"version": 2, "markets": {"match_over_25@v1": {"status": "PAPER", "records": [
+        {"date": "2026-10-01", "match": "A vs B", "price": 1.5, "hit": True}]}}}
+    out = er.derive_floors(reg, "2026-10-13", parent_floors={"match_over_25": 1.30},
+                           margin=er.ENHANCEMENT_FLOOR_MARGIN)
+    assert out["floors"]["match_over_25"]["floor"] == 1.30
+    assert er.floor_for_slice({}, "match_over_25", parent_floors={"match_over_25": 1.30}) \
+        == (1.30, "inherited")
+    # no parent argument: the operator's static table, unchanged for live callers
+    assert er.floor_for_slice({}, "match_over_25") == (1.60, "inherited")
 
 
 def test_no_records_is_an_honest_empty_answer(monkeypatch, capsys):
