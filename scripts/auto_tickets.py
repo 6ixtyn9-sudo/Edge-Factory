@@ -261,10 +261,10 @@ ENHANCEMENT_STATE_FILE = LOCALDATA / "enhancement_tickets_state.json"
 ENH_BOARD_FLAG = "EDGE_FACTORY_ENH_BOARD"
 ENHANCEMENT_LANE = Lane(ENHANCEMENT_STATE_FILE, "autobets_enh_tickets",
                         "ENHANCEMENT TICKETS (ROLLING)", STAKE_FRAC)
-# Enhancement legs are ranked by the hit rate their floor encodes (approved
-# 2026-10-13), not by the model's stated probability. The main lane stays on
-# "prob"; its selection is untouched.
-ENHANCEMENT_RANK = "hitrate"
+# Enhancement legs are ranked by the realized cohort hit rate (prob),
+# not by the model's stated hit rate. The main lane stays on "hitrate";
+# its selection is untouched.
+ENHANCEMENT_RANK = "prob"
 
 
 def enhancement_board_enabled() -> bool:
@@ -4450,13 +4450,9 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
         else:
             # Operator, 2026-10-14: no price floor and no price ceiling. The only
             # price gate is MIN_LEG_ODDS; any
-            # price above it fires. A team under with no settled evidence for its
-            # side still does not fire: the lane ranks by hit rate, and an
-            # unevidenced side has nothing to rank by.
+            # price above it fires.
             if price < MIN_LEG_ODDS:
                 verdict = "below_min_odds"
-            elif is_team_under and leg_floor is None:
-                verdict = "no_floor"
             else:
                 verdict = "fire"
         legs.append({
@@ -4651,106 +4647,50 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
 
     Same header, same acca block, same stake line and same footer as the main
     lane's slip, because the operator's ruling is that the lane IS autobets
-    with enhancement legs. The per-leg line adds what this lane knows that
-    the main lane does not: the market's registry record, its floor and the
-    book its price came from.
+    with enhancement legs. The per-leg line shows only match, pick, price and
+    realized rate — no registry brackets, no floor brackets, no [SKIPPED_VETO]
+    tag. One summary no-bet line when nothing qualifies.
     """
     from edgefactory.enh_registry import market_track_record
     root = root or ROOT
     committed = st["bank"] - bank_eff
-    lines = [f"{ENHANCEMENT_LANE.label} — {target}", "=" * 62,
-             f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
-             f"(x{st['bank'] / st['base_pct']:.2f}) = free bank {bank_eff:.1f}% + "
-             f"committed {committed:.1f}% · next take-profit notification at "
-             f"{take_profit_target(st):.1f}%"]
-    lines.extend(_enh_slice_lines(root))
-    lines.append("")
-    lines.extend(_enh_floor_lines(floors))
-    lines.append("")
-    registry = {r["market"]: r for r in market_track_record(root)}
-    dropped = list((fixture_report or {}).get("dropped") or [])
-    # Eligibility is B-1's own wording: priced AND clearing the floor AND not
-    # a same-fixture duplicate. The no-bet line must count what could ride.
-    eligible = sum(1 for l in legs if l.get("verdict") == "fire") - len(dropped)
+    lines = [f"{ENHANCEMENT_LANE.label} — {target}",
+             "=" * 62,
+     f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
+     f"(x{st['bank'] / st['base_pct']:.2f}) = free bank {bank_eff:.1f}% + "
+     f"committed {committed:.1f}% · next take-profit notification at "
+     f"{take_profit_target(st):.1f}%"]
+    # Acca blocks — one line per leg: match, pick, price, realized rate.
+    # No registry or floor brackets; "stated" → "realized" per rule 3.
     if plan:
         for i, a in enumerate(plan, 1):
             shadow = any(l.get("shadow") for l in a["legs"])
             lines.append(
                 f"[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
-                f"({a['stake_pct'] / bank_eff:.1%} of free bank)"
-                + (ENH_SHADOW_TAG if shadow else ""))
+                f"({a['stake_pct'] / bank_eff:.1%} of free bank)" + (ENH_SHADOW_TAG if shadow else ""))
             for l in a["legs"]:
-                rec = registry.get(l.get("market")) or {}
-                bits = []
-                if rec.get("n"):
-                    bits.append(f"registry {rec['rate']:.0%} n={rec['n']}")
-                if l.get("floor") is not None:
-                    bits.append(f"floor {l['floor']:.2f} ({l.get('floor_basis') or 'inherited'})")
-                if l.get("price_book"):
-                    bits.append(str(l["price_book"]))
-                detail = f" [{' · '.join(bits)}]" if bits else ""
-                lines.append(f"   {str(l.get('match')):46s} {l.get('label')} "
-                             f"@ {l['odds']:.2f}  (stated {l['prob']:.0%}){detail}")
+                # realized cohort rate from the card, not the registry
+                prob = l.get("probability")
+                realized = prob if isinstance(prob, (int, float)) and not isinstance(prob, bool) else 0.0
+                detail = f" @ {l['odds']:.2f} (realized {realized:.0%})"
+                lines.append(f"   {str(l.get('match')):46s} {l.get('label')}{detail}")
             lines.append("")
     else:
-        lines.append(f"NO BET — only {eligible} eligible leg(s), "
-                     f"need {LEGS_PER_ACCA} for an acca")
+        # Single no-bet line matching main-lane style; no per-leg [NO BET] lines.
+        lines.append(f"No bet: no leg priced at or above {MIN_LEG_ODDS:.2f}")
         lines.append("(bank stays unbet; a lone leg is never a single)")
         lines.append("")
-
-    # Legs the gate refused are shown for audit, never as instructions.
-    for leg in legs:
-        if leg["verdict"] == "fire":
-            continue
-        prob = leg["probability"]
-        stated = f" (stated {float(prob):.0%})" if isinstance(prob, (int, float)) else ""
-        price = f" @ {leg['price']:.2f}" if leg["price"] is not None else ""
-        reason = {
-            # A floorless market reaches this verdict too (clears_floor is False
-            # without a threshold) but it is NOT "below" anything — say which
-            # case it is, exactly as the board line does.
-            "below_floor": (f"below floor {leg['floor']:.2f} "
-                            f"[{leg.get('floor_basis') or 'inherited'}] — no bet"
-                            if leg["floor"] is not None
-                            else "no floor set for this market — no bet"),
-            "unpriced": "no price captured — no bet",
-            # Eager dict: format the price only when there is one (unpriced legs have None).
-            "below_min_odds": (f"priced {leg['price']:.2f} under the {MIN_LEG_ODDS:.2f} minimum — no bet"
-                               if leg["price"] is not None else "no price captured — no bet"),
-            "no_floor": "no price floor for this side (no settled evidence) — no bet",
-            # Same guard as below_floor: a leg with no floor has nothing to
-            # "clear", and formatting None here crashed the whole card.
-            "outlier_price": (f"best quote clears floor {leg['floor']:.2f} but the median quote "
-                              f"does not — no bet"
-                              if leg["floor"] is not None
-                              else "no floor set for this market — no bet"),
-            "unpriceable": "unpriceable — no feed carries this market",
-            "above_ceiling": (f"above {leg['market']} ceiling {leg['ceiling']:.2f} — no bet"
-                              if leg.get("ceiling") is not None else "above ceiling — no bet"),
-        }.get(leg["verdict"], leg["verdict"])
-        lines.append(f"   [NO BET] {leg['match']:40s} {leg['label']}{price}{stated} — {reason}")
-    if any(l["verdict"] != "fire" for l in legs):
-        lines.append("")
-    if dropped:
-        lines.append("same-fixture duplicate(s) dropped (one fixture rides a card once): "
-                     + ", ".join(str(d) for d in dropped))
-    if plan:
-        left_over = eligible - LEGS_PER_ACCA * len(plan)
-        if left_over > 0:
-            lines.append(f"{left_over} eligible leg(s) left over without an acca "
-                         f"partner (never a single)")
-        day_staked = sum(a["stake_pct"] for a in plan)
-        lines.append(f"deploying {ENHANCEMENT_LANE.stake_frac:.0%} of free bank today "
-                     f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
-                     f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
+    # Deploy line, footer — identical to main slip.
+    day_staked = sum(a["stake_pct"] for a in plan) if plan else 0.0
+    lines.append(f"deploying {ENHANCEMENT_LANE.stake_frac:.0%} of free bank today "
+                 f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
+                 f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
     lines.append("All figures are percentages of capital. Round to your bookmaker's "
                  "minimum stake. Bet only what you can afford to lose.")
     if should_freeze and freeze_record:
         lines.append("")
         lines.append(freeze_footer(freeze_record))
-    return "\n".join(lines)
-
-
+    return "".join(lines)
 def cmd_enhancement(args, st) -> int:
     """Draft / freeze / re-print the enhancement lane's card for `args.date`."""
     now = datetime.now(TZ)
