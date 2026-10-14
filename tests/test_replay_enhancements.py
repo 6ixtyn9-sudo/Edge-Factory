@@ -109,6 +109,40 @@ def test_replay_reads_the_cohort_rate_as_its_ranking_input(tmp_path):
         [(False, 0.62), (True, 0.0)]
 
 
+def test_stake_fraction_and_mode_reach_the_enhancement_card():
+    records = [_rec(price=2.00, hit=True, match="A vs B"),
+               _rec(price=2.00, hit=True, match="C vs D")]
+    # one acca: per_acca sizing risks f / MAX_ACCAS of the bank on the day
+    small = rh.enh_day_growth(records, FLOORS, stake_frac=0.10)["2026-10-12"]
+    big = rh.enh_day_growth(records, FLOORS, stake_frac=0.25)["2026-10-12"]
+    assert small["growth"] == pytest.approx(1.0 + (0.10 / at.MAX_ACCAS) * 3.0)
+    assert big["growth"] == pytest.approx(1.0 + (0.25 / at.MAX_ACCAS) * 3.0)
+    assert big["log_growth"] > small["log_growth"]
+    # per_day risks the full fraction on the day
+    pd = rh.enh_day_growth(records, FLOORS, stake_frac=0.10,
+                           stake_mode="per_day")["2026-10-12"]
+    assert pd["growth"] == pytest.approx(1.0 + 0.10 * 3.0)
+
+
+def test_stake_only_spec_moves_the_stake_and_the_report_sweeps_it(tmp_path, monkeypatch, capsys):
+    records = [_rec(date=f"2026-09-{d:02d}", price=1.50 + 0.05 * d, hit=(d % 2 == 0),
+                    match=f"Home{d} vs Away{d}") for d in range(1, 11)]
+    records += [_rec(date=f"2026-09-{d:02d}", price=1.50 + 0.05 * d, hit=True,
+                     match=f"City{d} vs Town{d}") for d in range(1, 11)]
+    monkeypatch.setattr(rh, "enh_records", lambda root=None: records)
+    args = type("A", (), {"ab": ("stake_frac=0.10", "stake_frac=0.25")})()
+    assert rh.cmd_enhancements(args) == 0
+    out = capsys.readouterr().out
+    assert "arm A: live (MIN_LEG_ODDS) | stake_frac=0.1" in out
+    assert "arm B: live (MIN_LEG_ODDS) | stake_frac=0.25" in out
+    assert "stake sweep" in out and "<- live" in out
+    # the two stake-only arms gate identically: same bet-days and bets
+    a = rh.enh_arm(records, rh._root_floors(records), stake_frac=0.10)
+    b = rh.enh_arm(records, rh._root_floors(records), stake_frac=0.25)
+    assert (a["days"], a["bets"], a["hits"]) == (b["days"], b["bets"], b["hits"])
+    assert a["mean_log_growth"] != b["mean_log_growth"]
+
+
 def test_enh_arm_reports_the_harnesss_primary_metric():
     records = [_rec(date="2026-10-12", price=2.00, hit=True, match="A vs B"),
                _rec(date="2026-10-12", price=2.00, hit=True, match="C vs D"),
