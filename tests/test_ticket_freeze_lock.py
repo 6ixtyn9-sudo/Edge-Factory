@@ -252,3 +252,60 @@ def test_freeze_footer_formats_from_the_recorded_stamp():
     assert at.freeze_footer({"frozen_at": "2026-10-02T06:07:08+02:00"}) == \
         "FROZEN AT 06:07 - FINAL"
     assert at.freeze_footer({"frozen_at": "garbage"}) == "FROZEN AT ??:?? - FINAL"
+
+
+# ---------------- 6. --force on a frozen date: recut report, never a rewrite ----------------
+
+def test_force_on_a_frozen_date_keeps_the_placed_slip_and_writes_a_recut(lane, monkeypatch):
+    monkeypatch.setattr(at, "datetime", _clock(2026, 9, 6, 9, 13))
+    st = _run()
+    slip = lane / f"auto_tickets_{DAY}.txt"
+    before_text = slip.read_text()
+    before_open = json.loads(json.dumps(st["open_slips"]))
+    assert before_open, "the frozen card must be an open slip"
+
+    # Same slate, so a plan exists. The old path replaced the open slip here.
+    assert at.cmd_today(SimpleNamespace(date=DAY, force=True), st) == 0
+    assert slip.read_text() == before_text
+    assert st["open_slips"] == before_open
+    recut = (lane / f"auto_tickets_{DAY}_force_recut.txt").read_text()
+    assert recut.startswith(f"AUTO TICKETS FORCE RE-CUT — {DAY}")
+    assert "The frozen slip was NOT edited" in recut
+    assert "[ACCA #1]" in recut
+    assert "STAKED on the frozen card, NOT on the re-cut" in recut
+
+
+def test_an_ordinary_run_after_a_main_recut_shows_the_frozen_card_and_the_notice(lane, monkeypatch, capsys):
+    monkeypatch.setattr(at, "datetime", _clock(2026, 9, 6, 9, 13))
+    st = _run()
+    slip = lane / f"auto_tickets_{DAY}.txt"
+    before_text = slip.read_text()
+    assert at.cmd_today(SimpleNamespace(date=DAY, force=True), st) == 0
+    capsys.readouterr()
+    assert at.cmd_today(SimpleNamespace(date=DAY, force=False), st) == 0
+    out = capsys.readouterr().out
+    assert before_text in out
+    assert "SUPERSEDED — a forced re-cut was recorded" in out
+    assert f"auto_tickets_{DAY}_force_recut.txt" in out
+
+
+def test_the_recut_diff_separates_staked_legs_from_the_re_cut():
+    frozen = (
+        "AUTO TICKETS (ROLLING) — 2026-09-06\n"
+        "[ACCA #1] @2.13 — stake 12.5% of capital (12.5% of free bank)\n"
+        "   Heart of Midlothian vs Dundee                  HOME  @ 1.47  (stated 70%)\n"
+        "   Gresford Athletic vs Mold Alexandra            HOME  @ 1.45  (stated 70%)\n"
+        "   [NO BET] Rudes vs HNK Hajduk Split  HOME  @ 1.29 — refused\n"
+        "\nFROZEN AT 09:13 - FINAL"
+    )
+    recut = {
+        "Heart of Midlothian vs Dundee HOME": "Heart of Midlothian vs Dundee  HOME @ 1.47",
+        "Zrinjski vs Siroki Brijeg HOME": "Zrinjski vs Siroki Brijeg  HOME @ 1.26",
+    }
+    out = at._recut_diff_lines(frozen, recut)
+    assert out[0] == "  STAKED on the frozen card, NOT on the re-cut (1) — still graded as placed:"
+    assert "Gresford Athletic vs Mold Alexandra" in out[1]
+    assert out[2] == "  ON THE RE-CUT ONLY (1) — not on the frozen card:"
+    assert "Zrinjski vs Siroki Brijeg" in out[3]
+    assert not any("Rudes" in line for line in out)          # refused legs are not staked
+    assert at._recut_diff_lines("", recut) == ["  frozen slip text missing; leg diff not computed"]
