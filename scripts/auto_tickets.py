@@ -4720,8 +4720,12 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                             else "no floor set for this market — no bet"),
             "unpriced": "no price captured — no bet",
             "no_floor": "no price floor for this side (no settled evidence) — no bet",
+            # Same guard as below_floor: a leg with no floor has nothing to
+            # "clear", and formatting None here crashed the whole card.
             "outlier_price": (f"best quote clears floor {leg['floor']:.2f} but the median quote "
-                              f"does not — no bet"),
+                              f"does not — no bet"
+                              if leg["floor"] is not None
+                              else "no floor set for this market — no bet"),
             "unpriceable": "unpriceable — no feed carries this market",
             "above_ceiling": (f"above {leg['market']} ceiling {leg['ceiling']:.2f} — no bet"
                               if leg.get("ceiling") is not None else "above ceiling — no bet"),
