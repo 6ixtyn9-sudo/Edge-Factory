@@ -2,8 +2,8 @@
   "added": 0,
   "attempted": 0,
   "attempted_fixtures": [],
-  "candidate_fixtures": 4,
-  "captured_at": "2026-10-13T22:21:53+00:00",
+  "candidate_fixtures": 7,
+  "captured_at": "2026-10-14T01:15:42+00:00",
   "date": "2026-10-14",
   "due_reasons": {},
   "errors": [],
@@ -13,13 +13,16 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "retry_cooldown": 4
+    "retry_cooldown": 7
   },
   "skipped": [
+    "Junior|Deportivo Pereira (retry cooldown (6h after failed attempt))",
     "Atletico Mineiro|Montevideo City Torque (retry cooldown (6h after failed attempt))",
+    "Kheybar Khorramabad|Persepolis FC (retry cooldown (6h after failed attempt))",
+    "CS Cartagines|Puntarenas FC (retry cooldown (6h after failed attempt))",
     "Bodo/Glimt|Borussia Dortmund (retry cooldown (6h after failed attempt))",
-    "Slovan Bratislava|VfB Stuttgart (retry cooldown (6h after failed attempt))",
-    "CS Cartagines|Puntarenas FC (retry cooldown (6h after failed attempt))"
+    "Trans Narva|Kuressaare (retry cooldown (6h after failed attempt))",
+    "Slovan Bratislava|VfB Stuttgart (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
   "status": "not_due",

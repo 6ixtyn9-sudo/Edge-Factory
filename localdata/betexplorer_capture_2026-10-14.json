@@ -1,6 +1,16 @@
 {
-  "attempted": 4,
+  "attempted": 7,
   "attempted_fixtures": [
+    {
+      "avg_p": 74.5,
+      "away": "Deportivo Pereira",
+      "date": "2026-10-14",
+      "home": "Junior",
+      "league": "Colombia: Primera A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
     {
       "avg_p": 73.1,
       "away": "Montevideo City Torque",
@@ -12,6 +22,26 @@
       "w_score": 1.0013
     },
     {
+      "avg_p": 63.7,
+      "away": "Persepolis FC",
+      "date": "2026-10-14",
+      "home": "Kheybar Khorramabad",
+      "league": "Iran Persian Gulf Pro League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 62.7,
+      "away": "Puntarenas FC",
+      "date": "2026-10-14",
+      "home": "CS Cartagines",
+      "league": "Costa Rica,Primera Division Apertura",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
       "avg_p": 62.4,
       "away": "Borussia Dortmund",
       "date": "2026-10-14",
@@ -22,6 +52,16 @@
       "w_score": 0.5048
     },
     {
+      "avg_p": 60.2,
+      "away": "Kuressaare",
+      "date": "2026-10-14",
+      "home": "Trans Narva",
+      "league": "Estonia Meistriliiga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.4127
+    },
+    {
       "avg_p": 60.1,
       "away": "VfB Stuttgart",
       "date": "2026-10-14",
@@ -30,39 +70,27 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 1.0
-    },
-    {
-      "avg_p": 60.1,
-      "away": "Puntarenas FC",
-      "date": "2026-10-14",
-      "home": "CS Cartagines",
-      "league": "Costa Rica,Primera Division Apertura",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.4117
     }
   ],
-  "be_429": 1,
-  "be_cached": 0,
+  "be_429": 0,
+  "be_cached": 4,
   "be_cooling_down": false,
-  "be_rows_rejected": 3,
-  "be_rows_rejected_reasons": {
-    "row teams do not both match the pick": 3
-  },
-  "candidate_fixtures": 4,
-  "captured_at": "2026-10-13T22:11:28.934038+00:00",
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "candidate_fixtures": 7,
+  "captured_at": "2026-10-14T01:06:10.419939+00:00",
   "date": "2026-10-14",
   "errors": [],
-  "fixtures_with_rows": 3,
+  "fixtures_with_rows": 6,
   "market_budget_stop": false,
-  "market_requests": 20,
+  "market_requests": 15,
   "match_detail": {
-    "bookmakers": 61,
+    "bookmakers": 80,
     "challenge_pages": 0,
-    "fixtures": 4,
-    "market_rows": 182,
-    "markets": 24,
-    "named_rows": 182,
+    "fixtures": 7,
+    "market_rows": 231,
+    "markets": 39,
+    "named_rows": 231,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -71,6 +99,36 @@
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
+      "avg_p": 74.5,
+      "away": "Deportivo Pereira",
+      "date": "2026-10-14",
+      "home": "Junior",
+      "league": "Colombia: Primera A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 63.7,
+      "away": "Persepolis FC",
+      "date": "2026-10-14",
+      "home": "Kheybar Khorramabad",
+      "league": "Iran Persian Gulf Pro League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 62.7,
+      "away": "Puntarenas FC",
+      "date": "2026-10-14",
+      "home": "CS Cartagines",
+      "league": "Costa Rica,Primera Division Apertura",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
       "avg_p": 62.4,
       "away": "Borussia Dortmund",
       "date": "2026-10-14",
@@ -81,6 +139,16 @@
       "w_score": 0.5048
     },
     {
+      "avg_p": 60.2,
+      "away": "Kuressaare",
+      "date": "2026-10-14",
+      "home": "Trans Narva",
+      "league": "Estonia Meistriliiga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.4127
+    },
+    {
       "avg_p": 60.1,
       "away": "VfB Stuttgart",
       "date": "2026-10-14",
@@ -89,20 +157,10 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 1.0
-    },
-    {
-      "avg_p": 60.1,
-      "away": "Puntarenas FC",
-      "date": "2026-10-14",
-      "home": "CS Cartagines",
-      "league": "Costa Rica,Primera Division Apertura",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.4117
     }
   ],
-  "requests": 31,
-  "rows": 9,
+  "requests": 23,
+  "rows": 18,
   "schema": 1,
   "status": "ok"
 }
