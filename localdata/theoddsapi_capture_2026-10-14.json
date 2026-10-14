@@ -1,11 +1,42 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 7,
-  "captured_at": "2026-10-14T01:15:42+00:00",
+  "attempted": 4,
+  "attempted_fixtures": [
+    {
+      "away": "Montevideo City Torque",
+      "date": "2026-10-14",
+      "home": "Atletico Mineiro",
+      "kickoff": "17:00",
+      "league": "International,Copa Sudamericana Knockout Stage"
+    },
+    {
+      "away": "Puntarenas FC",
+      "date": "2026-10-14",
+      "home": "CS Cartagines",
+      "kickoff": "17:00",
+      "league": "Costa Rica,Primera Division Apertura"
+    },
+    {
+      "away": "Borussia Dortmund",
+      "date": "2026-10-14",
+      "home": "Bodo/Glimt",
+      "kickoff": "14:00",
+      "league": "International,Champions League"
+    },
+    {
+      "away": "VfB Stuttgart",
+      "date": "2026-10-14",
+      "home": "Slovan Bratislava",
+      "kickoff": "14:00",
+      "league": "International,Champions League"
+    }
+  ],
+  "candidate_fixtures": 8,
+  "captured_at": "2026-10-14T04:18:21+00:00",
   "date": "2026-10-14",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 4
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -13,18 +44,25 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "retry_cooldown": 7
+    "retry_cooldown": 4
   },
   "skipped": [
+    "Dukagjini|Vushtrria (retry cooldown (6h after failed attempt))",
     "Junior|Deportivo Pereira (retry cooldown (6h after failed attempt))",
-    "Atletico Mineiro|Montevideo City Torque (retry cooldown (6h after failed attempt))",
     "Kheybar Khorramabad|Persepolis FC (retry cooldown (6h after failed attempt))",
-    "CS Cartagines|Puntarenas FC (retry cooldown (6h after failed attempt))",
-    "Bodo/Glimt|Borussia Dortmund (retry cooldown (6h after failed attempt))",
-    "Trans Narva|Kuressaare (retry cooldown (6h after failed attempt))",
-    "Slovan Bratislava|VfB Stuttgart (retry cooldown (6h after failed attempt))"
+    "Trans Narva|Kuressaare (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Atletico Mineiro vs Montevideo City Torque (league not covered: International,Copa Sudamericana Knockout Stage)",
+    "CS Cartagines vs Puntarenas FC (league not covered: Costa Rica,Primera Division Apertura)",
+    "Bodo/Glimt vs Borussia Dortmund (league not covered: International,Champions League)",
+    "Slovan Bratislava vs VfB Stuttgart (league not covered: International,Champions League)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Costa Rica,Primera Division Apertura": 1,
+    "league not covered: International,Champions League": 2,
+    "league not covered: International,Copa Sudamericana Knockout Stage": 1
+  }
 }
