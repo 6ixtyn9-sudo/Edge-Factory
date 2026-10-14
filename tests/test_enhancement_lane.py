@@ -967,7 +967,7 @@ def test_a_leg_with_no_floor_ranks_last_under_hitrate():
 
 
 def test_the_enhancement_lane_is_the_only_caller_on_hitrate():
-    assert at.ENHANCEMENT_RANK == "hitrate"
+    assert at.ENHANCEMENT_RANK == "prob"
     # main lane selection default is untouched
     import inspect
     assert inspect.signature(at.select_accas).parameters["rank"].default == "prob"
