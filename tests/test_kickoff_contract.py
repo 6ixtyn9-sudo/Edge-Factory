@@ -439,10 +439,10 @@ def _slate_rows():
     rows = []
     for home, away, ko, odds, league in [
             ("Inter Miami", "Atlanta United FC", "2026-09-06T01:30:00+02:00", 1.33, "x"),
-            ("Zrinjski", "Siroki Brijeg", "2026-09-06T20:15:00+02:00", 1.26, "x"),
+            ("Zrinjski", "Siroki Brijeg", "2026-09-06T20:15:00+02:00", 1.31, "x"),
             ("Heart of Midlothian", "Dundee", "2026-09-06T16:00:00+02:00", 1.47, "x"),
             ("Gresford Athletic", "Mold Alexandra", "2026-09-06 15:30:00", 1.45, "x"),
-            ("Rudes", "HNK Hajduk Split", "16:00", 1.29, "Croatia,Hnl"),
+            ("Rudes", "HNK Hajduk Split", "16:00", 1.31, "Croatia,Hnl"),
             ("Vancouver Whitecaps", "St. Louis City", "22:30", 1.45,
              "USA,Major League Soccer"),
     ]:

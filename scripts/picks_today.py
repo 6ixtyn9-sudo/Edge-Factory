@@ -578,6 +578,46 @@ def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | N
 AUDIT_ROLLING_PATH = LOCALDATA / "picks_audit_rolling.json"
 
 
+# Market choice is judged on the REALIZED rate of the outcome-unconditioned
+# "matches like this one" cohort (fetch_match_cohort), which is also what the
+# stated probabilities are blended from. Operator 2026-10-14: replace the stated
+# probability with the cohort rate for selection, gates and ranking. The stated
+# probability is kept on the candidate as raw_probability for audit.
+COHORT_DIRECT_KEYS = {
+    "match_over_15": "over15", "match_over_25": "over25",
+    "match_over_35": "over35", "match_over_45": "over45",
+    "btts_yes": "btts",
+    "home_over_05": "h_o05", "home_over_15": "h_o15",
+    "home_over_25": "h_o25", "home_over_35": "h_o35",
+    "away_over_05": "a_o05", "away_over_15": "a_o15",
+    "away_over_25": "a_o25", "away_over_35": "a_o35",
+}
+COHORT_COMPLEMENT_KEYS = {
+    "match_under_15": "over15", "match_under_25": "over25",
+    "match_under_35": "over35", "match_under_45": "over45",
+    "btts_no": "btts",
+    "home_under_05": "h_o05", "home_under_15": "h_o15",
+    "home_under_25": "h_o25", "home_under_35": "h_o35",
+    "away_under_05": "a_o05", "away_under_15": "a_o15",
+    "away_under_25": "a_o25", "away_under_35": "a_o35",
+}
+
+
+def cohort_realized_rate(cohort: dict | None, market: str) -> float | None:
+    """Realized rate of `market` in the cohort, or None when the cohort cannot
+    speak to it (no cohort, or a market outside the cohort's columns). An under
+    is the complement of its over/score rate, exact for whole-goal lines."""
+    if not cohort:
+        return None
+    if market in COHORT_DIRECT_KEYS:
+        value = cohort.get(COHORT_DIRECT_KEYS[market])
+        return None if value is None else float(value)
+    if market in COHORT_COMPLEMENT_KEYS:
+        value = cohort.get(COHORT_COMPLEMENT_KEYS[market])
+        return None if value is None else 1.0 - float(value)
+    return None
+
+
 def load_enhancement_calibration(audit_path: Path = AUDIT_ROLLING_PATH) -> dict[str, dict]:
     """Per-market promised->realized calibration from the rolling audit.
 
@@ -599,7 +639,7 @@ def load_enhancement_calibration(audit_path: Path = AUDIT_ROLLING_PATH) -> dict[
         n = int(slot.get("n") or 0)
         realized = slot.get("realized")
         promised = slot.get("mean_promised")
-        if n <= 0 or realized is None or promised is None:
+        if n <= 0 or realized is None or promised is None or float(promised) <= 0:
             continue
         try:
             out[market] = {
@@ -1034,28 +1074,33 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
     candidates = []
 
     for market, prob, label, reason in raw_candidates:
+        cohort_rate = cohort_realized_rate(cohort, market)
+        if cohort is not None and cohort_rate is None:
+            continue  # cohort replaces the stated probability: no realized rate, no candidate
         engine = "hybrid_cohort" if cohort is not None else "model"
         hr = rolling_hit_rates.get(market, 1.0)
         if engine_aware_debias:
             hr = resolve_debias_hr(market, engine, debias_map)
-        prob_adjusted = prob * hr
+        prob_adjusted = prob * hr if cohort_rate is None else cohort_rate
         # ML-assisted calibration: n-weighted correction from the audit.
         # Over-promising markets get pulled down, under-promising get lifted.
-        if market in calib and calib[market]["n"] >= 10:
+        if cohort_rate is None and market in calib and calib[market]["n"] >= 10:
             realized = calib[market]["realized"]
             promised = calib[market]["mean_promised"]
             n = calib[market]["n"]
             # shrink the raw probability toward the realized rate, weighted by
             # evidence (n) and capped so we never fully trust a young sample
             w = min(1.0, n / 40.0)          # evidence weight, saturates at n=40
-            prob_adjusted = prob_adjusted + w * (realized - promised) * prob_adjusted
+            # Scale by the realized / promised ratio (was an additive gap times
+            # prob, which under-corrected: over 2.5 is 44.8% promised, 61.1% realized).
+            prob_adjusted = prob_adjusted * (1.0 + w * (realized / promised - 1.0))
             prob_adjusted = max(0.01, min(0.99, prob_adjusted))
             reason = reason + (f" (ML-calibrated {promised:.1%}->{realized:.1%}, n={n})")
-        elif market in calib:
+        elif cohort_rate is None and market in calib:
             # young sample: still nudge, weakly
             realized = calib[market]["realized"]
             promised = calib[market]["mean_promised"]
-            prob_adjusted = prob_adjusted + 0.5 * (realized - promised) * prob_adjusted
+            prob_adjusted = prob_adjusted * (1.0 + 0.5 * (realized / promised - 1.0))
             prob_adjusted = max(0.01, min(0.99, prob_adjusted))
         
         thr = LINE_THRESHOLDS.get(market, 0.80)
@@ -1065,7 +1110,10 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 "probability": prob_adjusted,
                 "raw_probability": prob,
                 "label": label,
-                "reason": reason + (f" (Performance feedback: HR={hr:.1%}, Adjusted Prob: {prob_adjusted:.1%})" if hr < 1.0 else ""),
+                "reason": reason + (
+                    f" (realized cohort {cohort_rate:.1%}, n={cohort['n']}; stated {prob:.1%})"
+                    if cohort_rate is not None else
+                    (f" (Performance feedback: HR={hr:.1%}, Adjusted Prob: {prob_adjusted:.1%})" if hr < 1.0 else "")),
                 # Addendum 17: provenance so the audit can grade engines separately.
                 "engine": engine,
                 "cohort_n": (cohort["n"] if cohort is not None else None),
@@ -1086,81 +1134,63 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         # see the same filtered candidate set.
         candidates = [c for c in candidates if c["market"] not in EXCLUDED_MARKETS]
 
-        # Hard filters for the EV-ranked layer:
-        #   - must map to a captured market (kills goal_range_*)
-        #   - must have a captured price (zero network, zero credits — the
-        #     prices_index was built from cached captures earlier in the run)
-        #   - must offer >= +3% edge at the best captured price
-        #   - probability must sit in [25%, 90%]: sub-25% is lotto noise,
-        #     >90% is an obvious outcome with no real value even at best odds
-        MIN_EDGE = 0.05
+        # Selection rule (operator, 2026-10-14): a candidate is eligible only when
+        # it is priced at or above MIN_LEG_ODDS, the same minimum the slip uses,
+        # and its realized cohort hit rate sits inside [MIN_PROB, MAX_PROB]. The
+        # highest realized hit rate wins. There is no edge gate: an edge test
+        # rewards long prices with low hit rates. Nothing eligible means no
+        # recommendation (no bet). The probability band is a hit-rate band, not
+        # an edge test.
+        _scripts_dir = str(ROOT / "scripts")
+        if _scripts_dir not in sys.path:
+            sys.path.insert(0, _scripts_dir)
+        from auto_tickets import MIN_LEG_ODDS  # one minimum for both lanes
         MIN_PROB = 0.25
         MAX_PROB = 0.90
 
-        ev_candidates = []
-        for c in candidates:
-            market = c["market"]
-            if prices_index is not None:
-                # Price this candidate in a throwaway probe without mutating
-                # the real pick. attach_enhancement_price only reads home/away
-                # and recommended_enhancement.
+        eligible = []
+        if prices_index is not None:
+            for c in candidates:
+                market = c["market"]
+                # Price this candidate in a throwaway probe without mutating the
+                # real pick. attach_enhancement_price reads only home/away and
+                # recommended_enhancement.
                 probe = dict(pick)
                 probe["recommended_enhancement"] = market
                 attach_enhancement_price(probe, prices_index)
                 if not probe.get("enhancement_priced"):
                     continue
                 price = float(probe["enhancement_price"])
-                edge = float(c["probability"]) * price - 1.0
+                if price < MIN_LEG_ODDS:
+                    continue
+                prob = float(c["probability"])
+                if prob < MIN_PROB or prob > MAX_PROB:
+                    continue
                 c = dict(c)
                 c["enhancement_price"] = round(price, 3)
                 c["enhancement_price_source"] = probe.get("enhancement_price_source")
                 c["enhancement_price_book"] = probe.get("enhancement_price_book")
-                c["enhancement_edge_sample"] = round(edge, 4)
-            else:
-                edge = 0.0  # legacy offline path: no price available
-            prob = float(c["probability"])
-            if prob < MIN_PROB or prob > MAX_PROB:
-                continue
-            if edge < MIN_EDGE:
-                continue
-            c["ev_rank_key"] = (edge, prob)
-            ev_candidates.append(c)
+                # Informational only: never used to choose.
+                c["enhancement_edge_sample"] = round(prob * price - 1.0, 4)
+                eligible.append(c)
 
-        if ev_candidates:
-            ev_candidates.sort(key=lambda x: x["ev_rank_key"], reverse=True)
-            out["event_notes"] = ev_candidates
-            best = ev_candidates[0]
-        else:
-            # Nothing passed the EV / hard filters. Fall back to the legacy
-            # safety-tier ranking so the pick still carries a research marker,
-            # but it will be unpriced (🔬, not 🔥).
-            def get_safety_tier(m, prob):
-                if m in ["match_over_15", "match_over_25"] and prob >= 0.45: return 6
-                if "goal_range" in m and prob >= 0.45: return 5
-                if m == "btts_yes" and prob >= 0.45: return 4
-                if "over_05" in m and prob >= 0.75: return 3
-                if m == "match_over_35" and prob >= 0.30: return 2
-                return 1
-            candidates.sort(
-                key=lambda x: (get_safety_tier(x["market"], x["probability"]), x["probability"]),
-                reverse=True,
-            )
-            out["event_notes"] = candidates
-            best = candidates[0]
-
-        out.update({
-            "recommended_enhancement": best["market"],
-            "enhancement_probability": round(best["probability"], 4),
-            "enhancement_reason": best["reason"],
-            "enhancement_label": best["label"],
-        })
-        # Carry EV / price metadata through when known. The subsequent
-        # attach_enhancement_price call in main() is idempotent and will
-        # re-derive the same fields.
-        for k in ("enhancement_price", "enhancement_price_source",
-                  "enhancement_price_book", "enhancement_edge_sample"):
-            if k in best:
-                out[k] = best[k]
+        eligible.sort(key=lambda x: (x["probability"], x["enhancement_price"]), reverse=True)
+        out["event_notes"] = eligible
+        if eligible:
+            best = eligible[0]
+            out.update({
+                "recommended_enhancement": best["market"],
+                "enhancement_probability": round(best["probability"], 4),
+                "enhancement_stated_probability": round(best["raw_probability"], 4),
+                "enhancement_reason": best["reason"],
+                "enhancement_label": best["label"],
+            })
+            # Carry the price metadata through. The subsequent attach_enhancement_price
+            # call in main() is idempotent and re-derives the same fields.
+            for k in ("enhancement_price", "enhancement_price_source",
+                      "enhancement_price_book", "enhancement_edge_sample"):
+                if k in best:
+                    out[k] = best[k]
 
     return out
 
@@ -5988,7 +6018,7 @@ def _enh_floor_table(day: str) -> dict:
 def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     """The board's one enhancement line for a pick, or None when it has none.
 
-    Marker 🔬 = priced and clearing its market's floor: a real candidate the
+    Marker 🔬 = priced at or above MIN_LEG_ODDS: a real candidate the
     operator can act on, still short of registry certification. Marker 🚫 = the
     Stage 2 floor gate fired, so there is no bet — not paper, not shadow.
 
@@ -6027,24 +6057,21 @@ def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
     edge = p.get("enhancement_edge_sample")
     edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int, float)) else ""
+    # Operator 2026-10-14: no floor and no ceiling. The board gate is the slip's
+    # gate: the shared MIN_LEG_ODDS minimum, plus a team under with no evidence
+    # (no derived floor) does not fire, as in auto_tickets.enhancement_legs.
+    from auto_tickets import MIN_LEG_ODDS
     from edgefactory.enh_registry import floor_for_slice
-    # None: derive the day's table from this workspace's registry. An explicit
-    # table (including one with no rows) is used as given — the lane passes its
-    # own, so the board and the slip can never consult different numbers.
+    from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS
     table = _enh_floor_table(p.get("date")) if floors is None else floors
-    floor, basis = floor_for_slice(table, rec_market, p.get("league"))
-    if floor is None:                      # no derived row: the operator's table
-        floor, basis = enh_floor_for(rec_market), "inherited"
-    ceiling = enh_ceiling_for(rec_market)
-    above_ceiling = ceiling is not None and rec_price > ceiling
-    if enh_clears_floor(rec_market, rec_price, floor=floor) and not above_ceiling:
+    floor, _basis = floor_for_slice(table, rec_market, p.get("league"))
+    below_min = rec_price < MIN_LEG_ODDS
+    team_without_evidence = rec_market in TEAM_UNDER_MARKETS and floor is None
+    if not below_min and not team_without_evidence:
         return (f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
-                f"{edge_txt}{src} — floor {floor:.2f} ({basis})")
-    # Show WHY it is not a bet rather than hiding the candidate: the gate firing
-    # is audit evidence, and the slip prints the same verdict as [NO BET].
-    why = (f"above {rec_market} ceiling {ceiling:.2f}" if above_ceiling
-           else f"below {rec_market} floor {floor:.2f} ({basis})"
-           if floor is not None else "no floor set for this market")
+                f"{edge_txt}{src} — minimum {MIN_LEG_ODDS:.2f}")
+    why = (f"below minimum {MIN_LEG_ODDS:.2f}" if below_min
+           else "no settled evidence for this side")
     return (f"     🚫 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
             f" — no bet: {why}{src}")
 

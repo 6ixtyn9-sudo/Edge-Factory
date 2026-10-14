@@ -83,19 +83,19 @@ def test_the_floor_moves_with_the_record(tmp_path):
     assert after > before
 
 
-def test_a_team_under_leg_fires_only_at_or_above_its_side_floor():
+def test_a_team_under_leg_with_evidence_fires_at_any_price_above_the_minimum():
     table = {"home_under_35|2": {"floor": 1.13, "n": 344, "hits": 340,
                                  "wilson_lb": 0.9705, "basis": "pick_evidence"}}
     pick = {"home": "H", "away": "A", "match": "H vs A", "date": DAY, "pick": "away",
             "bucket": "CERTIFIED_CLEAN", "rule": "r1", "recommended_enhancement": "home_under_35",
             "enhancement_label": "Home Under 3.5", "enhancement_probability": 0.96,
             "enhancement_price_book": "b", "enhancement_price_source": "oddspapi"}
-    below = at.enhancement_legs([{**pick, "enhancement_price": 1.12}], team_floors=table)[0]
-    at_floor = at.enhancement_legs([{**pick, "enhancement_price": 1.13,
-                                     "enhancement_consensus_price": 1.13}], team_floors=table)[0]
-    assert below["verdict"] == "below_floor"
-    assert at_floor["verdict"] == "fire"
-    assert at_floor["floor_basis"] == "pick_evidence"
+    below = at.enhancement_legs([{**pick, "enhancement_price": 1.25}], team_floors=table)[0]
+    at_min = at.enhancement_legs([{**pick, "enhancement_price": 1.30,
+                                   "enhancement_consensus_price": 1.30}], team_floors=table)[0]
+    assert below["verdict"] == "below_min_odds"
+    assert at_min["verdict"] == "fire"
+    assert at_min["floor_basis"] == "pick_evidence"
 
 
 def test_a_team_under_leg_on_a_side_without_evidence_does_not_fire():
@@ -120,11 +120,11 @@ def _team_pick(price, consensus, *, market="away_under_25", side="away"):
             "enhancement_consensus_price": consensus}
 
 
-def test_a_best_quote_the_median_does_not_support_is_not_a_bet():
+def test_the_median_quote_no_longer_gates_a_team_leg():
     table = {"away_under_25|2": {"floor": 1.20, "n": 900, "hits": 830,
                                  "wilson_lb": 0.9, "basis": "pick_evidence"}}
     leg = at.enhancement_legs([_team_pick(1.90, 1.14)], team_floors=table)[0]
-    assert leg["verdict"] == "outlier_price"
+    assert leg["verdict"] == "fire"
 
 
 def test_a_price_the_median_also_supports_fires():
@@ -134,11 +134,11 @@ def test_a_price_the_median_also_supports_fires():
     assert leg["verdict"] == "fire"
 
 
-def test_a_team_leg_with_no_consensus_quote_does_not_fire():
+def test_a_team_leg_with_no_consensus_quote_still_fires():
     table = {"away_under_25|2": {"floor": 1.20, "n": 900, "hits": 830,
                                  "wilson_lb": 0.9, "basis": "pick_evidence"}}
     leg = at.enhancement_legs([_team_pick(1.68, None)], team_floors=table)[0]
-    assert leg["verdict"] == "outlier_price"
+    assert leg["verdict"] == "fire"
 
 
 def test_a_swapped_fixture_reads_the_feed_team_it_names():
