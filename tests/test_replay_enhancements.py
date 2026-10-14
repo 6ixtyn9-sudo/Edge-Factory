@@ -134,9 +134,43 @@ def test_the_report_compares_two_uniform_floor_variants(tmp_path, monkeypatch, c
     args = type("A", (), {"ab": ("live", "floor=1.70")})()
     assert rh.cmd_enhancements(args) == 0
     out = capsys.readouterr().out
-    assert "live floors" in out
+    assert "live (MIN_LEG_ODDS)" in out
     assert "every market at floor=1.70" in out
     assert "paired bootstrap, B minus A" in out
+
+
+def test_uniform_arm_gates_on_its_own_floor_not_the_static_table():
+    # Two priced 1.40 over-2.5 legs on one day: the static table (1.60) would
+    # block them, so a 1.30 arm must bet and a 1.60 arm must not.
+    records = [_rec(price=1.40, hit=True, match="A vs B"),
+               _rec(price=1.40, hit=True, match="C vs D")]
+    assert rh.enh_day_growth(records, {"match_over_25": 1.30})["2026-10-12"]["bets"] == 1
+    assert rh.enh_day_growth(records, {"match_over_25": 1.60}) == {}
+    # and the two uniform arms must differ, or the replay is blind to the floor
+    lo = rh.enh_arm(records, {"match_over_25": 1.00})
+    hi = rh.enh_arm(records, {"match_over_25": 1.60})
+    assert lo["bets"] == 1 and hi["bets"] == 0
+
+
+def test_live_arm_is_the_shared_minimum_on_every_market():
+    records = [_rec(market="match_over_25", price=1.40),
+               _rec(market="away_under_35", price=1.35)]
+    assert rh._root_floors(records) == {"away_under_35": at.MIN_LEG_ODDS,
+                                        "match_over_25": at.MIN_LEG_ODDS}
+
+
+def test_derive_floors_honours_its_parent_table_and_defaults_to_static():
+    from edgefactory import enh_registry as er
+    # one priced record: below the evidence minimum, so the market inherits its parent
+    reg = {"version": 2, "markets": {"match_over_25@v1": {"status": "PAPER", "records": [
+        {"date": "2026-10-01", "match": "A vs B", "price": 1.5, "hit": True}]}}}
+    out = er.derive_floors(reg, "2026-10-13", parent_floors={"match_over_25": 1.30},
+                           margin=er.ENHANCEMENT_FLOOR_MARGIN)
+    assert out["floors"]["match_over_25"]["floor"] == 1.30
+    assert er.floor_for_slice({}, "match_over_25", parent_floors={"match_over_25": 1.30}) \
+        == (1.30, "inherited")
+    # no parent argument: the operator's static table, unchanged for live callers
+    assert er.floor_for_slice({}, "match_over_25") == (1.60, "inherited")
 
 
 def test_no_records_is_an_honest_empty_answer(monkeypatch, capsys):
