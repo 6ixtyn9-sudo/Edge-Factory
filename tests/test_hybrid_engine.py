@@ -218,3 +218,32 @@ def test_btts_is_a_recommendable_market_after_the_opt_out_was_lifted(monkeypatch
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
     markets = {n["market"] for n in pt.compute_dynamic_enhancement(con, _pick())["event_notes"]}
     assert "btts_yes" in markets
+
+
+def test_cohort_rank_rates_maps_the_realized_cohort_to_match_over_markets():
+    """Market choice ranks on the realized outcome-unconditioned cohort rate.
+    No cohort (no warehouse, thin cohort, draw pick) means no rates, so ranking
+    falls back to stated probability alone."""
+    assert pt.cohort_rank_rates(None) == {}
+    cohort = {"n": 500, "over15": 0.80, "over25": 0.61, "over35": 0.38,
+              "over45": 0.19, "btts": 0.41}
+    assert pt.cohort_rank_rates(cohort) == {
+        "match_over_15": 0.80, "match_over_25": 0.61,
+        "match_over_35": 0.38, "match_over_45": 0.19,
+    }
+
+
+def test_event_notes_are_ordered_by_realized_cohort_rate(monkeypatch):
+    """The survivors of the stated-probability gates come back sorted by their
+    realized cohort rate, highest first, not by the enhancement registry."""
+    con = _empty_warehouse()
+    cohort = {"n": 400, "avg_goals": 2.6, "over15": 0.60, "over25": 0.55,
+              "over35": 0.85, "over45": 0.30, "btts": 0.50,
+              "h_o05": 0.90, "h_o15": 0.60, "h_o25": 0.30, "h_o35": 0.10,
+              "a_o05": 0.70, "a_o15": 0.30, "a_o25": 0.10, "a_o35": 0.02}
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
+    notes = pt.compute_dynamic_enhancement(con, _pick())["event_notes"]
+    rates = pt.cohort_rank_rates(cohort)
+    ranked = [rates[n["market"]] for n in notes if n["market"] in rates]
+    assert len(ranked) >= 2, "need at least two cohort-rated candidates to order"
+    assert ranked == sorted(ranked, reverse=True)
