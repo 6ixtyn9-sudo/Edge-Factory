@@ -127,12 +127,13 @@ def test_a_market_with_no_settled_evidence_has_no_floor_and_does_not_fire():
 
 
 def test_ev_fields_gate_nothing(tmp_path, _tmp_lane):
-    """A big sample edge below the floor is still no bet — there is no EV veto."""
-    above = _pick(price=1.72)
-    below = _pick(price=1.59, prob=0.95)          # huge sample edge, under floor
+    """No EV veto and no price floor: a leg with a big sample edge fires at any
+    price above the minimum; only a price under MIN_LEG_ODDS is refused."""
+    above = _pick(price=1.59, prob=0.95)
+    below = _pick(price=1.25, prob=0.95)
     legs = {l["price"]: l for l in at.enhancement_legs([above, below])}
-    assert legs[1.72]["verdict"] == "fire"
-    assert legs[1.59]["verdict"] == "below_floor"
+    assert legs[1.59]["verdict"] == "fire"
+    assert legs[1.25]["verdict"] == "below_min_odds"
     # The information fields remain on the row; nothing consults them here.
     assert below.get("enhancement_edge_sample") is None  # set by enh_pricing, not here
 
@@ -292,7 +293,7 @@ def test_a_vetoed_parent_is_staked_and_not_called_paper(tmp_path, _tmp_lane):
 def test_the_artifact_matches_autobets_conventions(tmp_path, _tmp_lane):
     _registry(_tmp_lane)
     _board(_tmp_lane, _distinct(2) + [
-        _pick(home="Nu FC", away="Xi FC", price=1.59)])       # below floor
+        _pick(home="Nu FC", away="Xi FC", price=1.20)])       # below the minimum
     legs, plan = _legs_and_plan(_tmp_lane)
     txt = at.render_enhancement_tickets(
         at.fresh_state(), DAY, legs, plan, _now(),
@@ -306,7 +307,7 @@ def test_the_artifact_matches_autobets_conventions(tmp_path, _tmp_lane):
     assert "ENHANCEMENT SLICE (settled, registry)" in txt
     assert "by bucket" in txt and "by rule" in txt
     # the refused leg is visible for audit but is NOT an instruction
-    assert "[NO BET]" in txt and "below floor 1.60 [inherited] — no bet" in txt
+    assert "[NO BET]" in txt and "priced 1.20 under the 1.30 minimum — no bet" in txt
     assert "Nu FC" not in "\n".join(
         l for l in txt.splitlines() if l.startswith("[ACCA #"))
     assert "deploying 25% of free bank today" in txt
@@ -656,22 +657,25 @@ def test_the_floor_boundary_is_inclusive_across_every_floored_market():
             "match_under_35": 1.64}
 
 
-def test_the_board_shows_a_bet_above_the_floor_and_no_bet_below_it():
+def test_the_board_shows_a_bet_at_the_minimum_and_no_bet_below_it():
     """One gate, two presentations: 🔬 for a bet, 🚫 for the refusal."""
     import picks_today as pt
+    from auto_tickets import MIN_LEG_ODDS
 
-    fired = pt.enhancement_board_line(_pick(price=1.60))      # exactly at floor
-    assert fired.startswith("     🔬 ") and "@ 1.60" in fired
+    fired = pt.enhancement_board_line(_pick(price=MIN_LEG_ODDS))   # exactly at the minimum
+    assert fired.startswith("     🔬 ") and f"@ {MIN_LEG_ODDS:.2f}" in fired
 
-    refused = pt.enhancement_board_line(_pick(price=1.59))
+    refused = pt.enhancement_board_line(_pick(price=round(MIN_LEG_ODDS - 0.01, 2)))
     assert refused.startswith("     🚫 ")
-    assert "no bet: below match_over_25 floor 1.60" in refused
+    assert f"no bet: below minimum {MIN_LEG_ODDS:.2f}" in refused
     # The marker is not advice: nothing about the refused line invites a bet.
     assert "🔬" not in refused
 
-    # A floorless market is not "below" a floor it does not have.
+    # A floorless market that is not a team under fires: no floor gate any more.
+    assert pt.enhancement_board_line(_pick(market="match_over_45", price=3.75)).startswith("     🔬 ")
+    # A team under with no evidence for its side is still not a bet.
     floorless = pt.enhancement_board_line(_pick(market="away_under_35", price=1.90))
-    assert "no bet: no floor set for this market" in floorless
+    assert "no bet: no settled evidence for this side" in floorless
 
     # Nothing to say when there is no price, or when the price is junk.
     assert pt.enhancement_board_line(_pick(price=None)) is None
@@ -680,51 +684,20 @@ def test_the_board_shows_a_bet_above_the_floor_and_no_bet_below_it():
     assert pt.enhancement_board_line({"home": "A", "away": "B"}) is None
 
 
-def test_the_ceiling_refuses_a_price_above_its_band_on_both_surfaces(tmp_path, _tmp_lane):
-    """match_over_25: 1.85 is inside the band, 1.86 is a refused no-bet."""
+def test_there_is_no_price_ceiling_any_price_above_the_minimum_fires(tmp_path, _tmp_lane):
+    """Operator 2026-10-14: accept whatever odds. The old 1.85 band is gone."""
+    for price in (1.85, 1.86, 3.50):
+        assert at.enhancement_legs([_pick(price=price)])[0]["verdict"] == "fire", price
+
+
+def test_the_board_and_the_slip_refuse_with_the_same_minimum():
+    """The board's gate IS the slip's gate: the MIN_LEG_ODDS minimum, nothing else."""
     import picks_today as pt
-    assert reg.ceiling_for("match_over_25") == 1.85
-    assert reg.ceiling_for("away_under_35") is None       # floorless / no ceiling
-
-    inside = _pick(price=1.85)                             # inclusive, like the floor
-    assert at.enhancement_legs([inside])[0]["verdict"] == "fire"
-    assert pt.enhancement_board_line(inside).startswith("     🔬 ")
-
-    above = _pick(price=1.86)
-    leg = at.enhancement_legs([above])[0]
-    assert leg["verdict"] == "above_ceiling" and leg["ceiling"] == 1.85
-    board = pt.enhancement_board_line(above)
-    assert board.startswith("     🚫 ") and "above match_over_25 ceiling 1.85" in board
-    assert "🔬" not in board
-
-    # Above the ceiling it never reaches the pool, so it can never be staked.
-    assert at.enhancement_pool([leg]) == []
-    _board(_tmp_lane, [above])
-    _, plan = _legs_and_plan(_tmp_lane)
-    assert plan == []
-    txt = at.render_enhancement_tickets(at.fresh_state(), DAY,
-                                        at.enhancement_legs([above]), [], _now(),
-                                        should_freeze=False, freeze_record=None,
-                                        bank_eff=100.0)
-    assert "above match_over_25 ceiling 1.85 — no bet" in txt
-
-
-def test_the_board_and_the_slip_refuse_with_the_same_floor():
-    """The board's gate IS the slip's gate — no second opinion anywhere."""
-    import picks_today as pt
-
-    for price in (1.59, 1.60, 1.72, 1.85, 1.86, 3.29, 3.30):
+    for price in (1.25, 1.29, 1.30, 1.59, 1.86, 3.50):
         pick = _pick(price=price)
         leg = at.enhancement_legs([pick])[0]
         board_bet = pt.enhancement_board_line(pick).startswith("     🔬 ")
-        in_band = reg.clears_floor(pick["recommended_enhancement"], price) and (
-            reg.ceiling_for(pick["recommended_enhancement"]) is None
-            or price <= reg.ceiling_for(pick["recommended_enhancement"]))
-        assert board_bet == (leg["verdict"] == "fire") == in_band, price
-    assert at.enhancement_legs([_pick(price=1.59)])[0]["floor"] == 1.60
-    # ...and the slip says "no floor set" for the floorless case rather than
-    # claiming the market is below a threshold that does not exist.
-    assert at.enhancement_legs([_pick(market="away_under_35", price=1.90)])[0]["floor"] is None
+        assert board_bet == (leg["verdict"] == "fire") == (price >= at.MIN_LEG_ODDS), price
 
 
 def test_an_under_is_priced_as_readily_as_an_over(tmp_path):
@@ -862,33 +835,16 @@ def _tightened_registry(localdata: Path) -> dict:
     return payload
 
 
-def test_the_derived_floor_tightens_the_market_and_the_slip_and_the_board_agree(tmp_path, _tmp_lane, monkeypatch):
+def test_a_derived_floor_no_longer_gates_a_leg(tmp_path, _tmp_lane, monkeypatch):
+    """Operator 2026-10-14: no floor gate. A price under the derived floor but at or
+    above the minimum fires on the slip and on the board."""
     import picks_today as pt
-    monkeypatch.setattr(reg, "ENHANCEMENT_PRICE_CEILINGS", {})   # floor-only test
+    monkeypatch.setattr(reg, "ENHANCEMENT_PRICE_CEILINGS", {})
     _tightened_registry(_tmp_lane)
     floors = reg.derive_floors_for_day(_tmp_lane.parent, DAY)
-    market_row = [r for r in floors["rows"] if r["level"] == "market"][0]
-    assert market_row["basis"] == "market"
-    derived = market_row["floor"]
-    assert derived > reg.floor_for("match_over_25")
-
-    # A price that clears the OPERATOR's floor and not the derived one is not a
-    # bet on either surface — and both surfaces say which floor refused it.
-    price = round(reg.floor_for("match_over_25") + 0.01, 2)
-    pick = _pick(price=price)
-    leg = at.enhancement_legs([pick], floors=floors)[0]
-    assert leg["verdict"] == "below_floor"
-    assert leg["floor"] == derived and leg["floor_basis"] == "market"
-    board = pt.enhancement_board_line(pick, floors=floors)
-    assert board.startswith("     🚫 ")
-    assert f"below match_over_25 floor {derived:.2f} (market)" in board
-    # ...and the same price against the operator's table (no derived rows) fires
-    assert at.enhancement_legs([pick], floors={})[0]["verdict"] == "fire"
-    assert pt.enhancement_board_line(pick, floors={}).startswith("     🔬 ")
-    # A price above the derived floor fires on both, quoting the basis.
-    above = _pick(price=round(derived + 0.05, 2))
-    assert at.enhancement_legs([above], floors=floors)[0]["verdict"] == "fire"
-    assert f"floor {derived:.2f} (market)" in pt.enhancement_board_line(above, floors=floors)
+    pick = _pick(price=1.50)
+    assert at.enhancement_legs([pick], floors=floors)[0]["verdict"] == "fire"
+    assert pt.enhancement_board_line(pick, floors=floors).startswith("     🔬 ")
 
 
 def test_the_lane_artifact_and_state_carry_the_days_derivation(_tmp_lane, monkeypatch):
@@ -1015,3 +971,26 @@ def test_the_enhancement_lane_is_the_only_caller_on_hitrate():
     # main lane selection default is untouched
     import inspect
     assert inspect.signature(at.select_accas).parameters["rank"].default == "prob"
+
+
+def test_a_priced_leg_with_no_floor_prints_no_bet_and_never_crashes(tmp_path, _tmp_lane):
+    """A priced team-under has no floor (home/away_under_35), so its leg is
+    ``no_floor`` with ``floor=None``. The render used to format that None in
+    the ``outlier_price`` text eagerly and raised TypeError, failing the whole
+    --enhancements stage (daily run 38509129401). It must print NO BET instead."""
+    leg = {
+        "match": "Alpha FC vs Beta FC", "home": "Alpha FC", "away": "Beta FC",
+        "row": {}, "fixture_key": "k", "market": "away_under_35",
+        "label": "AWAY UNDER 3.5", "probability": 0.5, "price": 1.9,
+        "price_book": "x", "price_source": "x", "bucket": "SKIPPED_VETO",
+        "rule": "", "league": "L", "floor": None, "floor_basis": "inherited",
+        "ceiling": None, "verdict": "no_floor", "shadow": True,
+    }
+    for verdict in ("no_floor", "outlier_price", "below_floor"):
+        leg["verdict"] = verdict
+        txt = at.render_enhancement_tickets(at.fresh_state(), DAY, [leg], [], _now(),
+                                            should_freeze=False, freeze_record=None,
+                                            bank_eff=100.0)
+        assert "[NO BET] Alpha FC vs Beta FC" in txt, verdict
+        assert "no floor set for this market — no bet" in txt or \
+            "no price floor for this side" in txt, verdict

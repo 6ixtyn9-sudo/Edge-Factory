@@ -110,7 +110,7 @@ def test_losing_bucket_at_the_door_reaches_veto_and_closes_it(state):
 
 @pytest.mark.parametrize("n,wins,odds,expected", [
     (11, 11, 1.50, "UNKNOWN"),       # below the engine's own small-n floor
-    (12, 12, 1.25, "ALLOW"),
+    (12, 12, 1.30, "ALLOW"),
     (12, 0, 1.50, "VETO"),          # avg_p floors at 55%, so gap != 0 here
     (20, 14, 1.30, "CAUTION"),
     (40, 30, 1.30, "CAUTION"),

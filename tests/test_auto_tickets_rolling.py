@@ -171,13 +171,15 @@ def _fixture_leg(match, home, away, date, prob, odds):
 
 def _incident_pool():
     """The real 2026-09-22 FA Cup split: one match, two spellings, one card.
-    Dag-and: betexplorer @1.27 stated 68% · Dag-&: scoutingstats @1.33 67.1%."""
+    Dag-and: betexplorer @1.27 stated 68% · Dag-&: scoutingstats @1.33 67.1%.
+    EK and Dag-and are lifted to 1.31 (quoted 1.24 / 1.27, under the 1.30 minimum)
+    so both stay in the pool; the dedup shape is unchanged."""
     return [
         _fixture_leg("East Kilbride vs Celtic II", "East Kilbride", "Celtic II",
-                     "2026-09-22", 0.75, 1.24),
+                     "2026-09-22", 0.75, 1.31),
         _fixture_leg("Dagenham and Redbridge vs Waltham Abbey",
                      "Dagenham and Redbridge", "Waltham Abbey",
-                     "2026-09-22", 0.68, 1.27),
+                     "2026-09-22", 0.68, 1.31),
         _fixture_leg("Dagenham & Redbridge vs Waltham Abbey",
                      "Dagenham & Redbridge", "Waltham Abbey",
                      "2026-09-22", 0.671, 1.33),
@@ -232,7 +234,7 @@ def test_same_teams_on_different_dates_are_not_dupes():
 # ---------------- planning (percent stakes) ----------------
 
 def test_plan_day_top6_consecutive_pairs_and_stake_pct():
-    pool = [_leg(i, 0.60 + i / 100, 1.10 + i / 10) for i in range(9)]
+    pool = [_leg(i, 0.60 + i / 100, 1.31 + i / 10) for i in range(9)]
     plan = at.plan_day(pool, bank_pct=100.0, pairing="consecutive")
     assert len(plan) == at.MAX_ACCAS
     assert all(len(a["legs"]) == at.LEGS_PER_ACCA for a in plan)
@@ -340,7 +342,7 @@ def test_acca_gate_actually_bites_and_is_not_live():
 def test_selection_knobs_are_overridable_for_the_harness():
     """One code path: the replay harness drives THIS function with overrides
     (2026-09-04: it used to re-implement the recipe and drifted twice)."""
-    pool = [_leg(i, 0.60 + i / 100, 1.10 + i / 10) for i in range(9)]
+    pool = [_leg(i, 0.60 + i / 100, 1.31 + i / 10) for i in range(9)]
     assert all(l["odds"] >= 1.30 for a in at.select_accas(pool, floor=1.30) for l in a)
     assert len(at.select_accas(pool, max_accas=4)) == 4
     ev = at.select_accas(pool, rank="ev")
@@ -483,7 +485,7 @@ def test_playable_legs_excludes_unverified_secondary_price():
 # ---------------- backfill end-to-end (percent arithmetic) ----------------
 
 def test_backfill_end_to_end(tmp_path, monkeypatch):
-    days = {"2026-08-01": [("Ah", "Bh", 1.25, 80.0, "home"), ("Ch", "Dh", 1.6, 75.0, "home")],
+    days = {"2026-08-01": [("Ah", "Bh", 1.31, 80.0, "home"), ("Ch", "Dh", 1.6, 75.0, "home")],
             "2026-08-02": [("Eh", "Fh", 1.3, 78.0, "home"), ("Gh", "Hh", 1.4, 72.0, "away")]}
     archives, settled = [], {}
     for d, rows in days.items():
@@ -498,10 +500,10 @@ def test_backfill_end_to_end(tmp_path, monkeypatch):
     at.cmd_backfill(args, at.load_state())
     st = at.load_state()
     assert len(st["history"]) == 2
-    # day1: one acca @2.00 (1.25*1.6), it wins. Under STAKE_MODE="per_acca" a
+    # day1: one acca @2.10 (1.31*1.6 = 2.096, rounded to the card's 2dp), it wins. Under STAKE_MODE="per_acca" a
     # single-acca card stakes STAKE_FRAC/MAX_ACCAS, not the whole day fraction.
     f = at.STAKE_FRAC / at.MAX_ACCAS
-    day1 = 100.0 * (1 + f)                          # 100 - 100f + 100f*2.00
+    day1 = 100.0 * (1 + f * 1.10)                   # 100 - 100f + 100f*2.10
     assert st["history"][0]["bank_pct"] == pytest.approx(day1, abs=0.01)
     assert st["events"] == []                       # < 200% target
     # day2: stake = the same per-acca fraction of day1 bank, acca loses
