@@ -197,7 +197,7 @@ MIN_ACCAS = 1              # cards with fewer accas are NO BET (1 preserves live
 LEGS_PER_ACCA = 2          # 2-leg beat 3-leg out-of-sample
 MAX_LEGS = MAX_ACCAS * LEGS_PER_ACCA
 PAIRING = "barbell"        # ARMED 2026-09-09. Revert = "consecutive".
-MIN_LEG_ODDS = 1.20        # min odds per leg (2026-09-02..04 band evidence; the
+MIN_LEG_ODDS = 1.30        # min odds per leg, both lanes (operator 2026-10-14: 1.20 -> 1.30; was 2026-09-02..04 band evidence; the
                            # replay harness A/Bs this knob — never inline the number)
 VOLUME_POOL = 12           # pool >= this -> volume regime (saturated day)
 VOLUME_MIN_PROB = 0.65     # stated-prob threshold used by the volume regime
@@ -4414,7 +4414,7 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
     ``market|side`` where side is ``1`` (home 1X2 pick) or ``2`` (away). A team
     under leg with no entry for its side has no floor and does not fire.
     """
-    from edgefactory.enh_registry import ceiling_for, clears_floor, floor_for, floor_for_slice
+    from edgefactory.enh_registry import ceiling_for, floor_for, floor_for_slice
     from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS as TEAM_UNDERS
     try:
         from edgefactory.enh_pricing import MARKET_PRICE_MAP
@@ -4448,20 +4448,15 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
             # 429 from 2026-10-04, so later days are unpriced, not unpriceable.
             verdict = "unpriceable" if mapped is None else "unpriced"
         else:
-            ceiling = ceiling_for(market)
-            consensus = pick.get("enhancement_consensus_price")
-            if is_team_under and leg_floor is None:
-                verdict = "no_floor"             # no evidence for this side: not a bet
-            elif is_team_under and (not isinstance(consensus, (int, float))
-                                    or consensus < leg_floor):
-                # The best quote clears the floor but the market's median does not:
-                # one top-of-market quote is not a price anyone else will take.
-                verdict = ("outlier_price" if clears_floor(market, price, floor=leg_floor)
-                           else "below_floor")
-            elif not clears_floor(market, price, floor=leg_floor):
-                verdict = "below_floor"
-            elif ceiling is not None and price > ceiling:
-                verdict = "above_ceiling"       # priced past its band: no bet
+            # Operator, 2026-10-14: no price floor and no price ceiling. The only
+            # price gate is MIN_LEG_ODDS; any
+            # price above it fires. A team under with no settled evidence for its
+            # side still does not fire: the lane ranks by hit rate, and an
+            # unevidenced side has nothing to rank by.
+            if price < MIN_LEG_ODDS:
+                verdict = "below_min_odds"
+            elif is_team_under and leg_floor is None:
+                verdict = "no_floor"
             else:
                 verdict = "fire"
         legs.append({
@@ -4719,6 +4714,9 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                             if leg["floor"] is not None
                             else "no floor set for this market — no bet"),
             "unpriced": "no price captured — no bet",
+            # Eager dict: format the price only when there is one (unpriced legs have None).
+            "below_min_odds": (f"priced {leg['price']:.2f} under the {MIN_LEG_ODDS:.2f} minimum — no bet"
+                               if leg["price"] is not None else "no price captured — no bet"),
             "no_floor": "no price floor for this side (no settled evidence) — no bet",
             # Same guard as below_floor: a leg with no floor has nothing to
             # "clear", and formatting None here crashed the whole card.
