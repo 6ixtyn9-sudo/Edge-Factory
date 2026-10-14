@@ -1,95 +1,50 @@
 {
-  "added": 144,
-  "attempted": 4,
-  "attempted_fixtures": [
-    {
-      "away": "Montevideo City Torque",
-      "date": "2026-10-14",
-      "home": "Atletico Mineiro",
-      "kickoff": "17:00",
-      "league": "International,Copa Sudamericana Knockout Stage"
-    },
-    {
-      "away": "VfB Stuttgart",
-      "date": "2026-10-14",
-      "home": "Slovan Bratislava",
-      "kickoff": "14-10, 20:00",
-      "league": "World UEFA Champions League"
-    },
-    {
-      "away": "Puntarenas FC",
-      "date": "2026-10-14",
-      "home": "CS Cartagines",
-      "kickoff": "17:00",
-      "league": "Costa Rica,Primera Division Apertura"
-    },
-    {
-      "away": "Borussia Dortmund",
-      "date": "2026-10-14",
-      "home": "Bodo/Glimt",
-      "kickoff": "14-10, 20:00",
-      "league": "World UEFA Champions League"
-    }
-  ],
-  "candidate_fixtures": 16,
-  "captured_at": "2026-10-14T10:19:33+00:00",
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 17,
+  "captured_at": "2026-10-14T11:35:28+00:00",
   "date": "2026-10-14",
-  "due_reasons": {
-    "first_at": 4
-  },
+  "due_reasons": {},
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 2
+    "kickoff_mismatch_display_fallback_overridden": 5
   },
-  "quoted_fixtures": [
-    {
-      "away": "VfB Stuttgart",
-      "date": "2026-10-14",
-      "home": "\u0160K Slovan Bratislava",
-      "kickoff": "2026-10-14T19:00:00Z",
-      "league": "World UEFA Champions League"
-    },
-    {
-      "away": "Borussia Dortmund",
-      "date": "2026-10-14",
-      "home": "Bod\u00f8/Glimt",
-      "kickoff": "2026-10-14T19:00:00Z",
-      "league": "World UEFA Champions League"
-    }
-  ],
-  "rows": 144,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
-    "kickoff_mismatch": 2,
-    "priced_close_window_not_open": 2,
-    "retry_cooldown": 9
+    "kickoff_mismatch": 5,
+    "priced_close_window_not_open": 5,
+    "retry_cooldown": 11
   },
   "skipped": [
     "Dukagjini|Vushtrria (retry cooldown (6h after failed attempt))",
     "Junior|Deportivo Pereira (retry cooldown (6h after failed attempt))",
+    "Atletico Mineiro|Montevideo City Torque (retry cooldown (6h after failed attempt))",
     "\u00dcmraniyespor|Boluspor (retry cooldown (6h after failed attempt))",
     "Mito Hollyhock|FC Tokyo (kickoff already passed)",
     "Spartakos Kitiou|Digenis Ypsonas (retry cooldown (6h after failed attempt))",
     "Kheybar Khorramabad|Persepolis FC (retry cooldown (6h after failed attempt))",
     "Stabaek|Sandnes ULF (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Slovan Bratislava|VfB Stuttgart: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Slovan Bratislava|VfB Stuttgart (priced, close window not open)",
     "WARN kickoff-mismatch Lincoln|West Ham: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Lincoln|West Ham (priced, close window not open)",
+    "CS Cartagines|Puntarenas FC (retry cooldown (6h after failed attempt))",
     "Lask Linz|Liverpool (retry cooldown (6h after failed attempt))",
     "Stromsgodset|Kongsvinger (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Shakhtar Donetsk|AEK Athens FC: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Shakhtar Donetsk|AEK Athens FC (priced, close window not open)",
+    "WARN kickoff-mismatch Bodo/Glimt|Borussia Dortmund: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Bodo/Glimt|Borussia Dortmund (priced, close window not open)",
     "Trans Narva|Kuressaare (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Aston Villa|Fenerbah\u00e7e: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Aston Villa|Fenerbah\u00e7e (priced, close window not open)"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [
-    "Atletico Mineiro vs Montevideo City Torque (league not covered: International,Copa Sudamericana Knockout Stage)",
-    "CS Cartagines vs Puntarenas FC (league not covered: Costa Rica,Primera Division Apertura)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Costa Rica,Primera Division Apertura": 1,
-    "league not covered: International,Copa Sudamericana Knockout Stage": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
