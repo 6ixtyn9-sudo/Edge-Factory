@@ -578,31 +578,30 @@ def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | N
 AUDIT_ROLLING_PATH = LOCALDATA / "picks_audit_rolling.json"
 
 
-ENH_RANK_MIN_N = 10  # same evidence bar as the calibration below
+# Market choice ranks by the REALIZED rate of the same outcome-unconditioned
+# "matches like this one" cohort that prices the stated probabilities
+# (fetch_match_cohort). Operator 2026-10-14: rank by the realized cohort, not by
+# the enhancement registry. Stated EV and the MIN_PROB/MIN_EDGE/LINE_THRESHOLDS
+# gates still decide which candidates survive; this only orders the survivors.
+COHORT_RANK_KEYS = {
+    "match_over_15": "over15",
+    "match_over_25": "over25",
+    "match_over_35": "over35",
+    "match_over_45": "over45",
+}
 
 
-def _enh_hit_rates(registry_path: Path | None = None) -> dict[str, float]:
-    """Settled hit rate per enhancement market from the enhancement registry.
-
-    Operator ruling (2026-10-12): "we have the track record of enhanced, we know
-    what wins more". Market choice ranks by this, not by stated EV. Markets with
-    fewer than ENH_RANK_MIN_N settled records have no rate and rank last.
-    Fail-soft: an unreadable registry means no rates, not a crash.
-    """
-    path = registry_path or (LOCALDATA / "enhancement_registry.json")
-    try:
-        markets = json.loads(path.read_text()).get("markets", {})
-    except Exception:
+def cohort_rank_rates(cohort: dict | None) -> dict[str, float]:
+    """Realized cohort rate per enhancement market. Empty when there is no cohort
+    (no warehouse, a thin cohort, or a draw pick): ranking then falls back to
+    stated probability alone."""
+    if not cohort:
         return {}
     out: dict[str, float] = {}
-    for key, slot in markets.items():
-        if not isinstance(slot, dict):
-            continue
-        market = str(key).split("@", 1)[0]
-        n = int(slot.get("n") or 0)
-        hits = int(slot.get("hits") or 0)
-        if n >= ENH_RANK_MIN_N:
-            out[market] = hits / n
+    for market, key in COHORT_RANK_KEYS.items():
+        value = cohort.get(key)
+        if value is not None:
+            out[market] = float(value)
     return out
 
 
@@ -1156,18 +1155,17 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             c["ev_rank_key"] = (edge, prob)
             ev_candidates.append(c)
 
-        hit_rates = _enh_hit_rates()
+        rank_rates = cohort_rank_rates(cohort)
         if ev_candidates:
-            ev_candidates.sort(key=lambda x: (hit_rates.get(x["market"], -1.0),
+            ev_candidates.sort(key=lambda x: (rank_rates.get(x["market"], -1.0),
                                               x["probability"]), reverse=True)
             out["event_notes"] = ev_candidates
             best = ev_candidates[0]
         else:
-            # Nothing passed the EV / hard filters. Rank by settled hit rate, then
-            # stated probability. The old safety tiers (over 1.5/2.5 needed 45%,
-            # over 3.5 needed 30%) let a 32.5% over 3.5 beat a 42.1% over 2.5.
+            # Nothing passed the EV / hard filters. Rank by realized cohort rate,
+            # then stated probability.
             candidates.sort(
-                key=lambda x: (hit_rates.get(x["market"], -1.0), x["probability"]),
+                key=lambda x: (rank_rates.get(x["market"], -1.0), x["probability"]),
                 reverse=True,
             )
             out["event_notes"] = candidates
