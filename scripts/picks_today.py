@@ -578,31 +578,44 @@ def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | N
 AUDIT_ROLLING_PATH = LOCALDATA / "picks_audit_rolling.json"
 
 
-# Market choice ranks by the REALIZED rate of the same outcome-unconditioned
-# "matches like this one" cohort that prices the stated probabilities
-# (fetch_match_cohort). Operator 2026-10-14: rank by the realized cohort, not by
-# the enhancement registry. Stated EV and the MIN_PROB/MIN_EDGE/LINE_THRESHOLDS
-# gates still decide which candidates survive; this only orders the survivors.
-COHORT_RANK_KEYS = {
-    "match_over_15": "over15",
-    "match_over_25": "over25",
-    "match_over_35": "over35",
-    "match_over_45": "over45",
+# Market choice is judged on the REALIZED rate of the outcome-unconditioned
+# "matches like this one" cohort (fetch_match_cohort), which is also what the
+# stated probabilities are blended from. Operator 2026-10-14: replace the stated
+# probability with the cohort rate for selection, gates and ranking. The stated
+# probability is kept on the candidate as raw_probability for audit.
+COHORT_DIRECT_KEYS = {
+    "match_over_15": "over15", "match_over_25": "over25",
+    "match_over_35": "over35", "match_over_45": "over45",
+    "btts_yes": "btts",
+    "home_over_05": "h_o05", "home_over_15": "h_o15",
+    "home_over_25": "h_o25", "home_over_35": "h_o35",
+    "away_over_05": "a_o05", "away_over_15": "a_o15",
+    "away_over_25": "a_o25", "away_over_35": "a_o35",
+}
+COHORT_COMPLEMENT_KEYS = {
+    "match_under_15": "over15", "match_under_25": "over25",
+    "match_under_35": "over35", "match_under_45": "over45",
+    "btts_no": "btts",
+    "home_under_05": "h_o05", "home_under_15": "h_o15",
+    "home_under_25": "h_o25", "home_under_35": "h_o35",
+    "away_under_05": "a_o05", "away_under_15": "a_o15",
+    "away_under_25": "a_o25", "away_under_35": "a_o35",
 }
 
 
-def cohort_rank_rates(cohort: dict | None) -> dict[str, float]:
-    """Realized cohort rate per enhancement market. Empty when there is no cohort
-    (no warehouse, a thin cohort, or a draw pick): ranking then falls back to
-    stated probability alone."""
+def cohort_realized_rate(cohort: dict | None, market: str) -> float | None:
+    """Realized rate of `market` in the cohort, or None when the cohort cannot
+    speak to it (no cohort, or a market outside the cohort's columns). An under
+    is the complement of its over/score rate, exact for whole-goal lines."""
     if not cohort:
-        return {}
-    out: dict[str, float] = {}
-    for market, key in COHORT_RANK_KEYS.items():
-        value = cohort.get(key)
-        if value is not None:
-            out[market] = float(value)
-    return out
+        return None
+    if market in COHORT_DIRECT_KEYS:
+        value = cohort.get(COHORT_DIRECT_KEYS[market])
+        return None if value is None else float(value)
+    if market in COHORT_COMPLEMENT_KEYS:
+        value = cohort.get(COHORT_COMPLEMENT_KEYS[market])
+        return None if value is None else 1.0 - float(value)
+    return None
 
 
 def load_enhancement_calibration(audit_path: Path = AUDIT_ROLLING_PATH) -> dict[str, dict]:
@@ -1061,14 +1074,17 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
     candidates = []
 
     for market, prob, label, reason in raw_candidates:
+        cohort_rate = cohort_realized_rate(cohort, market)
+        if cohort is not None and cohort_rate is None:
+            continue  # cohort replaces the stated probability: no realized rate, no candidate
         engine = "hybrid_cohort" if cohort is not None else "model"
         hr = rolling_hit_rates.get(market, 1.0)
         if engine_aware_debias:
             hr = resolve_debias_hr(market, engine, debias_map)
-        prob_adjusted = prob * hr
+        prob_adjusted = prob * hr if cohort_rate is None else cohort_rate
         # ML-assisted calibration: n-weighted correction from the audit.
         # Over-promising markets get pulled down, under-promising get lifted.
-        if market in calib and calib[market]["n"] >= 10:
+        if cohort_rate is None and market in calib and calib[market]["n"] >= 10:
             realized = calib[market]["realized"]
             promised = calib[market]["mean_promised"]
             n = calib[market]["n"]
@@ -1080,7 +1096,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             prob_adjusted = prob_adjusted * (1.0 + w * (realized / promised - 1.0))
             prob_adjusted = max(0.01, min(0.99, prob_adjusted))
             reason = reason + (f" (ML-calibrated {promised:.1%}->{realized:.1%}, n={n})")
-        elif market in calib:
+        elif cohort_rate is None and market in calib:
             # young sample: still nudge, weakly
             realized = calib[market]["realized"]
             promised = calib[market]["mean_promised"]
@@ -1094,7 +1110,10 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 "probability": prob_adjusted,
                 "raw_probability": prob,
                 "label": label,
-                "reason": reason + (f" (Performance feedback: HR={hr:.1%}, Adjusted Prob: {prob_adjusted:.1%})" if hr < 1.0 else ""),
+                "reason": reason + (
+                    f" (realized cohort {cohort_rate:.1%}, n={cohort['n']}; stated {prob:.1%})"
+                    if cohort_rate is not None else
+                    (f" (Performance feedback: HR={hr:.1%}, Adjusted Prob: {prob_adjusted:.1%})" if hr < 1.0 else "")),
                 # Addendum 17: provenance so the audit can grade engines separately.
                 "engine": engine,
                 "cohort_n": (cohort["n"] if cohort is not None else None),
@@ -1155,17 +1174,15 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             c["ev_rank_key"] = (edge, prob)
             ev_candidates.append(c)
 
-        rank_rates = cohort_rank_rates(cohort)
         if ev_candidates:
-            ev_candidates.sort(key=lambda x: (rank_rates.get(x["market"], -1.0),
-                                              x["probability"]), reverse=True)
+            ev_candidates.sort(key=lambda x: x["probability"], reverse=True)
             out["event_notes"] = ev_candidates
             best = ev_candidates[0]
         else:
-            # Nothing passed the EV / hard filters. Rank by realized cohort rate,
-            # then stated probability.
+            # Nothing passed the EV / hard filters. Rank by probability (the
+            # realized cohort rate when a cohort exists).
             candidates.sort(
-                key=lambda x: (rank_rates.get(x["market"], -1.0), x["probability"]),
+                key=lambda x: x["probability"],
                 reverse=True,
             )
             out["event_notes"] = candidates
@@ -1174,6 +1191,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         out.update({
             "recommended_enhancement": best["market"],
             "enhancement_probability": round(best["probability"], 4),
+            "enhancement_stated_probability": round(best["raw_probability"], 4),
             "enhancement_reason": best["reason"],
             "enhancement_label": best["label"],
         })
