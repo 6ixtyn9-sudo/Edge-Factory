@@ -1043,10 +1043,8 @@ def test_a_forced_recut_supersedes_the_frozen_card_and_never_edits_it(tmp_path, 
     # the frozen acca stays open for settlement, exactly as it was staked
     assert state["open_slips"] == frozen_state["open_slips"]
     assert state["frozen_by_date"] == frozen_state["frozen_by_date"]
-    marker = state["superseded_by_date"][DAY]
-    assert marker["result"] == "RECUT"
-    assert marker["recut_slip"] == f"localdata/autobets_enh_tickets_{DAY}_force_recut.txt"
-    assert marker["audit_slip"] == f"localdata/autobets_enh_tickets_{DAY}.txt"
+    assert "[ACCA #" in text                                   # the re-cut has legs
+    assert "superseded_by_date" not in state                   # no state marker
 
 
 def test_a_forced_recut_with_no_qualifying_leg_is_recorded_as_no_bet(tmp_path, _tmp_lane):
@@ -1057,7 +1055,7 @@ def test_a_forced_recut_with_no_qualifying_leg_is_recorded_as_no_bet(tmp_path, _
 
     assert art.read_text() == frozen_text
     assert "NO BET" in recut.read_text()
-    assert state["superseded_by_date"][DAY]["result"] == "NO BET"
+    assert "[ACCA #" not in recut.read_text()                  # a no-bet re-cut
     assert state["open_slips"][0]["accas"]                    # frozen acca still open
 
 
@@ -1101,3 +1099,23 @@ def test_the_recut_diff_comes_from_the_frozen_slip_when_the_state_is_gone(tmp_pa
     assert "ON THE RE-CUT ONLY (2)" in text
     assert "Alpha FC vs Beta FC  Match Over 1.5 Goals @ 1.80" in text
     assert "frozen legs unknown" not in text
+
+
+def test_the_superseded_notice_survives_a_fresh_checkout_with_no_state(tmp_path, _tmp_lane, capsys):
+    """CI has no state file. The notice must still appear, read from the re-cut file."""
+    frozen_text, _ = _force_recut(_tmp_lane, _distinct(2, market="match_over_15", label="Match Over 1.5 Goals"))
+    (_tmp_lane / "enhancement_tickets_state.json").unlink()
+    capsys.readouterr()
+    at.cmd_enhancement(_args(), at.fresh_state())
+    out = capsys.readouterr().out
+    assert frozen_text in out
+    assert "SUPERSEDED — a forced re-cut (RECUT)" in out
+    assert "autobets_enh_tickets_2026-10-12_force_recut.txt" in out
+
+
+def test_a_no_bet_recut_notice_reads_no_bet_from_the_file_alone(tmp_path, _tmp_lane, capsys):
+    _force_recut(_tmp_lane, _distinct(2, price=1.10))                   # below MIN_LEG_ODDS
+    (_tmp_lane / "enhancement_tickets_state.json").unlink()
+    capsys.readouterr()
+    at.cmd_enhancement(_args(), at.fresh_state())
+    assert "SUPERSEDED — a forced re-cut (NO BET)" in capsys.readouterr().out

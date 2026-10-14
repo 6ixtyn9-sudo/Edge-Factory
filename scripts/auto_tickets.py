@@ -4712,7 +4712,7 @@ def _enhancement_recut(st: dict, target: str, now, slip_txt: Path, legs: list[di
     The frozen slip and its open acca stay exactly as staked, so settlement
     still grades what was placed. The corrected card goes to a sibling
     ``_force_recut.txt`` with the legs that moved shown against the frozen card.
-    A superseded marker tells later ordinary runs that a recut exists.
+    The re-cut file on disk is what later ordinary runs read.
     """
     frozen_rec = frozen_entry(st, target) or {}
     frozen_text = slip_txt.read_text(encoding="utf-8") if slip_txt.exists() else ""
@@ -4764,16 +4764,6 @@ def _enhancement_recut(st: dict, target: str, now, slip_txt: Path, legs: list[di
     recut_path = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}_force_recut.txt"
     recut_path.write_text(text, encoding="utf-8")
     print(text)
-    # Latest forced run wins the marker; the frozen book is never touched.
-    st.setdefault(SUPERSEDED_BOOK_KEY, {})[str(target)] = {
-        "recorded_at": now.isoformat(timespec="seconds"),
-        "result": result,
-        "reason": "operator --force re-cut of a frozen enhancement card",
-        "frozen_at": frozen_rec.get("frozen_at"),
-        "audit_slip": f"localdata/{slip_txt.name}",
-        "recut_slip": f"localdata/{recut_path.name}",
-    }
-    save_state(st, ENHANCEMENT_LANE)
     print(f"\nSTATUS: SUPERSEDED — frozen card retained; re-cut ({result}) written to "
           f"localdata/{recut_path.name}")
     return 0
@@ -4803,9 +4793,12 @@ def cmd_enhancement(args, st) -> int:
         if slip_txt.exists():
             print(slip_txt.read_text())
         recut_file = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}_force_recut.txt"
-        sup = superseded_entry(st, target)
-        if sup is not None or recut_file.exists():
-            result = (sup or {}).get("result") or "see re-cut file"
+        if recut_file.exists():
+            # The re-cut file is the durable record (it is tracked). The state
+            # is gitignored and absent in a fresh run, so the notice reads only
+            # the file, and takes RECUT / NO BET from its content.
+            recut_text = recut_file.read_text(encoding="utf-8")
+            result = "RECUT" if "[ACCA #" in recut_text else "NO BET"
             print(f"\nSUPERSEDED — a forced re-cut ({result}) was recorded for this date. "
                   f"The card above is still what was staked; review the re-cut before "
                   f"acting: localdata/{recut_file.name}")
