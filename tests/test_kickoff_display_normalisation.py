@@ -127,3 +127,23 @@ def test_club_brugge_kv_and_club_brugge_collapse_to_one_pick():
         [row("Club Brugge KV", "13-10, 20:00"), row("Club Brugge", "12:00")])
     assert removed == 1
     assert len(out) == 1
+
+
+def test_near_duplicate_tripwire_prints_sast_not_the_raw_feed_text(capsys):
+    """The tripwire block is operator-facing: it must show the SAST kickoff
+    derived from kickoff_utc, never the raw feed string ('13-10, 16:45' is the
+    UK-local rendering of 15:45Z, which is 17:45 SAST)."""
+    def row(away: str, raw: str) -> dict:
+        return {"date": "2026-10-13", "home": "Inter", "away": away,
+                "match": f"Inter vs {away}", "league": "World UEFA Champions League",
+                "market": "1x2", "pick": "home", "selection_side": "home",
+                "odds": 1.25, "kickoff": raw, "kickoff_utc": "2026-10-13T15:45:00+00:00",
+                "odds_source": "src_a", "bucket": "CERTIFIED_CLEAN",
+                "avg_p": 74.0, "w_score": 1.0}
+
+    n = pt.print_near_duplicate_fixture_tripwire(
+        [row("Juventus", "13-10, 16:45"), row("Milan", "12:00")], day="2026-10-13")
+    err = capsys.readouterr().err
+    assert n == 1
+    assert "2026-10-13 17:45 SAST" in err
+    assert "16:45" not in err and "12:00" not in err

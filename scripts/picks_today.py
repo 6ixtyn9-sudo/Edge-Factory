@@ -1072,13 +1072,12 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             })
 
     if candidates:
-        # Operator opt-outs (2026-08-08): BTTS sides have coin-flip track
-        # records in the rolling audit and are excluded from recommendations
-        # regardless of edge. Goal ranges have no captured price source and
-        # are excluded here as well — they must never reach the fallback,
-        # which otherwise recommends an unpriced market as a "tip".
+        # BTTS (btts_yes / btts_no) is no longer excluded: the operator lifted
+        # the 2026-08-08 opt-out on 2026-10-14, and BTTS has a captured price
+        # source (enh_pricing, since 2026-08-03). Goal ranges have no captured
+        # price source, so they are excluded here as well: they must never
+        # reach the fallback, which otherwise recommends an unpriced market.
         EXCLUDED_MARKETS = {
-            "btts_yes", "btts_no",
             "goal_range_0_1", "goal_range_2_3", "goal_range_4_5",
             "goal_range_4_6", "goal_range_6_plus", "goal_range_7_plus",
             "exact_0", "exact_1", "exact_2", "exact_3", "exact_4", "exact_5",
@@ -5383,13 +5382,13 @@ def near_duplicate_fixture_warnings(picks: list[dict]) -> list[dict]:
                         "match": str(a.get("match") or f"{a.get('home')} vs {a.get('away')}"),
                         "home_key": a_home, "away_key": a_away,
                         "source": str(a.get("odds_source") or a.get("source") or "?"),
-                        "kickoff": str(a.get("kickoff") or ""),
+                        "kickoff": format_kickoff(a),  # SAST display, never the raw feed text
                     },
                     {
                         "match": str(b.get("match") or f"{b.get('home')} vs {b.get('away')}"),
                         "home_key": b_home, "away_key": b_away,
                         "source": str(b.get("odds_source") or b.get("source") or "?"),
-                        "kickoff": str(b.get("kickoff") or ""),
+                        "kickoff": format_kickoff(b),
                     },
                 ],
             })
@@ -5415,7 +5414,7 @@ def print_near_duplicate_fixture_tripwire(picks: list[dict], day: str = "",
               file=stream)
         for row in w["rows"]:
             print(f"!!     {row['match']!r} keys=({row['home_key']}|{row['away_key']}) "
-                  f"src={row['source']} ko={row['kickoff']!r}", file=stream)
+                  f"src={row['source']} ko={row['kickoff']}", file=stream)
     print("=" * 72, file=stream)
     return len(warnings)
 

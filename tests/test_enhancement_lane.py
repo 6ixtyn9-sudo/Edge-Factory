@@ -538,8 +538,11 @@ def test_a_missing_score_holds_the_leg_and_the_slip_date_timer_voids_it(tmp_path
     assert at.settle_open_slips(state, {}, archives=[], entries_by_date={},
                                 lane=at.ENHANCEMENT_LANE, scores={}) == []
     assert len(state["open_slips"]) == 1 and state["history"] == []
+    # The settle reads the void clock through ``at.datetime``, which _tmp_lane
+    # pins to DAY 08:00. The slip date must come from that same clock, not the
+    # real one, or the horizon depends on the day the test happens to run.
     state["open_slips"][0]["date"] = (
-        _dt.datetime.now(at.TZ) - _dt.timedelta(days=6)).strftime("%Y-%m-%d")
+        at.datetime.now(at.TZ) - _dt.timedelta(days=6)).strftime("%Y-%m-%d")
     lines = at.settle_open_slips(state, {}, archives=[], entries_by_date={},
                                  lane=at.ENHANCEMENT_LANE, scores={})
     assert state["open_slips"] == []
