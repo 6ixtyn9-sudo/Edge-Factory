@@ -81,7 +81,7 @@ def test_live_recipe_constants_unchanged(at):
     assert at.MAX_ACCAS == 2
     assert at.MIN_ACCAS == 1
     assert at.LEGS_PER_ACCA == 2
-    assert at.MIN_LEG_ODDS == 1.20
+    assert at.MIN_LEG_ODDS == 1.30   # operator 2026-10-14: both lanes 1.20 -> 1.30
     assert at.VOLUME_POOL == 12
     assert at.VOLUME_MIN_PROB == 0.65
     assert at.GATE_MODE == "off"

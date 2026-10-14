@@ -5988,7 +5988,7 @@ def _enh_floor_table(day: str) -> dict:
 def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     """The board's one enhancement line for a pick, or None when it has none.
 
-    Marker 🔬 = priced and clearing its market's floor: a real candidate the
+    Marker 🔬 = priced at or above MIN_LEG_ODDS: a real candidate the
     operator can act on, still short of registry certification. Marker 🚫 = the
     Stage 2 floor gate fired, so there is no bet — not paper, not shadow.
 
@@ -6027,24 +6027,21 @@ def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
     edge = p.get("enhancement_edge_sample")
     edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int, float)) else ""
+    # Operator 2026-10-14: no floor and no ceiling. The board gate is the slip's
+    # gate: the shared MIN_LEG_ODDS minimum, plus a team under with no evidence
+    # (no derived floor) does not fire, as in auto_tickets.enhancement_legs.
+    from auto_tickets import MIN_LEG_ODDS
     from edgefactory.enh_registry import floor_for_slice
-    # None: derive the day's table from this workspace's registry. An explicit
-    # table (including one with no rows) is used as given — the lane passes its
-    # own, so the board and the slip can never consult different numbers.
+    from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS
     table = _enh_floor_table(p.get("date")) if floors is None else floors
-    floor, basis = floor_for_slice(table, rec_market, p.get("league"))
-    if floor is None:                      # no derived row: the operator's table
-        floor, basis = enh_floor_for(rec_market), "inherited"
-    ceiling = enh_ceiling_for(rec_market)
-    above_ceiling = ceiling is not None and rec_price > ceiling
-    if enh_clears_floor(rec_market, rec_price, floor=floor) and not above_ceiling:
+    floor, _basis = floor_for_slice(table, rec_market, p.get("league"))
+    below_min = rec_price < MIN_LEG_ODDS
+    team_without_evidence = rec_market in TEAM_UNDER_MARKETS and floor is None
+    if not below_min and not team_without_evidence:
         return (f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
-                f"{edge_txt}{src} — floor {floor:.2f} ({basis})")
-    # Show WHY it is not a bet rather than hiding the candidate: the gate firing
-    # is audit evidence, and the slip prints the same verdict as [NO BET].
-    why = (f"above {rec_market} ceiling {ceiling:.2f}" if above_ceiling
-           else f"below {rec_market} floor {floor:.2f} ({basis})"
-           if floor is not None else "no floor set for this market")
+                f"{edge_txt}{src} — minimum {MIN_LEG_ODDS:.2f}")
+    why = (f"below minimum {MIN_LEG_ODDS:.2f}" if below_min
+           else "no settled evidence for this side")
     return (f"     🚫 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
             f" — no bet: {why}{src}")
 
