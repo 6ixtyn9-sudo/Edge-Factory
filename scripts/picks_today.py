@@ -578,6 +578,34 @@ def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | N
 AUDIT_ROLLING_PATH = LOCALDATA / "picks_audit_rolling.json"
 
 
+ENH_RANK_MIN_N = 10  # same evidence bar as the calibration below
+
+
+def _enh_hit_rates(registry_path: Path | None = None) -> dict[str, float]:
+    """Settled hit rate per enhancement market from the enhancement registry.
+
+    Operator ruling (2026-10-12): "we have the track record of enhanced, we know
+    what wins more". Market choice ranks by this, not by stated EV. Markets with
+    fewer than ENH_RANK_MIN_N settled records have no rate and rank last.
+    Fail-soft: an unreadable registry means no rates, not a crash.
+    """
+    path = registry_path or (LOCALDATA / "enhancement_registry.json")
+    try:
+        markets = json.loads(path.read_text()).get("markets", {})
+    except Exception:
+        return {}
+    out: dict[str, float] = {}
+    for key, slot in markets.items():
+        if not isinstance(slot, dict):
+            continue
+        market = str(key).split("@", 1)[0]
+        n = int(slot.get("n") or 0)
+        hits = int(slot.get("hits") or 0)
+        if n >= ENH_RANK_MIN_N:
+            out[market] = hits / n
+    return out
+
+
 def load_enhancement_calibration(audit_path: Path = AUDIT_ROLLING_PATH) -> dict[str, dict]:
     """Per-market promised->realized calibration from the rolling audit.
 
@@ -599,7 +627,7 @@ def load_enhancement_calibration(audit_path: Path = AUDIT_ROLLING_PATH) -> dict[
         n = int(slot.get("n") or 0)
         realized = slot.get("realized")
         promised = slot.get("mean_promised")
-        if n <= 0 or realized is None or promised is None:
+        if n <= 0 or realized is None or promised is None or float(promised) <= 0:
             continue
         try:
             out[market] = {
@@ -1048,14 +1076,16 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             # shrink the raw probability toward the realized rate, weighted by
             # evidence (n) and capped so we never fully trust a young sample
             w = min(1.0, n / 40.0)          # evidence weight, saturates at n=40
-            prob_adjusted = prob_adjusted + w * (realized - promised) * prob_adjusted
+            # Scale by the realized / promised ratio (was an additive gap times
+            # prob, which under-corrected: over 2.5 is 44.8% promised, 61.1% realized).
+            prob_adjusted = prob_adjusted * (1.0 + w * (realized / promised - 1.0))
             prob_adjusted = max(0.01, min(0.99, prob_adjusted))
             reason = reason + (f" (ML-calibrated {promised:.1%}->{realized:.1%}, n={n})")
         elif market in calib:
             # young sample: still nudge, weakly
             realized = calib[market]["realized"]
             promised = calib[market]["mean_promised"]
-            prob_adjusted = prob_adjusted + 0.5 * (realized - promised) * prob_adjusted
+            prob_adjusted = prob_adjusted * (1.0 + 0.5 * (realized / promised - 1.0))
             prob_adjusted = max(0.01, min(0.99, prob_adjusted))
         
         thr = LINE_THRESHOLDS.get(market, 0.80)
@@ -1126,23 +1156,18 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             c["ev_rank_key"] = (edge, prob)
             ev_candidates.append(c)
 
+        hit_rates = _enh_hit_rates()
         if ev_candidates:
-            ev_candidates.sort(key=lambda x: x["ev_rank_key"], reverse=True)
+            ev_candidates.sort(key=lambda x: (hit_rates.get(x["market"], -1.0),
+                                              x["probability"]), reverse=True)
             out["event_notes"] = ev_candidates
             best = ev_candidates[0]
         else:
-            # Nothing passed the EV / hard filters. Fall back to the legacy
-            # safety-tier ranking so the pick still carries a research marker,
-            # but it will be unpriced (🔬, not 🔥).
-            def get_safety_tier(m, prob):
-                if m in ["match_over_15", "match_over_25"] and prob >= 0.45: return 6
-                if "goal_range" in m and prob >= 0.45: return 5
-                if m == "btts_yes" and prob >= 0.45: return 4
-                if "over_05" in m and prob >= 0.75: return 3
-                if m == "match_over_35" and prob >= 0.30: return 2
-                return 1
+            # Nothing passed the EV / hard filters. Rank by settled hit rate, then
+            # stated probability. The old safety tiers (over 1.5/2.5 needed 45%,
+            # over 3.5 needed 30%) let a 32.5% over 3.5 beat a 42.1% over 2.5.
             candidates.sort(
-                key=lambda x: (get_safety_tier(x["market"], x["probability"]), x["probability"]),
+                key=lambda x: (hit_rates.get(x["market"], -1.0), x["probability"]),
                 reverse=True,
             )
             out["event_notes"] = candidates
