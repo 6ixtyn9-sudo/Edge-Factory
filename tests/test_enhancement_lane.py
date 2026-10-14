@@ -1015,3 +1015,26 @@ def test_the_enhancement_lane_is_the_only_caller_on_hitrate():
     # main lane selection default is untouched
     import inspect
     assert inspect.signature(at.select_accas).parameters["rank"].default == "prob"
+
+
+def test_a_priced_leg_with_no_floor_prints_no_bet_and_never_crashes(tmp_path, _tmp_lane):
+    """A priced team-under has no floor (home/away_under_35), so its leg is
+    ``no_floor`` with ``floor=None``. The render used to format that None in
+    the ``outlier_price`` text eagerly and raised TypeError, failing the whole
+    --enhancements stage (daily run 38509129401). It must print NO BET instead."""
+    leg = {
+        "match": "Alpha FC vs Beta FC", "home": "Alpha FC", "away": "Beta FC",
+        "row": {}, "fixture_key": "k", "market": "away_under_35",
+        "label": "AWAY UNDER 3.5", "probability": 0.5, "price": 1.9,
+        "price_book": "x", "price_source": "x", "bucket": "SKIPPED_VETO",
+        "rule": "", "league": "L", "floor": None, "floor_basis": "inherited",
+        "ceiling": None, "verdict": "no_floor", "shadow": True,
+    }
+    for verdict in ("no_floor", "outlier_price", "below_floor"):
+        leg["verdict"] = verdict
+        txt = at.render_enhancement_tickets(at.fresh_state(), DAY, [leg], [], _now(),
+                                            should_freeze=False, freeze_record=None,
+                                            bank_eff=100.0)
+        assert "[NO BET] Alpha FC vs Beta FC" in txt, verdict
+        assert "no floor set for this market — no bet" in txt or \
+            "no price floor for this side" in txt, verdict
