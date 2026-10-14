@@ -1072,13 +1072,12 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             })
 
     if candidates:
-        # Operator opt-outs (2026-08-08): BTTS sides have coin-flip track
-        # records in the rolling audit and are excluded from recommendations
-        # regardless of edge. Goal ranges have no captured price source and
-        # are excluded here as well — they must never reach the fallback,
-        # which otherwise recommends an unpriced market as a "tip".
+        # BTTS (btts_yes / btts_no) is no longer excluded: the operator lifted
+        # the 2026-08-08 opt-out on 2026-10-14, and BTTS has a captured price
+        # source (enh_pricing, since 2026-08-03). Goal ranges have no captured
+        # price source, so they are excluded here as well: they must never
+        # reach the fallback, which otherwise recommends an unpriced market.
         EXCLUDED_MARKETS = {
-            "btts_yes", "btts_no",
             "goal_range_0_1", "goal_range_2_3", "goal_range_4_5",
             "goal_range_4_6", "goal_range_6_plus", "goal_range_7_plus",
             "exact_0", "exact_1", "exact_2", "exact_3", "exact_4", "exact_5",
