@@ -23,7 +23,7 @@ def _rec(match, market, price, stated, hit=True):
 
 
 def test_replay_ranks_by_the_shipped_rule_and_carries_floors(monkeypatch):
-    assert at.ENHANCEMENT_RANK == "hitrate"
+    assert at.ENHANCEMENT_RANK == "prob"
     seen = {}
     real = at.plan_day
 
