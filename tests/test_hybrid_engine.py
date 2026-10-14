@@ -204,3 +204,17 @@ def test_compute_cohort_override_math(monkeypatch):
             math.exp(-lam_exp) * lam_exp ** 2 / 2, abs=1e-9)
 
     json.dumps(hyb)
+
+
+def test_btts_is_a_recommendable_market_after_the_opt_out_was_lifted(monkeypatch):
+    """BTTS was excluded from recommendations by an operator opt-out (2026-08-08),
+    lifted 2026-10-14. A high-probability BTTS-yes candidate must now reach the
+    recommendation list rather than being filtered out before ranking."""
+    con = _empty_warehouse()
+    cohort = {"n": 150, "avg_goals": 2.9, "over15": 0.99, "over25": 0.90,
+              "over35": 0.70, "over45": 0.40, "btts": 0.90,
+              "h_o05": 0.95, "h_o15": 0.70, "h_o25": 0.40, "h_o35": 0.20,
+              "a_o05": 0.90, "a_o15": 0.60, "a_o25": 0.30, "a_o35": 0.10}
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
+    markets = {n["market"] for n in pt.compute_dynamic_enhancement(con, _pick())["event_notes"]}
+    assert "btts_yes" in markets

@@ -45,6 +45,7 @@ from collections import Counter
 from datetime import date as _date
 from datetime import datetime, timezone  # timedelta dropped: unused (red-team hygiene)
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 
@@ -57,6 +58,12 @@ CLOSE_WINDOW_MIN = int(os.environ.get("ODDS_API_CLOSE_WINDOW_MIN", "45") or 45)
 START_GRACE_MIN = 30          # don't first-capture a match this close to/after kickoff
 ATTEMPT_RETRY_HOURS = 6       # failure cooldown per fixture/snapshot-type
 KICKOFF_MISMATCH_MIN = 15     # pick-listed vs captured-API kickoff divergence guard
+_SAST_TZ = ZoneInfo("Africa/Johannesburg")  # the operator's clock: log kickoffs in SAST
+
+
+def _sast_hm(stamp: datetime) -> str:
+    """Kickoff clock for an operator log line: SAST, never UTC."""
+    return stamp.astimezone(_SAST_TZ).strftime("%H:%M SAST")
 
 # Pick-side kickoff provenance tags, mirrored by value (not imported) from
 # edgefactory.sources.theoddsapi.PICK_KICKOFF_SOURCE_UTC / _LEGACY: this module
@@ -364,8 +371,8 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
                     # UTC witness, so plan from it rather than letting the
                     # legacy guess falsely mark the fixture already-passed.
                     skips.append(
-                        f"WARN kickoff-mismatch {fk}: pick legacy display says {kickoff:%H:%MZ}, "
-                        f"captured rows say {row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from "
+                        f"WARN kickoff-mismatch {fk}: pick legacy display says {_sast_hm(kickoff)}, "
+                        f"captured rows say {_sast_hm(row_ko)} (Δ={delta_m:.0f}m; planning from "
                         f"captured UTC witness, display-fallback override) "
                         f"[kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]")
                     kickoff = row_ko
@@ -373,8 +380,8 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
                     # Both sides are real UTC witnesses and still disagree:
                     # stay strict/fail-closed exactly as before.
                     skips.append(
-                        f"WARN kickoff-mismatch {fk}: pick kickoff_utc says {kickoff:%H:%MZ}, "
-                        f"captured rows say {row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from "
+                        f"WARN kickoff-mismatch {fk}: pick kickoff_utc says {_sast_hm(kickoff)}, "
+                        f"captured rows say {_sast_hm(row_ko)} (Δ={delta_m:.0f}m; planning from "
                         f"the earlier real UTC witness) "
                         f"[kickoff_mismatch_detail=kickoff_mismatch_planned_from_earlier_utc]")
                     kickoff = min(kickoff, row_ko)
@@ -383,8 +390,8 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
                     # extra trust signal to safely override, so behave exactly
                     # like the original guard (earlier-of-two, fail-closed).
                     skips.append(
-                        f"WARN kickoff-mismatch {fk}: pick lists {kickoff:%H:%MZ}, captured rows say "
-                        f"{row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from the earlier, "
+                        f"WARN kickoff-mismatch {fk}: pick lists {_sast_hm(kickoff)}, captured rows say "
+                        f"{_sast_hm(row_ko)} (Δ={delta_m:.0f}m; planning from the earlier, "
                         f"legacy-grade provenance only) "
                         f"[kickoff_mismatch_detail=kickoff_mismatch_legacy_only]")
                     kickoff = min(kickoff, row_ko)
