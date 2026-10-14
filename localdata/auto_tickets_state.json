@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 176.2570980000001,
+  "bank": 157.3723980000001,
   "cycle_base": 203.9865280000001,
   "open_slips": [
     {
@@ -78,47 +78,12 @@
           "stake_pct": 18.8847,
           "results": [
             null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Mito Hollyhock vs FC Tokyo",
-              "pick": "AWAY",
-              "prob": 0.667,
-              "odds": 1.89,
-              "result": null,
-              "fixture_key": [
-                "2026-10-14",
-                "Mito Hollyhock",
-                "FC Tokyo"
-              ]
-            },
-            {
-              "match": "Lincoln vs West Ham",
-              "pick": "AWAY",
-              "prob": 0.667,
-              "odds": 1.73,
-              "result": null,
-              "fixture_key": [
-                "2026-10-14",
-                "Lincoln",
-                "West Ham"
-              ]
-            }
-          ],
-          "odds": 3.27,
-          "stake_pct": 18.8847,
-          "results": [
-            null,
-            null
+            "conflict"
           ],
           "won": null
         }
       ],
-      "staked_pct": 37.7694
+      "staked_pct": 18.8847
     }
   ],
   "history": [
@@ -861,6 +826,18 @@
         }
       ],
       "bank_pct": 176.2571
+    },
+    {
+      "date": "2026-10-14",
+      "staked_pct": 18.8847,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 3.27,
+          "won": false
+        }
+      ],
+      "bank_pct": 157.3724
     }
   ],
   "events": [
