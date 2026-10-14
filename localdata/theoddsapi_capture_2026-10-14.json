@@ -1,20 +1,27 @@
 {
   "added": 0,
-  "attempted": 1,
+  "attempted": 2,
   "attempted_fixtures": [
     {
-      "away": "Digenis Ypsonas",
+      "away": "Sandnes ULF",
       "date": "2026-10-14",
-      "home": "Spartakos Kitiou",
-      "kickoff": "14-10, 16:00",
-      "league": "Cyprus Cup"
+      "home": "Stabaek",
+      "kickoff": "14-10, 18:00",
+      "league": "Norway 1. Division"
+    },
+    {
+      "away": "Kongsvinger",
+      "date": "2026-10-14",
+      "home": "Stromsgodset",
+      "kickoff": "14-10, 18:00",
+      "league": "Norway 1. Division"
     }
   ],
   "candidate_fixtures": 18,
-  "captured_at": "2026-10-14T13:15:41+00:00",
+  "captured_at": "2026-10-14T16:13:51+00:00",
   "date": "2026-10-14",
   "due_reasons": {
-    "close_at": 1
+    "first_at": 2
   },
   "errors": [],
   "fixtures_with_rows": 0,
@@ -25,31 +32,31 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 3,
+    "kickoff_already_passed": 6,
     "kickoff_mismatch": 5,
     "priced_close_window_not_open": 5,
-    "retry_cooldown": 9
+    "retry_cooldown": 4,
+    "too_close_for_first_capture": 1
   },
   "skipped": [
     "Junior|Deportivo Pereira (retry cooldown (6h after failed attempt))",
     "Atletico Mineiro|Montevideo City Torque (retry cooldown (6h after failed attempt))",
-    "Dukagjini|Vushtrria (retry cooldown (6h after failed attempt))",
-    "\u00dcmraniyespor|Boluspor (retry cooldown (6h after failed attempt))",
+    "Dukagjini|Vushtrria (kickoff already passed)",
+    "\u00dcmraniyespor|Boluspor (kickoff already passed)",
     "FC Viktoria K\u00f6ln|SG Sonnenhof Grossaspach (retry cooldown (6h after failed attempt))",
     "Mito Hollyhock|FC Tokyo (kickoff already passed)",
+    "Spartakos Kitiou|Digenis Ypsonas (kickoff already passed)",
     "Kheybar Khorramabad|Persepolis FC (kickoff already passed)",
-    "Stabaek|Sandnes ULF (retry cooldown (6h after failed attempt))",
+    "CS Cartagines|Puntarenas FC (retry cooldown (6h after failed attempt))",
+    "Lask Linz|Liverpool (too close to kickoff for first capture)",
     "WARN kickoff-mismatch Lincoln|West Ham: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Lincoln|West Ham (priced, close window not open)",
     "WARN kickoff-mismatch Slovan Bratislava|VfB Stuttgart: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Slovan Bratislava|VfB Stuttgart (priced, close window not open)",
-    "CS Cartagines|Puntarenas FC (retry cooldown (6h after failed attempt))",
-    "Lask Linz|Liverpool (retry cooldown (6h after failed attempt))",
-    "Stromsgodset|Kongsvinger (retry cooldown (6h after failed attempt))",
-    "WARN kickoff-mismatch Bodo/Glimt|Borussia Dortmund: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Bodo/Glimt|Borussia Dortmund (priced, close window not open)",
     "WARN kickoff-mismatch Shakhtar Donetsk|AEK Athens FC: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Shakhtar Donetsk|AEK Athens FC (priced, close window not open)",
+    "WARN kickoff-mismatch Bodo/Glimt|Borussia Dortmund: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Bodo/Glimt|Borussia Dortmund (priced, close window not open)",
     "Trans Narva|Kuressaare (kickoff already passed)",
     "WARN kickoff-mismatch Aston Villa|Fenerbah\u00e7e: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Aston Villa|Fenerbah\u00e7e (priced, close window not open)"
@@ -57,9 +64,10 @@
   "source": "theoddsapi",
   "status": "empty",
   "unmatched": [
-    "Spartakos Kitiou vs Digenis Ypsonas (league not covered: Cyprus Cup)"
+    "Stabaek vs Sandnes ULF (league not covered: Norway 1. Division)",
+    "Stromsgodset vs Kongsvinger (league not covered: Norway 1. Division)"
   ],
   "unmatched_reasons": {
-    "league not covered: Cyprus Cup": 1
+    "league not covered: Norway 1. Division": 2
   }
 }
