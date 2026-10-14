@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-10-14",
+    "kickoff": "14-10, 14:30",
+    "home": "Kheybar Khorramabad",
+    "away": "Persepolis FC",
+    "league": "Iran Persian Gulf Pro League",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "kheybarkhorramabad",
+    "away_key": "persepolisfc",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Persib",
+        "away": "Th\u1ec3 C\u00f4ng-Viettel",
+        "league": "AFC Champions League Two",
+        "kickoff": "2026-10-14T12:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.7,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "persib",
+        "away_key": "thecongviettel",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Str\u00f8mmen",
+        "away": "\u00c5sane",
+        "league": "1. Division",
+        "kickoff": "2026-10-14T13:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "strommen",
+        "away_key": "asane",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Latina",
+        "away": "Atalanta II",
+        "league": "Serie C: Girone B",
+        "kickoff": "2026-10-14T13:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.4,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "latina",
+        "away_key": "atalantaii",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Batman Petrolspor",
+        "away": "\u0130stanbulspor",
+        "league": "1. Lig",
+        "kickoff": "2026-10-14T11:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 4.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "batmanpetrolspor",
+        "away_key": "istanbulspor",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Nasaf",
+        "away": "Al Wahda",
+        "league": "AFC Champions League Two",
+        "kickoff": "2026-10-14T13:45:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.95,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "nasaf",
+        "away_key": "alwahda",
+        "kickoff_delta_minutes": 75
+      }
+    ]
+  },
+  {
+    "date": "2026-10-14",
     "kickoff": "17:00",
     "home": "CS Cartagines",
     "away": "Puntarenas FC",
@@ -77,6 +158,87 @@
         "home_key": "muharraq",
         "away_key": "golgohar",
         "kickoff_delta_minutes": 60
+      }
+    ]
+  },
+  {
+    "date": "2026-10-14",
+    "kickoff": "14-10, 14:00",
+    "home": "Trans Narva",
+    "away": "Kuressaare",
+    "league": "Estonia Meistriliiga",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "transnarva",
+    "away_key": "kuressaare",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Persib",
+        "away": "Th\u1ec3 C\u00f4ng-Viettel",
+        "league": "AFC Champions League Two",
+        "kickoff": "2026-10-14T12:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.72,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "persib",
+        "away_key": "thecongviettel",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Batman Petrolspor",
+        "away": "\u0130stanbulspor",
+        "league": "1. Lig",
+        "kickoff": "2026-10-14T11:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.61,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "batmanpetrolspor",
+        "away_key": "istanbulspor",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Latina",
+        "away": "Atalanta II",
+        "league": "Serie C: Girone B",
+        "kickoff": "2026-10-14T13:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "latina",
+        "away_key": "atalantaii",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Str\u00f8mmen",
+        "away": "\u00c5sane",
+        "league": "1. Division",
+        "kickoff": "2026-10-14T13:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.85,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "strommen",
+        "away_key": "asane",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Nasaf",
+        "away": "Al Wahda",
+        "league": "AFC Champions League Two",
+        "kickoff": "2026-10-14T13:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.4,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "nasaf",
+        "away_key": "alwahda",
+        "kickoff_delta_minutes": 105
       }
     ]
   }

@@ -1,206 +1,83 @@
 {
-  "added": 34320,
-  "attempted": 6,
+  "added": 17,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Puntarenas FC",
-      "fixture_id": "id1002709272053644",
-      "home": "CS Cartagines"
-    },
-    {
-      "away": "Violette AC",
-      "fixture_id": "id1004025174879334",
-      "home": "Portmore United"
-    },
-    {
-      "away": "CR Vasco da Gama RJ",
-      "fixture_id": "id1000048074752722",
-      "home": "Boca Juniors"
-    },
-    {
-      "away": "Jamaica",
-      "fixture_id": "id1000085275467310",
-      "home": "Mexico"
-    },
-    {
-      "away": "CD Once Caldas",
-      "fixture_id": "id1002707072335176",
-      "home": "Millonarios FC"
-    },
-    {
-      "away": "Inter San Carlos",
-      "fixture_id": "id1002709272053646",
-      "home": "AD San Carlos"
+      "away": "Khaan Khuns - Erchim FC",
+      "fixture_id": "id1002862375558350",
+      "home": "Deren"
     }
   ],
   "budget": {
     "day": "2026-10-14",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 8,
-    "remaining_today": 33,
-    "spent_today": 8
+    "month_spent": 9,
+    "remaining_today": 32,
+    "spent_today": 9
   },
-  "captured_at": "2026-10-13T22:11:28+00:00",
+  "captured_at": "2026-10-14T01:06:10+00:00",
   "date": "2026-10-14",
   "errors": [],
   "fixtures": 231,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 645,
+  "market_census_distinct": 32,
   "markets": {
-    "1x2": 3914,
-    "ou_0.5": 1234,
-    "ou_0.75": 299,
-    "ou_1": 307,
-    "ou_1.25": 501,
-    "ou_1.5": 1953,
-    "ou_1.75": 596,
-    "ou_10.5": 24,
-    "ou_11.5": 6,
-    "ou_12.5": 6,
-    "ou_13.5": 6,
-    "ou_14.5": 6,
-    "ou_2": 620,
-    "ou_2.25": 895,
-    "ou_2.5": 2242,
-    "ou_2.75": 868,
-    "ou_3": 692,
-    "ou_3.25": 639,
-    "ou_3.5": 2181,
-    "ou_3.75": 443,
-    "ou_4": 316,
-    "ou_4.25": 345,
-    "ou_4.5": 1873,
-    "ou_4.75": 222,
-    "ou_5": 204,
-    "ou_5.25": 85,
-    "ou_5.5": 905,
-    "ou_5.75": 54,
-    "ou_6": 59,
-    "ou_6.25": 53,
-    "ou_6.5": 550,
-    "ou_6.75": 30,
-    "ou_7": 32,
-    "ou_7.25": 30,
-    "ou_7.5": 226,
-    "ou_7.75": 30,
-    "ou_8": 30,
-    "ou_8.25": 30,
-    "ou_8.5": 77,
-    "ou_9.5": 26,
-    "tt_away_0.5": 1572,
-    "tt_away_0.75": 92,
-    "tt_away_1": 110,
-    "tt_away_1.25": 74,
-    "tt_away_1.5": 1554,
-    "tt_away_1.75": 40,
-    "tt_away_2": 56,
-    "tt_away_2.25": 2,
-    "tt_away_2.5": 1095,
-    "tt_away_3": 3,
-    "tt_away_3.5": 440,
-    "tt_away_4.5": 103,
-    "tt_away_5.5": 33,
-    "tt_away_6.5": 3,
-    "tt_home_0.5": 1286,
-    "tt_home_0.75": 26,
-    "tt_home_1": 86,
-    "tt_home_1.25": 84,
-    "tt_home_1.5": 1769,
-    "tt_home_1.75": 74,
-    "tt_home_2": 64,
-    "tt_home_2.25": 56,
-    "tt_home_2.5": 1718,
-    "tt_home_2.75": 22,
-    "tt_home_3": 38,
-    "tt_home_3.25": 6,
-    "tt_home_3.5": 885,
-    "tt_home_3.75": 2,
-    "tt_home_4.5": 372,
-    "tt_home_5.5": 34,
-    "tt_home_6.5": 9,
-    "tt_home_7.5": 3
+    "1x2": 3,
+    "ou_6.5": 2,
+    "ou_7": 2,
+    "ou_7.5": 2,
+    "ou_8": 2,
+    "ou_8.5": 2,
+    "tt_away_0.5": 2,
+    "tt_home_6.5": 2
   },
-  "markets_source": "fetch",
-  "matched": 6,
-  "odds_vocabulary": "written",
+  "markets_source": "cache",
+  "matched": 1,
+  "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "alt_line_skipped": 15,
-    "market_id_unknown": 7122,
-    "market_inactive": 690,
-    "market_unsupported_clean_sheet": 551,
-    "market_unsupported_corners": 5935,
-    "market_unsupported_correct_score": 1938,
-    "market_unsupported_double_chance": 1104,
-    "market_unsupported_draw_no_bet": 960,
-    "market_unsupported_handicap": 10229,
-    "market_unsupported_odd_even": 1855,
-    "market_unsupported_period": 31521,
-    "market_unsupported_win_to_nil": 1068,
-    "outcome_inactive": 1880,
-    "unresolved_btts": 2049
+    "market_id_unknown": 2,
+    "market_unsupported_correct_score": 1,
+    "market_unsupported_double_chance": 1,
+    "market_unsupported_handicap": 3,
+    "market_unsupported_odd_even": 1,
+    "market_unsupported_period": 15,
+    "unresolved_btts": 2
   },
   "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 15,
-      "market_inactive": 690,
-      "outcome_inactive": 1880
-    },
+    "expected": {},
     "loss_or_diagnosis": {
-      "market_id_unknown": 7122,
-      "market_unsupported_clean_sheet": 551,
-      "market_unsupported_corners": 5935,
-      "market_unsupported_correct_score": 1938,
-      "market_unsupported_double_chance": 1104,
-      "market_unsupported_draw_no_bet": 960,
-      "market_unsupported_handicap": 10229,
-      "market_unsupported_odd_even": 1855,
-      "market_unsupported_period": 31521,
-      "market_unsupported_win_to_nil": 1068,
-      "unresolved_btts": 2049
+      "market_id_unknown": 2,
+      "market_unsupported_correct_score": 1,
+      "market_unsupported_double_chance": 1,
+      "market_unsupported_handicap": 3,
+      "market_unsupported_odd_even": 1,
+      "market_unsupported_period": 15,
+      "unresolved_btts": 2
     }
   },
-  "pending_fixtures": 6,
+  "pending_fixtures": 1,
   "quoted_fixtures": [
     {
-      "away": "Puntarenas FC",
-      "fixture_id": "id1002709272053644",
-      "home": "CS Cartagines"
-    },
-    {
-      "away": "Violette AC",
-      "fixture_id": "id1004025174879334",
-      "home": "Portmore United"
-    },
-    {
-      "away": "CR Vasco da Gama RJ",
-      "fixture_id": "id1000048074752722",
-      "home": "Boca Juniors"
-    },
-    {
-      "away": "Jamaica",
-      "fixture_id": "id1000085275467310",
-      "home": "Mexico"
-    },
-    {
-      "away": "CD Once Caldas",
-      "fixture_id": "id1002707072335176",
-      "home": "Millonarios FC"
-    },
-    {
-      "away": "Inter San Carlos",
-      "fixture_id": "id1002709272053646",
-      "home": "AD San Carlos"
+      "away": "Khaan Khuns - Erchim FC",
+      "fixture_id": "id1002862375558350",
+      "home": "Deren"
     }
   ],
-  "rows": 34320,
+  "rows": 17,
   "schema": 1,
-  "slate_candidate_fixtures": 4,
+  "slate_candidate_fixtures": 7,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 1,
-  "slate_provider_overlap_fixtures": 2,
+  "slate_priority_fixtures": 0,
+  "slate_provider_overlap_fixtures": 3,
   "slate_unmatched_fixtures": [
+    {
+      "away": "Deportivo Pereira",
+      "home": "Junior",
+      "league": "Colombia: Primera A",
+      "normalized_pair": "deportivo pereira|junior"
+    },
     {
       "away": "Montevideo City Torque",
       "home": "Atletico Mineiro",
@@ -212,6 +89,12 @@
       "home": "Bodo/Glimt",
       "league": "International,Champions League",
       "normalized_pair": "bodo/glimt|borussia dortmund"
+    },
+    {
+      "away": "Kuressaare",
+      "home": "Trans Narva",
+      "league": "Estonia Meistriliiga",
+      "normalized_pair": "kuressaare|trans narva"
     }
   ],
   "source": "oddspapi_odds"
