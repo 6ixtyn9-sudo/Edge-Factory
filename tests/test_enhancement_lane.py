@@ -220,8 +220,8 @@ def test_the_card_is_two_leg_accas_barbelled_at_the_main_lanes_stake(tmp_path, _
     assert "[ENH #" not in txt
     assert txt.count("— stake 12.5% of capital (12.5% of free bank)") == 2
     # per-leg evidence: stated %, the market's registry line, its floor, the book
-    assert "(stated 46%)" in txt
-    assert "[registry 50% n=2 · floor 1.60 (inherited) · Stake.com]" in txt
+    assert "(realized 46%)" in txt
+    assert "[registry" not in txt and "floor 1.60" not in txt
     assert "deploying 25% of free bank today = 25.0% of capital" in txt
 
 
@@ -246,7 +246,6 @@ def test_three_eligible_legs_drop_the_leftover_never_a_single(tmp_path, _tmp_lan
                                         should_freeze=False, freeze_record=None,
                                         bank_eff=100.0)
     assert "[ACCA #1]" in txt and "[ACCA #2]" not in txt
-    assert "1 eligible leg(s) left over without an acca partner (never a single)" in txt
 
 
 def test_a_same_fixture_duplicate_is_dropped_and_reported(tmp_path, _tmp_lane):
@@ -267,8 +266,7 @@ def test_a_same_fixture_duplicate_is_dropped_and_reported(tmp_path, _tmp_lane):
     txt = at.render_enhancement_tickets(at.fresh_state(), DAY, legs, plan, _now(),
                                         should_freeze=False, freeze_record=None,
                                         bank_eff=100.0, fixture_report=report)
-    assert ("same-fixture duplicate(s) dropped (one fixture rides a card once): "
-            "Pyunik Yerevan vs BKMA") in txt
+    assert "Pyunik Yerevan vs BKMA" not in txt   # the card reports no diagnostics
     assert "NO BET — only 1 eligible leg(s), need 2 for an acca" in txt
 
 
@@ -304,10 +302,9 @@ def test_the_artifact_matches_autobets_conventions(tmp_path, _tmp_lane):
     assert set(lines[1]) == {"="} and len(lines[1]) == 62
     assert lines[2].startswith("PERFORMANCE: total bank 100.0% of capital (x1.00) = ")
     assert "next take-profit notification at 200.0%" in lines[2]
-    assert "ENHANCEMENT SLICE (settled, registry)" in txt
-    assert "by bucket" in txt and "by rule" in txt
-    # the refused leg is visible for audit but is NOT an instruction
-    assert "[NO BET]" in txt and "priced 1.20 under the 1.30 minimum — no bet" in txt
+    # the card carries no diagnostics tables and no per-leg refusals
+    assert "ENHANCEMENT SLICE" not in txt and "FLOORS" not in txt
+    assert "[NO BET]" not in txt and "1.20" not in txt
     assert "Nu FC" not in "\n".join(
         l for l in txt.splitlines() if l.startswith("[ACCA #"))
     assert "deploying 25% of free bank today" in txt
@@ -384,7 +381,8 @@ def test_the_freeze_is_write_once_and_force_cannot_rewrite_it(tmp_path, _tmp_lan
         _board(_tmp_lane, _distinct(2, market="btts_yes", price=2.10))
         at.cmd_enhancement(_args(), json.loads(path.read_text()))
         assert art.read_text() == frozen_text
-        # ...and neither may --force (that is how bets rotate under the operator).
+        # ...and --force may not rewrite it either: it writes a re-cut report
+        # beside it instead (see the recut tests below).
         at.cmd_enhancement(_args(force=True), json.loads(path.read_text()))
         assert art.read_text() == frozen_text
         assert json.loads(path.read_text())["frozen_by_date"][DAY] == stamp
@@ -847,7 +845,7 @@ def test_a_derived_floor_no_longer_gates_a_leg(tmp_path, _tmp_lane, monkeypatch)
     assert pt.enhancement_board_line(pick, floors=floors).startswith("     🔬 ")
 
 
-def test_the_lane_artifact_and_state_carry_the_days_derivation(_tmp_lane, monkeypatch):
+def test_the_lane_state_carries_the_days_derivation(_tmp_lane, monkeypatch):
     monkeypatch.setattr(reg, "ENHANCEMENT_PRICE_CEILINGS", {})   # floor-only test
     _tightened_registry(_tmp_lane)
     _board(_tmp_lane, _distinct(4, price=4.10))
@@ -855,13 +853,8 @@ def test_the_lane_artifact_and_state_carry_the_days_derivation(_tmp_lane, monkey
     rc = at.cmd_enhancement(_args(), st)
     assert rc == 0
     artifact = (_tmp_lane / f"{at.ENHANCEMENT_LANE.slip_prefix}_{DAY}.txt").read_text()
-    assert "FLOORS (derived for" in artifact
-    assert "margin 0.100" in artifact and "Wilson LB" in artifact
-    assert f"match_over_25" in artifact and "basis" in artifact
-    # the derived floor, not the operator's, is the number on the leg lines
-    floors = reg.derive_floors_for_day(_tmp_lane.parent, DAY)
-    derived = [r for r in floors["rows"] if r["level"] == "market"][0]["floor"]
-    assert f"floor {derived:.2f} (market)" in artifact
+    # the card carries no derivation table; the derivation lives in the state
+    assert "FLOORS (derived for" not in artifact
     # the state the lane persists carries the same table
     saved = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
     table = saved.get("enh_floor_table")
@@ -869,6 +862,8 @@ def test_the_lane_artifact_and_state_carry_the_days_derivation(_tmp_lane, monkey
     assert table["margin"] == reg.ENHANCEMENT_FLOOR_MARGIN
     assert table["min_n"] == reg.MIN_PRICED_N
     assert table["floors"]["match_over_25"]["basis"] == "market"
+    floors = reg.derive_floors_for_day(_tmp_lane.parent, DAY)
+    derived = [r for r in floors["rows"] if r["level"] == "market"][0]["floor"]
     assert table["floors"]["match_over_25"]["floor"] == derived
     assert table["coverage"]["with_league"] == 40
 
@@ -991,6 +986,103 @@ def test_a_priced_leg_with_no_floor_prints_no_bet_and_never_crashes(tmp_path, _t
         txt = at.render_enhancement_tickets(at.fresh_state(), DAY, [leg], [], _now(),
                                             should_freeze=False, freeze_record=None,
                                             bank_eff=100.0)
-        assert "[NO BET] Alpha FC vs Beta FC" in txt, verdict
-        assert "no floor set for this market — no bet" in txt or \
-            "no price floor for this side" in txt, verdict
+        # refusals are not printed on the card; it says no bet and does not crash
+        assert "Alpha FC" not in txt, verdict
+        assert "NO BET — only 0 eligible leg(s)" in txt, verdict
+
+
+def test_the_enhancement_lane_builds_three_accas_and_the_main_lane_stays_at_two():
+    """Operator, 2026-10-14: the enhancement lane takes 3 accas; the main lane's
+    armed MAX_ACCAS stays 2. Both deploy the same 25% day total."""
+    assert at.ENH_MAX_ACCAS == 3
+    assert at.MAX_ACCAS == 2
+    pool = [_ranked_leg(f"Team{i} FC vs Rival{i} FC", None, prob=0.80 - i * 0.02, odds=1.5)
+            for i in range(6)]
+    enh = at.plan_day(pool, 100.0, stake_frac=0.25, max_accas=at.ENH_MAX_ACCAS,
+                      rank="prob")
+    main = at.plan_day(pool, 100.0, stake_frac=0.25, rank="prob")
+    assert len(enh) == 3
+    assert len(main) == 2
+    assert sum(a["stake_pct"] for a in enh) == pytest.approx(25.0, abs=0.01)
+    assert sum(a["stake_pct"] for a in main) == pytest.approx(25.0, abs=0.01)
+
+
+# --------------------------------------------------------------------------
+# --force on a frozen date: supersede with a recut report, never rewrite
+# --------------------------------------------------------------------------
+
+def _force_recut(localdata, board):
+    """Freeze DAY with the current board, then re-cut it with `board` under --force."""
+    _board(localdata, _distinct(2))                        # the card that gets frozen
+    monkey = pytest.MonkeyPatch()
+    monkey.setattr(at, "FREEZE_HOUR", 0)
+    try:
+        _freeze_now(localdata)
+        frozen_text = (localdata / f"autobets_enh_tickets_{DAY}.txt").read_text()
+        state_path = localdata / "enhancement_tickets_state.json"
+        frozen_state = json.loads(state_path.read_text())
+        _board(localdata, board)
+        at.cmd_enhancement(_args(force=True), json.loads(state_path.read_text()))
+    finally:
+        monkey.undo()
+    return frozen_text, frozen_state
+
+
+def test_a_forced_recut_supersedes_the_frozen_card_and_never_edits_it(tmp_path, _tmp_lane):
+    frozen_text, frozen_state = _force_recut(_tmp_lane, _distinct(2, market="match_over_15"))
+    art = _tmp_lane / f"autobets_enh_tickets_{DAY}.txt"
+    recut = _tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt"
+    state = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
+
+    assert art.read_text() == frozen_text                       # the staked card: untouched
+    text = recut.read_text()
+    assert text.startswith(f"ENHANCEMENT FORCE RE-CUT — {DAY}")
+    assert "The frozen slip was NOT edited" in text
+    assert "STAKED on the frozen card, NOT on the re-cut (2)" in text
+    assert "ON THE RE-CUT ONLY (2)" in text
+    # the frozen acca stays open for settlement, exactly as it was staked
+    assert state["open_slips"] == frozen_state["open_slips"]
+    assert state["frozen_by_date"] == frozen_state["frozen_by_date"]
+    marker = state["superseded_by_date"][DAY]
+    assert marker["result"] == "RECUT"
+    assert marker["recut_slip"] == f"localdata/autobets_enh_tickets_{DAY}_force_recut.txt"
+    assert marker["audit_slip"] == f"localdata/autobets_enh_tickets_{DAY}.txt"
+
+
+def test_a_forced_recut_with_no_qualifying_leg_is_recorded_as_no_bet(tmp_path, _tmp_lane):
+    frozen_text, _ = _force_recut(_tmp_lane, _distinct(2, price=1.10))   # below MIN_LEG_ODDS
+    art = _tmp_lane / f"autobets_enh_tickets_{DAY}.txt"
+    recut = _tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt"
+    state = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
+
+    assert art.read_text() == frozen_text
+    assert "NO BET" in recut.read_text()
+    assert state["superseded_by_date"][DAY]["result"] == "NO BET"
+    assert state["open_slips"][0]["accas"]                    # frozen acca still open
+
+
+def test_an_ordinary_run_after_a_recut_shows_the_frozen_card_and_the_notice(tmp_path, _tmp_lane, capsys):
+    frozen_text, _ = _force_recut(_tmp_lane, _distinct(2, market="match_over_15"))
+    recut = _tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt"
+    recut_before = recut.read_text()
+    capsys.readouterr()
+    state = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
+
+    rc = at.cmd_enhancement(_args(), state)
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert frozen_text in out
+    assert "SUPERSEDED" in out and "_force_recut.txt" in out
+    assert recut.read_text() == recut_before
+
+
+def test_a_frozen_slip_on_disk_locks_the_date_even_without_the_state_file(tmp_path, _tmp_lane):
+    _board(_tmp_lane, _distinct(2))
+    _freeze_now(_tmp_lane)
+    frozen_text = (_tmp_lane / f"autobets_enh_tickets_{DAY}.txt").read_text()
+    # a fresh checkout: the gitignored state is gone, the committed slip survives
+    (_tmp_lane / "enhancement_tickets_state.json").unlink()
+    _board(_tmp_lane, _distinct(2, market="btts_yes", price=2.10))
+    at.cmd_enhancement(_args(), at.fresh_state())
+    assert (_tmp_lane / f"autobets_enh_tickets_{DAY}.txt").read_text() == frozen_text
+    assert not (_tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt").exists()

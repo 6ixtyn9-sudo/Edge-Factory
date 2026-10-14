@@ -39,6 +39,6 @@ def test_replay_ranks_by_the_shipped_rule_and_carries_floors(monkeypatch):
         _rec("Gamma FC vs Delta FC", "match_under_15", 4.60, stated=0.90),
     ]
     rh.enh_day_growth(records, floors)
-    assert seen["kw"].get("rank") == "hitrate"
+    assert seen["kw"].get("rank") == "prob"
     assert {l["pick"]: l["floor"] for l in seen["pool"]} == {
         "match_over_25": 1.60, "match_under_15": 4.45}
