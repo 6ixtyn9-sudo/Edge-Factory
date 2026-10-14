@@ -62,9 +62,9 @@
   },
   "away_under_25@v1": {
    "hits": 1,
-   "inv_price_sum": 0.5263157894736842,
+   "inv_price_sum": 1.0668563300142246,
    "multi_n": 0,
-   "n": 1,
+   "n": 2,
    "processed": [
     "2026-10-04|Portugal vs Norway|away_under_25@v1",
     "2026-09-14|Inter vs Udinese|away_under_25@v1",
@@ -90,9 +90,10 @@
     "2026-09-19|Arsenal (w) vs Manchester United Women|away_under_25@v1",
     "2026-09-19|Maccabi Haifa vs Ironi Tiberias|away_under_25@v1",
     "2026-09-20|Bayer Leverkusen vs RB Leipzig|away_under_25@v1",
-    "2026-09-20|Sagamihara vs Giravanz K.|away_under_25@v1"
+    "2026-09-20|Sagamihara vs Giravanz K.|away_under_25@v1",
+    "2026-10-14|Lask Linz vs Liverpool|away_under_25@v1"
    ],
-   "profit": 0.9,
+   "profit": -0.1,
    "records": [
     {
      "away": "Norway",
@@ -106,6 +107,23 @@
      "multi_source": false,
      "price": 1.9,
      "source": "oddspapi"
+    },
+    {
+     "away": "Liverpool",
+     "away_key": "liverpool",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": false,
+     "home": "Lask Linz",
+     "home_key": "lasklinz",
+     "league": "World UEFA Champions League",
+     "match": "Lask Linz vs Liverpool",
+     "multi_source": false,
+     "price": 1.85,
+     "rule": "unanimous[vitibet+zulubet] avg_p>=70",
+     "source": "oddspapi",
+     "stated": 0.8545
     }
    ],
    "status": "PAPER",
@@ -390,6 +408,56 @@
    "status": "PAPER",
    "status_reason": "first priced outcome recorded",
    "status_since": "2026-10-05"
+  },
+  "btts_no@v1": {
+   "hits": 1,
+   "inv_price_sum": 0.991304347826087,
+   "multi_n": 1,
+   "n": 2,
+   "processed": [
+    "2026-10-14|Stromsgodset vs Kongsvinger|btts_no@v1",
+    "2026-10-14|Dukagjini vs Vushtrria|btts_no@v1"
+   ],
+   "profit": -0.62,
+   "records": [
+    {
+     "away": "Kongsvinger",
+     "away_key": "kongsvinger",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": false,
+     "home": "Stromsgodset",
+     "home_key": "stromsgodset",
+     "league": "Norway 1. Division",
+     "match": "Stromsgodset vs Kongsvinger",
+     "multi_source": true,
+     "price": 3.75,
+     "rule": "ml-meta avg_p>=60",
+     "source": "scoutingstats",
+     "stated": 0.513
+    },
+    {
+     "away": "Vushtrria",
+     "away_key": "vushtrria",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": true,
+     "home": "Dukagjini",
+     "home_key": "dukagjini",
+     "league": "Kosovo: Superliga",
+     "match": "Dukagjini vs Vushtrria",
+     "multi_source": false,
+     "price": 1.38,
+     "rule": "unanimous[betclan+vitibet] avg_p>=70",
+     "source": "betexplorer",
+     "stated": 0.557
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-10-15"
   },
   "btts_yes@v1": {
    "hits": 4,
@@ -737,6 +805,38 @@
    "status": "SHADOW",
    "status_reason": null,
    "status_since": null
+  },
+  "home_under_15@v1": {
+   "hits": 1,
+   "inv_price_sum": 0.7501875468867217,
+   "multi_n": 0,
+   "n": 1,
+   "processed": [
+    "2026-10-14|Mito Hollyhock vs FC Tokyo|home_under_15@v1"
+   ],
+   "profit": 0.333,
+   "records": [
+    {
+     "away": "FC Tokyo",
+     "away_key": "tokyo",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": true,
+     "home": "Mito Hollyhock",
+     "home_key": "mitohollyhock",
+     "league": "Japan J-League Cup",
+     "match": "Mito Hollyhock vs FC Tokyo",
+     "multi_source": false,
+     "price": 1.333,
+     "rule": "ml-meta avg_p>=60",
+     "source": "oddspapi",
+     "stated": 0.7671
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
    "hits": 0,
@@ -1434,10 +1534,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 231,
-   "inv_price_sum": 229.8783339456116,
-   "multi_n": 42,
-   "n": 350,
+   "hits": 234,
+   "inv_price_sum": 233.09087396356924,
+   "multi_n": 44,
+   "n": 355,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -2009,9 +2109,14 @@
     "2026-10-12|AEK Larnaca FC vs Omonia Aradippou|match_over_25@v1",
     "2026-10-12|Forge vs York United|match_over_25@v1",
     "2026-10-12|St. Louis City vs Los Angeles Galaxy|match_over_25@v1",
-    "2026-10-12|Hapoel Kfar Saba vs FC Ashdod|match_over_25@v1"
+    "2026-10-12|Hapoel Kfar Saba vs FC Ashdod|match_over_25@v1",
+    "2026-10-14|Stabaek vs Sandnes ULF|match_over_25@v1",
+    "2026-10-14|Lincoln vs West Ham|match_over_25@v1",
+    "2026-10-14|Aston Villa vs Fenerbah\u00e7e|match_over_25@v1",
+    "2026-10-14|Bodo/Glimt vs Borussia Dortmund|match_over_25@v1",
+    "2026-10-14|Trans Narva vs Kuressaare|match_over_25@v1"
    ],
-   "profit": 2.297,
+   "profit": 2.017,
    "records": [
     {
      "away": "Botafogo W",
@@ -6510,6 +6615,91 @@
      "multi_source": false,
      "price": 1.47,
      "source": "scoutingstats"
+    },
+    {
+     "away": "Sandnes ULF",
+     "away_key": "sandnesulf",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": true,
+     "home": "Stabaek",
+     "home_key": "stabaek",
+     "league": "Norway 1. Division",
+     "match": "Stabaek vs Sandnes ULF",
+     "multi_source": false,
+     "price": 1.36,
+     "rule": "ml-meta avg_p>=60",
+     "source": "scoutingstats",
+     "stated": 0.5976
+    },
+    {
+     "away": "West Ham",
+     "away_key": "westham",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": true,
+     "home": "Lincoln",
+     "home_key": "lincoln",
+     "league": "England Championship",
+     "match": "Lincoln vs West Ham",
+     "multi_source": false,
+     "price": 1.73,
+     "rule": "ml-meta avg_p>=60",
+     "source": "betexplorer",
+     "stated": 0.5991
+    },
+    {
+     "away": "Fenerbah\u00e7e",
+     "away_key": "fenerbahce",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": true,
+     "home": "Aston Villa",
+     "home_key": "astonvilla",
+     "league": "World UEFA Champions League",
+     "match": "Aston Villa vs Fenerbah\u00e7e",
+     "multi_source": true,
+     "price": 1.63,
+     "rule": "ml-meta avg_p>=60",
+     "source": "theoddsapi",
+     "stated": 0.5563
+    },
+    {
+     "away": "Borussia Dortmund",
+     "away_key": "borussiadortmund",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": false,
+     "home": "Bodo/Glimt",
+     "home_key": "bodoglimt",
+     "league": "World UEFA Champions League",
+     "match": "Bodo/Glimt vs Borussia Dortmund",
+     "multi_source": true,
+     "price": 1.4,
+     "rule": "ml-meta avg_p>=60",
+     "source": "theoddsapi",
+     "stated": 0.6105
+    },
+    {
+     "away": "Kuressaare",
+     "away_key": "kuressaare",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": false,
+     "home": "Trans Narva",
+     "home_key": "transnarva",
+     "league": "Estonia Meistriliiga",
+     "match": "Trans Narva vs Kuressaare",
+     "multi_source": false,
+     "price": 1.75,
+     "rule": "ml-meta avg_p>=60",
+     "source": "scoutingstats",
+     "stated": 0.5584
     }
    ],
    "status": "PAPER",
@@ -6517,10 +6707,10 @@
    "status_since": "2026-08-03"
   },
   "match_over_35@v1": {
-   "hits": 8,
-   "inv_price_sum": 7.886068709042189,
+   "hits": 9,
+   "inv_price_sum": 8.21610171234252,
    "multi_n": 1,
-   "n": 21,
+   "n": 22,
    "processed": [
     "2026-08-09|Benfica vs Academico Viseu|match_over_35@v1",
     "2026-08-09|Malm\u00f6 FF vs Degerfors IF|match_over_35@v1",
@@ -6555,9 +6745,10 @@
     "2026-10-13|Inter vs Club Brugge|match_over_35@v1",
     "2026-10-13|Ebbsfleet United vs AFC Totton|match_over_35@v1",
     "2026-10-13|Birmingham vs Preston|match_over_35@v1",
-    "2026-10-13|USM Alger vs JS Saoura|match_over_35@v1"
+    "2026-10-13|USM Alger vs JS Saoura|match_over_35@v1",
+    "2026-10-14|CS Cartagines vs Puntarenas FC|match_over_35@v1"
    ],
-   "profit": -0.28,
+   "profit": 1.75,
    "records": [
     {
      "away": "Academico Viseu",
@@ -6846,6 +7037,23 @@
      "rule": "ml-meta avg_p>=60",
      "source": "scoutingstats",
      "stated": 0.4018
+    },
+    {
+     "away": "Puntarenas FC",
+     "away_key": "puntarenas",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": true,
+     "home": "CS Cartagines",
+     "home_key": "cscartagines",
+     "league": "Costa Rica,Primera Division Apertura",
+     "match": "CS Cartagines vs Puntarenas FC",
+     "multi_source": false,
+     "price": 3.03,
+     "rule": "ml-meta avg_p>=60",
+     "source": "oddspapi",
+     "stated": 0.3251
     }
    ],
    "status": "PAPER",
