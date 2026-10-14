@@ -5383,13 +5383,13 @@ def near_duplicate_fixture_warnings(picks: list[dict]) -> list[dict]:
                         "match": str(a.get("match") or f"{a.get('home')} vs {a.get('away')}"),
                         "home_key": a_home, "away_key": a_away,
                         "source": str(a.get("odds_source") or a.get("source") or "?"),
-                        "kickoff": str(a.get("kickoff") or ""),
+                        "kickoff": format_kickoff(a),  # SAST display, never the raw feed text
                     },
                     {
                         "match": str(b.get("match") or f"{b.get('home')} vs {b.get('away')}"),
                         "home_key": b_home, "away_key": b_away,
                         "source": str(b.get("odds_source") or b.get("source") or "?"),
-                        "kickoff": str(b.get("kickoff") or ""),
+                        "kickoff": format_kickoff(b),
                     },
                 ],
             })
@@ -5415,7 +5415,7 @@ def print_near_duplicate_fixture_tripwire(picks: list[dict], day: str = "",
               file=stream)
         for row in w["rows"]:
             print(f"!!     {row['match']!r} keys=({row['home_key']}|{row['away_key']}) "
-                  f"src={row['source']} ko={row['kickoff']!r}", file=stream)
+                  f"src={row['source']} ko={row['kickoff']}", file=stream)
     print("=" * 72, file=stream)
     return len(warnings)
 
