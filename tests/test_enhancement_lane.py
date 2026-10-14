@@ -1029,7 +1029,7 @@ def _force_recut(localdata, board):
 
 
 def test_a_forced_recut_supersedes_the_frozen_card_and_never_edits_it(tmp_path, _tmp_lane):
-    frozen_text, frozen_state = _force_recut(_tmp_lane, _distinct(2, market="match_over_15"))
+    frozen_text, frozen_state = _force_recut(_tmp_lane, _distinct(2, market="match_over_15", label="Match Over 1.5 Goals"))
     art = _tmp_lane / f"autobets_enh_tickets_{DAY}.txt"
     recut = _tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt"
     state = json.loads((_tmp_lane / "enhancement_tickets_state.json").read_text())
@@ -1062,7 +1062,7 @@ def test_a_forced_recut_with_no_qualifying_leg_is_recorded_as_no_bet(tmp_path, _
 
 
 def test_an_ordinary_run_after_a_recut_shows_the_frozen_card_and_the_notice(tmp_path, _tmp_lane, capsys):
-    frozen_text, _ = _force_recut(_tmp_lane, _distinct(2, market="match_over_15"))
+    frozen_text, _ = _force_recut(_tmp_lane, _distinct(2, market="match_over_15", label="Match Over 1.5 Goals"))
     recut = _tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt"
     recut_before = recut.read_text()
     capsys.readouterr()
@@ -1086,3 +1086,18 @@ def test_a_frozen_slip_on_disk_locks_the_date_even_without_the_state_file(tmp_pa
     at.cmd_enhancement(_args(), at.fresh_state())
     assert (_tmp_lane / f"autobets_enh_tickets_{DAY}.txt").read_text() == frozen_text
     assert not (_tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt").exists()
+
+
+def test_the_recut_diff_comes_from_the_frozen_slip_when_the_state_is_gone(tmp_path, _tmp_lane):
+    """A fresh checkout has no state file; the staked legs still come from the slip."""
+    _board(_tmp_lane, _distinct(2))
+    _freeze_now(_tmp_lane)
+    (_tmp_lane / "enhancement_tickets_state.json").unlink()
+    _board(_tmp_lane, _distinct(2, market="match_over_15", label="Match Over 1.5 Goals"))
+    at.cmd_enhancement(_args(force=True), at.fresh_state())
+    text = (_tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt").read_text()
+    assert "frozen_at 08:00 (from the slip)" in text
+    assert "STAKED on the frozen card, NOT on the re-cut (2)" in text
+    assert "ON THE RE-CUT ONLY (2)" in text
+    assert "Alpha FC vs Beta FC  Match Over 1.5 Goals @ 1.80" in text
+    assert "frozen legs unknown" not in text
