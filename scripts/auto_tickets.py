@@ -3941,6 +3941,82 @@ def _board_coverage_lines(target: str, plan: list[dict],
     ]
 
 
+def _leg_text_key(s: str) -> str:
+    """Whitespace-collapsed text, so printed column padding never matters."""
+    return " ".join(s.split())
+
+
+def _slip_leg_keys(text: str) -> dict[str, str]:
+    """The staked legs of a printed slip, keyed by the text before the price.
+
+    A leg line is indented, carries ' @ ', and is not a refused [NO BET] line.
+    Both lanes print legs this way, so one parser serves both.
+    """
+    keys: dict[str, str] = {}
+    for line in (text or "").splitlines():
+        if line.startswith("   ") and " @ " in line and "[NO BET]" not in line:
+            keys.setdefault(_leg_text_key(line.split(" @ ")[0]), line.strip())
+    return keys
+
+
+def _recut_diff_lines(frozen_text: str, recut: dict[str, str]) -> list[str]:
+    """What is staked on the frozen card versus what the re-cut would stage.
+
+    The staked side comes from the frozen slip TEXT, the artifact that always
+    persists. The state file is gitignored and absent in a fresh CI checkout.
+    """
+    if not frozen_text:
+        return ["  frozen slip text missing; leg diff not computed"]
+    staked = _slip_leg_keys(frozen_text)
+    only_frozen = [k for k in staked if k not in recut]
+    only_recut = [k for k in recut if k not in staked]
+    out = [f"  STAKED on the frozen card, NOT on the re-cut ({len(only_frozen)}) "
+           "— still graded as placed:"]
+    out += [f"      {staked[k]}" for k in only_frozen]
+    out.append(f"  ON THE RE-CUT ONLY ({len(only_recut)}) — not on the frozen card:")
+    out += [f"      {recut[k]}" for k in only_recut]
+    return out
+
+
+def _main_recut(st: dict, target: str, now, plan: list[dict], slip_txt: Path) -> int:
+    """--force on a frozen main-lane date: supersede it with a recut report.
+
+    The frozen slip, its open slip (what was placed) and its slice evidence are
+    left exactly as they were. Only the sibling ``_force_recut.txt`` is written.
+    """
+    frozen_text = slip_txt.read_text(encoding="utf-8") if slip_txt.exists() else ""
+    footer = re.search(r"FROZEN AT (\d\d:\d\d)", frozen_text)
+    frozen_at = f"{footer.group(1)} (from the slip)" if footer else "unknown"
+    recut: dict[str, str] = {}
+    for a in plan:
+        for l in a.get("legs", []):
+            recut.setdefault(_leg_text_key(f"{l['match']} {l['pick']}"),
+                             f"{l['match']}  {l['pick']} @ {l['odds']:.2f}")
+    lines = [
+        f"AUTO TICKETS FORCE RE-CUT — {target}",
+        "=" * 62,
+        f"SUPERSEDES the frozen card (frozen_at {frozen_at}). The frozen slip was NOT edited:",
+        f"  localdata/{slip_txt.name}",
+        "  the frozen card is what was staked and stays the settlement record.",
+        "  nothing was placed or settled from this re-cut; it is for the operator's decision.",
+        *_recut_diff_lines(frozen_text, recut),
+        "",
+    ]
+    for i, a in enumerate(plan, 1):
+        lines.append(f"[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital")
+        for l in a["legs"]:
+            lines.append(f"   {l['match']:46s} {l['pick']:5s} @ {l['odds']:.2f}  "
+                         f"(stated {l['prob']:.0%})")
+        lines.append("")
+    text = "\n".join(lines)
+    recut_path = LOCALDATA / f"auto_tickets_{target}_force_recut.txt"
+    recut_path.write_text(text, encoding="utf-8")
+    print(text)
+    print(f"\nSTATUS: SUPERSEDED — frozen card retained; re-cut written to "
+          f"localdata/{recut_path.name}")
+    return 0
+
+
 def cmd_today(args, st):
     settled = load_settled()
     now = datetime.now(TZ)
@@ -4028,6 +4104,11 @@ def cmd_today(args, st):
         print("=" * 62)
         if slip_txt.exists():
             print(slip_txt.read_text())
+        recut_file = LOCALDATA / f"auto_tickets_{target}_force_recut.txt"
+        if recut_file.exists():
+            print(f"\nSUPERSEDED — a forced re-cut was recorded for this date. "
+                  f"The card above is still what was staked; review the re-cut "
+                  f"before acting: localdata/{recut_file.name}")
         return 0
     if str(target) == now.strftime("%Y-%m-%d") and now.hour < GENERATE_HOUR_START and not args.force:
         print(f"NOT YET — TICKETS START BUILDING AT {GENERATE_HOUR_START:02d}:00, FREEZE AT {FREEZE_HOUR:02d}:00")
@@ -4266,6 +4347,11 @@ def cmd_today(args, st):
                 "\n".join(audit_lines) + "\n"
             )
         return 0
+    if is_frozen(st, target) and args.force:
+        # A frozen card is final. --force writes a re-cut report beside it and
+        # touches nothing else: the open slip (what was placed), the slice
+        # evidence for the frozen card, and the frozen text all stay as they are.
+        return _main_recut(st, target, now, plan, slip_txt)
     # Task E (2026-09-06): a force-repick REPLACES the target date's own
     # existing slip (upsert below deletes it) — so its stake was excluded
     # from committed capital above. The slip prints the card as-is.
@@ -4731,34 +4817,13 @@ def _enhancement_recut(st: dict, target: str, now, slip_txt: Path, legs: list[di
         "  the frozen card is what was staked and stays the settlement record.",
         "  nothing was placed or settled from this re-cut; it is for the operator's decision.",
     ]
-    # The staked legs come from the frozen slip itself, the one artifact that
-    # always persists; the state file is gitignored and absent in a fresh run.
-    # Key = the leg text before its price, whitespace-collapsed, so the frozen
-    # slip's rendering and the re-cut's compare exactly.
-    def _norm(s: str) -> str:
-        return " ".join(s.split())
-    frozen_legs: dict[str, str] = {}
-    for line in frozen_text.splitlines():
-        if line.startswith("   ") and " @ " in line and "[NO BET]" not in line:
-            frozen_legs.setdefault(_norm(line.split(" @ ")[0]), line.strip())
     recut_legs: dict[str, str] = {}
     for a_ in plan:
         for l in a_.get("legs", []):
             recut_legs.setdefault(
-                _norm(f"{l['match']} {l.get('label')}"),
+                _leg_text_key(f"{l['match']} {l.get('label')}"),
                 f"{l['match']}  {l.get('label')} @ {l['odds']:.2f}")
-    if not frozen_text:
-        lines.append("  frozen slip text missing; leg diff not computed")
-    else:
-        only_frozen = [k for k in frozen_legs if k not in recut_legs]
-        only_recut = [k for k in recut_legs if k not in frozen_legs]
-        lines.append(f"  STAKED on the frozen card, NOT on the re-cut ({len(only_frozen)}) "
-                     "— still graded as placed:")
-        for k in only_frozen:
-            lines.append(f"      {frozen_legs[k]}")
-        lines.append(f"  ON THE RE-CUT ONLY ({len(only_recut)}) — not on the frozen card:")
-        for k in only_recut:
-            lines.append(f"      {recut_legs[k]}")
+    lines += _recut_diff_lines(frozen_text, recut_legs)
     lines += ["", card]
     text = "\n".join(lines)
     recut_path = LOCALDATA / f"{ENHANCEMENT_LANE.slip_prefix}_{target}_force_recut.txt"
