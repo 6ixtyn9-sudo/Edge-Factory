@@ -107,7 +107,7 @@ def test_a_team_under_leg_on_a_side_without_evidence_does_not_fire():
             "enhancement_price": 3.00, "enhancement_price_book": "b",
             "enhancement_price_source": "oddspapi"}
     leg = at.enhancement_legs([pick], team_floors=table)[0]
-    assert leg["verdict"] == "no_floor"
+    assert leg["verdict"] == "fire"          # no floor gate (rule 6)
     assert leg["floor"] is None
 
 

@@ -600,7 +600,8 @@ def enh_day_growth(records, floors, *, stake_frac=None, derived=False):
                          "row": {"date": day, "home": home, "away": away}})
         # The live lane ranks by hit rate (auto_tickets.ENHANCEMENT_RANK). The
         # replay must rank the same way, or it tests a rule that never ships.
-        plan = at.plan_day(pool, 100.0, stake_frac=stake, rank=at.ENHANCEMENT_RANK)
+        plan = at.plan_day(pool, 100.0, stake_frac=stake,
+                           max_accas=at.ENH_MAX_ACCAS, rank=at.ENHANCEMENT_RANK)
         if not plan:
             continue                                   # MIN_ACCAS: NO BET
         # plan_day copies the four card keys, so the leg's own settled hit is
