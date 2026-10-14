@@ -507,6 +507,17 @@ def enh_records(root=None):
     return rows
 
 
+def _root_floors(records):
+    """The live rule as a floor table: every market at MIN_LEG_ODDS.
+
+    auto_tickets.enhancement_legs fires any leg priced at or above the shared
+    minimum. There is no per-market table and no team-under gate on the live
+    verdict, so the live arm and the derived root both start here.
+    """
+    return {m: float(at.MIN_LEG_ODDS)
+            for m in sorted({r["market"] for r in records})}
+
+
 def derived_floors_for_records(records, day):
     """The floors a day's card would be gated against, from records before it.
 
@@ -516,8 +527,7 @@ def derived_floors_for_records(records, day):
     margin and gate the live lane uses. Cached by the caller when a whole
     replay is needed.
     """
-    from edgefactory.enh_registry import (ENHANCEMENT_FLOOR_MARGIN,
-                                          ENHANCEMENT_PRICE_FLOORS, derive_floors)
+    from edgefactory.enh_registry import ENHANCEMENT_FLOOR_MARGIN, derive_floors
     payload = {"version": 2, "markets": {}}
     for rec in records:
         if str(rec.get("date") or "") >= str(day):
@@ -525,7 +535,7 @@ def derived_floors_for_records(records, day):
         entry = payload["markets"].setdefault(f"{rec['market']}@v1", {"records": []})
         entry["records"].append({"date": rec["date"], "price": rec["price"],
                                  "hit": rec["hit"], "league": rec.get("league") or ""})
-    return derive_floors(payload, day, parent_floors=ENHANCEMENT_PRICE_FLOORS,
+    return derive_floors(payload, day, parent_floors=_root_floors(records),
                          margin=ENHANCEMENT_FLOOR_MARGIN)
 
 
@@ -538,7 +548,7 @@ def _firing_by_day(records, floors, *, derived=False):
     market root). One filter, two resolvers — the same ``clears_floor`` call
     either way, so an arm cannot be gated differently from the live card.
     """
-    from edgefactory.enh_registry import clears_floor, floor_for_slice
+    from edgefactory.enh_registry import floor_for_slice
     by_day: dict[str, list[dict]] = {}
     per_day: dict[str, dict] = {}
     for rec in records:
@@ -547,12 +557,15 @@ def _firing_by_day(records, floors, *, derived=False):
             if day not in per_day:
                 per_day[day] = derived_floors_for_records(records, day)
             floor, _basis = floor_for_slice(per_day[day], rec["market"],
-                                            rec.get("league"))
+                                            rec.get("league"),
+                                            parent_floors=_root_floors(records))
         else:
             floor = floors.get(rec["market"]) if floors else None
         if floor is None:
             continue                                   # no settled floor -> no bet
-        if not clears_floor(rec["market"], rec["price"]) or rec["price"] < float(floor):
+        # The arm's own floor is the ONLY gate. The static ENHANCEMENT_PRICE_FLOORS
+        # table is not consulted: a uniform arm must mean what it says.
+        if rec["price"] < float(floor):
             continue
         # Carry the floor the leg cleared: the shipped enhancement ranking
         # (hit rate implied by the floor) needs it, and the live lane has it.
@@ -650,7 +663,6 @@ def enh_arm(records, floors, *, stake_frac=None, derived=False):
 
 def cmd_enhancements(args):
     """Report the settled enhancement history under floor variants."""
-    from edgefactory.enh_registry import ENHANCEMENT_PRICE_FLOORS
     records = enh_records()
     if not records:
         print("no settled enhancement records found — nothing to replay")
@@ -663,6 +675,8 @@ def cmd_enhancements(args):
     print("The newly-priced legs exist only going forward. Use these numbers for")
     print("RELATIVE floor comparisons — never as a prediction of bank growth.\n")
 
+    live = _root_floors(records)
+
     def _arm_spec(spec_text: str):
         """(label, floors, derived) for one --ab spec, or a floor= override."""
         text = str(spec_text).strip().lower()
@@ -673,10 +687,10 @@ def cmd_enhancements(args):
         if text.startswith("floor") or "floor=" in text:
             uniform = float(parse_spec(spec_text)["floor"])
             return (f"every market at floor={uniform:.2f}",
-                    {m: uniform for m in ENHANCEMENT_PRICE_FLOORS}, False)
-        return ("live floors", dict(ENHANCEMENT_PRICE_FLOORS), False)
+                    {m: uniform for m in live}, False)
+        return ("live (MIN_LEG_ODDS)", dict(live), False)
 
-    arms = [("live floors", dict(ENHANCEMENT_PRICE_FLOORS), False),
+    arms = [("live (MIN_LEG_ODDS)", dict(live), False),
             ("derived slice floors (day-by-day, no lookahead)", None, True)]
     if args.ab:
         specs = [_arm_spec(t) for t in (args.ab[0], args.ab[1])]
@@ -703,9 +717,8 @@ def cmd_enhancements(args):
 
     # Per-market detail under the live floors, so a floor that never binds is
     # visible rather than implied.
-    print("by market (live floors):")
+    print("by market (live rule, MIN_LEG_ODDS):")
     print(f"  {'market':<18}{'floor':>7}{'n':>6}{'hits':>6}{'rate':>8}{'fires':>7}")
-    live = dict(ENHANCEMENT_PRICE_FLOORS)
     for market in sorted(live):
         rows = [r for r in records if r["market"] == market]
         fired = [r for r in rows if r["price"] >= live[market]]
