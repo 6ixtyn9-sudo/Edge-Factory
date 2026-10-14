@@ -1,18 +1,7 @@
 {
-  "added": 7362,
-  "attempted": 2,
-  "attempted_fixtures": [
-    {
-      "away": "VfB Stuttgart",
-      "fixture_id": "id1000232474560556",
-      "home": "Slovan Bratislava"
-    },
-    {
-      "away": "Fenerbahce",
-      "fixture_id": "id1000232474560560",
-      "home": "Aston Villa"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-10-14",
     "keys": 3,
@@ -21,191 +10,16 @@
     "remaining_today": 0,
     "spent_today": 41
   },
-  "budget_deferred": 65,
-  "captured_at": "2026-10-14T07:29:09+00:00",
+  "captured_at": "2026-10-14T10:08:29+00:00",
   "date": "2026-10-14",
   "errors": [],
-  "fixtures": 233,
+  "fixtures": 0,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 353,
-  "markets": {
-    "1x2": 858,
-    "ou_0.5": 68,
-    "ou_0.75": 20,
-    "ou_1": 50,
-    "ou_1.25": 20,
-    "ou_1.5": 272,
-    "ou_1.75": 40,
-    "ou_2": 100,
-    "ou_2.25": 42,
-    "ou_2.5": 350,
-    "ou_2.75": 124,
-    "ou_3": 152,
-    "ou_3.25": 268,
-    "ou_3.5": 499,
-    "ou_3.75": 288,
-    "ou_4": 200,
-    "ou_4.25": 268,
-    "ou_4.5": 396,
-    "ou_4.75": 100,
-    "ou_5": 104,
-    "ou_5.25": 44,
-    "ou_5.5": 276,
-    "ou_5.75": 36,
-    "ou_6": 70,
-    "ou_6.25": 36,
-    "ou_6.5": 140,
-    "ou_6.75": 20,
-    "ou_7": 20,
-    "ou_7.25": 20,
-    "ou_7.5": 74,
-    "ou_7.75": 20,
-    "ou_8": 20,
-    "ou_8.25": 20,
-    "ou_8.5": 36,
-    "tt_away_0.5": 212,
-    "tt_away_0.75": 4,
-    "tt_away_1": 4,
-    "tt_away_1.25": 6,
-    "tt_away_1.5": 292,
-    "tt_away_1.75": 8,
-    "tt_away_2": 6,
-    "tt_away_2.25": 8,
-    "tt_away_2.5": 318,
-    "tt_away_2.75": 6,
-    "tt_away_3": 2,
-    "tt_away_3.25": 4,
-    "tt_away_3.5": 166,
-    "tt_away_3.75": 2,
-    "tt_away_4": 2,
-    "tt_away_4.25": 2,
-    "tt_away_4.5": 78,
-    "tt_away_5.5": 24,
-    "tt_away_6.5": 6,
-    "tt_away_7.5": 3,
-    "tt_home_0.5": 232,
-    "tt_home_0.75": 4,
-    "tt_home_1": 6,
-    "tt_home_1.25": 6,
-    "tt_home_1.5": 292,
-    "tt_home_1.75": 8,
-    "tt_home_2": 8,
-    "tt_home_2.25": 6,
-    "tt_home_2.5": 317,
-    "tt_home_2.75": 4,
-    "tt_home_3": 4,
-    "tt_home_3.25": 4,
-    "tt_home_3.5": 169,
-    "tt_home_3.75": 2,
-    "tt_home_4": 4,
-    "tt_home_4.5": 74,
-    "tt_home_5.5": 9,
-    "tt_home_6.5": 6,
-    "tt_home_7.5": 3
-  },
-  "markets_source": "cache",
-  "matched": 2,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 1,
-    "market_id_unknown": 1547,
-    "market_inactive": 36,
-    "market_unsupported_clean_sheet": 120,
-    "market_unsupported_corners": 252,
-    "market_unsupported_correct_score": 330,
-    "market_unsupported_double_chance": 243,
-    "market_unsupported_draw_no_bet": 211,
-    "market_unsupported_handicap": 1892,
-    "market_unsupported_odd_even": 376,
-    "market_unsupported_period": 5430,
-    "market_unsupported_win_to_nil": 176,
-    "outcome_inactive": 319,
-    "unresolved_btts": 422
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 1,
-      "market_inactive": 36,
-      "outcome_inactive": 319
-    },
-    "loss_or_diagnosis": {
-      "market_id_unknown": 1547,
-      "market_unsupported_clean_sheet": 120,
-      "market_unsupported_corners": 252,
-      "market_unsupported_correct_score": 330,
-      "market_unsupported_double_chance": 243,
-      "market_unsupported_draw_no_bet": 211,
-      "market_unsupported_handicap": 1892,
-      "market_unsupported_odd_even": 376,
-      "market_unsupported_period": 5430,
-      "market_unsupported_win_to_nil": 176,
-      "unresolved_btts": 422
-    }
-  },
-  "pending_fixtures": 67,
-  "quoted_fixtures": [
-    {
-      "away": "VfB Stuttgart",
-      "fixture_id": "id1000232474560556",
-      "home": "Slovan Bratislava"
-    },
-    {
-      "away": "Fenerbahce",
-      "fixture_id": "id1000232474560560",
-      "home": "Aston Villa"
-    }
-  ],
-  "rows": 7362,
+  "markets": {},
+  "matched": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 12,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 2,
-  "slate_provider_overlap_fixtures": 5,
-  "slate_unmatched_fixtures": [
-    {
-      "away": "Vushtrria",
-      "home": "Dukagjini",
-      "league": "Kosovo: Superliga",
-      "normalized_pair": "dukagjini|vushtrria"
-    },
-    {
-      "away": "Deportivo Pereira",
-      "home": "Junior",
-      "league": "Colombia: Primera A",
-      "normalized_pair": "deportivo pereira|junior"
-    },
-    {
-      "away": "Montevideo City Torque",
-      "home": "Atletico Mineiro",
-      "league": "International,Copa Sudamericana Knockout Stage",
-      "normalized_pair": "atletico mineiro|montevideo city torque"
-    },
-    {
-      "away": "West Ham",
-      "home": "Lincoln",
-      "league": "England Championship",
-      "normalized_pair": "lincoln|west ham"
-    },
-    {
-      "away": "Digenis Ypsonas",
-      "home": "Spartakos Kitiou",
-      "league": "Cyprus Cup",
-      "normalized_pair": "digenis ypsonas|spartakos kitiou"
-    },
-    {
-      "away": "Kongsvinger",
-      "home": "Stromsgodset",
-      "league": "Norway 1. Division",
-      "normalized_pair": "kongsvinger|stromsgodset"
-    },
-    {
-      "away": "Kuressaare",
-      "home": "Trans Narva",
-      "league": "Estonia Meistriliiga",
-      "normalized_pair": "kuressaare|trans narva"
-    }
-  ],
   "source": "oddspapi_odds",
   "status": "budget"
 }
