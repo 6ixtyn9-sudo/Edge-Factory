@@ -461,7 +461,7 @@ def derive_floors(registry: dict, as_of: str, *, parent_floors: dict,
         with_league += sum(1 for r in recs if str(r.get("league") or "").strip())
         with_keys += sum(1 for r in recs
                          if str(r.get("home_key") or "").strip() and str(r.get("away_key") or "").strip())
-        parent = floor_for(plain)
+        parent = (parent_floors or {}).get(plain)
         evidence = _slice_evidence(recs)
         candidate = _candidate_floor(evidence, margin, min_n)
         applied = parent
@@ -584,7 +584,8 @@ def derive_floors(registry: dict, as_of: str, *, parent_floors: dict,
 
 
 def floor_for_slice(derived: dict, market: str | None,
-                    league: str | None = None) -> tuple[float | None, str]:
+                    league: str | None = None, *,
+                    parent_floors: dict | None = None) -> tuple[float | None, str]:
     """(floor, basis) applied to one leg: its league slice, else the market root.
 
     A leg with no league (or one the registry has never seen) inherits the
@@ -605,7 +606,8 @@ def floor_for_slice(derived: dict, market: str | None,
     # No derived row for this market (no settled records, e.g. the match unders):
     # the operator's root floor applies. Without this fallback a parent floor
     # with no registry row would silently never bind.
-    parent = floor_for(market)
+    parent = (floor_for(market) if parent_floors is None
+              else parent_floors.get(market))
     if parent is not None:
         return float(parent), FLOOR_BASIS_INHERITED
     return None, FLOOR_BASIS_INHERITED
@@ -766,7 +768,8 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                    today: str | None = None, multi_source: bool = False,
                    bucket: str = "", rule: str = "", stated: float | None = None,
                    league: str = "", home: str = "", away: str = "",
-                   home_key: str = "", away_key: str = "") -> dict:
+                   home_key: str = "", away_key: str = "",
+                   cohort_rate: float | None = None) -> dict:
     """Idempotently record one settled enhancement outcome.
 
     Dedupes on "date|match|<market>@v1" so repeated audit runs cannot double-count.
@@ -837,7 +840,13 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                      "home": str(home or ""),
                      "away": str(away or ""),
                      "home_key": str(home_key or ""),
-                     "away_key": str(away_key or "")})
+                     "away_key": str(away_key or ""),
+                     # Realized cohort rate (forward-only). Never the stated probability.
+                     "cohort_rate": (round(float(cohort_rate), 4)
+                                    if isinstance(cohort_rate, (int, float))
+                                    and not isinstance(cohort_rate, bool)
+                                    and math.isfinite(float(cohort_rate))
+                                    and 0.0 < float(cohort_rate) < 1.0 else None)})
                 entry["records"] = entry["records"][-MAX_RECORDS_PER_MARKET:]
                 if multi_source:
                     entry["multi_n"] = entry.get("multi_n", 0) + 1

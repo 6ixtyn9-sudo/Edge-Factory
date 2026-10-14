@@ -1763,6 +1763,9 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                                 "rule": str(pick.get("rule")
                                             or pick.get("display_rule") or ""),
                                 "stated": pick.get("enhancement_stated_probability", pick.get("enhancement_probability")),
+                                # Realized cohort rate the card ranked on (None when the
+                                # pick had no cohort). Never the stated probability.
+                                "cohort_rate": pick.get("enhancement_cohort_rate"),
                                 # Floor-slice provenance (round 6, R2): the
                                 # parent pick's league and the fixture's teams,
                                 # so the settled record can be sliced for the
@@ -1883,6 +1886,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                            multi_source=oc.get("multi_source", False),
                            bucket=oc.get("bucket", ""), rule=oc.get("rule", ""),
                            stated=oc.get("stated"),
+                           cohort_rate=oc.get("cohort_rate"),
                            league=oc.get("league", ""), home=oc.get("home", ""),
                            away=oc.get("away", ""))
         registry_states = all_statuses(ROOT)

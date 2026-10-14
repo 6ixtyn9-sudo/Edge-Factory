@@ -503,8 +503,20 @@ def enh_records(root=None):
                          # Floor-slice inputs (round 6, R2): the league the
                          # settled pick belonged to, when the registry recorded
                          # it. "" means unattributed — inherit, never guess.
+                         "cohort_rate": rec.get("cohort_rate"),
                          "league": str(rec.get("league") or "")})
     return rows
+
+
+def _root_floors(records):
+    """The live rule as a floor table: every market at MIN_LEG_ODDS.
+
+    auto_tickets.enhancement_legs fires any leg priced at or above the shared
+    minimum. There is no per-market table and no team-under gate on the live
+    verdict, so the live arm and the derived root both start here.
+    """
+    return {m: float(at.MIN_LEG_ODDS)
+            for m in sorted({r["market"] for r in records})}
 
 
 def derived_floors_for_records(records, day):
@@ -516,8 +528,7 @@ def derived_floors_for_records(records, day):
     margin and gate the live lane uses. Cached by the caller when a whole
     replay is needed.
     """
-    from edgefactory.enh_registry import (ENHANCEMENT_FLOOR_MARGIN,
-                                          ENHANCEMENT_PRICE_FLOORS, derive_floors)
+    from edgefactory.enh_registry import ENHANCEMENT_FLOOR_MARGIN, derive_floors
     payload = {"version": 2, "markets": {}}
     for rec in records:
         if str(rec.get("date") or "") >= str(day):
@@ -525,7 +536,7 @@ def derived_floors_for_records(records, day):
         entry = payload["markets"].setdefault(f"{rec['market']}@v1", {"records": []})
         entry["records"].append({"date": rec["date"], "price": rec["price"],
                                  "hit": rec["hit"], "league": rec.get("league") or ""})
-    return derive_floors(payload, day, parent_floors=ENHANCEMENT_PRICE_FLOORS,
+    return derive_floors(payload, day, parent_floors=_root_floors(records),
                          margin=ENHANCEMENT_FLOOR_MARGIN)
 
 
@@ -538,7 +549,7 @@ def _firing_by_day(records, floors, *, derived=False):
     market root). One filter, two resolvers — the same ``clears_floor`` call
     either way, so an arm cannot be gated differently from the live card.
     """
-    from edgefactory.enh_registry import clears_floor, floor_for_slice
+    from edgefactory.enh_registry import floor_for_slice
     by_day: dict[str, list[dict]] = {}
     per_day: dict[str, dict] = {}
     for rec in records:
@@ -547,12 +558,15 @@ def _firing_by_day(records, floors, *, derived=False):
             if day not in per_day:
                 per_day[day] = derived_floors_for_records(records, day)
             floor, _basis = floor_for_slice(per_day[day], rec["market"],
-                                            rec.get("league"))
+                                            rec.get("league"),
+                                            parent_floors=_root_floors(records))
         else:
             floor = floors.get(rec["market"]) if floors else None
         if floor is None:
             continue                                   # no settled floor -> no bet
-        if not clears_floor(rec["market"], rec["price"]) or rec["price"] < float(floor):
+        # The arm's own floor is the ONLY gate. The static ENHANCEMENT_PRICE_FLOORS
+        # table is not consulted: a uniform arm must mean what it says.
+        if rec["price"] < float(floor):
             continue
         # Carry the floor the leg cleared: the shipped enhancement ranking
         # (hit rate implied by the floor) needs it, and the live lane has it.
@@ -565,7 +579,8 @@ def enh_firing_days(records, floors, *, derived=False) -> set:
     return set(_firing_by_day(records, floors, derived=derived))
 
 
-def enh_day_growth(records, floors, *, stake_frac=None, derived=False):
+def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
+                   stake_per_acca=None, weights=None, derived=False):
     """{day: {"growth": factor, "log_growth": x, "bets": n, "hits": k}}.
 
     The lane's own card, modelled by the lane's own code: the day's
@@ -590,17 +605,22 @@ def enh_day_growth(records, floors, *, stake_frac=None, derived=False):
         for i, rec in enumerate(recs):
             parts = str(rec.get("match") or "").split(" vs ")
             home, away = (parts[0], parts[1]) if len(parts) == 2 else (f"leg {i}", "")
-            stated = rec.get("stated")
-            if not isinstance(stated, (int, float)) or isinstance(stated, bool):
-                stated = 0.0
+            # Rank on the REALIZED cohort rate, the input the live card uses.
+            # Stated is never a ranking input; an unrated leg ranks last (0.0).
+            rank_prob = rec.get("cohort_rate")
+            if not isinstance(rank_prob, (int, float)) or isinstance(rank_prob, bool):
+                rank_prob = 0.0
             pool.append({"match": rec.get("match") or f"{home} vs {away}",
-                         "pick": rec["market"], "prob": float(stated),
+                         "pick": rec["market"], "prob": float(rank_prob),
                          "odds": rec["price"], "hit": bool(rec["hit"]),
                          "floor": rec.get("floor"),
                          "row": {"date": day, "home": home, "away": away}})
         # The live lane ranks by hit rate (auto_tickets.ENHANCEMENT_RANK). The
         # replay must rank the same way, or it tests a rule that never ships.
-        plan = at.plan_day(pool, 100.0, stake_frac=stake,
+        # Sizing keys are forwarded as given; None means the live default, so
+        # the replay sizes exactly as the lane does unless a variant moves it.
+        plan = at.plan_day(pool, 100.0, stake_frac=stake, stake_mode=stake_mode,
+                           stake_per_acca=stake_per_acca, weights=weights,
                            max_accas=at.ENH_MAX_ACCAS, rank=at.ENHANCEMENT_RANK)
         if not plan:
             continue                                   # MIN_ACCAS: NO BET
@@ -621,7 +641,8 @@ def enh_day_growth(records, floors, *, stake_frac=None, derived=False):
     return out
 
 
-def enh_arm(records, floors, *, stake_frac=None, derived=False):
+def enh_arm(records, floors, *, stake_frac=None, stake_mode=None,
+            stake_per_acca=None, weights=None, derived=False):
     """Summary of one floor variant over the settled history.
 
     ``mean_log_growth`` is the acceptance metric — the mean over BET-DAYS, so a
@@ -629,7 +650,8 @@ def enh_arm(records, floors, *, stake_frac=None, derived=False):
     are reported beside it as ``no_bet_freq``: a floor variant that only wins by
     refusing to bet must show that in the same row.
     """
-    days = enh_day_growth(records, floors, stake_frac=stake_frac, derived=derived)
+    days = enh_day_growth(records, floors, stake_frac=stake_frac, stake_mode=stake_mode,
+                          stake_per_acca=stake_per_acca, weights=weights, derived=derived)
     firing = enh_firing_days(records, floors, derived=derived)
     bets = sum(d["bets"] for d in days.values())
     hits = sum(d["hits"] for d in days.values())
@@ -649,12 +671,13 @@ def enh_arm(records, floors, *, stake_frac=None, derived=False):
 
 
 def cmd_enhancements(args):
-    """Report the settled enhancement history under floor variants."""
-    from edgefactory.enh_registry import ENHANCEMENT_PRICE_FLOORS
+    """Report the settled enhancement history under floor AND staking variants."""
     records = enh_records()
     if not records:
         print("no settled enhancement records found — nothing to replay")
         return 0
+    live = _root_floors(records)
+    live_stake = at.ENHANCEMENT_LANE.stake_frac
     print("=" * 74)
     print("ENHANCEMENT LANE REPLAY (settled registry records only)")
     print("=" * 74)
@@ -664,31 +687,42 @@ def cmd_enhancements(args):
     print("RELATIVE floor comparisons — never as a prediction of bank growth.\n")
 
     def _arm_spec(spec_text: str):
-        """(label, floors, derived) for one --ab spec, or a floor= override."""
+        """(label, floors, derived, sizing) for one --ab spec.
+
+        A spec may set a floor (bare number or floor=) and/or sizing keys
+        (stake_frac, stake_mode, stake_per_acca, weights). A key that is absent
+        keeps the LIVE lane's value, so a stake-only spec moves the stake only.
+        """
         text = str(spec_text).strip().lower()
-        # A bare keyword is not a key=value spec, so it is matched first.
         if text in {"derived", "slice", "slice-aware"}:
             # Each day gated by the floors derived from the records before it.
-            return ("derived slice floors (day-by-day)", None, True)
-        if text.startswith("floor") or "floor=" in text:
-            uniform = float(parse_spec(spec_text)["floor"])
-            return (f"every market at floor={uniform:.2f}",
-                    {m: uniform for m in ENHANCEMENT_PRICE_FLOORS}, False)
-        return ("live floors", dict(ENHANCEMENT_PRICE_FLOORS), False)
+            return ("derived slice floors (day-by-day)", None, True, {})
+        spec = parse_spec(spec_text)
+        sizing = {k: spec[k] for k in SIZING_KEYS if k in spec}
+        if "floor" in spec:
+            uniform = float(spec["floor"])
+            floors = {m: uniform for m in live}
+            label = f"every market at floor={uniform:.2f}"
+        else:
+            floors = dict(live)
+            label = "live (MIN_LEG_ODDS)"
+        if sizing:
+            label += " | " + ", ".join(f"{k}={v}" for k, v in sizing.items())
+        return (label, floors, False, sizing)
 
-    arms = [("live floors", dict(ENHANCEMENT_PRICE_FLOORS), False),
-            ("derived slice floors (day-by-day, no lookahead)", None, True)]
+    arms = [("live (MIN_LEG_ODDS)", dict(live), False, {}),
+            ("derived slice floors (day-by-day, no lookahead)", None, True, {})]
     if args.ab:
         specs = [_arm_spec(t) for t in (args.ab[0], args.ab[1])]
-        arms = [(f"arm {chr(65 + i)}: {lbl}", fl, dv)
-                for i, (lbl, fl, dv) in enumerate(specs)]
+        arms = [(f"arm {chr(65 + i)}: {lbl}", fl, dv, sz)
+                for i, (lbl, fl, dv, sz) in enumerate(specs)]
 
     print(f"{'floor variant':<52}{'bet-days':>9}{'bets':>6}{'hits':>6}"
           f"{'rate':>8}{'mean log growth/bet-day':>25}{'no-bet days':>13}")
     print("-" * 120)
     arm_summaries = []
-    for label, floors, derived in arms:
-        s = enh_arm(records, floors, derived=derived)
+    for label, floors, derived, sizing in arms:
+        s = enh_arm(records, floors, derived=derived, **sizing)
         arm_summaries.append((label, s))
         print(f"{label:<52}{s['days']:>9}{s['bets']:>6}{s['hits']:>6}"
               f"{s['rate']:>7.1%}{s['mean_log_growth']:>+25.4f}"
@@ -701,11 +735,9 @@ def cmd_enhancements(args):
           f"derived {note['no_bet_freq']:.0%}; every mean above is per BET-day.")
     print()
 
-    # Per-market detail under the live floors, so a floor that never binds is
-    # visible rather than implied.
-    print("by market (live floors):")
+    # Per-market detail on the live rule, so a floor that never binds is visible.
+    print("by market (live rule, MIN_LEG_ODDS):")
     print(f"  {'market':<18}{'floor':>7}{'n':>6}{'hits':>6}{'rate':>8}{'fires':>7}")
-    live = dict(ENHANCEMENT_PRICE_FLOORS)
     for market in sorted(live):
         rows = [r for r in records if r["market"] == market]
         fired = [r for r in rows if r["price"] >= live[market]]
@@ -716,8 +748,23 @@ def cmd_enhancements(args):
               f"{len(fired):>7}{noise_flag(len(fired))}")
     print()
 
+    # Staking axis, on the live floors. Same selection in every row: only the
+    # stake fraction moves (per-acca sizing at f / MAX_ACCAS, the live rule).
+    # Mean log growth is the metric; worst day shows the single-day cost of size.
+    print("stake sweep (live floors, selection unchanged; sizing = live per-acca rule):")
+    print(f"  {'stake_frac':<12}{'bet-days':>9}{'bets':>6}{'rate':>8}"
+          f"{'mean log growth/bet-day':>25}{'worst day':>11}")
+    for f in sorted({0.10, 0.1667, 0.25, 0.33, 0.50, round(live_stake, 4)}):
+        s = enh_arm(records, live, stake_frac=f)
+        worst = min((d["growth"] for d in s["_days_detail"].values() if d["bets"] > 0),
+                    default=1.0)
+        mark = "   <- live" if abs(f - live_stake) < 1e-9 else ""
+        print(f"  {f:<12.4f}{s['days']:>9}{s['bets']:>6}{s['rate']:>7.1%}"
+              f"{s['mean_log_growth']:>+25.4f}{worst:>11.3f}{mark}")
+    print()
+
     # Bootstrap the two arms the operator actually named with --ab (the last two
-    # rows), not the informational live-floors row above them.
+    # rows), not the informational live row above them.
     if args.ab and len(arm_summaries) >= 2:
         (_, sa), (_, sb) = arm_summaries[-2], arm_summaries[-1]
         days = sorted(set(sa["by_day"]) | set(sb["by_day"]))

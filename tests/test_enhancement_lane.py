@@ -1074,6 +1074,41 @@ def test_an_ordinary_run_after_a_recut_shows_the_frozen_card_and_the_notice(tmp_
     assert recut.read_text() == recut_before
 
 
+def _notice_after_run(localdata, capsys) -> str:
+    capsys.readouterr()
+    state = json.loads((localdata / "enhancement_tickets_state.json").read_text())
+    at.cmd_enhancement(_args(), state)
+    return capsys.readouterr().out
+
+
+def test_a_recut_is_stamped_with_the_slate_it_was_built_from(tmp_path, _tmp_lane, capsys):
+    _force_recut(_tmp_lane, _distinct(2, market="match_over_15", label="Match Over 1.5 Goals"))
+    recut = (_tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt").read_text()
+    assert at._RECUT_SLATE_RE.search(recut) is not None
+    out = _notice_after_run(_tmp_lane, capsys)
+    assert "CURRENT — built from today's picks_today.json" in out
+
+
+def test_a_recut_built_from_an_older_slate_is_flagged_stale(tmp_path, _tmp_lane, capsys):
+    _force_recut(_tmp_lane, _distinct(2, market="match_over_15", label="Match Over 1.5 Goals"))
+    # the slate moves on after the re-cut was written
+    _board(_tmp_lane, _distinct(2, market="btts_yes", price=2.10))
+    out = _notice_after_run(_tmp_lane, capsys)
+    assert "STALE — built from a different picks_today.json" in out
+    assert "CURRENT" not in out
+
+
+def test_a_recut_with_no_slate_stamp_is_unverified_not_current(tmp_path, _tmp_lane, capsys):
+    _force_recut(_tmp_lane, _distinct(2, market="match_over_15", label="Match Over 1.5 Goals"))
+    recut = _tmp_lane / f"autobets_enh_tickets_{DAY}_force_recut.txt"
+    recut.write_text("\n".join(
+        ln for ln in recut.read_text().splitlines() if not ln.startswith("  slate sha256:")))
+    out = _notice_after_run(_tmp_lane, capsys)
+    assert "SUPERSEDED" in out and "_force_recut.txt" in out
+    assert "UNVERIFIED — this re-cut carries no slate stamp" in out
+    assert "CURRENT" not in out
+
+
 def test_a_frozen_slip_on_disk_locks_the_date_even_without_the_state_file(tmp_path, _tmp_lane):
     _board(_tmp_lane, _distinct(2))
     _freeze_now(_tmp_lane)
