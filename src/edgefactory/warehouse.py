@@ -21,6 +21,12 @@ from .util import norm_team_sql
 ROOT = Path(__file__).resolve().parent.parent.parent
 LOCALDATA = ROOT / "localdata"
 
+# Exact monthly filenames only. The looser bzzoiro_*.csv.gz also matches
+# bzzoiro_odds_*.csv.gz, which has an odds schema (no p1/px/p2 predictions) and
+# would add NULL-probability rows to the bzzoiro view. Same convention as
+# scripts/audit_source_availability.py.
+BZZOIRO_MONTHLY_GLOB = "bzzoiro_[0-9][0-9][0-9][0-9]-[0-9][0-9].csv.gz"
+
 def _prob(col: str) -> str:
     """Cast probability column: NaN -> NULL, 0 allowed."""
     return (
@@ -241,9 +247,9 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
         )
 
     # bzzoiro: ML model, probs are 0-1, includes xG and OU probs
-    if _glob.glob(f"{LOCALDATA}/bzzoiro_*.csv.gz"):
+    if _glob.glob(f"{LOCALDATA}/{BZZOIRO_MONTHLY_GLOB}"):
         _src_view(
-            con, "bzzoiro", f"{LOCALDATA}/bzzoiro_*.csv.gz",
+            con, "bzzoiro", f"{LOCALDATA}/{BZZOIRO_MONTHLY_GLOB}",
             f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, event_id, "
             f"{_prob('p1')} AS p1, {_prob('px')} AS px, {_prob('p2')} AS p2, "
             f"{_prob('p_o15')} AS p_o15, {_prob('p_o25')} AS p_o25, {_prob('p_o35')} AS p_o35, "
