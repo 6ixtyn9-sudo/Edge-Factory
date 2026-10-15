@@ -1024,6 +1024,24 @@ def _band_evidence_summary(rows: list[tuple[SettledPick, dict[str, Any]]]) -> di
     return out
 
 
+def _bucket_band_evidence_cut(
+    pairs: list[tuple[SettledPick, dict[str, Any]]],
+) -> dict[str, dict[str, Any]]:
+    """Every bucket x odds band x price evidence. Keys: "<bucket>|<band>|<evidence>"."""
+    grouped: dict[tuple[str, str, str], list[tuple[SettledPick, dict[str, Any]]]] = defaultdict(list)
+    for s, p in pairs:
+        key = (
+            str(s.bucket or "UNKNOWN"),
+            _veto_odds_band(s.odds),
+            str(s.price_evidence or "UNKNOWN"),
+        )
+        grouped[key].append((s, p))
+    return {
+        f"{bucket}|{band}|{evidence}": _band_evidence_summary(group)
+        for (bucket, band, evidence), group in sorted(grouped.items())
+    }
+
+
 def _band_evidence_cut(rows: list[tuple[SettledPick, dict[str, Any]]]) -> dict[str, dict[str, Any]]:
     grouped: dict[tuple[str, str], list[tuple[SettledPick, dict[str, Any]]]] = defaultdict(list)
     for s, p in rows:
@@ -1084,6 +1102,8 @@ def build_veto_deep_dive(
         # implied hit rate and z-score. Keys are "<odds band>|<price evidence>".
         "band_x_evidence": _band_evidence_cut(focus),
         "contrast_band_x_evidence": _band_evidence_cut(contrast),
+        # Every bucket, not only the focus and contrast buckets. Keys: "<bucket>|<band>|<evidence>".
+        "all_buckets_band_evidence": _bucket_band_evidence_cut(pairs),
     }
 
 

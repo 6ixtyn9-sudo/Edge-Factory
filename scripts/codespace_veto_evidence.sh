@@ -6,13 +6,15 @@
 # What it does
 #   1. Refuses to run on a dirty tracked tree (the audit rewrites tracked files).
 #   2. Creates a venv OUTSIDE the repo ($HOME/.edgefactory_audit_venv).
-#   3. Optionally tries to download the CI artifacts of a run and reports which
-#      missing warehouse sources appear inside them. Nothing is copied into localdata.
+#   3. Optionally tries to download the CI artifacts of a run and reports any
+#      warehouse data files (*.csv.gz) inside them. state_*.json files are capture
+#      bookkeeping, not data, and are ignored. Nothing is copied into localdata.
 #   4. Rebuilds localdata/warehouse.duckdb and reports which sources were skipped.
 #      The run is labelled FULL only when no source was skipped.
-#   5. Runs the settlement audit and prints the SKIPPED_VETO cuts, including
-#      band x price-evidence with implied hit rate and z-score, plus the pooled
-#      gate slice (SCOUTINGSTATS_SOLE + BETEXPLORER_RESCUE in the 1.50-2.00 band).
+#   5. Runs the settlement audit and prints every bucket: overall results, gate
+#      labels (SCOUTINGSTATS_SOLE + BETEXPLORER_RESCUE) vs the rest, and every
+#      odds band x price-evidence cell with implied hit rate and z-score. The full
+#      table goes to band_evidence_all_buckets.csv in the output folder.
 #   6. Restores every tracked file the audit changed, so git status stays clean.
 #
 # Outputs go to $HOME/ef_audit_out/<timestamp>/ (run.log, audit json and md,
@@ -82,12 +84,13 @@ else
       echo "NOT downloaded: $name (gh auth, permissions, or network)"
     fi
   done
-  FILES="$(find "$ART" -type f 2>/dev/null | wc -l | tr -d ' ')"
-  echo "files in artifacts: $FILES"
-  echo "missing warehouse sources found inside artifacts:"
-  find "$ART" -type f 2>/dev/null \
-    | grep -iE "vitibet|bettingclosed|prosoccer|bzzoiro|scoutingstats|predictz|betclan|freesupertips|afootballreport|windrawwin|soccervista|consensus4" \
-    || echo "  (none)"
+  DATA_FILES="$(find "$ART" -type f -name '*.csv.gz' 2>/dev/null | wc -l | tr -d ' ')"
+  STATE_FILES="$(find "$ART" -type f -name 'state_*.json' 2>/dev/null | wc -l | tr -d ' ')"
+  echo "warehouse data files (*.csv.gz) in artifacts: $DATA_FILES"
+  echo "capture bookkeeping files (state_*.json, not data, ignored): $STATE_FILES"
+  if [[ "$DATA_FILES" -gt 0 ]]; then
+    find "$ART" -type f -name '*.csv.gz' | sed 's/^/  /'
+  fi
   echo "note: the CI localdata cache is not reachable from here; only artifacts are checked."
 fi
 
@@ -115,15 +118,18 @@ cp "localdata/picks_audit_${END}.md" "$OUT/picks_audit_${END}.md" 2>/dev/null ||
 
 # ---- 5. report ---------------------------------------------------------------
 echo
-echo "== 5. SKIPPED_VETO price-evidence report ($WH_STATUS warehouse)"
-"$PY" - "$OUT/picks_audit_rolling.json" "$WH_STATUS" "$SKIPPED" <<'PY'
-import json, math, sys
+echo "== 5. all-bucket price-evidence report ($WH_STATUS warehouse)"
+"$PY" - "$OUT/picks_audit_rolling.json" "$WH_STATUS" "$SKIPPED" "$OUT" <<'PY'
+import csv, json, sys
 
-path, wh_status, skipped = sys.argv[1], sys.argv[2], sys.argv[3]
+path, wh_status, skipped, out_dir = sys.argv[1:5]
 d = json.load(open(path))
 vd = d["veto_deep_dive"]
-GATE_LABELS = ("SCOUTINGSTATS_SOLE", "BETEXPLORER_RESCUE")
+cells = vd.get("all_buckets_band_evidence", {})
+GATE_LABELS = {"SCOUTINGSTATS_SOLE", "BETEXPLORER_RESCUE"}
 GATE_BAND = "1.50-2.00"
+FIELDS = ["bucket", "band", "evidence", "settled_picks", "wins", "hit_rate",
+          "priced_picks", "implied_hit_rate", "z_vs_implied", "roi"]
 
 
 def pct(x):
@@ -138,74 +144,71 @@ def z(x):
     return "n/a" if x is None else f"{x:+.2f}"
 
 
+rows = []
+for key, s in cells.items():
+    bucket, band, evidence = key.split("|", 2)
+    rows.append({"bucket": bucket, "band": band, "evidence": evidence,
+                 **{k: s.get(k) for k in FIELDS[3:]}})
+with open(f"{out_dir}/band_evidence_all_buckets.csv", "w", newline="") as fh:
+    writer = csv.DictWriter(fh, fieldnames=FIELDS)
+    writer.writeheader()
+    for r in rows:
+        writer.writerow(r)
+
+
+def pool(items):
+    n = sum(r["settled_picks"] for r in items)
+    wins = sum(r["wins"] for r in items)
+    priced = sum(r["priced_picks"] for r in items)
+    implied = sum((r["implied_hit_rate"] or 0) * r["priced_picks"] for r in items)
+    roi_sum = sum((r["roi"] or 0) * r["priced_picks"] for r in items)
+    return {"n": n, "hit": wins / n if n else None,
+            "implied": implied / priced if priced else None,
+            "roi": roi_sum / priced if priced else None}
+
+
 print(f"warehouse: {wh_status}" + (f" (skipped: {skipped.strip() or 'none'})"))
-print(f"window: {d.get('start')}..{d.get('end')}")
-print(
-    f"settled={d.get('settled_ledger') and len(d['settled_ledger'])} "
-    f"pending={d.get('pending_result_picks')} rescheduled={d.get('rescheduled_result_picks')} "
-    f"voided={d.get('voided_event_picks')} ambiguous={d.get('ambiguous_result_picks')}"
-)
+print(f"window: {d.get('start')}..{d.get('end')}  settled={len(d.get('settled_ledger', []))} "
+      f"pending={d.get('pending_result_picks')} rescheduled={d.get('rescheduled_result_picks')} "
+      f"voided={d.get('voided_event_picks')} ambiguous={d.get('ambiguous_result_picks')}")
 print()
-ov = vd["overall"]
-print(f"SKIPPED_VETO overall: settled={ov['settled_picks']} hit={pct(ov['hit_rate'])} roi={roi(ov['roi'])}")
+
+print("A. Every bucket, overall:")
+print(f"  {'bucket':32s} {'n':>5s} {'hit':>7s} {'roi':>8s}")
+for name, s in sorted(d["by_bucket"].items()):
+    print(f"  {name:32s} {s['settled_picks']:5d} {pct(s['hit_rate']):>7s} {roi(s['roi']):>8s}")
+print()
+
+buckets = sorted({r["bucket"] for r in rows})
+print("B. Gate labels (SCOUTINGSTATS_SOLE + BETEXPLORER_RESCUE) vs the rest, per bucket:")
+print(f"  {'bucket':32s} | {'all bands: gate n':>17s} {'hit':>6s} {'impl':>6s} {'roi':>7s}"
+      f" | {'rest n':>6s} {'roi':>7s} | {GATE_BAND + ': gate n':>17s} {'hit':>6s} {'impl':>6s} {'roi':>7s} | {'rest n':>6s} {'roi':>7s}")
+for b in buckets:
+    all_rows = [r for r in rows if r["bucket"] == b]
+    band_rows = [r for r in all_rows if r["band"] == GATE_BAND]
+    g_all = pool([r for r in all_rows if r["evidence"] in GATE_LABELS])
+    rest_all = pool([r for r in all_rows if r["evidence"] not in GATE_LABELS])
+    g_band = pool([r for r in band_rows if r["evidence"] in GATE_LABELS])
+    rest_band = pool([r for r in band_rows if r["evidence"] not in GATE_LABELS])
+    print(f"  {b:32s} | {g_all['n']:17d} {pct(g_all['hit']):>6s} {pct(g_all['implied']):>6s} {roi(g_all['roi']):>7s}"
+          f" | {rest_all['n']:6d} {roi(rest_all['roi']):>7s}"
+          f" | {g_band['n']:17d} {pct(g_band['hit']):>6s} {pct(g_band['implied']):>6s} {roi(g_band['roi']):>7s}"
+          f" | {rest_band['n']:6d} {roi(rest_band['roi']):>7s}")
+print()
+
+print(f"C. Every bucket, {GATE_BAND} band, every price-evidence label (full table: band_evidence_all_buckets.csv):")
+print(f"  {'bucket|evidence':58s} {'n':>4s} {'hit':>7s} {'implied':>8s} {'z':>7s} {'roi':>8s}")
+for r in rows:
+    if r["band"] != GATE_BAND:
+        continue
+    print(f"  {r['bucket'] + '|' + r['evidence']:58s} {r['settled_picks']:4d} {pct(r['hit_rate']):>7s}"
+          f" {pct(r['implied_hit_rate']):>8s} {z(r['z_vs_implied']):>7s} {roi(r['roi']):>8s}")
+print()
+
+print("D. SKIPPED_VETO trusted vs soft evidence:")
 for name in ("trusted_evidence_only", "soft_evidence_only"):
     s = vd[name]
     print(f"  {name}: settled={s['settled_picks']} hit={pct(s['hit_rate'])} roi={roi(s['roi'])}")
-print()
-print("by price evidence (SKIPPED_VETO):")
-for k, s in vd["by_price_evidence"].items():
-    print(f"  {k:24s} n={s['settled_picks']:4d} hit={pct(s['hit_rate']):>7s} roi={roi(s['roi']):>8s}")
-print()
-
-
-def table(title, cells):
-    print(title)
-    print(f"  {'band|evidence':50s} {'n':>4s} {'hit':>7s} {'implied':>8s} {'z':>7s} {'roi':>8s}")
-    for k, s in cells.items():
-        print(
-            f"  {k:50s} {s['settled_picks']:4d} {pct(s['hit_rate']):>7s} "
-            f"{pct(s['implied_hit_rate']):>8s} {z(s['z_vs_implied']):>7s} {roi(s['roi']):>8s}"
-        )
-    print()
-
-
-table("SKIPPED_VETO band x evidence:", vd.get("band_x_evidence", {}))
-table("CAUTION (contrast) band x evidence:", vd.get("contrast_band_x_evidence", {}))
-
-
-def pool(cells, labels, band):
-    rows = [
-        (v, k) for k, v in cells.items()
-        if k.split("|", 1)[0] == band and k.split("|", 1)[1] in labels
-    ]
-    n = sum(v["settled_picks"] for v, _ in rows)
-    wins = sum(v["wins"] for v, _ in rows)
-    priced = sum(v["priced_picks"] for v, _ in rows)
-    implied_num = sum((v["implied_hit_rate"] or 0) * v["priced_picks"] for v, _ in rows)
-    roi_num = sum((v["roi"] or 0) * v["priced_picks"] for v, _ in rows)
-    return {
-        "n": n,
-        "hit": wins / n if n else None,
-        "implied": implied_num / priced if priced else None,
-        "roi": roi_num / priced if priced else None,
-        "priced": priced,
-    }
-
-
-cells = vd.get("band_x_evidence", {})
-gate = pool(cells, GATE_LABELS, GATE_BAND)
-rest = {
-    k: v for k, v in cells.items()
-    if k.split("|", 1)[0] == GATE_BAND and k.split("|", 1)[1] not in GATE_LABELS
-}
-rest_pooled = pool({k: v for k, v in rest.items()}, set(x.split("|", 1)[1] for x in rest), GATE_BAND)
-print(f"GATE SLICE (SKIPPED_VETO, {GATE_BAND}, labels {' + '.join(GATE_LABELS)}):")
-print(
-    f"  n={gate['n']} hit={pct(gate['hit'])} implied={pct(gate['implied'])} "
-    f"roi={roi(gate['roi'])} (pooled; z not pooled)"
-)
-print(f"  everything else in {GATE_BAND}: n={rest_pooled['n']} hit={pct(rest_pooled['hit'])} "
-      f"implied={pct(rest_pooled['implied'])} roi={roi(rest_pooled['roi'])}")
 PY
 
 # ---- 6. restore tracked files ------------------------------------------------
