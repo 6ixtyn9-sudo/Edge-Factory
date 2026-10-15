@@ -133,7 +133,7 @@ def hit(names, src):
 
 rows, missing = [], []
 for src in EXPECTED:
-    files = glob.glob(f"{root}/localdata/{src}.csv.gz") + glob.glob(f"{root}/localdata/{src}_[0-9]*.csv.gz")
+    files = glob.glob(f"{root}/localdata/{src}.csv.gz") + glob.glob(f"{root}/localdata/{src}_*.csv.gz")
     if hit(built, src):
         status = "built"
     elif hit(skipped, src):
