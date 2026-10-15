@@ -1,0 +1,9 @@
+{
+  "as_of_last": null,
+  "blocked": {
+    "BETEXPLORER_RESCUE": {"since": "2026-10-15", "z": null},
+    "SCOUTINGSTATS_SOLE": {"since": "2026-10-15", "z": null}
+  },
+  "seed": "Initial blocked set = the static pair from the 2026-10-15 acca gate (PR #91). Replaced by the dynamic rule on the first step.",
+  "params": {"window_days": 30, "min_n": 60, "z_block": -2.0, "z_unblock": 0.0}
+}
