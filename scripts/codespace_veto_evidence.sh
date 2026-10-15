@@ -8,7 +8,7 @@
 #   1. Refuses to run on a dirty tracked tree (the audit rewrites tracked files).
 #   2. Creates a venv OUTSIDE the repo ($HOME/.edgefactory_audit_venv).
 #   3. Downloads the warehouse-inputs artifact from the manual export workflow
-#      (default run 38739945411) and copies its untracked *.csv.gz files into
+#      (default run 38747882337) and copies its untracked *.csv.gz files into
 #      localdata/. Git-tracked files are never overwritten. bzzoiro_odds files are
 #      held back: their schema is not predictions, and the bzzoiro warehouse view
 #      would pick them up through its bzzoiro_*.csv.gz glob.
@@ -25,7 +25,7 @@ set -euo pipefail
 
 START="2026-06-01"
 END="2026-10-14"
-EXPORT_RUN="38739945411"
+EXPORT_RUN="38747882337"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -79,7 +79,7 @@ else
   DL="$OUT/warehouse_inputs"
   mkdir -p "$DL"
   if gh run download "$EXPORT_RUN" -R 6ixtyn9-sudo/Edge-Factory \
-       -n "warehouse-inputs-$EXPORT_RUN" -D "$DL" >/dev/null 2>&1; then
+       -n "warehouse-inputs-$EXPORT_RUN" -D "$DL" >"$OUT/warehouse_inputs.log" 2>&1; then
     echo "downloaded: warehouse-inputs-$EXPORT_RUN"
     [[ -f "$DL/MANIFEST.txt" ]] && head -n 1 "$DL/MANIFEST.txt"
     COPIED=0
@@ -98,7 +98,9 @@ else
     done < <(find "$DL/localdata" -type f -name '*.csv.gz' 2>/dev/null | sort)
     echo "copied $COPIED untracked data files into localdata/"
   else
-    echo "NOT downloaded: warehouse-inputs-$EXPORT_RUN (gh auth, artifact expired after 7 days, or network)"
+    echo "NOT downloaded: warehouse-inputs-$EXPORT_RUN. gh said:"
+    tail -n 5 "$OUT/warehouse_inputs.log" | sed 's/^/  /'
+    echo "  full log: $OUT/warehouse_inputs.log"
   fi
 fi
 
