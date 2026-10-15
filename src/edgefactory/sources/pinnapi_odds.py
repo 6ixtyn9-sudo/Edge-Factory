@@ -608,6 +608,30 @@ def _envelope(payload: Any) -> tuple[list[Any] | None, str | None]:
 
 # Receipt observed 2026-10-10: a 200 prematch board with teams but no prices
 # after parse (source_health_2026-10-10.json, response_shape_summary).
+# Words that mark a relay event as a side market, not the match result.
+# Matched as whole words, lower-cased, against league and team names.
+NON_MATCH_QUALIFIERS = frozenset({
+    "bookings", "booking", "corners", "corner", "cards", "card",
+    "specials", "special", "players", "player",
+})
+
+
+def _non_match_event(league: Any, home: Any, away: Any) -> bool:
+    """True when the relay event is a side market rather than the match.
+
+    A league is judged by its words. A team name is judged ONLY inside
+    parentheses ("AZ Alkmaar (Bookings)"): a bare word such as "Card" can be
+    part of a real club name and must not be refused on that alone.
+    """
+    if set(re.findall(r"[a-z]+", str(league or "").lower())) & NON_MATCH_QUALIFIERS:
+        return True
+    for name in (home, away):
+        for annotation in re.findall(r"\(([^)]*)\)", str(name or "")):
+            if set(re.findall(r"[a-z]+", annotation.lower())) & NON_MATCH_QUALIFIERS:
+                return True
+    return False
+
+
 def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], bool]:
     """Map a snapshot into price-ledger rows. Returns (rows, schema_match).
 
@@ -653,6 +677,13 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
                   or event.get("tournament") or event.get("competition"))
         if isinstance(league, dict):
             league = league.get("name")
+        if _non_match_event(league, home, away):
+            # 2026-10-15 red-team: the relay carries side-market events (e.g.
+            # "UEFA - Europa League Bookings", "AZ Alkmaar (Bookings)") under
+            # the same team names as the match. Their money lines are not the
+            # match 1X2 and must never be priced as one.
+            _count_drop("non_match_event")
+            continue
         event_id = event.get("id") if event.get("id") is not None else event.get("event_id")
 
         periods = event.get("periods")

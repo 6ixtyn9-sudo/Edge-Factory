@@ -366,6 +366,11 @@ def migrate_folded_key(name: object) -> str:
 SQUAD_MARKER_CLASSES: dict[str, str] = {}
 for _tokens, _cls in (
     (("u17", "u18", "u19", "u20", "u21", "u22", "u23", "u25"), None),  # age grade: exact token
+    # 2026-10-15 red-team: side-market annotations a relay appends to a team
+    # name ("AZ Alkmaar (Bookings)"). The name is not the match side.
+    # Only the unambiguous side-market words: a bare "card" or "special" can be
+    # part of a real club name, and a false marker costs a price for no gain.
+    (("bookings", "booking", "corners", "cards"), "non_match"),
     (("ii", "b", "res", "reserve", "reserves", "yth", "youth", "amateur", "amateurs"), "reserve"),
     (("w", "women", "womens", "woman", "ladies", "feminino", "feminina",
       "femenino", "femenina", "damer"), "women"),
