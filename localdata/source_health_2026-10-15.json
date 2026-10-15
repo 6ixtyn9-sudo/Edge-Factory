@@ -24,10 +24,9 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 3,
+        "fixture_key_miss": 4,
         "market_unmapped": 1,
         "market_unsupported": 239,
-        "no_pick_for_fixture": 1,
         "out_of_window": 32,
         "selection_unmapped": 352
       },
@@ -45,25 +44,25 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 7,
-      "be_raw": 21,
-      "be_usable": 18,
+      "be_matched": 12,
+      "be_raw": 33,
+      "be_usable": 30,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 4,
+      "join_matched_rows": 7,
       "join_miss_counts": {
-        "fixture_key_miss": 6,
-        "no_pick_for_fixture": 8
+        "fixture_key_miss": 9,
+        "no_pick_for_fixture": 14
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-15' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -159,15 +158,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 461,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 73201,
-        "market_unsupported": 43421,
-        "no_pick_for_fixture": 8115
+        "fixture_key_miss": 94559,
+        "market_unsupported": 47871
       },
-      "op_matched": 2,
-      "op_raw": 125198,
-      "op_usable": 125198,
+      "op_matched": 0,
+      "op_raw": 142430,
+      "op_usable": 142430,
       "reason": null,
       "status": "cache_only"
     },
@@ -188,8 +186,8 @@
       "freshness_h": null,
       "join_matched_rows": 15,
       "join_miss_counts": {
-        "fixture_key_miss": 16589,
-        "no_pick_for_fixture": 292
+        "fixture_key_miss": 16621,
+        "no_pick_for_fixture": 260
       },
       "pa_matched": 18,
       "pa_raw": 16896,
@@ -331,13 +329,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 23,
+      "join_matched_rows": 35,
       "join_miss_counts": {
-        "no_pick_for_fixture": 60
+        "fixture_key_miss": 165
       },
-      "oa_matched": 1,
-      "oa_raw": 83,
-      "oa_usable": 83,
+      "oa_matched": 4,
+      "oa_raw": 200,
+      "oa_usable": 200,
       "reason": null,
       "status": "cache_only"
     },
