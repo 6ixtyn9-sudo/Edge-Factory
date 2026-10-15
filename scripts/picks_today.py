@@ -320,6 +320,9 @@ PRICE_EVIDENCE_BZZOIRO_PRIMARY = "BZZOIRO_PRIMARY"
 PRICE_EVIDENCE_NAMED_BOOKMAKER = "NAMED_BOOKMAKER_PRICE"
 PRICE_EVIDENCE_SCOUTINGSTATS_SOLE = "SCOUTINGSTATS_SOLE"
 PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY = "SUSPECT_ALIAS_FUZZY"
+# 2026-10-15: a named-book price that disagrees with the other independent
+# quotes for the same fixture and selection by more than CONSENSUS_MAX_RATIO.
+PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT = "SUSPECT_SOURCE_CONFLICT"
 PRICE_EVIDENCE_BETEXPLORER_RESCUE = "BETEXPLORER_RESCUE"
 PRICE_EVIDENCE_SOURCE_FALLBACK = "SOURCE_FALLBACK"
 PRICE_EVIDENCE_UNMATCHED = "UNMATCHED"
@@ -1769,6 +1772,9 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     if evidence == PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY:
         pick["price_quarantine_reason"] = "alias_fuzzy"
         return BUCKET_WL_SUSPECT_PRICE
+    if evidence == PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT:
+        pick["price_quarantine_reason"] = "source_conflict"
+        return BUCKET_WL_SUSPECT_PRICE
     if evidence == PRICE_EVIDENCE_SCOUTINGSTATS_SOLE:
         pick["price_quarantine_reason"] = "scoutingstats_sole_source"
         return BUCKET_WL_UNCORROBORATED_PRICE
@@ -2875,6 +2881,11 @@ COHERENT_BOOK_OVERROUND_MAX = 1.20
 
 _EXCLUDED_NOT_IN_BOOK = "excluded_not_in_three_way_book"
 _WITHHELD_AMBIGUOUS = "withheld_ambiguous_one_x_two"
+_WITHHELD_MIXED_EVENTS = "withheld_mixed_events_one_x_two"
+
+
+def _norm_league(value) -> str:
+    return " ".join(str(value or "").lower().split())
 
 
 def _fail_closed_odds(value) -> float | None:
@@ -2942,6 +2953,22 @@ def _gate_one_x_two_rows(rows: list[dict]) -> tuple[list[dict], list[dict], dict
 
     for key, group in groups.items():
         summary["groups"] += 1
+        # 2026-10-15 red-team: the group key names the fixture, not the event.
+        # A Pinnacle "Bookings" event with the same team names shared a group
+        # with the real match, and the tightest-overround search then built a
+        # trio from both events. Rows that disagree on league or event id are
+        # two events; with no way to tell which is the match, nothing prices.
+        leagues = {_norm_league(row.get("league")) for row in group} - {""}
+        event_ids = {str(row.get("event_id")) for row in group
+                     if row.get("event_id") not in (None, "")}
+        if len(leagues) > 1 or len(event_ids) > 1:
+            summary["withheld_fixtures"] += 1
+            if len(summary["withheld_fixture_names"]) < 10:
+                summary["withheld_fixture_names"].append(
+                    f"{group[0].get('home') or '?'} vs {group[0].get('away') or '?'}")
+            for row in group:
+                refused.append({**row, "price_coherence": _WITHHELD_MIXED_EVENTS})
+            continue
         sides: dict[str, list[dict]] = {}
         for row in group:
             if _fail_closed_odds(row.get("odds")) is None:
@@ -4178,7 +4205,8 @@ def _bundle_fixture_keys(bundle: dict, day: str) -> set[tuple[str, str, str]]:
 def _named_book_price_matched(pick: dict) -> bool:
     if pick.get("odds") is None:
         return False
-    if str(pick.get("price_evidence") or "") == PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY:
+    if str(pick.get("price_evidence") or "") in (
+            PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY, PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT):
         return False
     return bool(psrc.spec(pick.get("odds_source")).named_bookmaker)
 
@@ -4281,6 +4309,19 @@ def _print_price_coverage(
     )
 
 
+# Red-team thresholds (2026-10-15 incident). A quote older than this, or with
+# no capture stamp, is never a price. 24h is one full card cycle: the 09:00
+# SAST card reads quotes captured the previous evening at the latest. The
+# incident quotes were 37h old. Tune here, not per source.
+MAX_PRICE_AGE_HOURS = 24.0
+# The widest disagreement tolerated between a chosen price and the median of
+# independent quotes for the same selection. The incident prices were 2.5x
+# and 3.0x their market. Legitimate book-to-book gaps on long prices are
+# typically well under 1.6x; a larger gap is treated as a mis-join until a
+# human confirms it.
+CONSENSUS_MAX_RATIO = 1.6
+
+
 def _bundle_candidates(pick: dict, bundles, default_names=()) -> list:
     """Observe each bundle for THIS pick: healthy? exact fixture match?
 
@@ -4297,27 +4338,59 @@ def _bundle_candidates(pick: dict, bundles, default_names=()) -> list:
         name = str(bundle.get("provider") or default or "")
         rows = len(bundle.get("exact") or {}) if "exact" in bundle else len(bundle)
         row, method = find_side_keyed_odds_row(pick, bundle)
+        refused = None
+        if row is not None:
+            # 2026-10-15 red-team: a quote captured days before the card was
+            # priced was used as today's price (Pinnacle, captured 13 Oct,
+            # priced the 15 Oct card). A quote we cannot date is refused for
+            # the same reason: nothing proves it is current.
+            age = _row_age_hours(row, pick)
+            if age is None:
+                refused = "undated_quote"
+            elif age > MAX_PRICE_AGE_HOURS:
+                refused = "stale_quote"
         healthy = psrc.status_is_healthy("ok" if rows else "empty", rows)
         candidates.append(psrc.SourceCandidate(
             name=name,
             healthy=healthy,
-            exact_match=bool(row) and method == "exact",
+            exact_match=bool(row) and method == "exact" and refused is None,
             rows=rows,
-            freshness_h=_row_age_hours(row),
+            freshness_h=_row_age_hours(row, pick),
             bundle=bundle,
-            extra={"row": row, "method": method},
+            extra={
+                "row": None if refused else row,
+                "method": None if refused else method,
+                "refused": refused,
+                "refused_row": row if refused else None,
+            },
         ))
     return candidates
 
 
-def _row_age_hours(row: dict | None) -> float | None:
-    """Age of a matched quote in hours; ``None`` when it cannot be known."""
+def _row_age_hours(row: dict | None, pick: dict | None = None) -> float | None:
+    """Age of a matched quote in hours; ``None`` when it cannot be known.
+
+    Measured from the START of the pick's card day (00:00 UTC), not from the
+    wall clock. A live card and a replay of a past card then judge a quote by
+    the same rule, and a fixture dated in the past is not refused just because
+    it is old. With no card date the wall clock is used. A quote stamped after
+    the anchor is age 0, never negative.
+    """
     if not row:
         return None
     stamp = _parse_utc_stamp(row.get("captured_at"))
     if stamp is None:
         return None
-    return max(0.0, (datetime.now(timezone.utc) - stamp).total_seconds() / 3600.0)
+    anchor = _card_day_anchor(pick) or datetime.now(timezone.utc)
+    return max(0.0, (anchor - stamp).total_seconds() / 3600.0)
+
+
+def _card_day_anchor(pick: dict | None) -> datetime | None:
+    day = str((pick or {}).get("date") or "").strip()
+    try:
+        return datetime.fromisoformat(day[:10]).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
 
 
 def _parse_utc_stamp(value):
@@ -4331,21 +4404,25 @@ def _parse_utc_stamp(value):
         return None
 
 
-def select_price_source(pick: dict, bundles) -> tuple[dict | None, str | None, str | None]:
-    """Pick the healthiest approved source quoting THIS fixture+selection.
+def _select_price_detail(pick: dict, bundles) -> dict:
+    """Source selection plus the evidence needed to refuse a bad choice.
 
-    Returns ``(row, method, source_name)``. Selection is health-aware, not
-    order-aware: Bzzoiro no longer wins merely because it was built first.
-    A healthy source with a valid exact fixture match beats an unavailable
-    source whatever its historic priority. Sources that are not execution
-    eligible (ScoutingStats, BetMiner) can still be returned - the caller
-    quarantines them - but they are ranked behind anything that can execute.
+    Returns ``{"row", "method", "provider", "refused", "others"}``:
+
+    * ``refused``: ``[(source, reason), ...]`` for quotes that matched the
+      fixture but were refused as stale or undated. Never priced.
+    * ``others``: the odds from the OTHER independent sources quoting the
+      same fixture and selection (non-fresh and refused quotes excluded).
+      Used only to test the chosen price for consensus.
     """
     candidates = _bundle_candidates(
         pick, bundles, default_names=(BZZOIRO_ODDS_SOURCE, SCOUTINGSTATS_ODDS_SOURCE))
+    refused = [(c.name, c.extra["refused"]) for c in candidates if c.extra.get("refused")]
     matched = [c for c in candidates if c.extra.get("row")]
+    empty = {"row": None, "method": None, "provider": None,
+             "refused": refused, "others": []}
     if not matched:
-        return None, None, None
+        return empty
     ranked = psrc.rank_candidates(matched, execution_only=True)
     if not ranked:
         ranked = psrc.rank_candidates(matched)
@@ -4357,9 +4434,60 @@ def select_price_source(pick: dict, bundles) -> tuple[dict | None, str | None, s
         # last resort.
         ranked = [c for c in matched if not psrc.known(c.name)]
     if not ranked:
-        return None, None, None
+        return empty
     chosen = ranked[0]
-    return chosen.extra["row"], chosen.extra["method"], chosen.name
+    chosen_family = psrc.independence_family(
+        chosen.name, chosen.extra["row"].get("bookmaker"))
+    others = []
+    for candidate in matched:
+        if candidate is chosen:
+            continue
+        other_row = candidate.extra["row"]
+        if psrc.independence_family(candidate.name, other_row.get("bookmaker")) == chosen_family:
+            # Two boards quoting one book are one opinion, not corroboration.
+            continue
+        other_odds = _valid_decimal_odds(other_row.get("odds"))
+        if other_odds is not None:
+            others.append(other_odds)
+    return {"row": chosen.extra["row"], "method": chosen.extra["method"],
+            "provider": chosen.name, "refused": refused, "others": others}
+
+
+def select_price_source(pick: dict, bundles) -> tuple[dict | None, str | None, str | None]:
+    """Pick the healthiest approved source quoting THIS fixture+selection.
+
+    Returns ``(row, method, source_name)``. Selection is health-aware, not
+    order-aware: Bzzoiro no longer wins merely because it was built first.
+    A healthy source with a valid exact fixture match beats an unavailable
+    source whatever its historic priority. Sources that are not execution
+    eligible (ScoutingStats, BetMiner) can still be returned - the caller
+    quarantines them - but they are ranked behind anything that can execute.
+    Stale and undated quotes are never returned (see ``_bundle_candidates``).
+    """
+    detail = _select_price_detail(pick, bundles)
+    return detail["row"], detail["method"], detail["provider"]
+
+
+def _source_conflict(chosen_odds: float, others: list[float]) -> dict | None:
+    """Return the disagreement when the chosen price is out of line, else None.
+
+    Red-team rule: a single source can be wrong in a way no internal check
+    sees (2026-10-15: a Pinnacle 1X2 of 4.00 against a 1.33 market). When
+    another independent source quotes the same selection, a chosen price more
+    than CONSENSUS_MAX_RATIO away from the median of those quotes is refused.
+    Ratio, not difference, so a long shot is judged on the same scale as a
+    favourite. Only fires when there is an independent quote to disagree with.
+    """
+    if not others:
+        return None
+    ordered = sorted(others)
+    mid = len(ordered) // 2
+    median = ordered[mid] if len(ordered) % 2 else (ordered[mid - 1] + ordered[mid]) / 2
+    ratio = max(chosen_odds / median, median / chosen_odds)
+    if ratio <= CONSENSUS_MAX_RATIO:
+        return None
+    return {"median": round(median, 4), "independent_quotes": len(ordered),
+            "ratio": round(ratio, 3), "bound": CONSENSUS_MAX_RATIO}
 
 
 def enrich_with_live_odds(
@@ -4392,6 +4520,8 @@ def enrich_with_live_odds(
         for field in (
             "price_evidence",
             "price_push_eligible",
+            # 2026-10-15 red-team: this was missing, so a quarantine reason
+            # from an earlier run could outlive the price it described.
             "price_quarantine_reason",
             "suspect_price",
             "price_board",
@@ -4402,7 +4532,8 @@ def enrich_with_live_odds(
         ):
             pick.pop(field, None)
 
-        row, match_method, provider = select_price_source(pick, bundles)
+        detail = _select_price_detail(pick, bundles)
+        row, match_method, provider = detail["row"], detail["method"], detail["provider"]
         source_spec = psrc.spec(provider)
 
         previous_odds = pick.get("odds")
@@ -4415,6 +4546,10 @@ def enrich_with_live_odds(
 
         if not row:
             _stamp_price_board(pick, bundles)
+            if detail["refused"]:
+                # Something matched but was refused as stale/undated. Say so,
+                # so "no price" is never mistaken for "no quote existed".
+                pick["price_quarantine_reason"] = detail["refused"][0][1]
             if previous_odds is not None:
                 fallback_source = str(previous_source or "forebet_best").strip()
                 fallback_spec = psrc.spec(fallback_source)
@@ -4445,18 +4580,27 @@ def enrich_with_live_odds(
             pick["price_push_eligible"] = False
             continue
 
-        if method == "alias_fuzzy":
+        conflict = None
+        if method != "alias_fuzzy":
+            conflict = _source_conflict(candidate_odds, detail["others"])
+        if method == "alias_fuzzy" or conflict is not None:
             # Addendum 26: do not let a fuzzy event string join become “best
             # odds”. Preserve any prior source price, otherwise leave odds n/a;
             # archive the candidate separately so the audit can grade this
             # failure mode rather than erase it.
+            # 2026-10-15: the same treatment for a price that contradicts the
+            # independent quotes. Withheld, never silently repriced.
             _stamp_price_board(pick, bundles,
                                chosen_row=row, chosen_source=provider,
                                chosen_method=method)
             pick["odds_match_method"] = method
-            pick["price_evidence"] = PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY
+            if method == "alias_fuzzy":
+                pick["price_evidence"] = PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY
+                pick["price_quarantine_reason"] = "alias_fuzzy"
+            else:
+                pick["price_evidence"] = PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT
+                pick["price_quarantine_reason"] = "source_conflict"
             pick["price_push_eligible"] = False
-            pick["price_quarantine_reason"] = "alias_fuzzy"
             pick["suspect_price"] = {
                 "odds": candidate_odds,
                 "source": provider or BZZOIRO_ODDS_SOURCE,
@@ -4464,6 +4608,7 @@ def enrich_with_live_odds(
                 "captured_at": row.get("captured_at"),
                 "league": row.get("league"),
                 "match_method": method,
+                "conflict": conflict,
             }
             if previous_odds is None:
                 pick["odds"] = None
@@ -7031,7 +7176,8 @@ def main():
             p["market_type"] = p.get("market", "1x2")
             p["odds_tier"] = get_odds_tier(p.get("market", "1x2"))
             evidence = str(p.get("price_evidence") or "")
-            if evidence == PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY:
+            if evidence in (PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY,
+                            PRICE_EVIDENCE_SUSPECT_SOURCE_CONFLICT):
                 p["odds_match_status"] = "suspect"
             elif evidence == PRICE_EVIDENCE_SCOUTINGSTATS_SOLE:
                 p["odds_match_status"] = "uncorroborated"
