@@ -14,7 +14,7 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 5,
+    "ledger_entries": 6,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -25,14 +25,7 @@
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "necnijmegen|levskisofia",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "hoffenheim|besiktas",
+        "fixture": "caen|larochevf",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -46,21 +39,28 @@
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "dinamominsk|slaviamozyr",
+        "fixture": "sttruiden|iberia1999",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "egnatiarrogozhine|midtjylland",
+        "fixture": "benfica|celtic",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "lechpoznan|bayerleverkusen",
+        "fixture": "atalanta|pafos",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "bournemouth|sturmgraz",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -70,11 +70,13 @@
     "usable_snapshots": 0
   },
   "preflight": {
-    "allowance_by_key": {},
+    "allowance_by_key": {
+      "88739ee5": 76
+    },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=0 [pools=2 cap=90 reserve=20 spent=1 month=2026-10] -> unattributed_quota",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=76 [pools=2 cap=90 reserve=20 spent=1 month=2026-10] -> approved",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1
@@ -88,8 +90,8 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 0,
-    "verdict": "unattributed_quota"
+    "spendable": 76,
+    "verdict": "approved"
   },
   "provenance": {
     "api": "https://football-prediction-api.p.rapidapi.com/api/v2/head-to-head/:id",
