@@ -1,0 +1,72 @@
+name: Export warehouse inputs (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Record git-tracked warehouse files
+        run: |
+          git ls-files 'localdata/*.csv.gz' | sort > "$RUNNER_TEMP/tracked.txt"
+          echo "git-tracked csv.gz files: $(wc -l < "$RUNNER_TEMP/tracked.txt")"
+
+      - name: Restore localdata from the latest daily cache
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: localdata
+          key: localdata-v2-${{ github.run_id }}
+          restore-keys: |
+            localdata-v2-
+
+      - name: Collect untracked warehouse data files
+        run: |
+          set -euo pipefail
+          mkdir -p export
+          find localdata -type f -name '*.csv.gz' | sort > "$RUNNER_TEMP/all.txt"
+          grep -vxFf "$RUNNER_TEMP/tracked.txt" "$RUNNER_TEMP/all.txt" > "$RUNNER_TEMP/untracked.txt" || true
+          if [ ! -s "$RUNNER_TEMP/untracked.txt" ]; then
+            echo "::error::No untracked *.csv.gz files found in the restored cache"
+            exit 1
+          fi
+          MANIFEST=export/MANIFEST.txt
+          echo "cache_key_matched=${{ steps.restore.outputs.cache-matched-key }}" > "$MANIFEST"
+          while read -r f; do
+            mkdir -p "export/$(dirname "$f")"
+            cp "$f" "export/$f"
+            size=$(stat -c %s "$f")
+            hdr=$(zcat "$f" 2>/dev/null | head -n 1 | cut -c1-200 || true)
+            last=$(zcat "$f" 2>/dev/null | tail -n 1 | cut -c1-200 || true)
+            echo "$f bytes=$size" >> "$MANIFEST"
+            echo "  header: $hdr" >> "$MANIFEST"
+            echo "  last:   $last" >> "$MANIFEST"
+          done < "$RUNNER_TEMP/untracked.txt"
+          echo "total_bytes=$(du -sb export | cut -f1)" >> "$MANIFEST"
+          cat "$MANIFEST"
+
+      - name: Upload warehouse inputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: warehouse-inputs-${{ github.run_id }}
+          path: export
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Warehouse inputs export"
+            echo '```'
+            cat export/MANIFEST.txt 2>/dev/null || echo "no manifest written"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
