@@ -3554,9 +3554,12 @@ def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
     candidates = [day]
     try:
         base = datetime.strptime(day, "%Y-%m-%d").date()
-        candidates = [(base + timedelta(days=o)).strftime("%Y-%m-%d")
-                      for o in range(-RESCHEDULE_WINDOW_DAYS,
-                                     RESCHEDULE_WINDOW_DAYS + 1)]
+        # The slip's own day first, then nearby days by distance (+1, -1, +2,
+        # -2, ...). A same-named fixture on an earlier date must never be
+        # graded in place of the fixture that was actually staked.
+        offsets = sorted(range(-RESCHEDULE_WINDOW_DAYS, RESCHEDULE_WINDOW_DAYS + 1),
+                         key=lambda o: (abs(o), o < 0))
+        candidates = [(base + timedelta(days=o)).strftime("%Y-%m-%d") for o in offsets]
     except ValueError:
         pass
     for d in candidates:
