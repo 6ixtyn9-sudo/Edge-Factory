@@ -1,0 +1,94 @@
+"""The rolling-performance grader reports either lane, and the main lane is unchanged.
+
+The grader writes into localdata, so every path it touches is redirected to a
+temp directory: the committed localdata and the real lane states are never read
+or written by these tests.
+"""
+from __future__ import annotations
+
+import importlib
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src"))
+
+import auto_tickets as at  # noqa: E402
+
+grade = importlib.import_module("auto_tickets_grade")
+
+
+def _history_state():
+    st = at.fresh_state()
+    st["bank"] = 150.0
+    st["cycle_base"] = at.BASE_PCT
+    st["history"] = [{
+        "date": "2026-10-12",
+        "accas": [{"odds": 2.0, "won": True}, {"odds": 3.0, "won": False}],
+        "bank_pct": 150.0,
+    }]
+    return st
+
+
+@pytest.fixture
+def sandbox(tmp_path, monkeypatch):
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    main_state = tmp_path / "auto_tickets_state.json"
+    enh_state = tmp_path / "enhancement_tickets_state.json"
+    monkeypatch.setattr(grade, "LOCALDATA", localdata)
+    monkeypatch.setattr(at, "STATE_FILE", main_state)
+    monkeypatch.setattr(at, "load_settled", lambda *a, **k: {})
+    enh_lane = at.ENHANCEMENT_LANE._replace(state_file=enh_state)
+    monkeypatch.setitem(grade.LANES, "enh", (enh_lane, "ENHANCEMENT TICKETS (ROLLING)",
+                                             "autobets_enh_performance"))
+    return {"localdata": localdata, "main_state": main_state, "enh_state": enh_state}
+
+
+def test_enh_lane_writes_its_own_report(sandbox):
+    sandbox["enh_state"].write_text(json.dumps(_history_state()))
+    assert grade.main(["--lane", "enh"]) == 0
+
+    txt = (sandbox["localdata"] / "autobets_enh_performance.txt").read_text()
+    assert txt.startswith("ENHANCEMENT TICKETS (ROLLING) PERFORMANCE")
+    assert "bank 150.0% of capital" in txt
+    assert "accas 1W/1L" in txt
+
+    data = json.loads((sandbox["localdata"] / "autobets_enh_performance.json").read_text())
+    assert data["lane"] == "enh"
+    assert data["bank_pct"] == 150.0
+    assert data["accas"] == {"wins": 1, "losses": 1}
+    # the main lane's report is not touched by an enhancement run
+    assert not (sandbox["localdata"] / "auto_tickets_performance.txt").exists()
+
+
+def test_main_lane_default_writes_main_report_only(sandbox):
+    sandbox["main_state"].write_text(json.dumps(_history_state()))
+    assert grade.main([]) == 0
+
+    txt = (sandbox["localdata"] / "auto_tickets_performance.txt").read_text()
+    assert txt.startswith("AUTO-TICKETS (ROLLING) PERFORMANCE")
+    data = json.loads((sandbox["localdata"] / "auto_tickets_performance.json").read_text())
+    assert data["lane"] == "main"
+    assert not (sandbox["localdata"] / "autobets_enh_performance.txt").exists()
+
+
+def test_enh_lane_with_no_state_writes_nothing(sandbox, capsys):
+    assert grade.main(["--lane", "enh"]) == 0
+    assert "nothing to report" in capsys.readouterr().out
+    assert not list(sandbox["localdata"].iterdir())
+
+
+def test_main_lane_with_no_state_keeps_original_message(sandbox, capsys):
+    assert grade.main([]) == 0
+    assert "no rolling state yet" in capsys.readouterr().out
+    assert not list(sandbox["localdata"].iterdir())
+
+
+def test_unknown_lane_is_rejected(sandbox):
+    with pytest.raises(SystemExit):
+        grade.main(["--lane", "bogus"])
