@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 """Report the ROLLING auto-tickets performance — PERCENT-ONLY (no amounts).
 
-Settles anything settleable via the engine, then writes
-localdata/auto_tickets_performance.txt/.json: bank as % of capital,
-performance multiple, acca record, and any TAKE-PROFIT NOTIFICATION events.
+Settles anything settleable via the engine, then writes a report for one lane:
+
+  --lane main (default)  localdata/auto_tickets_performance.txt/.json
+  --lane enh             localdata/autobets_enh_performance.txt/.json
+
+Each report gives bank as % of capital, performance multiple, acca record,
+and any TAKE-PROFIT NOTIFICATION events. The enhancement lane's state is
+gitignored runtime state, so its report only exists where that state is.
 
 Usage:
   PYTHONPATH=src python3 scripts/auto_tickets_grade.py
+  PYTHONPATH=src python3 scripts/auto_tickets_grade.py --lane enh
 """
 from __future__ import annotations
 
@@ -24,24 +30,36 @@ import auto_tickets as at  # noqa: E402
 
 LOCALDATA = ROOT / "localdata"
 
+# lane name -> (state lane object or None for main, report label, report file stem)
+LANES = {
+    "main": (None, "AUTO-TICKETS (ROLLING)", "auto_tickets_performance"),
+    "enh": (at.ENHANCEMENT_LANE, "ENHANCEMENT TICKETS (ROLLING)", "autobets_enh_performance"),
+}
 
-def main():
+
+def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--lane", choices=sorted(LANES), default="main",
+                    help="which lane to report (default: main)")
     ap.add_argument("--last", type=int, default=15, help="bet-days to show in the txt report")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
-    st = at.load_state()
+    lane, label, stem = LANES[args.lane]
+    st = at.load_state(lane)
     if not st:
-        print("no rolling state yet — run scripts/auto_tickets.py first")
+        if lane is None:
+            print("no rolling state yet — run scripts/auto_tickets.py first")
+        else:
+            print(f"no {args.lane} lane state yet — nothing to report")
         return 0
-    for line in at.settle_open_slips(st, at.load_settled()):
+    for line in at.settle_open_slips(st, at.load_settled(), lane=lane):
         print(line)
 
     accas = [a for h in st["history"] for a in h["accas"]]
     wins = sum(1 for a in accas if a["won"])
     multiple = st["bank"] / st["base_pct"]
 
-    lines = ["AUTO-TICKETS (ROLLING) PERFORMANCE — percentages of capital only", "=" * 62,
+    lines = [f"{label} PERFORMANCE — percentages of capital only", "=" * 62,
              f"generated {datetime.now().isoformat(timespec='seconds')}",
              f"bank {st['bank']:.1f}% of capital (x{multiple:.2f}) · "
              f"cycle baseline {st['cycle_base']:.1f}% · "
@@ -63,9 +81,10 @@ def main():
     txt = "\n".join(lines)
     print()
     print(txt)
-    (LOCALDATA / "auto_tickets_performance.txt").write_text(txt + "\n")
-    (LOCALDATA / "auto_tickets_performance.json").write_text(json.dumps({
+    (LOCALDATA / f"{stem}.txt").write_text(txt + "\n")
+    (LOCALDATA / f"{stem}.json").write_text(json.dumps({
         "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "lane": args.lane,
         "unit": "percent_of_capital",
         "base_pct": st["base_pct"], "bank_pct": st["bank"], "multiple": multiple,
         "cycle_base_pct": st["cycle_base"],
