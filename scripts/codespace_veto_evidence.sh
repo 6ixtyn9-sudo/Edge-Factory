@@ -1,0 +1,279 @@
+#!/usr/bin/env bash
+# Codespaces evidence run for the SKIPPED_VETO acca price-evidence gate.
+#
+#   bash scripts/codespace_veto_evidence.sh [--start YYYY-MM-DD] [--end YYYY-MM-DD]
+#                                           [--export-run RUN_ID|none]
+#
+# What it does
+#   1. Refuses to run on a dirty tracked tree (the audit rewrites tracked files).
+#   2. Creates a venv OUTSIDE the repo ($HOME/.edgefactory_audit_venv).
+#   3. Downloads the warehouse-inputs artifact from the manual export workflow
+#      (default run 38747882337) and copies its untracked *.csv.gz files into
+#      localdata/. Git-tracked files are never overwritten. bzzoiro_odds files are
+#      held back: their schema is not predictions, and the bzzoiro warehouse view
+#      would pick them up through its bzzoiro_*.csv.gz glob.
+#   4. Rebuilds localdata/warehouse.duckdb and prints per-source coverage.
+#   5. Runs the settlement audit and prints every bucket: overall results, gate
+#      labels (SCOUTINGSTATS_SOLE + BETEXPLORER_RESCUE) vs the rest, and every
+#      odds band x price-evidence cell with implied hit rate and z-score. The full
+#      table goes to band_evidence_all_buckets.csv in the output folder.
+#   6. Restores every tracked file the audit changed, so git status stays clean.
+#
+# Outputs go to $HOME/ef_audit_out/<timestamp>/. Nothing is committed or pushed.
+
+set -euo pipefail
+
+START="2026-06-01"
+END="2026-10-14"
+EXPORT_RUN="38747882337"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --start) START="$2"; shift 2 ;;
+    --end) END="$2"; shift 2 ;;
+    --export-run) EXPORT_RUN="$2"; shift 2 ;;
+    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "$ROOT" || ! -f "$ROOT/scripts/audit_recent_picks.py" ]]; then
+  echo "Run this from inside the Edge-Factory checkout." >&2
+  exit 1
+fi
+cd "$ROOT"
+
+if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+  echo "Tracked files have local changes. Commit or stash them first:" >&2
+  git status --short --untracked-files=no >&2
+  exit 1
+fi
+
+TS="$(date +%Y%m%d-%H%M%S)"
+OUT="$HOME/ef_audit_out/$TS"
+mkdir -p "$OUT"
+exec > >(tee -a "$OUT/run.log") 2>&1
+
+echo "branch=$(git branch --show-current) head=$(git rev-parse --short HEAD)"
+echo "window=$START..$END export_run=$EXPORT_RUN output=$OUT"
+
+# ---- 1. environment (outside the repo) -------------------------------------
+VENV="$HOME/.edgefactory_audit_venv"
+if [[ ! -x "$VENV/bin/python" ]]; then
+  python3 -m venv "$VENV"
+fi
+"$VENV/bin/pip" install -q --upgrade pip >/dev/null
+"$VENV/bin/pip" install -q duckdb==1.5.6 pytest
+if [[ -f requirements.txt ]]; then
+  "$VENV/bin/pip" install -q -r requirements.txt
+fi
+PY="$VENV/bin/python"
+
+# ---- 2. warehouse inputs from the export artifact ----------------------------
+echo
+echo "== 2. warehouse inputs from export run $EXPORT_RUN"
+if [[ "$EXPORT_RUN" == "none" ]]; then
+  echo "skipped (--export-run none); using whatever is already in localdata/"
+else
+  DL="$OUT/warehouse_inputs"
+  mkdir -p "$DL"
+  if gh run download "$EXPORT_RUN" -R 6ixtyn9-sudo/Edge-Factory \
+       -n "warehouse-inputs-$EXPORT_RUN" -D "$DL" >"$OUT/warehouse_inputs.log" 2>&1; then
+    echo "downloaded: warehouse-inputs-$EXPORT_RUN"
+    [[ -f "$DL/MANIFEST.txt" ]] && head -n 1 "$DL/MANIFEST.txt"
+    COPIED=0
+    while IFS= read -r f; do
+      base="$(basename "$f")"
+      if [[ "$base" == bzzoiro_odds_* ]]; then
+        echo "held back: $base (odds schema, not predictions)"
+        continue
+      fi
+      if git ls-files --error-unmatch "localdata/$base" >/dev/null 2>&1; then
+        echo "kept git-tracked file, not overwritten: localdata/$base"
+        continue
+      fi
+      cp "$f" "localdata/$base"
+      COPIED=$((COPIED + 1))
+    done < <(find "$DL/localdata" -type f -name '*.csv.gz' 2>/dev/null | sort)
+    echo "copied $COPIED untracked data files into localdata/"
+  else
+    echo "NOT downloaded: warehouse-inputs-$EXPORT_RUN. gh said:"
+    tail -n 5 "$OUT/warehouse_inputs.log" | sed 's/^/  /'
+    echo "  full log: $OUT/warehouse_inputs.log"
+  fi
+fi
+
+# ---- 3. warehouse build and per-source coverage ------------------------------
+echo
+echo "== 3. warehouse build"
+"$PY" scripts/build_warehouse.py > "$OUT/build_warehouse.log" 2>&1
+grep -E "warehouse built" "$OUT/build_warehouse.log" || true
+"$PY" - "$ROOT" "$OUT" <<'PY'
+import glob, json, re, sys
+
+root, out = sys.argv[1], sys.argv[2]
+EXPECTED = [
+    "afootballreport", "betclan", "bettingclosed", "bzzoiro", "freesupertips",
+    "predictz", "prosoccer", "scoutingstats", "soccervista", "vitibet", "windrawwin",
+    "forebet", "zulubet", "statarea", "betexplorer",
+]
+built, skipped = set(), set()
+for line in open(f"{out}/build_warehouse.log", errors="replace"):
+    s = line.strip()
+    m = re.match(r"([a-z0-9_]+): [0-9,]+ rows", s)
+    if m:
+        built.add(m.group(1))
+    m = re.match(r"([a-z0-9_]+): skipped", s)
+    if m:
+        skipped.add(m.group(1))
+
+
+def hit(names, src):
+    return any(n == src or n.startswith(src + "_") for n in names)
+
+
+rows, missing = [], []
+for src in EXPECTED:
+    files = glob.glob(f"{root}/localdata/{src}.csv.gz") + glob.glob(f"{root}/localdata/{src}_*.csv.gz")
+    if hit(built, src):
+        status = "built"
+    elif hit(skipped, src):
+        status = "skipped by builder"
+    else:
+        status = "no build line"
+    rows.append((src, len(files), status))
+    if status != "built":
+        reason = "no data files on disk" if not files else status
+        missing.append(f"{src} ({reason})")
+
+n_built = sum(1 for _, _, s in rows if s == "built")
+print(f"{'source':18s} {'files':>5s}  status")
+for src, n, s in rows:
+    print(f"{src:18s} {n:5d}  {s}")
+print(f"coverage: {n_built}/{len(EXPECTED)} expected sources built")
+print("missing: " + ("; ".join(missing) if missing else "none"))
+json.dump({"built": n_built, "expected": len(EXPECTED), "missing": missing},
+          open(f"{out}/coverage.json", "w"), indent=2)
+PY
+
+# ---- 4. audit ----------------------------------------------------------------
+echo
+echo "== 4. settlement audit $START..$END"
+"$PY" scripts/audit_recent_picks.py --warehouse localdata/warehouse.duckdb --start "$START" --end "$END" \
+  > "$OUT/audit.log" 2>&1
+cp localdata/picks_audit_rolling.json "$OUT/picks_audit_rolling.json"
+cp "localdata/picks_audit_${END}.md" "$OUT/picks_audit_${END}.md" 2>/dev/null || true
+
+# ---- 5. report ---------------------------------------------------------------
+echo
+echo "== 5. all-bucket price-evidence report"
+"$PY" - "$OUT/picks_audit_rolling.json" "$OUT/coverage.json" "$OUT" <<'PY'
+import csv, json, sys
+
+path, cov_path, out_dir = sys.argv[1:4]
+d = json.load(open(path))
+cov = json.load(open(cov_path))
+vd = d["veto_deep_dive"]
+cells = vd.get("all_buckets_band_evidence", {})
+GATE_LABELS = {"SCOUTINGSTATS_SOLE", "BETEXPLORER_RESCUE"}
+GATE_BAND = "1.50-2.00"
+FIELDS = ["bucket", "band", "evidence", "settled_picks", "wins", "hit_rate",
+          "priced_picks", "implied_hit_rate", "z_vs_implied", "roi"]
+
+
+def pct(x):
+    return "n/a" if x is None else f"{x * 100:.1f}%"
+
+
+def roi(x):
+    return "n/a" if x is None else f"{x * 100:+.1f}%"
+
+
+def z(x):
+    return "n/a" if x is None else f"{x:+.2f}"
+
+
+rows = []
+for key, s in cells.items():
+    bucket, band, evidence = key.split("|", 2)
+    rows.append({"bucket": bucket, "band": band, "evidence": evidence,
+                 **{k: s.get(k) for k in FIELDS[3:]}})
+with open(f"{out_dir}/band_evidence_all_buckets.csv", "w", newline="") as fh:
+    writer = csv.DictWriter(fh, fieldnames=FIELDS)
+    writer.writeheader()
+    for r in rows:
+        writer.writerow(r)
+
+
+def pool(items):
+    n = sum(r["settled_picks"] for r in items)
+    wins = sum(r["wins"] for r in items)
+    priced = sum(r["priced_picks"] for r in items)
+    implied = sum((r["implied_hit_rate"] or 0) * r["priced_picks"] for r in items)
+    roi_sum = sum((r["roi"] or 0) * r["priced_picks"] for r in items)
+    return {"n": n, "hit": wins / n if n else None,
+            "implied": implied / priced if priced else None,
+            "roi": roi_sum / priced if priced else None}
+
+
+print(f"warehouse coverage: {cov['built']}/{cov['expected']} expected sources built")
+print(f"missing: {'; '.join(cov['missing']) or 'none'}")
+print(f"window: {d.get('start')}..{d.get('end')}  settled={len(d.get('settled_ledger', []))} "
+      f"pending={d.get('pending_result_picks')} rescheduled={d.get('rescheduled_result_picks')} "
+      f"voided={d.get('voided_event_picks')} ambiguous={d.get('ambiguous_result_picks')}")
+print()
+
+print("A. Every bucket, overall:")
+print(f"  {'bucket':32s} {'n':>5s} {'hit':>7s} {'roi':>8s}")
+for name, s in sorted(d["by_bucket"].items()):
+    print(f"  {name:32s} {s['settled_picks']:5d} {pct(s['hit_rate']):>7s} {roi(s['roi']):>8s}")
+print()
+
+buckets = sorted({r["bucket"] for r in rows})
+print("B. Gate labels (SCOUTINGSTATS_SOLE + BETEXPLORER_RESCUE) vs the rest, per bucket:")
+print(f"  {'bucket':32s} | {'all bands: gate n':>17s} {'hit':>6s} {'impl':>6s} {'roi':>7s}"
+      f" | {'rest n':>6s} {'roi':>7s} | {GATE_BAND + ': gate n':>17s} {'hit':>6s} {'impl':>6s} {'roi':>7s} | {'rest n':>6s} {'roi':>7s}")
+for b in buckets:
+    all_rows = [r for r in rows if r["bucket"] == b]
+    band_rows = [r for r in all_rows if r["band"] == GATE_BAND]
+    g_all = pool([r for r in all_rows if r["evidence"] in GATE_LABELS])
+    rest_all = pool([r for r in all_rows if r["evidence"] not in GATE_LABELS])
+    g_band = pool([r for r in band_rows if r["evidence"] in GATE_LABELS])
+    rest_band = pool([r for r in band_rows if r["evidence"] not in GATE_LABELS])
+    print(f"  {b:32s} | {g_all['n']:17d} {pct(g_all['hit']):>6s} {pct(g_all['implied']):>6s} {roi(g_all['roi']):>7s}"
+          f" | {rest_all['n']:6d} {roi(rest_all['roi']):>7s}"
+          f" | {g_band['n']:17d} {pct(g_band['hit']):>6s} {pct(g_band['implied']):>6s} {roi(g_band['roi']):>7s}"
+          f" | {rest_band['n']:6d} {roi(rest_band['roi']):>7s}")
+print()
+
+print(f"C. Every bucket, {GATE_BAND} band, every price-evidence label (full table: band_evidence_all_buckets.csv):")
+print(f"  {'bucket|evidence':58s} {'n':>4s} {'hit':>7s} {'implied':>8s} {'z':>7s} {'roi':>8s}")
+for r in rows:
+    if r["band"] != GATE_BAND:
+        continue
+    print(f"  {r['bucket'] + '|' + r['evidence']:58s} {r['settled_picks']:4d} {pct(r['hit_rate']):>7s}"
+          f" {pct(r['implied_hit_rate']):>8s} {z(r['z_vs_implied']):>7s} {roi(r['roi']):>8s}")
+print()
+
+print("D. SKIPPED_VETO trusted vs soft evidence:")
+for name in ("trusted_evidence_only", "soft_evidence_only"):
+    s = vd[name]
+    print(f"  {name}: settled={s['settled_picks']} hit={pct(s['hit_rate'])} roi={roi(s['roi'])}")
+PY
+
+# ---- 6. restore tracked files ------------------------------------------------
+echo
+echo "== 6. restoring tracked files the audit changed"
+CHANGED="$(git status --porcelain --untracked-files=no | awk '{print $2}')"
+if [[ -n "$CHANGED" ]]; then
+  echo "$CHANGED"
+  # shellcheck disable=SC2086
+  git checkout -- $CHANGED
+else
+  echo "nothing to restore"
+fi
+echo "git status after restore:"
+git status --short --untracked-files=no
+echo
+echo "done. Paste the sections starting at '== 2.' or send $OUT/run.log"

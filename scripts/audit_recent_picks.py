@@ -1007,6 +1007,51 @@ def _summarize_pairs(rows: list[tuple[SettledPick, dict[str, Any]]]) -> dict[str
     return summarize_scored([s for s, _p in rows])
 
 
+def _band_evidence_summary(rows: list[tuple[SettledPick, dict[str, Any]]]) -> dict[str, Any]:
+    """Summary plus implied hit rate and z-score vs the price-implied probability.
+
+    Only rows with odds > 1.0 enter the implied/z calculation. z is
+    (wins - sum(p)) / sqrt(sum(p * (1 - p))) with p = 1 / odds.
+    """
+    out = summarize_scored([s for s, _p in rows])
+    priced = [s for s, _p in rows if s.odds is not None and float(s.odds) > 1.0]
+    probs = [1.0 / float(s.odds) for s in priced]
+    expected = sum(probs)
+    variance = sum(p * (1.0 - p) for p in probs)
+    wins = sum(1 for s in priced if s.won)
+    out["implied_hit_rate"] = round(expected / len(priced), 6) if priced else None
+    out["z_vs_implied"] = round((wins - expected) / math.sqrt(variance), 3) if variance > 0 else None
+    return out
+
+
+def _bucket_band_evidence_cut(
+    pairs: list[tuple[SettledPick, dict[str, Any]]],
+) -> dict[str, dict[str, Any]]:
+    """Every bucket x odds band x price evidence. Keys: "<bucket>|<band>|<evidence>"."""
+    grouped: dict[tuple[str, str, str], list[tuple[SettledPick, dict[str, Any]]]] = defaultdict(list)
+    for s, p in pairs:
+        key = (
+            str(s.bucket or "UNKNOWN"),
+            _veto_odds_band(s.odds),
+            str(s.price_evidence or "UNKNOWN"),
+        )
+        grouped[key].append((s, p))
+    return {
+        f"{bucket}|{band}|{evidence}": _band_evidence_summary(group)
+        for (bucket, band, evidence), group in sorted(grouped.items())
+    }
+
+
+def _band_evidence_cut(rows: list[tuple[SettledPick, dict[str, Any]]]) -> dict[str, dict[str, Any]]:
+    grouped: dict[tuple[str, str], list[tuple[SettledPick, dict[str, Any]]]] = defaultdict(list)
+    for s, p in rows:
+        grouped[(_veto_odds_band(s.odds), str(s.price_evidence or "UNKNOWN"))].append((s, p))
+    return {
+        f"{band}|{evidence}": _band_evidence_summary(group)
+        for (band, evidence), group in sorted(grouped.items())
+    }
+
+
 def build_veto_deep_dive(
     pairs: list[tuple[SettledPick, dict[str, Any]]],
     *,
@@ -1053,6 +1098,12 @@ def build_veto_deep_dive(
             k: _summarize_pairs(v)
             for k, v in sorted(cut(contrast, lambda s, _p: s.price_evidence).items())
         },
+        # Added for the acca price-evidence gate review: band x evidence with
+        # implied hit rate and z-score. Keys are "<odds band>|<price evidence>".
+        "band_x_evidence": _band_evidence_cut(focus),
+        "contrast_band_x_evidence": _band_evidence_cut(contrast),
+        # Every bucket, not only the focus and contrast buckets. Keys: "<bucket>|<band>|<evidence>".
+        "all_buckets_band_evidence": _bucket_band_evidence_cut(pairs),
     }
 
 
