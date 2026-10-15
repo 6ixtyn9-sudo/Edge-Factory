@@ -1,55 +1,48 @@
 {
   "added": 0,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Mixco",
-      "date": "2026-10-15",
-      "home": "Marquense",
-      "kickoff": "15-10, 04:00",
-      "league": "Guatemala Liga Nacional"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 17,
-  "captured_at": "2026-10-15T01:17:23+00:00",
+  "captured_at": "2026-10-15T04:24:41+00:00",
   "date": "2026-10-15",
-  "due_reasons": {
-    "close_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
-  "kickoff_mismatch_detail": {},
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 2
+  },
   "quoted_fixtures": [],
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
+    "kickoff_mismatch": 2,
     "priced": 1,
-    "retry_cooldown": 15
+    "priced_close_window_not_open": 2,
+    "retry_cooldown": 13
   },
   "skipped": [
-    "Brann|Lincoln Red Imps FC (retry cooldown (6h after failed attempt))",
-    "Bournemouth|Sturm Graz (retry cooldown (6h after failed attempt))",
-    "AZ Alkmaar|Hapoel Beer Sheva (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Brann|Lincoln Red Imps FC: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Brann|Lincoln Red Imps FC (priced, close window not open)",
     "SC Freiburg|FK Jablonec (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Bournemouth|Sturm Graz: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Bournemouth|Sturm Graz (priced, close window not open)",
+    "AZ Alkmaar|Hapoel Beer Sheva (retry cooldown (6h after failed attempt))",
     "Nashville SC|Sporting Kansas City (retry cooldown (6h after failed attempt))",
-    "Twente|FC Thun (retry cooldown (6h after failed attempt))",
     "Benfica|Celtic (retry cooldown (6h after failed attempt))",
+    "Twente|FC Thun (retry cooldown (6h after failed attempt))",
+    "Panathinaikos|FK Borac Banja Luka (retry cooldown (6h after failed attempt))",
     "Dinamo Minsk|Slavia Mozyr (retry cooldown (6h after failed attempt))",
     "Atalanta|Pafos FC (retry cooldown (6h after failed attempt))",
     "CSKA Sofia|Monaco (retry cooldown (6h after failed attempt))",
-    "Lech Poznan|Bayer Leverkusen (retry cooldown (6h after failed attempt))",
-    "Panathinaikos|FK Borac Banja Luka (retry cooldown (6h after failed attempt))",
     "Sparta Praha|Lillestrom (retry cooldown (6h after failed attempt))",
     "Riga FC|Kairat Almaty (retry cooldown (6h after failed attempt))",
+    "Lech Poznan|Bayer Leverkusen (retry cooldown (6h after failed attempt))",
     "Los Angeles FC|Austin FC (priced)",
+    "Marquense|Mixco (kickoff already passed)",
     "LD Alajuelense|CS Herediano (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Marquense vs Mixco (league not covered: Guatemala Liga Nacional)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Guatemala Liga Nacional": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }

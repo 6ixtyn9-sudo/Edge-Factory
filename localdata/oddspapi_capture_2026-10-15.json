@@ -1,111 +1,236 @@
 {
-  "added": 1049,
-  "attempted": 1,
+  "added": 17232,
+  "attempted": 10,
   "attempted_fixtures": [
     {
-      "away": "Khovd FC",
-      "fixture_id": "id1002862375558354",
-      "home": "Hunters FC"
+      "away": "Ulaangom City",
+      "fixture_id": "id1002862375558356",
+      "home": "Amtat FC"
+    },
+    {
+      "away": "Wollongong Wolves FC",
+      "fixture_id": "id1004850774827352",
+      "home": "Preston Lions FC"
+    },
+    {
+      "away": "Calcutta Port Trust SC",
+      "fixture_id": "id1000180075449482",
+      "home": "Barisha SC"
+    },
+    {
+      "away": "Suburban Club",
+      "fixture_id": "id1000180075449484",
+      "home": "Belgharia AC"
+    },
+    {
+      "away": "Salkia FDS Asson",
+      "fixture_id": "id1000180075449486",
+      "home": "Eastern Railway SC"
+    },
+    {
+      "away": "Elite Kings FC",
+      "fixture_id": "id1005369475464474",
+      "home": "University FC"
+    },
+    {
+      "away": "Phnom Penh Crown FC",
+      "fixture_id": "id1000066873835326",
+      "home": "Gangwon FC"
+    },
+    {
+      "away": "Lion City Sailors FC",
+      "fixture_id": "id1000066873835440",
+      "home": "Tai Po FC"
+    },
+    {
+      "away": "Akademia Ontustyk",
+      "fixture_id": "id1000078569854900",
+      "home": "FK Arys"
+    },
+    {
+      "away": "Sejong Sportstoto WFC",
+      "fixture_id": "id1000177269976420",
+      "home": "Hwacheon KSPO FC"
     }
   ],
   "budget": {
     "day": "2026-10-15",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 64,
-    "remaining_today": 18,
-    "spent_today": 23
+    "month_spent": 75,
+    "remaining_today": 7,
+    "spent_today": 34
   },
-  "captured_at": "2026-10-15T01:08:25+00:00",
+  "captured_at": "2026-10-15T04:12:38+00:00",
   "date": "2026-10-15",
   "errors": [],
-  "fixtures": 175,
+  "fixtures": 157,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 119,
+  "market_census_distinct": 347,
   "markets": {
-    "1x2": 219,
-    "ou_0.5": 11,
-    "ou_0.75": 5,
-    "ou_1": 5,
-    "ou_1.25": 5,
-    "ou_1.5": 30,
-    "ou_1.75": 5,
-    "ou_2": 5,
-    "ou_2.25": 10,
-    "ou_2.5": 44,
-    "ou_2.75": 10,
-    "ou_3": 10,
-    "ou_3.25": 11,
-    "ou_3.5": 41,
-    "ou_3.75": 12,
-    "ou_4": 10,
-    "ou_4.25": 70,
-    "ou_4.5": 115,
-    "ou_4.75": 70,
-    "ou_5": 46,
-    "ou_5.25": 30,
-    "ou_5.5": 91,
-    "ou_5.75": 30,
-    "ou_6": 12,
-    "ou_6.25": 12,
-    "ou_6.5": 35,
-    "ou_6.75": 11,
-    "ou_7": 10,
-    "ou_7.25": 10,
-    "ou_7.5": 6,
-    "ou_7.75": 10,
-    "ou_8": 10,
-    "ou_8.25": 10,
-    "ou_8.5": 6,
-    "tt_away_1.5": 16,
-    "tt_home_3.5": 16
+    "1x2": 3009,
+    "ou_0.5": 475,
+    "ou_0.75": 35,
+    "ou_1": 77,
+    "ou_1.25": 101,
+    "ou_1.5": 998,
+    "ou_1.75": 196,
+    "ou_2": 228,
+    "ou_2.25": 334,
+    "ou_2.5": 1652,
+    "ou_2.75": 402,
+    "ou_3": 418,
+    "ou_3.25": 418,
+    "ou_3.5": 1348,
+    "ou_3.75": 268,
+    "ou_4": 202,
+    "ou_4.25": 185,
+    "ou_4.5": 888,
+    "ou_4.75": 161,
+    "ou_5": 132,
+    "ou_5.25": 172,
+    "ou_5.5": 628,
+    "ou_5.75": 82,
+    "ou_6": 42,
+    "ou_6.25": 32,
+    "ou_6.5": 112,
+    "ou_6.75": 21,
+    "ou_7": 20,
+    "ou_7.25": 21,
+    "ou_7.5": 34,
+    "ou_7.75": 20,
+    "ou_8": 20,
+    "ou_8.25": 20,
+    "ou_8.5": 31,
+    "tt_away_0.5": 714,
+    "tt_away_0.75": 30,
+    "tt_away_1": 32,
+    "tt_away_1.25": 18,
+    "tt_away_1.5": 546,
+    "tt_away_1.75": 20,
+    "tt_away_2": 24,
+    "tt_away_2.25": 8,
+    "tt_away_2.5": 506,
+    "tt_away_2.75": 16,
+    "tt_away_3.25": 2,
+    "tt_away_3.5": 161,
+    "tt_away_4.5": 37,
+    "tt_away_5.5": 21,
+    "tt_home_0.5": 498,
+    "tt_home_0.75": 8,
+    "tt_home_1": 48,
+    "tt_home_1.25": 20,
+    "tt_home_1.5": 740,
+    "tt_home_1.75": 26,
+    "tt_home_2": 36,
+    "tt_home_2.25": 26,
+    "tt_home_2.5": 444,
+    "tt_home_2.75": 18,
+    "tt_home_3": 20,
+    "tt_home_3.25": 2,
+    "tt_home_3.5": 306,
+    "tt_home_3.75": 2,
+    "tt_home_4.5": 92,
+    "tt_home_5.5": 26,
+    "tt_home_6.5": 3
   },
   "markets_source": "cache",
-  "matched": 1,
+  "matched": 10,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "market_id_unknown": 140,
-    "market_unsupported_correct_score": 60,
-    "market_unsupported_double_chance": 66,
-    "market_unsupported_draw_no_bet": 41,
-    "market_unsupported_handicap": 343,
-    "market_unsupported_odd_even": 47,
-    "market_unsupported_period": 507,
-    "market_unsupported_win_to_nil": 10,
-    "outcome_inactive": 455,
-    "unresolved_btts": 78
+    "market_id_unknown": 3435,
+    "market_inactive": 60,
+    "market_unsupported_clean_sheet": 216,
+    "market_unsupported_corners": 461,
+    "market_unsupported_correct_score": 1155,
+    "market_unsupported_double_chance": 899,
+    "market_unsupported_draw_no_bet": 698,
+    "market_unsupported_handicap": 4268,
+    "market_unsupported_odd_even": 961,
+    "market_unsupported_period": 11975,
+    "market_unsupported_win_to_nil": 402,
+    "outcome_inactive": 1828,
+    "unresolved_btts": 1278
   },
   "parse_skips_classified": {
     "expected": {
-      "outcome_inactive": 455
+      "market_inactive": 60,
+      "outcome_inactive": 1828
     },
     "loss_or_diagnosis": {
-      "market_id_unknown": 140,
-      "market_unsupported_correct_score": 60,
-      "market_unsupported_double_chance": 66,
-      "market_unsupported_draw_no_bet": 41,
-      "market_unsupported_handicap": 343,
-      "market_unsupported_odd_even": 47,
-      "market_unsupported_period": 507,
-      "market_unsupported_win_to_nil": 10,
-      "unresolved_btts": 78
+      "market_id_unknown": 3435,
+      "market_unsupported_clean_sheet": 216,
+      "market_unsupported_corners": 461,
+      "market_unsupported_correct_score": 1155,
+      "market_unsupported_double_chance": 899,
+      "market_unsupported_draw_no_bet": 698,
+      "market_unsupported_handicap": 4268,
+      "market_unsupported_odd_even": 961,
+      "market_unsupported_period": 11975,
+      "market_unsupported_win_to_nil": 402,
+      "unresolved_btts": 1278
     }
   },
-  "pending_fixtures": 1,
+  "pending_fixtures": 10,
   "quoted_fixtures": [
     {
-      "away": "Khovd FC",
-      "fixture_id": "id1002862375558354",
-      "home": "Hunters FC"
+      "away": "Ulaangom City",
+      "fixture_id": "id1002862375558356",
+      "home": "Amtat FC"
+    },
+    {
+      "away": "Wollongong Wolves FC",
+      "fixture_id": "id1004850774827352",
+      "home": "Preston Lions FC"
+    },
+    {
+      "away": "Calcutta Port Trust SC",
+      "fixture_id": "id1000180075449482",
+      "home": "Barisha SC"
+    },
+    {
+      "away": "Suburban Club",
+      "fixture_id": "id1000180075449484",
+      "home": "Belgharia AC"
+    },
+    {
+      "away": "Salkia FDS Asson",
+      "fixture_id": "id1000180075449486",
+      "home": "Eastern Railway SC"
+    },
+    {
+      "away": "Elite Kings FC",
+      "fixture_id": "id1005369475464474",
+      "home": "University FC"
+    },
+    {
+      "away": "Phnom Penh Crown FC",
+      "fixture_id": "id1000066873835326",
+      "home": "Gangwon FC"
+    },
+    {
+      "away": "Lion City Sailors FC",
+      "fixture_id": "id1000066873835440",
+      "home": "Tai Po FC"
+    },
+    {
+      "away": "Akademia Ontustyk",
+      "fixture_id": "id1000078569854900",
+      "home": "FK Arys"
+    },
+    {
+      "away": "Sejong Sportstoto WFC",
+      "fixture_id": "id1000177269976420",
+      "home": "Hwacheon KSPO FC"
     }
   ],
-  "rows": 1049,
+  "rows": 17232,
   "schema": 1,
-  "slate_candidate_fixtures": 15,
+  "slate_candidate_fixtures": 12,
   "slate_match_mode": "exact_normalized_pair",
   "slate_priority_fixtures": 0,
-  "slate_provider_overlap_fixtures": 7,
+  "slate_provider_overlap_fixtures": 6,
   "slate_unmatched_fixtures": [
     {
       "away": "Hapoel Beer Sheva",
@@ -120,6 +245,12 @@
       "normalized_pair": "benfica|celtic"
     },
     {
+      "away": "FK Borac Banja Luka",
+      "home": "Panathinaikos",
+      "league": "International,Conference League",
+      "normalized_pair": "borac banja luka|panathinaikos"
+    },
+    {
       "away": "Pafos FC",
       "home": "Atalanta",
       "league": "International,Conference League",
@@ -132,28 +263,10 @@
       "normalized_pair": "bayer leverkusen|lech poznan"
     },
     {
-      "away": "FK Borac Banja Luka",
-      "home": "Panathinaikos",
-      "league": "International,Conference League",
-      "normalized_pair": "borac banja luka|panathinaikos"
-    },
-    {
       "away": "Lillestrom",
       "home": "Sparta Praha",
       "league": "International,Europa League",
       "normalized_pair": "lillestrom|sparta praha"
-    },
-    {
-      "away": "Mixco",
-      "home": "Marquense",
-      "league": "Guatemala Liga Nacional",
-      "normalized_pair": "marquense|mixco"
-    },
-    {
-      "away": "CS Herediano",
-      "home": "LD Alajuelense",
-      "league": "Costa Rica,Primera Division Apertura",
-      "normalized_pair": "cs herediano|ld alajuelense"
     }
   ],
   "source": "oddspapi_odds"
