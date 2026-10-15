@@ -29,7 +29,7 @@ from edgefactory.settlement import (  # noqa: E402
     load_verified_results,
     terminal_event_disposition,
 )
-from edgefactory.util import ledger_team_key, norm_team  # noqa: E402
+from edgefactory.util import ledger_team_key, markers_conflict, norm_team  # noqa: E402
 from edgefactory.enh_registry import check_enhancement_hit  # noqa: E402
 
 
@@ -677,6 +677,9 @@ def find_fuzzy_result_matches(
     for res in results_on_date:
         res_h = str(res.get("home", ""))
         res_a = str(res.get("away", ""))
+        # Different squads (youth / reserve / women's) are different fixtures.
+        if markers_conflict(pick_home, res_h) or markers_conflict(pick_away, res_a):
+            continue
         if not _orientation_ok(pick_home, pick_away, res_h, res_a):
             continue
         combined = char_ngram_similarity(f"{pick_home} {pick_away}", f"{res_h} {res_a}", n=2)
@@ -727,6 +730,8 @@ def _alias_candidate_results(
         ak = norm_team(ra)
         if not (hk in home_keys or ak in away_keys or hk in away_keys or ak in home_keys):
             continue
+        if markers_conflict(pick_home, rh) or markers_conflict(pick_away, ra):
+            continue
         sim_hh = char_ngram_similarity(pick_home, rh, n=2)
         sim_aa = char_ngram_similarity(pick_away, ra, n=2)
         if min(sim_hh, sim_aa) < _ALIAS_SIDE_MIN_SIM:
@@ -768,7 +773,9 @@ def _find_rescheduled_result(
         for hk in hc:
             for ak in ac:
                 hit = results.get((nd, hk, ak))
-                if hit is not None:
+                if hit is not None and not (
+                        markers_conflict(pick.get("home"), hit.get("home"))
+                        or markers_conflict(pick.get("away"), hit.get("away"))):
                     dist = abs(offset)
                     if nearest is None or dist < nearest[0]:
                         nearest = (dist, nd, hit)
@@ -786,6 +793,47 @@ def _find_rescheduled_result(
         "rescheduled_origin": hit.get("origin"),
     })
     return diag
+
+
+def _rescheduled_outcome(
+    pick: dict[str, Any],
+    pick_date: str,
+    results: dict[tuple[str, str, str], dict[str, Any]],
+    days: int = 3,
+) -> tuple[str, dict[str, Any] | None]:
+    """Settle a pick whose fixture was played on a nearby date.
+
+    Every settled row for the same squads within ±``days`` (other than the
+    pick's own date) must agree on the 1X2 result. One agreed result ->
+    ("settled", hit): the bet stands on the match that was actually played.
+    Rows that disagree -> ("conflict", None): held, fail-closed, never guessed.
+    No rows -> ("none", None).
+    """
+    try:
+        d0 = datetime.strptime(pick_date, "%Y-%m-%d").date()
+    except ValueError:
+        return ("none", None)
+    hc = audit_team_key_candidates(pick.get("home"))
+    ac = audit_team_key_candidates(pick.get("away"))
+    hits: list[dict[str, Any]] = []
+    for offset in range(-days, days + 1):
+        if offset == 0:
+            continue
+        nd = (d0 + timedelta(days=offset)).isoformat()
+        for hk in hc:
+            for ak in ac:
+                hit = results.get((nd, hk, ak))
+                if hit is None or hit in hits:
+                    continue
+                if (markers_conflict(pick.get("home"), hit.get("home"))
+                        or markers_conflict(pick.get("away"), hit.get("away"))):
+                    continue
+                hits.append(hit)
+    if not hits:
+        return ("none", None)
+    if len({(h.get("hs"), h.get("gs"), h.get("outcome")) for h in hits}) > 1:
+        return ("conflict", None)
+    return ("settled", hits[0])
 
 
 def _price_evidence_from_pick(pick: dict[str, Any]) -> tuple[str, str]:
@@ -1681,10 +1729,17 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
             else:
                 rescheduled = _find_rescheduled_result(pick, pick_date, results)
                 if rescheduled is not None:
+                    status, hit = _rescheduled_outcome(pick, pick_date, results)
+                    rescheduled["rescheduled_status"] = status
                     rescheduled_result_examples.append(rescheduled)
+                    if status != "settled" or hit is None:
+                        continue
+                    # The match was played on a nearby date and every spelling
+                    # agrees: settle on the actual result (falls through below).
+                    result = dict(hit, rescheduled=True)
+                else:
+                    unmatched_result_examples.append(_pick_diag(pick, "pending_or_unmatched_result"))
                     continue
-                unmatched_result_examples.append(_pick_diag(pick, "pending_or_unmatched_result"))
-                continue
 
         settled = settle_pick(pick, result)
         if settled is not None:

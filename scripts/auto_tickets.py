@@ -2840,7 +2840,7 @@ def _alias_candidate_entries(pick, entries_by_date) -> list[dict]:
     checked). Mirrors the audit's ``_alias_candidate_results`` so the verified
     override can purge every spelling of a fixture, not just one normalized
     pair."""
-    from edgefactory.util import norm_team
+    from edgefactory.util import markers_conflict, norm_team
 
     day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
     home = str(pick.get("home") or "")
@@ -2851,6 +2851,10 @@ def _alias_candidate_entries(pick, entries_by_date) -> list[dict]:
     for e in entries_by_date.get(day, []):
         rh = str(e.get("home") or "")
         ra = str(e.get("away") or "")
+        # A youth / reserve / women's side is a different squad even when the
+        # 9-letter key collides ("Slovan Bratislava U19" vs "Slovan Bratislava").
+        if markers_conflict(home, rh) or markers_conflict(away, ra):
+            continue
         hk = norm_team(rh)
         ak = norm_team(ra)
         if not (hk in home_keys or ak in away_keys or hk in away_keys or ak in home_keys):
@@ -3294,27 +3298,48 @@ def _apply_settlement(st, ret_pct, staked_pct, when, lane: "Lane | None" = None)
     return events
 
 
+def _settled_leg_record(leg, result):
+    """One leg as the history keeps it: what was bet, and how it resolved.
+
+    The stored result is what the grader decided (win / loss / void / conflict /
+    None), so the performance report can say which leg made an acca win or lose.
+    """
+    rec = {"match": leg.get("match"), "pick": leg.get("pick"),
+           "odds": leg.get("odds"), "result": result}
+    if leg.get("label"):
+        rec["label"] = leg.get("label")
+    return rec
+
+
 def _record_acca_settlement(st, slip_date, acca):
     """Append/update a per-day history entry for one settled acca.
 
     Per-acca settlement means a day's accas can settle across several runs (a
     stuck leg no longer freezes the whole day's stake). History stays grouped
-    by date so the performance report still reads one line per bet-day.
+    by date so the performance report still reads one line per bet-day. Each
+    acca keeps its own stake, return and leg results so the report can show
+    what drove the win or loss (entries written before this carry no legs).
     """
     won = bool(acca["won"])
     ret = round(acca["stake_pct"] * acca["odds"] if won else 0.0, 4)
+    results = list(acca.get("results") or [])
+    legs = [_settled_leg_record(l, results[i] if i < len(results) else None)
+            for i, l in enumerate(acca.get("legs") or [])]
+    rec = {"odds": acca["odds"], "won": won,
+           "stake_pct": round(acca["stake_pct"], 4),
+           "returned_pct": ret, "legs": legs}
     for h in st["history"]:
         if h["date"] == slip_date:
             h["staked_pct"] = round(h["staked_pct"] + acca["stake_pct"], 4)
             h["returned_pct"] = round(h["returned_pct"] + ret, 4)
-            h["accas"].append({"odds": acca["odds"], "won": won})
+            h["accas"].append(rec)
             h["bank_pct"] = round(st["bank"], 4)
             return
     st["history"].append({
         "date": slip_date,
         "staked_pct": round(acca["stake_pct"], 4),
         "returned_pct": ret,
-        "accas": [{"odds": acca["odds"], "won": won}],
+        "accas": [rec],
         "bank_pct": round(st["bank"], 4),
     })
 
@@ -3554,11 +3579,17 @@ def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
     candidates = [day]
     try:
         base = datetime.strptime(day, "%Y-%m-%d").date()
-        candidates = [(base + timedelta(days=o)).strftime("%Y-%m-%d")
-                      for o in range(-RESCHEDULE_WINDOW_DAYS,
-                                     RESCHEDULE_WINDOW_DAYS + 1)]
+        # The slip's own day first, then nearby days by distance (+1, -1, +2,
+        # -2, ...). A same-named fixture on an earlier date must never be
+        # graded in place of the fixture that was actually staked.
+        offsets = sorted(range(-RESCHEDULE_WINDOW_DAYS, RESCHEDULE_WINDOW_DAYS + 1),
+                         key=lambda o: (abs(o), o < 0))
+        candidates = [(base + timedelta(days=o)).strftime("%Y-%m-%d") for o in offsets]
     except ValueError:
         pass
+    # The staked day first. Only when the fixture is not on that day do the
+    # nearby days count, and then every one of them must agree on the leg.
+    verdicts: set[bool] = set()
     for d in candidates:
         for hk, ak in _result_write_keys(home, away):
             pair = scores.get((d, hk, ak))
@@ -3567,8 +3598,54 @@ def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
             hit = check_enhancement_hit(market, selection, pair[0], pair[1])
             if hit is None:
                 return None          # no scoring rule for this market: hold it
-            return "win" if hit else "loss"
-    return None
+            if d == day:
+                return "win" if hit else "loss"
+            verdicts.add(bool(hit))
+            break
+    if not verdicts:
+        return None
+    if len(verdicts) > 1:
+        return "conflict"
+    return "win" if verdicts.pop() else "loss"
+
+
+def _rescheduled_leg_result(day: str, pick: dict, settled: dict):
+    """win / loss for a 1X2 pick whose fixture was played within ±3 days.
+
+    Only used after the pick's own date found nothing. Every settled row for
+    the same squads on a nearby date must agree on the 1X2 outcome; agreement
+    settles the pick on the match that was actually played, disagreement is
+    "conflict" (held, never guessed), and no rows is None (not known yet).
+    Squad markers are already part of the exact keys, so a youth or women's
+    side cannot pick up the senior club's row here.
+    """
+    try:
+        base = datetime.strptime(day, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+    keys = _result_write_keys(pick.get("home"), pick.get("away"))
+    outcomes: set[str] = set()
+    for off in sorted(range(-RESCHEDULE_WINDOW_DAYS, RESCHEDULE_WINDOW_DAYS + 1),
+                      key=lambda o: (abs(o), o < 0)):
+        if off == 0:
+            continue
+        nd = (base + timedelta(days=off)).strftime("%Y-%m-%d")
+        for hk, ak in keys:
+            outcome = settled.get((nd, hk, ak))
+            if outcome is not None:
+                outcomes.add(str(outcome))
+                break
+    if not outcomes:
+        return None
+    if len(outcomes) > 1:
+        return "conflict"
+    outcome = outcomes.pop()
+    if outcome not in ("home", "away", "draw"):
+        return None
+    sel = str(pick.get("pick") or "").lower()
+    if outcome == "draw":
+        return "loss"
+    return "win" if outcome == sel else "loss"
 
 
 def settle_open_slips(st, settled, archives=None, entries_by_date=None,
@@ -3653,6 +3730,14 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
                     conflicts.append(l["match"])
                 else:
                     r = pick_result(p, settled)
+                    if r is None:
+                        # Played on a nearby date (rescheduled): settle on the
+                        # actual result only when every spelling agrees.
+                        r = _rescheduled_leg_result(
+                            str(p.get("date") or p.get("_archive_day") or slip["date"])[:10],
+                            p, settled)
+                        if r == "conflict":
+                            conflicts.append(l["match"])
                     if r is None:
                         kt = parse_kickoff(p)
                         anchor = kt if kt is not None else _slip_day_anchor(slip["date"])
@@ -4625,6 +4710,42 @@ def _market_selection(market: str | None) -> str:
     return name
 
 
+def apply_enhancement_timing(legs: list[dict], now, target: str, scores) -> dict:
+    """Withdraw firing enhancement legs that can no longer be bet.
+
+    The enhancement lane had no kickoff guard, so a card drafted at 07:28 SAST
+    still listed legs that had kicked off at 02:30, 04:30 and 05:00. The main
+    lane runs ``live_kickoff_guard`` on its pool; this runs the same guard on
+    the enhancement pool, and also withdraws a leg whose score is already known
+    (the match is finished). A withdrawn leg keeps its row and carries a
+    ``withdrawn_reason``; its verdict stops it from firing.
+
+    Returns ``{reason: [match, ...]}`` for the run log.
+    """
+    firing = [l for l in legs if l.get("verdict") == "fire"]
+    kept, drops = live_kickoff_guard(firing, now)
+    kept_ids = {id(l) for l in kept}
+    report: dict[str, list[str]] = {}
+    for reason, names in drops.items():
+        report.setdefault(reason, []).extend(names)
+    for leg in firing:
+        if id(leg) in kept_ids:
+            continue
+        reason = next((r for r, names in drops.items() if leg.get("match") in names),
+                      "kickoff guard")
+        leg["verdict"] = "kickoff_guard"
+        leg["withdrawn_reason"] = reason
+    for leg in legs:
+        if leg.get("verdict") != "fire":
+            continue
+        probe = dict(leg, pick=_market_selection(leg.get("market")))
+        if enhancement_leg_result(probe, target, scores or {}) in ("win", "loss"):
+            leg["verdict"] = "result_known"
+            leg["withdrawn_reason"] = "result already known"
+            report.setdefault("result already known", []).append(leg.get("match"))
+    return report
+
+
 def enhancement_pool(legs: list[dict]) -> list[dict]:
     """The firing legs, in the shared recipe's own leg shape.
 
@@ -4920,6 +5041,9 @@ def cmd_enhancement(args, st) -> int:
     from edgefactory.enh_team_floors import team_under_floors
     team_floors = team_under_floors(LOCALDATA.parent, target)
     legs = enhancement_legs(slate, floors=floors, team_floors=team_floors)
+    withdrawn = apply_enhancement_timing(legs, now, target, load_settled_scores())
+    for reason, names in withdrawn.items():
+        print(f"enhancement leg withdrawn ({reason}): {', '.join(str(n) for n in names)}")
     pool = enhancement_pool(legs)
     bank_eff = effective_bank(st, exclude_date=target)
     should_freeze = (str(target) == now.strftime("%Y-%m-%d")
