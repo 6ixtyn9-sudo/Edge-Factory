@@ -92,3 +92,45 @@ def test_main_lane_with_no_state_keeps_original_message(sandbox, capsys):
 def test_unknown_lane_is_rejected(sandbox):
     with pytest.raises(SystemExit):
         grade.main(["--lane", "bogus"])
+
+
+def test_settled_acca_history_keeps_stake_return_and_each_leg_result():
+    """A settled acca records what it staked, returned and how each leg resolved,
+    so the report can say which leg decided it."""
+    st = at.fresh_state()
+    st["bank"] = 100.0
+    acca = {"odds": 2.0, "won": False, "stake_pct": 10.0,
+            "legs": [{"match": "Alpha vs Beta", "pick": "HOME", "odds": 1.3},
+                     {"match": "Gamma vs Delta", "pick": "AWAY", "odds": 1.5}],
+            "results": ["win", "loss"]}
+    at._record_acca_settlement(st, "2026-10-12", acca)
+    rec = st["history"][-1]["accas"][0]
+    assert rec["stake_pct"] == 10.0 and rec["returned_pct"] == 0.0
+    assert [(l["match"], l["result"]) for l in rec["legs"]] == [
+        ("Alpha vs Beta", "win"), ("Gamma vs Delta", "loss")]
+
+
+def test_report_names_the_leg_that_lost_an_acca_and_shows_held_accas():
+    st = at.fresh_state()
+    st["bank"] = 80.0
+    st["base_pct"] = 100.0
+    st["history"] = [{"date": "2026-10-12", "staked_pct": 10.0, "returned_pct": 0.0,
+                      "bank_pct": 80.0,
+                      "accas": [{"odds": 2.0, "won": False, "stake_pct": 10.0,
+                                 "returned_pct": 0.0,
+                                 "legs": [{"match": "Alpha vs Beta", "pick": "HOME",
+                                           "odds": 1.3, "result": "win"},
+                                          {"match": "Gamma vs Delta", "pick": "AWAY",
+                                           "odds": 1.5, "result": "loss"}]}]}]
+    held_acca = {"odds": 1.85, "won": None, "stake_pct": 5.0,
+                 "legs": [{"match": "Eps vs Zeta", "pick": "HOME", "odds": 1.4},
+                          {"match": "Eta vs Theta", "pick": "AWAY", "odds": 1.3}],
+                 "results": ["win", "conflict"]}
+    held = [({"date": "2026-10-12", "accas": [held_acca], "staked_pct": 5.0}, held_acca)]
+    from auto_tickets_grade import render_lines
+    txt = "\n".join(render_lines(st, "T", 15, held, [st["history"][0]["accas"][0]], 0))
+    assert "lost on: Gamma vs Delta" in txt
+    assert "LOST  net -10.0%" in txt
+    assert "ACCA @1.85  stake 5.0%  HELD" in txt
+    assert "reason: donor spellings disagree on the outcome of Eta vs Theta" in txt
+    assert "bank 90.0% -> 80.0%" in txt

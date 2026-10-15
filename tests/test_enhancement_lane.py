@@ -36,11 +36,14 @@ DAY = "2026-10-12"
 def _pick(home="Pyunik Yerevan", away="BKMA", market="match_over_25", *,
           price=1.72, bucket="CERTIFIED_CLEAN", rule="r1", prob=0.46,
           label="Match Over 2.5 Goals", book="Stake.com"):
+    # A real card row always carries a kickoff; the live guard withdraws legs
+    # without one. Default to a kickoff still ahead of the pinned 08:00 SAST run.
     return {"home": home, "away": away, "match": f"{home} vs {away}", "date": DAY,
             "bucket": bucket, "rule": rule, "recommended_enhancement": market,
             "enhancement_label": label, "enhancement_probability": prob,
             "enhancement_price": price, "enhancement_price_book": book,
-            "enhancement_price_source": "oddspapi"}
+            "enhancement_price_source": "oddspapi",
+            "kickoff_utc": f"{DAY}T16:00:00+00:00"}
 
 
 class _PinnedDatetime(datetime):
@@ -460,6 +463,20 @@ def test_the_market_grading_path_is_the_registrys_own_hit_definition():
     assert at.enhancement_leg_result(leg, DAY, _scores_for([("Alpha FC", "Beta FC", 3, 0)])) is None
     # and no score at all is 'not known yet', not a loss
     assert at.enhancement_leg_result(leg, DAY, {}) is None
+
+
+def test_a_leg_is_graded_from_the_staked_days_score_not_an_earlier_same_name_fixture():
+    """A same-named fixture on an earlier day must not grade the staked leg."""
+    leg = {"market": "home_under_15", "pick": "home", "match": "Mito Hollyhock vs FC Tokyo",
+           "fixture_key": [DAY, "Mito Hollyhock", "FC Tokyo"]}
+    earlier = _scores_for([("Mito Hollyhock", "FC Tokyo", 3, 0)], day="2026-10-11")
+    on_day = _scores_for([("Mito Hollyhock", "FC Tokyo", 1, 0)])
+    scores = {**earlier, **on_day}
+    # home scored 1 on the staked day -> Under 1.5 wins; the 3-0 on an
+    # earlier date must not be picked up first.
+    assert at.enhancement_leg_result(leg, DAY, scores) == "win"
+    # with only the earlier-date score present, it is still found (within window)
+    assert at.enhancement_leg_result(leg, DAY, earlier) == "loss"
 
 
 def test_a_market_leg_on_a_conflicted_fixture_is_held_as_a_conflict():
@@ -1154,3 +1171,26 @@ def test_a_no_bet_recut_notice_reads_no_bet_from_the_file_alone(tmp_path, _tmp_l
     capsys.readouterr()
     at.cmd_enhancement(_args(), at.fresh_state())
     assert "SUPERSEDED — a forced re-cut (NO BET)" in capsys.readouterr().out
+
+
+def test_enhancement_legs_already_kicked_off_or_finished_are_withdrawn_from_the_card():
+    """A draft built after a kickoff must not list that match (2026-10-15 card:
+    Marquense 05:00, LA FC 04:30 and Nashville 02:30 were still on it at 07:28)."""
+    now = datetime.fromisoformat(f"{DAY}T08:00:00").replace(tzinfo=at.TZ)
+    started = _pick(home="Marquense", away="Mixco", price=1.64, market="match_over_25")
+    started["kickoff_utc"] = f"{DAY}T05:00:00+00:00"     # 07:00 SAST: already started
+    upcoming = _pick(home="Riga FC", away="Kairat Almaty", price=1.30, market="match_over_15")
+    upcoming["kickoff_utc"] = f"{DAY}T16:45:00+00:00"    # 18:45 SAST: still ahead
+    finished = _pick(home="Alpha FC", away="Beta FC", price=1.50, market="match_over_25")
+    finished["kickoff_utc"] = f"{DAY}T16:45:00+00:00"    # ahead, but the score is already in
+    legs = at.enhancement_legs([started, upcoming, finished])
+    hk, ak = at._result_write_keys("Alpha FC", "Beta FC")[0]
+    report = at.apply_enhancement_timing(legs, now, DAY, {(DAY, hk, ak): (1, 0)})
+    pool = at.enhancement_pool(legs)
+    assert [l["match"] for l in pool] == ["Riga FC vs Kairat Almaty"]
+    assert "Marquense vs Mixco" in report[at.KO_SKIP_STARTED]
+    assert "Alpha FC vs Beta FC" in report["result already known"]
+    by_match = {l["match"]: l for l in legs}
+    assert by_match["Marquense vs Mixco"]["verdict"] == "kickoff_guard"
+    assert by_match["Alpha FC vs Beta FC"]["verdict"] == "result_known"
+    assert by_match["Riga FC vs Kairat Almaty"]["verdict"] == "fire"
