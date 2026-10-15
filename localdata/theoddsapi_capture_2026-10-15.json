@@ -1,11 +1,21 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 14,
-  "captured_at": "2026-10-14T22:23:19+00:00",
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Mixco",
+      "date": "2026-10-15",
+      "home": "Marquense",
+      "kickoff": "15-10, 04:00",
+      "league": "Guatemala Liga Nacional"
+    }
+  ],
+  "candidate_fixtures": 17,
+  "captured_at": "2026-10-15T01:17:23+00:00",
   "date": "2026-10-15",
-  "due_reasons": {},
+  "due_reasons": {
+    "close_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -14,7 +24,7 @@
   "schema": 1,
   "skip_reasons": {
     "priced": 1,
-    "retry_cooldown": 13
+    "retry_cooldown": 15
   },
   "skipped": [
     "Brann|Lincoln Red Imps FC (retry cooldown (6h after failed attempt))",
@@ -24,15 +34,22 @@
     "Nashville SC|Sporting Kansas City (retry cooldown (6h after failed attempt))",
     "Twente|FC Thun (retry cooldown (6h after failed attempt))",
     "Benfica|Celtic (retry cooldown (6h after failed attempt))",
+    "Dinamo Minsk|Slavia Mozyr (retry cooldown (6h after failed attempt))",
     "Atalanta|Pafos FC (retry cooldown (6h after failed attempt))",
     "CSKA Sofia|Monaco (retry cooldown (6h after failed attempt))",
     "Lech Poznan|Bayer Leverkusen (retry cooldown (6h after failed attempt))",
     "Panathinaikos|FK Borac Banja Luka (retry cooldown (6h after failed attempt))",
     "Sparta Praha|Lillestrom (retry cooldown (6h after failed attempt))",
     "Riga FC|Kairat Almaty (retry cooldown (6h after failed attempt))",
-    "Los Angeles FC|Austin FC (priced)"
+    "Los Angeles FC|Austin FC (priced)",
+    "LD Alajuelense|CS Herediano (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Marquense vs Mixco (league not covered: Guatemala Liga Nacional)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Guatemala Liga Nacional": 1
+  }
 }

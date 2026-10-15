@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 42,
@@ -30,7 +30,7 @@
         "selection_unmapped": 355
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-16' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -158,13 +158,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -176,19 +171,19 @@
       },
       "coherence_withheld_fixtures": 0,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 1,
       "join_miss_counts": {
         "fixture_key_miss": 17058,
         "no_pick_for_fixture": 20
       },
       "pa_matched": 1,
-      "pa_raw": 987,
+      "pa_raw": 17079,
       "pa_scored": 17079,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -234,22 +229,32 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 3,
-        "board_league_count": 2,
+        "board_fixtures": 7,
+        "board_league_count": 3,
         "board_leagues": {
-          "colombia_-_primera_a": 179,
-          "uefa_-_champions_league": 21
+          "costa_rica_-_primera_division": 1,
+          "usa_-_major_league_soccer": 196,
+          "usa_-_usl_league_one": 3
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 5,
+        "board_team_count": 14,
         "board_team_names": {
-          "Atletico Junior": 54,
-          "Deportivo Pereira": 179,
-          "Junior FC Barranquilla": 125,
-          "Porto": 21,
-          "Real Betis": 21
+          "Atlanta Utd": 48,
+          "CF Montr\u00e9al": 48,
+          "Charlotte FC": 48,
+          "Columbus": 48,
+          "Escorpiones Belen": 1,
+          "FC Cincinnati": 32,
+          "Greenville Triumph": 3,
+          "Inter Miami CF": 48,
+          "New England Revolution": 32,
+          "New York City": 48,
+          "Orlando City": 20,
+          "Perez Zeledon": 1,
+          "Spokane Velocity": 3,
+          "Toronto FC": 20
         },
         "board_truncated": false,
         "card_fixture_count": 2,

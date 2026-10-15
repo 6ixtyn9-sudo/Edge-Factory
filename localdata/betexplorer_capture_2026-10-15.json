@@ -42,16 +42,6 @@
       "w_score": 1.2096
     },
     {
-      "avg_p": 77.0,
-      "away": "Sporting Kansas City",
-      "date": "2026-10-15",
-      "home": "Nashville SC",
-      "league": "United States: Major League Soccer",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
       "avg_p": 74.2,
       "away": "Celtic",
       "date": "2026-10-15",
@@ -60,6 +50,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0556
+    },
+    {
+      "avg_p": 71.0,
+      "away": "Slavia Mozyr",
+      "date": "2026-10-15",
+      "home": "Dinamo Minsk",
+      "league": "Belarus: Premier League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
     },
     {
       "avg_p": 71.0,
@@ -123,24 +123,26 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 3,
   "be_cooling_down": true,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "candidate_fixtures": 13,
-  "captured_at": "2026-10-14T22:12:48.643948+00:00",
+  "be_rows_rejected": 3,
+  "be_rows_rejected_reasons": {
+    "row teams do not both match the pick": 3
+  },
+  "candidate_fixtures": 15,
+  "captured_at": "2026-10-15T01:08:25.415924+00:00",
   "date": "2026-10-15",
   "errors": [],
-  "fixtures_with_rows": 3,
+  "fixtures_with_rows": 7,
   "market_budget_stop": false,
-  "market_requests": 13,
+  "market_requests": 25,
   "match_detail": {
-    "bookmakers": 45,
+    "bookmakers": 125,
     "challenge_pages": 0,
-    "fixtures": 3,
-    "market_rows": 157,
-    "markets": 15,
-    "named_rows": 157,
+    "fixtures": 8,
+    "market_rows": 390,
+    "markets": 44,
+    "named_rows": 390,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -177,10 +179,50 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.2241
+    },
+    {
+      "avg_p": 77.0,
+      "away": "FK Jablonec",
+      "date": "2026-10-15",
+      "home": "SC Freiburg",
+      "league": "International,Conference League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.2096
+    },
+    {
+      "avg_p": 74.2,
+      "away": "Celtic",
+      "date": "2026-10-15",
+      "home": "Benfica",
+      "league": "International,Europa League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0556
+    },
+    {
+      "avg_p": 71.0,
+      "away": "Pafos FC",
+      "date": "2026-10-15",
+      "home": "Atalanta",
+      "league": "International,Conference League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.8971
+    },
+    {
+      "avg_p": 69.3,
+      "away": "Monaco",
+      "date": "2026-10-15",
+      "home": "CSKA Sofia",
+      "league": "International,Conference League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.8127
     }
   ],
-  "requests": 22,
-  "rows": 9,
+  "requests": 38,
+  "rows": 21,
   "schema": 1,
   "status": "ok"
 }

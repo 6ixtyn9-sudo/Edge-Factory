@@ -957,10 +957,10 @@
    "status_since": null
   },
   "match_over_15@v1": {
-   "hits": 29,
-   "inv_price_sum": 33.55990245711001,
+   "hits": 30,
+   "inv_price_sum": 34.32913322634078,
    "multi_n": 2,
-   "n": 38,
+   "n": 39,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -1021,9 +1021,10 @@
     "2026-10-13|Galatasaray vs Barcelona|match_over_15@v1",
     "2026-10-13|Wolves vs Bolton|match_over_15@v1",
     "2026-10-13|Cardiff vs Watford|match_over_15@v1",
-    "2026-10-13|Eichst\u00e4tt vs Vilzing|match_over_15@v1"
+    "2026-10-13|Eichst\u00e4tt vs Vilzing|match_over_15@v1",
+    "2026-10-14|Atletico Mineiro vs Montevideo City Torque|match_over_15@v1"
    ],
-   "profit": -5.21,
+   "profit": -4.91,
    "records": [
     {
      "away": "Aston Villa",
@@ -1527,6 +1528,23 @@
      "rule": "ml-meta avg_p>=60",
      "source": "betexplorer",
      "stated": 0.8569
+    },
+    {
+     "away": "Montevideo City Torque",
+     "away_key": "montevideocitytorque",
+     "bucket": "CAUTION",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": true,
+     "home": "Atletico Mineiro",
+     "home_key": "atleticomineiro",
+     "league": "International,Copa Sudamericana Knockout Stage",
+     "match": "Atletico Mineiro vs Montevideo City Torque",
+     "multi_source": false,
+     "price": 1.3,
+     "rule": "ml-meta avg_p>=60",
+     "source": "scoutingstats",
+     "stated": 0.8405
     }
    ],
    "status": "PAPER",
@@ -1535,9 +1553,9 @@
   },
   "match_over_25@v1": {
    "hits": 234,
-   "inv_price_sum": 233.09087396356924,
-   "multi_n": 44,
-   "n": 355,
+   "inv_price_sum": 233.72781663872848,
+   "multi_n": 45,
+   "n": 356,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -2114,9 +2132,10 @@
     "2026-10-14|Lincoln vs West Ham|match_over_25@v1",
     "2026-10-14|Aston Villa vs Fenerbah\u00e7e|match_over_25@v1",
     "2026-10-14|Bodo/Glimt vs Borussia Dortmund|match_over_25@v1",
-    "2026-10-14|Trans Narva vs Kuressaare|match_over_25@v1"
+    "2026-10-14|Trans Narva vs Kuressaare|match_over_25@v1",
+    "2026-10-14|Junior vs Deportivo Pereira|match_over_25@v1"
    ],
-   "profit": 2.017,
+   "profit": 1.017,
    "records": [
     {
      "away": "Botafogo W",
@@ -6700,6 +6719,23 @@
      "rule": "ml-meta avg_p>=60",
      "source": "scoutingstats",
      "stated": 0.5584
+    },
+    {
+     "away": "Deportivo Pereira",
+     "away_key": "deportivopereira",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": false,
+     "home": "Junior",
+     "home_key": "junior",
+     "league": "Colombia: Primera A",
+     "match": "Junior vs Deportivo Pereira",
+     "multi_source": true,
+     "price": 1.57,
+     "rule": "unanimous[betclan+vitibet] avg_p>=70",
+     "source": "scoutingstats",
+     "stated": 0.6641
     }
    ],
    "status": "PAPER",
