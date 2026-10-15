@@ -60,6 +60,38 @@
    "status_reason": null,
    "status_since": null
   },
+  "away_under_15@v1": {
+   "hits": 1,
+   "inv_price_sum": 0.4166666666666667,
+   "multi_n": 0,
+   "n": 1,
+   "processed": [
+    "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1"
+   ],
+   "profit": 1.4,
+   "records": [
+    {
+     "away": "Sporting Kansas City",
+     "away_key": "sportingkansascity",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.8744,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "Nashville SC",
+     "home_key": "nashville",
+     "league": "United States: Major League Soccer",
+     "match": "Nashville SC vs Sporting Kansas City",
+     "multi_source": false,
+     "price": 2.4,
+     "rule": "unanimous[bzzoiro+vitibet] avg_p>=70",
+     "source": "oddspapi",
+     "stated": 0.7591
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-10-16"
+  },
   "away_under_25@v1": {
    "hits": 1,
    "inv_price_sum": 1.0668563300142246,
@@ -463,10 +495,10 @@
    "status_since": "2026-10-15"
   },
   "btts_yes@v1": {
-   "hits": 4,
-   "inv_price_sum": 3.260311243018132,
-   "multi_n": 2,
-   "n": 7,
+   "hits": 5,
+   "inv_price_sum": 3.7148566975635866,
+   "multi_n": 3,
+   "n": 8,
    "processed": [
     "2026-08-03|Celtic vs Dundee|btts_yes@v1",
     "2026-08-05|Fenerbah\u00e7e vs Sturm Graz|btts_yes@v1",
@@ -480,9 +512,10 @@
     "2026-08-05|Panathinaikos vs CSKA 1948|btts_yes@v1",
     "2026-08-05|Spartak Moscow vs FC Orenburg|btts_yes@v1",
     "2026-08-05|Lazio vs Ostia Mare|btts_yes@v1",
-    "2026-08-06|FC Thun vs Vikingur Reykjavik|btts_yes@v1"
+    "2026-08-06|FC Thun vs Vikingur Reykjavik|btts_yes@v1",
+    "2026-10-15|Brann vs Lincoln Red Imps FC|btts_yes@v1"
    ],
-   "profit": 1.99,
+   "profit": 3.19,
    "records": [
     {
      "away": "Dundee",
@@ -573,6 +606,23 @@
      "multi_source": false,
      "price": 3.0,
      "source": "scoutingstats"
+    },
+    {
+     "away": "Lincoln Red Imps FC",
+     "away_key": "lincolnredimps",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": null,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "Brann",
+     "home_key": "brann",
+     "league": "World UEFA Europa Conference League",
+     "match": "Brann vs Lincoln Red Imps FC",
+     "multi_source": true,
+     "price": 2.2,
+     "rule": "ml-meta avg_p>=60",
+     "source": "scoutingstats",
+     "stated": 0.5524
     }
    ],
    "status": "PAPER",
@@ -616,10 +666,10 @@
    "status_since": null
   },
   "home_over_05@v1": {
-   "hits": 0,
-   "inv_price_sum": 0.0,
+   "hits": 1,
+   "inv_price_sum": 0.7246376811594204,
    "multi_n": 0,
-   "n": 0,
+   "n": 1,
    "processed": [
     "2026-08-06|FC Lugano vs NSI Runavik|home_over_05@v1",
     "2026-08-06|Twente vs Dunajska Streda|home_over_05@v1",
@@ -801,13 +851,32 @@
     "2026-10-09|Athlone Town vs Treaty United|home_over_05@v1",
     "2026-10-09|Penybont FC vs Barry Town|home_over_05@v1",
     "2026-10-09|Vejle vs Hvidovre|home_over_05@v1",
-    "2026-10-09|Montpellier vs Grenoble Foot 38|home_over_05@v1"
+    "2026-10-09|Montpellier vs Grenoble Foot 38|home_over_05@v1",
+    "2026-10-15|Los Angeles FC vs Austin FC|home_over_05@v1"
    ],
-   "profit": 0.0,
-   "records": [],
-   "status": "SHADOW",
-   "status_reason": null,
-   "status_since": null
+   "profit": 0.38,
+   "records": [
+    {
+     "away": "Austin FC",
+     "away_key": "austin",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.8906,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "USA,Major League Soccer",
+     "match": "Los Angeles FC vs Austin FC",
+     "multi_source": false,
+     "price": 1.38,
+     "rule": "ml-meta avg_p>=60",
+     "source": "oddspapi",
+     "stated": 0.8862
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-10-16"
   },
   "home_under_15@v1": {
    "hits": 2,
@@ -979,10 +1048,10 @@
    "status_since": null
   },
   "match_over_15@v1": {
-   "hits": 30,
-   "inv_price_sum": 34.32913322634078,
+   "hits": 31,
+   "inv_price_sum": 35.0810129255889,
    "multi_n": 2,
-   "n": 39,
+   "n": 40,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -1044,9 +1113,10 @@
     "2026-10-13|Wolves vs Bolton|match_over_15@v1",
     "2026-10-13|Cardiff vs Watford|match_over_15@v1",
     "2026-10-13|Eichst\u00e4tt vs Vilzing|match_over_15@v1",
-    "2026-10-14|Atletico Mineiro vs Montevideo City Torque|match_over_15@v1"
+    "2026-10-14|Atletico Mineiro vs Montevideo City Torque|match_over_15@v1",
+    "2026-10-15|Riga FC vs Kairat Almaty|match_over_15@v1"
    ],
-   "profit": -4.91,
+   "profit": -4.58,
    "records": [
     {
      "away": "Aston Villa",
@@ -1567,6 +1637,23 @@
      "rule": "ml-meta avg_p>=60",
      "source": "scoutingstats",
      "stated": 0.8405
+    },
+    {
+     "away": "Kairat Almaty",
+     "away_key": "kairatalmaty",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.8076,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "Riga FC",
+     "home_key": "riga",
+     "league": "International,Conference League",
+     "match": "Riga FC vs Kairat Almaty",
+     "multi_source": false,
+     "price": 1.33,
+     "rule": "ml-meta avg_p>=60",
+     "source": "betexplorer",
+     "stated": 0.8054
     }
    ],
    "status": "PAPER",
@@ -1574,10 +1661,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 235,
-   "inv_price_sum": 234.31605193284614,
-   "multi_n": 45,
-   "n": 357,
+   "hits": 243,
+   "inv_price_sum": 241.0038278983064,
+   "multi_n": 53,
+   "n": 367,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -2157,9 +2244,19 @@
     "2026-10-14|Trans Narva vs Kuressaare|match_over_25@v1",
     "2026-10-14|Junior vs Deportivo Pereira|match_over_25@v1",
     "2026-09-27|Pachuca W vs Santos Laguna W|match_over_25@v1",
-    "2026-09-21|Inter Miami vs San Diego|match_over_25@v1"
+    "2026-09-21|Inter Miami vs San Diego|match_over_25@v1",
+    "2026-10-15|Sparta Praha vs Lillestrom|match_over_25@v1",
+    "2026-10-15|Atalanta vs Pafos FC|match_over_25@v1",
+    "2026-10-15|Bournemouth vs Sturm Graz|match_over_25@v1",
+    "2026-10-15|AZ Alkmaar vs Hapoel Beer Sheva|match_over_25@v1",
+    "2026-10-15|Benfica vs Celtic|match_over_25@v1",
+    "2026-10-15|Twente vs FC Thun|match_over_25@v1",
+    "2026-10-15|Panathinaikos vs FK Borac Banja Luka|match_over_25@v1",
+    "2026-10-15|CSKA Sofia vs Monaco|match_over_25@v1",
+    "2026-10-15|Lech Poznan vs Bayer Leverkusen|match_over_25@v1",
+    "2026-10-15|SC Freiburg vs FK Jablonec|match_over_25@v1"
    ],
-   "profit": 1.717,
+   "profit": 3.947,
    "records": [
     {
      "away": "Botafogo W",
@@ -6777,6 +6874,176 @@
      "rule": "ml-meta avg_p>=65",
      "source": "scoutingstats",
      "stated": 0.4602
+    },
+    {
+     "away": "Lillestrom",
+     "away_key": "lillestrom",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.5968,
+     "date": "2026-10-15",
+     "hit": false,
+     "home": "Sparta Praha",
+     "home_key": "spartapraha",
+     "league": "International,Europa League",
+     "match": "Sparta Praha vs Lillestrom",
+     "multi_source": true,
+     "price": 1.54,
+     "rule": "ml-meta avg_p>=60",
+     "source": "oddspapi",
+     "stated": 0.589
+    },
+    {
+     "away": "Pafos FC",
+     "away_key": "pafos",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6873,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "Atalanta",
+     "home_key": "atalanta",
+     "league": "International,Conference League",
+     "match": "Atalanta vs Pafos FC",
+     "multi_source": true,
+     "price": 1.53,
+     "rule": "ml-meta avg_p>=60",
+     "source": "betexplorer",
+     "stated": 0.654
+    },
+    {
+     "away": "Sturm Graz",
+     "away_key": "sturmgraz",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.729,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "Bournemouth",
+     "home_key": "bournemouth",
+     "league": "World UEFA Europa League",
+     "match": "Bournemouth vs Sturm Graz",
+     "multi_source": false,
+     "price": 1.36,
+     "rule": "ml-meta avg_p>=60",
+     "source": "betexplorer",
+     "stated": 0.6236
+    },
+    {
+     "away": "Hapoel Beer Sheva",
+     "away_key": "hapoelbeersheva",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7323,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "AZ Alkmaar",
+     "home_key": "azalkmaar",
+     "league": "International,Europa League",
+     "match": "AZ Alkmaar vs Hapoel Beer Sheva",
+     "multi_source": true,
+     "price": 1.49,
+     "rule": "ml-meta avg_p>=60",
+     "source": "oddspapi",
+     "stated": 0.6791
+    },
+    {
+     "away": "Celtic",
+     "away_key": "celtic",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7275,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "Benfica",
+     "home_key": "benfica",
+     "league": "International,Europa League",
+     "match": "Benfica vs Celtic",
+     "multi_source": true,
+     "price": 1.44,
+     "rule": "ml-meta avg_p>=60",
+     "source": "betexplorer",
+     "stated": 0.6963
+    },
+    {
+     "away": "FC Thun",
+     "away_key": "thun",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": null,
+     "date": "2026-10-15",
+     "hit": false,
+     "home": "Twente",
+     "home_key": "twente",
+     "league": "International,Conference League",
+     "match": "Twente vs FC Thun",
+     "multi_source": true,
+     "price": 1.29,
+     "rule": "unanimous[statarea+vitibet] avg_p>=70",
+     "source": "betexplorer",
+     "stated": 0.5235
+    },
+    {
+     "away": "FK Borac Banja Luka",
+     "away_key": "boracbanjaluka",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6094,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "Panathinaikos",
+     "home_key": "panathinaikos",
+     "league": "International,Conference League",
+     "match": "Panathinaikos vs FK Borac Banja Luka",
+     "multi_source": true,
+     "price": 1.53,
+     "rule": "ml-meta avg_p>=60",
+     "source": "betexplorer",
+     "stated": 0.5996
+    },
+    {
+     "away": "Monaco",
+     "away_key": "monaco",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6403,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "CSKA Sofia",
+     "home_key": "cskasofia",
+     "league": "International,Conference League",
+     "match": "CSKA Sofia vs Monaco",
+     "multi_source": true,
+     "price": 1.67,
+     "rule": "ml-meta avg_p>=60",
+     "source": "betexplorer",
+     "stated": 0.6204
+    },
+    {
+     "away": "Bayer Leverkusen",
+     "away_key": "bayerleverkusen",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6065,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "Lech Poznan",
+     "home_key": "lechpoznan",
+     "league": "International,Europa League",
+     "match": "Lech Poznan vs Bayer Leverkusen",
+     "multi_source": true,
+     "price": 1.46,
+     "rule": "ml-meta avg_p>=60",
+     "source": "betexplorer",
+     "stated": 0.5774
+    },
+    {
+     "away": "FK Jablonec",
+     "away_key": "jablonec",
+     "bucket": "WATCHLIST_NO_ODDS",
+     "cohort_rate": 0.7349,
+     "date": "2026-10-15",
+     "hit": true,
+     "home": "SC Freiburg",
+     "home_key": "freiburg",
+     "league": "International,Conference League",
+     "match": "SC Freiburg vs FK Jablonec",
+     "multi_source": false,
+     "price": 1.75,
+     "rule": "ml-meta avg_p>=60",
+     "source": "theoddsapi",
+     "stated": 0.7078
     }
    ],
    "status": "PAPER",

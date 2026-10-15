@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-15T21:24:18",
+  "generated_at": "2026-10-16T00:42:36",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 188.5321530000001,
-  "multiple": 1.885321530000001,
+  "bank_pct": 192.30279300000012,
+  "multiple": 1.9230279300000013,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 46,
+  "bet_days": 47,
   "accas": {
-    "wins": 58,
-    "losses": 40
+    "wins": 59,
+    "losses": 41
   },
-  "open_slips": [
-    {
-      "date": "2026-10-15",
-      "staked_pct": 47.133
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -819,6 +814,54 @@
         }
       ],
       "bank_pct": 188.5322
+    },
+    {
+      "date": "2026-10-15",
+      "staked_pct": 47.133,
+      "returned_pct": 50.9036,
+      "accas": [
+        {
+          "odds": 1.78,
+          "won": false,
+          "stake_pct": 23.5665,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "AZ Alkmaar vs Hapoel Beer Sheva",
+              "pick": "HOME",
+              "odds": 1.33,
+              "result": "win"
+            },
+            {
+              "match": "Sparta Praha vs Lillestrom",
+              "pick": "HOME",
+              "odds": 1.34,
+              "result": "loss"
+            }
+          ]
+        },
+        {
+          "odds": 2.16,
+          "won": true,
+          "stake_pct": 23.5665,
+          "returned_pct": 50.9036,
+          "legs": [
+            {
+              "match": "Atalanta vs Pafos FC",
+              "pick": "HOME",
+              "odds": 1.31,
+              "result": "win"
+            },
+            {
+              "match": "Lech Poznan vs Bayer Leverkusen",
+              "pick": "AWAY",
+              "odds": 1.65,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 192.3028
     }
   ]
 }

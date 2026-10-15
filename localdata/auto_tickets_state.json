@@ -1,96 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 188.5321530000001,
+  "bank": 192.30279300000012,
   "cycle_base": 203.9865280000001,
-  "open_slips": [
-    {
-      "date": "2026-10-15",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "AZ Alkmaar vs Hapoel Beer Sheva",
-              "pick": "HOME",
-              "prob": 0.773,
-              "odds": 1.33,
-              "result": null,
-              "fixture_key": [
-                "2026-10-15",
-                "AZ Alkmaar",
-                "Hapoel Beer Sheva"
-              ]
-            },
-            {
-              "match": "Sparta Praha vs Lillestrom",
-              "pick": "HOME",
-              "prob": 0.691,
-              "odds": 1.34,
-              "result": null,
-              "fixture_key": [
-                "2026-10-15",
-                "Sparta Praha",
-                "Lillestrom"
-              ]
-            }
-          ],
-          "odds": 1.78,
-          "stake_pct": 23.5665,
-          "results": [
-            null,
-            null
-          ],
-          "won": null,
-          "correction": {
-            "applied_by": "operator-approved correction (2026-10-15 SAST)",
-            "reason": "AZ Alkmaar vs Hapoel Beer Sheva HOME 4.00 was a pre-fix archive price; verified public 1X2 ~1.33 (1xBet, ratingbet, eurofootballresults)",
-            "original": {
-              "leg_odds": 4.0,
-              "acca_odds": 5.36
-            },
-            "corrected_leg_odds": 1.33,
-            "corrected_acca_odds": 1.78,
-            "stake_pct_unchanged": 23.5665
-          }
-        },
-        {
-          "legs": [
-            {
-              "match": "Atalanta vs Pafos FC",
-              "pick": "HOME",
-              "prob": 0.7090000000000001,
-              "odds": 1.31,
-              "result": null,
-              "fixture_key": [
-                "2026-10-15",
-                "Atalanta",
-                "Pafos FC"
-              ]
-            },
-            {
-              "match": "Lech Poznan vs Bayer Leverkusen",
-              "pick": "AWAY",
-              "prob": 0.6940000000000001,
-              "odds": 1.65,
-              "result": null,
-              "fixture_key": [
-                "2026-10-15",
-                "Lech Poznan",
-                "Bayer Leverkusen"
-              ]
-            }
-          ],
-          "odds": 2.16,
-          "stake_pct": 23.5665,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 47.133
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -883,6 +795,54 @@
         }
       ],
       "bank_pct": 188.5322
+    },
+    {
+      "date": "2026-10-15",
+      "staked_pct": 47.133,
+      "returned_pct": 50.9036,
+      "accas": [
+        {
+          "odds": 1.78,
+          "won": false,
+          "stake_pct": 23.5665,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "AZ Alkmaar vs Hapoel Beer Sheva",
+              "pick": "HOME",
+              "odds": 1.33,
+              "result": "win"
+            },
+            {
+              "match": "Sparta Praha vs Lillestrom",
+              "pick": "HOME",
+              "odds": 1.34,
+              "result": "loss"
+            }
+          ]
+        },
+        {
+          "odds": 2.16,
+          "won": true,
+          "stake_pct": 23.5665,
+          "returned_pct": 50.9036,
+          "legs": [
+            {
+              "match": "Atalanta vs Pafos FC",
+              "pick": "HOME",
+              "odds": 1.31,
+              "result": "win"
+            },
+            {
+              "match": "Lech Poznan vs Bayer Leverkusen",
+              "pick": "AWAY",
+              "odds": 1.65,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 192.3028
     }
   ],
   "events": [

@@ -1,0 +1,241 @@
+{
+  "added": 33792,
+  "attempted": 8,
+  "attempted_fixtures": [
+    {
+      "away": "SE Palmeiras SP",
+      "fixture_id": "id1002017874930588",
+      "home": "Universitario de Deportes"
+    },
+    {
+      "away": "CR Flamengo RJ",
+      "fixture_id": "id1000038474808584",
+      "home": "Estudiantes de La Plata"
+    },
+    {
+      "away": "Real Cartagena FC",
+      "fixture_id": "id1000123874702438",
+      "home": "Deportes Quindio"
+    },
+    {
+      "away": "Art Municipal Jalapa",
+      "fixture_id": "id1001924274321154",
+      "home": "Real Esteli FC"
+    },
+    {
+      "away": "CD Inca",
+      "fixture_id": "id1002708873075344",
+      "home": "CD Luis Angel Firpo Usulutan"
+    },
+    {
+      "away": "Deportivo San Pedro",
+      "fixture_id": "id1002739672475016",
+      "home": "CD Suchitepequez"
+    },
+    {
+      "away": "Real CD Espana San Pedro Sula",
+      "fixture_id": "id1002741475179262",
+      "home": "CD Olimpia Tegucigalpa"
+    },
+    {
+      "away": "Sporting FC",
+      "fixture_id": "id1002709272053648",
+      "home": "Deportivo Saprissa San Jose"
+    }
+  ],
+  "budget": {
+    "day": "2026-10-16",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 92,
+    "remaining_today": 31,
+    "spent_today": 10
+  },
+  "captured_at": "2026-10-15T22:09:53+00:00",
+  "date": "2026-10-16",
+  "errors": [],
+  "fixtures": 338,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-10.json",
+  "market_census_distinct": 674,
+  "markets": {
+    "1x2": 4718,
+    "ou_0.5": 1162,
+    "ou_0.75": 208,
+    "ou_1": 316,
+    "ou_1.25": 429,
+    "ou_1.5": 2039,
+    "ou_1.75": 599,
+    "ou_10.5": 6,
+    "ou_11.5": 6,
+    "ou_12.5": 6,
+    "ou_13.5": 6,
+    "ou_14.5": 6,
+    "ou_2": 714,
+    "ou_2.25": 876,
+    "ou_2.5": 2635,
+    "ou_2.75": 898,
+    "ou_3": 718,
+    "ou_3.25": 634,
+    "ou_3.5": 2575,
+    "ou_3.75": 498,
+    "ou_4": 473,
+    "ou_4.25": 291,
+    "ou_4.5": 1717,
+    "ou_4.75": 194,
+    "ou_5": 220,
+    "ou_5.25": 119,
+    "ou_5.5": 914,
+    "ou_5.75": 71,
+    "ou_6": 85,
+    "ou_6.25": 55,
+    "ou_6.5": 373,
+    "ou_6.75": 40,
+    "ou_7": 37,
+    "ou_7.25": 35,
+    "ou_7.5": 131,
+    "ou_7.75": 30,
+    "ou_8": 32,
+    "ou_8.25": 30,
+    "ou_8.5": 73,
+    "ou_9.5": 26,
+    "tt_away_0.5": 1404,
+    "tt_away_0.75": 58,
+    "tt_away_1": 148,
+    "tt_away_1.25": 52,
+    "tt_away_1.5": 1314,
+    "tt_away_1.75": 26,
+    "tt_away_2": 80,
+    "tt_away_2.25": 20,
+    "tt_away_2.5": 1009,
+    "tt_away_2.75": 18,
+    "tt_away_3": 24,
+    "tt_away_3.5": 477,
+    "tt_away_4": 1,
+    "tt_away_4.5": 72,
+    "tt_away_5": 1,
+    "tt_away_5.5": 29,
+    "tt_home_0.5": 1025,
+    "tt_home_0.75": 48,
+    "tt_home_1": 106,
+    "tt_home_1.25": 46,
+    "tt_home_1.5": 1451,
+    "tt_home_1.75": 30,
+    "tt_home_2": 130,
+    "tt_home_2.25": 26,
+    "tt_home_2.5": 1223,
+    "tt_home_2.75": 8,
+    "tt_home_3": 51,
+    "tt_home_3.25": 2,
+    "tt_home_3.5": 571,
+    "tt_home_3.75": 2,
+    "tt_home_4": 49,
+    "tt_home_4.5": 237,
+    "tt_home_5": 1,
+    "tt_home_5.5": 52,
+    "tt_home_6.5": 6
+  },
+  "markets_source": "fetch",
+  "matched": 8,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 9,
+    "market_id_unknown": 6661,
+    "market_inactive": 824,
+    "market_unsupported_clean_sheet": 378,
+    "market_unsupported_corners": 3974,
+    "market_unsupported_correct_score": 2053,
+    "market_unsupported_double_chance": 1396,
+    "market_unsupported_draw_no_bet": 1032,
+    "market_unsupported_handicap": 9928,
+    "market_unsupported_odd_even": 1800,
+    "market_unsupported_period": 28738,
+    "market_unsupported_win_to_nil": 844,
+    "outcome_inactive": 3833,
+    "unresolved_btts": 2268
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 9,
+      "market_inactive": 824,
+      "outcome_inactive": 3833
+    },
+    "loss_or_diagnosis": {
+      "market_id_unknown": 6661,
+      "market_unsupported_clean_sheet": 378,
+      "market_unsupported_corners": 3974,
+      "market_unsupported_correct_score": 2053,
+      "market_unsupported_double_chance": 1396,
+      "market_unsupported_draw_no_bet": 1032,
+      "market_unsupported_handicap": 9928,
+      "market_unsupported_odd_even": 1800,
+      "market_unsupported_period": 28738,
+      "market_unsupported_win_to_nil": 844,
+      "unresolved_btts": 2268
+    }
+  },
+  "pending_fixtures": 8,
+  "quoted_fixtures": [
+    {
+      "away": "SE Palmeiras SP",
+      "fixture_id": "id1002017874930588",
+      "home": "Universitario de Deportes"
+    },
+    {
+      "away": "CR Flamengo RJ",
+      "fixture_id": "id1000038474808584",
+      "home": "Estudiantes de La Plata"
+    },
+    {
+      "away": "Real Cartagena FC",
+      "fixture_id": "id1000123874702438",
+      "home": "Deportes Quindio"
+    },
+    {
+      "away": "Art Municipal Jalapa",
+      "fixture_id": "id1001924274321154",
+      "home": "Real Esteli FC"
+    },
+    {
+      "away": "CD Inca",
+      "fixture_id": "id1002708873075344",
+      "home": "CD Luis Angel Firpo Usulutan"
+    },
+    {
+      "away": "Deportivo San Pedro",
+      "fixture_id": "id1002739672475016",
+      "home": "CD Suchitepequez"
+    },
+    {
+      "away": "Real CD Espana San Pedro Sula",
+      "fixture_id": "id1002741475179262",
+      "home": "CD Olimpia Tegucigalpa"
+    },
+    {
+      "away": "Sporting FC",
+      "fixture_id": "id1002709272053648",
+      "home": "Deportivo Saprissa San Jose"
+    }
+  ],
+  "rows": 33792,
+  "schema": 1,
+  "slate_candidate_fixtures": 3,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 0,
+  "slate_provider_overlap_fixtures": 1,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Abha",
+      "home": "Al-Qadisiyah",
+      "league": "Saudi Arabia,Saudi Pro League",
+      "normalized_pair": "abha|al-qadisiyah"
+    },
+    {
+      "away": "Nykobing FC",
+      "home": "Fremad Amager",
+      "league": "Denmark 2. Division",
+      "normalized_pair": "fremad amager|nykobing"
+    }
+  ],
+  "source": "oddspapi_odds"
+}

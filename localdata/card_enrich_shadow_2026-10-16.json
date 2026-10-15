@@ -1,0 +1,89 @@
+{
+  "notes": [
+    "need_h2h=0",
+    "unresolved=3"
+  ],
+  "outcome": {
+    "calls_charged": 0,
+    "decisions": {
+      "budget_stop": 0,
+      "capture_blocked": 0,
+      "captured": 0,
+      "lane_blocked_local": 0,
+      "staleness_skip": 0,
+      "unresolved_id": 3
+    },
+    "free_listing_recorded_today": true,
+    "ledger_entries": 6,
+    "listing": {
+      "charged": false,
+      "outcome": "not_planned",
+      "reason": "free_listing_present_zero_matches",
+      "resolved_pairs": 0
+    },
+    "retained_pairs": 4,
+    "shadow_file_present": true,
+    "unresolved": [
+      {
+        "fixture": "fremadamager|nykobing",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "finnharps|braywanderers",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "alqadisiyah|abha",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      }
+    ],
+    "usable_snapshots": 0
+  },
+  "preflight": {
+    "allowance_by_key": {
+      "88739ee5": 76
+    },
+    "allowed_calls": 0,
+    "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
+    "budget_monthly": 90,
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=76 [pools=2 cap=90 reserve=20 spent=1 month=2026-10] -> approved",
+    "month": "2026-10",
+    "month_spend_by_key": {
+      "5b6ed40a": 1
+    },
+    "need_h2h": 0,
+    "need_listing": 0,
+    "need_total": 0,
+    "pool_labels": {
+      "5b6ed40a": "50ca",
+      "88739ee5": "4a0d"
+    },
+    "reserve_per_key": 20,
+    "ring_keys": 2,
+    "spendable": 76,
+    "verdict": "approved"
+  },
+  "provenance": {
+    "api": "https://football-prediction-api.p.rapidapi.com/api/v2/head-to-head/:id",
+    "cadence": "weekly at most (6x7=180/month does not fit a 100/key/month family; ~24-30 does)",
+    "point_in_time": "as_of is the capture instant; provider publishes no per-row history timestamp"
+  },
+  "role": "silent pre-kickoff H2H context capture for the dormant context vocabulary; NOT a price, NOT a vote, NOT a registered rule",
+  "run_date": "2026-10-16",
+  "schema": 1,
+  "snapshots": [],
+  "source": "boggio_h2h",
+  "stats": {
+    "snapshots": 0,
+    "usable": 0
+  }
+}
