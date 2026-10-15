@@ -2840,7 +2840,7 @@ def _alias_candidate_entries(pick, entries_by_date) -> list[dict]:
     checked). Mirrors the audit's ``_alias_candidate_results`` so the verified
     override can purge every spelling of a fixture, not just one normalized
     pair."""
-    from edgefactory.util import norm_team
+    from edgefactory.util import markers_conflict, norm_team
 
     day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
     home = str(pick.get("home") or "")
@@ -2851,6 +2851,10 @@ def _alias_candidate_entries(pick, entries_by_date) -> list[dict]:
     for e in entries_by_date.get(day, []):
         rh = str(e.get("home") or "")
         ra = str(e.get("away") or "")
+        # A youth / reserve / women's side is a different squad even when the
+        # 9-letter key collides ("Slovan Bratislava U19" vs "Slovan Bratislava").
+        if markers_conflict(home, rh) or markers_conflict(away, ra):
+            continue
         hk = norm_team(rh)
         ak = norm_team(ra)
         if not (hk in home_keys or ak in away_keys or hk in away_keys or ak in home_keys):
@@ -3583,6 +3587,9 @@ def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
         candidates = [(base + timedelta(days=o)).strftime("%Y-%m-%d") for o in offsets]
     except ValueError:
         pass
+    # The staked day first. Only when the fixture is not on that day do the
+    # nearby days count, and then every one of them must agree on the leg.
+    verdicts: set[bool] = set()
     for d in candidates:
         for hk, ak in _result_write_keys(home, away):
             pair = scores.get((d, hk, ak))
@@ -3591,8 +3598,54 @@ def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
             hit = check_enhancement_hit(market, selection, pair[0], pair[1])
             if hit is None:
                 return None          # no scoring rule for this market: hold it
-            return "win" if hit else "loss"
-    return None
+            if d == day:
+                return "win" if hit else "loss"
+            verdicts.add(bool(hit))
+            break
+    if not verdicts:
+        return None
+    if len(verdicts) > 1:
+        return "conflict"
+    return "win" if verdicts.pop() else "loss"
+
+
+def _rescheduled_leg_result(day: str, pick: dict, settled: dict):
+    """win / loss for a 1X2 pick whose fixture was played within ±3 days.
+
+    Only used after the pick's own date found nothing. Every settled row for
+    the same squads on a nearby date must agree on the 1X2 outcome; agreement
+    settles the pick on the match that was actually played, disagreement is
+    "conflict" (held, never guessed), and no rows is None (not known yet).
+    Squad markers are already part of the exact keys, so a youth or women's
+    side cannot pick up the senior club's row here.
+    """
+    try:
+        base = datetime.strptime(day, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+    keys = _result_write_keys(pick.get("home"), pick.get("away"))
+    outcomes: set[str] = set()
+    for off in sorted(range(-RESCHEDULE_WINDOW_DAYS, RESCHEDULE_WINDOW_DAYS + 1),
+                      key=lambda o: (abs(o), o < 0)):
+        if off == 0:
+            continue
+        nd = (base + timedelta(days=off)).strftime("%Y-%m-%d")
+        for hk, ak in keys:
+            outcome = settled.get((nd, hk, ak))
+            if outcome is not None:
+                outcomes.add(str(outcome))
+                break
+    if not outcomes:
+        return None
+    if len(outcomes) > 1:
+        return "conflict"
+    outcome = outcomes.pop()
+    if outcome not in ("home", "away", "draw"):
+        return None
+    sel = str(pick.get("pick") or "").lower()
+    if outcome == "draw":
+        return "loss"
+    return "win" if outcome == sel else "loss"
 
 
 def settle_open_slips(st, settled, archives=None, entries_by_date=None,
@@ -3677,6 +3730,14 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
                     conflicts.append(l["match"])
                 else:
                     r = pick_result(p, settled)
+                    if r is None:
+                        # Played on a nearby date (rescheduled): settle on the
+                        # actual result only when every spelling agrees.
+                        r = _rescheduled_leg_result(
+                            str(p.get("date") or p.get("_archive_day") or slip["date"])[:10],
+                            p, settled)
+                        if r == "conflict":
+                            conflicts.append(l["match"])
                     if r is None:
                         kt = parse_kickoff(p)
                         anchor = kt if kt is not None else _slip_day_anchor(slip["date"])
