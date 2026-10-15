@@ -34631,6 +34631,586 @@
   ],
   "verified_late_additions": 5,
   "veto_deep_dive": {
+    "all_buckets_band_evidence": {
+      "CAUTION|1.50-2.00|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.538462,
+        "implied_hit_rate": 0.628819,
+        "priced_picks": 13,
+        "roi": -0.15,
+        "settled_picks": 13,
+        "wins": 7,
+        "z_vs_implied": -0.676
+      },
+      "CAUTION|1.50-2.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.875,
+        "implied_hit_rate": 0.598151,
+        "priced_picks": 8,
+        "roi": 0.476262,
+        "settled_picks": 8,
+        "wins": 7,
+        "z_vs_implied": 1.6
+      },
+      "CAUTION|1.50-2.00|SOURCE_FALLBACK": {
+        "hit_rate": 0.5,
+        "implied_hit_rate": 0.624032,
+        "priced_picks": 6,
+        "roi": -0.23,
+        "settled_picks": 6,
+        "wins": 3,
+        "z_vs_implied": -0.629
+      },
+      "CAUTION|2.00-3.00|BETEXPLORER_RESCUE": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.487805,
+        "priced_picks": 1,
+        "roi": 1.05,
+        "settled_picks": 1,
+        "wins": 1,
+        "z_vs_implied": 1.025
+      },
+      "CAUTION|2.00-3.00|BZZOIRO_PRIMARY": {
+        "hit_rate": 0.0,
+        "implied_hit_rate": 0.471698,
+        "priced_picks": 1,
+        "roi": -1.0,
+        "settled_picks": 1,
+        "wins": 0,
+        "z_vs_implied": -0.945
+      },
+      "CAUTION|2.00-3.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.5,
+        "implied_hit_rate": 0.457311,
+        "priced_picks": 2,
+        "roi": 0.03,
+        "settled_picks": 2,
+        "wins": 1,
+        "z_vs_implied": 0.121
+      },
+      "CAUTION|2.00-3.00|SOURCE_FALLBACK": {
+        "hit_rate": 0.0,
+        "implied_hit_rate": 0.483092,
+        "priced_picks": 1,
+        "roi": -1.0,
+        "settled_picks": 1,
+        "wins": 0,
+        "z_vs_implied": -0.967
+      },
+      "CAUTION|<1.50|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.5,
+        "implied_hit_rate": 0.717893,
+        "priced_picks": 4,
+        "roi": -0.31,
+        "settled_picks": 4,
+        "wins": 2,
+        "z_vs_implied": -0.972
+      },
+      "CAUTION|<1.50|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.716482,
+        "priced_picks": 2,
+        "roi": 0.40025,
+        "settled_picks": 2,
+        "wins": 2,
+        "z_vs_implied": 0.893
+      },
+      "CAUTION|<1.50|SOURCE_FALLBACK": {
+        "hit_rate": 0.333333,
+        "implied_hit_rate": 0.710594,
+        "priced_picks": 3,
+        "roi": -0.506667,
+        "settled_picks": 3,
+        "wins": 1,
+        "z_vs_implied": -1.444
+      },
+      "CERTIFIED_CLEAN|1.50-2.00|APPROVED_DONOR_PRICE": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.657895,
+        "priced_picks": 1,
+        "roi": 0.52,
+        "settled_picks": 1,
+        "wins": 1,
+        "z_vs_implied": 0.721
+      },
+      "CERTIFIED_CLEAN|1.50-2.00|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.642857,
+        "implied_hit_rate": 0.580602,
+        "priced_picks": 14,
+        "roi": 0.106429,
+        "settled_picks": 14,
+        "wins": 9,
+        "z_vs_implied": 0.473
+      },
+      "CERTIFIED_CLEAN|1.50-2.00|BZZOIRO_PRIMARY": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.636364,
+        "priced_picks": 2,
+        "roi": 0.575,
+        "settled_picks": 2,
+        "wins": 2,
+        "z_vs_implied": 1.071
+      },
+      "CERTIFIED_CLEAN|1.50-2.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.631579,
+        "implied_hit_rate": 0.603651,
+        "priced_picks": 19,
+        "roi": 0.068416,
+        "settled_picks": 19,
+        "wins": 12,
+        "z_vs_implied": 0.25
+      },
+      "CERTIFIED_CLEAN|1.50-2.00|SOURCE_FALLBACK": {
+        "hit_rate": 0.642857,
+        "implied_hit_rate": 0.59722,
+        "priced_picks": 14,
+        "roi": 0.08,
+        "settled_picks": 14,
+        "wins": 9,
+        "z_vs_implied": 0.35
+      },
+      "CERTIFIED_CLEAN|2.00-3.00|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.5,
+        "implied_hit_rate": 0.451355,
+        "priced_picks": 2,
+        "roi": 0.185,
+        "settled_picks": 2,
+        "wins": 1,
+        "z_vs_implied": 0.138
+      },
+      "CERTIFIED_CLEAN|2.00-3.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.333333,
+        "implied_hit_rate": 0.383094,
+        "priced_picks": 3,
+        "roi": -0.083333,
+        "settled_picks": 3,
+        "wins": 1,
+        "z_vs_implied": -0.178
+      },
+      "CERTIFIED_CLEAN|2.00-3.00|SOURCE_FALLBACK": {
+        "hit_rate": 0.25,
+        "implied_hit_rate": 0.379985,
+        "priced_picks": 4,
+        "roi": -0.2925,
+        "settled_picks": 4,
+        "wins": 1,
+        "z_vs_implied": -0.536
+      },
+      "CERTIFIED_CLEAN|<1.50|BETEXPLORER_RESCUE": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.772544,
+        "priced_picks": 7,
+        "roi": 0.302857,
+        "settled_picks": 7,
+        "wins": 7,
+        "z_vs_implied": 1.452
+      },
+      "CERTIFIED_CLEAN|<1.50|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.75,
+        "implied_hit_rate": 0.786632,
+        "priced_picks": 8,
+        "roi": -0.06375,
+        "settled_picks": 8,
+        "wins": 6,
+        "z_vs_implied": -0.258
+      },
+      "CERTIFIED_CLEAN|<1.50|SOURCE_FALLBACK": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.710647,
+        "priced_picks": 4,
+        "roi": 0.4075,
+        "settled_picks": 4,
+        "wins": 4,
+        "z_vs_implied": 1.277
+      },
+      "SKIPPED_VETO|1.50-2.00|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.526316,
+        "implied_hit_rate": 0.593538,
+        "priced_picks": 19,
+        "roi": -0.144737,
+        "settled_picks": 19,
+        "wins": 10,
+        "z_vs_implied": -0.599
+      },
+      "SKIPPED_VETO|1.50-2.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.863636,
+        "implied_hit_rate": 0.60243,
+        "priced_picks": 22,
+        "roi": 0.406473,
+        "settled_picks": 22,
+        "wins": 19,
+        "z_vs_implied": 2.512
+      },
+      "SKIPPED_VETO|1.50-2.00|SCOUTINGSTATS_SOLE": {
+        "hit_rate": 0.617647,
+        "implied_hit_rate": 0.595299,
+        "priced_picks": 34,
+        "roi": 0.049118,
+        "settled_picks": 34,
+        "wins": 21,
+        "z_vs_implied": 0.267
+      },
+      "SKIPPED_VETO|1.50-2.00|SOURCE_FALLBACK": {
+        "hit_rate": 0.428571,
+        "implied_hit_rate": 0.584149,
+        "priced_picks": 7,
+        "roi": -0.224286,
+        "settled_picks": 7,
+        "wins": 3,
+        "z_vs_implied": -0.84
+      },
+      "SKIPPED_VETO|1.50-2.00|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 0.75,
+        "implied_hit_rate": 0.582034,
+        "priced_picks": 4,
+        "roi": 0.24,
+        "settled_picks": 4,
+        "wins": 3,
+        "z_vs_implied": 0.686
+      },
+      "SKIPPED_VETO|2.00-3.00|BZZOIRO_PRIMARY": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.5,
+        "priced_picks": 1,
+        "roi": 1.0,
+        "settled_picks": 1,
+        "wins": 1,
+        "z_vs_implied": 1.0
+      },
+      "SKIPPED_VETO|2.00-3.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.8,
+        "implied_hit_rate": 0.462202,
+        "priced_picks": 5,
+        "roi": 0.764,
+        "settled_picks": 5,
+        "wins": 4,
+        "z_vs_implied": 1.518
+      },
+      "SKIPPED_VETO|2.00-3.00|SCOUTINGSTATS_SOLE": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.447984,
+        "priced_picks": 2,
+        "roi": 1.25,
+        "settled_picks": 2,
+        "wins": 2,
+        "z_vs_implied": 1.575
+      },
+      "SKIPPED_VETO|2.00-3.00|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 0.0,
+        "implied_hit_rate": 0.5,
+        "priced_picks": 1,
+        "roi": -1.0,
+        "settled_picks": 1,
+        "wins": 0,
+        "z_vs_implied": -1.0
+      },
+      "SKIPPED_VETO|<1.50|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.780488,
+        "implied_hit_rate": 0.804685,
+        "priced_picks": 41,
+        "roi": -0.032927,
+        "settled_picks": 41,
+        "wins": 32,
+        "z_vs_implied": -0.405
+      },
+      "SKIPPED_VETO|<1.50|BZZOIRO_PRIMARY": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.797867,
+        "priced_picks": 4,
+        "roi": 0.255,
+        "settled_picks": 4,
+        "wins": 4,
+        "z_vs_implied": 1.009
+      },
+      "SKIPPED_VETO|<1.50|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.813953,
+        "implied_hit_rate": 0.805736,
+        "priced_picks": 43,
+        "roi": 0.015493,
+        "settled_picks": 43,
+        "wins": 35,
+        "z_vs_implied": 0.14
+      },
+      "SKIPPED_VETO|<1.50|SCOUTINGSTATS_SOLE": {
+        "hit_rate": 0.738095,
+        "implied_hit_rate": 0.782473,
+        "priced_picks": 42,
+        "roi": -0.057857,
+        "settled_picks": 42,
+        "wins": 31,
+        "z_vs_implied": -0.712
+      },
+      "SKIPPED_VETO|<1.50|SOURCE_FALLBACK": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.784832,
+        "priced_picks": 13,
+        "roi": 0.285385,
+        "settled_picks": 13,
+        "wins": 13,
+        "z_vs_implied": 1.92
+      },
+      "SKIPPED_VETO|<1.50|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 0.8,
+        "implied_hit_rate": 0.809259,
+        "priced_picks": 5,
+        "roi": -0.006,
+        "settled_picks": 5,
+        "wins": 4,
+        "z_vs_implied": -0.054
+      },
+      "SKIPPED_VETO|unpriced|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": null,
+        "priced_picks": 0,
+        "roi": null,
+        "settled_picks": 1,
+        "wins": 1,
+        "z_vs_implied": null
+      },
+      "SKIPPED_VETO|unpriced|UNMATCHED": {
+        "hit_rate": 0.708333,
+        "implied_hit_rate": null,
+        "priced_picks": 0,
+        "roi": null,
+        "settled_picks": 24,
+        "wins": 17,
+        "z_vs_implied": null
+      },
+      "WATCHLIST_NO_ODDS|unpriced|UNMATCHED": {
+        "hit_rate": 0.655738,
+        "implied_hit_rate": null,
+        "priced_picks": 0,
+        "roi": null,
+        "settled_picks": 61,
+        "wins": 40,
+        "z_vs_implied": null
+      },
+      "WATCHLIST_SUSPECT_PRICE|1.50-2.00|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 0.0,
+        "implied_hit_rate": 0.510204,
+        "priced_picks": 1,
+        "roi": -1.0,
+        "settled_picks": 1,
+        "wins": 0,
+        "z_vs_implied": -1.021
+      },
+      "WATCHLIST_SUSPECT_PRICE|2.00-3.00|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.487805,
+        "priced_picks": 1,
+        "roi": 1.05,
+        "settled_picks": 1,
+        "wins": 1,
+        "z_vs_implied": 1.025
+      },
+      "WATCHLIST_SUSPECT_PRICE|unpriced|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": null,
+        "priced_picks": 0,
+        "roi": null,
+        "settled_picks": 2,
+        "wins": 2,
+        "z_vs_implied": null
+      },
+      "WATCHLIST_UNCORROBORATED_PRICE|1.50-2.00|SCOUTINGSTATS_SOLE": {
+        "hit_rate": 0.657895,
+        "implied_hit_rate": 0.606826,
+        "priced_picks": 38,
+        "roi": 0.082632,
+        "settled_picks": 38,
+        "wins": 25,
+        "z_vs_implied": 0.647
+      },
+      "WATCHLIST_UNCORROBORATED_PRICE|2.00-3.00|SCOUTINGSTATS_SOLE": {
+        "hit_rate": 0.0,
+        "implied_hit_rate": 0.462843,
+        "priced_picks": 4,
+        "roi": -1.0,
+        "settled_picks": 4,
+        "wins": 0,
+        "z_vs_implied": -1.857
+      },
+      "WATCHLIST_UNCORROBORATED_PRICE|<1.50|SCOUTINGSTATS_SOLE": {
+        "hit_rate": 0.8,
+        "implied_hit_rate": 0.772033,
+        "priced_picks": 45,
+        "roi": 0.035111,
+        "settled_picks": 45,
+        "wins": 36,
+        "z_vs_implied": 0.454
+      },
+      "WATCHLIST_UNKNOWN_CTX|<1.50|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.666667,
+        "implied_hit_rate": 0.806452,
+        "priced_picks": 3,
+        "roi": -0.173333,
+        "settled_picks": 3,
+        "wins": 2,
+        "z_vs_implied": -0.613
+      },
+      "WATCHLIST_UNKNOWN_CTX|<1.50|SOURCE_FALLBACK": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.833333,
+        "priced_picks": 1,
+        "roi": 0.2,
+        "settled_picks": 1,
+        "wins": 1,
+        "z_vs_implied": 0.447
+      }
+    },
+    "band_x_evidence": {
+      "1.50-2.00|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.526316,
+        "implied_hit_rate": 0.593538,
+        "priced_picks": 19,
+        "roi": -0.144737,
+        "settled_picks": 19,
+        "wins": 10,
+        "z_vs_implied": -0.599
+      },
+      "1.50-2.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.863636,
+        "implied_hit_rate": 0.60243,
+        "priced_picks": 22,
+        "roi": 0.406473,
+        "settled_picks": 22,
+        "wins": 19,
+        "z_vs_implied": 2.512
+      },
+      "1.50-2.00|SCOUTINGSTATS_SOLE": {
+        "hit_rate": 0.617647,
+        "implied_hit_rate": 0.595299,
+        "priced_picks": 34,
+        "roi": 0.049118,
+        "settled_picks": 34,
+        "wins": 21,
+        "z_vs_implied": 0.267
+      },
+      "1.50-2.00|SOURCE_FALLBACK": {
+        "hit_rate": 0.428571,
+        "implied_hit_rate": 0.584149,
+        "priced_picks": 7,
+        "roi": -0.224286,
+        "settled_picks": 7,
+        "wins": 3,
+        "z_vs_implied": -0.84
+      },
+      "1.50-2.00|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 0.75,
+        "implied_hit_rate": 0.582034,
+        "priced_picks": 4,
+        "roi": 0.24,
+        "settled_picks": 4,
+        "wins": 3,
+        "z_vs_implied": 0.686
+      },
+      "2.00-3.00|BZZOIRO_PRIMARY": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.5,
+        "priced_picks": 1,
+        "roi": 1.0,
+        "settled_picks": 1,
+        "wins": 1,
+        "z_vs_implied": 1.0
+      },
+      "2.00-3.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.8,
+        "implied_hit_rate": 0.462202,
+        "priced_picks": 5,
+        "roi": 0.764,
+        "settled_picks": 5,
+        "wins": 4,
+        "z_vs_implied": 1.518
+      },
+      "2.00-3.00|SCOUTINGSTATS_SOLE": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.447984,
+        "priced_picks": 2,
+        "roi": 1.25,
+        "settled_picks": 2,
+        "wins": 2,
+        "z_vs_implied": 1.575
+      },
+      "2.00-3.00|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 0.0,
+        "implied_hit_rate": 0.5,
+        "priced_picks": 1,
+        "roi": -1.0,
+        "settled_picks": 1,
+        "wins": 0,
+        "z_vs_implied": -1.0
+      },
+      "<1.50|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.780488,
+        "implied_hit_rate": 0.804685,
+        "priced_picks": 41,
+        "roi": -0.032927,
+        "settled_picks": 41,
+        "wins": 32,
+        "z_vs_implied": -0.405
+      },
+      "<1.50|BZZOIRO_PRIMARY": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.797867,
+        "priced_picks": 4,
+        "roi": 0.255,
+        "settled_picks": 4,
+        "wins": 4,
+        "z_vs_implied": 1.009
+      },
+      "<1.50|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.813953,
+        "implied_hit_rate": 0.805736,
+        "priced_picks": 43,
+        "roi": 0.015493,
+        "settled_picks": 43,
+        "wins": 35,
+        "z_vs_implied": 0.14
+      },
+      "<1.50|SCOUTINGSTATS_SOLE": {
+        "hit_rate": 0.738095,
+        "implied_hit_rate": 0.782473,
+        "priced_picks": 42,
+        "roi": -0.057857,
+        "settled_picks": 42,
+        "wins": 31,
+        "z_vs_implied": -0.712
+      },
+      "<1.50|SOURCE_FALLBACK": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.784832,
+        "priced_picks": 13,
+        "roi": 0.285385,
+        "settled_picks": 13,
+        "wins": 13,
+        "z_vs_implied": 1.92
+      },
+      "<1.50|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 0.8,
+        "implied_hit_rate": 0.809259,
+        "priced_picks": 5,
+        "roi": -0.006,
+        "settled_picks": 5,
+        "wins": 4,
+        "z_vs_implied": -0.054
+      },
+      "unpriced|SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": null,
+        "priced_picks": 0,
+        "roi": null,
+        "settled_picks": 1,
+        "wins": 1,
+        "z_vs_implied": null
+      },
+      "unpriced|UNMATCHED": {
+        "hit_rate": 0.708333,
+        "implied_hit_rate": null,
+        "priced_picks": 0,
+        "roi": null,
+        "settled_picks": 24,
+        "wins": 17,
+        "z_vs_implied": null
+      }
+    },
     "by_odds_band": {
       "1.50-2.00": {
         "hit_rate": 0.651163,
@@ -34929,6 +35509,98 @@
         "roi": 0.28,
         "settled_picks": 1,
         "wins": 1
+      }
+    },
+    "contrast_band_x_evidence": {
+      "1.50-2.00|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.538462,
+        "implied_hit_rate": 0.628819,
+        "priced_picks": 13,
+        "roi": -0.15,
+        "settled_picks": 13,
+        "wins": 7,
+        "z_vs_implied": -0.676
+      },
+      "1.50-2.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.875,
+        "implied_hit_rate": 0.598151,
+        "priced_picks": 8,
+        "roi": 0.476262,
+        "settled_picks": 8,
+        "wins": 7,
+        "z_vs_implied": 1.6
+      },
+      "1.50-2.00|SOURCE_FALLBACK": {
+        "hit_rate": 0.5,
+        "implied_hit_rate": 0.624032,
+        "priced_picks": 6,
+        "roi": -0.23,
+        "settled_picks": 6,
+        "wins": 3,
+        "z_vs_implied": -0.629
+      },
+      "2.00-3.00|BETEXPLORER_RESCUE": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.487805,
+        "priced_picks": 1,
+        "roi": 1.05,
+        "settled_picks": 1,
+        "wins": 1,
+        "z_vs_implied": 1.025
+      },
+      "2.00-3.00|BZZOIRO_PRIMARY": {
+        "hit_rate": 0.0,
+        "implied_hit_rate": 0.471698,
+        "priced_picks": 1,
+        "roi": -1.0,
+        "settled_picks": 1,
+        "wins": 0,
+        "z_vs_implied": -0.945
+      },
+      "2.00-3.00|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 0.5,
+        "implied_hit_rate": 0.457311,
+        "priced_picks": 2,
+        "roi": 0.03,
+        "settled_picks": 2,
+        "wins": 1,
+        "z_vs_implied": 0.121
+      },
+      "2.00-3.00|SOURCE_FALLBACK": {
+        "hit_rate": 0.0,
+        "implied_hit_rate": 0.483092,
+        "priced_picks": 1,
+        "roi": -1.0,
+        "settled_picks": 1,
+        "wins": 0,
+        "z_vs_implied": -0.967
+      },
+      "<1.50|BETEXPLORER_RESCUE": {
+        "hit_rate": 0.5,
+        "implied_hit_rate": 0.717893,
+        "priced_picks": 4,
+        "roi": -0.31,
+        "settled_picks": 4,
+        "wins": 2,
+        "z_vs_implied": -0.972
+      },
+      "<1.50|NAMED_BOOKMAKER_PRICE": {
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.716482,
+        "priced_picks": 2,
+        "roi": 0.40025,
+        "settled_picks": 2,
+        "wins": 2,
+        "z_vs_implied": 0.893
+      },
+      "<1.50|SOURCE_FALLBACK": {
+        "hit_rate": 0.333333,
+        "implied_hit_rate": 0.710594,
+        "priced_picks": 3,
+        "roi": -0.506667,
+        "settled_picks": 3,
+        "wins": 1,
+        "z_vs_implied": -1.444
       }
     },
     "contrast_bucket": "CAUTION",

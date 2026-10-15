@@ -1,78 +1,77 @@
 {
-  "added": 112,
-  "attempted": 3,
+  "added": 50,
+  "attempted": 4,
   "attempted_fixtures": [
     {
-      "away": "Pafos",
+      "away": "FK Jablonec",
       "date": "2026-10-15",
-      "home": "Atalanta",
+      "home": "SC Freiburg",
       "kickoff": "15-10, 20:00",
       "league": "World UEFA Europa Conference League"
     },
     {
-      "away": "FC Iberia 1999",
+      "away": "FC Thun",
       "date": "2026-10-15",
-      "home": "St. Truiden",
-      "kickoff": "15-10, 20:00",
-      "league": "World UEFA Europa Conference League"
+      "home": "Twente",
+      "kickoff": "12:00",
+      "league": "International,Conference League"
     },
     {
-      "away": "Kairat Almaty",
+      "away": "Sporting Kansas City",
       "date": "2026-10-15",
-      "home": "Riga",
-      "kickoff": "15-10, 17:45",
-      "league": "World UEFA Europa Conference League"
+      "home": "Nashville SC",
+      "kickoff": "2026-10-15T02:30:00+02:00",
+      "league": "United States: Major League Soccer"
+    },
+    {
+      "away": "FK Borac Banja Luka",
+      "date": "2026-10-15",
+      "home": "Panathinaikos",
+      "kickoff": "09:45",
+      "league": "International,Conference League"
     }
   ],
-  "candidate_fixtures": 22,
-  "captured_at": "2026-10-15T13:28:00+00:00",
+  "candidate_fixtures": 23,
+  "captured_at": "2026-10-15T16:16:50+00:00",
   "date": "2026-10-15",
   "due_reasons": {
-    "first_at": 3
+    "first_at": 4
   },
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 1,
   "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 10
+    "kickoff_mismatch_display_fallback_overridden": 12
   },
   "quoted_fixtures": [
     {
-      "away": "Pafos FC",
+      "away": "FK Jablonec",
       "date": "2026-10-15",
-      "home": "Atalanta BC",
+      "home": "SC Freiburg",
       "kickoff": "2026-10-15T19:00:00Z",
-      "league": "World UEFA Europa Conference League"
-    },
-    {
-      "away": "FC Kairat",
-      "date": "2026-10-15",
-      "home": "Riga FC",
-      "kickoff": "2026-10-15T16:45:00Z",
       "league": "World UEFA Europa Conference League"
     }
   ],
-  "rows": 112,
+  "rows": 50,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
-    "kickoff_mismatch": 10,
+    "kickoff_already_passed": 2,
+    "kickoff_mismatch": 12,
     "priced": 1,
-    "priced_close_window_not_open": 10,
-    "retry_cooldown": 7
+    "priced_close_window_not_open": 12,
+    "retry_cooldown": 4
   },
   "skipped": [
     "WARN kickoff-mismatch Brann|Lincoln Red Imps FC: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Brann|Lincoln Red Imps FC (priced, close window not open)",
-    "SC Freiburg|FK Jablonec (retry cooldown (6h after failed attempt))",
-    "Twente|FC Thun (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Bournemouth|Sturm Graz: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Bournemouth|Sturm Graz (priced, close window not open)",
-    "Nashville SC|Sporting Kansas City (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch AZ Alkmaar|Hapoel Beer Sheva: pick legacy display says 17:45 SAST, captured rows say 18:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "AZ Alkmaar|Hapoel Beer Sheva (priced, close window not open)",
+    "WARN kickoff-mismatch Atalanta|Pafos: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Atalanta|Pafos (priced, close window not open)",
+    "St. Truiden|FC Iberia 1999 (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Benfica|Celtic: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Benfica|Celtic (priced, close window not open)",
-    "Panathinaikos|FK Borac Banja Luka (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Brighton|Kauno \u017dalgiris: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Brighton|Kauno \u017dalgiris (priced, close window not open)",
     "Dinamo Minsk|Slavia Mozyr (retry cooldown (6h after failed attempt))",
@@ -80,10 +79,13 @@
     "Sparta Praha|Lillestrom (priced, close window not open)",
     "WARN kickoff-mismatch CSKA Sofia|Monaco: pick legacy display says 17:45 SAST, captured rows say 18:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "CSKA Sofia|Monaco (priced, close window not open)",
+    "WARN kickoff-mismatch Riga|Kairat Almaty: pick legacy display says 17:45 SAST, captured rows say 18:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Riga|Kairat Almaty (priced, close window not open)",
     "WARN kickoff-mismatch Lech Poznan|Bayer Leverkusen: pick legacy display says 17:45 SAST, captured rows say 18:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Lech Poznan|Bayer Leverkusen (priced, close window not open)",
-    "Egnatia Rrogozhin\u00eb|FC Midtjylland (retry cooldown (6h after failed attempt))",
+    "Egnatia Rrogozhin\u00eb|FC Midtjylland (kickoff already passed)",
     "Los Angeles FC|Austin FC (priced)",
+    "Caen|La Roche VF (retry cooldown (6h after failed attempt))",
     "Marquense|Mixco (kickoff already passed)",
     "WARN kickoff-mismatch Torreense|Sunderland: pick legacy display says 17:45 SAST, captured rows say 18:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Torreense|Sunderland (priced, close window not open)",
@@ -94,9 +96,12 @@
   "source": "theoddsapi",
   "status": "ok",
   "unmatched": [
-    "St. Truiden vs FC Iberia 1999 (no event in soccer_uefa_europa_conference_league)"
+    "Twente vs FC Thun (league not covered: International,Conference League)",
+    "Nashville SC vs Sporting Kansas City (league not covered: United States: Major League Soccer)",
+    "Panathinaikos vs FK Borac Banja Luka (league not covered: International,Conference League)"
   ],
   "unmatched_reasons": {
-    "no event in soccer_uefa_europa_conference_league": 1
+    "league not covered: International,Conference League": 2,
+    "league not covered: United States: Major League Soccer": 1
   }
 }
