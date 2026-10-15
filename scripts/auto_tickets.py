@@ -96,6 +96,7 @@ from edgefactory.assay import grade as assay_grade                  # noqa: E402
 from edgefactory.assay import wilson_lb                              # noqa: E402
 from edgefactory.config import GATES                                 # noqa: E402
 from edgefactory.enh_registry import check_enhancement_hit           # noqa: E402
+from edgefactory import acca_gate                                    # noqa: E402
 from edgefactory import price_sources as psrc                        # noqa: E402
 
 # Audit-only scored-candidate shadow grading ledger (observability only).
@@ -2970,24 +2971,21 @@ def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=Fa
     return out
 
 
-# ACCA PRICE-EVIDENCE GATE (2026-10-15, operator-approved after the warehouse
-# audit). On the 2026-06-01..2026-10-14 archive, SKIPPED_VETO legs priced at
-# 1.50-1.99 were the weak slice: SCOUTINGSTATS_SOLE n=105 hit 50.5% vs implied
-# 60.5% (ROI -16.4%, z=-2.1); BETEXPLORER_RESCUE n=48 hit 52.1% vs 59.9%
-# (ROI -13.9%). The same band with NAMED_BOOKMAKER_PRICE was positive. The
-# bucket as a whole was calibrated below 1.50, so the gate blocks these two
-# price-evidence labels from ACCAS only. Singles are not built, and this gate
+# ACCA PRICE-EVIDENCE GATE. Dynamic, live, with hysteresis (edgefactory.acca_gate).
+# Each price-evidence label is blocked from ACCAS when its trailing 30-day
+# hit rate is clearly below the implied rate (z <= -2.0, at least 60 settled
+# legs), and unblocked only once z recovers to >= 0. The label set is no longer
+# hard-coded. The decision is stepped once per run date from the audit ledger
+# written earlier in the same daily run. Singles are not built, and this gate
 # does not change the bucket policy in BUCKETS. The replay harness does not
 # call this helper, so its frozen baseline is unchanged.
-ACCA_BLOCKED_PRICE_EVIDENCE = frozenset({"SCOUTINGSTATS_SOLE", "BETEXPLORER_RESCUE"})
-
-
-def acca_price_evidence_gate(pool):
+def acca_price_evidence_gate(pool, blocked_labels=frozenset()):
     """Split a leg pool into (kept, blocked) by price-evidence label."""
+    blocked_labels = frozenset(str(x).strip().upper() for x in blocked_labels)
     kept, blocked = [], []
     for leg in pool:
         label = str((leg.get("row") or {}).get("price_evidence") or "").strip().upper()
-        (blocked if label in ACCA_BLOCKED_PRICE_EVIDENCE else kept).append(leg)
+        (blocked if label in blocked_labels else kept).append(leg)
     return kept, blocked
 
 
@@ -4329,7 +4327,9 @@ def cmd_today(args, st):
             "selection_ladder_bucket_benched",
             "selection ladder bench_buckets policy vetoed the bucket",
         )
-    plan_pool, price_gate_blocked = acca_price_evidence_gate(plan_pool)
+    gate_labels, gate_status = acca_gate.refresh(target)
+    print(f"ACCA PRICE-EVIDENCE GATE: {gate_status}")
+    plan_pool, price_gate_blocked = acca_price_evidence_gate(plan_pool, gate_labels)
     if price_gate_blocked:
         census["ACCA PRICE-EVIDENCE GATE: blocked label"] = sorted(
             f"{l['match']} [{(l['row'].get('price_evidence') or '').upper()}]"
@@ -4337,7 +4337,7 @@ def cmd_today(args, st):
         stage_rejections(
             price_gate_blocked,
             "acca_price_evidence_gate",
-            "price-evidence label is blocked from accas (weak on 1.50-1.99 archive audit)",
+            "price-evidence label is blocked from accas (dynamic gate, 30-day z <= -2 with hysteresis)",
         )
 
     # The shadow plan is a second pure call. It deliberately strips both the
