@@ -462,6 +462,20 @@ def test_the_market_grading_path_is_the_registrys_own_hit_definition():
     assert at.enhancement_leg_result(leg, DAY, {}) is None
 
 
+def test_a_leg_is_graded_from_the_staked_days_score_not_an_earlier_same_name_fixture():
+    """A same-named fixture on an earlier day must not grade the staked leg."""
+    leg = {"market": "home_under_15", "pick": "home", "match": "Mito Hollyhock vs FC Tokyo",
+           "fixture_key": [DAY, "Mito Hollyhock", "FC Tokyo"]}
+    earlier = _scores_for([("Mito Hollyhock", "FC Tokyo", 3, 0)], day="2026-10-11")
+    on_day = _scores_for([("Mito Hollyhock", "FC Tokyo", 1, 0)])
+    scores = {**earlier, **on_day}
+    # home scored 1 on the staked day -> Under 1.5 wins; the 3-0 on an
+    # earlier date must not be picked up first.
+    assert at.enhancement_leg_result(leg, DAY, scores) == "win"
+    # with only the earlier-date score present, it is still found (within window)
+    assert at.enhancement_leg_result(leg, DAY, earlier) == "loss"
+
+
 def test_a_market_leg_on_a_conflicted_fixture_is_held_as_a_conflict():
     leg = {"market": "match_over_25", "pick": "over", "match": "Pafos vs Dinamo Tirana",
            "fixture_key": [DAY, "Pafos", "Dinamo Tirana"]}
