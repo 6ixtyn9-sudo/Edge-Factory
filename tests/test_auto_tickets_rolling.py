@@ -604,7 +604,7 @@ def test_settle_per_acca_does_not_freeze_bank_on_one_stuck_leg(monkeypatch):
     assert st["open_slips"][0]["staked_pct"] == pytest.approx(25.0)
     assert at.effective_bank(st) == pytest.approx(st["bank"] - 25.0)
     assert len(lines) == 1
-    assert [a for h in st["history"] for a in h["accas"]] == [{"odds": 1.69, "won": True}]
+    assert [{"odds": a["odds"], "won": a["won"]} for h in st["history"] for a in h["accas"]] == [{"odds": 1.69, "won": True}]
 
 
 def test_alias_outcome_conflict_true_false_and_womens_collision():
@@ -936,7 +936,7 @@ def test_settle_loss_leg_decides_acca_without_waiting_for_void(monkeypatch):
     h = st["history"][-1]
     assert h["date"] == "2026-09-27"
     # original combined odds kept in the record (no void-style recompute)
-    assert h["accas"] == [{"odds": 2.22, "won": False}]
+    assert [{"odds": a["odds"], "won": a["won"]} for a in h["accas"]] == [{"odds": 2.22, "won": False}]
     assert h["returned_pct"] == 0.0
     assert at.effective_bank(st) == pytest.approx(st["bank"])
     assert any("settled 2026-09-27" in ln and "decided by settled loss leg" in ln
@@ -979,7 +979,7 @@ def test_settle_loss_leg_decides_even_with_conflicted_sibling(monkeypatch):
     assert st["open_slips"] == []
     assert st["bank"] == pytest.approx(100.0 - 50.0, abs=1e-6)
     h = st["history"][-1]
-    assert h["accas"] == [{"odds": 1.87, "won": False}]
+    assert [{"odds": a["odds"], "won": a["won"]} for a in h["accas"]] == [{"odds": 1.87, "won": False}]
     assert h["returned_pct"] == 0.0
     # decided by the certain loss; the conflict is surfaced, not silent
     assert any("decided by settled loss leg" in ln and "conflict" in ln and

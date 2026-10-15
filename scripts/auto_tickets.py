@@ -3294,27 +3294,48 @@ def _apply_settlement(st, ret_pct, staked_pct, when, lane: "Lane | None" = None)
     return events
 
 
+def _settled_leg_record(leg, result):
+    """One leg as the history keeps it: what was bet, and how it resolved.
+
+    The stored result is what the grader decided (win / loss / void / conflict /
+    None), so the performance report can say which leg made an acca win or lose.
+    """
+    rec = {"match": leg.get("match"), "pick": leg.get("pick"),
+           "odds": leg.get("odds"), "result": result}
+    if leg.get("label"):
+        rec["label"] = leg.get("label")
+    return rec
+
+
 def _record_acca_settlement(st, slip_date, acca):
     """Append/update a per-day history entry for one settled acca.
 
     Per-acca settlement means a day's accas can settle across several runs (a
     stuck leg no longer freezes the whole day's stake). History stays grouped
-    by date so the performance report still reads one line per bet-day.
+    by date so the performance report still reads one line per bet-day. Each
+    acca keeps its own stake, return and leg results so the report can show
+    what drove the win or loss (entries written before this carry no legs).
     """
     won = bool(acca["won"])
     ret = round(acca["stake_pct"] * acca["odds"] if won else 0.0, 4)
+    results = list(acca.get("results") or [])
+    legs = [_settled_leg_record(l, results[i] if i < len(results) else None)
+            for i, l in enumerate(acca.get("legs") or [])]
+    rec = {"odds": acca["odds"], "won": won,
+           "stake_pct": round(acca["stake_pct"], 4),
+           "returned_pct": ret, "legs": legs}
     for h in st["history"]:
         if h["date"] == slip_date:
             h["staked_pct"] = round(h["staked_pct"] + acca["stake_pct"], 4)
             h["returned_pct"] = round(h["returned_pct"] + ret, 4)
-            h["accas"].append({"odds": acca["odds"], "won": won})
+            h["accas"].append(rec)
             h["bank_pct"] = round(st["bank"], 4)
             return
     st["history"].append({
         "date": slip_date,
         "staked_pct": round(acca["stake_pct"], 4),
         "returned_pct": ret,
-        "accas": [{"odds": acca["odds"], "won": won}],
+        "accas": [rec],
         "bank_pct": round(st["bank"], 4),
     })
 
