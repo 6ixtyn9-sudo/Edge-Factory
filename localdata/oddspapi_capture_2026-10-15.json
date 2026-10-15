@@ -1,237 +1,162 @@
 {
-  "added": 17232,
-  "attempted": 10,
+  "added": 1697,
+  "attempted": 7,
   "attempted_fixtures": [
     {
-      "away": "Ulaangom City",
-      "fixture_id": "id1002862375558356",
-      "home": "Amtat FC"
+      "away": "Hapoel Beer Sheva FC Srl",
+      "fixture_id": "id1003622375485082",
+      "home": "AZ Alkmaar SRL"
     },
     {
-      "away": "Wollongong Wolves FC",
-      "fixture_id": "id1004850774827352",
-      "home": "Preston Lions FC"
+      "away": "Omonia Nicosia Srl",
+      "fixture_id": "id1003622375485084",
+      "home": "NK Celje Srl"
     },
     {
-      "away": "Calcutta Port Trust SC",
-      "fixture_id": "id1000180075449482",
-      "home": "Barisha SC"
+      "away": "Bayer 04 Leverkusen SRL",
+      "fixture_id": "id1003622375485086",
+      "home": "KKS Lech Poznan SRL"
     },
     {
-      "away": "Suburban Club",
-      "fixture_id": "id1000180075449484",
-      "home": "Belgharia AC"
+      "away": "Crystal Palace SRL",
+      "fixture_id": "id1003622375485088",
+      "home": "Olympique Lyon SRL"
     },
     {
-      "away": "Salkia FDS Asson",
-      "fixture_id": "id1000180075449486",
-      "home": "Eastern Railway SC"
+      "away": "Real Sociedad SRL",
+      "fixture_id": "id1003622375485090",
+      "home": "Union Saint-Gilloise Srl"
     },
     {
-      "away": "Elite Kings FC",
-      "fixture_id": "id1005369475464474",
-      "home": "University FC"
+      "away": "AC Milan SRL",
+      "fixture_id": "id1003622375485092",
+      "home": "FC Salzburg SRL"
     },
     {
-      "away": "Phnom Penh Crown FC",
-      "fixture_id": "id1000066873835326",
-      "home": "Gangwon FC"
-    },
-    {
-      "away": "Lion City Sailors FC",
-      "fixture_id": "id1000066873835440",
-      "home": "Tai Po FC"
-    },
-    {
-      "away": "Akademia Ontustyk",
-      "fixture_id": "id1000078569854900",
-      "home": "FK Arys"
-    },
-    {
-      "away": "Sejong Sportstoto WFC",
-      "fixture_id": "id1000177269976420",
-      "home": "Hwacheon KSPO FC"
+      "away": "Lillestroem SK Srl",
+      "fixture_id": "id1003622375485094",
+      "home": "AC Sparta Prague SRL"
     }
   ],
   "budget": {
     "day": "2026-10-15",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 75,
-    "remaining_today": 7,
-    "spent_today": 34
+    "month_spent": 82,
+    "remaining_today": 0,
+    "spent_today": 41
   },
-  "captured_at": "2026-10-15T04:12:38+00:00",
+  "budget_deferred": 36,
+  "captured_at": "2026-10-15T07:14:36+00:00",
   "date": "2026-10-15",
   "errors": [],
   "fixtures": 157,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 347,
+  "market_census_distinct": 104,
   "markets": {
-    "1x2": 3009,
-    "ou_0.5": 475,
-    "ou_0.75": 35,
-    "ou_1": 77,
-    "ou_1.25": 101,
-    "ou_1.5": 998,
-    "ou_1.75": 196,
-    "ou_2": 228,
-    "ou_2.25": 334,
-    "ou_2.5": 1652,
-    "ou_2.75": 402,
-    "ou_3": 418,
-    "ou_3.25": 418,
-    "ou_3.5": 1348,
-    "ou_3.75": 268,
-    "ou_4": 202,
-    "ou_4.25": 185,
-    "ou_4.5": 888,
-    "ou_4.75": 161,
-    "ou_5": 132,
-    "ou_5.25": 172,
-    "ou_5.5": 628,
-    "ou_5.75": 82,
-    "ou_6": 42,
-    "ou_6.25": 32,
-    "ou_6.5": 112,
-    "ou_6.75": 21,
-    "ou_7": 20,
-    "ou_7.25": 21,
-    "ou_7.5": 34,
-    "ou_7.75": 20,
-    "ou_8": 20,
-    "ou_8.25": 20,
-    "ou_8.5": 31,
-    "tt_away_0.5": 714,
-    "tt_away_0.75": 30,
-    "tt_away_1": 32,
-    "tt_away_1.25": 18,
-    "tt_away_1.5": 546,
-    "tt_away_1.75": 20,
-    "tt_away_2": 24,
-    "tt_away_2.25": 8,
-    "tt_away_2.5": 506,
-    "tt_away_2.75": 16,
-    "tt_away_3.25": 2,
-    "tt_away_3.5": 161,
-    "tt_away_4.5": 37,
-    "tt_away_5.5": 21,
-    "tt_home_0.5": 498,
-    "tt_home_0.75": 8,
-    "tt_home_1": 48,
-    "tt_home_1.25": 20,
-    "tt_home_1.5": 740,
-    "tt_home_1.75": 26,
-    "tt_home_2": 36,
-    "tt_home_2.25": 26,
-    "tt_home_2.5": 444,
-    "tt_home_2.75": 18,
-    "tt_home_3": 20,
-    "tt_home_3.25": 2,
-    "tt_home_3.5": 306,
-    "tt_home_3.75": 2,
-    "tt_home_4.5": 92,
-    "tt_home_5.5": 26,
-    "tt_home_6.5": 3
+    "1x2": 291,
+    "ou_0.5": 154,
+    "ou_1.5": 164,
+    "ou_2": 10,
+    "ou_2.25": 38,
+    "ou_2.5": 182,
+    "ou_2.75": 74,
+    "ou_3": 74,
+    "ou_3.25": 58,
+    "ou_3.5": 174,
+    "ou_4.5": 158,
+    "ou_5.5": 140,
+    "tt_away_0.5": 24,
+    "tt_away_1.5": 60,
+    "tt_home_0.5": 14,
+    "tt_home_1.5": 54,
+    "tt_home_2.5": 28
   },
   "markets_source": "cache",
-  "matched": 10,
+  "matched": 7,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "market_id_unknown": 3435,
-    "market_inactive": 60,
-    "market_unsupported_clean_sheet": 216,
-    "market_unsupported_corners": 461,
-    "market_unsupported_correct_score": 1155,
-    "market_unsupported_double_chance": 899,
-    "market_unsupported_draw_no_bet": 698,
-    "market_unsupported_handicap": 4268,
-    "market_unsupported_odd_even": 961,
-    "market_unsupported_period": 11975,
-    "market_unsupported_win_to_nil": 402,
-    "outcome_inactive": 1828,
-    "unresolved_btts": 1278
+    "market_id_unknown": 322,
+    "market_unsupported_clean_sheet": 14,
+    "market_unsupported_correct_score": 35,
+    "market_unsupported_double_chance": 98,
+    "market_unsupported_draw_no_bet": 49,
+    "market_unsupported_handicap": 409,
+    "market_unsupported_odd_even": 91,
+    "market_unsupported_period": 1282,
+    "market_unsupported_win_to_nil": 70,
+    "outcome_inactive": 17,
+    "unresolved_btts": 96
   },
   "parse_skips_classified": {
     "expected": {
-      "market_inactive": 60,
-      "outcome_inactive": 1828
+      "outcome_inactive": 17
     },
     "loss_or_diagnosis": {
-      "market_id_unknown": 3435,
-      "market_unsupported_clean_sheet": 216,
-      "market_unsupported_corners": 461,
-      "market_unsupported_correct_score": 1155,
-      "market_unsupported_double_chance": 899,
-      "market_unsupported_draw_no_bet": 698,
-      "market_unsupported_handicap": 4268,
-      "market_unsupported_odd_even": 961,
-      "market_unsupported_period": 11975,
-      "market_unsupported_win_to_nil": 402,
-      "unresolved_btts": 1278
+      "market_id_unknown": 322,
+      "market_unsupported_clean_sheet": 14,
+      "market_unsupported_correct_score": 35,
+      "market_unsupported_double_chance": 98,
+      "market_unsupported_draw_no_bet": 49,
+      "market_unsupported_handicap": 409,
+      "market_unsupported_odd_even": 91,
+      "market_unsupported_period": 1282,
+      "market_unsupported_win_to_nil": 70,
+      "unresolved_btts": 96
     }
   },
-  "pending_fixtures": 10,
+  "pending_fixtures": 43,
   "quoted_fixtures": [
     {
-      "away": "Ulaangom City",
-      "fixture_id": "id1002862375558356",
-      "home": "Amtat FC"
+      "away": "Hapoel Beer Sheva FC Srl",
+      "fixture_id": "id1003622375485082",
+      "home": "AZ Alkmaar SRL"
     },
     {
-      "away": "Wollongong Wolves FC",
-      "fixture_id": "id1004850774827352",
-      "home": "Preston Lions FC"
+      "away": "Omonia Nicosia Srl",
+      "fixture_id": "id1003622375485084",
+      "home": "NK Celje Srl"
     },
     {
-      "away": "Calcutta Port Trust SC",
-      "fixture_id": "id1000180075449482",
-      "home": "Barisha SC"
+      "away": "Bayer 04 Leverkusen SRL",
+      "fixture_id": "id1003622375485086",
+      "home": "KKS Lech Poznan SRL"
     },
     {
-      "away": "Suburban Club",
-      "fixture_id": "id1000180075449484",
-      "home": "Belgharia AC"
+      "away": "Crystal Palace SRL",
+      "fixture_id": "id1003622375485088",
+      "home": "Olympique Lyon SRL"
     },
     {
-      "away": "Salkia FDS Asson",
-      "fixture_id": "id1000180075449486",
-      "home": "Eastern Railway SC"
+      "away": "Real Sociedad SRL",
+      "fixture_id": "id1003622375485090",
+      "home": "Union Saint-Gilloise Srl"
     },
     {
-      "away": "Elite Kings FC",
-      "fixture_id": "id1005369475464474",
-      "home": "University FC"
+      "away": "AC Milan SRL",
+      "fixture_id": "id1003622375485092",
+      "home": "FC Salzburg SRL"
     },
     {
-      "away": "Phnom Penh Crown FC",
-      "fixture_id": "id1000066873835326",
-      "home": "Gangwon FC"
-    },
-    {
-      "away": "Lion City Sailors FC",
-      "fixture_id": "id1000066873835440",
-      "home": "Tai Po FC"
-    },
-    {
-      "away": "Akademia Ontustyk",
-      "fixture_id": "id1000078569854900",
-      "home": "FK Arys"
-    },
-    {
-      "away": "Sejong Sportstoto WFC",
-      "fixture_id": "id1000177269976420",
-      "home": "Hwacheon KSPO FC"
+      "away": "Lillestroem SK Srl",
+      "fixture_id": "id1003622375485094",
+      "home": "AC Sparta Prague SRL"
     }
   ],
-  "rows": 17232,
+  "rows": 1697,
   "schema": 1,
-  "slate_candidate_fixtures": 12,
+  "slate_candidate_fixtures": 14,
   "slate_match_mode": "exact_normalized_pair",
   "slate_priority_fixtures": 0,
   "slate_provider_overlap_fixtures": 6,
   "slate_unmatched_fixtures": [
+    {
+      "away": "FC Thun",
+      "home": "Twente",
+      "league": "International,Conference League",
+      "normalized_pair": "thun|twente"
+    },
     {
       "away": "Hapoel Beer Sheva",
       "home": "AZ Alkmaar",
@@ -241,7 +166,7 @@
     {
       "away": "Celtic",
       "home": "Benfica",
-      "league": "International,Europa League",
+      "league": "World UEFA Europa League",
       "normalized_pair": "benfica|celtic"
     },
     {
@@ -249,6 +174,12 @@
       "home": "Panathinaikos",
       "league": "International,Conference League",
       "normalized_pair": "borac banja luka|panathinaikos"
+    },
+    {
+      "away": "Kauno \u017dalgiris",
+      "home": "Brighton",
+      "league": "World UEFA Europa Conference League",
+      "normalized_pair": "brighton|kauno zalgiris"
     },
     {
       "away": "Pafos FC",
@@ -259,15 +190,16 @@
     {
       "away": "Bayer Leverkusen",
       "home": "Lech Poznan",
-      "league": "International,Europa League",
+      "league": "World UEFA Europa League",
       "normalized_pair": "bayer leverkusen|lech poznan"
     },
     {
       "away": "Lillestrom",
       "home": "Sparta Praha",
-      "league": "International,Europa League",
+      "league": "World UEFA Europa League",
       "normalized_pair": "lillestrom|sparta praha"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "budget"
 }

@@ -44,19 +44,19 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 12,
-      "be_raw": 33,
-      "be_usable": 30,
+      "be_matched": 15,
+      "be_raw": 39,
+      "be_usable": 36,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 7,
+      "join_matched_rows": 8,
       "join_miss_counts": {
-        "fixture_key_miss": 9,
-        "no_pick_for_fixture": 14
+        "fixture_key_miss": 12,
+        "no_pick_for_fixture": 16
       },
       "reason": null,
       "status": "cache_only"
@@ -158,14 +158,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 14,
       "join_miss_counts": {
-        "fixture_key_miss": 94559,
-        "market_unsupported": 47871
+        "fixture_key_miss": 95860,
+        "market_unsupported": 48051,
+        "no_pick_for_fixture": 202
       },
-      "op_matched": 0,
-      "op_raw": 142430,
-      "op_usable": 142430,
+      "op_matched": 2,
+      "op_raw": 144127,
+      "op_usable": 144127,
       "reason": null,
       "status": "cache_only"
     },
@@ -177,19 +178,19 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 78,
+      "coherence_excluded_rows": 150,
       "coherence_reason_counts": {
-        "excluded_not_in_three_way_book": 78
+        "withheld_mixed_events_one_x_two": 150
       },
-      "coherence_withheld_fixtures": 0,
+      "coherence_withheld_fixtures": 24,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 15,
+      "join_matched_rows": 12,
       "join_miss_counts": {
-        "fixture_key_miss": 16621,
-        "no_pick_for_fixture": 260
+        "fixture_key_miss": 16672,
+        "no_pick_for_fixture": 212
       },
-      "pa_matched": 18,
+      "pa_matched": 13,
       "pa_raw": 16896,
       "pa_scored": 16896,
       "reason": null,
@@ -268,7 +269,7 @@
           "unsupported_market:team_total_exact": 10,
           "unsupported_market:team_total_goals": 14
         },
-        "card_fixture_count": 17,
+        "card_fixture_count": 18,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "player_prop": 72
@@ -329,13 +330,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 35,
+      "join_matched_rows": 47,
       "join_miss_counts": {
-        "fixture_key_miss": 165
+        "fixture_key_miss": 193
       },
-      "oa_matched": 4,
-      "oa_raw": 200,
-      "oa_usable": 200,
+      "oa_matched": 5,
+      "oa_raw": 240,
+      "oa_usable": 240,
       "reason": null,
       "status": "cache_only"
     },

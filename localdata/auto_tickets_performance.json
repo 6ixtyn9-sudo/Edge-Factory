@@ -1,29 +1,21 @@
 {
-  "generated_at": "2026-10-15T06:58:29",
+  "generated_at": "2026-10-15T10:02:30",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 157.3723980000001,
-  "multiple": 1.573723980000001,
+  "bank_pct": 188.5321530000001,
+  "multiple": 1.885321530000001,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
   "bet_days": 46,
   "accas": {
-    "wins": 56,
+    "wins": 58,
     "losses": 40
   },
   "open_slips": [
     {
-      "date": "2026-10-13",
-      "staked_pct": 25.1796
-    },
-    {
-      "date": "2026-10-14",
-      "staked_pct": 18.8847
-    },
-    {
       "date": "2026-10-15",
-      "staked_pct": 28.327
+      "staked_pct": 47.133
     }
   ],
   "events": [
@@ -766,27 +758,67 @@
     },
     {
       "date": "2026-10-13",
-      "staked_pct": 25.1796,
-      "returned_pct": 0.0,
+      "staked_pct": 50.3592,
+      "returned_pct": 40.2874,
       "accas": [
         {
           "odds": 2.03,
           "won": false
+        },
+        {
+          "odds": 1.6,
+          "won": true,
+          "stake_pct": 25.1796,
+          "returned_pct": 40.2874,
+          "legs": [
+            {
+              "match": "Arsenal vs Lille",
+              "pick": "HOME",
+              "odds": 1.21,
+              "result": "win"
+            },
+            {
+              "match": "Galatasaray vs Barcelona",
+              "pick": "AWAY",
+              "odds": 1.32,
+              "result": "win"
+            }
+          ]
         }
       ],
-      "bank_pct": 176.2571
+      "bank_pct": 172.4802
     },
     {
       "date": "2026-10-14",
-      "staked_pct": 18.8847,
-      "returned_pct": 0.0,
+      "staked_pct": 37.7694,
+      "returned_pct": 34.9367,
       "accas": [
         {
           "odds": 3.27,
           "won": false
+        },
+        {
+          "odds": 1.85,
+          "won": true,
+          "stake_pct": 18.8847,
+          "returned_pct": 34.9367,
+          "legs": [
+            {
+              "match": "Atletico Mineiro vs Montevideo City Torque",
+              "pick": "HOME",
+              "odds": 1.3205,
+              "result": "win"
+            },
+            {
+              "match": "Slovan Bratislava vs VfB Stuttgart",
+              "pick": "AWAY",
+              "odds": 1.4,
+              "result": "win"
+            }
+          ]
         }
       ],
-      "bank_pct": 157.3724
+      "bank_pct": 188.5322
     }
   ]
 }
