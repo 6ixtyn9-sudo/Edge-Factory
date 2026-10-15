@@ -387,7 +387,10 @@
     "2026-10-11|Kongsvinger vs Ranheim|away_under_35@v1",
     "2026-10-12|Antigua GFC vs Coban Imperial|away_under_35@v1",
     "2026-10-12|Hapoel Rishon LeZion vs Maccabi Kabilio Jaffa|away_under_35@v1",
-    "2026-10-13|Hansa Rostock vs SV Meppen|away_under_35@v1"
+    "2026-10-13|Hansa Rostock vs SV Meppen|away_under_35@v1",
+    "2026-09-26|Vila Nova FC vs Londrina|away_under_35@v1",
+    "2026-09-27|Isidro Metap\u00e1n vs Cacahuatique|away_under_35@v1",
+    "2026-10-04|Tampa Bay Rowdies vs Miami FC|away_under_35@v1"
    ],
    "profit": 0.435,
    "records": [
@@ -807,14 +810,15 @@
    "status_since": null
   },
   "home_under_15@v1": {
-   "hits": 1,
-   "inv_price_sum": 0.7501875468867217,
+   "hits": 2,
+   "inv_price_sum": 1.4499776098678274,
    "multi_n": 0,
-   "n": 1,
+   "n": 2,
    "processed": [
-    "2026-10-14|Mito Hollyhock vs FC Tokyo|home_under_15@v1"
+    "2026-10-14|Mito Hollyhock vs FC Tokyo|home_under_15@v1",
+    "2026-10-14|Slovan Bratislava vs VfB Stuttgart|home_under_15@v1"
    ],
-   "profit": 0.333,
+   "profit": 0.762,
    "records": [
     {
      "away": "FC Tokyo",
@@ -832,6 +836,23 @@
      "rule": "ml-meta avg_p>=60",
      "source": "oddspapi",
      "stated": 0.7671
+    },
+    {
+     "away": "VfB Stuttgart",
+     "away_key": "stuttgart",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": null,
+     "date": "2026-10-14",
+     "hit": true,
+     "home": "Slovan Bratislava",
+     "home_key": "slovanbratislava",
+     "league": "World UEFA Champions League",
+     "match": "Slovan Bratislava vs VfB Stuttgart",
+     "multi_source": false,
+     "price": 1.429,
+     "rule": "ml-meta avg_p>=60",
+     "source": "oddspapi",
+     "stated": 0.721
     }
    ],
    "status": "PAPER",
@@ -948,7 +969,8 @@
     "2026-10-11|Vidar vs Brattvag|home_under_35@v1",
     "2026-10-11|Tokyo Verdy vs Sanfrecce Hiroshima|home_under_35@v1",
     "2026-10-11|Csakvar vs Kecskemeti TE|home_under_35@v1",
-    "2026-10-12|Always Ready vs Independiente Petrolero|home_under_35@v1"
+    "2026-10-12|Always Ready vs Independiente Petrolero|home_under_35@v1",
+    "2026-10-04|Brooklyn vs Rhode Island FC|home_under_35@v1"
    ],
    "profit": 0.0,
    "records": [],
@@ -1552,10 +1574,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 234,
-   "inv_price_sum": 233.72781663872848,
+   "hits": 235,
+   "inv_price_sum": 234.31605193284614,
    "multi_n": 45,
-   "n": 356,
+   "n": 357,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -2133,9 +2155,11 @@
     "2026-10-14|Aston Villa vs Fenerbah\u00e7e|match_over_25@v1",
     "2026-10-14|Bodo/Glimt vs Borussia Dortmund|match_over_25@v1",
     "2026-10-14|Trans Narva vs Kuressaare|match_over_25@v1",
-    "2026-10-14|Junior vs Deportivo Pereira|match_over_25@v1"
+    "2026-10-14|Junior vs Deportivo Pereira|match_over_25@v1",
+    "2026-09-27|Pachuca W vs Santos Laguna W|match_over_25@v1",
+    "2026-09-21|Inter Miami vs San Diego|match_over_25@v1"
    ],
-   "profit": 1.017,
+   "profit": 1.717,
    "records": [
     {
      "away": "Botafogo W",
@@ -6736,6 +6760,23 @@
      "rule": "unanimous[betclan+vitibet] avg_p>=70",
      "source": "scoutingstats",
      "stated": 0.6641
+    },
+    {
+     "away": "Santos Laguna W",
+     "away_key": "santoslagunaw",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": null,
+     "date": "2026-09-27",
+     "hit": true,
+     "home": "Pachuca W",
+     "home_key": "pachucaw",
+     "league": "MxW",
+     "match": "Pachuca W vs Santos Laguna W",
+     "multi_source": false,
+     "price": 1.7,
+     "rule": "ml-meta avg_p>=65",
+     "source": "scoutingstats",
+     "stated": 0.4602
     }
    ],
    "status": "PAPER",
