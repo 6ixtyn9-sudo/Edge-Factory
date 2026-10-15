@@ -1,7 +1,7 @@
 [
   {
     "date": "2026-10-15",
-    "kickoff": "12:45",
+    "kickoff": "09:45",
     "home": "Riga FC",
     "away": "Kairat Almaty",
     "league": "International,Conference League",
@@ -24,7 +24,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "wofootaipo",
         "away_key": "lioncitysailorsfc",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "Gangwon",
@@ -37,7 +37,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "gangwon",
         "away_key": "phnompenhcrown",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "Tampines Rovers",
@@ -50,7 +50,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "tampinesrovers",
         "away_key": "machidazelvia",
-        "kickoff_delta_minutes": 90
+        "kickoff_delta_minutes": 270
       },
       {
         "home": "Svay Rieng",
@@ -63,7 +63,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "svayrieng",
         "away_key": "shanghaishenhua",
-        "kickoff_delta_minutes": 90
+        "kickoff_delta_minutes": 270
       },
       {
         "home": "BG Pathum United",
@@ -76,13 +76,94 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "bgpathumunited",
         "away_key": "adelaideunited",
-        "kickoff_delta_minutes": 90
+        "kickoff_delta_minutes": 270
       }
     ]
   },
   {
     "date": "2026-10-15",
-    "kickoff": "12:45",
+    "kickoff": "15-10, 04:00",
+    "home": "Marquense",
+    "away": "Mixco",
+    "league": "Guatemala Liga Nacional",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "marquense",
+    "away_key": "mixco",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Colorado Rapids",
+        "away": "Minnesota United",
+        "league": "Major League Soccer",
+        "kickoff": "2026-10-15T01:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 4.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "coloradorapids",
+        "away_key": "minnesotaunited",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Real Salt Lake",
+        "away": "SJ Earthquakes",
+        "league": "Major League Soccer",
+        "kickoff": "2026-10-15T01:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.6,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "realsaltlake",
+        "away_key": "sjearthquakes",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Los Angeles FC",
+        "away": "Austin",
+        "league": "Major League Soccer",
+        "kickoff": "2026-10-15T02:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 6.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "losangelesfc",
+        "away_key": "austin",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "San Diego",
+        "away": "Houston Dynamo",
+        "league": "Major League Soccer",
+        "kickoff": "2026-10-15T02:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.4,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "sandiego",
+        "away_key": "houstondynamo",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "LA Galaxy",
+        "away": "Portland Timbers",
+        "league": "Major League Soccer",
+        "kickoff": "2026-10-15T02:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "lagalaxy",
+        "away_key": "portlandtimbers",
+        "kickoff_delta_minutes": 30
+      }
+    ]
+  },
+  {
+    "date": "2026-10-15",
+    "kickoff": "09:45",
     "home": "AZ Alkmaar",
     "away": "Hapoel Beer Sheva",
     "league": "International,Europa League",
@@ -105,7 +186,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "wofootaipo",
         "away_key": "lioncitysailorsfc",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "Gangwon",
@@ -118,7 +199,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "gangwon",
         "away_key": "phnompenhcrown",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "Tampines Rovers",
@@ -131,7 +212,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "tampinesrovers",
         "away_key": "machidazelvia",
-        "kickoff_delta_minutes": 90
+        "kickoff_delta_minutes": 270
       },
       {
         "home": "Svay Rieng",
@@ -144,7 +225,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "svayrieng",
         "away_key": "shanghaishenhua",
-        "kickoff_delta_minutes": 90
+        "kickoff_delta_minutes": 270
       },
       {
         "home": "BG Pathum United",
@@ -157,13 +238,94 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "bgpathumunited",
         "away_key": "adelaideunited",
-        "kickoff_delta_minutes": 90
+        "kickoff_delta_minutes": 270
       }
     ]
   },
   {
     "date": "2026-10-15",
-    "kickoff": "12:45",
+    "kickoff": "2026-10-15T17:30:00+02:00",
+    "home": "Dinamo Minsk",
+    "away": "Slavia Mozyr",
+    "league": "Belarus: Premier League",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "unanimous[betclan+vitibet] avg_p>=70",
+    "match_method": "none",
+    "home_key": "fcdinamominsk",
+    "away_key": "slaviamozyr",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Al Hazm",
+        "away": "Al Fateh",
+        "league": "Pro League",
+        "kickoff": "2026-10-15T15:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.35,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alhazm",
+        "away_key": "alfateh",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Flora",
+        "away": "Levadia",
+        "league": "Meistriliiga",
+        "kickoff": "2026-10-15T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "flora",
+        "away_key": "levadia",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Al Khaleej",
+        "away": "Al-Fayha",
+        "league": "Pro League",
+        "kickoff": "2026-10-15T14:50:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alkhaleej",
+        "away_key": "alfayha",
+        "kickoff_delta_minutes": 40
+      },
+      {
+        "home": "Pogo\u0144 Siedlce",
+        "away": "Puszcza Niepo\u0142omice",
+        "league": "1. Liga",
+        "kickoff": "2026-10-15T16:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.8,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "pogonsiedlce",
+        "away_key": "puszczaniepolomice",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Torreense",
+        "away": "Sunderland",
+        "league": "Europa League",
+        "kickoff": "2026-10-15T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "torreense",
+        "away_key": "sunderland",
+        "kickoff_delta_minutes": 75
+      }
+    ]
+  },
+  {
+    "date": "2026-10-15",
+    "kickoff": "09:45",
     "home": "Panathinaikos",
     "away": "FK Borac Banja Luka",
     "league": "International,Conference League",
@@ -186,7 +348,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "wofootaipo",
         "away_key": "lioncitysailorsfc",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "Gangwon",
@@ -199,7 +361,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "gangwon",
         "away_key": "phnompenhcrown",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "Tampines Rovers",
@@ -212,7 +374,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "tampinesrovers",
         "away_key": "machidazelvia",
-        "kickoff_delta_minutes": 90
+        "kickoff_delta_minutes": 270
       },
       {
         "home": "Svay Rieng",
@@ -225,7 +387,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "svayrieng",
         "away_key": "shanghaishenhua",
-        "kickoff_delta_minutes": 90
+        "kickoff_delta_minutes": 270
       },
       {
         "home": "BG Pathum United",
@@ -238,13 +400,94 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "bgpathumunited",
         "away_key": "adelaideunited",
-        "kickoff_delta_minutes": 90
+        "kickoff_delta_minutes": 270
       }
     ]
   },
   {
     "date": "2026-10-15",
-    "kickoff": "15:00",
+    "kickoff": "19:00",
+    "home": "LD Alajuelense",
+    "away": "CS Herediano",
+    "league": "Costa Rica,Primera Division Apertura",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "none",
+    "home_key": "ldalajuelense",
+    "away_key": "csherediano",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Torreense",
+        "away": "Sunderland",
+        "league": "Europa League",
+        "kickoff": "2026-10-15T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "torreense",
+        "away_key": "sunderland",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "KuPS",
+        "away": "Trabzonspor",
+        "league": "Europa Conference League",
+        "kickoff": "2026-10-15T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "kups",
+        "away_key": "trabzonspor",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Egnatia Rrogozhin\u00eb",
+        "away": "FC Midtjylland",
+        "league": "Europa Conference League",
+        "kickoff": "2026-10-15T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 6.25,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "egnatiarrogozhine",
+        "away_key": "fcmidtjylland",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "CSKA Sofia",
+        "away": "Monaco",
+        "league": "Europa Conference League",
+        "kickoff": "2026-10-15T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "cskasofia",
+        "away_key": "monaco",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Hajduk Split",
+        "away": "Ajax",
+        "league": "Europa Conference League",
+        "kickoff": "2026-10-15T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "hajduksplit",
+        "away_key": "ajax",
+        "kickoff_delta_minutes": 15
+      }
+    ]
+  },
+  {
+    "date": "2026-10-15",
+    "kickoff": "12:00",
     "home": "SC Freiburg",
     "away": "FK Jablonec",
     "league": "International,Conference League",
@@ -257,19 +500,6 @@
     "nearby_bzzoiro_candidates": [],
     "nearby_scoutingstats_candidates": [
       {
-        "home": "Al Faisaly",
-        "away": "Al Kholood",
-        "league": "Pro League",
-        "kickoff": "2026-10-15T13:40:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.25,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "alfaisaly",
-        "away_key": "alkholood",
-        "kickoff_delta_minutes": 40
-      },
-      {
         "home": "Tampines Rovers",
         "away": "Machida Zelvia",
         "league": "AFC Champions League Two",
@@ -280,7 +510,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "tampinesrovers",
         "away_key": "machidazelvia",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "Svay Rieng",
@@ -293,7 +523,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "svayrieng",
         "away_key": "shanghaishenhua",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "BG Pathum United",
@@ -306,7 +536,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "bgpathumunited",
         "away_key": "adelaideunited",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "Kuching FA",
@@ -319,7 +549,20 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "kuchingfa",
         "away_key": "kitchee",
-        "kickoff_delta_minutes": 45
+        "kickoff_delta_minutes": 135
+      },
+      {
+        "home": "Al Faisaly",
+        "away": "Al Kholood",
+        "league": "Pro League",
+        "kickoff": "2026-10-15T13:40:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.25,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alfaisaly",
+        "away_key": "alkholood",
+        "kickoff_delta_minutes": 220
       }
     ]
   }

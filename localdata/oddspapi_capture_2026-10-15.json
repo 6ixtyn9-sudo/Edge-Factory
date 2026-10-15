@@ -1,352 +1,110 @@
 {
-  "added": 124149,
-  "attempted": 20,
+  "added": 1049,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Sporting Kansas City",
-      "fixture_id": "id1000024266299656",
-      "home": "Nashville SC"
-    },
-    {
-      "away": "Austin FC",
-      "fixture_id": "id1000024266299666",
-      "home": "Los Angeles FC"
-    },
-    {
-      "away": "San Marcos FC",
-      "fixture_id": "id1001924274321148",
-      "home": "Managua FC"
-    },
-    {
-      "away": "Albion FC",
-      "fixture_id": "id1003712775235040",
-      "home": "Deportivo Maldonado"
-    },
-    {
-      "away": "Mount Pleasant FC",
-      "fixture_id": "id1004025174879336",
-      "home": "Club Sando"
-    },
-    {
-      "away": "Atletico Mineiro MG",
-      "fixture_id": "id1004709773174688",
-      "home": "SC Internacional RS"
-    },
-    {
-      "away": "Philadelphia Union",
-      "fixture_id": "id1000024266299652",
-      "home": "Chicago Fire"
-    },
-    {
-      "away": "Seattle Sounders",
-      "fixture_id": "id1000024266299654",
-      "home": "FC Dallas"
-    },
-    {
-      "away": "Vancouver Whitecaps FC",
-      "fixture_id": "id1000024266299658",
-      "home": "Saint Louis City SC"
-    },
-    {
-      "away": "SE Palmeiras SP",
-      "fixture_id": "id1000038474781108",
-      "home": "Fluminense FC RJ"
-    },
-    {
-      "away": "CD Walter Ferretti",
-      "fixture_id": "id1001924274321150",
-      "home": "Indigenas de Matagalpa FC"
-    },
-    {
-      "away": "Antigua GFC",
-      "fixture_id": "id1002739672475020",
-      "home": "CD Guastatoya"
-    },
-    {
-      "away": "AD Forfut",
-      "fixture_id": "id1003917375603010",
-      "home": "CD Marte Soyapango"
-    },
-    {
-      "away": "Minnesota United FC",
-      "fixture_id": "id1000024266299660",
-      "home": "Colorado Rapids"
-    },
-    {
-      "away": "San Jose Earthquakes",
-      "fixture_id": "id1000024266299662",
-      "home": "Real Salt Lake"
-    },
-    {
-      "away": "Independiente Medellin",
-      "fixture_id": "id1000133575371332",
-      "home": "Atletico Nacional"
-    },
-    {
-      "away": "CS Herediano",
-      "fixture_id": "id1002709272053642",
-      "home": "Liga Deportiva Alajuelense"
-    },
-    {
-      "away": "Portland Timbers",
-      "fixture_id": "id1000024266299664",
-      "home": "Los Angeles Galaxy"
-    },
-    {
-      "away": "Houston Dynamo",
-      "fixture_id": "id1000024266299668",
-      "home": "San Diego FC"
-    },
-    {
-      "away": "Deportivo Mixco",
-      "fixture_id": "id1002739672475012",
-      "home": "CD Marquense"
+      "away": "Khovd FC",
+      "fixture_id": "id1002862375558354",
+      "home": "Hunters FC"
     }
   ],
   "budget": {
     "day": "2026-10-15",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 63,
-    "remaining_today": 19,
-    "spent_today": 22
+    "month_spent": 64,
+    "remaining_today": 18,
+    "spent_today": 23
   },
-  "captured_at": "2026-10-14T22:12:48+00:00",
+  "captured_at": "2026-10-15T01:08:25+00:00",
   "date": "2026-10-15",
   "errors": [],
   "fixtures": 175,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 690,
+  "market_census_distinct": 119,
   "markets": {
-    "1x2": 12930,
-    "ou_0.5": 3557,
-    "ou_0.75": 386,
-    "ou_1": 988,
-    "ou_1.25": 845,
-    "ou_1.5": 5946,
-    "ou_1.75": 1529,
-    "ou_10.5": 80,
-    "ou_11.5": 54,
-    "ou_12.5": 45,
-    "ou_13.5": 27,
-    "ou_14.5": 9,
-    "ou_2": 1740,
-    "ou_2.25": 2427,
-    "ou_2.5": 7221,
-    "ou_2.75": 3182,
-    "ou_3": 2876,
-    "ou_3.25": 3107,
-    "ou_3.5": 8263,
-    "ou_3.75": 2519,
-    "ou_4": 1907,
-    "ou_4.25": 1549,
-    "ou_4.5": 7113,
-    "ou_4.75": 760,
-    "ou_5": 1071,
-    "ou_5.25": 637,
-    "ou_5.5": 4727,
-    "ou_5.75": 372,
-    "ou_6": 337,
-    "ou_6.25": 188,
-    "ou_6.5": 2253,
-    "ou_6.75": 133,
-    "ou_7": 127,
-    "ou_7.25": 120,
-    "ou_7.5": 961,
-    "ou_7.75": 90,
-    "ou_8": 92,
-    "ou_8.25": 90,
-    "ou_8.5": 422,
-    "ou_9.5": 80,
-    "tt_away_0.5": 5114,
-    "tt_away_0.75": 246,
-    "tt_away_1": 264,
-    "tt_away_1.25": 228,
-    "tt_away_1.5": 5412,
-    "tt_away_1.75": 190,
-    "tt_away_2": 242,
-    "tt_away_2.25": 148,
-    "tt_away_2.5": 5152,
-    "tt_away_2.75": 120,
-    "tt_away_3": 76,
-    "tt_away_3.25": 42,
-    "tt_away_3.5": 2070,
-    "tt_away_3.75": 6,
-    "tt_away_4": 8,
-    "tt_away_4.5": 462,
-    "tt_away_5.5": 91,
-    "tt_away_6.5": 9,
-    "tt_home_0.5": 4236,
-    "tt_home_0.75": 172,
-    "tt_home_1": 240,
-    "tt_home_1.25": 212,
-    "tt_home_1.5": 6369,
-    "tt_home_1.75": 226,
-    "tt_home_2": 234,
-    "tt_home_2.25": 182,
-    "tt_home_2.5": 5498,
-    "tt_home_2.75": 182,
-    "tt_home_3": 188,
-    "tt_home_3.25": 164,
-    "tt_home_3.5": 3370,
-    "tt_home_3.75": 36,
-    "tt_home_4": 48,
-    "tt_home_4.25": 16,
-    "tt_home_4.5": 1657,
-    "tt_home_4.75": 16,
-    "tt_home_5": 18,
-    "tt_home_5.5": 371,
-    "tt_home_6.5": 71,
-    "tt_home_7.5": 3
+    "1x2": 219,
+    "ou_0.5": 11,
+    "ou_0.75": 5,
+    "ou_1": 5,
+    "ou_1.25": 5,
+    "ou_1.5": 30,
+    "ou_1.75": 5,
+    "ou_2": 5,
+    "ou_2.25": 10,
+    "ou_2.5": 44,
+    "ou_2.75": 10,
+    "ou_3": 10,
+    "ou_3.25": 11,
+    "ou_3.5": 41,
+    "ou_3.75": 12,
+    "ou_4": 10,
+    "ou_4.25": 70,
+    "ou_4.5": 115,
+    "ou_4.75": 70,
+    "ou_5": 46,
+    "ou_5.25": 30,
+    "ou_5.5": 91,
+    "ou_5.75": 30,
+    "ou_6": 12,
+    "ou_6.25": 12,
+    "ou_6.5": 35,
+    "ou_6.75": 11,
+    "ou_7": 10,
+    "ou_7.25": 10,
+    "ou_7.5": 6,
+    "ou_7.75": 10,
+    "ou_8": 10,
+    "ou_8.25": 10,
+    "ou_8.5": 6,
+    "tt_away_1.5": 16,
+    "tt_home_3.5": 16
   },
-  "markets_source": "fetch",
-  "matched": 20,
+  "markets_source": "cache",
+  "matched": 1,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "alt_line_skipped": 32,
-    "market_id_unknown": 26087,
-    "market_inactive": 2324,
-    "market_unsupported_clean_sheet": 2033,
-    "market_unsupported_corners": 28535,
-    "market_unsupported_correct_score": 6930,
-    "market_unsupported_double_chance": 3682,
-    "market_unsupported_draw_no_bet": 3149,
-    "market_unsupported_handicap": 35993,
-    "market_unsupported_odd_even": 6606,
-    "market_unsupported_period": 118104,
-    "market_unsupported_win_to_nil": 3743,
-    "outcome_inactive": 9210,
-    "unresolved_btts": 6564
+    "market_id_unknown": 140,
+    "market_unsupported_correct_score": 60,
+    "market_unsupported_double_chance": 66,
+    "market_unsupported_draw_no_bet": 41,
+    "market_unsupported_handicap": 343,
+    "market_unsupported_odd_even": 47,
+    "market_unsupported_period": 507,
+    "market_unsupported_win_to_nil": 10,
+    "outcome_inactive": 455,
+    "unresolved_btts": 78
   },
   "parse_skips_classified": {
     "expected": {
-      "alt_line_skipped": 32,
-      "market_inactive": 2324,
-      "outcome_inactive": 9210
+      "outcome_inactive": 455
     },
     "loss_or_diagnosis": {
-      "market_id_unknown": 26087,
-      "market_unsupported_clean_sheet": 2033,
-      "market_unsupported_corners": 28535,
-      "market_unsupported_correct_score": 6930,
-      "market_unsupported_double_chance": 3682,
-      "market_unsupported_draw_no_bet": 3149,
-      "market_unsupported_handicap": 35993,
-      "market_unsupported_odd_even": 6606,
-      "market_unsupported_period": 118104,
-      "market_unsupported_win_to_nil": 3743,
-      "unresolved_btts": 6564
+      "market_id_unknown": 140,
+      "market_unsupported_correct_score": 60,
+      "market_unsupported_double_chance": 66,
+      "market_unsupported_draw_no_bet": 41,
+      "market_unsupported_handicap": 343,
+      "market_unsupported_odd_even": 47,
+      "market_unsupported_period": 507,
+      "market_unsupported_win_to_nil": 10,
+      "unresolved_btts": 78
     }
   },
-  "pending_fixtures": 20,
+  "pending_fixtures": 1,
   "quoted_fixtures": [
     {
-      "away": "Sporting Kansas City",
-      "fixture_id": "id1000024266299656",
-      "home": "Nashville SC"
-    },
-    {
-      "away": "Austin FC",
-      "fixture_id": "id1000024266299666",
-      "home": "Los Angeles FC"
-    },
-    {
-      "away": "San Marcos FC",
-      "fixture_id": "id1001924274321148",
-      "home": "Managua FC"
-    },
-    {
-      "away": "Albion FC",
-      "fixture_id": "id1003712775235040",
-      "home": "Deportivo Maldonado"
-    },
-    {
-      "away": "Mount Pleasant FC",
-      "fixture_id": "id1004025174879336",
-      "home": "Club Sando"
-    },
-    {
-      "away": "Atletico Mineiro MG",
-      "fixture_id": "id1004709773174688",
-      "home": "SC Internacional RS"
-    },
-    {
-      "away": "Philadelphia Union",
-      "fixture_id": "id1000024266299652",
-      "home": "Chicago Fire"
-    },
-    {
-      "away": "Seattle Sounders",
-      "fixture_id": "id1000024266299654",
-      "home": "FC Dallas"
-    },
-    {
-      "away": "Vancouver Whitecaps FC",
-      "fixture_id": "id1000024266299658",
-      "home": "Saint Louis City SC"
-    },
-    {
-      "away": "SE Palmeiras SP",
-      "fixture_id": "id1000038474781108",
-      "home": "Fluminense FC RJ"
-    },
-    {
-      "away": "CD Walter Ferretti",
-      "fixture_id": "id1001924274321150",
-      "home": "Indigenas de Matagalpa FC"
-    },
-    {
-      "away": "Antigua GFC",
-      "fixture_id": "id1002739672475020",
-      "home": "CD Guastatoya"
-    },
-    {
-      "away": "AD Forfut",
-      "fixture_id": "id1003917375603010",
-      "home": "CD Marte Soyapango"
-    },
-    {
-      "away": "Minnesota United FC",
-      "fixture_id": "id1000024266299660",
-      "home": "Colorado Rapids"
-    },
-    {
-      "away": "San Jose Earthquakes",
-      "fixture_id": "id1000024266299662",
-      "home": "Real Salt Lake"
-    },
-    {
-      "away": "Independiente Medellin",
-      "fixture_id": "id1000133575371332",
-      "home": "Atletico Nacional"
-    },
-    {
-      "away": "CS Herediano",
-      "fixture_id": "id1002709272053642",
-      "home": "Liga Deportiva Alajuelense"
-    },
-    {
-      "away": "Portland Timbers",
-      "fixture_id": "id1000024266299664",
-      "home": "Los Angeles Galaxy"
-    },
-    {
-      "away": "Houston Dynamo",
-      "fixture_id": "id1000024266299668",
-      "home": "San Diego FC"
-    },
-    {
-      "away": "Deportivo Mixco",
-      "fixture_id": "id1002739672475012",
-      "home": "CD Marquense"
+      "away": "Khovd FC",
+      "fixture_id": "id1002862375558354",
+      "home": "Hunters FC"
     }
   ],
-  "rows": 124149,
+  "rows": 1049,
   "schema": 1,
-  "slate_candidate_fixtures": 13,
+  "slate_candidate_fixtures": 15,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 2,
+  "slate_priority_fixtures": 0,
   "slate_provider_overlap_fixtures": 7,
   "slate_unmatched_fixtures": [
     {
@@ -384,6 +142,18 @@
       "home": "Sparta Praha",
       "league": "International,Europa League",
       "normalized_pair": "lillestrom|sparta praha"
+    },
+    {
+      "away": "Mixco",
+      "home": "Marquense",
+      "league": "Guatemala Liga Nacional",
+      "normalized_pair": "marquense|mixco"
+    },
+    {
+      "away": "CS Herediano",
+      "home": "LD Alajuelense",
+      "league": "Costa Rica,Primera Division Apertura",
+      "normalized_pair": "cs herediano|ld alajuelense"
     }
   ],
   "source": "oddspapi_odds"
