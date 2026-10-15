@@ -12,7 +12,7 @@
               "match": "AZ Alkmaar vs Hapoel Beer Sheva",
               "pick": "HOME",
               "prob": 0.773,
-              "odds": 4.0,
+              "odds": 1.33,
               "result": null,
               "fixture_key": [
                 "2026-10-15",
@@ -33,13 +33,24 @@
               ]
             }
           ],
-          "odds": 5.36,
+          "odds": 1.78,
           "stake_pct": 23.5665,
           "results": [
             null,
             null
           ],
-          "won": null
+          "won": null,
+          "correction": {
+            "applied_by": "operator-approved correction (2026-10-15 SAST)",
+            "reason": "AZ Alkmaar vs Hapoel Beer Sheva HOME 4.00 was a pre-fix archive price; verified public 1X2 ~1.33 (1xBet, ratingbet, eurofootballresults)",
+            "original": {
+              "leg_odds": 4.0,
+              "acca_odds": 5.36
+            },
+            "corrected_leg_odds": 1.33,
+            "corrected_acca_odds": 1.78,
+            "stake_pct_unchanged": 23.5665
+          }
         },
         {
           "legs": [
