@@ -46,6 +46,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.notifier import format_kickoff  # noqa: E402
+from edgefactory.step_timing import timed, timed_step  # noqa: E402
 from edgefactory.util import (  # noqa: E402
     kickoff_date,
     ledger_team_key,
@@ -156,6 +157,7 @@ def get_actual_kickoff_date(pick: dict[str, Any], fallback: str) -> str:
     return _pick_date(pick, fallback)
 
 
+@timed()
 def archive_picks_by_kickoff(picks: list[dict[str, Any]], fallback_date: str) -> None:
     """Distribute picks to archives based on their actual kickoff date.
 
@@ -242,6 +244,7 @@ def save_morning_baseline(target_date: str, picks_text: str | None, *, overwrite
     path.write_text(picks_text)
 
 
+@timed()
 def sync_repo_state() -> None:
     """Pull cloud-committed pipeline state (localdata) before local runs.
 
@@ -264,6 +267,7 @@ def sync_repo_state() -> None:
         print(f">>> git state sync skipped (non-fatal): {exc}")
 
 
+@timed()
 def sync_official_archive(target_date: str, label: str = "sync_supabase") -> None:
     archive = archived_picks_file(target_date)
     run_soft(
@@ -313,6 +317,7 @@ def ml_fade_research_cmd(target_date: str, *, official_run: bool) -> str:
     return cmd if official_run else cmd + " --settle-monitor-only"
 
 
+@timed()
 def ml_fade_research_maintenance(target_date: str) -> None:
     """Settle the tracked research ledger, print accrual/monitoring lines,
     and — only after the day's 09:00 SAST freeze is reached — evaluate a due
@@ -432,7 +437,8 @@ def run(cmd: str, label: str | None = None) -> None:
     """Run a pipeline step and stream its output."""
     display = label or cmd
     print(f"\n>>> {display}")
-    result = subprocess.run(cmd, shell=True, cwd=ROOT)
+    with timed_step(f"run: {display}"):
+        result = subprocess.run(cmd, shell=True, cwd=ROOT)
     if result.returncode != 0:
         print(f"\nFAILED: {display}")
         sys.exit(result.returncode)
@@ -442,7 +448,8 @@ def run_soft(cmd: str, label: str | None = None) -> None:
     """Run a non-critical step and continue on failure."""
     display = label or cmd
     print(f"\n>>> {display}")
-    result = subprocess.run(cmd, shell=True, cwd=ROOT)
+    with timed_step(f"run_soft: {display}"):
+        result = subprocess.run(cmd, shell=True, cwd=ROOT)
     if result.returncode != 0:
         print(f"WARNING: non-critical step failed: {display}")
 
@@ -455,14 +462,15 @@ def run_capture(cmd: str, label: str | None = None) -> str:
     """
     display = label or cmd
     print(f"\n>>> {display}")
-    result = subprocess.run(
-        cmd,
-        shell=True,
-        cwd=ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
+    with timed_step(f"run_capture: {display}"):
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
     if result.returncode != 0:
         print(result.stdout, end="")
         print(f"\nFAILED: {display}")
@@ -516,6 +524,7 @@ def restore_target_picks(target_picks_text: str | None) -> None:
     PICKS_TODAY_FILE.write_text(target_picks_text)
 
 
+@timed()
 def generate_daily_report(
     target_date: str,
     output_path: Path | None = None,
@@ -632,6 +641,7 @@ def _pick_date(pick: dict[str, Any], fallback: str) -> str:
     return fallback
 
 
+@timed()
 def write_future_outputs(all_picks: list[dict[str, Any]], days: int, snapshot_as_of: str) -> None:
     """Write the aggregate machine-readable future-picks file plus forecast manifest."""
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -650,6 +660,7 @@ def write_future_outputs(all_picks: list[dict[str, Any]], days: int, snapshot_as
     print(f"Future planner manifest: {manifest_file}")
 
 
+@timed()
 def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, Any]], run_as_of: str) -> None:
     """Inline N-day planner using scripts/picks_today.py as the only pick engine."""
     if days <= 0:
@@ -792,6 +803,7 @@ def match_market_key(pick: dict[str, Any]) -> tuple[str, str, str, str]:
     return ("EVENT_ID", home, away, market)
 
 
+@timed()
 def autonomous_intraday_merge(
     existing_ledger: list[dict[str, Any]],
     fresh_run: list[dict[str, Any]],
@@ -917,6 +929,7 @@ def report_phase5_capture_status(
         print(f"PHASE5_CAPTURE status=skipped_by_mode mode={mode} reason={reason}")
 
 
+@timed()
 def run_pipeline(
     target_date: str,
     mode: str,  # "official", "autonomous_intraday", "forecast", "clv_only"
@@ -1321,6 +1334,7 @@ def run_pipeline(
         print(f"\n=== Pipeline Forecast Refresh Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
 
+@timed()
 def run_smart_auto(future_days: int, backfill_days: int, force_repick: bool = False, picks_only: bool = False) -> None:
     """Determine operational state for the target date and execute autonomous accumulating run."""
     now = datetime.now(local_tz())
@@ -1372,6 +1386,7 @@ def run_smart_auto(future_days: int, backfill_days: int, force_repick: bool = Fa
     )
 
 
+@timed()
 def _notify(target_date: str, label: str) -> None:
     """Run the notifier and surface delivery failures loudly.
 
