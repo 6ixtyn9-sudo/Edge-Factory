@@ -1,37 +1,38 @@
 #!/usr/bin/env bash
 # Codespaces evidence run for the SKIPPED_VETO acca price-evidence gate.
 #
-#   bash scripts/codespace_veto_evidence.sh [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--ci-run RUN_ID|none]
+#   bash scripts/codespace_veto_evidence.sh [--start YYYY-MM-DD] [--end YYYY-MM-DD]
+#                                           [--export-run RUN_ID|none]
 #
 # What it does
 #   1. Refuses to run on a dirty tracked tree (the audit rewrites tracked files).
 #   2. Creates a venv OUTSIDE the repo ($HOME/.edgefactory_audit_venv).
-#   3. Optionally tries to download the CI artifacts of a run and reports any
-#      warehouse data files (*.csv.gz) inside them. state_*.json files are capture
-#      bookkeeping, not data, and are ignored. Nothing is copied into localdata.
-#   4. Rebuilds localdata/warehouse.duckdb and reports which sources were skipped.
-#      The run is labelled FULL only when no source was skipped.
+#   3. Downloads the warehouse-inputs artifact from the manual export workflow
+#      (default run 38739945411) and copies its untracked *.csv.gz files into
+#      localdata/. Git-tracked files are never overwritten. bzzoiro_odds files are
+#      held back: their schema is not predictions, and the bzzoiro warehouse view
+#      would pick them up through its bzzoiro_*.csv.gz glob.
+#   4. Rebuilds localdata/warehouse.duckdb and prints per-source coverage.
 #   5. Runs the settlement audit and prints every bucket: overall results, gate
 #      labels (SCOUTINGSTATS_SOLE + BETEXPLORER_RESCUE) vs the rest, and every
 #      odds band x price-evidence cell with implied hit rate and z-score. The full
 #      table goes to band_evidence_all_buckets.csv in the output folder.
 #   6. Restores every tracked file the audit changed, so git status stays clean.
 #
-# Outputs go to $HOME/ef_audit_out/<timestamp>/ (run.log, audit json and md,
-# build log). Nothing is committed, pushed, or sent to CI.
+# Outputs go to $HOME/ef_audit_out/<timestamp>/. Nothing is committed or pushed.
 
 set -euo pipefail
 
 START="2026-06-01"
 END="2026-10-14"
-CI_RUN="38717081638"
+EXPORT_RUN="38739945411"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --start) START="$2"; shift 2 ;;
     --end) END="$2"; shift 2 ;;
-    --ci-run) CI_RUN="$2"; shift 2 ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    --export-run) EXPORT_RUN="$2"; shift 2 ;;
+    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -55,7 +56,7 @@ mkdir -p "$OUT"
 exec > >(tee -a "$OUT/run.log") 2>&1
 
 echo "branch=$(git branch --show-current) head=$(git rev-parse --short HEAD)"
-echo "window=$START..$END ci_run=$CI_RUN output=$OUT"
+echo "window=$START..$END export_run=$EXPORT_RUN output=$OUT"
 
 # ---- 1. environment (outside the repo) -------------------------------------
 VENV="$HOME/.edgefactory_audit_venv"
@@ -69,44 +70,90 @@ if [[ -f requirements.txt ]]; then
 fi
 PY="$VENV/bin/python"
 
-# ---- 2. CI artifacts (report only) -----------------------------------------
+# ---- 2. warehouse inputs from the export artifact ----------------------------
 echo
-echo "== 2. CI artifacts for run $CI_RUN"
-if [[ "$CI_RUN" == "none" ]]; then
-  echo "skipped (--ci-run none)"
+echo "== 2. warehouse inputs from export run $EXPORT_RUN"
+if [[ "$EXPORT_RUN" == "none" ]]; then
+  echo "skipped (--export-run none); using whatever is already in localdata/"
 else
-  ART="$OUT/ci_artifacts"
-  mkdir -p "$ART"
-  for name in "EdgeFactory-Reports" "Scored-Candidate-Audit-$CI_RUN"; do
-    if gh run download "$CI_RUN" -R 6ixtyn9-sudo/Edge-Factory -n "$name" -D "$ART/$name" >/dev/null 2>&1; then
-      echo "downloaded: $name"
-    else
-      echo "NOT downloaded: $name (gh auth, permissions, or network)"
-    fi
-  done
-  DATA_FILES="$(find "$ART" -type f -name '*.csv.gz' 2>/dev/null | wc -l | tr -d ' ')"
-  STATE_FILES="$(find "$ART" -type f -name 'state_*.json' 2>/dev/null | wc -l | tr -d ' ')"
-  echo "warehouse data files (*.csv.gz) in artifacts: $DATA_FILES"
-  echo "capture bookkeeping files (state_*.json, not data, ignored): $STATE_FILES"
-  if [[ "$DATA_FILES" -gt 0 ]]; then
-    find "$ART" -type f -name '*.csv.gz' | sed 's/^/  /'
+  DL="$OUT/warehouse_inputs"
+  mkdir -p "$DL"
+  if gh run download "$EXPORT_RUN" -R 6ixtyn9-sudo/Edge-Factory \
+       -n "warehouse-inputs-$EXPORT_RUN" -D "$DL" >/dev/null 2>&1; then
+    echo "downloaded: warehouse-inputs-$EXPORT_RUN"
+    [[ -f "$DL/MANIFEST.txt" ]] && head -n 1 "$DL/MANIFEST.txt"
+    COPIED=0
+    while IFS= read -r f; do
+      base="$(basename "$f")"
+      if [[ "$base" == bzzoiro_odds_* ]]; then
+        echo "held back: $base (odds schema, not predictions)"
+        continue
+      fi
+      if git ls-files --error-unmatch "localdata/$base" >/dev/null 2>&1; then
+        echo "kept git-tracked file, not overwritten: localdata/$base"
+        continue
+      fi
+      cp "$f" "localdata/$base"
+      COPIED=$((COPIED + 1))
+    done < <(find "$DL/localdata" -type f -name '*.csv.gz' 2>/dev/null | sort)
+    echo "copied $COPIED untracked data files into localdata/"
+  else
+    echo "NOT downloaded: warehouse-inputs-$EXPORT_RUN (gh auth, artifact expired after 7 days, or network)"
   fi
-  echo "note: the CI localdata cache is not reachable from here; only artifacts are checked."
 fi
 
-# ---- 3. warehouse ------------------------------------------------------------
+# ---- 3. warehouse build and per-source coverage ------------------------------
 echo
 echo "== 3. warehouse build"
 "$PY" scripts/build_warehouse.py > "$OUT/build_warehouse.log" 2>&1
-SKIPPED="$(grep -oE '^ +[a-z0-9_]+: skipped' "$OUT/build_warehouse.log" | sed -E 's/^ +//; s/: skipped//' | sort -u | tr '\n' ' ' || true)"
-if [[ -z "${SKIPPED// /}" ]]; then
-  WH_STATUS="FULL"
-else
-  WH_STATUS="PARTIAL"
-fi
-echo "warehouse status: $WH_STATUS"
-echo "skipped sources: ${SKIPPED:-none}"
 grep -E "warehouse built" "$OUT/build_warehouse.log" || true
+"$PY" - "$ROOT" "$OUT" <<'PY'
+import glob, json, re, sys
+
+root, out = sys.argv[1], sys.argv[2]
+EXPECTED = [
+    "afootballreport", "betclan", "bettingclosed", "bzzoiro", "freesupertips",
+    "predictz", "prosoccer", "scoutingstats", "soccervista", "vitibet", "windrawwin",
+    "forebet", "zulubet", "statarea", "betexplorer",
+]
+built, skipped = set(), set()
+for line in open(f"{out}/build_warehouse.log", errors="replace"):
+    s = line.strip()
+    m = re.match(r"([a-z0-9_]+): [0-9,]+ rows", s)
+    if m:
+        built.add(m.group(1))
+    m = re.match(r"([a-z0-9_]+): skipped", s)
+    if m:
+        skipped.add(m.group(1))
+
+
+def hit(names, src):
+    return any(n == src or n.startswith(src + "_") for n in names)
+
+
+rows, missing = [], []
+for src in EXPECTED:
+    files = glob.glob(f"{root}/localdata/{src}.csv.gz") + glob.glob(f"{root}/localdata/{src}_[0-9]*.csv.gz")
+    if hit(built, src):
+        status = "built"
+    elif hit(skipped, src):
+        status = "skipped by builder"
+    else:
+        status = "no build line"
+    rows.append((src, len(files), status))
+    if status != "built":
+        reason = "no data files on disk" if not files else status
+        missing.append(f"{src} ({reason})")
+
+n_built = sum(1 for _, _, s in rows if s == "built")
+print(f"{'source':18s} {'files':>5s}  status")
+for src, n, s in rows:
+    print(f"{src:18s} {n:5d}  {s}")
+print(f"coverage: {n_built}/{len(EXPECTED)} expected sources built")
+print("missing: " + ("; ".join(missing) if missing else "none"))
+json.dump({"built": n_built, "expected": len(EXPECTED), "missing": missing},
+          open(f"{out}/coverage.json", "w"), indent=2)
+PY
 
 # ---- 4. audit ----------------------------------------------------------------
 echo
@@ -118,12 +165,13 @@ cp "localdata/picks_audit_${END}.md" "$OUT/picks_audit_${END}.md" 2>/dev/null ||
 
 # ---- 5. report ---------------------------------------------------------------
 echo
-echo "== 5. all-bucket price-evidence report ($WH_STATUS warehouse)"
-"$PY" - "$OUT/picks_audit_rolling.json" "$WH_STATUS" "$SKIPPED" "$OUT" <<'PY'
+echo "== 5. all-bucket price-evidence report"
+"$PY" - "$OUT/picks_audit_rolling.json" "$OUT/coverage.json" "$OUT" <<'PY'
 import csv, json, sys
 
-path, wh_status, skipped, out_dir = sys.argv[1:5]
+path, cov_path, out_dir = sys.argv[1:4]
 d = json.load(open(path))
+cov = json.load(open(cov_path))
 vd = d["veto_deep_dive"]
 cells = vd.get("all_buckets_band_evidence", {})
 GATE_LABELS = {"SCOUTINGSTATS_SOLE", "BETEXPLORER_RESCUE"}
@@ -167,7 +215,8 @@ def pool(items):
             "roi": roi_sum / priced if priced else None}
 
 
-print(f"warehouse: {wh_status}" + (f" (skipped: {skipped.strip() or 'none'})"))
+print(f"warehouse coverage: {cov['built']}/{cov['expected']} expected sources built")
+print(f"missing: {'; '.join(cov['missing']) or 'none'}")
 print(f"window: {d.get('start')}..{d.get('end')}  settled={len(d.get('settled_ledger', []))} "
       f"pending={d.get('pending_result_picks')} rescheduled={d.get('rescheduled_result_picks')} "
       f"voided={d.get('voided_event_picks')} ambiguous={d.get('ambiguous_result_picks')}")
@@ -225,4 +274,4 @@ fi
 echo "git status after restore:"
 git status --short --untracked-files=no
 echo
-echo "done. Paste the section starting at '== 5.' or send $OUT/run.log"
+echo "done. Paste the sections starting at '== 2.' or send $OUT/run.log"
