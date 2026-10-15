@@ -4710,6 +4710,42 @@ def _market_selection(market: str | None) -> str:
     return name
 
 
+def apply_enhancement_timing(legs: list[dict], now, target: str, scores) -> dict:
+    """Withdraw firing enhancement legs that can no longer be bet.
+
+    The enhancement lane had no kickoff guard, so a card drafted at 07:28 SAST
+    still listed legs that had kicked off at 02:30, 04:30 and 05:00. The main
+    lane runs ``live_kickoff_guard`` on its pool; this runs the same guard on
+    the enhancement pool, and also withdraws a leg whose score is already known
+    (the match is finished). A withdrawn leg keeps its row and carries a
+    ``withdrawn_reason``; its verdict stops it from firing.
+
+    Returns ``{reason: [match, ...]}`` for the run log.
+    """
+    firing = [l for l in legs if l.get("verdict") == "fire"]
+    kept, drops = live_kickoff_guard(firing, now)
+    kept_ids = {id(l) for l in kept}
+    report: dict[str, list[str]] = {}
+    for reason, names in drops.items():
+        report.setdefault(reason, []).extend(names)
+    for leg in firing:
+        if id(leg) in kept_ids:
+            continue
+        reason = next((r for r, names in drops.items() if leg.get("match") in names),
+                      "kickoff guard")
+        leg["verdict"] = "kickoff_guard"
+        leg["withdrawn_reason"] = reason
+    for leg in legs:
+        if leg.get("verdict") != "fire":
+            continue
+        probe = dict(leg, pick=_market_selection(leg.get("market")))
+        if enhancement_leg_result(probe, target, scores or {}) in ("win", "loss"):
+            leg["verdict"] = "result_known"
+            leg["withdrawn_reason"] = "result already known"
+            report.setdefault("result already known", []).append(leg.get("match"))
+    return report
+
+
 def enhancement_pool(legs: list[dict]) -> list[dict]:
     """The firing legs, in the shared recipe's own leg shape.
 
@@ -5005,6 +5041,9 @@ def cmd_enhancement(args, st) -> int:
     from edgefactory.enh_team_floors import team_under_floors
     team_floors = team_under_floors(LOCALDATA.parent, target)
     legs = enhancement_legs(slate, floors=floors, team_floors=team_floors)
+    withdrawn = apply_enhancement_timing(legs, now, target, load_settled_scores())
+    for reason, names in withdrawn.items():
+        print(f"enhancement leg withdrawn ({reason}): {', '.join(str(n) for n in names)}")
     pool = enhancement_pool(legs)
     bank_eff = effective_bank(st, exclude_date=target)
     should_freeze = (str(target) == now.strftime("%Y-%m-%d")
