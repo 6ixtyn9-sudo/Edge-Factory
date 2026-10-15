@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_at": "2026-10-15T03:02:36",
+ "generated_at": "2026-10-15T06:03:30",
  "window_days": 90,
  "rows": [
   {
@@ -4253,21 +4253,21 @@
   },
   {
    "date": "2026-07-17",
+   "home": "Sydney FC U20",
+   "away": "Manly Utd U20",
+   "hs": 2,
+   "gs": 2,
+   "outcome": "draw",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-07-17",
    "home": "Sydney FC U21",
    "away": "Manly United",
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
    "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-07-17",
-   "home": "Sydney FC U23",
-   "away": "Manly Utd",
-   "hs": 0,
-   "gs": 0,
-   "outcome": "draw",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-07-17",
@@ -9023,11 +9023,11 @@
   },
   {
    "date": "2026-07-18",
-   "home": "Gold Coast Knights U23",
-   "away": "Wynnum Wolves U23",
-   "hs": 2,
-   "gs": 1,
-   "outcome": "home",
+   "home": "Gold Coast Knights",
+   "away": "Wynnum Wolves",
+   "hs": 1,
+   "gs": 2,
+   "outcome": "away",
    "src": "betexplorer_settled"
   },
   {
@@ -12201,20 +12201,20 @@
   {
    "date": "2026-07-18",
    "home": "Moreton City Excelsior",
+   "away": "Peninsula",
+   "hs": 2,
+   "gs": 2,
+   "outcome": "draw",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-07-18",
+   "home": "Moreton City Excelsior",
    "away": "Peninsula Power",
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
    "src": "forebet_settled"
-  },
-  {
-   "date": "2026-07-18",
-   "home": "Moreton City Excelsior U23",
-   "away": "Peninsula U23",
-   "hs": 3,
-   "gs": 0,
-   "outcome": "home",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-07-18",
@@ -16160,10 +16160,10 @@
   },
   {
    "date": "2026-07-18",
-   "home": "UNSW",
-   "away": "NWS Spirit",
+   "home": "UNSW U20",
+   "away": "NWS Spirit U20",
    "hs": 3,
-   "gs": 1,
+   "gs": 2,
    "outcome": "home",
    "src": "betexplorer_settled"
   },
@@ -35636,9 +35636,9 @@
   },
   {
    "date": "2026-07-24",
-   "home": "Manly Utd U20",
-   "away": "Sydney Olympic U20",
-   "hs": 6,
+   "home": "Manly Utd",
+   "away": "Sydney Olympic",
+   "hs": 4,
    "gs": 0,
    "outcome": "home",
    "src": "betexplorer_settled"
@@ -55643,8 +55643,8 @@
   },
   {
    "date": "2026-07-26",
-   "home": "Wollongong Wolves U20",
-   "away": "Blacktown City U20",
+   "home": "Wollongong Wolves",
+   "away": "Blacktown City",
    "hs": 0,
    "gs": 2,
    "outcome": "away",
@@ -80123,15 +80123,6 @@
   },
   {
    "date": "2026-08-01",
-   "home": "Gold Coast U23",
-   "away": "Gold Coast Knights U23",
-   "hs": 1,
-   "gs": 0,
-   "outcome": "home",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-01",
    "home": "Gold Coast United",
    "away": "Gold Coast Knights",
    "hs": 1,
@@ -80146,6 +80137,15 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-01",
+   "home": "Gold Coast W",
+   "away": "Gold Coast Knights W",
+   "hs": 0,
+   "gs": 1,
+   "outcome": "away",
    "src": "betexplorer_settled"
   },
   {
@@ -132270,20 +132270,20 @@
   {
    "date": "2026-08-08",
    "home": "Magic United",
-   "away": "Rochedale",
-   "hs": 2,
-   "gs": 1,
-   "outcome": "home",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-08",
-   "home": "Magic United",
    "away": "Rochedale Rovers",
    "hs": 2,
    "gs": 1,
    "outcome": "home",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-08-08",
+   "home": "Magic United U23",
+   "away": "Rochedale U23",
+   "hs": 1,
+   "gs": 4,
+   "outcome": "away",
+   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-08",
@@ -188960,11 +188960,11 @@
   },
   {
    "date": "2026-08-15",
-   "home": "Manly Utd U20",
-   "away": "NWS Spirit U20",
-   "hs": 3,
-   "gs": 1,
-   "outcome": "home",
+   "home": "Manly Utd",
+   "away": "NWS Spirit",
+   "hs": 0,
+   "gs": 4,
+   "outcome": "away",
    "src": "betexplorer_settled"
   },
   {
@@ -326742,6 +326742,15 @@
   {
    "date": "2026-08-30",
    "home": "Blacktown City",
+   "away": "WS Wanderers U21",
+   "hs": 1,
+   "gs": 3,
+   "outcome": "away",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-30",
+   "home": "Blacktown City",
    "away": "WS Wanderers Youth",
    "hs": 1,
    "gs": 3,
@@ -326756,15 +326765,6 @@
    "gs": 3,
    "outcome": "away",
    "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-08-30",
-   "home": "Blacktown City U20",
-   "away": "WS Wanderers U20",
-   "hs": 3,
-   "gs": 1,
-   "outcome": "home",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-30",
@@ -339314,10 +339314,10 @@
   },
   {
    "date": "2026-08-30",
-   "home": "Sydney Utd U20",
-   "away": "St George Saints U20",
-   "hs": 8,
-   "gs": 4,
+   "home": "Sydney Utd",
+   "away": "St George Saints",
+   "hs": 6,
+   "gs": 0,
    "outcome": "home",
    "src": "betexplorer_settled"
   },
@@ -386933,11 +386933,11 @@
   },
   {
    "date": "2026-09-06",
-   "home": "FK Jablonec B",
-   "away": "Slovan Liberec B",
-   "hs": 2,
-   "gs": 0,
-   "outcome": "home",
+   "home": "FK Jablonec",
+   "away": "Slovan Liberec",
+   "hs": 1,
+   "gs": 2,
+   "outcome": "away",
    "src": "forebet_settled"
   },
   {
@@ -404996,10 +404996,10 @@
   },
   {
    "date": "2026-09-09",
-   "home": "Napoli",
-   "away": "Arsenal",
-   "hs": 0,
-   "gs": 1,
+   "home": "Napoli U19",
+   "away": "Arsenal U19",
+   "hs": 1,
+   "gs": 2,
    "outcome": "away",
    "src": "forebet_settled"
   },
@@ -406049,11 +406049,11 @@
   },
   {
    "date": "2026-09-09",
-   "home": "Sporting CP",
-   "away": "Galatasaray",
-   "hs": 3,
-   "gs": 1,
-   "outcome": "home",
+   "home": "Sporting CP U19",
+   "away": "Galatasaray U19",
+   "hs": 2,
+   "gs": 2,
+   "outcome": "draw",
    "src": "forebet_settled"
   },
   {
@@ -407750,11 +407750,11 @@
   },
   {
    "date": "2026-09-10",
-   "home": "Fenerbah\u00e7e",
-   "away": "Roma",
-   "hs": 1,
-   "gs": 1,
-   "outcome": "draw",
+   "home": "Fenerbah\u00e7e U19",
+   "away": "Roma U19",
+   "hs": 2,
+   "gs": 4,
+   "outcome": "away",
    "src": "forebet_settled"
   },
   {
@@ -548726,20 +548726,20 @@
   },
   {
    "date": "2026-10-05",
-   "home": "Montenegro",
-   "away": "Armenia",
-   "hs": 0,
-   "gs": 0,
-   "outcome": "draw",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-10-05",
    "home": "Montenegro U19",
    "away": "Israel U19",
    "hs": 0,
    "gs": 1,
    "outcome": "away",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-05",
+   "home": "Montenegro U21",
+   "away": "Armenia U21",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
    "src": "bettingclosed_settled"
   },
   {
@@ -576797,11 +576797,11 @@
   },
   {
    "date": "2026-10-13",
-   "home": "Lens",
-   "away": "Sporting CP",
-   "hs": 0,
+   "home": "Lens U19",
+   "away": "Sporting CP U19",
+   "hs": 3,
    "gs": 2,
-   "outcome": "away",
+   "outcome": "home",
    "src": "zulubet_settled"
   },
   {
@@ -577940,12 +577940,12 @@
   },
   {
    "date": "2026-10-14",
-   "home": "Atl\u00e9tico Mineiro",
+   "home": "Atletico Mineiro",
    "away": "Montevideo City Torque",
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "scoutingstats_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-10-14",
@@ -578120,11 +578120,38 @@
   },
   {
    "date": "2026-10-14",
+   "home": "Cincinnati",
+   "away": "New England",
+   "hs": 2,
+   "gs": 3,
+   "outcome": "away",
+   "src": "scoutingstats_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "Cincinnati",
+   "away": "New England Revo",
+   "hs": 2,
+   "gs": 3,
+   "outcome": "away",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-14",
    "home": "Club Comunicacio",
    "away": "Aurora",
    "hs": 1,
    "gs": 2,
    "outcome": "away",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "Columbus Crew",
+   "away": "Charlotte",
+   "hs": 3,
+   "gs": 1,
+   "outcome": "home",
    "src": "bettingclosed_settled"
   },
   {
@@ -578135,6 +578162,24 @@
    "gs": 2,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "D.C. United",
+   "away": "New York Red Bul",
+   "hs": 2,
+   "gs": 1,
+   "outcome": "home",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "DC United",
+   "away": "New York RB",
+   "hs": 2,
+   "gs": 1,
+   "outcome": "home",
+   "src": "scoutingstats_settled"
   },
   {
    "date": "2026-10-14",
@@ -578264,12 +578309,39 @@
   },
   {
    "date": "2026-10-14",
+   "home": "Greenville",
+   "away": "Spokane Velocity",
+   "hs": 4,
+   "gs": 3,
+   "outcome": "home",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-14",
    "home": "Gzira United",
    "away": "Mosta",
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
    "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "Hartford Athleti",
+   "away": "Charleston Batte",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "Hartford Athletic",
+   "away": "Charleston Battery",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
+   "src": "scoutingstats_settled"
   },
   {
    "date": "2026-10-14",
@@ -578313,6 +578385,24 @@
    "away": "Maghreb Fez",
    "hs": 2,
    "gs": 1,
+   "outcome": "home",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "Inter Miami",
+   "away": "New York City",
+   "hs": 2,
+   "gs": 0,
+   "outcome": "home",
+   "src": "scoutingstats_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "Inter Miami CF",
+   "away": "New York City (U",
+   "hs": 2,
+   "gs": 0,
    "outcome": "home",
    "src": "bettingclosed_settled"
   },
@@ -578624,6 +578714,15 @@
   },
   {
    "date": "2026-10-14",
+   "home": "Montreal",
+   "away": "Atlanta United",
+   "hs": 0,
+   "gs": 3,
+   "outcome": "away",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-14",
    "home": "Moss",
    "away": "Egersund",
    "hs": 0,
@@ -578849,12 +578948,30 @@
   },
   {
    "date": "2026-10-14",
+   "home": "Rhode Island",
+   "away": "Loudoun",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "Rhode Island",
+   "away": "Loudoun United",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "scoutingstats_settled"
+  },
+  {
+   "date": "2026-10-14",
    "home": "Roma",
    "away": "Real Madrid",
    "hs": 3,
    "gs": 4,
    "outcome": "away",
-   "src": "scoutingstats_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-10-14",
@@ -578954,6 +579071,15 @@
    "gs": 1,
    "outcome": "home",
    "src": "scoutingstats_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "Shakhter Donetsk",
+   "away": "AEK Athens",
+   "hs": 3,
+   "gs": 1,
+   "outcome": "home",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-10-14",
@@ -579134,6 +579260,15 @@
    "gs": 1,
    "outcome": "away",
    "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-10-14",
+   "home": "Toronto FC",
+   "away": "Orlando City",
+   "hs": 3,
+   "gs": 3,
+   "outcome": "draw",
+   "src": "bettingclosed_settled"
   },
   {
    "date": "2026-10-14",
