@@ -158,32 +158,37 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [],
-      "auth_mechanism": null,
+      "auth_attempts": [
+        {
+          "auth": "header",
+          "status": 200
+        }
+      ],
+      "auth_mechanism": "header",
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 132,
+      "coherence_excluded_rows": 24,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 132
+        "withheld_mixed_events_one_x_two": 24
       },
-      "coherence_withheld_fixtures": 22,
+      "coherence_withheld_fixtures": 4,
       "event_type": "prematch",
-      "freshness_h": null,
-      "join_matched_rows": 1,
+      "freshness_h": 0.0,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 17058,
-        "no_pick_for_fixture": 20
+        "fixture_key_miss": 19766,
+        "no_pick_for_fixture": 38
       },
-      "pa_matched": 1,
-      "pa_raw": 17079,
-      "pa_scored": 17079,
+      "pa_matched": 3,
+      "pa_raw": 1090,
+      "pa_scored": 19806,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "cache_only",
+      "status": "ok",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -263,7 +268,7 @@
           "unknown_market:both_halves_goal_scored": 2,
           "unsupported_market:correct_score": 30
         },
-        "card_fixture_count": 2,
+        "card_fixture_count": 3,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 161

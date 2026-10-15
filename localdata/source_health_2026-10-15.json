@@ -44,19 +44,19 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 15,
-      "be_raw": 39,
-      "be_usable": 36,
+      "be_matched": 23,
+      "be_raw": 45,
+      "be_usable": 45,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 8,
+      "join_matched_rows": 13,
       "join_miss_counts": {
-        "fixture_key_miss": 12,
-        "no_pick_for_fixture": 16
+        "fixture_key_miss": 14,
+        "no_pick_for_fixture": 18
       },
       "reason": null,
       "status": "cache_only"
@@ -158,45 +158,50 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 14,
+      "join_matched_rows": 28,
       "join_miss_counts": {
-        "fixture_key_miss": 95860,
+        "fixture_key_miss": 95644,
         "market_unsupported": 48051,
-        "no_pick_for_fixture": 202
+        "no_pick_for_fixture": 404
       },
-      "op_matched": 2,
+      "op_matched": 4,
       "op_raw": 144127,
       "op_usable": 144127,
       "reason": null,
       "status": "cache_only"
     },
     "pinnapi_odds": {
-      "auth_attempts": [],
-      "auth_mechanism": null,
+      "auth_attempts": [
+        {
+          "auth": "header",
+          "status": 200
+        }
+      ],
+      "auth_mechanism": "header",
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 150,
+      "coherence_excluded_rows": 24,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 150
+        "withheld_mixed_events_one_x_two": 24
       },
-      "coherence_withheld_fixtures": 24,
+      "coherence_withheld_fixtures": 4,
       "event_type": "prematch",
-      "freshness_h": null,
-      "join_matched_rows": 12,
+      "freshness_h": 0.0,
+      "join_matched_rows": 17,
       "join_miss_counts": {
-        "fixture_key_miss": 16672,
-        "no_pick_for_fixture": 212
+        "fixture_key_miss": 19541,
+        "no_pick_for_fixture": 248
       },
-      "pa_matched": 13,
-      "pa_raw": 16896,
-      "pa_scored": 16896,
+      "pa_matched": 24,
+      "pa_raw": 1090,
+      "pa_scored": 19806,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "cache_only",
+      "status": "ok",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -269,7 +274,7 @@
           "unsupported_market:team_total_exact": 10,
           "unsupported_market:team_total_goals": 14
         },
-        "card_fixture_count": 18,
+        "card_fixture_count": 22,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "player_prop": 72
@@ -330,13 +335,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 47,
+      "join_matched_rows": 181,
       "join_miss_counts": {
-        "fixture_key_miss": 193
+        "fixture_key_miss": 299,
+        "no_pick_for_fixture": 242
       },
-      "oa_matched": 5,
-      "oa_raw": 240,
-      "oa_usable": 240,
+      "oa_matched": 16,
+      "oa_raw": 722,
+      "oa_usable": 722,
       "reason": null,
       "status": "cache_only"
     },
