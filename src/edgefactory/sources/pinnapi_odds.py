@@ -1052,6 +1052,37 @@ def _status_for_http(status: int | None) -> str:
     return "unavailable"
 
 
+# A stored capture is reusable for a card day only if every row was taken
+# within this many hours before 00:00 UTC of that day. Same bound as the
+# pricing gate (scripts/picks_today.py MAX_PRICE_AGE_HOURS); a test keeps them
+# equal. 2026-10-15: the cache-first path reused a 13 Oct capture for the 15 Oct
+# card because it never looked at the stamps.
+LEDGER_MAX_AGE_HOURS = 24.0
+
+
+def ledger_is_current(rows: list[dict[str, Any]], day: str) -> bool:
+    """True only when the stored rows are all recent enough for ``day``."""
+    if not rows:
+        return False
+    try:
+        anchor = datetime.fromisoformat(str(day)[:10]).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return False
+    for row in rows:
+        text = str(row.get("captured_at") or "").strip().replace("Z", "+00:00")
+        try:
+            stamp = datetime.fromisoformat(text) if text else None
+        except ValueError:
+            stamp = None
+        if stamp is None:
+            return False
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=timezone.utc)
+        if (anchor - stamp).total_seconds() / 3600.0 > LEDGER_MAX_AGE_HOURS:
+            return False
+    return True
+
+
 def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Capture one dated Pinnacle pre-match snapshot. Cache-first, inert
     without ``PINNAPI_KEY`` (status ``not_run``), fail-closed on shape."""
@@ -1075,8 +1106,14 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["blocker"] = f"{KEY_ENV} not set; shadow capture skipped (inert)"
         return [], _set_diag(stats)
     committed = _load_ledger_rows(day, localdata=localdata)
+    if committed and not ledger_is_current(committed, day):
+        # 2026-10-15: the stored capture is older than the card day allows.
+        # Refetch rather than republish yesterday's prices as today's. The
+        # fresh rows replace this file when the shadow is persisted.
+        stats["stale_ledger_rows"] = len(committed)
+        committed = []
     if committed:
-        # Gap-aware: we hold committed rows for this date - never refetch.
+        # Gap-aware: we hold current committed rows for this date - never refetch.
         stats["status"] = "cache_only"
         stats["cache_hits"] = 1
         stats["pa_raw"] = len(committed)
