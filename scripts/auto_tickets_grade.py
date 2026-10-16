@@ -104,25 +104,50 @@ def _close(h) -> float:
     return h.get("close_pct", h["bank_pct"])
 
 
-def _bank_breaks(history):
-    """Index -> (previous close, this day's open) wherever the stored bank does not carry over."""
-    breaks = {}
-    for i in range(1, len(history)):
-        prev_end = _close(history[i - 1])
-        h = history[i]
-        staked = h.get("staked_pct", 0.0)
-        returned = h.get("returned_pct", 0.0)
-        opens = _close(h) - returned + staked
-        if abs(opens - prev_end) > 0.05:
-            breaks[i] = (prev_end, opens)
-    return breaks
+def _day_attributed_closes(history, base) -> dict:
+    """Each bet-day's close rebuilt from the settled P&L of every bet-day up to it,
+    in date order from ``base``. It does not depend on when a snapshot was written,
+    and it does not depend on list order."""
+    bank = float(base)
+    out = {}
+    for h in sorted(history, key=lambda r: r["date"]):
+        bank += h.get("returned_pct", 0.0) - h.get("staked_pct", 0.0)
+        out[h["date"]] = round(bank, 4)
+    return out
+
+
+def _snapshot_episodes(history, base, tol=0.05):
+    """Runs of consecutive bet-days (date order) whose stored close sits off the
+    rebuilt close by the same offset. A run is one settlement that landed after
+    later days were written. ``resumed`` is the first day back in line, or None."""
+    rebuilt = _day_attributed_closes(history, base)
+    episodes = []
+    cur = None
+    for h in sorted(history, key=lambda r: r["date"]):
+        off = round(_close(h) - rebuilt[h["date"]], 4)
+        if abs(off) <= tol:
+            if cur is not None:
+                cur["resumed"] = h["date"]
+                episodes.append(cur)
+                cur = None
+            continue
+        if cur is not None and abs(off - cur["offset"]) <= 0.01:
+            cur["last"] = h["date"]
+        else:
+            if cur is not None:
+                episodes.append(cur)
+            cur = {"first": h["date"], "last": h["date"], "offset": off, "resumed": None}
+    if cur is not None:
+        episodes.append(cur)
+    return episodes
 
 
 def render_lines(st, label, last, held, accas, wins, generated):
     """The performance report: summary block, then bet-days newest first."""
     multiple = st["bank"] / st["base_pct"]
     history = st["history"]
-    breaks = _bank_breaks(history)
+    rebuilt = _day_attributed_closes(history, st["base_pct"])
+    episodes = _snapshot_episodes(history, st["base_pct"])
     rows = []
     add = rows.append
     add(f"{label} — performance, percent of capital")
@@ -140,6 +165,16 @@ def render_lines(st, label, last, held, accas, wins, generated):
     add(f"OPEN     {len(st['open_slips'])} open slips   {len(held)} held accas   "
         f"{len(st.get('events', []))} take-profit notice(s) to date")
     add("")
+    if episodes:
+        add("SNAPSHOT NOTES")
+        add("  A stored close is the bank when that day's last acca settled. An acca that")
+        add("  settles after later days were written moves their stored closes. The rebuild")
+        add("  counts each day's settled P&L in date order from the base.")
+        for e in episodes:
+            tail = (f"back in line {e['resumed']}" if e["resumed"]
+                    else f"no in-line day after {e['last']}")
+            add(f"  {e['first']} to {e['last']}: stored close {e['offset']:+.2f} vs rebuild; {tail}")
+        add("")
     start = max(0, len(history) - last)
     add(f"BET-DAYS, newest first (last {len(history) - start})")
     for i in reversed(range(start, len(history))):
@@ -149,10 +184,9 @@ def render_lines(st, label, last, held, accas, wins, generated):
         opens = _close(h) - returned + staked
         add(f"  {h['date']}   staked {staked:5.1f}%   returned {returned:5.1f}%   "
             f"net {returned - staked:+6.1f}%   bank {opens:.1f}% -> {_close(h):.1f}%")
-        if i in breaks:
-            prev_end, opens_at = breaks[i]
-            add(f"  ! bank break: previous bet-day closed at {prev_end:.1f}%, this one opens at "
-                f"{opens_at:.1f}% (gap {opens_at - prev_end:+.1f} pts). Stored bank values disagree.")
+        off = _close(h) - rebuilt[h["date"]]
+        if abs(off) > 0.05:
+            add(f"  ~ stored close {off:+.2f} vs rebuild (see SNAPSHOT NOTES)")
         for a in h["accas"]:
             rows.extend(_main_acca_block(a))
         add("")
