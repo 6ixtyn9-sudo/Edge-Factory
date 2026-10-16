@@ -1,6 +1,26 @@
 {
-  "attempted": 3,
+  "attempted": 5,
   "attempted_fixtures": [
+    {
+      "avg_p": 80.0,
+      "away": "Syunik",
+      "date": "2026-10-16",
+      "home": "Alashkert",
+      "league": "Armenia: Premier League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 78.5,
+      "away": "TSV Hartberg",
+      "date": "2026-10-16",
+      "home": "Rapid Vienna",
+      "league": "Austria: Bundesliga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
     {
       "avg_p": 77.5,
       "away": "Abha",
@@ -32,36 +52,55 @@
       "w_score": 1.0
     }
   ],
-  "be_429": 2,
-  "be_cached": 0,
-  "be_cooling_down": true,
-  "be_rows_rejected": 3,
-  "be_rows_rejected_reasons": {
-    "row teams do not both match the pick": 3
-  },
-  "candidate_fixtures": 3,
-  "captured_at": "2026-10-15T22:09:53.587584+00:00",
+  "be_429": 0,
+  "be_cached": 2,
+  "be_cooling_down": false,
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "candidate_fixtures": 5,
+  "captured_at": "2026-10-16T01:06:06.845572+00:00",
   "date": "2026-10-16",
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
-  "market_requests": 5,
+  "market_requests": 10,
   "match_detail": {
-    "bookmakers": 6,
+    "bookmakers": 22,
     "challenge_pages": 0,
-    "fixtures": 1,
-    "market_rows": 24,
-    "markets": 6,
-    "named_rows": 24,
+    "fixtures": 3,
+    "market_rows": 60,
+    "markets": 18,
+    "named_rows": 60,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "quoted_fixtures": [],
-  "requests": 12,
-  "rows": 0,
+  "quoted_fixtures": [
+    {
+      "avg_p": 80.0,
+      "away": "Syunik",
+      "date": "2026-10-16",
+      "home": "Alashkert",
+      "league": "Armenia: Premier League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 61.7,
+      "away": "Nykobing FC",
+      "date": "2026-10-16",
+      "home": "Fremad Amager",
+      "league": "Denmark 2. Division",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    }
+  ],
+  "requests": 17,
+  "rows": 6,
   "schema": 1,
-  "status": "empty"
+  "status": "ok"
 }
