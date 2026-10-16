@@ -4,15 +4,6 @@ Everything an operator needs for the production lane starts here. Nothing in
 this tree was deleted during consolidation (OP-01 T3): deep-evidence documents
 moved to [`archive/`](archive/) and are linked below.
 
-Standing constraints (unchanged by any document here): no proxies / stealth /
-CAPTCHA bypass; `EDGE_FACTORY_FOREBET_BROWSER=off`; `scripts/auto_tickets.py`
-is the sole owner of tickets and staking; abstention is valid; **single
-production lane** (no dual production); no `edge >= 0` hard gate; no
-production re-mine without explicit operator promotion; gap-only mining
-(never refetch what we hold, existing rows win collisions, independent
-settlement, raw + checksum + provenance per crawl). The GitHub App cannot push
-`.github/workflows/` — workflow changes ship as paste-ready docs only.
-
 Latest reviewed decisions:
 [`DECISIONS-2026-10-09.md`](DECISIONS-2026-10-09.md) transfers D1–D5 with
 snapshot-bound evidence, corrected archive/price/provenance claims, the
