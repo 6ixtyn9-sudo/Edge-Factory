@@ -3353,14 +3353,37 @@ def _record_acca_settlement(st, slip_date, acca):
             h["returned_pct"] = round(h["returned_pct"] + ret, 4)
             h["accas"].append(rec)
             h["bank_pct"] = round(st["bank"], 4)
+            h["close_pct"] = _day_close(st, slip_date, h)
             return
-    st["history"].append({
+    row = {
         "date": slip_date,
         "staked_pct": round(acca["stake_pct"], 4),
         "returned_pct": ret,
         "accas": [rec],
         "bank_pct": round(st["bank"], 4),
-    })
+    }
+    row["close_pct"] = _day_close(st, slip_date, row)
+    st["history"].append(row)
+
+
+def _day_close(st, slip_date, row) -> float:
+    """End-of-day close for one bet-day: the previous bet-day's close plus this
+    day's net P&L (returned minus staked, over every acca on the day).
+
+    ``bank_pct`` is a snapshot of the live bank at the moment an acca settles.
+    When a day's accas settle in different runs, the snapshot can include a
+    later-settled day's P&L: the 13 Oct row was stored 18.88 low because the
+    14 Oct acca #1 had already lost. ``close_pct`` is chained from the previous
+    close, so it does not depend on settlement order. Rows written before this
+    field existed carry only ``bank_pct``, which is what the chain starts from.
+    With no earlier bet-day, the snapshot is the close.
+    """
+    prior = [h for h in st["history"] if h["date"] < slip_date]
+    if not prior:
+        return round(row["bank_pct"], 4)
+    prev = max(prior, key=lambda h: h["date"])
+    prev_close = prev.get("close_pct", prev["bank_pct"])
+    return round(prev_close + row["returned_pct"] - row["staked_pct"], 4)
 
 
 def _folded_leg_key(day, home, away, pick):
@@ -3850,12 +3873,14 @@ def cmd_backfill(args, st):
         ret = sum(a["stake_pct"] * a["odds"] for a in plan
                   if all(l.get("result") == "win" for l in a["legs"]))
         _apply_settlement(st, ret, staked, d)
-        st["history"].append({"date": d, "staked_pct": round(staked, 4),
-                              "returned_pct": round(ret, 4),
-                              "accas": [{"odds": a["odds"],
-                                         "won": all(l.get("result") == "win" for l in a["legs"])}
-                                        for a in plan],
-                              "bank_pct": round(st["bank"], 4)})
+        row = {"date": d, "staked_pct": round(staked, 4),
+               "returned_pct": round(ret, 4),
+               "accas": [{"odds": a["odds"],
+                          "won": all(l.get("result") == "win" for l in a["legs"])}
+                         for a in plan],
+               "bank_pct": round(st["bank"], 4)}
+        row["close_pct"] = _day_close(st, d, row)
+        st["history"].append(row)
         if st["bank"] < 1.0:
             print(f"  BUSTED on {d} (bank {st['bank']:.1f}%)")
             break

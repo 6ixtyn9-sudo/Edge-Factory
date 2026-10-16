@@ -707,6 +707,14 @@ def _orientation_ok(pick_home: str, pick_away: str, res_h: str, res_a: str) -> b
     return sim_hh > sim_ha and sim_aa > sim_ah
 
 
+def _fuzzy_sides_clear(pick_home: str, pick_away: str, res: dict[str, Any]) -> bool:
+    """True when each pick side matches its result side at the alias side bar."""
+    return min(
+        char_ngram_similarity(pick_home, str(res.get("home", "")), n=2),
+        char_ngram_similarity(pick_away, str(res.get("away", "")), n=2),
+    ) >= _ALIAS_SIDE_MIN_SIM
+
+
 def find_fuzzy_result_matches(
     pick_home: str,
     pick_away: str,
@@ -1811,8 +1819,16 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
             fuzzy_matches = find_fuzzy_result_matches(pick_home, pick_away, results_on_date)
             fuzzy_scores = {(r.get("hs"), r.get("gs"), r.get("outcome")) for r in fuzzy_matches}
             if len(fuzzy_scores) > 1:
-                ambiguous_result_examples.append(_pick_diag(pick, "ambiguous_alias_result"))
-                continue
+                # Only a candidate whose BOTH team names clear the alias side bar
+                # may settle a conflict. The combined bigram score alone let a
+                # different fixture through (Wiener SC v Leobendorf 1-2 against
+                # SC Neusiedl v Oberpullendorf 2-1). Single candidates are unchanged.
+                strong = [r for r in fuzzy_matches if _fuzzy_sides_clear(pick_home, pick_away, r)]
+                strong_scores = {(r.get("hs"), r.get("gs"), r.get("outcome")) for r in strong}
+                if len(strong_scores) != 1:
+                    ambiguous_result_examples.append(_pick_diag(pick, "ambiguous_alias_result"))
+                    continue
+                fuzzy_matches = strong
             if fuzzy_matches:
                 result = max(
                     fuzzy_matches,
