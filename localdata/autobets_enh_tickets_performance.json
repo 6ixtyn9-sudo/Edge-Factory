@@ -1,0 +1,114 @@
+{
+  "generated_at": "2026-10-16T10:30:01",
+  "lane": "enh",
+  "unit": "percent_of_capital",
+  "base_pct": 100.0,
+  "bank_pct": 95.0625,
+  "multiple": 0.950625,
+  "cycle_base_pct": 100.0,
+  "next_take_profit_pct": 200.0,
+  "bet_days": 2,
+  "accas": {
+    "wins": 3,
+    "losses": 2
+  },
+  "open_slips": [
+    {
+      "date": "2026-10-16",
+      "staked_pct": 23.7656
+    }
+  ],
+  "events": [],
+  "history": [
+    {
+      "date": "2026-10-14",
+      "staked_pct": 25.0,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.35,
+          "won": false
+        },
+        {
+          "odds": 2.14,
+          "won": false
+        }
+      ],
+      "bank_pct": 75.0
+    },
+    {
+      "date": "2026-10-15",
+      "staked_pct": 18.75,
+      "returned_pct": 38.8125,
+      "accas": [
+        {
+          "odds": 2.0,
+          "won": true,
+          "stake_pct": 6.25,
+          "returned_pct": 12.5,
+          "legs": [
+            {
+              "match": "Riga FC vs Kairat Almaty",
+              "pick": "over",
+              "odds": 1.33,
+              "result": "win",
+              "label": "Match Over 1.5 Goals"
+            },
+            {
+              "match": "SC Freiburg vs FK Jablonec",
+              "pick": "over",
+              "odds": 1.5,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 1.96,
+          "won": true,
+          "stake_pct": 6.25,
+          "returned_pct": 12.25,
+          "legs": [
+            {
+              "match": "Benfica vs Celtic",
+              "pick": "over",
+              "odds": 1.44,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Bournemouth vs Sturm Graz",
+              "pick": "over",
+              "odds": 1.36,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 2.25,
+          "won": true,
+          "stake_pct": 6.25,
+          "returned_pct": 14.0625,
+          "legs": [
+            {
+              "match": "AZ Alkmaar vs Hapoel Beer Sheva",
+              "pick": "over",
+              "odds": 1.47,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Panathinaikos vs FK Borac Banja Luka",
+              "pick": "over",
+              "odds": 1.53,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 95.0625
+    }
+  ]
+}

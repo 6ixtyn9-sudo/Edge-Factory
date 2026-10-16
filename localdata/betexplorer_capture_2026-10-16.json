@@ -1,5 +1,5 @@
 {
-  "attempted": 4,
+  "attempted": 5,
   "attempted_fixtures": [
     {
       "avg_p": 80.0,
@@ -20,6 +20,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 62.9,
+      "away": "1. FC N\u00fcrnberg",
+      "date": "2026-10-16",
+      "home": "Energie Cottbus",
+      "league": "Germany 2. Bundesliga",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5291
     },
     {
       "avg_p": 62.9,
@@ -47,20 +57,20 @@
   "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "candidate_fixtures": 4,
-  "captured_at": "2026-10-16T04:07:03.938862+00:00",
+  "candidate_fixtures": 5,
+  "captured_at": "2026-10-16T07:08:47.847861+00:00",
   "date": "2026-10-16",
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 3,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 22,
+    "bookmakers": 40,
     "challenge_pages": 0,
-    "fixtures": 3,
-    "market_rows": 60,
-    "markets": 18,
-    "named_rows": 60,
+    "fixtures": 4,
+    "market_rows": 115,
+    "markets": 24,
+    "named_rows": 115,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -79,6 +89,16 @@
       "w_score": 1.0
     },
     {
+      "avg_p": 62.9,
+      "away": "1. FC N\u00fcrnberg",
+      "date": "2026-10-16",
+      "home": "Energie Cottbus",
+      "league": "Germany 2. Bundesliga",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5291
+    },
+    {
       "avg_p": 61.7,
       "away": "Nykobing FC",
       "date": "2026-10-16",
@@ -89,8 +109,8 @@
       "w_score": 1.0
     }
   ],
-  "requests": 0,
-  "rows": 6,
+  "requests": 9,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }
