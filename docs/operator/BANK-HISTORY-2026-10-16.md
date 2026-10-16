@@ -1,58 +1,68 @@
-# Bank history: snapshot vs close (2026-10-16)
+# Bank history: snapshot, close, and the rebuild (2026-10-16)
 
 ## What the history rows mean
 
 Each bet-day row in `auto_tickets_state.json` (main lane) and the enhancement
 state (enh lane) carries two bank figures.
 
-- `bank_pct` is a **settlement snapshot**: the live bank at the moment the
-  last acca on that day was written. It is not an end-of-day close.
-- `close_pct` (new, from 2026-10-16) is the **end-of-day close**: the previous
-  bet-day's close plus this day's net P&L (returned minus staked, over every
-  acca on the day). It is chained, so it does not depend on the order in which
-  accas settle.
+- `bank_pct` is a **settlement snapshot**: the live bank at the moment an acca
+  on that day settled. It is not an end-of-day close. Live `bank` moves only
+  when an acca settles, and open stakes are held separately as committed
+  (`effective_bank` = bank − committed).
+- `close_pct` (from 2026-10-16) is the previous bet-day's close plus this day's
+  net P&L. It is chained only within the writer's own view of the history.
 
-Rows written before 2026-10-16 have no `close_pct`. For those rows the close is
-`bank_pct`, which is how the report and the grader already read them.
+**Correction to the earlier note.** `close_pct` was described as independent of
+settlement order. That holds only for a single day's own accas. If an earlier
+day's acca settles after a later day has been written, the live bank moves, but
+the later row's `close_pct` is not recalculated. The grader therefore does not
+rely on `close_pct` (see below).
 
-## Why the 13 Oct row reads 172.48
+Rows written before 2026-10-16 have no `close_pct`.
 
-The 13 Oct accas settled in two runs, and a 14 Oct acca settled between them:
+## What the report does now
 
-| Step | Bank after step |
-|---|---|
-| 12 Oct close | 201.44 |
-| 13 Oct acca #1 lost (stake 25.18) | 176.26 |
-| 14 Oct acca #1 lost (stake 18.88) | 157.37 |
-| 13 Oct acca #2 won (returned 40.29, stake 25.18) | 172.48 |
+`scripts/auto_tickets_grade.py` rebuilds each bet-day's close from the settled
+P&L of every bet-day up to it, in date order, from the base (100%). It compares
+that with the stored close. Where they disagree, the report:
 
-The stored 13 Oct `bank_pct` is 172.48, the bank after the 13 Oct acca #2
-settlement. That includes the 14 Oct loss, which settled first. The chained
-13 Oct close is 201.44 − 50.36 + 40.29 = **191.36**. The gap of 18.88 is the
-14 Oct acca #1 stake.
+- prints a `SNAPSHOT NOTES` block: each run of off-line days, its offset, and
+  the first day back in line (or "no in-line day after" if it is still open);
+- marks the affected day lines with `~ stored close ... (see SNAPSHOT NOTES)`.
 
-The 14 Oct row (188.53) is correct. The current bank (192.30 on 15 Oct) is also
-correct. Nothing in the live bank arithmetic was wrong.
+The earlier "bank break" flag compared neighbouring list entries, so it
+mislabelled late settlements and out-of-order rows. It is removed.
 
-## What changed
+The rebuilt chain matches the live bank (192.30 on 16 Oct) to rounding, so the
+report's total is consistent with the live balance.
 
-- `scripts/auto_tickets.py`: `_record_acca_settlement` and the backfill path
-  write `close_pct` on every bet-day row. `bank_pct` is unchanged.
-- `scripts/auto_tickets_grade.py`: the bet-day report and the bank-break check
-  read the close through `_close()`, which uses `close_pct` when present and
-  falls back to `bank_pct` otherwise.
-- Tests: `test_day_close_does_not_depend_on_settlement_order` replays the
-  13/14 Oct settlement order; `test_legacy_rows_without_close_pct_still_report_the_break`
-  checks the fallback.
+## The 13 Oct row (corrected 2026-10-16)
+
+The 13 Oct `bank_pct` was 172.4802: the bank after the 13 Oct acca #2 settled on
+15 Oct, which came after the 14 Oct acca #1 loss (18.8847). It is now 191.3649,
+the rebuilt close, with the original kept as `bank_pct_before_correction`.
+
+## What the other snapshot offsets are
+
+Checked read-only against the state history:
+
+| Days (stored − rebuild) | Offset | Cause |
+|---|---|---|
+| 11–22 Sep | +15.6111 | 10 Sep acca, stake 15.6111, open until it lost on 23 Sep |
+| 28 Sep–1 Oct | +15.5364 | 27 Sep acca, stake 15.5364, open until it lost on 2 Oct |
+| 27 Sep | +6.13 | Not explained by one open stake. Not investigated further. |
+| 27–31 Aug | −6 to +5 | Three 27 Aug accas (50.0001 staked) open for days. Rows for 27 and 29 Aug were appended on 1 Sep. Converges by 1 Sep. Not reconciled day by day. |
+| 10 Sep | −0.18 | Small residual. Not investigated. |
+
+The two exact matches are the amounts a late settlement moves the bank. The
+live bank was correct at every point; only the stored snapshots for the days in
+between differ.
 
 ## What was not changed
 
-- The stored 13 Oct row (`bank_pct` 172.48) is **not edited**. Correcting it
-  would be a history edit and needs a separate approval. The grader still flags
-  the 13 Oct and 14 Oct breaks in the existing report; the flags are accurate
-  for the stored snapshot values.
-- The 14 Oct row has no `close_pct`. If a new settlement is ever written to
-  14 Oct, its chain starts from the 13 Oct stored snapshot. Before any such
-  write, the 13 Oct row needs correcting (see above), or the close for 14 Oct
-  would inherit the 18.88 gap.
-- No state files were regenerated, and no pipeline run was triggered.
+- No history row was edited, except the 13 Oct correction above.
+- The residuals on 27 Sep, 10 Sep and in 27–31 Aug remain. They are shown in the
+  report and are not corrected.
+- The enh lane's report was not regenerated (no enh state in the workspace).
+- No pipeline run was triggered and no settlement was executed. The text report
+  was rendered from the tracked state with `render_lines`.
