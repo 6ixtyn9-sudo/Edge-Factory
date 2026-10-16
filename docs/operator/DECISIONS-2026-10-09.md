@@ -130,6 +130,8 @@ Do not attribute +39 to warehouse coverage without that evidence.
 
 ## 4. D2: archive and identity limitations
 
+> **SUPERSEDED for the disposition only (16 Oct 2026, section 10, entry S-D2).** The findings below stand as recorded. The "retain the fail-closed loader" and "no loader relaxation" dispositions no longer apply.
+
 Actual canonical receipt: morning **969**, verified additions **5**, regular-only
 **118**, unsafe dates **48**, empty dates **0**. Unsafe August 14–October 6 spans
 **54 days**, omitting August 15–19 and September 30: **not contiguous**.
@@ -301,3 +303,41 @@ Full-suite and merged-tree validation results are recorded with the pull
 request. Large probes, scratch databases and disposable copied ledgers remain
 outside Git. Future pipeline-state updates on main are not authored or rewritten
 by this patch.
+
+## 10. Superseding entries (16 Oct 2026)
+
+### S-D2: regular-ledger late additions are counted
+
+- **Supersedes:** the D2 disposition in section 2 ("Retain the current fail-closed
+  loader") and the statement in section 4 that "no loader relaxation is applied".
+  Section 4's findings are not changed.
+- **Decided by:** the operator, on 16 Oct 2026, instruction "yes to regular late
+  additions". The operator was told that the 9 Oct review had recorded this
+  disposition and that the 16 candidates were not approved official additions.
+- **Decision:** the audit counts regular-ledger rows whose key is not in the
+  morning baseline as late additions. This applies on days where a forecast
+  refresh changed baseline values; morning values stay authoritative. A
+  regular-only row that re-spells a morning pick (same market and side, both
+  team names matching by word-subset) is not counted again.
+- **Implementation:** `scripts/audit_recent_picks.py`, commit `55e3b6e`, in PR #93.
+  The receipt adds `late_additions_on_rewritten_ledgers` and
+  `name_variant_duplicates_skipped`.
+- **Measured effect (in memory, nothing written):** window 17 Sep to 16 Oct,
+  archived rows 557 to 719. Of the 169 newly counted rows, 164 have an `as_of`
+  before kickoff, 0 are after kickoff, and 5 have no timestamp. Two
+  re-spellings were found and are now skipped.
+- **Not established by this entry:**
+  - whether the counted rows are official or verified additions;
+  - whether any of the 16 candidates in section 4 are official;
+  - the 25 name-field changes and the uncleared spellings (Drogheda United/Utd,
+    Borussia M'gladbach/Mönchengladbach);
+  - frozen price or probability integrity for ROI. Material changes on the
+    affected dates are unchanged.
+- **Known limit of the name rule:** it does not match abbreviations such as
+  "Utd" vs "United". A first-word check found none in this window.
+- **Consequence to watch:** `src/edgefactory/acca_gate.py` reads
+  `localdata/picks_audit_rolling.json`, which the next daily run regenerates.
+  Gate inputs change then. Settled hit rate and ROI for the window have not been
+  re-measured, because the warehouse is not in the workspace.
+- **Reversal:** revert the loader hunk in commit `55e3b6e`. The name-variant
+  helpers can go with it.
