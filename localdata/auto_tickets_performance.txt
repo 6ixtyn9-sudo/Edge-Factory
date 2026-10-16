@@ -1,11 +1,24 @@
 AUTO-TICKETS (ROLLING) — performance, percent of capital
 ==============================================================
-generated 2026-10-16T09:53:35
+generated 2026-10-16T10:34:06
 
 BANK     192.3%   x1.92 of the 100% base
 CYCLE    baseline 204.0%   next take-profit notice at 408.0%   (+100% per cycle)
 RECORD   59W / 41L   (59.0% hit)   over 47 bet-days
 OPEN     1 open slips   1 held accas   1 take-profit notice(s) to date
+
+SNAPSHOT NOTES
+  A stored close is the bank when that day's last acca settled. An acca that
+  settles after later days were written moves their stored closes. The rebuild
+  counts each day's settled P&L in date order from the base.
+  2026-08-27 to 2026-08-27: stored close +5.48 vs rebuild; no in-line day after 2026-08-27
+  2026-08-28 to 2026-08-28: stored close -0.67 vs rebuild; no in-line day after 2026-08-28
+  2026-08-29 to 2026-08-29: stored close -6.48 vs rebuild; no in-line day after 2026-08-29
+  2026-08-30 to 2026-08-31: stored close -2.29 vs rebuild; back in line 2026-09-01
+  2026-09-10 to 2026-09-10: stored close -0.18 vs rebuild; no in-line day after 2026-09-10
+  2026-09-11 to 2026-09-22: stored close +15.61 vs rebuild; back in line 2026-09-23
+  2026-09-27 to 2026-09-27: stored close +6.13 vs rebuild; no in-line day after 2026-09-27
+  2026-09-28 to 2026-10-01: stored close +15.54 vs rebuild; back in line 2026-10-02
 
 BET-DAYS, newest first (last 15)
   2026-10-15   staked  47.1%   returned  50.9%   net   +3.8%   bank 188.5% -> 192.3%
@@ -18,14 +31,12 @@ BET-DAYS, newest first (last 15)
       WON  Lech Poznan vs Bayer Leverkusen                  AWAY @1.65
 
   2026-10-14   staked  37.8%   returned  34.9%   net   -2.8%   bank 191.4% -> 188.5%
-  ! bank break: previous bet-day closed at 172.5%, this one opens at 191.4% (gap +18.9 pts). Stored bank values disagree.
     ACCA @3.27   stake not recorded   LOST
     ACCA @1.85   stake 18.9%          WON   net +16.1%
       WON  Atletico Mineiro vs Montevideo City Torque       HOME @1.32
       WON  Slovan Bratislava vs VfB Stuttgart               AWAY @1.40
 
-  2026-10-13   staked  50.4%   returned  40.3%   net  -10.1%   bank 182.6% -> 172.5%
-  ! bank break: previous bet-day closed at 201.4%, this one opens at 182.6% (gap -18.9 pts). Stored bank values disagree.
+  2026-10-13   staked  50.4%   returned  40.3%   net  -10.1%   bank 201.4% -> 191.4%
     ACCA @2.03   stake not recorded   LOST
     ACCA @1.60   stake 25.2%          WON   net +15.1%
       WON  Arsenal vs Lille                                 HOME @1.21
@@ -62,19 +73,20 @@ BET-DAYS, newest first (last 15)
     ACCA @5.38   stake not recorded   LOST
 
   2026-10-02   staked  15.8%   returned  41.3%   net  +25.5%   bank 126.7% -> 152.2%
-  ! bank break: previous bet-day closed at 142.2%, this one opens at 126.7% (gap -15.5 pts). Stored bank values disagree.
     ACCA @2.61   stake not recorded   WON
 
   2026-10-01   staked  42.2%   returned   0.0%   net  -42.2%   bank 184.5% -> 142.2%
+  ~ stored close +15.54 vs rebuild (see SNAPSHOT NOTES)
     ACCA @1.91   stake not recorded   LOST
     ACCA @2.13   stake not recorded   LOST
 
   2026-09-29   staked  36.0%   returned  61.0%   net  +25.0%   bank 159.5% -> 184.5%
+  ~ stored close +15.54 vs rebuild (see SNAPSHOT NOTES)
     ACCA @1.66   stake not recorded   WON
     ACCA @1.73   stake not recorded   WON
 
   2026-09-28   staked  15.1%   returned  38.4%   net  +23.4%   bank 136.1% -> 159.5%
-  ! bank break: previous bet-day closed at 126.7%, this one opens at 136.1% (gap +9.4 pts). Stored bank values disagree.
+  ~ stored close +15.54 vs rebuild (see SNAPSHOT NOTES)
     ACCA @2.55   stake not recorded   WON
 
 HELD (not yet settled; stake counted as committed)

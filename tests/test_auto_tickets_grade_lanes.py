@@ -170,8 +170,72 @@ def test_main_report_layout_is_clean_and_flags_bank_breaks():
     assert txt.splitlines()[0].startswith("T — performance")
     assert not any(l != l.rstrip() for l in lines)
     assert txt.index("BANK") < txt.index("BET-DAYS")
-    assert "! bank break: previous bet-day closed at 110.0%" in txt
+    assert "SNAPSHOT NOTES" in txt
+    assert "2026-10-13 to 2026-10-13: stored close +45.00 vs rebuild; no in-line day after 2026-10-13" in txt
     assert "HELD (not yet settled" in txt and "ACCA @1.85" in txt
     assert "lost on: Eps vs Zeta (HOME)" in txt
-    # the flag goes on the day whose open disagrees, not on the consistent day
-    assert txt.index("2026-10-13") < txt.index("! bank break") < txt.index("2026-10-12")
+    # the flag goes on the day whose stored close is off, not on the consistent day
+    seg = txt[txt.index("BET-DAYS"):]
+    assert seg.index("2026-10-13") < seg.index("~ stored close +45.00") < seg.index("2026-10-12")
+
+
+def test_day_close_does_not_depend_on_settlement_order():
+    """Replays the 13/14 Oct settlement order from production: 14 Oct acca #1 lost
+    before 13 Oct acca #2 won. The 13 Oct snapshot (bank_pct) carries the 14 Oct loss,
+    but the chained close_pct and the grader's bank-break check do not."""
+    st = at.fresh_state()
+    st["bank"] = 201.4367
+    st["cycle_base"] = 201.4367
+    st["history"] = [{"date": "2026-10-12", "staked_pct": 50.9966, "returned_pct": 48.4468,
+                      "accas": [], "bank_pct": 201.4367, "close_pct": 201.4367}]
+
+    def settle(date, odds, stake, won):
+        ret = round(stake * odds, 4) if won else 0.0
+        at._apply_settlement(st, ret, stake, date)
+        at._record_acca_settlement(st, date, {"odds": odds, "won": won, "stake_pct": stake,
+                                              "legs": [], "results": []})
+
+    settle("2026-10-13", 2.03, 25.1796, False)   # 13 Oct acca #1 lost
+    settle("2026-10-14", 3.27, 18.8847, False)   # 14 Oct acca #1 lost (settles first)
+    settle("2026-10-13", 1.60, 25.1796, True)    # 13 Oct acca #2 won (settles later)
+    settle("2026-10-14", 1.85, 18.8847, True)    # 14 Oct acca #2 won
+
+    by_date = {h["date"]: h for h in st["history"]}
+    assert by_date["2026-10-13"]["bank_pct"] == pytest.approx(172.4802, abs=1e-3)
+    assert by_date["2026-10-13"]["close_pct"] == pytest.approx(191.3649, abs=1e-3)
+    assert by_date["2026-10-14"]["close_pct"] == pytest.approx(188.5322, abs=1e-3)
+    assert st["bank"] == pytest.approx(188.5322, abs=1e-3)
+    assert grade._snapshot_episodes(st["history"], 203.9865) == []
+
+
+def test_legacy_rows_without_close_pct_still_report_the_break():
+    """Rows written before close_pct existed have only the snapshot. Rebuilt from the
+    base, the stored 13 Oct close (172.48) sits 18.88 below the day-attributed 191.36."""
+    history = [
+        {"date": "2026-10-12", "staked_pct": 50.9966, "returned_pct": 48.4468,
+         "accas": [], "bank_pct": 201.4367},
+        {"date": "2026-10-13", "staked_pct": 50.3592, "returned_pct": 40.2874,
+         "accas": [], "bank_pct": 172.4802},
+    ]
+    episodes = grade._snapshot_episodes(history, 203.9865)
+    assert len(episodes) == 1
+    e = episodes[0]
+    assert (e["first"], e["last"], e["resumed"]) == ("2026-10-13", "2026-10-13", None)
+    assert e["offset"] == pytest.approx(-18.8847, abs=1e-3)
+
+
+def test_snapshot_episode_ends_when_the_day_is_back_in_line():
+    """A late settlement is one run of off-line days, and the run closes on the first
+    day that is back in line with the rebuild."""
+    history = [
+        {"date": "2026-09-10", "staked_pct": 0.0, "returned_pct": 10.0, "accas": [], "bank_pct": 110.0},
+        {"date": "2026-09-11", "staked_pct": 0.0, "returned_pct": 0.0, "accas": [], "bank_pct": 125.0},
+        {"date": "2026-09-12", "staked_pct": 15.0, "returned_pct": 0.0, "accas": [], "bank_pct": 110.0},
+        {"date": "2026-09-13", "staked_pct": 0.0, "returned_pct": 0.0, "accas": [], "bank_pct": 95.0},
+    ]
+    rebuilt = grade._day_attributed_closes(history, 100.0)
+    assert rebuilt == {"2026-09-10": 110.0, "2026-09-11": 110.0,
+                       "2026-09-12": 95.0, "2026-09-13": 95.0}
+    episodes = grade._snapshot_episodes(history, 100.0)
+    assert episodes == [{"first": "2026-09-11", "last": "2026-09-12",
+                         "offset": 15.0, "resumed": "2026-09-13"}]
