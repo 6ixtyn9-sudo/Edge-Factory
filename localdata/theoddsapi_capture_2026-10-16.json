@@ -1,64 +1,64 @@
 {
   "added": 0,
-  "attempted": 3,
+  "attempted": 2,
   "attempted_fixtures": [
     {
-      "away": "Syunik",
+      "away": "Clermont Foot",
       "date": "2026-10-16",
-      "home": "Alashkert",
-      "kickoff": "2026-10-16T15:00:00+02:00",
-      "league": "Armenia: Premier League"
+      "home": "Laval",
+      "kickoff": "16-10, 19:00",
+      "league": "France Ligue 2"
     },
     {
-      "away": "TSV Hartberg",
+      "away": "Vasas",
       "date": "2026-10-16",
-      "home": "Rapid Vienna",
-      "kickoff": "16-10, 18:30",
-      "league": "Austria Bundesliga"
-    },
-    {
-      "away": "1. FC N\u00fcrnberg",
-      "date": "2026-10-16",
-      "home": "Energie Cottbus",
-      "kickoff": "16-10, 17:30",
-      "league": "Germany 2. Bundesliga"
+      "home": "MTK Budapest",
+      "kickoff": "16-10, 19:00",
+      "league": "Hungary NB I"
     }
   ],
-  "candidate_fixtures": 10,
-  "captured_at": "2026-10-16T13:15:21+00:00",
+  "candidate_fixtures": 13,
+  "captured_at": "2026-10-16T16:19:29+00:00",
   "date": "2026-10-16",
   "due_reasons": {
-    "first_at": 3
+    "close_at": 2
   },
   "errors": [],
   "fixtures_with_rows": 0,
-  "kickoff_mismatch_detail": {},
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
   "quoted_fixtures": [],
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
-    "retry_cooldown": 6
+    "kickoff_already_passed": 3,
+    "kickoff_mismatch": 1,
+    "priced_close_window_not_open": 1,
+    "retry_cooldown": 7
   },
   "skipped": [
+    "Alashkert|Syunik (retry cooldown (6h after failed attempt))",
+    "Rapid Vienna|TSV Hartberg (retry cooldown (6h after failed attempt))",
     "Al-Qadisiyah|Abha (retry cooldown (6h after failed attempt))",
-    "Yantra 2019|Lokomotiv Plovdiv (retry cooldown (6h after failed attempt))",
+    "Yantra 2019|Lokomotiv Plovdiv (kickoff already passed)",
+    "Stade Nyonnais|FC Basel 1893 (retry cooldown (6h after failed attempt))",
+    "Energie Cottbus|1. FC N\u00fcrnberg (kickoff already passed)",
     "Finn Harps|Bray Wanderers (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Heerenveen|Excelsior: pick legacy display says 19:00 SAST, captured rows say 20:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Heerenveen|Excelsior (priced, close window not open)",
     "Fremad Amager|Nykobing FC (retry cooldown (6h after failed attempt))",
     "SV Lafnitz|Gleisdorf 09 (retry cooldown (6h after failed attempt))",
-    "Internacional Palmira|Orsomarso (kickoff already passed)",
-    "MTK Budapest|Vasas (retry cooldown (6h after failed attempt))"
+    "Internacional Palmira|Orsomarso (kickoff already passed)"
   ],
   "source": "theoddsapi",
   "status": "empty",
   "unmatched": [
-    "Alashkert vs Syunik (league not covered: Armenia: Premier League)",
-    "Energie Cottbus vs 1. FC N\u00fcrnberg (league not covered: Germany 2. Bundesliga)",
-    "Rapid Vienna vs TSV Hartberg (no event in soccer_austria_bundesliga)"
+    "MTK Budapest vs Vasas (league not covered: Hungary NB I)",
+    "Laval vs Clermont Foot (no event in soccer_france_ligue_two)"
   ],
   "unmatched_reasons": {
-    "league not covered: Armenia: Premier League": 1,
-    "league not covered: Germany 2. Bundesliga": 1,
-    "no event in soccer_austria_bundesliga": 1
+    "league not covered: Hungary NB I": 1,
+    "no event in soccer_france_ligue_two": 1
   }
 }
