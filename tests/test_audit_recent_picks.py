@@ -1585,3 +1585,74 @@ def test_name_variant_rule_keeps_different_clubs_that_share_a_prefix():
     other_side = _late_ledger_pick("2026-09-29", "FK Napredak", "FK Vozdovac", pick="away")
     assert not audit_mod._is_name_variant_of_morning(other_side, baseline)
 
+
+
+def _build_fuzzy_case(tmp_path, monkeypatch, *, pick, forebet_rows):
+    """One pick and a forebet donor table on its date; no verified overlay."""
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    (localdata / "picks_2026-09-18.json").write_text(json.dumps([pick]))
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    for row in forebet_rows:
+        con.execute("INSERT INTO forebet_settled VALUES (?,?,?,?,?,?)", row)
+    con.close()
+    monkeypatch.setattr(audit_mod, "load_verified_results", lambda: [])
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    return audit_mod.build_report("2026-09-18", "2026-09-18", wh)
+
+
+_WIENER_PICK = {"date": "2026-09-18", "home": "Wiener SC", "away": "Leobendorf",
+                "match": "Wiener SC vs Leobendorf", "league": "Austria: Regionalliga - Ost",
+                "market": "1x2", "pick": "home", "odds": None,
+                "edge_rule": "2way-unanimous avg_p>=70", "bucket": "WATCHLIST_NO_ODDS"}
+
+
+def test_fuzzy_conflict_resolves_to_candidate_matching_both_sides(tmp_path, monkeypatch):
+    """A different fixture (SC Neusiedl v Oberpullendorf 2-1) passed the combined
+    bigram bar beside the real Wiener SK v Leobendorf 1-2. Only the candidate
+    matching both sides may settle, so the pick settles as a loss, not ambiguous."""
+    report = _build_fuzzy_case(tmp_path, monkeypatch, pick=_WIENER_PICK, forebet_rows=[
+        ("2026-09-18", "SC Neusiedl", "Oberpullendorf", 2, 1, "home"),
+        ("2026-09-18", "Wiener SK", "SV Leobendorf", 1, 2, "away"),
+    ])
+    assert report["ambiguous_result_picks"] == 0
+    assert report["overall"]["settled_picks"] == 1
+    assert report["overall"]["wins"] == 0
+
+
+def test_genuine_two_spelling_conflict_stays_ambiguous(tmp_path, monkeypatch):
+    """Two spellings of one fixture that both clear the side bar and disagree
+    must still hold the pick, whichever path finds them."""
+    pick = {"date": "2026-09-18", "home": "Gamma Athletic", "away": "Delta Rovers",
+            "match": "Gamma Athletic vs Delta Rovers", "league": "Test League",
+            "market": "1x2", "pick": "home", "odds": 2.10,
+            "edge_rule": "2way-unanimous avg_p>=70", "bucket": "SKIPPED_VETO"}
+    report = _build_fuzzy_case(tmp_path, monkeypatch, pick=pick, forebet_rows=[
+        ("2026-09-18", "Gamma Athletic Club", "Delta Rovers", 2, 0, "home"),
+        ("2026-09-18", "Gamma Athletico", "Delta Rover", 0, 1, "away"),
+    ])
+    assert report["ambiguous_result_picks"] == 1
+    assert report["overall"]["settled_picks"] == 0
+
+
+def test_single_fuzzy_candidate_with_club_alias_still_settles(tmp_path, monkeypatch):
+    """With no conflict, a club-alias match whose side bar is weak (SC Braga vs
+    Sporting Braga) still settles, as before the conflict-only change."""
+    pick = {"date": "2026-09-18", "home": "SC Braga", "away": "Estoril",
+            "match": "SC Braga vs Estoril", "league": "Portugal",
+            "market": "1x2", "pick": "home", "odds": 1.50,
+            "edge_rule": "2way-unanimous avg_p>=70", "bucket": "SKIPPED_VETO"}
+    report = _build_fuzzy_case(tmp_path, monkeypatch, pick=pick, forebet_rows=[
+        ("2026-09-18", "Sporting Braga", "Estoril", 1, 0, "home"),
+    ])
+    assert report["ambiguous_result_picks"] == 0
+    assert report["overall"]["settled_picks"] == 1
+    assert report["overall"]["wins"] == 1
