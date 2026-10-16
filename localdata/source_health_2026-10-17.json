@@ -160,13 +160,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -178,19 +173,19 @@
       },
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 14,
       "join_miss_counts": {
         "fixture_key_miss": 18936,
         "no_pick_for_fixture": 248
       },
       "pa_matched": 21,
-      "pa_raw": 1055,
+      "pa_raw": 19198,
       "pa_scored": 19198,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -234,46 +229,60 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
         "board_fixtures": 3,
         "board_league_count": 2,
         "board_leagues": {
-          "colombia_-_cup": 7,
-          "conmebol_-_copa_libertadores": 193
+          "australian_championship": 189,
+          "costa_rica_-_primera_division": 11
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 0,
+        "board_priced_rows": 24,
         "board_rows": 200,
-        "board_team_count": 5,
+        "board_team_count": 6,
         "board_team_names": {
-          "Estudiantes": 164,
-          "Estudiantes La Plata": 29,
-          "Flamengo": 193,
-          "Internacional de Bogota": 7,
-          "Llaneros SA": 7
+          "Adelaide City": 134,
+          "Avondale Heights": 134,
+          "Deportivo Saprissa": 11,
+          "Oakleigh Cannons": 55,
+          "Sporting San Jose": 11,
+          "Sydney Olympic": 55
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_moneyline": 6,
+          "unknown_market:both_halves_goal_scored": 4,
+          "unknown_market:exact_total_goals": 16,
+          "unknown_market:first_team_to_score": 3,
+          "unknown_market:halftime_fulltime": 9,
+          "unknown_selection:adelaide_city": 1,
+          "unknown_selection:avondale_heights": 1,
+          "unsupported_market:asian_handicap": 6,
+          "unsupported_market:correct_score": 126,
+          "unsupported_market:double_chance": 3
+        },
         "card_fixture_count": 17,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 200
-        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "card_fixtures_unmatched_on_board",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "fixture_key_miss": 24
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 3,
+      "sa_scored": 24,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

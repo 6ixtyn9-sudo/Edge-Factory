@@ -1,9 +1,70 @@
 {
-  "as_of_last": null,
+  "as_of_last": "2026-10-16",
   "blocked": {
-    "BETEXPLORER_RESCUE": {"since": "2026-10-15", "z": null},
-    "SCOUTINGSTATS_SOLE": {"since": "2026-10-15", "z": null}
+    "BETEXPLORER_RESCUE": {
+      "since": "2026-10-15",
+      "z": -0.373
+    },
+    "SCOUTINGSTATS_SOLE": {
+      "since": "2026-10-15",
+      "z": -0.052
+    }
   },
-  "seed": "Initial blocked set = the static pair from the 2026-10-15 acca gate (PR #91). Replaced by the dynamic rule on the first step.",
-  "params": {"window_days": 30, "min_n": 60, "z_block": -2.0, "z_unblock": 0.0}
+  "params": {
+    "min_n": 60,
+    "window_days": 30,
+    "z_block": -2.0,
+    "z_unblock": 0.0
+  },
+  "stats": {
+    "APPROVED_DONOR_PRICE": {
+      "hit_rate": 1.0,
+      "implied_rate": 0.6579,
+      "n": 1,
+      "roi": 0.52,
+      "z": 0.721
+    },
+    "BETEXPLORER_RESCUE": {
+      "hit_rate": 0.68,
+      "implied_rate": 0.6965,
+      "n": 100,
+      "roi": -0.0242,
+      "z": -0.373
+    },
+    "BZZOIRO_PRIMARY": {
+      "hit_rate": 0.8,
+      "implied_rate": 0.6872,
+      "n": 5,
+      "roi": 0.094,
+      "z": 0.567
+    },
+    "NAMED_BOOKMAKER_PRICE": {
+      "hit_rate": 0.7823,
+      "implied_rate": 0.6788,
+      "n": 124,
+      "roi": 0.1826,
+      "z": 2.598
+    },
+    "SCOUTINGSTATS_SOLE": {
+      "hit_rate": 0.6875,
+      "implied_rate": 0.6893,
+      "n": 160,
+      "roi": -0.0016,
+      "z": -0.052
+    },
+    "SOURCE_FALLBACK": {
+      "hit_rate": 0.6604,
+      "implied_rate": 0.6454,
+      "n": 53,
+      "roi": 0.0004,
+      "z": 0.236
+    },
+    "SUSPECT_ALIAS_FUZZY": {
+      "hit_rate": 0.6667,
+      "implied_rate": 0.656,
+      "n": 12,
+      "roi": -0.0017,
+      "z": 0.082
+    }
+  }
 }

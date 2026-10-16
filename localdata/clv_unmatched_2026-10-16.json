@@ -1,7 +1,7 @@
 [
   {
     "date": "2026-10-16",
-    "kickoff": "13:45",
+    "kickoff": "11:45",
     "home": "Finn Harps",
     "away": "Bray Wanderers",
     "league": "Rep. Of Ireland,First Division",
@@ -14,6 +14,32 @@
     "nearby_bzzoiro_candidates": [],
     "nearby_scoutingstats_candidates": [
       {
+        "home": "Obolon'-Brovar",
+        "away": "Veres",
+        "league": "Premier League",
+        "kickoff": "2026-10-16T10:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.37,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "obolonbrovar",
+        "away_key": "veres",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Sydney",
+        "away": "Western Sydney Wanderers",
+        "league": "A-League Men",
+        "kickoff": "2026-10-16T09:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.9,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "sydney",
+        "away_key": "westernsydneywanderers",
+        "kickoff_delta_minutes": 45
+      },
+      {
         "home": "Henan Songshan Longmen",
         "away": "Tianjin Jinmen Tiger",
         "league": "Super League",
@@ -24,7 +50,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "henansongshanlongmen",
         "away_key": "tianjinjinmentiger",
-        "kickoff_delta_minutes": 10
+        "kickoff_delta_minutes": 110
       },
       {
         "home": "Ayutthaya United",
@@ -37,7 +63,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "ayutthayaunited",
         "away_key": "lamphunwarrior",
-        "kickoff_delta_minutes": 15
+        "kickoff_delta_minutes": 135
       },
       {
         "home": "Al Dhafra",
@@ -50,114 +76,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "aldhafra",
         "away_key": "dubaiunited",
-        "kickoff_delta_minutes": 80
-      },
-      {
-        "home": "Al-Qadsiah",
-        "away": "Abha",
-        "league": "Pro League",
-        "kickoff": "2026-10-16T13:15:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 15.0,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "alqadsiah",
-        "away_key": "abha",
-        "kickoff_delta_minutes": 90
-      },
-      {
-        "home": "Obolon'-Brovar",
-        "away": "Veres",
-        "league": "Premier League",
-        "kickoff": "2026-10-16T10:00:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.37,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "obolonbrovar",
-        "away_key": "veres",
-        "kickoff_delta_minutes": 105
-      }
-    ]
-  },
-  {
-    "date": "2026-10-16",
-    "kickoff": "16-10, 18:00",
-    "home": "Fremad Amager",
-    "away": "Nykobing FC",
-    "league": "Denmark 2. Division",
-    "market": "1x2",
-    "pick": "away",
-    "rule_name": "ml-meta avg_p>=60",
-    "match_method": "fallback",
-    "home_key": "fremadamager",
-    "away_key": "nykobingfc",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Bani Yas",
-        "away": "Al Wasl",
-        "league": "UAE Pro League",
-        "kickoff": "2026-10-16T15:45:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 1.44,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "baniyas",
-        "away_key": "alwasl",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Aluminij",
-        "away": "Olimpija",
-        "league": "1. SNL",
-        "kickoff": "2026-10-16T15:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 1.8,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "aluminij",
-        "away_key": "olimpija",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "St. P\u00f6lten",
-        "away": "Rapid Wien II",
-        "league": "2. Liga",
-        "kickoff": "2026-10-16T16:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 5.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "stpolten",
-        "away_key": "rapidwienii",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Austria Wien II",
-        "away": "WSPG Wels",
-        "league": "2. Liga",
-        "kickoff": "2026-10-16T16:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "austriawienii",
-        "away_key": "wspgwels",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Dinamo City",
-        "away": "Teuta Durr\u00ebs",
-        "league": "Superliga",
-        "kickoff": "2026-10-16T16:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "dinamocity",
-        "away_key": "teutadurres",
-        "kickoff_delta_minutes": 30
+        "kickoff_delta_minutes": 200
       }
     ]
   },
@@ -401,6 +320,87 @@
         "home_key": "ayutthayaunited",
         "away_key": "lamphunwarrior",
         "kickoff_delta_minutes": 345
+      }
+    ]
+  },
+  {
+    "date": "2026-10-16",
+    "kickoff": "16-10, 18:00",
+    "home": "Fremad Amager",
+    "away": "Nykobing FC",
+    "league": "Denmark 2. Division",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "fremadamager",
+    "away_key": "nykobingfc",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Bani Yas",
+        "away": "Al Wasl",
+        "league": "UAE Pro League",
+        "kickoff": "2026-10-16T15:45:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.44,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "baniyas",
+        "away_key": "alwasl",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Aluminij",
+        "away": "Olimpija",
+        "league": "1. SNL",
+        "kickoff": "2026-10-16T15:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.8,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "aluminij",
+        "away_key": "olimpija",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "St. P\u00f6lten",
+        "away": "Rapid Wien II",
+        "league": "2. Liga",
+        "kickoff": "2026-10-16T16:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 5.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "stpolten",
+        "away_key": "rapidwienii",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Austria Wien II",
+        "away": "WSPG Wels",
+        "league": "2. Liga",
+        "kickoff": "2026-10-16T16:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "austriawienii",
+        "away_key": "wspgwels",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Dinamo City",
+        "away": "Teuta Durr\u00ebs",
+        "league": "Superliga",
+        "kickoff": "2026-10-16T16:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "dinamocity",
+        "away_key": "teutadurres",
+        "kickoff_delta_minutes": 30
       }
     ]
   }
