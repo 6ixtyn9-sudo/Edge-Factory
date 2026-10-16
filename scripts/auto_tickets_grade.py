@@ -98,15 +98,21 @@ def _main_acca_block(a, held=False):
     return out
 
 
+def _close(h) -> float:
+    """A bet-day's end-of-day bank. Rows written before ``close_pct`` existed
+    carry only the settlement snapshot in ``bank_pct``."""
+    return h.get("close_pct", h["bank_pct"])
+
+
 def _bank_breaks(history):
     """Index -> (previous close, this day's open) wherever the stored bank does not carry over."""
     breaks = {}
     for i in range(1, len(history)):
-        prev_end = history[i - 1]["bank_pct"]
+        prev_end = _close(history[i - 1])
         h = history[i]
         staked = h.get("staked_pct", 0.0)
         returned = h.get("returned_pct", 0.0)
-        opens = h["bank_pct"] - returned + staked
+        opens = _close(h) - returned + staked
         if abs(opens - prev_end) > 0.05:
             breaks[i] = (prev_end, opens)
     return breaks
@@ -140,9 +146,9 @@ def render_lines(st, label, last, held, accas, wins, generated):
         h = history[i]
         staked = h.get("staked_pct", 0.0)
         returned = h.get("returned_pct", 0.0)
-        opens = h["bank_pct"] - returned + staked
+        opens = _close(h) - returned + staked
         add(f"  {h['date']}   staked {staked:5.1f}%   returned {returned:5.1f}%   "
-            f"net {returned - staked:+6.1f}%   bank {opens:.1f}% -> {h['bank_pct']:.1f}%")
+            f"net {returned - staked:+6.1f}%   bank {opens:.1f}% -> {_close(h):.1f}%")
         if i in breaks:
             prev_end, opens_at = breaks[i]
             add(f"  ! bank break: previous bet-day closed at {prev_end:.1f}%, this one opens at "
