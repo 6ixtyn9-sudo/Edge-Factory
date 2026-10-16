@@ -43,9 +43,9 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 3,
-      "be_raw": 15,
-      "be_usable": 12,
+      "be_matched": 4,
+      "be_raw": 24,
+      "be_usable": 21,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -54,7 +54,8 @@
       "freshness_h": null,
       "join_matched_rows": 3,
       "join_miss_counts": {
-        "fixture_key_miss": 9
+        "fixture_key_miss": 12,
+        "no_pick_for_fixture": 6
       },
       "reason": null,
       "status": "cache_only"
@@ -156,12 +157,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 15,
       "join_miss_counts": {
-        "fixture_key_miss": 64431,
-        "market_unsupported": 26853
+        "fixture_key_miss": 64184,
+        "market_unsupported": 26853,
+        "no_pick_for_fixture": 232
       },
-      "op_matched": 0,
+      "op_matched": 2,
       "op_raw": 91284,
       "op_usable": 91284,
       "reason": null,
@@ -182,12 +184,12 @@
       "coherence_withheld_fixtures": 4,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 3,
+      "join_matched_rows": 4,
       "join_miss_counts": {
-        "fixture_key_miss": 19767,
-        "no_pick_for_fixture": 36
+        "fixture_key_miss": 19746,
+        "no_pick_for_fixture": 56
       },
-      "pa_matched": 4,
+      "pa_matched": 5,
       "pa_raw": 19806,
       "pa_scored": 19806,
       "reason": null,
@@ -273,7 +275,7 @@
           "unknown_market:both_halves_goal_scored": 2,
           "unsupported_market:correct_score": 30
         },
-        "card_fixture_count": 10,
+        "card_fixture_count": 13,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 161
@@ -328,19 +330,21 @@
       "status": null
     },
     "theoddsapi": {
-      "blocker": "no pre-build TheOddsAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
-      "oa_matched": 0,
-      "oa_raw": 0,
-      "oa_usable": 0,
+      "join_matched_rows": 22,
+      "join_miss_counts": {
+        "no_pick_for_fixture": 50
+      },
+      "oa_matched": 2,
+      "oa_raw": 72,
+      "oa_usable": 72,
       "reason": null,
-      "status": "empty"
+      "status": "cache_only"
     },
     "vitibet": {
       "blocker": null,
