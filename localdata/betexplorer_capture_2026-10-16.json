@@ -1,25 +1,25 @@
 {
-  "attempted": 5,
+  "attempted": 6,
   "attempted_fixtures": [
     {
       "avg_p": 80.0,
-      "away": "Syunik",
+      "away": "TSV Hartberg",
       "date": "2026-10-16",
-      "home": "Alashkert",
-      "league": "Armenia: Premier League",
+      "home": "Rapid Vienna",
+      "league": "Austria Bundesliga",
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
     },
     {
-      "avg_p": 78.5,
-      "away": "TSV Hartberg",
+      "avg_p": 68.2,
+      "away": "Lokomotiv Plovdiv",
       "date": "2026-10-16",
-      "home": "Rapid Vienna",
-      "league": "Austria: Bundesliga",
+      "home": "Yantra 2019",
+      "league": "Bulgaria Cup",
       "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
+      "pick": "away",
+      "w_score": 0.762
     },
     {
       "avg_p": 62.9,
@@ -32,16 +32,6 @@
       "w_score": 0.5291
     },
     {
-      "avg_p": 62.9,
-      "away": "Bray Wanderers",
-      "date": "2026-10-16",
-      "home": "Finn Harps",
-      "league": "Rep. Of Ireland,First Division",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5273
-    },
-    {
       "avg_p": 61.7,
       "away": "Nykobing FC",
       "date": "2026-10-16",
@@ -50,27 +40,47 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 61.7,
+      "away": "Gleisdorf 09",
+      "date": "2026-10-16",
+      "home": "SV Lafnitz",
+      "league": "Austria Regionalliga - South",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.4774
+    },
+    {
+      "avg_p": 60.2,
+      "away": "Vasas",
+      "date": "2026-10-16",
+      "home": "MTK Budapest",
+      "league": "Hungary NB I",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.4148
     }
   ],
-  "be_429": 0,
-  "be_cached": 4,
+  "be_429": 1,
+  "be_cached": 3,
   "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "candidate_fixtures": 5,
-  "captured_at": "2026-10-16T07:08:47.847861+00:00",
+  "candidate_fixtures": 6,
+  "captured_at": "2026-10-16T13:07:06.105171+00:00",
   "date": "2026-10-16",
   "errors": [],
-  "fixtures_with_rows": 3,
+  "fixtures_with_rows": 4,
   "market_budget_stop": false,
-  "market_requests": 5,
+  "market_requests": 10,
   "match_detail": {
-    "bookmakers": 40,
+    "bookmakers": 168,
     "challenge_pages": 0,
-    "fixtures": 4,
-    "market_rows": 115,
-    "markets": 24,
-    "named_rows": 115,
+    "fixtures": 6,
+    "market_rows": 382,
+    "markets": 36,
+    "named_rows": 382,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -79,16 +89,6 @@
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
-      "avg_p": 80.0,
-      "away": "Syunik",
-      "date": "2026-10-16",
-      "home": "Alashkert",
-      "league": "Armenia: Premier League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
       "avg_p": 62.9,
       "away": "1. FC N\u00fcrnberg",
       "date": "2026-10-16",
@@ -107,10 +107,30 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 61.7,
+      "away": "Gleisdorf 09",
+      "date": "2026-10-16",
+      "home": "SV Lafnitz",
+      "league": "Austria Regionalliga - South",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.4774
+    },
+    {
+      "avg_p": 60.2,
+      "away": "Vasas",
+      "date": "2026-10-16",
+      "home": "MTK Budapest",
+      "league": "Hungary NB I",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.4148
     }
   ],
-  "requests": 9,
-  "rows": 9,
+  "requests": 18,
+  "rows": 12,
   "schema": 1,
   "status": "ok"
 }

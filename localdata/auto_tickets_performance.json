@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-16T09:53:35",
+  "generated_at": "2026-10-16T15:35:29",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
@@ -786,7 +786,10 @@
           ]
         }
       ],
-      "bank_pct": 172.4802
+      "bank_pct": 191.3649,
+      "close_pct": 191.3649,
+      "bank_pct_before_correction": 172.4802,
+      "correction": "2026-10-16: bank_pct was a settlement snapshot taken after the 14 Oct acca #1 loss (18.8847). Set to the chained close: 12 Oct close 201.4367 - staked 50.3592 + returned 40.2874. See docs/operator/BANK-HISTORY-2026-10-16.md."
     },
     {
       "date": "2026-10-14",

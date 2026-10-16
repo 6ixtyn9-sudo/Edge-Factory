@@ -1,11 +1,35 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 7,
-  "captured_at": "2026-10-16T07:15:24+00:00",
+  "attempted": 3,
+  "attempted_fixtures": [
+    {
+      "away": "Syunik",
+      "date": "2026-10-16",
+      "home": "Alashkert",
+      "kickoff": "2026-10-16T15:00:00+02:00",
+      "league": "Armenia: Premier League"
+    },
+    {
+      "away": "TSV Hartberg",
+      "date": "2026-10-16",
+      "home": "Rapid Vienna",
+      "kickoff": "16-10, 18:30",
+      "league": "Austria Bundesliga"
+    },
+    {
+      "away": "1. FC N\u00fcrnberg",
+      "date": "2026-10-16",
+      "home": "Energie Cottbus",
+      "kickoff": "16-10, 17:30",
+      "league": "Germany 2. Bundesliga"
+    }
+  ],
+  "candidate_fixtures": 10,
+  "captured_at": "2026-10-16T13:15:21+00:00",
   "date": "2026-10-16",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 3
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -17,15 +41,24 @@
     "retry_cooldown": 6
   },
   "skipped": [
-    "Alashkert|Syunik (retry cooldown (6h after failed attempt))",
-    "Rapid Vienna|TSV Hartberg (retry cooldown (6h after failed attempt))",
     "Al-Qadisiyah|Abha (retry cooldown (6h after failed attempt))",
-    "Energie Cottbus|1. FC N\u00fcrnberg (retry cooldown (6h after failed attempt))",
+    "Yantra 2019|Lokomotiv Plovdiv (retry cooldown (6h after failed attempt))",
     "Finn Harps|Bray Wanderers (retry cooldown (6h after failed attempt))",
     "Fremad Amager|Nykobing FC (retry cooldown (6h after failed attempt))",
-    "Internacional Palmira|Orsomarso (kickoff already passed)"
+    "SV Lafnitz|Gleisdorf 09 (retry cooldown (6h after failed attempt))",
+    "Internacional Palmira|Orsomarso (kickoff already passed)",
+    "MTK Budapest|Vasas (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Alashkert vs Syunik (league not covered: Armenia: Premier League)",
+    "Energie Cottbus vs 1. FC N\u00fcrnberg (league not covered: Germany 2. Bundesliga)",
+    "Rapid Vienna vs TSV Hartberg (no event in soccer_austria_bundesliga)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Armenia: Premier League": 1,
+    "league not covered: Germany 2. Bundesliga": 1,
+    "no event in soccer_austria_bundesliga": 1
+  }
 }
