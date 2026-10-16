@@ -1,35 +1,11 @@
 {
   "added": 0,
-  "attempted": 3,
-  "attempted_fixtures": [
-    {
-      "away": "Abha",
-      "date": "2026-10-16",
-      "home": "Al-Qadisiyah",
-      "kickoff": "08:15",
-      "league": "Saudi Arabia,Saudi Pro League"
-    },
-    {
-      "away": "Bray Wanderers",
-      "date": "2026-10-16",
-      "home": "Finn Harps",
-      "kickoff": "11:45",
-      "league": "Rep. Of Ireland,First Division"
-    },
-    {
-      "away": "Nykobing FC",
-      "date": "2026-10-16",
-      "home": "Fremad Amager",
-      "kickoff": "16-10, 18:00",
-      "league": "Denmark 2. Division"
-    }
-  ],
-  "candidate_fixtures": 6,
-  "captured_at": "2026-10-16T04:11:31+00:00",
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 7,
+  "captured_at": "2026-10-16T07:15:24+00:00",
   "date": "2026-10-16",
-  "due_reasons": {
-    "first_at": 3
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -38,23 +14,18 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
-    "retry_cooldown": 2
+    "retry_cooldown": 6
   },
   "skipped": [
     "Alashkert|Syunik (retry cooldown (6h after failed attempt))",
     "Rapid Vienna|TSV Hartberg (retry cooldown (6h after failed attempt))",
+    "Al-Qadisiyah|Abha (retry cooldown (6h after failed attempt))",
+    "Energie Cottbus|1. FC N\u00fcrnberg (retry cooldown (6h after failed attempt))",
+    "Finn Harps|Bray Wanderers (retry cooldown (6h after failed attempt))",
+    "Fremad Amager|Nykobing FC (retry cooldown (6h after failed attempt))",
     "Internacional Palmira|Orsomarso (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Al-Qadisiyah vs Abha (league not covered: Saudi Arabia,Saudi Pro League)",
-    "Finn Harps vs Bray Wanderers (league not covered: Rep. Of Ireland,First Division)",
-    "Fremad Amager vs Nykobing FC (league not covered: Denmark 2. Division)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Denmark 2. Division": 1,
-    "league not covered: Rep. Of Ireland,First Division": 1,
-    "league not covered: Saudi Arabia,Saudi Pro League": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
