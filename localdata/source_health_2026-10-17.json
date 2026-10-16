@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 14,
@@ -32,7 +32,7 @@
         "selection_unmapped": 353
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -60,7 +60,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-17' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -179,14 +179,14 @@
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
       "freshness_h": 0.0,
-      "join_matched_rows": 17,
+      "join_matched_rows": 14,
       "join_miss_counts": {
-        "fixture_key_miss": 19099,
+        "fixture_key_miss": 18936,
         "no_pick_for_fixture": 248
       },
-      "pa_matched": 24,
-      "pa_raw": 1065,
-      "pa_scored": 19364,
+      "pa_matched": 21,
+      "pa_raw": 1055,
+      "pa_scored": 19198,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -236,49 +236,31 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 6,
-        "board_league_count": 5,
+        "board_fixtures": 3,
+        "board_league_count": 2,
         "board_leagues": {
-          "argentina_-_primera_division": 85,
-          "copa_libertadores_women": 2,
-          "guatemala_-_liga_nacional": 87,
-          "uefa_-_europa_conference_league": 2,
-          "uefa_-_europa_league": 24
+          "colombia_-_cup": 7,
+          "conmebol_-_copa_libertadores": 193
         },
-        "board_non_prematch_rows": 170,
+        "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 11,
+        "board_team_count": 5,
         "board_team_names": {
-          "Anderlecht": 24,
-          "Brighton": 2,
-          "CSD Municipal": 72,
-          "Coban Imperial": 87,
-          "Colo Colo [W]": 2,
-          "Corinthians [W]": 2,
-          "Dinamo Zagreb": 24,
-          "Gimnasia La Plata": 85,
-          "Huracan": 85,
-          "Kauno Zalgiris": 2,
-          "Municipal": 15
+          "Estudiantes": 164,
+          "Estudiantes La Plata": 29,
+          "Flamengo": 193,
+          "Internacional de Bogota": 7,
+          "Llaneros SA": 7
         },
         "board_truncated": false,
-        "canonicalization_drop_reasons": {
-          "unknown_market:1st_half_asian_handicap_corners": 2,
-          "unknown_market:1st_half_moneyline": 3,
-          "unknown_market:1st_half_total_corners": 10,
-          "unknown_market:2nd_half_asian_handicap_corners": 2,
-          "unknown_market:2nd_half_moneyline": 3,
-          "unknown_market:2nd_half_total_corners": 10
-        },
         "card_fixture_count": 17,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 115,
-          "player_prop": 55
+          "live_price": 200
         },
         "requested_limit": 1000
       },
