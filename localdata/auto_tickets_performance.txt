@@ -1,11 +1,11 @@
 AUTO-TICKETS (ROLLING) — performance, percent of capital
 ==============================================================
-generated 2026-10-16T21:39:23
+generated 2026-10-17T01:09:02
 
-BANK     192.3%   x1.92 of the 100% base
+BANK     168.3%   x1.68 of the 100% base
 CYCLE    baseline 204.0%   next take-profit notice at 408.0%   (+100% per cycle)
-RECORD   59W / 41L   (59.0% hit)   over 47 bet-days
-OPEN     1 open slips   1 held accas   1 take-profit notice(s) to date
+RECORD   59W / 42L   (58.4% hit)   over 48 bet-days
+OPEN     0 open slips   0 held accas   1 take-profit notice(s) to date
 
 SNAPSHOT NOTES
   A stored close is the bank when that day's last acca settled. An acca that
@@ -21,6 +21,12 @@ SNAPSHOT NOTES
   2026-09-28 to 2026-10-01: stored close +15.54 vs rebuild; back in line 2026-10-02
 
 BET-DAYS, newest first (last 15)
+  2026-10-16   staked  24.0%   returned   0.0%   net  -24.0%   bank 192.3% -> 168.3%
+    ACCA @2.78   stake 24.0%          LOST  net -24.0%
+      LOST Energie Cottbus vs 1. FC Nürnberg                AWAY @1.98
+      LOST Finn Harps vs Bray Wanderers                     AWAY @1.40
+      lost on: Energie Cottbus vs 1. FC Nürnberg (AWAY)
+
   2026-10-15   staked  47.1%   returned  50.9%   net   +3.8%   bank 188.5% -> 192.3%
     ACCA @1.78   stake 23.6%          LOST  net -23.6%
       WON  AZ Alkmaar vs Hapoel Beer Sheva                  HOME @1.33
@@ -84,16 +90,6 @@ BET-DAYS, newest first (last 15)
   ~ stored close +15.54 vs rebuild (see SNAPSHOT NOTES)
     ACCA @1.66   stake not recorded   WON
     ACCA @1.73   stake not recorded   WON
-
-  2026-09-28   staked  15.1%   returned  38.4%   net  +23.4%   bank 136.1% -> 159.5%
-  ~ stored close +15.54 vs rebuild (see SNAPSHOT NOTES)
-    ACCA @2.55   stake not recorded   WON
-
-HELD (not yet settled; stake counted as committed)
-  2026-10-16
-    ACCA @2.78   stake 24.0%          HELD (not settled)
-      open Energie Cottbus vs 1. FC Nürnberg                AWAY @1.98
-      open Finn Harps vs Bray Wanderers                     AWAY @1.40
 
 TAKE-PROFIT NOTICES
   2026-10-11   +104.0% that cycle   -> bank 204.0%, next target 408.0%
