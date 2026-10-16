@@ -8,6 +8,7 @@ import json
 import math
 import os
 import re
+import unicodedata
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -117,17 +118,54 @@ def _same_frozen_payload(left: dict[str, Any], right: dict[str, Any]) -> bool:
     )
 
 
+_NAME_NOISE = {"fc", "fk", "sc", "sk", "cf", "ud", "cd", "ac", "as", "ss", "us",
+               "if", "bk", "nk", "afc", "the", "of", "de", "club"}
+
+
+def _name_tokens(name: object) -> set[str]:
+    txt = unicodedata.normalize("NFKD", str(name or "")).encode("ascii", "ignore").decode()
+    toks = {t for t in re.split(r"[^a-z0-9]+", txt.lower()) if t}
+    return toks - _NAME_NOISE
+
+
+def _same_team_name(x: object, y: object) -> bool:
+    """True when one spelling's words are all in the other's (``Albacete`` vs
+    ``Albacete Balompie``, ``Napredak`` vs ``FK Napredak``). Different clubs
+    that share a prefix (``Hapoel Kfar Shalem`` vs ``Hapoel Kfar Saba``) do not."""
+    tx, ty = _name_tokens(x), _name_tokens(y)
+    return bool(tx and ty) and (tx <= ty or ty <= tx)
+
+
+def _is_name_variant_of_morning(row: dict[str, Any], morning: list[dict[str, Any]]) -> bool:
+    """A regular-only row that re-spells a morning pick (same market, same side,
+    both teams matching by name variant) is the same pick, not a late addition."""
+    mkt = str(row.get("market") or "").lower()
+    sel = str(row.get("pick") or "").lower()
+    for m in morning:
+        if str(m.get("market") or "").lower() != mkt or str(m.get("pick") or "").lower() != sel:
+            continue
+        if _same_team_name(row.get("home"), m.get("home")) and _same_team_name(
+            row.get("away"), m.get("away")
+        ):
+            return True
+    return False
+
+
 def load_archived_picks_with_receipt(
     start: str,
     end: str,
     *,
     localdata: Path | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Load immutable morning picks plus verified official late-slate additions.
+    """Load immutable morning picks plus regular-ledger late-slate additions.
 
     The regular daily ledger may contain valid intraday discoveries, but it can
-    be replaced by a forecast refresh. Its new rows are accepted only when it is
-    a payload-identical superset of every morning baseline row.
+    be replaced by a forecast refresh. Morning baseline rows always come from
+    the morning file, never from the regular ledger. Regular rows whose key is
+    not in the morning baseline are counted as late additions. When the regular
+    ledger's copies of baseline rows differ from the morning copies (a
+    forecast refresh rewrote them), the day is listed in
+    ``unsafe_regular_ledger_dates`` and its late additions are still counted.
 
     ``localdata`` defaults to the repository ledger directory; retention
     tooling passes a scratch directory to prove a morning file is redundant
@@ -138,6 +176,8 @@ def load_archived_picks_with_receipt(
     receipt: dict[str, Any] = {
         "morning_baseline_rows": 0,
         "verified_late_additions": 0,
+        "late_additions_on_rewritten_ledgers": 0,
+        "name_variant_duplicates_skipped": 0,
         "regular_only_rows": 0,
         "unsafe_regular_ledger_dates": [],
         "empty_regular_ledger_dates": [],
@@ -174,12 +214,17 @@ def load_archived_picks_with_receipt(
         )
         if not baseline_preserved:
             receipt["unsafe_regular_ledger_dates"].append(day)
-            continue
 
         for row in regular:
-            if _archive_pick_key(row, day) not in morning_by_key:
-                out.append(row)
-                receipt["verified_late_additions"] += 1
+            if _archive_pick_key(row, day) in morning_by_key:
+                continue
+            if _is_name_variant_of_morning(row, morning):
+                receipt["name_variant_duplicates_skipped"] += 1
+                continue
+            out.append(row)
+            receipt["verified_late_additions"] += 1
+            if not baseline_preserved:
+                receipt["late_additions_on_rewritten_ledgers"] += 1
 
     return out, receipt
 
@@ -2069,6 +2114,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "archived_pick_dates": archived_dates,
         "morning_baseline_rows": archive_receipt["morning_baseline_rows"],
         "verified_late_additions": archive_receipt["verified_late_additions"],
+        "late_additions_on_rewritten_ledgers": archive_receipt["late_additions_on_rewritten_ledgers"],
         "regular_only_rows": archive_receipt["regular_only_rows"],
         "unsafe_regular_ledger_dates": archive_receipt["unsafe_regular_ledger_dates"],
         "empty_regular_ledger_dates": archive_receipt.get("empty_regular_ledger_dates", []),
@@ -2136,7 +2182,9 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- archived pick rows: {report.get('archived_pick_rows', 0)}",
         f"- archived pick dates: {len(report.get('archived_pick_dates', []))}",
         f"- immutable morning-baseline rows: {report.get('morning_baseline_rows', 0)}",
-        f"- verified official late-slate additions: {report.get('verified_late_additions', 0)}",
+        f"- late-slate additions (regular-ledger rows not in the morning baseline): "
+        f"{report.get('verified_late_additions', 0)}, of which on days whose regular ledger was "
+        f"rewritten: {report.get('late_additions_on_rewritten_ledgers', 0)}",
         f"- regular-ledger-only legacy rows: {report.get('regular_only_rows', 0)}",
         f"- unsafe regular ledgers ignored: {len(report.get('unsafe_regular_ledger_dates', []))}",
         "- empty regular ledgers (morning-baseline coverage only): "

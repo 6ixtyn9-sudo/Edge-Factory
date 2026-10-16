@@ -549,7 +549,7 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     assert "## Price Evidence / Corroboration Audit" in text
     assert "## Suspect-price Quarantine Audit" in text
     assert "immutable morning-baseline rows" in text
-    assert "verified official late-slate additions" in text
+    assert "late-slate additions (regular-ledger rows not in the morning baseline)" in text
     assert "## Event Disposition / Void Audit" in text
     assert "pending/unmatched result picks" in text
     assert "SCOUTINGSTATS_SOLE" in text
@@ -874,7 +874,9 @@ def test_archived_pick_loader_merges_verified_late_official_additions(tmp_path, 
     assert receipt["unsafe_regular_ledger_dates"] == []
 
 
-def test_archived_pick_loader_rejects_forecast_mutated_regular_ledger(tmp_path, monkeypatch):
+def test_archived_pick_loader_keeps_morning_values_when_regular_ledger_was_rewritten(tmp_path, monkeypatch):
+    """A forecast refresh rewrote a baseline row's odds. The morning copy stays
+    authoritative, the day is still flagged, and the regular-only late row counts."""
     import scripts.audit_recent_picks as audit_mod
 
     localdata = tmp_path / "localdata"
@@ -889,8 +891,10 @@ def test_archived_pick_loader_rejects_forecast_mutated_regular_ledger(tmp_path, 
 
     rows, receipt = audit_mod.load_archived_picks_with_receipt(day, day)
 
-    assert [row["match"] for row in rows] == ["Alpha vs Beta"]
-    assert receipt["verified_late_additions"] == 0
+    assert [row["match"] for row in rows] == ["Alpha vs Beta", "Gamma vs Delta"]
+    assert rows[0]["odds"] == 1.50  # morning value, not the rewritten 9.99
+    assert receipt["verified_late_additions"] == 1
+    assert receipt["late_additions_on_rewritten_ledgers"] == 1
     assert receipt["unsafe_regular_ledger_dates"] == [day]
 
 
@@ -1545,3 +1549,39 @@ def test_verified_result_purges_alternate_spelling(tmp_path, monkeypatch):
     assert report["ambiguous_result_picks"] == 0
     assert report["overall"]["settled_picks"] == 1
     assert report["overall"]["wins"] == 1
+
+
+def test_archived_pick_loader_skips_regular_respelling_of_a_morning_pick(tmp_path, monkeypatch):
+    """Re-spelled team names (Albacete vs Albacete Balompie) are the same pick, not a late addition."""
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-09-25"
+    baseline = _late_ledger_pick(day, "Girona", "Albacete")
+    respelled = _late_ledger_pick(day, "Girona", "Albacete Balompie")
+    late = _late_ledger_pick(day, "Gamma", "Delta", pick="away")
+    (localdata / f"picks_morning_{day}.json").write_text(json.dumps([baseline]))
+    (localdata / f"picks_{day}.json").write_text(json.dumps([baseline, respelled, late]))
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+
+    rows, receipt = audit_mod.load_archived_picks_with_receipt(day, day)
+
+    assert [row["match"] for row in rows] == ["Girona vs Albacete", "Gamma vs Delta"]
+    assert receipt["name_variant_duplicates_skipped"] == 1
+    assert receipt["verified_late_additions"] == 1
+
+
+def test_name_variant_rule_keeps_different_clubs_that_share_a_prefix():
+    import scripts.audit_recent_picks as audit_mod
+
+    morning = [_late_ledger_pick("2026-09-28", "Hapoel Kfar Shalem", "Maccabi Kabilio Jaffa")]
+    other_club = _late_ledger_pick("2026-09-28", "Hapoel Kfar Saba", "Bnei Yehuda", pick="away")
+    assert not audit_mod._is_name_variant_of_morning(other_club, morning)
+    variant = _late_ledger_pick("2026-09-29", "FK Napredak", "FK Vozdovac")
+    baseline = [_late_ledger_pick("2026-09-29", "Napredak", "Vozdovac")]
+    assert audit_mod._is_name_variant_of_morning(variant, baseline)
+    # same teams, other side: a different pick, so it is kept
+    other_side = _late_ledger_pick("2026-09-29", "FK Napredak", "FK Vozdovac", pick="away")
+    assert not audit_mod._is_name_variant_of_morning(other_side, baseline)
+
