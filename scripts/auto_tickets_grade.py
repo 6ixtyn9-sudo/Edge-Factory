@@ -4,11 +4,12 @@
 Settles anything settleable via the engine, then writes a report for one lane:
 
   --lane main (default)  localdata/auto_tickets_performance.txt/.json
-  --lane enh             localdata/autobets_enh_performance.txt/.json
+  --lane enh             localdata/autobets_enh_tickets_performance.txt/.json
 
 Each report gives bank as % of capital, performance multiple, acca record,
-and any TAKE-PROFIT NOTIFICATION events. The enhancement lane's state is
-gitignored runtime state, so its report only exists where that state is.
+and any TAKE-PROFIT NOTIFICATION events. Both lanes share one layout.
+The enhancement lane's state is gitignored runtime state, so its report only
+exists where that state is.
 
 Usage:
   PYTHONPATH=src python3 scripts/auto_tickets_grade.py
@@ -33,103 +34,144 @@ LOCALDATA = ROOT / "localdata"
 # lane name -> (state lane object or None for main, report label, report file stem)
 LANES = {
     "main": (None, "AUTO-TICKETS (ROLLING)", "auto_tickets_performance"),
-    "enh": (at.ENHANCEMENT_LANE, "ENHANCEMENT TICKETS (ROLLING)", "autobets_enh_performance"),
+    "enh": (at.ENHANCEMENT_LANE, "ENHANCEMENT TICKETS (ROLLING)", "autobets_enh_tickets_performance"),
 }
 
 
-_RESULT_TAG = {"win": "WON ", "loss": "LOST", "void": "VOID", "conflict": "HELD",
-               None: "open"}
+# ---------------------------------------------------------------------------
+# One layout for both lanes; only the label and file stem differ.
+# ---------------------------------------------------------------------------
+
+_LEG_TAG = {"win": "WON", "loss": "LOST", "void": "VOID", "conflict": "HELD"}
 
 
-def _leg_text(leg, result):
-    """One leg line: result, match, pick and price, and the leg's own label."""
-    pick = str(leg.get("pick") or "").upper()
-    if leg.get("label"):
-        pick = str(leg["label"])
-    odds = leg.get("odds")
-    price = f" @{float(odds):.2f}" if isinstance(odds, (int, float)) else ""
-    return f"      {_RESULT_TAG.get(result, 'open'):4s}  {str(leg.get('match') or ''):44s} {pick}{price}"
-
-
-def _acca_detail(a, held=False):
-    """Stake, outcome and legs for one acca, as printed under its bet-day."""
-    stake = a.get("stake_pct")
-    if held:
-        head = f"   ACCA @{a['odds']:.2f}  stake {stake:.1f}%  HELD (not settled)"
-    elif a.get("won") is None:
-        head = f"   ACCA @{a['odds']:.2f}  stake {stake:.1f}%  open"
-    else:
-        ret = a.get("returned_pct")
-        if ret is None:
-            ret = round(stake * a["odds"], 4) if a["won"] and stake is not None else 0.0
-        net = ret - stake if stake is not None else None
-        verdict = "WON " if a["won"] else "LOST"
-        head = (f"   ACCA @{a['odds']:.2f}  stake {stake:.1f}%  {verdict}  net {net:+.1f}%"
-                if stake is not None else f"   ACCA @{a['odds']:.2f}  {verdict}")
-    out = [head]
-    legs = a.get("legs")
+def _leg_results(a):
+    """Per-leg result tags for an acca: stored results first, then the leg record."""
+    legs = a.get("legs") or []
     results = a.get("results")
-    if legs is None:
-        # Settlements from before leg detail was recorded: the header says so.
-        return out
-    # Held accas carry results beside the legs; settled history carries each
-    # leg's own result on the leg record.
-    res = [results[i] if results is not None and i < len(results)
-           else (leg.get("result") if isinstance(leg, dict) else None)
-           for i, leg in enumerate(legs)]
-    for leg, r in zip(legs, res):
-        out.append(_leg_text(leg, r))
-    if not held and a.get("won") is False:
-        culprit = next((l for l, r in zip(legs, res) if r == "loss"), None)
-        if culprit is not None:
-            out.append(f"      -> lost on: {culprit.get('match')} ({culprit.get('pick') or culprit.get('label')})")
+    out = []
+    for i, leg in enumerate(legs):
+        if results is not None and i < len(results):
+            out.append(results[i])
+        else:
+            out.append(leg.get("result") if isinstance(leg, dict) else None)
     return out
 
 
-def render_lines(st, label, last, held, accas, wins):
-    """The performance report, one block per bet-day with each acca broken out."""
-    multiple = st["bank"] / st["base_pct"]
-    n_held = len(held)
-    lines = [f"{label} PERFORMANCE — percentages of capital only", "=" * 62,
-             f"generated {datetime.now().isoformat(timespec='seconds')}",
-             f"bank {st['bank']:.1f}% of capital (x{multiple:.2f}) · "
-             f"cycle baseline {st['cycle_base']:.1f}% · "
-             f"next take-profit notification at {at.take_profit_target(st):.1f}% "
-             f"(+{at.TAKE_PROFIT_GAIN:.0%} per cycle)",
-             (f"bet-days {len(st['history'])} · accas {wins}W/{len(accas)-wins}L "
-              f"(hit {wins/len(accas):.1%})") if accas else "no settled accas yet",
-             f"open slips {len(st['open_slips'])} · held accas {n_held} · "
-             f"{len(st.get('events', []))} take-profit notification(s) to date",
-             "",
-             "Each acca is listed on its bet-day with its stake and net result in",
-             "percent of capital. Leg rows show WON / LOST / VOID / HELD for each leg;",
-             "'-> lost on' names the leg that decided the acca. Bet-days from before",
-             "leg detail was recorded show the acca result only.",
-             "",
-             "--- bet-days (most recent first) ---"]
-    for h in reversed(st["history"][-last:]):
+def _main_acca_block(a, held=False):
+    """One acca: its stake and result on one line, then its legs indented under it."""
+    odds = a.get("odds")
+    odds_txt = f"@{odds:.2f}" if isinstance(odds, (int, float)) else "@n/a"
+    stake = a.get("stake_pct")
+    stake_txt = f"stake {stake:.1f}%" if stake is not None else "stake not recorded"
+    if held:
+        head = f"    ACCA {odds_txt:<7} {stake_txt:<20} HELD (not settled)"
+    elif a.get("won") is None:
+        head = f"    ACCA {odds_txt:<7} {stake_txt:<20} open"
+    else:
+        verdict = "WON" if a["won"] else "LOST"
+        ret = a.get("returned_pct")
+        if ret is None:
+            ret = (round(stake * odds, 4)
+                   if a["won"] and stake is not None and isinstance(odds, (int, float)) else 0.0)
+        net_txt = f"net {ret - stake:+.1f}%" if stake is not None else ""
+        head = f"    ACCA {odds_txt:<7} {stake_txt:<20} {verdict:<4}  {net_txt}"
+    out = [head]
+    legs = a.get("legs")
+    if legs is None:
+        return out  # settled before leg detail was recorded
+    res = _leg_results(a)
+    for leg, r in zip(legs, res):
+        if leg.get("label"):
+            pick = str(leg["label"])
+        else:
+            pick = str(leg.get("pick") or "").upper()
+        price = leg.get("odds")
+        price_txt = f"@{float(price):.2f}" if isinstance(price, (int, float)) else ""
+        tag = _LEG_TAG.get(r, "open")
+        out.append(f"      {tag:<5}{str(leg.get('match') or ''):<48} {pick} {price_txt}")
+    if not held and a.get("won") is False:
+        culprit = next((l for l, r in zip(legs, res) if r == "loss"), None)
+        if culprit is not None:
+            out.append(f"      lost on: {culprit.get('match')} "
+                       f"({culprit.get('pick') or culprit.get('label')})")
+    return out
+
+
+def _bank_breaks(history):
+    """Index -> (previous close, this day's open) wherever the stored bank does not carry over."""
+    breaks = {}
+    for i in range(1, len(history)):
+        prev_end = history[i - 1]["bank_pct"]
+        h = history[i]
         staked = h.get("staked_pct", 0.0)
         returned = h.get("returned_pct", 0.0)
-        before = h["bank_pct"] - returned + staked
-        lines.append(f"  {h['date']}  staked {staked:.1f}% · returned {returned:.1f}% · "
-                     f"net {returned - staked:+.1f}% · bank {before:.1f}% -> {h['bank_pct']:.1f}%")
+        opens = h["bank_pct"] - returned + staked
+        if abs(opens - prev_end) > 0.05:
+            breaks[i] = (prev_end, opens)
+    return breaks
+
+
+def render_lines(st, label, last, held, accas, wins, generated):
+    """The performance report: summary block, then bet-days newest first."""
+    multiple = st["bank"] / st["base_pct"]
+    history = st["history"]
+    breaks = _bank_breaks(history)
+    rows = []
+    add = rows.append
+    add(f"{label} — performance, percent of capital")
+    add("=" * 62)
+    add(f"generated {generated}")
+    add("")
+    add(f"BANK     {st['bank']:.1f}%   x{multiple:.2f} of the {st['base_pct']:.0f}% base")
+    add(f"CYCLE    baseline {st['cycle_base']:.1f}%   next take-profit notice at "
+        f"{at.take_profit_target(st):.1f}%   (+{at.TAKE_PROFIT_GAIN:.0%} per cycle)")
+    if accas:
+        add(f"RECORD   {wins}W / {len(accas) - wins}L   ({wins / len(accas):.1%} hit)   "
+            f"over {len(history)} bet-days")
+    else:
+        add("RECORD   no settled accas yet")
+    add(f"OPEN     {len(st['open_slips'])} open slips   {len(held)} held accas   "
+        f"{len(st.get('events', []))} take-profit notice(s) to date")
+    add("")
+    start = max(0, len(history) - last)
+    add(f"BET-DAYS, newest first (last {len(history) - start})")
+    for i in reversed(range(start, len(history))):
+        h = history[i]
+        staked = h.get("staked_pct", 0.0)
+        returned = h.get("returned_pct", 0.0)
+        opens = h["bank_pct"] - returned + staked
+        add(f"  {h['date']}   staked {staked:5.1f}%   returned {returned:5.1f}%   "
+            f"net {returned - staked:+6.1f}%   bank {opens:.1f}% -> {h['bank_pct']:.1f}%")
+        if i in breaks:
+            prev_end, opens_at = breaks[i]
+            add(f"  ! bank break: previous bet-day closed at {prev_end:.1f}%, this one opens at "
+                f"{opens_at:.1f}% (gap {opens_at - prev_end:+.1f} pts). Stored bank values disagree.")
         for a in h["accas"]:
-            lines.extend(_acca_detail(a))
-        lines.append("")
+            rows.extend(_main_acca_block(a))
+        add("")
     if held:
-        lines.append("--- held accas (not yet settled; stake counted as committed until it settles) ---")
+        add("HELD (not yet settled; stake counted as committed)")
         for slip, a in held:
-            lines.append(f"  {slip['date']}")
-            lines.extend(_acca_detail(dict(a, won=None, stake_pct=a["stake_pct"]), held=True))
-            conflicts = [l.get("match") for l, r in zip(a["legs"], a.get("results") or []) if r == "conflict"]
+            add(f"  {slip['date']}")
+            rows.extend(_main_acca_block(dict(a, won=None), held=True))
+            conflicts = [l.get("match") for l, r in zip(a["legs"], a.get("results") or [])
+                         if r == "conflict"]
             if conflicts:
-                lines.append("      reason: donor spellings disagree on the outcome of "
-                             + ", ".join(str(c) for c in conflicts))
-        lines.append("")
-    for e in st.get("events", []):
-        lines.append(f"  🔔 {e['date']}: TAKE-PROFIT NOTIFICATION — +{e['gain_pct']:.1f}% that cycle "
-                     f"(bank {e['bank_after_pct']:.1f}%, next target {e['next_target_pct']:.1f}%)")
-    return lines
+                add("      reason: donor spellings disagree on the outcome of "
+                    + ", ".join(str(c) for c in conflicts))
+        add("")
+    events = st.get("events", [])
+    if events:
+        add("TAKE-PROFIT NOTICES")
+        for e in events:
+            add(f"  {e['date']}   +{e['gain_pct']:.1f}% that cycle   "
+                f"-> bank {e['bank_after_pct']:.1f}%, next target {e['next_target_pct']:.1f}%")
+        add("")
+    add("KEY  Stake and returned are % of capital. Each leg reads WON / LOST / VOID / HELD.")
+    add("     'lost on' names the leg that decided an acca. '!' marks a bank break.")
+    add("     Bet-days recorded before leg detail was kept show the acca result only.")
+    return [r.rstrip() for r in rows]
 
 
 def main(argv=None):
@@ -153,7 +195,8 @@ def main(argv=None):
     accas = [a for h in st["history"] for a in h["accas"]]
     wins = sum(1 for a in accas if a["won"])
     held = [(slip, a) for slip in st["open_slips"] for a in slip["accas"]]
-    lines = render_lines(st, label, args.last, held, accas, wins)
+    generated = datetime.now().isoformat(timespec="seconds")
+    lines = render_lines(st, label, args.last, held, accas, wins, generated)
     multiple = st["bank"] / st["base_pct"]
 
     txt = "\n".join(lines)
