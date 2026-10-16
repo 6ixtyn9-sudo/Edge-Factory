@@ -1,50 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 192.30279300000012,
+  "bank": 168.26499300000012,
   "cycle_base": 203.9865280000001,
-  "open_slips": [
-    {
-      "date": "2026-10-16",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Energie Cottbus vs 1. FC N\u00fcrnberg",
-              "pick": "AWAY",
-              "prob": 0.629,
-              "odds": 1.9804,
-              "result": null,
-              "fixture_key": [
-                "2026-10-16",
-                "Energie Cottbus",
-                "1. FC N\u00fcrnberg"
-              ]
-            },
-            {
-              "match": "Finn Harps vs Bray Wanderers",
-              "pick": "AWAY",
-              "prob": 0.629,
-              "odds": 1.4032,
-              "result": null,
-              "fixture_key": [
-                "2026-10-16",
-                "Finn Harps",
-                "Bray Wanderers"
-              ]
-            }
-          ],
-          "odds": 2.78,
-          "stake_pct": 24.0378,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 24.0378
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -888,6 +846,35 @@
         }
       ],
       "bank_pct": 192.3028
+    },
+    {
+      "date": "2026-10-16",
+      "staked_pct": 24.0378,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.78,
+          "won": false,
+          "stake_pct": 24.0378,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Energie Cottbus vs 1. FC N\u00fcrnberg",
+              "pick": "AWAY",
+              "odds": 1.9804,
+              "result": "loss"
+            },
+            {
+              "match": "Finn Harps vs Bray Wanderers",
+              "pick": "AWAY",
+              "odds": 1.4032,
+              "result": "loss"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 168.265,
+      "close_pct": 168.265
     }
   ],
   "events": [

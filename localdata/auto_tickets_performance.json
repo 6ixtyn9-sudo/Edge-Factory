@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-16T21:39:23",
+  "generated_at": "2026-10-17T01:09:02",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 192.30279300000012,
-  "multiple": 1.9230279300000013,
+  "bank_pct": 168.26499300000012,
+  "multiple": 1.682649930000001,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 47,
+  "bet_days": 48,
   "accas": {
     "wins": 59,
-    "losses": 41
+    "losses": 42
   },
-  "open_slips": [
-    {
-      "date": "2026-10-16",
-      "staked_pct": 24.0378
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -870,6 +865,35 @@
         }
       ],
       "bank_pct": 192.3028
+    },
+    {
+      "date": "2026-10-16",
+      "staked_pct": 24.0378,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.78,
+          "won": false,
+          "stake_pct": 24.0378,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Energie Cottbus vs 1. FC N\u00fcrnberg",
+              "pick": "AWAY",
+              "odds": 1.9804,
+              "result": "loss"
+            },
+            {
+              "match": "Finn Harps vs Bray Wanderers",
+              "pick": "AWAY",
+              "odds": 1.4032,
+              "result": "loss"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 168.265,
+      "close_pct": 168.265
     }
   ]
 }
