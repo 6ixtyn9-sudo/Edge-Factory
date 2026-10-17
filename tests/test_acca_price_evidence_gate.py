@@ -229,3 +229,21 @@ def test_replay_recipe_is_unchanged_by_the_gate():
     plan = at.plan_day(pool, 100.0)
     used = {l["match"] for a in plan for l in a["legs"]}
     assert "A v B" in used
+
+
+def test_gate_run_log_records_blocked_legs_and_empty_runs(tmp_path):
+    """Every gate run appends one line: the status, the blocked label set, and each
+    leg the gate removed. An empty block is still logged, so a quiet run is visible."""
+    leg = {"match": "A vs B", "pick": "HOME", "odds": 1.8, "prob": 0.7,
+           "row": {"price_evidence": "BETEXPLORER_RESCUE", "bucket": "SKIPPED_VETO"}}
+    path = tmp_path / "acca_gate_log.jsonl"
+    at.log_acca_gate_run("2026-10-17", "stepped for 2026-10-17", {"BETEXPLORER_RESCUE"}, [leg], path=path)
+    at.log_acca_gate_run("2026-10-17", "already stepped", {"BETEXPLORER_RESCUE"}, [], path=path)
+    lines = path.read_text().splitlines()
+    assert len(lines) == 2
+    first = json.loads(lines[0])
+    assert first["target"] == "2026-10-17"
+    assert first["blocked_labels"] == ["BETEXPLORER_RESCUE"]
+    assert first["blocked_legs"][0]["match"] == "A vs B"
+    assert first["blocked_legs"][0]["label"] == "BETEXPLORER_RESCUE"
+    assert json.loads(lines[1])["blocked_legs"] == []
