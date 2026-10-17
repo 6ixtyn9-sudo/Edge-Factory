@@ -1,11 +1,21 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Coritiba",
+      "date": "2026-10-17",
+      "home": "Atletico-MG",
+      "kickoff": "2026-10-17T23:30:00+02:00",
+      "league": "Brazil: Serie A"
+    }
+  ],
   "candidate_fixtures": 48,
-  "captured_at": "2026-10-17T16:19:15+00:00",
+  "captured_at": "2026-10-17T19:15:37+00:00",
   "date": "2026-10-17",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -15,11 +25,11 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 10,
+    "kickoff_already_passed": 13,
     "kickoff_mismatch": 7,
     "priced": 16,
-    "priced_close_window_not_open": 3,
-    "retry_cooldown": 19
+    "retry_cooldown": 17,
+    "too_close_for_first_capture": 1
   },
   "skipped": [
     "Athletic Club W|Valencia W (kickoff already passed)",
@@ -38,7 +48,6 @@
     "Slavia Praha|Hradec Kralove (retry cooldown (6h after failed attempt))",
     "Queen Of The South|Ross County (retry cooldown (6h after failed attempt))",
     "Fenerbahce|Alanyaspor (priced)",
-    "Atletico-MG|Coritiba (retry cooldown (6h after failed attempt))",
     "Ham-Kam|Bodo/Glimt (priced)",
     "Real Madrid (w)|Espanyol (w) (priced)",
     "WARN kickoff-mismatch Union Berlin|Borussia Dortmund: pick legacy display says 14:30 SAST, captured rows say 15:30 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
@@ -48,7 +57,7 @@
     "WARN kickoff-mismatch Venezia|Napoli: pick legacy display says 14:00 SAST, captured rows say 15:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Venezia|Napoli (kickoff already passed)",
     "WARN kickoff-mismatch Real Betis|Barcelona: pick legacy display says 17:30 SAST, captured rows say 18:30 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Real Betis|Barcelona (priced, close window not open)",
+    "Real Betis|Barcelona (kickoff already passed)",
     "Salisbury FC|Eastbourne Borough (retry cooldown (6h after failed attempt))",
     "Eastleigh|Brentwood Town (retry cooldown (6h after failed attempt))",
     "Bayern Munich|RB Leipzig (priced)",
@@ -58,7 +67,7 @@
     "Philadelphia Union|Charlotte (priced)",
     "Kashiwa Reysol|Nagoya Grampus (priced)",
     "WARN kickoff-mismatch AS Roma|Genoa: pick legacy display says 19:45 SAST, captured rows say 20:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "AS Roma|Genoa (priced, close window not open)",
+    "AS Roma|Genoa (kickoff already passed)",
     "Barrow|Gloucester City (retry cooldown (6h after failed attempt))",
     "VfL Wolfsburg|1. FC Heidenheim (kickoff already passed)",
     "WARN kickoff-mismatch Middlesbrough|Cardiff: pick legacy display says 12:30 SAST, captured rows say 13:30 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
@@ -66,7 +75,7 @@
     "Maccabi Petah Tikva|Maccabi Haifa (retry cooldown (6h after failed attempt))",
     "Tokyo Verdy|FC Tokyo (priced)",
     "WARN kickoff-mismatch Bologna|Inter: pick legacy display says 17:00 SAST, captured rows say 18:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Bologna|Inter (priced, close window not open)",
+    "Bologna|Inter (kickoff already passed)",
     "Al Wihdat|Al Hussein (kickoff already passed)",
     "Hartford Athletic|Brooklyn (retry cooldown (6h after failed attempt))",
     "Kolos Kovalivka II|UCSA (kickoff already passed)",
@@ -74,11 +83,16 @@
     "Kashima Antlers|V-Varen Nagasaki (priced)",
     "Broadmeadow Magic|Wests APIA (kickoff already passed)",
     "Villarreal|Elche (priced)",
-    "Maring\u00e1|Ferrovi\u00e1ria (retry cooldown (6h after failed attempt))",
+    "Maring\u00e1|Ferrovi\u00e1ria (too close to kickoff for first capture)",
     "Petrocub|Dacia Buiucani (retry cooldown (6h after failed attempt))",
     "Doma United|Kun Khalifat (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Atletico-MG vs Coritiba (no event in soccer_brazil_campeonato)"
+  ],
+  "unmatched_reasons": {
+    "no event in soccer_brazil_campeonato": 1
+  }
 }
