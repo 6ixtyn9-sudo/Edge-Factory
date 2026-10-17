@@ -1,37 +1,56 @@
 {
   "added": 0,
-  "attempted": 1,
+  "attempted": 3,
   "attempted_fixtures": [
     {
-      "away": "Coritiba",
+      "away": "FC Liefering",
       "date": "2026-10-17",
-      "home": "Atletico-MG",
-      "kickoff": "2026-10-17T23:30:00+02:00",
-      "league": "Brazil: Serie A"
+      "home": "FC BW Linz",
+      "kickoff": "2026-10-17T17:30:00+02:00",
+      "league": "Austria: 2. Liga"
+    },
+    {
+      "away": "Lask Linz",
+      "date": "2026-10-17",
+      "home": "Austria Lustenau",
+      "kickoff": "08:00",
+      "league": "Austria,Bundesliga"
+    },
+    {
+      "away": "UCSA",
+      "date": "2026-10-17",
+      "home": "Kolos Kovalivka II",
+      "kickoff": "17-10, 10:00",
+      "league": "Ukraine Persha Liga"
     }
   ],
-  "candidate_fixtures": 41,
-  "captured_at": "2026-10-17T04:45:17+00:00",
+  "candidate_fixtures": 45,
+  "captured_at": "2026-10-17T07:31:05+00:00",
   "date": "2026-10-17",
   "due_reasons": {
-    "first_at": 1
+    "close_at": 1,
+    "first_at": 2
   },
   "errors": [],
   "fixtures_with_rows": 0,
-  "kickoff_mismatch_detail": {},
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 3
+  },
   "quoted_fixtures": [],
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
-    "priced": 19,
+    "kickoff_mismatch": 3,
+    "priced": 18,
+    "priced_close_window_not_open": 3,
     "retry_cooldown": 20
   },
   "skipped": [
+    "Athletic Club W|Valencia W (retry cooldown (6h after failed attempt))",
     "Stockport County FC|Bromley (priced)",
     "ADO Den Haag|PSV Eindhoven (priced)",
     "Hapoel Tel Aviv|Ironi Tiberias (retry cooldown (6h after failed attempt))",
-    "FC BW Linz|FC Liefering (retry cooldown (6h after failed attempt))",
     "Cavalry FC|Pacific FC (retry cooldown (6h after failed attempt))",
     "Telstar|Feyenoord (priced)",
     "Sanfrecce Hiroshima|Kyoto Sanga (retry cooldown (6h after failed attempt))",
@@ -40,13 +59,15 @@
     "Viking|Fredrikstad (priced)",
     "Salford City|Crawley Town (priced)",
     "Slavia Praha|Hradec Kralove (retry cooldown (6h after failed attempt))",
-    "Athletic Club W|Valencia W (retry cooldown (6h after failed attempt))",
     "Queen Of The South|Ross County (retry cooldown (6h after failed attempt))",
     "Fenerbahce|Alanyaspor (priced)",
+    "Atletico-MG|Coritiba (retry cooldown (6h after failed attempt))",
     "Ham-Kam|Bodo/Glimt (priced)",
     "Real Madrid (w)|Espanyol (w) (priced)",
     "Genclerbirligi|Galatasaray (priced)",
     "Altrincham|FC Utd Of Manchester (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Venezia|Napoli: pick legacy display says 14:00 SAST, captured rows say 15:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Venezia|Napoli (priced, close window not open)",
     "Salisbury FC|Eastbourne Borough (retry cooldown (6h after failed attempt))",
     "Eastleigh|Brentwood Town (retry cooldown (6h after failed attempt))",
     "Bayern Munich|RB Leipzig (priced)",
@@ -55,26 +76,33 @@
     "Philadelphia Union|Charlotte (priced)",
     "Betis|Barcelona (priced)",
     "Kashiwa Reysol|Nagoya Grampus (priced)",
-    "Austria Lustenau|Lask Linz (retry cooldown (6h after failed attempt))",
-    "Middlesbrough|Cardiff (priced)",
     "Barrow|Gloucester City (retry cooldown (6h after failed attempt))",
+    "VfL Wolfsburg|1. FC Heidenheim (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Middlesbrough|Cardiff: pick legacy display says 12:30 SAST, captured rows say 13:30 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Middlesbrough|Cardiff (priced, close window not open)",
     "Maccabi Petah Tikva|Maccabi Haifa (retry cooldown (6h after failed attempt))",
     "Tokyo Verdy|FC Tokyo (priced)",
+    "WARN kickoff-mismatch Bologna|Inter: pick legacy display says 17:00 SAST, captured rows say 18:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Bologna|Inter (priced, close window not open)",
     "Hartford Athletic|Brooklyn (retry cooldown (6h after failed attempt))",
     "Boreham Wood|Woking (retry cooldown (6h after failed attempt))",
     "Kashima Antlers|V-Varen Nagasaki (priced)",
     "Broadmeadow Magic|Wests APIA (kickoff already passed)",
     "Villarreal|Elche (priced)",
-    "Petrocub|Dacia Buiucani (retry cooldown (6h after failed attempt))",
     "Maring\u00e1|Ferrovi\u00e1ria (retry cooldown (6h after failed attempt))",
+    "Petrocub|Dacia Buiucani (retry cooldown (6h after failed attempt))",
     "Doma United|Kun Khalifat (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
   "status": "empty",
   "unmatched": [
-    "Atletico-MG vs Coritiba (no event in soccer_brazil_campeonato)"
+    "FC BW Linz vs FC Liefering (league not covered: Austria: 2. Liga)",
+    "Kolos Kovalivka II vs UCSA (league not covered: Ukraine Persha Liga)",
+    "Austria Lustenau vs Lask Linz (no event in soccer_austria_bundesliga)"
   ],
   "unmatched_reasons": {
-    "no event in soccer_brazil_campeonato": 1
+    "league not covered: Austria: 2. Liga": 1,
+    "league not covered: Ukraine Persha Liga": 1,
+    "no event in soccer_austria_bundesliga": 1
   }
 }
