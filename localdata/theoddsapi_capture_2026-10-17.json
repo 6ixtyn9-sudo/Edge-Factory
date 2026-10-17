@@ -1,164 +1,66 @@
 {
-  "added": 0,
-  "attempted": 18,
+  "added": 54,
+  "attempted": 2,
   "attempted_fixtures": [
     {
-      "away": "Valencia W",
+      "away": "Crawley Town",
       "date": "2026-10-17",
-      "home": "Athletic Club W",
-      "kickoff": "17-10, 15:30",
-      "league": "Spain Primera Divisi\u00f3n Femenina"
+      "home": "Salford City",
+      "kickoff": "17-10, 15:00",
+      "league": "England League Two"
     },
     {
-      "away": "Ironi Tiberias",
+      "away": "Lask Linz",
       "date": "2026-10-17",
-      "home": "Hapoel Tel Aviv",
-      "kickoff": "08:45",
-      "league": "Israel,Ligat Haal"
-    },
-    {
-      "away": "Pacific FC",
-      "date": "2026-10-17",
-      "home": "Cavalry FC",
-      "kickoff": "13:00",
-      "league": "Canada,Premier League"
-    },
-    {
-      "away": "Kyoto Sanga",
-      "date": "2026-10-17",
-      "home": "Sanfrecce Hiroshima",
-      "kickoff": "2026-10-17T07:00:00+02:00",
-      "league": "Japan: J1 League"
-    },
-    {
-      "away": "Csakvar",
-      "date": "2026-10-17",
-      "home": "Tiszakecske FC",
-      "kickoff": "08:00",
-      "league": "Hungary,Nb Ii"
-    },
-    {
-      "away": "Hradec Kralove",
-      "date": "2026-10-17",
-      "home": "Slavia Praha",
-      "kickoff": "07:00",
-      "league": "Czech Republic,1. Liga"
-    },
-    {
-      "away": "Ross County",
-      "date": "2026-10-17",
-      "home": "Queen Of The South",
-      "kickoff": "07:00",
-      "league": "Scotland,League One"
-    },
-    {
-      "away": "FC Utd Of Manchester",
-      "date": "2026-10-17",
-      "home": "Altrincham",
-      "kickoff": "07:00",
-      "league": "England,Fa Cup"
-    },
-    {
-      "away": "Eastbourne Borough",
-      "date": "2026-10-17",
-      "home": "Salisbury FC",
-      "kickoff": "07:00",
-      "league": "England,Fa Cup"
-    },
-    {
-      "away": "Brentwood Town",
-      "date": "2026-10-17",
-      "home": "Eastleigh",
-      "kickoff": "07:00",
-      "league": "England,Fa Cup"
-    },
-    {
-      "away": "Annan Athletic",
-      "date": "2026-10-17",
-      "home": "Clyde",
-      "kickoff": "07:00",
-      "league": "Scotland,League Two"
-    },
-    {
-      "away": "Gloucester City",
-      "date": "2026-10-17",
-      "home": "Barrow",
-      "kickoff": "07:00",
-      "league": "England,Fa Cup"
-    },
-    {
-      "away": "Maccabi Haifa",
-      "date": "2026-10-17",
-      "home": "Maccabi Petah Tikva",
-      "kickoff": "09:30",
-      "league": "Israel,Ligat Haal"
-    },
-    {
-      "away": "Brooklyn",
-      "date": "2026-10-17",
-      "home": "Hartford Athletic",
-      "kickoff": "16:00",
-      "league": "USA,Usl Championship Eastern Conference"
-    },
-    {
-      "away": "Woking",
-      "date": "2026-10-17",
-      "home": "Boreham Wood",
-      "kickoff": "08:00",
-      "league": "England,Fa Cup"
-    },
-    {
-      "away": "Ferrovi\u00e1ria",
-      "date": "2026-10-17",
-      "home": "Maring\u00e1",
-      "kickoff": "17-10, 21:00",
-      "league": "Brazil Serie C"
-    },
-    {
-      "away": "Dacia Buiucani",
-      "date": "2026-10-17",
-      "home": "Petrocub",
-      "kickoff": "07:00",
-      "league": "Moldova,Super Liga"
-    },
-    {
-      "away": "Kun Khalifat",
-      "date": "2026-10-17",
-      "home": "Doma United",
-      "kickoff": "08:00",
-      "league": "Nigeria,Npfl"
+      "home": "Austria Lustenau",
+      "kickoff": "17-10, 16:00",
+      "league": "Austria Bundesliga"
     }
   ],
-  "candidate_fixtures": 46,
-  "captured_at": "2026-10-17T10:23:05+00:00",
+  "candidate_fixtures": 48,
+  "captured_at": "2026-10-17T13:23:30+00:00",
   "date": "2026-10-17",
   "due_reasons": {
-    "first_at": 18
+    "close_at": 2
   },
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 1,
   "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 5
+    "kickoff_mismatch_display_fallback_overridden": 7
   },
-  "quoted_fixtures": [],
-  "rows": 0,
+  "quoted_fixtures": [
+    {
+      "away": "Crawley Town",
+      "date": "2026-10-17",
+      "home": "Salford City",
+      "kickoff": "2026-10-17T14:00:00Z",
+      "league": "England League Two"
+    }
+  ],
+  "rows": 54,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 2,
-    "kickoff_mismatch": 5,
-    "priced": 17,
+    "kickoff_already_passed": 4,
+    "kickoff_mismatch": 7,
+    "priced": 16,
     "priced_close_window_not_open": 5,
-    "retry_cooldown": 4
+    "retry_cooldown": 21
   },
   "skipped": [
+    "Athletic Club W|Valencia W (retry cooldown (6h after failed attempt))",
     "Stockport County FC|Bromley (priced)",
     "ADO Den Haag|PSV Eindhoven (priced)",
+    "Hapoel Tel Aviv|Ironi Tiberias (retry cooldown (6h after failed attempt))",
     "FC BW Linz|FC Liefering (retry cooldown (6h after failed attempt))",
+    "Cavalry FC|Pacific FC (retry cooldown (6h after failed attempt))",
     "Telstar|Feyenoord (priced)",
     "WARN kickoff-mismatch Salford City|Crawley Town: pick legacy display says 15:00 SAST, captured rows say 16:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Salford City|Crawley Town (priced, close window not open)",
+    "Sanfrecce Hiroshima|Kyoto Sanga (retry cooldown (6h after failed attempt))",
     "Manchester City|Ipswich (priced)",
+    "Tiszakecske FC|Csakvar (retry cooldown (6h after failed attempt))",
     "Viking|Fredrikstad (priced)",
+    "Slavia Praha|Hradec Kralove (retry cooldown (6h after failed attempt))",
+    "Queen Of The South|Ross County (retry cooldown (6h after failed attempt))",
     "Fenerbahce|Alanyaspor (priced)",
     "Atletico-MG|Coritiba (retry cooldown (6h after failed attempt))",
     "Ham-Kam|Bodo/Glimt (priced)",
@@ -166,60 +68,45 @@
     "WARN kickoff-mismatch Union Berlin|Borussia Dortmund: pick legacy display says 14:30 SAST, captured rows say 15:30 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Union Berlin|Borussia Dortmund (priced, close window not open)",
     "Genclerbirligi|Galatasaray (priced)",
+    "Altrincham|FC Utd Of Manchester (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Venezia|Napoli: pick legacy display says 14:00 SAST, captured rows say 15:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Venezia|Napoli (priced, close window not open)",
+    "WARN kickoff-mismatch Real Betis|Barcelona: pick legacy display says 17:30 SAST, captured rows say 18:30 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Real Betis|Barcelona (priced, close window not open)",
+    "Salisbury FC|Eastbourne Borough (retry cooldown (6h after failed attempt))",
+    "Eastleigh|Brentwood Town (retry cooldown (6h after failed attempt))",
     "Bayern Munich|RB Leipzig (priced)",
+    "Clyde|Annan Athletic (retry cooldown (6h after failed attempt))",
     "Inter Turku|AC Oulu (priced)",
     "Philadelphia Union|Charlotte (priced)",
-    "Betis|Barcelona (priced)",
     "Kashiwa Reysol|Nagoya Grampus (priced)",
-    "Austria Lustenau|Lask Linz (retry cooldown (6h after failed attempt))",
-    "VfL Wolfsburg|1. FC Heidenheim (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch AS Roma|Genoa: pick legacy display says 19:45 SAST, captured rows say 20:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "AS Roma|Genoa (priced, close window not open)",
+    "Barrow|Gloucester City (retry cooldown (6h after failed attempt))",
+    "VfL Wolfsburg|1. FC Heidenheim (kickoff already passed)",
     "WARN kickoff-mismatch Middlesbrough|Cardiff: pick legacy display says 12:30 SAST, captured rows say 13:30 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Middlesbrough|Cardiff (priced, close window not open)",
+    "Middlesbrough|Cardiff (kickoff already passed)",
+    "Maccabi Petah Tikva|Maccabi Haifa (retry cooldown (6h after failed attempt))",
     "Tokyo Verdy|FC Tokyo (priced)",
     "WARN kickoff-mismatch Bologna|Inter: pick legacy display says 17:00 SAST, captured rows say 18:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Bologna|Inter (priced, close window not open)",
+    "Al Wihdat|Al Hussein (retry cooldown (6h after failed attempt))",
+    "Hartford Athletic|Brooklyn (retry cooldown (6h after failed attempt))",
     "Kolos Kovalivka II|UCSA (kickoff already passed)",
+    "Boreham Wood|Woking (retry cooldown (6h after failed attempt))",
     "Kashima Antlers|V-Varen Nagasaki (priced)",
     "Broadmeadow Magic|Wests APIA (kickoff already passed)",
-    "Villarreal|Elche (priced)"
+    "Villarreal|Elche (priced)",
+    "Maring\u00e1|Ferrovi\u00e1ria (retry cooldown (6h after failed attempt))",
+    "Petrocub|Dacia Buiucani (retry cooldown (6h after failed attempt))",
+    "Doma United|Kun Khalifat (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
+  "status": "ok",
   "unmatched": [
-    "Athletic Club W vs Valencia W (league not covered: Spain Primera Divisi\u00f3n Femenina)",
-    "Hapoel Tel Aviv vs Ironi Tiberias (league not covered: Israel,Ligat Haal)",
-    "Cavalry FC vs Pacific FC (league not covered: Canada,Premier League)",
-    "Sanfrecce Hiroshima vs Kyoto Sanga (league not covered: Japan: J1 League)",
-    "Tiszakecske FC vs Csakvar (league not covered: Hungary,Nb Ii)",
-    "Slavia Praha vs Hradec Kralove (league not covered: Czech Republic,1. Liga)",
-    "Queen Of The South vs Ross County (league not covered: Scotland,League One)",
-    "Altrincham vs FC Utd Of Manchester (league not covered: England,Fa Cup)",
-    "Salisbury FC vs Eastbourne Borough (league not covered: England,Fa Cup)",
-    "Eastleigh vs Brentwood Town (league not covered: England,Fa Cup)",
-    "Clyde vs Annan Athletic (league not covered: Scotland,League Two)",
-    "Barrow vs Gloucester City (league not covered: England,Fa Cup)",
-    "Maccabi Petah Tikva vs Maccabi Haifa (league not covered: Israel,Ligat Haal)",
-    "Hartford Athletic vs Brooklyn (league not covered: USA,Usl Championship Eastern Conference)",
-    "Boreham Wood vs Woking (league not covered: England,Fa Cup)",
-    "Maring\u00e1 vs Ferrovi\u00e1ria (league not covered: Brazil Serie C)",
-    "Petrocub vs Dacia Buiucani (league not covered: Moldova,Super Liga)",
-    "Doma United vs Kun Khalifat (league not covered: Nigeria,Npfl)"
+    "Austria Lustenau vs Lask Linz (no event in soccer_austria_bundesliga)"
   ],
   "unmatched_reasons": {
-    "league not covered: Brazil Serie C": 1,
-    "league not covered: Canada,Premier League": 1,
-    "league not covered: Czech Republic,1. Liga": 1,
-    "league not covered: England,Fa Cup": 5,
-    "league not covered: Hungary,Nb Ii": 1,
-    "league not covered: Israel,Ligat Haal": 2,
-    "league not covered: Japan: J1 League": 1,
-    "league not covered: Moldova,Super Liga": 1,
-    "league not covered: Nigeria,Npfl": 1,
-    "league not covered: Scotland,League One": 1,
-    "league not covered: Scotland,League Two": 1,
-    "league not covered: Spain Primera Divisi\u00f3n Femenina": 1,
-    "league not covered: USA,Usl Championship Eastern Conference": 1
+    "no event in soccer_austria_bundesliga": 1
   }
 }
