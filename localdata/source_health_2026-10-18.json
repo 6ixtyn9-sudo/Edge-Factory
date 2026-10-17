@@ -159,13 +159,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -177,19 +172,19 @@
       },
       "coherence_withheld_fixtures": 10,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 8,
       "join_miss_counts": {
         "fixture_key_miss": 26282,
         "no_pick_for_fixture": 140
       },
       "pa_matched": 12,
-      "pa_raw": 1474,
+      "pa_raw": 26430,
       "pa_scored": 26430,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -235,32 +230,25 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 6,
-        "board_league_count": 6,
+        "board_fixtures": 4,
+        "board_league_count": 3,
         "board_leagues": {
-          "argentina_-_primera_nacional": 63,
-          "bolivia_-_liga_profesional": 51,
-          "bolivia_-_primera_division": 5,
-          "brazil_-_serie_b": 67,
-          "copa_libertadores_women": 13,
-          "usa_-_nwsl": 1
+          "mexican_liga_de_expansion_mx": 3,
+          "mexico_-_liga_de_expansion_mx": 1,
+          "mexico_-_liga_mx": 196
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 11,
+        "board_team_count": 7,
         "board_team_names": {
-          "Atletico Rafaela": 63,
-          "Boston Legacy FC (W)": 1,
-          "CD Gualberto Villarroel": 56,
-          "Fortaleza CE": 5,
-          "Fortaleza EC": 62,
-          "Nacional Montevideo [W]": 13,
-          "Quilmes": 63,
-          "Racing Louisville FC (W)": 1,
-          "Real Tomayapo": 56,
-          "Sport Recife": 67,
-          "Uni De Chile [W]": 13
+          "Atlante": 173,
+          "Club Atletico La Paz": 4,
+          "Puebla": 23,
+          "Pumas UNAM": 173,
+          "Tijuana": 23,
+          "Tlaxcala": 1,
+          "Tlaxcala F.C": 3
         },
         "board_truncated": false,
         "card_fixture_count": 14,
