@@ -2,7 +2,7 @@
   "attempted": 12,
   "attempted_fixtures": [
     {
-      "avg_p": 77.4,
+      "avg_p": 77.2,
       "away": "Bromley",
       "date": "2026-10-17",
       "home": "Stockport County FC",
@@ -22,7 +22,7 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 76.0,
+      "avg_p": 76.5,
       "away": "Ironi Tiberias",
       "date": "2026-10-17",
       "home": "Hapoel Tel Aviv",
@@ -62,7 +62,7 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 73.8,
+      "avg_p": 74.2,
       "away": "Kyoto Sanga",
       "date": "2026-10-17",
       "home": "Sanfrecce Hiroshima",
@@ -82,11 +82,21 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 72.6,
-      "away": "Hradec Kralove",
+      "avg_p": 73.0,
+      "away": "Csakvar",
       "date": "2026-10-17",
-      "home": "Slavia Praha",
-      "league": "Czech Republic,1. Liga",
+      "home": "Tiszakecske FC",
+      "league": "Hungary,Nb Ii",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 72.7,
+      "away": "Crawley Town",
+      "date": "2026-10-17",
+      "home": "Salford City",
+      "league": "England,League Two",
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
@@ -102,45 +112,35 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 72.1,
-      "away": "Alanyaspor",
+      "avg_p": 71.5,
+      "away": "Ross County",
       "date": "2026-10-17",
-      "home": "Fenerbahce",
-      "league": "Turkey,Super Lig",
+      "home": "Queen Of The South",
+      "league": "Scotland,League One",
       "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 72.0,
-      "away": "Crawley Town",
-      "date": "2026-10-17",
-      "home": "Salford City",
-      "league": "England,League Two",
-      "market": "1x2",
-      "pick": "home",
+      "pick": "away",
       "w_score": 1.0
     }
   ],
   "be_429": 0,
-  "be_cached": 10,
+  "be_cached": 11,
   "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "candidate_fixtures": 32,
-  "captured_at": "2026-10-17T01:17:32.683257+00:00",
+  "candidate_fixtures": 31,
+  "captured_at": "2026-10-17T04:22:33.701832+00:00",
   "date": "2026-10-17",
   "errors": [],
-  "fixtures_with_rows": 7,
+  "fixtures_with_rows": 8,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 131,
+    "bookmakers": 137,
     "challenge_pages": 0,
-    "fixtures": 10,
-    "market_rows": 375,
-    "markets": 60,
-    "named_rows": 375,
+    "fixtures": 11,
+    "market_rows": 391,
+    "markets": 66,
+    "named_rows": 391,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -149,7 +149,7 @@
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
-      "avg_p": 77.4,
+      "avg_p": 77.2,
       "away": "Bromley",
       "date": "2026-10-17",
       "home": "Stockport County FC",
@@ -159,7 +159,7 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 76.0,
+      "avg_p": 76.5,
       "away": "Ironi Tiberias",
       "date": "2026-10-17",
       "home": "Hapoel Tel Aviv",
@@ -189,7 +189,7 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 73.8,
+      "avg_p": 74.2,
       "away": "Kyoto Sanga",
       "date": "2026-10-17",
       "home": "Sanfrecce Hiroshima",
@@ -209,18 +209,28 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 72.6,
-      "away": "Hradec Kralove",
+      "avg_p": 73.0,
+      "away": "Csakvar",
       "date": "2026-10-17",
-      "home": "Slavia Praha",
-      "league": "Czech Republic,1. Liga",
+      "home": "Tiszakecske FC",
+      "league": "Hungary,Nb Ii",
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 71.5,
+      "away": "Ross County",
+      "date": "2026-10-17",
+      "home": "Queen Of The South",
+      "league": "Scotland,League One",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
     }
   ],
-  "requests": 3,
-  "rows": 21,
+  "requests": 9,
+  "rows": 24,
   "schema": 1,
   "status": "ok"
 }
