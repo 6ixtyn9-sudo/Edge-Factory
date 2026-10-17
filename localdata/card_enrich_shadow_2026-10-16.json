@@ -14,7 +14,7 @@
       "unresolved_id": 5
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 6,
+    "ledger_entries": 7,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -25,14 +25,21 @@
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "fremadamager|nykobing",
+        "fixture": "mtkbudapest|vasas",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "energiecottbus|1nurnberg",
+        "fixture": "laval|clermontfoot",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "heerenveen|excelsior",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -46,14 +53,7 @@
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "rapidvienna|tsvhartberg",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "alashkert|syunik",
+        "fixture": "stadenyonnais|basel1893",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -64,12 +64,12 @@
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 76
+      "88739ee5": 70
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=76 [pools=2 cap=90 reserve=20 spent=1 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=70 [pools=2 cap=90 reserve=20 spent=1 month=2026-10] -> approved",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1
@@ -83,7 +83,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 76,
+    "spendable": 70,
     "verdict": "approved"
   },
   "provenance": {

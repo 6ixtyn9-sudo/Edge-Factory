@@ -1,6 +1,6 @@
 Edge Factory Picks — 2026-10-16
 ============================================================
-Generated at: 2026-10-16 09:12:40
+Generated at: 2026-10-16 18:16:10
 
 
 CERTIFIED CLEAN PICKS
@@ -11,6 +11,9 @@ CERTIFIED CLEAN PICKS
   [ML-META≥60] Internacional Palmira vs Orsomarso         KO 2026-10-16 01:00 SAST -> AWAY   avg 60%  w=0.42 @4.12
      bucket=CERTIFIED_CLEAN  league=colombia primera b:UNKNOWN  odds_band=2.50+:BOOST
      📊 Realized Stats on Away Win (n=621): Avg Goals: 3.39 | Over 2.5: 68.1% | BTTS: 42.4% | Home Over 1.5 Goals: 10.6% | Away Over 1.5 Goals: 84.5%
+  [ML-META≥60] MTK Budapest vs Vasas                      KO 2026-10-16 20:00 SAST -> HOME   avg 60%  w=0.41 @2.51
+     bucket=CERTIFIED_CLEAN  league=hu1:UNKNOWN  odds_band=2.50+:BOOST
+     📊 Realized Stats on Home Win (n=1587): Avg Goals: 3.27 | Over 2.5: 64.7% | BTTS: 42.2% | Home Over 1.5 Goals: 82.3% | Away Over 1.5 Goals: 10.1%
 
 CAUTION PICKS
 ============================================================
@@ -28,9 +31,15 @@ WATCHLIST — UNCORROBORATED SCOUTINGSTATS PRICE
 
 WATCHLIST — SUSPECT FUZZY PRICE MATCH
 ============================================================
+  [ML-META≥60] Rapid Vienna vs TSV Hartberg               KO 2026-10-16 19:30 SAST -> HOME   avg 80%  w=1.00 @1.26 zulubet
+     bucket=WATCHLIST_SUSPECT_PRICE  league=austria bundesliga:UNKNOWN  odds_band=1.20-1.35:CAUTION
+     📊 Realized Stats on Home Win (n=72): Avg Goals: 4.14 | Over 2.5: 75.0% | BTTS: 36.1% | Home Over 1.5 Goals: 91.7% | Away Over 1.5 Goals: 11.1%
   [ML-META≥60] Fremad Amager vs Nykobing FC               KO 2026-10-16 19:00 SAST -> AWAY   avg 62%  w=1.00 @1.78 zulubet
      bucket=WATCHLIST_SUSPECT_PRICE  league=denmark 2 division:UNKNOWN  odds_band=1.75-2.00:BOOST
      📊 Realized Stats on Away Win (n=568): Avg Goals: 3.47 | Over 2.5: 68.5% | BTTS: 41.4% | Home Over 1.5 Goals: 11.1% | Away Over 1.5 Goals: 85.6%
+  [ML-META≥60] SV Lafnitz vs Gleisdorf 09                 KO 2026-10-16 19:00 SAST -> HOME   avg 62%  w=0.48 @1.80 zulubet
+     bucket=WATCHLIST_SUSPECT_PRICE  league=austria regionalliga south:UNKNOWN  odds_band=1.75-2.00:BOOST
+     📊 Realized Stats on Home Win (n=1482): Avg Goals: 3.32 | Over 2.5: 65.4% | BTTS: 41.6% | Home Over 1.5 Goals: 83.3% | Away Over 1.5 Goals: 10.5%
 
 WATCHLIST — UNKNOWN CONTEXT
 ============================================================
@@ -41,17 +50,26 @@ SKIPPED — VETO CONTEXT
   [unanimous[betclan+vitibet] avg_p>=70] Alashkert vs Syunik                        KO 2026-10-16 15:00 SAST -> HOME   avg 80%  w=1.00 @1.22
      bucket=SKIPPED_VETO  league=am1:UNKNOWN  odds_band=1.20-1.35:UNKNOWN
      📊 Realized Stats on Home Win (n=124): Avg Goals: 4.03 | Over 2.5: 74.2% | BTTS: 37.1% | Home Over 1.5 Goals: 90.3% | Away Over 1.5 Goals: 7.3%
-  [unanimous[betclan+vitibet] avg_p>=70] Rapid Vienna vs TSV Hartberg               KO 2026-10-16 19:30 SAST -> HOME   avg 78%  w=1.00 @n/a
-     bucket=SKIPPED_VETO  league=austria bundesliga:UNKNOWN  odds_band=NO_ODDS:UNKNOWN
-     📊 Realized Stats on Home Win (n=195): Avg Goals: 4.11 | Over 2.5: 79.0% | BTTS: 41.5% | Home Over 1.5 Goals: 91.8% | Away Over 1.5 Goals: 9.2%
   [unanimous[statarea+vitibet] avg_p>=70] Al-Qadisiyah vs Abha                       KO 2026-10-16 15:15 SAST -> HOME   avg 78%  w=1.00 @1.13
      bucket=SKIPPED_VETO  league=saudi arabia saudi pro league:UNKNOWN  odds_band=1.10-1.20:UNKNOWN
      📊 Realized Stats on Home Win (n=246): Avg Goals: 4.04 | Over 2.5: 78.9% | BTTS: 40.7% | Home Over 1.5 Goals: 91.5% | Away Over 1.5 Goals: 8.5%
+  [ML-META≥60] Yantra 2019 vs Lokomotiv Plovdiv           KO 2026-10-16 18:00 SAST -> AWAY   avg 68%  w=0.76 @1.53 zulubet
+     bucket=SKIPPED_VETO  league=bulgaria cup:UNKNOWN  odds_band=1.50-1.75:BOOST
+     📊 Realized Stats on Away Win (n=267): Avg Goals: 3.64 | Over 2.5: 69.3% | BTTS: 36.3% | Home Over 1.5 Goals: 9.0% | Away Over 1.5 Goals: 85.8%
+  [ML-META≥60] Stade Nyonnais vs FC Basel 1893            KO 2026-10-16 20:15 SAST -> AWAY   avg 65%  w=0.61 @1.15
+     bucket=SKIPPED_VETO  league=switzerland schweizer cup:UNKNOWN  odds_band=1.10-1.20:ALLOW
+     📊 Realized Stats on Away Win (n=428): Avg Goals: 3.55 | Over 2.5: 68.9% | BTTS: 40.4% | Home Over 1.5 Goals: 10.7% | Away Over 1.5 Goals: 85.7%
+  [ML-META≥60] Heerenveen vs Excelsior                    KO 2026-10-16 20:00 SAST -> HOME   avg 62%  w=1.00 @1.58
+     bucket=SKIPPED_VETO  league=netherlands eredivisie:ALLOW  odds_band=1.50-1.75:BOOST
+     📊 Realized Stats on Home Win (n=1451): Avg Goals: 3.35 | Over 2.5: 65.7% | BTTS: 41.1% | Home Over 1.5 Goals: 83.5% | Away Over 1.5 Goals: 10.1%
+  [ML-META≥60] Laval vs Clermont Foot                     KO 2026-10-16 20:00 SAST -> AWAY   avg 61%  w=0.43 @3.36 zulubet
+     bucket=SKIPPED_VETO  league=france ligue 1:VETO  odds_band=2.50+:BOOST
+     📊 Realized Stats on Away Win (n=599): Avg Goals: 3.42 | Over 2.5: 67.9% | BTTS: 41.9% | Home Over 1.5 Goals: 10.9% | Away Over 1.5 Goals: 85.3%
 
 SKIPPED — DEAD EDGE
 ============================================================
   (none)
 
-Total archived picks in this report: 7
+Total archived picks in this report: 13
 ⚠️  Flat stakes only. Best odds inflate ROI (~halve it).
 ⚠️  Bet only what you can afford to lose.
