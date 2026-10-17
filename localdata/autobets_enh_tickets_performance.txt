@@ -1,52 +1,29 @@
 ENHANCEMENT TICKETS (ROLLING) — performance, percent of capital
 ==============================================================
-generated 2026-10-17T08:00:11
+generated 2026-10-17T10:38:07
 
-BANK     83.2%   x0.83 of the 100% base
+BANK     101.2%   x1.01 of the 100% base
 CYCLE    baseline 100.0%   next take-profit notice at 200.0%   (+100% per cycle)
-RECORD   3W / 3L   (50.0% hit)   over 3 bet-days
-OPEN     2 open slips   4 held accas   0 take-profit notice(s) to date
+RECORD   4W / 3L   (57.1% hit)   over 3 bet-days
+OPEN     1 open slips   3 held accas   0 take-profit notice(s) to date
 
-BET-DAYS, newest first (last 3)
-  2026-10-16   staked  11.9%   returned   0.0%   net  -11.9%   bank 95.1% -> 83.2%
-    ACCA @2.07   stake 11.9%          LOST  net -11.9%
-      LOST Energie Cottbus vs 1. FC Nürnberg                Match Over 2.5 Goals @1.36
-      WON  Fremad Amager vs Nykobing FC                     Match Over 2.5 Goals @1.52
-      lost on: Energie Cottbus vs 1. FC Nürnberg (over)
-
-  2026-10-15   staked  18.8%   returned  38.8%   net  +20.1%   bank 75.0% -> 95.1%
-    ACCA @2.00   stake 6.2%           WON   net +6.2%
-      WON  Riga FC vs Kairat Almaty                         Match Over 1.5 Goals @1.33
-      WON  SC Freiburg vs FK Jablonec                       Match Over 2.5 Goals @1.50
-    ACCA @1.96   stake 6.2%           WON   net +6.0%
-      WON  Benfica vs Celtic                                Match Over 2.5 Goals @1.44
-      WON  Bournemouth vs Sturm Graz                        Match Over 2.5 Goals @1.36
-    ACCA @2.25   stake 6.2%           WON   net +7.8%
-      WON  AZ Alkmaar vs Hapoel Beer Sheva                  Match Over 2.5 Goals @1.47
-      WON  Panathinaikos vs FK Borac Banja Luka             Match Over 2.5 Goals @1.53
-
-  2026-10-14   staked  25.0%   returned   0.0%   net  -25.0%   bank 100.0% -> 75.0%
-    ACCA @2.35   stake not recorded   LOST
-    ACCA @2.14   stake not recorded   LOST
+BET-DAYS, oldest first (3 of 3)
+  2026-10-14   0W/2L   staked  25.0%   returned   0.0%   net  -25.0%   bank   75.0%
+  2026-10-15   3W/0L   staked  18.8%   returned  38.8%   net  +20.1%   bank   95.1%
+  2026-10-16   1W/1L   staked  23.8%   returned  29.9%   net   +6.2%   bank  101.2%
 
 HELD (not yet settled; stake counted as committed)
-  2026-10-16
-    ACCA @2.52   stake 11.9%          HELD (not settled)
-      open Rapid Vienna vs TSV Hartberg                     Match Over 2.5 Goals @1.36
-      WON  Alashkert vs Syunik                              Both Teams to Score - Yes (BTTS-Yes) @1.85
-  2026-10-17
-    ACCA @2.09   stake 5.9%           HELD (not settled)
-      open Athletic Club W vs Valencia W                    Match Over 1.5 Goals @1.36
-      open Tiszakecske FC vs Csakvar                        Match Over 2.5 Goals @1.54
-  2026-10-17
-    ACCA @1.90   stake 5.9%           HELD (not settled)
-      open Maringá vs Ferroviária                           Match Over 1.5 Goals @1.36
-      open Stockport County FC vs Bromley                   Match Over 2.5 Goals @1.40
-  2026-10-17
-    ACCA @2.33   stake 5.9%           HELD (not settled)
-      open Telstar vs Feyenoord                             Both Teams to Score - Yes (BTTS-Yes) @1.55
-      open Hapoel Tel Aviv vs Ironi Tiberias                Match Over 2.5 Goals @1.50
+  2026-10-17   ACCA @2.09   stake 8.4%   HELD (not settled)
+      MATCH OVER 1.5 GOALS @1.36
+      MATCH OVER 2.5 GOALS @1.54
+  2026-10-17   ACCA @1.90   stake 8.4%   HELD (not settled)
+      MATCH OVER 1.5 GOALS @1.36
+      MATCH OVER 2.5 GOALS @1.40
+  2026-10-17   ACCA @2.33   stake 8.4%   HELD (not settled)
+      BOTH TEAMS TO SCORE - YES (BTTS-YES) @1.55
+      MATCH OVER 2.5 GOALS @1.50
 
-KEY  Stake and returned are % of capital. Each leg reads WON / LOST / VOID / HELD.
-     'lost on' names the leg that decided an acca. '!' marks a bank break.
-     Bet-days recorded before leg detail was kept show the acca result only.
+NOTES
+  Stake, returned and net are % of capital. Bank is the stored close for each day.
+  Bank breaks in the history are documented in docs/operator/BANK-HISTORY-2026-10-16.md.
+  Bet-days recorded before leg detail was kept show the acca result only.

@@ -1879,9 +1879,9 @@
   },
   "match_over_25@v1": {
    "hits": 264,
-   "inv_price_sum": 264.02102152597604,
+   "inv_price_sum": 264.6789162628181,
    "multi_n": 61,
-   "n": 403,
+   "n": 404,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -2529,23 +2529,11 @@
     "2026-09-18|Wiener SC vs Leobendorf|match_over_25@v1",
     "2026-10-16|Energie Cottbus vs 1. FC N\u00fcrnberg|match_over_25@v1",
     "2026-10-16|Stade Nyonnais vs FC Basel 1893|match_over_25@v1",
-    "2026-10-16|SV Lafnitz vs Gleisdorf 09|match_over_25@v1"
+    "2026-10-16|SV Lafnitz vs Gleisdorf 09|match_over_25@v1",
+    "2026-10-16|MTK Budapest vs Vasas|match_over_25@v1"
    ],
-   "profit": 1.987,
+   "profit": 0.987,
    "records": [
-    {
-     "away": "Lincoln Red Imps",
-     "away_key": "lincolnredimps",
-     "date": "2026-08-13",
-     "hit": false,
-     "home": "Omonia Nicosia",
-     "home_key": "omonianicosia",
-     "league": "UEL",
-     "match": "Omonia Nicosia vs Lincoln Red Imps",
-     "multi_source": false,
-     "price": 1.44,
-     "source": "scoutingstats"
-    },
     {
      "away": "Valur Reykjavik",
      "away_key": "valurreykjavik",
@@ -7894,6 +7882,23 @@
      "rule": "ml-meta avg_p>=60",
      "source": "betexplorer",
      "stated": 0.5718
+    },
+    {
+     "away": "Vasas",
+     "away_key": "vasas",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.5599,
+     "date": "2026-10-16",
+     "hit": false,
+     "home": "MTK Budapest",
+     "home_key": "mtkbudapest",
+     "league": "Hungary NB I",
+     "match": "MTK Budapest vs Vasas",
+     "multi_source": false,
+     "price": 1.52,
+     "rule": "ml-meta avg_p>=60",
+     "source": "betexplorer",
+     "stated": 0.5564
     }
    ],
    "status": "PAPER",

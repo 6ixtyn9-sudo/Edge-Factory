@@ -1,25 +1,21 @@
 {
-  "generated_at": "2026-10-17T08:00:11",
+  "generated_at": "2026-10-17T10:38:07",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 83.1797,
-  "multiple": 0.831797,
+  "bank_pct": 101.241556,
+  "multiple": 1.01241556,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
   "bet_days": 3,
   "accas": {
-    "wins": 3,
+    "wins": 4,
     "losses": 3
   },
   "open_slips": [
     {
-      "date": "2026-10-16",
-      "staked_pct": 11.8828
-    },
-    {
       "date": "2026-10-17",
-      "staked_pct": 17.8242
+      "staked_pct": 25.3104
     }
   ],
   "events": [],
@@ -116,8 +112,8 @@
     },
     {
       "date": "2026-10-16",
-      "staked_pct": 11.8828,
-      "returned_pct": 0.0,
+      "staked_pct": 23.7656,
+      "returned_pct": 29.9447,
       "accas": [
         {
           "odds": 2.07,
@@ -140,10 +136,32 @@
               "label": "Match Over 2.5 Goals"
             }
           ]
+        },
+        {
+          "odds": 2.52,
+          "won": true,
+          "stake_pct": 11.8828,
+          "returned_pct": 29.9447,
+          "legs": [
+            {
+              "match": "Rapid Vienna vs TSV Hartberg",
+              "pick": "over",
+              "odds": 1.36,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Alashkert vs Syunik",
+              "pick": "yes",
+              "odds": 1.85,
+              "result": "win",
+              "label": "Both Teams to Score - Yes (BTTS-Yes)"
+            }
+          ]
         }
       ],
-      "bank_pct": 83.1797,
-      "close_pct": 83.1797
+      "bank_pct": 101.2416,
+      "close_pct": 101.2416
     }
   ]
 }
