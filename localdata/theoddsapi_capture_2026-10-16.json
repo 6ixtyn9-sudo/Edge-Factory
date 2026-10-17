@@ -1,31 +1,63 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 7,
-  "captured_at": "2026-10-16T07:15:24+00:00",
+  "attempted": 2,
+  "attempted_fixtures": [
+    {
+      "away": "Abha",
+      "date": "2026-10-16",
+      "home": "Al-Qadisiyah",
+      "kickoff": "08:15",
+      "league": "Saudi Arabia,Saudi Pro League"
+    },
+    {
+      "away": "Bray Wanderers",
+      "date": "2026-10-16",
+      "home": "Finn Harps",
+      "kickoff": "20:45",
+      "league": "Rep. Of Ireland,First Division"
+    }
+  ],
+  "candidate_fixtures": 13,
+  "captured_at": "2026-10-16T19:11:20+00:00",
   "date": "2026-10-16",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 2
+  },
   "errors": [],
   "fixtures_with_rows": 0,
-  "kickoff_mismatch_detail": {},
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
   "quoted_fixtures": [],
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
-    "retry_cooldown": 6
+    "kickoff_already_passed": 10,
+    "kickoff_mismatch": 1,
+    "retry_cooldown": 1
   },
   "skipped": [
     "Alashkert|Syunik (retry cooldown (6h after failed attempt))",
-    "Rapid Vienna|TSV Hartberg (retry cooldown (6h after failed attempt))",
-    "Al-Qadisiyah|Abha (retry cooldown (6h after failed attempt))",
-    "Energie Cottbus|1. FC N\u00fcrnberg (retry cooldown (6h after failed attempt))",
-    "Finn Harps|Bray Wanderers (retry cooldown (6h after failed attempt))",
-    "Fremad Amager|Nykobing FC (retry cooldown (6h after failed attempt))",
-    "Internacional Palmira|Orsomarso (kickoff already passed)"
+    "Rapid Vienna|TSV Hartberg (kickoff already passed)",
+    "Yantra 2019|Lokomotiv Plovdiv (kickoff already passed)",
+    "Stade Nyonnais|FC Basel 1893 (kickoff already passed)",
+    "Energie Cottbus|1. FC N\u00fcrnberg (kickoff already passed)",
+    "WARN kickoff-mismatch Heerenveen|Excelsior: pick legacy display says 19:00 SAST, captured rows say 20:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Heerenveen|Excelsior (kickoff already passed)",
+    "Fremad Amager|Nykobing FC (kickoff already passed)",
+    "SV Lafnitz|Gleisdorf 09 (kickoff already passed)",
+    "Laval|Clermont Foot (kickoff already passed)",
+    "Internacional Palmira|Orsomarso (kickoff already passed)",
+    "MTK Budapest|Vasas (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Al-Qadisiyah vs Abha (league not covered: Saudi Arabia,Saudi Pro League)",
+    "Finn Harps vs Bray Wanderers (league not covered: Rep. Of Ireland,First Division)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Rep. Of Ireland,First Division": 1,
+    "league not covered: Saudi Arabia,Saudi Pro League": 1
+  }
 }

@@ -1,0 +1,80 @@
+{
+  "added": 0,
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Coritiba",
+      "date": "2026-10-17",
+      "home": "Atletico-MG",
+      "kickoff": "2026-10-17T23:30:00+02:00",
+      "league": "Brazil: Serie A"
+    }
+  ],
+  "candidate_fixtures": 41,
+  "captured_at": "2026-10-17T04:45:17+00:00",
+  "date": "2026-10-17",
+  "due_reasons": {
+    "first_at": 1
+  },
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {},
+  "quoted_fixtures": [],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "kickoff_already_passed": 1,
+    "priced": 19,
+    "retry_cooldown": 20
+  },
+  "skipped": [
+    "Stockport County FC|Bromley (priced)",
+    "ADO Den Haag|PSV Eindhoven (priced)",
+    "Hapoel Tel Aviv|Ironi Tiberias (retry cooldown (6h after failed attempt))",
+    "FC BW Linz|FC Liefering (retry cooldown (6h after failed attempt))",
+    "Cavalry FC|Pacific FC (retry cooldown (6h after failed attempt))",
+    "Telstar|Feyenoord (priced)",
+    "Sanfrecce Hiroshima|Kyoto Sanga (retry cooldown (6h after failed attempt))",
+    "Manchester City|Ipswich (priced)",
+    "Tiszakecske FC|Csakvar (retry cooldown (6h after failed attempt))",
+    "Viking|Fredrikstad (priced)",
+    "Salford City|Crawley Town (priced)",
+    "Slavia Praha|Hradec Kralove (retry cooldown (6h after failed attempt))",
+    "Athletic Club W|Valencia W (retry cooldown (6h after failed attempt))",
+    "Queen Of The South|Ross County (retry cooldown (6h after failed attempt))",
+    "Fenerbahce|Alanyaspor (priced)",
+    "Ham-Kam|Bodo/Glimt (priced)",
+    "Real Madrid (w)|Espanyol (w) (priced)",
+    "Genclerbirligi|Galatasaray (priced)",
+    "Altrincham|FC Utd Of Manchester (retry cooldown (6h after failed attempt))",
+    "Salisbury FC|Eastbourne Borough (retry cooldown (6h after failed attempt))",
+    "Eastleigh|Brentwood Town (retry cooldown (6h after failed attempt))",
+    "Bayern Munich|RB Leipzig (priced)",
+    "Clyde|Annan Athletic (retry cooldown (6h after failed attempt))",
+    "Inter Turku|AC Oulu (priced)",
+    "Philadelphia Union|Charlotte (priced)",
+    "Betis|Barcelona (priced)",
+    "Kashiwa Reysol|Nagoya Grampus (priced)",
+    "Austria Lustenau|Lask Linz (retry cooldown (6h after failed attempt))",
+    "Middlesbrough|Cardiff (priced)",
+    "Barrow|Gloucester City (retry cooldown (6h after failed attempt))",
+    "Maccabi Petah Tikva|Maccabi Haifa (retry cooldown (6h after failed attempt))",
+    "Tokyo Verdy|FC Tokyo (priced)",
+    "Hartford Athletic|Brooklyn (retry cooldown (6h after failed attempt))",
+    "Boreham Wood|Woking (retry cooldown (6h after failed attempt))",
+    "Kashima Antlers|V-Varen Nagasaki (priced)",
+    "Broadmeadow Magic|Wests APIA (kickoff already passed)",
+    "Villarreal|Elche (priced)",
+    "Petrocub|Dacia Buiucani (retry cooldown (6h after failed attempt))",
+    "Maring\u00e1|Ferrovi\u00e1ria (retry cooldown (6h after failed attempt))",
+    "Doma United|Kun Khalifat (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "empty",
+  "unmatched": [
+    "Atletico-MG vs Coritiba (no event in soccer_brazil_campeonato)"
+  ],
+  "unmatched_reasons": {
+    "no event in soccer_brazil_campeonato": 1
+  }
+}
