@@ -46,22 +46,6 @@ LANES = {
 # documented in docs/operator/BANK-HISTORY-2026-10-16.md, not re-derived here.
 # ---------------------------------------------------------------------------
 
-_LEG_TAG = {"win": "WON", "loss": "LOST", "void": "VOID", "conflict": "HELD"}
-
-
-def _leg_results(a):
-    """Per-leg result tags for an acca: stored results first, then the leg record."""
-    legs = a.get("legs") or []
-    results = a.get("results")
-    out = []
-    for i, leg in enumerate(legs):
-        if results is not None and i < len(results):
-            out.append(results[i])
-        else:
-            out.append(leg.get("result") if isinstance(leg, dict) else None)
-    return out
-
-
 def _close(h) -> float:
     """A bet-day's stored end-of-day bank. Rows written before ``close_pct``
     existed carry only the settlement snapshot in ``bank_pct``."""
@@ -78,19 +62,6 @@ def _day_line(h) -> str:
             f"net {returned - staked:+6.1f}%   bank {_close(h):6.1f}%")
 
 
-def _lost_on_lines(a):
-    """For a lost acca, the leg that decided it. Empty when no leg detail was kept."""
-    if a.get("won") is not False:
-        return []
-    legs = a.get("legs") or []
-    res = _leg_results(a)
-    culprit = next((l for l, r in zip(legs, res) if r == "loss"), None)
-    if culprit is None:
-        return []
-    pick = culprit.get("pick") or culprit.get("label") or ""
-    return [f"      lost on {culprit.get('match')} ({pick})"]
-
-
 def _held_lines(slip, a):
     """One held acca: its stake, then its legs. Held accas have no result yet."""
     odds = a.get("odds")
@@ -99,15 +70,13 @@ def _held_lines(slip, a):
     stake_txt = f"stake {stake:.1f}%" if stake is not None else "stake not recorded"
     out = [f"  {slip['date']}   ACCA {odds_txt}   {stake_txt}   HELD (not settled)"]
     res = a.get("results") or []
-    for i, leg in enumerate(a.get("legs") or []):
+    for leg in a.get("legs") or []:
         pick = str(leg.get("label") or leg.get("pick") or "").upper()
         price = leg.get("odds")
         price_txt = f"@{float(price):.2f}" if isinstance(price, (int, float)) else ""
-        tag = _LEG_TAG.get(res[i], "open") if i < len(res) else "open"
-        out.append(f"      {tag:<5} {str(leg.get('match') or ''):<44} {pick} {price_txt}".rstrip())
-    conflicts = [str(l.get("match")) for l, r in zip(a.get("legs") or [], res) if r == "conflict"]
-    if conflicts:
-        out.append("      reason: donor spellings disagree on the outcome of " + ", ".join(conflicts))
+        out.append(f"      {pick} {price_txt}".rstrip())
+    if "conflict" in res:
+        out.append("      reason: donor spellings disagree on the outcome of one leg")
     return out
 
 
@@ -140,9 +109,6 @@ def render_lines(st, label, last, held, accas, wins, generated):
     add(f"BET-DAYS, oldest first ({len(shown)} of {len(history)})")
     for h in shown:
         add(_day_line(h))
-        for a in h.get("accas") or []:
-            for line in _lost_on_lines(a):
-                add(line)
     add("")
     if held:
         add("HELD (not yet settled; stake counted as committed)")

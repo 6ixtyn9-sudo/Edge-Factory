@@ -131,10 +131,10 @@ def test_report_names_the_leg_that_lost_an_acca_and_shows_held_accas():
     from auto_tickets_grade import render_lines
     txt = "\n".join(render_lines(st, "T", 15, held, [st["history"][0]["accas"][0]], 0,
                                  "2026-10-16T06:00:00"))
-    assert "lost on Gamma vs Delta (AWAY)" in txt
+    assert "lost on" not in txt and "Gamma vs Delta" not in txt  # no team names in the report
     assert "0W/1L" in txt and "-10.0%" in txt
     assert "ACCA @1.85" in txt and "HELD (not settled)" in txt
-    assert "reason: donor spellings disagree on the outcome of Eta vs Theta" in txt
+    assert "reason: donor spellings disagree on the outcome of one leg" in txt
     assert "bank   80.0%" in txt
 
 
@@ -174,7 +174,7 @@ def test_main_report_layout_is_clean_and_flags_bank_breaks():
     assert "SNAPSHOT NOTES" not in txt and "vs rebuild" not in txt and "~ stored close" not in txt
     assert "bank  150.0%" in txt  # the 13 Oct stored close, unmodified
     assert "HELD (not yet settled" in txt and "ACCA @1.85" in txt
-    assert "lost on Eps vs Zeta (HOME)" in txt
+    assert "lost on" not in txt and "Eps vs Zeta" not in txt
     # days run oldest first
     assert txt.index("2026-10-12") < txt.index("2026-10-13")
     # the bank-break history is pointed to, not re-derived
