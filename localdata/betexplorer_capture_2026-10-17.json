@@ -1,52 +1,12 @@
 {
-  "attempted": 10,
+  "attempted": 3,
   "attempted_fixtures": [
-    {
-      "avg_p": 77.2,
-      "away": "Bromley",
-      "date": "2026-10-17",
-      "home": "Stockport County FC",
-      "league": "England: League One",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 75.5,
-      "away": "FC Liefering",
-      "date": "2026-10-17",
-      "home": "FC BW Linz",
-      "league": "Austria: 2. Liga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
     {
       "avg_p": 75.0,
       "away": "Feyenoord",
       "date": "2026-10-17",
       "home": "Telstar",
       "league": "Netherlands: Eredivisie",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 68.0,
-      "away": "Barcelona",
-      "date": "2026-10-17",
-      "home": "Real Betis",
-      "league": "Spain La Liga",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 66.0,
-      "away": "Lask Linz",
-      "date": "2026-10-17",
-      "home": "Austria Lustenau",
-      "league": "Austria Bundesliga",
       "market": "1x2",
       "pick": "away",
       "w_score": 1.0
@@ -62,36 +22,6 @@
       "w_score": 0.5749
     },
     {
-      "avg_p": 62.4,
-      "away": "Inter",
-      "date": "2026-10-17",
-      "home": "Bologna",
-      "league": "Italy Serie A",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 61.7,
-      "away": "Al Hussein",
-      "date": "2026-10-17",
-      "home": "Al Wihdat",
-      "league": "Jordan League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.4752
-    },
-    {
-      "avg_p": 61.5,
-      "away": "Brooklyn",
-      "date": "2026-10-17",
-      "home": "Hartford Athletic",
-      "league": "USA,Usl Championship Eastern Conference",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.4678
-    },
-    {
       "avg_p": 60.7,
       "away": "Ferrovi\u00e1ria",
       "date": "2026-10-17",
@@ -103,19 +33,17 @@
     }
   ],
   "be_429": 0,
-  "be_cached": 6,
+  "be_cached": 3,
   "be_cooling_down": false,
-  "be_rows_rejected": 3,
-  "be_rows_rejected_reasons": {
-    "row teams do not both match the pick": 3
-  },
-  "candidate_fixtures": 10,
-  "captured_at": "2026-10-17T13:09:57.115039+00:00",
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "candidate_fixtures": 3,
+  "captured_at": "2026-10-17T16:10:01.484243+00:00",
   "date": "2026-10-17",
   "errors": [],
-  "fixtures_with_rows": 5,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
-  "market_requests": 15,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 280,
     "challenge_pages": 0,
@@ -131,31 +59,11 @@
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
-      "avg_p": 77.2,
-      "away": "Bromley",
-      "date": "2026-10-17",
-      "home": "Stockport County FC",
-      "league": "England: League One",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
       "avg_p": 75.0,
       "away": "Feyenoord",
       "date": "2026-10-17",
       "home": "Telstar",
       "league": "Netherlands: Eredivisie",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 68.0,
-      "away": "Barcelona",
-      "date": "2026-10-17",
-      "home": "Real Betis",
-      "league": "Spain La Liga",
       "market": "1x2",
       "pick": "away",
       "w_score": 1.0
@@ -169,20 +77,10 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5749
-    },
-    {
-      "avg_p": 62.4,
-      "away": "Inter",
-      "date": "2026-10-17",
-      "home": "Bologna",
-      "league": "Italy Serie A",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
     }
   ],
-  "requests": 25,
-  "rows": 15,
+  "requests": 0,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }
