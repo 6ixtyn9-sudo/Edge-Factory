@@ -230,24 +230,32 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 3,
-        "board_league_count": 3,
+        "board_fixtures": 6,
+        "board_league_count": 5,
         "board_leagues": {
-          "australia_-_a-league": 150,
-          "australia_-_a-league_women": 30,
-          "japan_-_j1_league": 20
+          "australia_-_a-league": 100,
+          "australian_championship": 1,
+          "bangladesh_-_premier_league": 33,
+          "indonesia_-_liga_1": 4,
+          "japan_-_j2_league": 62
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 6,
+        "board_team_count": 12,
         "board_team_names": {
-          "Brisbane Roar FC (W)": 30,
-          "Central Coast Mariners (W)": 30,
-          "Cerezo Osaka": 20,
-          "Kawasaki": 20,
-          "Macarthur FC": 150,
-          "Perth Glory": 150
+          "Abahani Dhaka": 18,
+          "Arema Cronus FC": 4,
+          "Bayswater City": 1,
+          "Brothers Union": 15,
+          "Central Coast Mariners": 100,
+          "Chattogram City Football Club": 18,
+          "Garudayaksa": 4,
+          "Marconi Stallions": 1,
+          "Newcastle Jets": 100,
+          "Rahmatgonj MFS": 15,
+          "Shonan": 62,
+          "Toyama": 62
         },
         "board_truncated": false,
         "card_fixture_count": 14,
@@ -339,10 +347,10 @@
       "status": null
     },
     "zulubet": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "can_fetch_today": true,
-      "can_price": false,
-      "can_vote": false,
+      "can_price": true,
+      "can_vote": true,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
