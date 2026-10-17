@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 8,
@@ -31,7 +31,7 @@
         "selection_unmapped": 324
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -59,7 +59,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-18' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -180,12 +180,12 @@
       "freshness_h": 0.0,
       "join_matched_rows": 8,
       "join_miss_counts": {
-        "fixture_key_miss": 24648,
+        "fixture_key_miss": 26282,
         "no_pick_for_fixture": 140
       },
       "pa_matched": 12,
-      "pa_raw": 1378,
-      "pa_scored": 24796,
+      "pa_raw": 1474,
+      "pa_scored": 26430,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -236,30 +236,31 @@
       "blocker": "fetch returned zero rows",
       "board_summary": {
         "board_fixtures": 6,
-        "board_league_count": 5,
+        "board_league_count": 6,
         "board_leagues": {
-          "argentina_-_primera_division": 94,
-          "chile_-_primera_b": 4,
-          "colombia_-_primera_b": 48,
-          "paraguay_-_primera_division": 52,
-          "uruguay_-_primera_division": 2
+          "argentina_-_primera_nacional": 63,
+          "bolivia_-_liga_profesional": 51,
+          "bolivia_-_primera_division": 5,
+          "brazil_-_serie_b": 67,
+          "copa_libertadores_women": 13,
+          "usa_-_nwsl": 1
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
         "board_team_count": 11,
         "board_team_names": {
-          "Atletico FC Cali": 48,
-          "Boca Juniors de Cali": 48,
-          "Cerro": 2,
-          "Cerro Largo FC": 2,
-          "Defensa y Justicia": 94,
-          "Deportivo Recoleta": 52,
-          "Instituto": 74,
-          "Instituto Cordoba": 20,
-          "Rangers Talca": 4,
-          "Rubio Nu": 52,
-          "Santiago Wanderers": 4
+          "Atletico Rafaela": 63,
+          "Boston Legacy FC (W)": 1,
+          "CD Gualberto Villarroel": 56,
+          "Fortaleza CE": 5,
+          "Fortaleza EC": 62,
+          "Nacional Montevideo [W]": 13,
+          "Quilmes": 63,
+          "Racing Louisville FC (W)": 1,
+          "Real Tomayapo": 56,
+          "Sport Recife": 67,
+          "Uni De Chile [W]": 13
         },
         "board_truncated": false,
         "card_fixture_count": 14,
