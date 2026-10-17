@@ -40,114 +40,52 @@ LANES = {
 
 # ---------------------------------------------------------------------------
 # One layout for both lanes; only the label and file stem differ.
+#
+# The report shows what was stored. Nothing here recomputes the bank: each
+# bet-day line carries its stored close. Bank breaks in the history are
+# documented in docs/operator/BANK-HISTORY-2026-10-16.md, not re-derived here.
 # ---------------------------------------------------------------------------
 
-_LEG_TAG = {"win": "WON", "loss": "LOST", "void": "VOID", "conflict": "HELD"}
+def _close(h) -> float:
+    """A bet-day's stored end-of-day bank. Rows written before ``close_pct``
+    existed carry only the settlement snapshot in ``bank_pct``."""
+    return h.get("close_pct", h["bank_pct"])
 
 
-def _leg_results(a):
-    """Per-leg result tags for an acca: stored results first, then the leg record."""
-    legs = a.get("legs") or []
-    results = a.get("results")
-    out = []
-    for i, leg in enumerate(legs):
-        if results is not None and i < len(results):
-            out.append(results[i])
-        else:
-            out.append(leg.get("result") if isinstance(leg, dict) else None)
-    return out
+def _day_line(h) -> str:
+    accas = h.get("accas") or []
+    wins = sum(1 for a in accas if a.get("won"))
+    record = f"{wins}W/{len(accas) - wins}L" if accas else "-"
+    staked = h.get("staked_pct", 0.0)
+    returned = h.get("returned_pct", 0.0)
+    return (f"  {h['date']}   {record:<7} staked {staked:5.1f}%   returned {returned:5.1f}%   "
+            f"net {returned - staked:+6.1f}%   bank {_close(h):6.1f}%")
 
 
-def _main_acca_block(a, held=False):
-    """One acca: its stake and result on one line, then its legs indented under it."""
+def _held_lines(slip, a):
+    """One held acca: its stake, then its legs. Held accas have no result yet."""
     odds = a.get("odds")
     odds_txt = f"@{odds:.2f}" if isinstance(odds, (int, float)) else "@n/a"
     stake = a.get("stake_pct")
     stake_txt = f"stake {stake:.1f}%" if stake is not None else "stake not recorded"
-    if held:
-        head = f"    ACCA {odds_txt:<7} {stake_txt:<20} HELD (not settled)"
-    elif a.get("won") is None:
-        head = f"    ACCA {odds_txt:<7} {stake_txt:<20} open"
-    else:
-        verdict = "WON" if a["won"] else "LOST"
-        ret = a.get("returned_pct")
-        if ret is None:
-            ret = (round(stake * odds, 4)
-                   if a["won"] and stake is not None and isinstance(odds, (int, float)) else 0.0)
-        net_txt = f"net {ret - stake:+.1f}%" if stake is not None else ""
-        head = f"    ACCA {odds_txt:<7} {stake_txt:<20} {verdict:<4}  {net_txt}"
-    out = [head]
-    legs = a.get("legs")
-    if legs is None:
-        return out  # settled before leg detail was recorded
-    res = _leg_results(a)
-    for leg, r in zip(legs, res):
-        if leg.get("label"):
-            pick = str(leg["label"])
-        else:
-            pick = str(leg.get("pick") or "").upper()
+    out = [f"  {slip['date']}   ACCA {odds_txt}   {stake_txt}   HELD (not settled)"]
+    res = a.get("results") or []
+    for leg in a.get("legs") or []:
+        pick = str(leg.get("label") or leg.get("pick") or "").upper()
         price = leg.get("odds")
         price_txt = f"@{float(price):.2f}" if isinstance(price, (int, float)) else ""
-        tag = _LEG_TAG.get(r, "open")
-        out.append(f"      {tag:<5}{str(leg.get('match') or ''):<48} {pick} {price_txt}")
-    if not held and a.get("won") is False:
-        culprit = next((l for l, r in zip(legs, res) if r == "loss"), None)
-        if culprit is not None:
-            out.append(f"      lost on: {culprit.get('match')} "
-                       f"({culprit.get('pick') or culprit.get('label')})")
+        out.append(f"      {pick} {price_txt}".rstrip())
+    if "conflict" in res:
+        out.append("      reason: donor spellings disagree on the outcome of one leg")
     return out
-
-
-def _close(h) -> float:
-    """A bet-day's end-of-day bank. Rows written before ``close_pct`` existed
-    carry only the settlement snapshot in ``bank_pct``."""
-    return h.get("close_pct", h["bank_pct"])
-
-
-def _day_attributed_closes(history, base) -> dict:
-    """Each bet-day's close rebuilt from the settled P&L of every bet-day up to it,
-    in date order from ``base``. It does not depend on when a snapshot was written,
-    and it does not depend on list order."""
-    bank = float(base)
-    out = {}
-    for h in sorted(history, key=lambda r: r["date"]):
-        bank += h.get("returned_pct", 0.0) - h.get("staked_pct", 0.0)
-        out[h["date"]] = round(bank, 4)
-    return out
-
-
-def _snapshot_episodes(history, base, tol=0.05):
-    """Runs of consecutive bet-days (date order) whose stored close sits off the
-    rebuilt close by the same offset. A run is one settlement that landed after
-    later days were written. ``resumed`` is the first day back in line, or None."""
-    rebuilt = _day_attributed_closes(history, base)
-    episodes = []
-    cur = None
-    for h in sorted(history, key=lambda r: r["date"]):
-        off = round(_close(h) - rebuilt[h["date"]], 4)
-        if abs(off) <= tol:
-            if cur is not None:
-                cur["resumed"] = h["date"]
-                episodes.append(cur)
-                cur = None
-            continue
-        if cur is not None and abs(off - cur["offset"]) <= 0.01:
-            cur["last"] = h["date"]
-        else:
-            if cur is not None:
-                episodes.append(cur)
-            cur = {"first": h["date"], "last": h["date"], "offset": off, "resumed": None}
-    if cur is not None:
-        episodes.append(cur)
-    return episodes
 
 
 def render_lines(st, label, last, held, accas, wins, generated):
-    """The performance report: summary block, then bet-days newest first."""
+    """The performance report: summary, one line per bet-day in date order,
+    held accas, take-profit notices and a short notes block. ``last`` limits the
+    bet-day table to the most recent N days; 0 or less shows every day."""
     multiple = st["bank"] / st["base_pct"]
     history = st["history"]
-    rebuilt = _day_attributed_closes(history, st["base_pct"])
-    episodes = _snapshot_episodes(history, st["base_pct"])
     rows = []
     add = rows.append
     add(f"{label} — performance, percent of capital")
@@ -165,41 +103,17 @@ def render_lines(st, label, last, held, accas, wins, generated):
     add(f"OPEN     {len(st['open_slips'])} open slips   {len(held)} held accas   "
         f"{len(st.get('events', []))} take-profit notice(s) to date")
     add("")
-    if episodes:
-        add("SNAPSHOT NOTES")
-        add("  A stored close is the bank when that day's last acca settled. An acca that")
-        add("  settles after later days were written moves their stored closes. The rebuild")
-        add("  counts each day's settled P&L in date order from the base.")
-        for e in episodes:
-            tail = (f"back in line {e['resumed']}" if e["resumed"]
-                    else f"no in-line day after {e['last']}")
-            add(f"  {e['first']} to {e['last']}: stored close {e['offset']:+.2f} vs rebuild; {tail}")
-        add("")
-    start = max(0, len(history) - last)
-    add(f"BET-DAYS, newest first (last {len(history) - start})")
-    for i in reversed(range(start, len(history))):
-        h = history[i]
-        staked = h.get("staked_pct", 0.0)
-        returned = h.get("returned_pct", 0.0)
-        opens = _close(h) - returned + staked
-        add(f"  {h['date']}   staked {staked:5.1f}%   returned {returned:5.1f}%   "
-            f"net {returned - staked:+6.1f}%   bank {opens:.1f}% -> {_close(h):.1f}%")
-        off = _close(h) - rebuilt[h["date"]]
-        if abs(off) > 0.05:
-            add(f"  ~ stored close {off:+.2f} vs rebuild (see SNAPSHOT NOTES)")
-        for a in h["accas"]:
-            rows.extend(_main_acca_block(a))
-        add("")
+    ordered = sorted(history, key=lambda h: h["date"])  # stored order is not guaranteed
+    start = max(0, len(ordered) - last) if last > 0 else 0
+    shown = ordered[start:]
+    add(f"BET-DAYS, oldest first ({len(shown)} of {len(history)})")
+    for h in shown:
+        add(_day_line(h))
+    add("")
     if held:
         add("HELD (not yet settled; stake counted as committed)")
         for slip, a in held:
-            add(f"  {slip['date']}")
-            rows.extend(_main_acca_block(dict(a, won=None), held=True))
-            conflicts = [l.get("match") for l, r in zip(a["legs"], a.get("results") or [])
-                         if r == "conflict"]
-            if conflicts:
-                add("      reason: donor spellings disagree on the outcome of "
-                    + ", ".join(str(c) for c in conflicts))
+            rows.extend(_held_lines(slip, a))
         add("")
     events = st.get("events", [])
     if events:
@@ -208,9 +122,10 @@ def render_lines(st, label, last, held, accas, wins, generated):
             add(f"  {e['date']}   +{e['gain_pct']:.1f}% that cycle   "
                 f"-> bank {e['bank_after_pct']:.1f}%, next target {e['next_target_pct']:.1f}%")
         add("")
-    add("KEY  Stake and returned are % of capital. Each leg reads WON / LOST / VOID / HELD.")
-    add("     'lost on' names the leg that decided an acca. '!' marks a bank break.")
-    add("     Bet-days recorded before leg detail was kept show the acca result only.")
+    add("NOTES")
+    add("  Stake, returned and net are % of capital. Bank is the stored close for each day.")
+    add("  Bank breaks in the history are documented in docs/operator/BANK-HISTORY-2026-10-16.md.")
+    add("  Bet-days recorded before leg detail was kept show the acca result only.")
     return [r.rstrip() for r in rows]
 
 
@@ -218,7 +133,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--lane", choices=sorted(LANES), default="main",
                     help="which lane to report (default: main)")
-    ap.add_argument("--last", type=int, default=15, help="bet-days to show in the txt report")
+    ap.add_argument("--last", type=int, default=0, help="bet-days to show in the txt report (0 = all)")
     args = ap.parse_args(argv)
 
     lane, label, stem = LANES[args.lane]

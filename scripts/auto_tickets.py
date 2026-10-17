@@ -2989,6 +2989,38 @@ def acca_price_evidence_gate(pool, blocked_labels=frozenset()):
     return kept, blocked
 
 
+# EDGE_FACTORY_ACCA_GATE_LOG lets the test suite point this at a scratch file;
+# production leaves it unset and the log lives in localdata/.
+ACCA_GATE_LOG = Path(os.environ.get("EDGE_FACTORY_ACCA_GATE_LOG") or (LOCALDATA / "acca_gate_log.jsonl"))
+
+
+def log_acca_gate_run(target, gate_status, gate_labels, blocked_legs, path=None):
+    """Append one line per run: the gate's status, the blocked label set, and every
+    leg the gate removed from the acca pool. This is the only durable record of
+    what the gate blocked; the census is printed, not stored."""
+    record = {
+        "run_at": datetime.now().isoformat(timespec="seconds"),
+        "target": target,
+        "status": gate_status,
+        "blocked_labels": sorted(gate_labels),
+        "blocked_legs": [
+            {
+                "match": leg.get("match"),
+                "pick": leg.get("pick"),
+                "odds": leg.get("odds"),
+                "prob": leg.get("prob"),
+                "label": (leg.get("row") or {}).get("price_evidence"),
+                "bucket": (leg.get("row") or {}).get("bucket"),
+            }
+            for leg in blocked_legs
+        ],
+    }
+    path = Path(path) if path is not None else ACCA_GATE_LOG
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as fh:
+        fh.write(json.dumps(record, default=str) + "\n")
+
+
 def _rule_of(leg):
     """The miner rule behind a leg, when the archived row is still attached."""
     return str((leg.get("row") or {}).get("rule") or "")
@@ -4355,6 +4387,7 @@ def cmd_today(args, st):
     gate_labels, gate_status = acca_gate.refresh(target)
     print(f"ACCA PRICE-EVIDENCE GATE: {gate_status}")
     plan_pool, price_gate_blocked = acca_price_evidence_gate(plan_pool, gate_labels)
+    log_acca_gate_run(target, gate_status, gate_labels, price_gate_blocked)
     if price_gate_blocked:
         census["ACCA PRICE-EVIDENCE GATE: blocked label"] = sorted(
             f"{l['match']} [{(l['row'].get('price_evidence') or '').upper()}]"
