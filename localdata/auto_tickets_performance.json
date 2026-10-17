@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-17T21:42:50",
+  "generated_at": "2026-10-18T00:59:43",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 168.26499300000012,
-  "multiple": 1.682649930000001,
+  "bank_pct": 165.11002800000014,
+  "multiple": 1.6511002800000014,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 48,
+  "bet_days": 49,
   "accas": {
-    "wins": 59,
-    "losses": 42
+    "wins": 60,
+    "losses": 43
   },
-  "open_slips": [
-    {
-      "date": "2026-10-17",
-      "staked_pct": 42.0662
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -899,6 +894,55 @@
       ],
       "bank_pct": 168.265,
       "close_pct": 168.265
+    },
+    {
+      "date": "2026-10-17",
+      "staked_pct": 42.0662,
+      "returned_pct": 38.9112,
+      "accas": [
+        {
+          "odds": 1.85,
+          "won": true,
+          "stake_pct": 21.0331,
+          "returned_pct": 38.9112,
+          "legs": [
+            {
+              "match": "FC BW Linz vs FC Liefering",
+              "pick": "HOME",
+              "odds": 1.4,
+              "result": "win"
+            },
+            {
+              "match": "Fenerbahce vs Alanyaspor",
+              "pick": "HOME",
+              "odds": 1.32,
+              "result": "win"
+            }
+          ]
+        },
+        {
+          "odds": 1.86,
+          "won": false,
+          "stake_pct": 21.0331,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Telstar vs Feyenoord",
+              "pick": "AWAY",
+              "odds": 1.35,
+              "result": "win"
+            },
+            {
+              "match": "Slavia Praha vs Hradec Kralove",
+              "pick": "HOME",
+              "odds": 1.38,
+              "result": "loss"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 165.11,
+      "close_pct": 165.11
     }
   ]
 }
