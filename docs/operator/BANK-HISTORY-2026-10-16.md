@@ -22,18 +22,19 @@ Rows written before 2026-10-16 have no `close_pct`.
 
 ## What the report does now
 
-`scripts/auto_tickets_grade.py` rebuilds each bet-day's close from the settled
-P&L of every bet-day up to it, in date order, from the base (100%). It compares
-that with the stored close. Where they disagree, the report:
+`scripts/auto_tickets_grade.py` shows the stored values and does not recompute
+the bank. Each bet-day line carries its stored close, and the `NOTES` block at
+the foot of the report points here for the history.
 
-- prints a `SNAPSHOT NOTES` block: each run of off-line days, its offset, and
-  the first day back in line (or "no in-line day after" if it is still open);
-- marks the affected day lines with `~ stored close ... (see SNAPSHOT NOTES)`.
+The rebuild-from-base comparison (the `SNAPSHOT NOTES` block and the `~ stored
+close` markers) was removed from the report on 17 Oct. It was a recomputation,
+and it put the audit detail in front of the performance view. The breaks it
+found are still described in this document, and the stored rows are unchanged.
 
 The earlier "bank break" flag compared neighbouring list entries, so it
-mislabelled late settlements and out-of-order rows. It is removed.
+mislabelled late settlements and out-of-order rows. It is also removed.
 
-The rebuilt chain matches the live bank (192.30 on 16 Oct) to rounding, so the
+The rebuilt chain matched the live bank (192.30 on 16 Oct) to rounding, so the
 report's total is consistent with the live balance.
 
 ## The 13 Oct row (corrected 2026-10-16)
