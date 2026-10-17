@@ -1,6 +1,6 @@
 Edge Factory Picks — 2026-10-17
 ============================================================
-Generated at: 2026-10-17 12:20:26
+Generated at: 2026-10-17 15:20:05
 
 
 CERTIFIED CLEAN PICKS
@@ -17,6 +17,9 @@ CERTIFIED CLEAN PICKS
   [ML-META≥60] Philadelphia Union vs Charlotte            KO 2026-10-17 20:30 SAST -> HOME   avg 65%  w=1.00 @1.47
      bucket=CERTIFIED_CLEAN  league=usa major league soccer:UNKNOWN  odds_band=1.35-1.50:BOOST
      📊 Realized Stats on Home Win (n=1305): Avg Goals: 3.42 | Over 2.5: 67.1% | BTTS: 40.4% | Home Over 1.5 Goals: 84.8% | Away Over 1.5 Goals: 9.9%
+  [ML-META≥60] AS Roma vs Genoa                           KO 2026-10-17 20:45 SAST -> HOME   avg 64%  w=0.57 @1.57
+     bucket=CERTIFIED_CLEAN  league=italy serie a:BOOST  odds_band=1.50-1.75:BOOST
+     📊 Realized Stats on Home Win (n=1379): Avg Goals: 3.40 | Over 2.5: 66.4% | BTTS: 40.6% | Home Over 1.5 Goals: 84.2% | Away Over 1.5 Goals: 10.2%
   [ML-META≥60] Tokyo Verdy vs FC Tokyo                    KO 2026-10-17 07:00 SAST -> AWAY   avg 63%  w=1.00 @1.71
      bucket=CERTIFIED_CLEAN  league=japan j league:UNKNOWN  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Away Win (n=529): Avg Goals: 3.48 | Over 2.5: 69.2% | BTTS: 41.4% | Home Over 1.5 Goals: 10.8% | Away Over 1.5 Goals: 85.3%
@@ -32,9 +35,6 @@ CERTIFIED CLEAN PICKS
   [ML-META≥60] Villarreal vs Elche                        KO 2026-10-17 16:15 SAST -> HOME   avg 61%  w=0.44 @1.51
      bucket=CERTIFIED_CLEAN  league=spain la liga:BOOST  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Home Win (n=1552): Avg Goals: 3.29 | Over 2.5: 64.9% | BTTS: 41.8% | Home Over 1.5 Goals: 82.7% | Away Over 1.5 Goals: 10.2%
-  [ML-META≥60] Maringá vs Ferroviária                     KO 2026-10-17 22:00 SAST -> AWAY   avg 61%  w=0.43 @4.18
-     bucket=CERTIFIED_CLEAN  league=brazil serie a:UNKNOWN  odds_band=2.50+:BOOST
-     📊 Realized Stats on Away Win (n=599): Avg Goals: 3.42 | Over 2.5: 67.9% | BTTS: 41.9% | Home Over 1.5 Goals: 10.9% | Away Over 1.5 Goals: 85.3%
 
 CAUTION PICKS
 ============================================================
@@ -132,6 +132,9 @@ SKIPPED — VETO CONTEXT
   [ML-META≥60] Venezia vs Napoli                          KO 2026-10-17 15:00 SAST -> AWAY   avg 68%  w=1.00 @1.75
      bucket=SKIPPED_VETO  league=italy serie a:VETO  odds_band=1.75-2.00:BOOST
      📊 Realized Stats on Away Win (n=253): Avg Goals: 3.65 | Over 2.5: 68.8% | BTTS: 35.6% | Home Over 1.5 Goals: 8.7% | Away Over 1.5 Goals: 85.8%
+  [ML-META≥60] Real Betis vs Barcelona                    KO 2026-10-17 18:30 SAST -> AWAY   avg 68%  w=1.00 @1.49
+     bucket=SKIPPED_VETO  league=spain la liga:VETO  odds_band=1.35-1.50:BOOST
+     📊 Realized Stats on Away Win (n=281): Avg Goals: 3.60 | Over 2.5: 67.6% | BTTS: 35.2% | Home Over 1.5 Goals: 8.9% | Away Over 1.5 Goals: 85.8%
   [ML-META≥60] Eastleigh vs Brentwood Town                KO 2026-10-17 16:00 SAST -> HOME   avg 67%  w=1.00 @1.22
      bucket=SKIPPED_VETO  league=england fa cup:UNKNOWN  odds_band=1.20-1.35:CAUTION
      📊 Realized Stats on Home Win (n=1006): Avg Goals: 3.56 | Over 2.5: 69.6% | BTTS: 40.8% | Home Over 1.5 Goals: 86.2% | Away Over 1.5 Goals: 10.3%
@@ -141,18 +144,15 @@ SKIPPED — VETO CONTEXT
   [ML-META≥60] Clyde vs Annan Athletic                    KO 2026-10-17 16:00 SAST -> HOME   avg 66%  w=0.68 @1.71
      bucket=SKIPPED_VETO  league=scotland league two:UNKNOWN  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Home Win (n=1093): Avg Goals: 3.53 | Over 2.5: 68.5% | BTTS: 40.4% | Home Over 1.5 Goals: 85.7% | Away Over 1.5 Goals: 10.4%
+  [ML-META≥60] Austria Lustenau vs Lask Linz              KO 2026-10-17 17:00 SAST -> AWAY   avg 66%  w=1.00 @1.37
+     bucket=SKIPPED_VETO  league=austria bundesliga:UNKNOWN  odds_band=1.35-1.50:BOOST
+     📊 Realized Stats on Away Win (n=381): Avg Goals: 3.60 | Over 2.5: 68.8% | BTTS: 39.4% | Home Over 1.5 Goals: 10.0% | Away Over 1.5 Goals: 85.8%
   [ML-META≥60] Inter Turku vs AC Oulu                     KO 2026-10-17 17:00 SAST -> HOME   avg 65%  w=1.00 @1.45
      bucket=SKIPPED_VETO  league=finland veikkausliiga championship round:UNKNOWN  odds_band=1.35-1.50:BOOST
      📊 Realized Stats on Home Win (n=1229): Avg Goals: 3.47 | Over 2.5: 67.5% | BTTS: 39.9% | Home Over 1.5 Goals: 85.3% | Away Over 1.5 Goals: 10.5%
-  [ML-META≥60] Betis vs Barcelona                         KO 2026-10-17 18:30 SAST -> AWAY   avg 64%  w=1.00 @1.45
-     bucket=SKIPPED_VETO  league=spain la liga:VETO  odds_band=1.35-1.50:BOOST
-     📊 Realized Stats on Away Win (n=459): Avg Goals: 3.56 | Over 2.5: 69.5% | BTTS: 40.5% | Home Over 1.5 Goals: 11.1% | Away Over 1.5 Goals: 86.7%
   [ML-META≥60] Kashiwa Reysol vs Nagoya Grampus           KO 2026-10-17 12:00 SAST -> HOME   avg 64%  w=1.00 @1.64
      bucket=SKIPPED_VETO  league=japan j league:UNKNOWN  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Home Win (n=1332): Avg Goals: 3.40 | Over 2.5: 66.6% | BTTS: 40.5% | Home Over 1.5 Goals: 84.5% | Away Over 1.5 Goals: 10.1%
-  [ML-META≥60] Austria Lustenau vs Lask Linz              KO 2026-10-17 17:00 SAST -> AWAY   avg 64%  w=1.00 @1.37
-     bucket=SKIPPED_VETO  league=austria bundesliga:UNKNOWN  odds_band=1.35-1.50:BOOST
-     📊 Realized Stats on Away Win (n=476): Avg Goals: 3.54 | Over 2.5: 69.5% | BTTS: 41.2% | Home Over 1.5 Goals: 10.9% | Away Over 1.5 Goals: 86.6%
   [ML-META≥60] Middlesbrough vs Cardiff                   KO 2026-10-17 13:30 SAST -> HOME   avg 63%  w=1.00 @1.51
      bucket=SKIPPED_VETO  league=england championship:UNKNOWN  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Home Win (n=1440): Avg Goals: 3.37 | Over 2.5: 66.0% | BTTS: 41.0% | Home Over 1.5 Goals: 83.8% | Away Over 1.5 Goals: 10.1%
@@ -162,11 +162,17 @@ SKIPPED — VETO CONTEXT
   [ML-META≥60] Bologna vs Inter                           KO 2026-10-17 18:00 SAST -> AWAY   avg 62%  w=1.00 @1.62
      bucket=SKIPPED_VETO  league=italy serie a:VETO  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Away Win (n=529): Avg Goals: 3.48 | Over 2.5: 69.2% | BTTS: 41.4% | Home Over 1.5 Goals: 10.8% | Away Over 1.5 Goals: 85.3%
+  [ML-META≥60] Al Wihdat vs Al Hussein                    KO 2026-10-17 18:30 SAST -> AWAY   avg 62%  w=0.48 @2.30 zulubet
+     bucket=SKIPPED_VETO  league=jordan league:UNKNOWN  odds_band=2.00-2.50:VETO
+     📊 Realized Stats on Away Win (n=568): Avg Goals: 3.47 | Over 2.5: 68.5% | BTTS: 41.4% | Home Over 1.5 Goals: 11.1% | Away Over 1.5 Goals: 85.6%
+  [ML-META≥60] Maringá vs Ferroviária                     KO 2026-10-17 22:00 SAST -> AWAY   avg 61%  w=0.43 @4.18
+     bucket=SKIPPED_VETO  league=brazil serie b:VETO  odds_band=2.50+:BOOST
+     📊 Realized Stats on Away Win (n=599): Avg Goals: 3.42 | Over 2.5: 67.9% | BTTS: 41.9% | Home Over 1.5 Goals: 10.9% | Away Over 1.5 Goals: 85.3%
 
 SKIPPED — DEAD EDGE
 ============================================================
   (none)
 
-Total archived picks in this report: 46
+Total archived picks in this report: 48
 ⚠️  Flat stakes only. Best odds inflate ROI (~halve it).
 ⚠️  Bet only what you can afford to lose.

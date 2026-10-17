@@ -1,16 +1,6 @@
 {
-  "attempted": 12,
+  "attempted": 10,
   "attempted_fixtures": [
-    {
-      "avg_p": 77.5,
-      "away": "Valencia W",
-      "date": "2026-10-17",
-      "home": "Athletic Club W",
-      "league": "Spain Primera Divisi\u00f3n Femenina",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
     {
       "avg_p": 77.2,
       "away": "Bromley",
@@ -22,31 +12,11 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 76.8,
-      "away": "PSV Eindhoven",
-      "date": "2026-10-17",
-      "home": "ADO Den Haag",
-      "league": "Netherlands: Eredivisie",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
       "avg_p": 75.5,
       "away": "FC Liefering",
       "date": "2026-10-17",
       "home": "FC BW Linz",
       "league": "Austria: 2. Liga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 75.0,
-      "away": "Pacific FC",
-      "date": "2026-10-17",
-      "home": "Cavalry FC",
-      "league": "Canada,Premier League",
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
@@ -62,34 +32,34 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 74.6,
-      "away": "Crawley Town",
+      "avg_p": 68.0,
+      "away": "Barcelona",
       "date": "2026-10-17",
-      "home": "Salford City",
-      "league": "England League Two",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0778
-    },
-    {
-      "avg_p": 69.3,
-      "away": "Borussia Dortmund",
-      "date": "2026-10-17",
-      "home": "Union Berlin",
-      "league": "Germany Bundesliga",
+      "home": "Real Betis",
+      "league": "Spain La Liga",
       "market": "1x2",
       "pick": "away",
       "w_score": 1.0
     },
     {
-      "avg_p": 68.5,
-      "away": "Napoli",
+      "avg_p": 66.0,
+      "away": "Lask Linz",
       "date": "2026-10-17",
-      "home": "Venezia",
+      "home": "Austria Lustenau",
+      "league": "Austria Bundesliga",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 64.0,
+      "away": "Genoa",
+      "date": "2026-10-17",
+      "home": "AS Roma",
       "league": "Italy Serie A",
       "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
+      "pick": "home",
+      "w_score": 0.5749
     },
     {
       "avg_p": 62.4,
@@ -100,6 +70,16 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 61.7,
+      "away": "Al Hussein",
+      "date": "2026-10-17",
+      "home": "Al Wihdat",
+      "league": "Jordan League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.4752
     },
     {
       "avg_p": 61.5,
@@ -123,24 +103,26 @@
     }
   ],
   "be_429": 0,
-  "be_cached": 9,
+  "be_cached": 6,
   "be_cooling_down": false,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "candidate_fixtures": 12,
-  "captured_at": "2026-10-17T10:10:28.474797+00:00",
+  "be_rows_rejected": 3,
+  "be_rows_rejected_reasons": {
+    "row teams do not both match the pick": 3
+  },
+  "candidate_fixtures": 10,
+  "captured_at": "2026-10-17T13:09:57.115039+00:00",
   "date": "2026-10-17",
   "errors": [],
   "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 15,
   "match_detail": {
-    "bookmakers": 236,
+    "bookmakers": 280,
     "challenge_pages": 0,
-    "fixtures": 17,
-    "market_rows": 678,
-    "markets": 102,
-    "named_rows": 678,
+    "fixtures": 20,
+    "market_rows": 803,
+    "markets": 120,
+    "named_rows": 803,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -160,16 +142,6 @@
     },
     {
       "avg_p": 75.0,
-      "away": "Pacific FC",
-      "date": "2026-10-17",
-      "home": "Cavalry FC",
-      "league": "Canada,Premier League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 75.0,
       "away": "Feyenoord",
       "date": "2026-10-17",
       "home": "Telstar",
@@ -179,14 +151,24 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 68.5,
-      "away": "Napoli",
+      "avg_p": 68.0,
+      "away": "Barcelona",
       "date": "2026-10-17",
-      "home": "Venezia",
-      "league": "Italy Serie A",
+      "home": "Real Betis",
+      "league": "Spain La Liga",
       "market": "1x2",
       "pick": "away",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 64.0,
+      "away": "Genoa",
+      "date": "2026-10-17",
+      "home": "AS Roma",
+      "league": "Italy Serie A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5749
     },
     {
       "avg_p": 62.4,
@@ -199,7 +181,7 @@
       "w_score": 1.0
     }
   ],
-  "requests": 9,
+  "requests": 25,
   "rows": 15,
   "schema": 1,
   "status": "ok"
