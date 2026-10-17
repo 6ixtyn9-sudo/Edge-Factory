@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-17T22:13:45",
+  "generated_at": "2026-10-18T01:36:57",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 101.241556,
-  "multiple": 1.01241556,
+  "bank_pct": 75.93115599999999,
+  "multiple": 0.7593115599999999,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 3,
+  "bet_days": 4,
   "accas": {
     "wins": 4,
-    "losses": 3
+    "losses": 6
   },
   "open_slips": [
     {
-      "date": "2026-10-17",
-      "staked_pct": 25.3104
+      "date": "2026-10-18",
+      "staked_pct": 18.9828
     }
   ],
   "events": [],
@@ -162,6 +162,81 @@
       ],
       "bank_pct": 101.2416,
       "close_pct": 101.2416
+    },
+    {
+      "date": "2026-10-17",
+      "staked_pct": 25.3104,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.09,
+          "won": false,
+          "stake_pct": 8.4368,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Athletic Club W vs Valencia W",
+              "pick": "over",
+              "odds": 1.36,
+              "result": "loss",
+              "label": "Match Over 1.5 Goals"
+            },
+            {
+              "match": "Tiszakecske FC vs Csakvar",
+              "pick": "over",
+              "odds": 1.54,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 1.9,
+          "won": false,
+          "stake_pct": 8.4368,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Maring\u00e1 vs Ferrovi\u00e1ria",
+              "pick": "over",
+              "odds": 1.36,
+              "result": "win",
+              "label": "Match Over 1.5 Goals"
+            },
+            {
+              "match": "Stockport County FC vs Bromley",
+              "pick": "over",
+              "odds": 1.4,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 2.33,
+          "won": false,
+          "stake_pct": 8.4368,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Telstar vs Feyenoord",
+              "pick": "yes",
+              "odds": 1.55,
+              "result": "win",
+              "label": "Both Teams to Score - Yes (BTTS-Yes)"
+            },
+            {
+              "match": "Hapoel Tel Aviv vs Ironi Tiberias",
+              "pick": "over",
+              "odds": 1.5,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 75.9312,
+      "close_pct": 75.9312
     }
   ]
 }
