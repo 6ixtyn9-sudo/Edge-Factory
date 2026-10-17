@@ -31,6 +31,12 @@ import pytest
 
 # Neutralize dotenv BEFORE importing anything from src (see docstring).
 import dotenv  # noqa: E402
+import tempfile  # noqa: E402
+
+# Daily-run code appends to the acca gate log. Point it at a scratch file for the
+# whole session, before any src module is imported, so tests never write localdata.
+os.environ["EDGE_FACTORY_ACCA_GATE_LOG"] = os.path.join(
+    tempfile.mkdtemp(prefix="acca_gate_log_"), "acca_gate_log.jsonl")
 
 dotenv.load_dotenv = lambda *a, **k: False  # noqa: E731 - session-wide neutralization
 
