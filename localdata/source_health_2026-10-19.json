@@ -158,13 +158,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -176,19 +171,19 @@
       },
       "coherence_withheld_fixtures": 5,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 1,
       "join_miss_counts": {
         "fixture_key_miss": 21780,
         "no_pick_for_fixture": 16
       },
       "pa_matched": 1,
-      "pa_raw": 1215,
+      "pa_raw": 21797,
       "pa_scored": 21797,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -234,31 +229,24 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 6,
-        "board_league_count": 4,
+        "board_fixtures": 4,
+        "board_league_count": 1,
         "board_leagues": {
-          "argentina_-_primera_b": 1,
-          "bolivia_-_liga_profesional": 1,
-          "bolivia_-_primera_division": 3,
-          "usa_-_major_league_soccer": 195
+          "usa_-_major_league_soccer": 200
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 12,
+        "board_team_count": 8,
         "board_team_names": {
-          "Atlanta Utd": 66,
-          "Blooming": 3,
-          "Blooming Santa Cruz": 1,
-          "CHI Fire": 12,
-          "Chicago Fire": 117,
-          "Club Independiente Petrolero": 1,
-          "Deportivo Merlo": 1,
-          "Independiente Petrolero": 3,
-          "Inter Miami CF": 66,
-          "NE Revolution": 12,
-          "New England Revolution": 117,
-          "Talleres Remedios": 1
+          "CF Montr\u00e9al": 34,
+          "Colorado": 106,
+          "LA Galaxy": 9,
+          "Nashville SC": 51,
+          "Portland Timbers": 106,
+          "San Diego FC": 9,
+          "San Jose Earthquakes": 51,
+          "Seattle Sounders": 34
         },
         "board_truncated": false,
         "card_fixture_count": 1,

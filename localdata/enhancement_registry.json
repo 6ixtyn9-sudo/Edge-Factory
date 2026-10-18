@@ -2004,10 +2004,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 280,
-   "inv_price_sum": 283.11124794601756,
+   "hits": 281,
+   "inv_price_sum": 283.7481906211768,
    "multi_n": 77,
-   "n": 432,
+   "n": 433,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -2684,23 +2684,11 @@
     "2026-10-17|Austria Lustenau vs Lask Linz|match_over_25@v1",
     "2026-10-17|Bologna vs Inter|match_over_25@v1",
     "2026-10-17|VfL Wolfsburg vs 1. FC Heidenheim|match_over_25@v1",
-    "2026-10-17|Barrow vs Gloucester City|match_over_25@v1"
+    "2026-10-17|Barrow vs Gloucester City|match_over_25@v1",
+    "2026-10-17|Hartford Athletic vs Brooklyn|match_over_25@v1"
    ],
-   "profit": -3.163,
+   "profit": -2.593,
    "records": [
-    {
-     "away": "RAAL La Louvi\u00e8re",
-     "away_key": "raallalouviere",
-     "date": "2026-08-21",
-     "hit": false,
-     "home": "Standard Li\u00e8ge",
-     "home_key": "standardliege",
-     "league": "Be1",
-     "match": "Standard Li\u00e8ge vs RAAL La Louvi\u00e8re",
-     "multi_source": false,
-     "price": 2.05,
-     "source": "scoutingstats"
-    },
     {
      "away": "Cienciano",
      "away_key": "cienciano",
@@ -8165,6 +8153,23 @@
      "rule": "ml-meta avg_p>=60",
      "source": "scoutingstats",
      "stated": 0.5757
+    },
+    {
+     "away": "Brooklyn",
+     "away_key": "brooklyn",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.5676,
+     "date": "2026-10-17",
+     "hit": true,
+     "home": "Hartford Athletic",
+     "home_key": "hartfordathletic",
+     "league": "USA,Usl Championship Eastern Conference",
+     "match": "Hartford Athletic vs Brooklyn",
+     "multi_source": false,
+     "price": 1.57,
+     "rule": "ml-meta avg_p>=60",
+     "source": "scoutingstats",
+     "stated": 0.5707
     }
    ],
    "status": "PAPER",
