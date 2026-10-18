@@ -46,7 +46,7 @@
     "betexplorer": {
       "be_matched": 4,
       "be_raw": 33,
-      "be_usable": 30,
+      "be_usable": 33,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -55,7 +55,7 @@
       "freshness_h": null,
       "join_matched_rows": 4,
       "join_miss_counts": {
-        "fixture_key_miss": 18,
+        "fixture_key_miss": 21,
         "no_pick_for_fixture": 8
       },
       "reason": null,
@@ -184,10 +184,10 @@
       "coherence_withheld_fixtures": 10,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 8,
+      "join_matched_rows": 7,
       "join_miss_counts": {
-        "fixture_key_miss": 26310,
-        "no_pick_for_fixture": 112
+        "fixture_key_miss": 26329,
+        "no_pick_for_fixture": 94
       },
       "pa_matched": 7,
       "pa_raw": 26430,
@@ -241,32 +241,39 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 4,
-        "board_league_count": 1,
+        "board_fixtures": 7,
+        "board_league_count": 5,
         "board_leagues": {
-          "usa_-_major_league_soccer": 200
+          "australia_-_a-league_women": 49,
+          "australian_championship": 30,
+          "hong_kong_-_first_division": 1,
+          "japan_-_j1_league": 103,
+          "korea_-_k1_league": 17
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 8,
+        "board_team_count": 14,
         "board_team_names": {
-          "CF Montr\u00e9al": 45,
-          "Colorado": 89,
-          "LA Galaxy": 10,
-          "Nashville SC": 56,
-          "Portland Timbers": 89,
-          "San Diego FC": 10,
-          "San Jose Earthquakes": 56,
-          "Seattle Sounders": 45
+          "Adelaide United (W)": 48,
+          "Adelaide United [W]": 1,
+          "Avispa Fukuoka": 12,
+          "Daejeon Citizen": 17,
+          "FC Machida": 91,
+          "Fukuoka": 91,
+          "Gwangju": 17,
+          "Lucky Mile": 1,
+          "Machida Zelvia": 12,
+          "Queensland Lions FC": 30,
+          "South China AA": 1,
+          "South Hobart": 30,
+          "Sydney FC (W)": 48,
+          "Sydney FC [W]": 1
         },
         "board_truncated": false,
         "card_fixture_count": 24,
-        "card_fixtures_on_board": 1,
+        "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
-        "card_prematch_drop_reasons": {
-          "live_price": 45
-        },
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
@@ -279,7 +286,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "reason": "card_fixtures_unmatched_on_board",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
@@ -324,13 +331,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 87,
+      "join_matched_rows": 68,
       "join_miss_counts": {
-        "fixture_key_miss": 443,
+        "fixture_key_miss": 518,
         "market_unsupported": 2,
-        "no_pick_for_fixture": 104
+        "no_pick_for_fixture": 48
       },
-      "oa_matched": 4,
+      "oa_matched": 3,
       "oa_raw": 636,
       "oa_usable": 636,
       "reason": null,
