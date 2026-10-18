@@ -44,7 +44,7 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 7,
+      "be_matched": 2,
       "be_raw": 36,
       "be_usable": 36,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
@@ -53,10 +53,10 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 7,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 19,
-        "no_pick_for_fixture": 10
+        "fixture_key_miss": 30,
+        "no_pick_for_fixture": 4
       },
       "reason": null,
       "status": "cache_only"
@@ -184,12 +184,12 @@
       "coherence_withheld_fixtures": 10,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 10,
+      "join_matched_rows": 3,
       "join_miss_counts": {
-        "fixture_key_miss": 26270,
-        "no_pick_for_fixture": 150
+        "fixture_key_miss": 26369,
+        "no_pick_for_fixture": 58
       },
-      "pa_matched": 10,
+      "pa_matched": 3,
       "pa_raw": 26430,
       "pa_scored": 26430,
       "reason": null,
@@ -239,51 +239,89 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 4,
-        "board_league_count": 4,
+        "board_fixtures": 14,
+        "board_league_count": 10,
         "board_leagues": {
-          "austria_-_2_liga": 19,
-          "austrian_erste_liga": 82,
-          "indonesia_-_liga_1": 7,
-          "slovakian_2_liga": 92
+          "andorran_primera_divisio": 20,
+          "belgian_cup": 25,
+          "belgium_-_cup": 28,
+          "china_-_super_league": 5,
+          "estonia_-_premier_league": 25,
+          "finland_-_veikkausliiga": 2,
+          "finland_-_ykkonen": 2,
+          "german_frauen_bundesliga": 34,
+          "germany_-_bundesliga_2": 57,
+          "germany_-_bundesliga_3": 2
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 119,
+        "board_priced_rows": 12,
         "board_rows": 200,
-        "board_team_count": 8,
+        "board_team_count": 27,
         "board_team_names": {
-          "FC Petrzalka": 92,
-          "KSV 1919": 82,
-          "Kapfenberg": 19,
-          "PSS Sleman": 7,
-          "Persebaya Surabaya": 7,
-          "SK Sturm Graz II": 82,
-          "Slovan Bratislava II": 92,
-          "Sturm Graz II": 19
+          "1. FC Union Berlin (W)": 34,
+          "Bielefeld": 26,
+          "CF Esperanca d'Andorra": 20,
+          "Chengdu Rongcheng": 5,
+          "Dresden": 29,
+          "Eupen": 3,
+          "FC Nurnberg (W)": 34,
+          "FC Santa Coloma": 20,
+          "Gent": 50,
+          "Harju JK Laagri": 25,
+          "Hoffenheim II": 2,
+          "JJK": 1,
+          "KV Mechelen": 2,
+          "Karlsruhe": 2,
+          "KuPS": 2,
+          "Magdeburg": 29,
+          "Osnabruck": 26,
+          "PKK-U": 1,
+          "Parnu JK Vaprus": 25,
+          "Rochefort": 50,
+          "SV Darmstadt": 2,
+          "Shanghai Port": 5,
+          "TPV": 1,
+          "VJS": 1,
+          "VPS": 2,
+          "Verl": 2,
+          "Yellow-Red Mechelen": 1
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:team_clean_sheet": 2,
+          "unknown_market:team_to_win_to_nil": 1,
+          "unsupported_market:double_chance": 7,
+          "unsupported_market:draw_no_bet": 5,
+          "unsupported_market:team_total_exact": 28,
+          "unsupported_market:team_total_goals": 14,
+          "unsupported_market:team_total_points_odd_even": 12
+        },
         "card_fixture_count": 28,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 119
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "card_fixtures_unmatched_on_board",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "fixture_key_miss": 12
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 3,
+      "sa_scored": 12,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
@@ -324,15 +362,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 130,
+      "join_matched_rows": 64,
       "join_miss_counts": {
-        "fixture_key_miss": 421,
-        "market_unsupported": 2,
-        "no_pick_for_fixture": 172
+        "fixture_key_miss": 607,
+        "market_unsupported": 6,
+        "no_pick_for_fixture": 116
       },
-      "oa_matched": 6,
-      "oa_raw": 725,
-      "oa_usable": 725,
+      "oa_matched": 3,
+      "oa_raw": 793,
+      "oa_usable": 793,
       "reason": null,
       "status": "cache_only"
     },
