@@ -1,56 +1,6 @@
 {
-  "attempted": 12,
+  "attempted": 4,
   "attempted_fixtures": [
-    {
-      "avg_p": 81.5,
-      "away": "Young Lions",
-      "date": "2026-10-18",
-      "home": "Tampines Rovers FC",
-      "league": "Singapore,Premier League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 77.0,
-      "away": "Schwaz",
-      "date": "2026-10-18",
-      "home": "Wolfurt",
-      "league": "Austria: Regionalliga - West",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 76.5,
-      "away": "Ararat-Armenia",
-      "date": "2026-10-18",
-      "home": "BKMA",
-      "league": "Armenia: Premier League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 76.0,
-      "away": "Imst",
-      "date": "2026-10-18",
-      "home": "Rheindorf Altach II",
-      "league": "Austria: Regionalliga - West",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 76.0,
-      "away": "SK Super Nova",
-      "date": "2026-10-18",
-      "home": "Riga FC",
-      "league": "Latvia,Virsliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
     {
       "avg_p": 75.1,
       "away": "Utrecht",
@@ -82,65 +32,37 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 74.0,
-      "away": "Asteras Tripolis",
+      "avg_p": 66.7,
+      "away": "Nice",
       "date": "2026-10-18",
-      "home": "Panathinaikos",
-      "league": "Greece,Super League",
+      "home": "Lyon",
+      "league": "France Ligue 1",
       "market": "1x2",
       "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 73.0,
-      "away": "SCR Altach",
-      "date": "2026-10-18",
-      "home": "Red Bull Salzburg",
-      "league": "Austria Bundesliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 72.5,
-      "away": "Sandnes ULF",
-      "date": "2026-10-18",
-      "home": "Kongsvinger",
-      "league": "Norway,1. Division",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 72.5,
-      "away": "Johor Darul Takzim",
-      "date": "2026-10-18",
-      "home": "Terengganu",
-      "league": "Malaysia,Liga Super",
-      "market": "1x2",
-      "pick": "away",
       "w_score": 1.0
     }
   ],
   "be_429": 0,
-  "be_cached": 10,
+  "be_cached": 3,
   "be_cooling_down": false,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "candidate_fixtures": 16,
-  "captured_at": "2026-10-18T10:10:33.963510+00:00",
+  "be_rows_rejected": 3,
+  "be_rows_rejected_reasons": {
+    "row teams do not both match the pick": 3
+  },
+  "candidate_fixtures": 4,
+  "captured_at": "2026-10-18T13:10:23.677304+00:00",
   "date": "2026-10-18",
   "errors": [],
-  "fixtures_with_rows": 6,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
   "market_requests": 5,
   "match_detail": {
-    "bookmakers": 182,
+    "bookmakers": 188,
     "challenge_pages": 0,
-    "fixtures": 12,
-    "market_rows": 491,
-    "markets": 66,
-    "named_rows": 491,
+    "fixtures": 13,
+    "market_rows": 515,
+    "markets": 72,
+    "named_rows": 515,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -148,36 +70,6 @@
   },
   "max_fixtures": 12,
   "quoted_fixtures": [
-    {
-      "avg_p": 81.5,
-      "away": "Young Lions",
-      "date": "2026-10-18",
-      "home": "Tampines Rovers FC",
-      "league": "Singapore,Premier League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 76.5,
-      "away": "Ararat-Armenia",
-      "date": "2026-10-18",
-      "home": "BKMA",
-      "league": "Armenia: Premier League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 1.0
-    },
-    {
-      "avg_p": 76.0,
-      "away": "SK Super Nova",
-      "date": "2026-10-18",
-      "home": "Riga FC",
-      "league": "Latvia,Virsliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
-    },
     {
       "avg_p": 75.1,
       "away": "Utrecht",
@@ -197,20 +89,10 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
-    },
-    {
-      "avg_p": 74.0,
-      "away": "Asteras Tripolis",
-      "date": "2026-10-18",
-      "home": "Panathinaikos",
-      "league": "Greece,Super League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 1.0
     }
   ],
-  "requests": 11,
-  "rows": 18,
+  "requests": 8,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }
