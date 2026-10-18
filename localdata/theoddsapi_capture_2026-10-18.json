@@ -2,8 +2,8 @@
   "added": 0,
   "attempted": 0,
   "attempted_fixtures": [],
-  "candidate_fixtures": 22,
-  "captured_at": "2026-10-18T01:21:05+00:00",
+  "candidate_fixtures": 24,
+  "captured_at": "2026-10-18T04:23:43+00:00",
   "date": "2026-10-18",
   "due_reasons": {},
   "errors": [],
@@ -16,9 +16,9 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_mismatch": 1,
-    "priced": 7,
+    "priced": 8,
     "priced_close_window_not_open": 1,
-    "retry_cooldown": 14
+    "retry_cooldown": 15
   },
   "skipped": [
     "Igdir FK|Boluspor (retry cooldown (6h after failed attempt))",
@@ -26,6 +26,7 @@
     "BKMA|Ararat-Armenia (retry cooldown (6h after failed attempt))",
     "Rheindorf Altach II|Imst (retry cooldown (6h after failed attempt))",
     "Riga FC|SK Super Nova (retry cooldown (6h after failed attempt))",
+    "JS Kabylie|US Biskra (retry cooldown (6h after failed attempt))",
     "Twente|Utrecht (priced)",
     "PAOK|Iraklis 1908 FC (retry cooldown (6h after failed attempt))",
     "Panathinaikos|Asteras Tripolis (priced)",
@@ -35,6 +36,7 @@
     "Red Bull Salzburg|SCR Altach (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Brighton|Crystal Palace: pick legacy display says 14:00 SAST, captured rows say 15:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Brighton|Crystal Palace (priced, close window not open)",
+    "Real Madrid|Sevilla (priced)",
     "Hartford Athletic|Brooklyn (retry cooldown (6h after failed attempt))",
     "Seattle Sounders|CF Montreal (retry cooldown (6h after failed attempt))",
     "Cruz Azul|FC Juarez (priced)",

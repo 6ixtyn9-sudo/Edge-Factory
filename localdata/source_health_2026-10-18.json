@@ -24,10 +24,9 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 7,
+        "fixture_key_miss": 8,
         "market_unmapped": 69,
         "market_unsupported": 216,
-        "no_pick_for_fixture": 1,
         "out_of_window": 30,
         "selection_unmapped": 324
       },
@@ -45,25 +44,25 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 5,
-      "be_raw": 30,
-      "be_usable": 27,
+      "be_matched": 4,
+      "be_raw": 33,
+      "be_usable": 30,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 5,
+      "join_matched_rows": 4,
       "join_miss_counts": {
-        "fixture_key_miss": 12,
-        "no_pick_for_fixture": 10
+        "fixture_key_miss": 18,
+        "no_pick_for_fixture": 8
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-18' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -159,13 +158,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 548,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 133692,
-        "market_unsupported": 77854,
-        "no_pick_for_fixture": 11999
+        "fixture_key_miss": 146239,
+        "market_unsupported": 77854
       },
-      "op_matched": 2,
+      "op_matched": 0,
       "op_raw": 224093,
       "op_usable": 224093,
       "reason": null,
@@ -188,10 +186,10 @@
       "freshness_h": null,
       "join_matched_rows": 8,
       "join_miss_counts": {
-        "fixture_key_miss": 26294,
-        "no_pick_for_fixture": 128
+        "fixture_key_miss": 26310,
+        "no_pick_for_fixture": 112
       },
-      "pa_matched": 8,
+      "pa_matched": 7,
       "pa_raw": 26430,
       "pa_scored": 26430,
       "reason": null,
@@ -243,39 +241,32 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 7,
-        "board_league_count": 5,
+        "board_fixtures": 4,
+        "board_league_count": 1,
         "board_leagues": {
-          "argentina_-_primera_b": 1,
-          "bolivia_-_liga_profesional": 71,
-          "bolivia_-_primera_division": 1,
-          "mexico_-_liga_mx": 50,
-          "usa_-_major_league_soccer": 77
+          "usa_-_major_league_soccer": 200
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 14,
+        "board_team_count": 8,
         "board_team_names": {
-          "Atlanta Utd": 27,
-          "Blooming": 1,
-          "Blooming Santa Cruz": 71,
-          "CHI Fire": 10,
-          "Chicago Fire": 40,
-          "Club Independiente Petrolero": 71,
-          "Deportivo Merlo": 1,
-          "Guadalajara": 50,
-          "Independiente Petrolero": 1,
-          "Inter Miami CF": 27,
-          "NE Revolution": 10,
-          "New England Revolution": 40,
-          "Talleres Remedios": 1,
-          "Tigres": 50
+          "CF Montr\u00e9al": 45,
+          "Colorado": 89,
+          "LA Galaxy": 10,
+          "Nashville SC": 56,
+          "Portland Timbers": 89,
+          "San Diego FC": 10,
+          "San Jose Earthquakes": 56,
+          "Seattle Sounders": 45
         },
         "board_truncated": false,
-        "card_fixture_count": 22,
-        "card_fixtures_on_board": 0,
+        "card_fixture_count": 24,
+        "card_fixtures_on_board": 1,
         "card_fixtures_reversed": 0,
+        "card_prematch_drop_reasons": {
+          "live_price": 45
+        },
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
@@ -288,7 +279,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "card_fixtures_unmatched_on_board",
+      "reason": "all_rows_live_or_stale",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
@@ -333,15 +324,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 84,
+      "join_matched_rows": 87,
       "join_miss_counts": {
-        "fixture_key_miss": 383,
+        "fixture_key_miss": 443,
         "market_unsupported": 2,
-        "no_pick_for_fixture": 98
+        "no_pick_for_fixture": 104
       },
       "oa_matched": 4,
-      "oa_raw": 567,
-      "oa_usable": 567,
+      "oa_raw": 636,
+      "oa_usable": 636,
       "reason": null,
       "status": "cache_only"
     },
