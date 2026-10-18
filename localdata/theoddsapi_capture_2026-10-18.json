@@ -1,53 +1,160 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 24,
-  "captured_at": "2026-10-18T07:21:26+00:00",
+  "attempted": 12,
+  "attempted_fixtures": [
+    {
+      "away": "Boluspor",
+      "date": "2026-10-18",
+      "home": "Igdir FK",
+      "kickoff": "03:30",
+      "league": "Turkey,1. Lig"
+    },
+    {
+      "away": "SK Super Nova",
+      "date": "2026-10-18",
+      "home": "Riga FC",
+      "kickoff": "15:00",
+      "league": "Latvia,Virsliga"
+    },
+    {
+      "away": "US Biskra",
+      "date": "2026-10-18",
+      "home": "JS Kabylie",
+      "kickoff": "2026-10-18T18:45:00+02:00",
+      "league": "Algeria: Ligue 1"
+    },
+    {
+      "away": "Iraklis 1908 FC",
+      "date": "2026-10-18",
+      "home": "PAOK",
+      "kickoff": "13:00",
+      "league": "Greece,Super League"
+    },
+    {
+      "away": "SCR Altach",
+      "date": "2026-10-18",
+      "home": "Red Bull Salzburg",
+      "kickoff": "18-10, 13:30",
+      "league": "Austria Bundesliga"
+    },
+    {
+      "away": "Sandnes ULF",
+      "date": "2026-10-18",
+      "home": "Kongsvinger",
+      "kickoff": "17:00",
+      "league": "Norway,1. Division"
+    },
+    {
+      "away": "Gimhae City",
+      "date": "2026-10-18",
+      "home": "Seoul E-Land FC",
+      "kickoff": "22:00",
+      "league": "South Korea,K-league 2"
+    },
+    {
+      "away": "Brooklyn",
+      "date": "2026-10-18",
+      "home": "Hartford Athletic",
+      "kickoff": "2026-10-18T01:00:00+02:00",
+      "league": "United States: USL Championship"
+    },
+    {
+      "away": "CF Montreal",
+      "date": "2026-10-18",
+      "home": "Seattle Sounders",
+      "kickoff": "2026-10-18T04:30:00+02:00",
+      "league": "United States: Major League Soccer"
+    },
+    {
+      "away": "NK Varazdin",
+      "date": "2026-10-18",
+      "home": "HNK Hajduk Split",
+      "kickoff": "08:00",
+      "league": "Croatia,Hnl"
+    },
+    {
+      "away": "Crotone",
+      "date": "2026-10-18",
+      "home": "Bari",
+      "kickoff": "08:00",
+      "league": "Italy,Serie C Grp. C"
+    },
+    {
+      "away": "Stabaek",
+      "date": "2026-10-18",
+      "home": "Asane",
+      "kickoff": "10:00",
+      "league": "Norway,1. Division"
+    }
+  ],
+  "candidate_fixtures": 28,
+  "captured_at": "2026-10-18T10:19:40+00:00",
   "date": "2026-10-18",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 12
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 1
+    "kickoff_mismatch_display_fallback_overridden": 3
   },
   "quoted_fixtures": [],
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_mismatch": 1,
-    "priced": 8,
-    "priced_close_window_not_open": 1,
-    "retry_cooldown": 15
+    "kickoff_mismatch": 3,
+    "priced": 7,
+    "priced_close_window_not_open": 3,
+    "retry_cooldown": 6
   },
   "skipped": [
-    "Igdir FK|Boluspor (retry cooldown (6h after failed attempt))",
+    "Tampines Rovers FC|Young Lions (retry cooldown (6h after failed attempt))",
     "Wolfurt|Schwaz (retry cooldown (6h after failed attempt))",
     "BKMA|Ararat-Armenia (retry cooldown (6h after failed attempt))",
     "Rheindorf Altach II|Imst (retry cooldown (6h after failed attempt))",
-    "Riga FC|SK Super Nova (retry cooldown (6h after failed attempt))",
-    "JS Kabylie|US Biskra (retry cooldown (6h after failed attempt))",
     "Twente|Utrecht (priced)",
-    "PAOK|Iraklis 1908 FC (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Real Madrid|Sevilla: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Real Madrid|Sevilla (priced, close window not open)",
     "Panathinaikos|Asteras Tripolis (priced)",
-    "Red Bull Salzburg|SCR Altach (retry cooldown (6h after failed attempt))",
-    "Kongsvinger|Sandnes ULF (retry cooldown (6h after failed attempt))",
+    "Terengganu|Johor Darul Takzim (retry cooldown (6h after failed attempt))",
     "Molde|Start (priced)",
-    "Seoul E-Land FC|Gimhae City (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Brighton|Crystal Palace: pick legacy display says 14:00 SAST, captured rows say 15:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Brighton|Crystal Palace (priced, close window not open)",
-    "Real Madrid|Sevilla (priced)",
-    "Hartford Athletic|Brooklyn (retry cooldown (6h after failed attempt))",
-    "Seattle Sounders|CF Montreal (retry cooldown (6h after failed attempt))",
     "Cruz Azul|FC Juarez (priced)",
     "Halmstad|Hammarby (priced)",
-    "HNK Hajduk Split|NK Varazdin (retry cooldown (6h after failed attempt))",
     "Toluca|Atletico San Luis (priced)",
-    "Bari|Crotone (retry cooldown (6h after failed attempt))",
-    "Asane|Stabaek (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Lyon|Nice: pick legacy display says 19:45 SAST, captured rows say 20:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Lyon|Nice (priced, close window not open)",
+    "Kayserispor|Batman Petrolspor (retry cooldown (6h after failed attempt))",
     "Lech Poznan|Korona Kielce (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Igdir FK vs Boluspor (league not covered: Turkey,1. Lig)",
+    "Riga FC vs SK Super Nova (league not covered: Latvia,Virsliga)",
+    "JS Kabylie vs US Biskra (league not covered: Algeria: Ligue 1)",
+    "Kongsvinger vs Sandnes ULF (league not covered: Norway,1. Division)",
+    "Seoul E-Land FC vs Gimhae City (league not covered: South Korea,K-league 2)",
+    "Hartford Athletic vs Brooklyn (league not covered: United States: USL Championship)",
+    "Seattle Sounders vs CF Montreal (league not covered: United States: Major League Soccer)",
+    "HNK Hajduk Split vs NK Varazdin (league not covered: Croatia,Hnl)",
+    "Bari vs Crotone (league not covered: Italy,Serie C Grp. C)",
+    "Asane vs Stabaek (league not covered: Norway,1. Division)",
+    "PAOK vs Iraklis 1908 FC (no event in soccer_greece_super_league)",
+    "Red Bull Salzburg vs SCR Altach (no event in soccer_austria_bundesliga)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Algeria: Ligue 1": 1,
+    "league not covered: Croatia,Hnl": 1,
+    "league not covered: Italy,Serie C Grp. C": 1,
+    "league not covered: Latvia,Virsliga": 1,
+    "league not covered: Norway,1. Division": 2,
+    "league not covered: South Korea,K-league 2": 1,
+    "league not covered: Turkey,1. Lig": 1,
+    "league not covered: United States: Major League Soccer": 1,
+    "league not covered: United States: USL Championship": 1,
+    "no event in soccer_austria_bundesliga": 1,
+    "no event in soccer_greece_super_league": 1
+  }
 }
