@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 51,
@@ -30,7 +30,7 @@
         "selection_unmapped": 283
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-19' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -170,21 +170,21 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 36,
+      "coherence_excluded_rows": 30,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 36
+        "withheld_mixed_events_one_x_two": 30
       },
-      "coherence_withheld_fixtures": 6,
+      "coherence_withheld_fixtures": 5,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 1,
       "join_miss_counts": {
-        "fixture_key_miss": 20065,
+        "fixture_key_miss": 21780,
         "no_pick_for_fixture": 16
       },
       "pa_matched": 1,
-      "pa_raw": 1115,
-      "pa_scored": 20082,
+      "pa_raw": 1215,
+      "pa_scored": 21797,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -234,51 +234,31 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 14,
-        "board_league_count": 11,
+        "board_fixtures": 6,
+        "board_league_count": 4,
         "board_leagues": {
-          "argentina_-_primera_c": 2,
-          "argentina_-_primera_nacional": 12,
-          "bolivia_-_liga_profesional": 3,
-          "bolivia_-_primera_division": 16,
-          "brazil_-_serie_a": 143,
-          "canada_-_premier_league": 1,
-          "el_salvador_-_primera_division": 1,
-          "honduras_-_liga_nacional": 5,
-          "ireland_-_premier_league": 1,
-          "portugal_-_taca_de_portugal": 3,
-          "usa_-_major_league_soccer": 13
+          "argentina_-_primera_b": 1,
+          "bolivia_-_liga_profesional": 1,
+          "bolivia_-_primera_division": 3,
+          "usa_-_major_league_soccer": 195
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 25,
+        "board_team_count": 12,
         "board_team_names": {
-          "Academica Coimbra": 3,
-          "Alianza FC (SLV)": 1,
-          "Almirante Brown": 12,
-          "Amarante": 3,
-          "Atletico MG": 18,
-          "Atletico Mineiro": 79,
-          "Botafogo FR": 28,
-          "Botafogo RJ": 18,
-          "CD Cacahuatique": 1,
-          "CD Motagua": 5,
-          "CD Platense [HON]": 5,
-          "Cavalry FC": 1,
-          "Chapecoense": 46,
-          "Club Mercedes": 2,
-          "Colon de Santa": 12,
-          "Coritiba": 97,
-          "Dundalk FC": 1,
-          "Leones de Rosario": 2,
-          "Minnesota Utd": 13,
-          "Pacific FC": 1,
-          "San Antonio Bulo Bulo": 19,
-          "Sligo Rovers": 1,
-          "St Louis City SC": 13,
-          "Universitario De Vinto": 16,
-          "Universitario de Vinto": 3
+          "Atlanta Utd": 66,
+          "Blooming": 3,
+          "Blooming Santa Cruz": 1,
+          "CHI Fire": 12,
+          "Chicago Fire": 117,
+          "Club Independiente Petrolero": 1,
+          "Deportivo Merlo": 1,
+          "Independiente Petrolero": 3,
+          "Inter Miami CF": 66,
+          "NE Revolution": 12,
+          "New England Revolution": 117,
+          "Talleres Remedios": 1
         },
         "board_truncated": false,
         "card_fixture_count": 1,

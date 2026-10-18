@@ -1,7 +1,124 @@
 {
-  "captured_at": "2026-10-17T22:21:21.361197+00:00",
+  "captured_at": "2026-10-18T01:12:29.367807+00:00",
   "date": "2026-10-18",
   "fixtures": {
+    "2026-10-18|bkma|araratarmenia": {
+      "away": "Ararat-Armenia",
+      "best_1x2": {
+        "odd1": 9.4,
+        "odd2": 1.23,
+        "oddx": 5.6
+      },
+      "captured_at": "2026-10-18T01:12:29.366143+00:00",
+      "event_id": "KjoPy7SO",
+      "home": "BKMA",
+      "kickoff": "14:00",
+      "league": "Armenia: Premier League",
+      "market_failures": [
+        "ou"
+      ],
+      "markets": {
+        "1x2": {
+          "average": [
+            9.33,
+            5.55,
+            1.23
+          ],
+          "average_by_line": {
+            "0": [
+              9.33,
+              5.55,
+              1.23
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-17T23:55",
+                "2026-10-17T23:55",
+                "2026-10-17T23:55"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "up",
+                "down"
+              ],
+              "odds": [
+                9.25,
+                5.5,
+                1.23
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-16T14:10",
+                "2026-10-16T14:10",
+                "2026-10-16T14:10"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null,
+                null
+              ],
+              "odds": [
+                9.4,
+                5.6,
+                1.22
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/armenia/premier-league/bkma-ararat-armenia/KjoPy7SO/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110030,
+        "page_sha256": "0744d57bb470c12b69fe597c3416d62d1ef3b5691bee838194d6a37f439f3a25",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
     "2026-10-18|brighton|crystalpalace": {
       "away": "Crystal Palace",
       "best_1x2": {
