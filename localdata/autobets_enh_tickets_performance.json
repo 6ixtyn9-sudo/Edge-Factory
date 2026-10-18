@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-18T22:07:03",
+  "generated_at": "2026-10-19T01:29:31",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 75.93115599999999,
-  "multiple": 0.7593115599999999,
+  "bank_pct": 81.94237599999998,
+  "multiple": 0.8194237599999998,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 4,
+  "bet_days": 5,
   "accas": {
-    "wins": 4,
-    "losses": 6
+    "wins": 6,
+    "losses": 7
   },
-  "open_slips": [
-    {
-      "date": "2026-10-18",
-      "staked_pct": 18.9828
-    }
-  ],
+  "open_slips": [],
   "events": [],
   "history": [
     {
@@ -237,6 +232,81 @@
       ],
       "bank_pct": 75.9312,
       "close_pct": 75.9312
+    },
+    {
+      "date": "2026-10-18",
+      "staked_pct": 18.9828,
+      "returned_pct": 24.9941,
+      "accas": [
+        {
+          "odds": 1.77,
+          "won": true,
+          "stake_pct": 6.3276,
+          "returned_pct": 11.1999,
+          "legs": [
+            {
+              "match": "JS Kabylie vs US Biskra",
+              "pick": "over",
+              "odds": 1.3,
+              "result": "win",
+              "label": "Match Over 1.5 Goals"
+            },
+            {
+              "match": "Molde vs Start",
+              "pick": "over",
+              "odds": 1.36,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 2.18,
+          "won": true,
+          "stake_pct": 6.3276,
+          "returned_pct": 13.7942,
+          "legs": [
+            {
+              "match": "Riga FC vs SK Super Nova",
+              "pick": "over",
+              "odds": 1.32,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Panathinaikos vs Asteras Tripolis",
+              "pick": "over",
+              "odds": 1.65,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 2.05,
+          "won": false,
+          "stake_pct": 6.3276,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Twente vs Utrecht",
+              "pick": "over",
+              "odds": 1.34,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Igdir FK vs Boluspor",
+              "pick": "over",
+              "odds": 1.53,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 81.9424,
+      "close_pct": 81.9425
     }
   ]
 }

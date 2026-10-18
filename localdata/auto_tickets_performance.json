@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-18T21:47:10",
+  "generated_at": "2026-10-19T00:57:53",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 165.11002800000014,
-  "multiple": 1.6511002800000014,
+  "bank_pct": 164.69715400000013,
+  "multiple": 1.6469715400000013,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 49,
+  "bet_days": 50,
   "accas": {
-    "wins": 60,
-    "losses": 43
+    "wins": 61,
+    "losses": 44
   },
-  "open_slips": [
-    {
-      "date": "2026-10-18",
-      "staked_pct": 41.2775
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -948,6 +943,55 @@
       ],
       "bank_pct": 165.11,
       "close_pct": 165.11
+    },
+    {
+      "date": "2026-10-18",
+      "staked_pct": 41.2775,
+      "returned_pct": 40.8646,
+      "accas": [
+        {
+          "odds": 1.98,
+          "won": false,
+          "stake_pct": 20.6388,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Twente vs Utrecht",
+              "pick": "HOME",
+              "odds": 1.37,
+              "result": "loss"
+            },
+            {
+              "match": "Lech Poznan vs Korona Kielce",
+              "pick": "HOME",
+              "odds": 1.4425,
+              "result": "win"
+            }
+          ]
+        },
+        {
+          "odds": 1.98,
+          "won": true,
+          "stake_pct": 20.6387,
+          "returned_pct": 40.8646,
+          "legs": [
+            {
+              "match": "Molde vs Start",
+              "pick": "HOME",
+              "odds": 1.3195,
+              "result": "win"
+            },
+            {
+              "match": "Brighton vs Crystal Palace",
+              "pick": "HOME",
+              "odds": 1.5,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 164.6972,
+      "close_pct": 164.6971
     }
   ]
 }
