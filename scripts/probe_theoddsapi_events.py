@@ -12,6 +12,11 @@ frozen card it says why the match did or did not resolve:
 Usage:
   PYTHONPATH=src python3 scripts/probe_theoddsapi_events.py --date 2026-10-13
   (--date defaults to today in SAST)
+
+Opt-in diagnostic (SPENDS 1 credit, one odds call):
+  PYTHONPATH=src python3 scripts/probe_theoddsapi_events.py --alt-totals-1-5
+  Requests only the alternate_totals market for ONE matched fixture and counts
+  the over/under 1.5 lines the provider returns. Writes nothing to localdata.
 """
 from __future__ import annotations
 
@@ -26,10 +31,45 @@ def _name(ev: dict) -> str:
     return f"{ev.get('home_team')} v {ev.get('away_team')}"
 
 
+def _alt_totals_diagnostic(fixtures: list[dict], sports) -> int:
+    """One odds call: does the provider return over/under 1.5 for alternate_totals?"""
+    for p in fixtures:
+        key = tha.sport_key_for_league(p.get("league"), sports)
+        if key is None:
+            continue
+        try:
+            events = tha.fetch_events(key)
+        except Exception as exc:  # noqa: BLE001 - diagnostic probe
+            print(f"  events fetch failed for {key}: {type(exc).__name__}: {exc}")
+            continue
+        ev = tha.match_event(p, events)
+        if not ev:
+            continue
+        label = f"{p.get('home')} vs {p.get('away')} [{p.get('league')}] -> {_name(ev)}"
+        print(f"alt-totals diagnostic: 1 odds call (alternate_totals only), {label}")
+        payload = tha.fetch_event_odds(key, ev["id"], markets=("alternate_totals",))
+        rows = tha.rows_from_event_odds(p, ev, payload)
+        lines = sorted({r.get("market") for r in rows})
+        n15 = sum(1 for r in rows if r.get("market") == "ou_1.5")
+        books = sorted({r.get("bookmaker") for r in rows if r.get("market") == "ou_1.5"})
+        print(f"  markets returned={lines or 'none'}")
+        print(f"  ou_1.5 rows={n15} bookmakers={len(books)}")
+        if n15:
+            print("  RESULT: alternate_totals returns 1.5 lines. Phase 3 config fix is viable.")
+        else:
+            print("  RESULT: no 1.5 lines for this fixture. Check other fixtures or the market key before changing config.")
+        return 0
+    print("alt-totals diagnostic: no matched fixture on this card; no odds call made")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--date", default=None,
                     help="card date, YYYY-MM-DD (default: today in SAST)")
+    ap.add_argument("--alt-totals-1-5", action="store_true",
+                    help="one odds call (1 credit): check whether alternate_totals "
+                         "returns over/under 1.5 lines for one matched fixture")
     args = ap.parse_args(argv)
     if not args.date:
         from datetime import datetime
@@ -49,6 +89,9 @@ def main(argv: list[str] | None = None) -> int:
 
     sports = tha.load_sports(refresh=True)
     print(f"sports loaded={len(sports)}")
+
+    if args.alt_totals_1_5:
+        return _alt_totals_diagnostic(fixtures, sports)
 
     events_by_key: dict[str, list[dict] | None] = {}
     tally: dict[str, int] = {}
