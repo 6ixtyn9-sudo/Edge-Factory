@@ -27,7 +27,7 @@ Env (see .env.example):
     ODDS_API_KEYS             comma list of API keys (rotation ring)
     ODDS_API_KEY              single key (fallback if ODDS_API_KEYS unset)
     ODDS_API_REGIONS          default "eu"          (1 region keeps cost at 1x)
-    ODDS_API_MARKETS          default "h2h,totals,totals_alt,btts,team_totals,double_chance"
+    ODDS_API_MARKETS          default "h2h,totals,btts,team_totals,double_chance"
                             (prices the enhancement overlay: ou 1.5/2.5/3.5/4.5, btts,
                              team totals, double chance; each market = +1 credit/event)
     ODDS_API_TOTAL_POINTS     default "1.5,2.5,3.5,4.5"  totals lines to keep
@@ -84,7 +84,7 @@ TOKEN = API_KEYS[0] if API_KEYS else None  # back-compat single-key view
 BASE = os.environ.get("ODDS_API_BASE", "https://api.the-odds-api.com/v4").rstrip("/")
 
 REGIONS = tuple(x.strip() for x in os.environ.get("ODDS_API_REGIONS", "eu").split(",") if x.strip()) or ("eu",)
-MARKETS = tuple(x.strip() for x in os.environ.get("ODDS_API_MARKETS", "h2h,totals,totals_alt,btts,team_totals,double_chance").split(",") if x.strip()) or ("h2h",)
+MARKETS = tuple(x.strip() for x in os.environ.get("ODDS_API_MARKETS", "h2h,totals,btts,team_totals,double_chance").split(",") if x.strip()) or ("h2h",)
 TOTAL_POINTS = tuple(x.strip() for x in os.environ.get("ODDS_API_TOTAL_POINTS", "1.5,2.5,3.5,4.5").split(",") if x.strip())
 MONTHLY_BUDGET = int(os.environ.get("ODDS_API_MONTHLY_BUDGET", "480") or 480)
 BOOKMAKERS = tuple(x.strip() for x in os.environ.get("ODDS_API_BOOKMAKERS", "").split(",") if x.strip())

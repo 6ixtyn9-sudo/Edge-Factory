@@ -670,16 +670,45 @@ def load_rolling_audit_hit_rates() -> dict[str, float]:
     return {}
 
 
+# Logging switch. Off = no rows are stored; selection is identical either way
+# (checked by tests/test_enh_candidate_log.py).
+ENH_CANDIDATE_LOG_ENABLED = True
+
+
+def _push_enh_log(enh_log: list, entry: dict | None) -> None:
+    """Store one candidate row. Never raises: a logging failure must not stop the
+    picks run or change the enhancement choice."""
+    if not ENH_CANDIDATE_LOG_ENABLED or entry is None:
+        return
+    try:
+        enh_log.append(entry)
+    except Exception:  # noqa: BLE001 - logging only
+        pass
+
+
 def _enh_log_entry(market: str, label, status: str, reason: str | None, *,
                    probability=None, raw_probability=None, cohort_rate=None,
-                   engine=None, price=None, price_source=None, price_book=None) -> dict:
-    """One enhancement-candidate log row (per pick, per market).
+                   engine=None, price=None, price_source=None, price_book=None) -> dict | None:
+    """One enhancement-candidate log row (per pick, per market). Returns None if
+    the row cannot be built; the caller then stores nothing.
 
     Logged for every candidate the overlay considers, including the ones it
     rejects, so exclusions can be measured later. Logging only: nothing here
     changes which candidate is chosen. ``implied_probability`` is the raw
     1/price (not de-vigged).
     """
+    try:
+        return _build_enh_log_entry(market, label, status, reason,
+                                    probability=probability, raw_probability=raw_probability,
+                                    cohort_rate=cohort_rate, engine=engine, price=price,
+                                    price_source=price_source, price_book=price_book)
+    except Exception:  # noqa: BLE001 - logging only
+        return None
+
+
+def _build_enh_log_entry(market, label, status, reason, *, probability=None, raw_probability=None,
+                         cohort_rate=None, engine=None, price=None, price_source=None,
+                         price_book=None) -> dict:
     def _r(x, nd=4):
         return None if x is None else round(float(x), nd)
     return {
@@ -700,15 +729,18 @@ def _enh_log_entry(market: str, label, status: str, reason: str | None, *,
 
 def _enh_log_mark_selected(enh_log: list, best_market: str | None) -> None:
     """Mark the chosen eligible candidate as recommended; others as not selected."""
-    marked = False
-    for e in enh_log:
-        if e.get("status") != "eligible":
-            continue
-        if best_market is not None and not marked and e.get("market") == best_market:
-            e["status"] = "recommended"
-            marked = True
-        else:
-            e["status"] = "eligible_not_selected"
+    try:
+        marked = False
+        for e in enh_log:
+            if e.get("status") != "eligible":
+                continue
+            if best_market is not None and not marked and e.get("market") == best_market:
+                e["status"] = "recommended"
+                marked = True
+            else:
+                e["status"] = "eligible_not_selected"
+    except Exception:  # noqa: BLE001 - logging only
+        pass
 
 
 def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = None) -> dict:
@@ -1121,7 +1153,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
     for market, prob, label, reason in raw_candidates:
         cohort_rate = cohort_realized_rate(cohort, market)
         if cohort is not None and cohort_rate is None:
-            enh_log.append(_enh_log_entry(market, label, "excluded", "no_cohort_rate",
+            _push_enh_log(enh_log, _enh_log_entry(market, label, "excluded", "no_cohort_rate",
                                           raw_probability=prob))
             continue  # cohort replaces the stated probability: no realized rate, no candidate
         engine = "hybrid_cohort" if cohort is not None else "model"
@@ -1152,7 +1184,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         
         thr = LINE_THRESHOLDS.get(market, 0.80)
         if prob_adjusted < thr:
-            enh_log.append(_enh_log_entry(market, label, "excluded", "below_line_threshold",
+            _push_enh_log(enh_log, _enh_log_entry(market, label, "excluded", "below_line_threshold",
                                           probability=prob_adjusted, raw_probability=prob,
                                           cohort_rate=cohort_rate, engine=engine))
         if prob_adjusted >= thr:
@@ -1187,7 +1219,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         # see the same filtered candidate set.
         for c in candidates:
             if c["market"] in EXCLUDED_MARKETS:
-                enh_log.append(_enh_log_entry(
+                _push_enh_log(enh_log, _enh_log_entry(
                     c["market"], c.get("label"), "excluded", "excluded_market",
                     probability=c.get("probability"), raw_probability=c.get("raw_probability"),
                     cohort_rate=c.get("cohort_rate"), engine=c.get("engine")))
@@ -1210,7 +1242,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         eligible = []
         if prices_index is None:
             for c in candidates:
-                enh_log.append(_enh_log_entry(
+                _push_enh_log(enh_log, _enh_log_entry(
                     c["market"], c.get("label"), "excluded", "no_price_index",
                     probability=c.get("probability"), raw_probability=c.get("raw_probability"),
                     cohort_rate=c.get("cohort_rate"), engine=c.get("engine")))
@@ -1229,16 +1261,16 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                     price_source=probe.get("enhancement_price_source"),
                     price_book=probe.get("enhancement_price_book"))
                 if not probe.get("enhancement_priced"):
-                    enh_log.append(_enh_log_entry(market, c.get("label"), "excluded", "unpriced", **_log_kw))
+                    _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "unpriced", **_log_kw))
                     continue
                 price = float(probe["enhancement_price"])
                 if price < MIN_LEG_ODDS:
-                    enh_log.append(_enh_log_entry(market, c.get("label"), "excluded", "below_min_leg_odds",
+                    _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "below_min_leg_odds",
                                                   price=price, **_log_kw))
                     continue
                 prob = float(c["probability"])
                 if prob < MIN_PROB or prob > MAX_PROB:
-                    enh_log.append(_enh_log_entry(market, c.get("label"), "excluded", "prob_outside_band",
+                    _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "prob_outside_band",
                                                   price=price, **_log_kw))
                     continue
                 c = dict(c)
@@ -1248,7 +1280,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 # Informational only: never used to choose.
                 c["enhancement_edge_sample"] = round(prob * price - 1.0, 4)
                 eligible.append(c)
-                enh_log.append(_enh_log_entry(market, c.get("label"), "eligible", None,
+                _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "eligible", None,
                                               price=price, **_log_kw))
 
         eligible.sort(key=lambda x: (x["probability"], x["enhancement_price"]), reverse=True)
@@ -1273,7 +1305,8 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
 
     # Audit fields (logging only). cluster_id groups every candidate on the same
     # fixture, so correlated markets on one match are not counted as independent.
-    out["enh_candidate_log"] = enh_log
+    # Stored on every pick (picks files grow with it). Empty when logging is off.
+    out["enh_candidate_log"] = enh_log if ENH_CANDIDATE_LOG_ENABLED else []
     out["enh_cluster_id"] = f"{pick.get('date')}|{pick.get('home')}|{pick.get('away')}"
     return out
 
