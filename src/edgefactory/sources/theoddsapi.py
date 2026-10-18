@@ -980,19 +980,25 @@ def match_event(pick: dict, events: list[dict]) -> dict | None:
 # ---------------------------------------------------------------- odds parse
 
 
-def fetch_event_odds(sport_key: str, event_id: str, *, day: str | None = None) -> dict:
+def fetch_event_odds(sport_key: str, event_id: str, *, day: str | None = None,
+                     markets: tuple[str, ...] | None = None) -> dict:
     """Per-event odds. Costs markets x regions credits (charged after success,
-    with per-key budget pre-check and automatic key rotation)."""
+    with per-key budget pre-check and automatic key rotation).
+
+    ``markets`` overrides the configured list for one call (diagnostics). The
+    default path is unchanged."""
+    use_markets = tuple(markets) if markets else MARKETS
     params = {
         "regions": ",".join(REGIONS),
-        "markets": ",".join(MARKETS),
+        "markets": ",".join(use_markets),
         "oddsFormat": "decimal",
         "dateFormat": "iso",
     }
     if BOOKMAKERS:
         params["bookmakers"] = ",".join(BOOKMAKERS)
     data, _fp = _get_json(f"/sports/{sport_key}/events/{event_id}/odds/", params,
-                          cost=cost_per_event(), day=day)
+                          cost=(len(use_markets) * max(1, len(REGIONS))
+                                if markets else cost_per_event()), day=day)
     return data if isinstance(data, dict) else {}
 
 
@@ -1051,7 +1057,7 @@ def rows_from_event_odds(pick: dict, event: dict, payload: dict) -> list[dict]:
                         row = _market_row(base, "1x2", sel, oc.get("price"), bname)
                         if row:
                             rows.append(row)
-                elif mkey in ("totals", "totals_alt"):
+                elif mkey in ("totals", "totals_alt", "alternate_totals"):
                     point = oc.get("point")
                     try:
                         pstr = f"{float(point):g}"
