@@ -1,28 +1,11 @@
 {
   "added": 0,
-  "attempted": 2,
-  "attempted_fixtures": [
-    {
-      "away": "Young Lions",
-      "date": "2026-10-18",
-      "home": "Tampines Rovers FC",
-      "kickoff": "13:30",
-      "league": "Singapore,Premier League"
-    },
-    {
-      "away": "Johor Darul Takzim",
-      "date": "2026-10-18",
-      "home": "Terengganu",
-      "kickoff": "15:00",
-      "league": "Malaysia,Liga Super"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 28,
-  "captured_at": "2026-10-18T16:17:17+00:00",
+  "captured_at": "2026-10-18T19:29:32+00:00",
   "date": "2026-10-18",
-  "due_reasons": {
-    "first_at": 2
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -32,13 +15,14 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 3,
+    "kickoff_already_passed": 4,
     "kickoff_mismatch": 3,
     "priced": 7,
-    "priced_close_window_not_open": 2,
-    "retry_cooldown": 14
+    "priced_close_window_not_open": 1,
+    "retry_cooldown": 16
   },
   "skipped": [
+    "Tampines Rovers FC|Young Lions (retry cooldown (6h after failed attempt))",
     "Igdir FK|Boluspor (retry cooldown (6h after failed attempt))",
     "Wolfurt|Schwaz (retry cooldown (6h after failed attempt))",
     "BKMA|Ararat-Armenia (retry cooldown (6h after failed attempt))",
@@ -53,6 +37,7 @@
     "Red Bull Salzburg|SCR Altach (kickoff already passed)",
     "Kongsvinger|Sandnes ULF (retry cooldown (6h after failed attempt))",
     "Seoul E-Land FC|Gimhae City (retry cooldown (6h after failed attempt))",
+    "Terengganu|Johor Darul Takzim (retry cooldown (6h after failed attempt))",
     "Molde|Start (priced)",
     "WARN kickoff-mismatch Brighton|Crystal Palace: pick legacy display says 14:00 SAST, captured rows say 15:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Brighton|Crystal Palace (kickoff already passed)",
@@ -63,20 +48,13 @@
     "HNK Hajduk Split|NK Varazdin (retry cooldown (6h after failed attempt))",
     "Toluca|Atletico San Luis (priced)",
     "WARN kickoff-mismatch Lyon|Nice: pick legacy display says 19:45 SAST, captured rows say 20:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Lyon|Nice (priced, close window not open)",
+    "Lyon|Nice (kickoff already passed)",
     "Kayserispor|Batman Petrolspor (kickoff already passed)",
     "Bari|Crotone (retry cooldown (6h after failed attempt))",
     "Asane|Stabaek (retry cooldown (6h after failed attempt))",
     "Lech Poznan|Korona Kielce (priced)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Tampines Rovers FC vs Young Lions (league not covered: Singapore,Premier League)",
-    "Terengganu vs Johor Darul Takzim (league not covered: Malaysia,Liga Super)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Malaysia,Liga Super": 1,
-    "league not covered: Singapore,Premier League": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
