@@ -17,13 +17,15 @@
       "silent": true
     }
   ],
-  "generated_at": "2026-10-18T21:47:36",
+  "generated_at": "2026-10-19T00:58:58",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=70",
     "3way-unanimous home-only avg_p>=60",
     "3way-unanimous home-only avg_p>=65",
+    "3way-unanimous min_p>=60 avg_p>=60",
+    "3way-unanimous min_p>=60 avg_p>=65",
     "3way-unanimous odds-1.20-1.75 avg_p>=65"
   ],
   "retired_captures": 1,
@@ -39,7 +41,7 @@
     },
     {
       "name": "statarea",
-      "newest_date": "2026-10-18",
+      "newest_date": "2026-10-19",
       "newest_file": "statarea_2026-10.csv.gz",
       "retired": null,
       "role": "core_voter",
@@ -47,7 +49,7 @@
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-10-18",
+      "newest_date": "2026-10-19",
       "newest_file": "scoutingstats_2026-10.csv.gz",
       "retired": null,
       "role": "voter_and_price",
@@ -55,7 +57,7 @@
     },
     {
       "name": "vitibet",
-      "newest_date": "2026-10-19",
+      "newest_date": "2026-10-20",
       "newest_file": "vitibet_2026-10.csv.gz",
       "retired": null,
       "role": "thin_voter",
@@ -63,7 +65,7 @@
     },
     {
       "name": "zulubet",
-      "newest_date": "2026-10-18",
+      "newest_date": "2026-10-19",
       "newest_file": "zulubet_2026-10.csv.gz",
       "retired": null,
       "role": "core_voter",
@@ -87,7 +89,7 @@
     },
     {
       "name": "afootballreport",
-      "newest_date": "2026-10-18",
+      "newest_date": "2026-10-19",
       "newest_file": "afootballreport_2026-10.csv.gz",
       "retired": null,
       "role": "research",
@@ -95,7 +97,7 @@
     },
     {
       "name": "betclan",
-      "newest_date": "2026-10-18",
+      "newest_date": "2026-10-19",
       "newest_file": "betclan_2026-10.csv.gz",
       "retired": null,
       "role": "partial_voter",
@@ -111,7 +113,7 @@
     },
     {
       "name": "bettingclosed",
-      "newest_date": "2026-10-18",
+      "newest_date": "2026-10-19",
       "newest_file": "bettingclosed_2026-10.csv.gz",
       "retired": null,
       "role": "confirmation_results",
