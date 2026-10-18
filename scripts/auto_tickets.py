@@ -2994,15 +2994,29 @@ def acca_price_evidence_gate(pool, blocked_labels=frozenset()):
 ACCA_GATE_LOG = Path(os.environ.get("EDGE_FACTORY_ACCA_GATE_LOG") or (LOCALDATA / "acca_gate_log.jsonl"))
 
 
-def log_acca_gate_run(target, gate_status, gate_labels, blocked_legs, path=None):
-    """Append one line per run: the gate's status, the blocked label set, and every
-    leg the gate removed from the acca pool. This is the only durable record of
-    what the gate blocked; the census is printed, not stored."""
+def log_acca_gate_run(target, gate_status, gate_labels, blocked_legs, pool_size=None, path=None):
+    """Append one line per run: the gate's status, the blocked label set, the pool
+    size it checked, and every leg the gate removed. An empty ``blocked_legs``
+    with ``pool_size`` set means no leg carried a blocked label.
+
+    Logging must never stop ticket placement: any failure is reported on stderr
+    and the run continues. Two same-day runs both append to this file; git merges
+    of it are not handled (no merge logic beyond ``git add``), so a conflict
+    there needs a manual resolve."""
+    try:
+        _write_acca_gate_run(target, gate_status, gate_labels, blocked_legs, pool_size, path)
+    except Exception as exc:  # noqa: BLE001 - logging must not break placement
+        print(f"WARNING: acca gate log not written ({type(exc).__name__}: {exc})", file=sys.stderr)
+
+
+def _write_acca_gate_run(target, gate_status, gate_labels, blocked_legs, pool_size, path):
     record = {
-        "run_at": datetime.now().isoformat(timespec="seconds"),
+        "run_at": datetime.now(TZ).isoformat(timespec="seconds"),
         "target": target,
         "status": gate_status,
         "blocked_labels": sorted(gate_labels),
+        "pool_size": pool_size,
+        "blocked_count": len(blocked_legs),
         "blocked_legs": [
             {
                 "match": leg.get("match"),
@@ -3385,7 +3399,7 @@ def _record_acca_settlement(st, slip_date, acca):
             h["returned_pct"] = round(h["returned_pct"] + ret, 4)
             h["accas"].append(rec)
             h["bank_pct"] = round(st["bank"], 4)
-            h["close_pct"] = _day_close(st, slip_date, h)
+            _rechain_from(st, slip_date)
             return
     row = {
         "date": slip_date,
@@ -3394,28 +3408,34 @@ def _record_acca_settlement(st, slip_date, acca):
         "accas": [rec],
         "bank_pct": round(st["bank"], 4),
     }
-    row["close_pct"] = _day_close(st, slip_date, row)
     st["history"].append(row)
+    _rechain_from(st, slip_date)
 
 
-def _day_close(st, slip_date, row) -> float:
-    """End-of-day close for one bet-day: the previous bet-day's close plus this
-    day's net P&L (returned minus staked, over every acca on the day).
+def _rechain_from(st, slip_date) -> None:
+    """Recompute ``close_pct`` for every bet-day on or after ``slip_date``.
 
-    ``bank_pct`` is a snapshot of the live bank at the moment an acca settles.
-    When a day's accas settle in different runs, the snapshot can include a
-    later-settled day's P&L: the 13 Oct row was stored 18.88 low because the
-    14 Oct acca #1 had already lost. ``close_pct`` is chained from the previous
-    close, so it does not depend on settlement order. Rows written before this
-    field existed carry only ``bank_pct``, which is what the chain starts from.
-    With no earlier bet-day, the snapshot is the close.
+    A bet-day's close is the previous bet-day's close plus its net P&L (returned
+    minus staked, over every acca on the day). ``bank_pct`` is a snapshot of the
+    live bank at the moment an acca settles, so it can include a later-settled
+    day's P&L (the 13 Oct row was stored 18.88 low because the 14 Oct acca #1
+    had already lost). The chain is therefore rebuilt in date order whenever any
+    day is written, so a late settlement on an earlier day also corrects every
+    later close. The anchor is the close of the last bet-day before
+    ``slip_date``; rows written before ``close_pct`` existed anchor on
+    ``bank_pct``. With no earlier bet-day, the first row's snapshot is the close.
     """
-    prior = [h for h in st["history"] if h["date"] < slip_date]
-    if not prior:
-        return round(row["bank_pct"], 4)
-    prev = max(prior, key=lambda h: h["date"])
-    prev_close = prev.get("close_pct", prev["bank_pct"])
-    return round(prev_close + row["returned_pct"] - row["staked_pct"], 4)
+    prev_close = None
+    # Intentional: a later day's stored close is rewritten when an earlier day settles late.
+    for h in sorted(st["history"], key=lambda h: h["date"]):
+        if h["date"] < slip_date:
+            prev_close = h.get("close_pct", h["bank_pct"])
+            continue
+        if prev_close is None:
+            h["close_pct"] = round(h["bank_pct"], 4)
+        else:
+            h["close_pct"] = round(prev_close + h["returned_pct"] - h["staked_pct"], 4)
+        prev_close = h["close_pct"]
 
 
 def _folded_leg_key(day, home, away, pick):
@@ -3911,8 +3931,8 @@ def cmd_backfill(args, st):
                           "won": all(l.get("result") == "win" for l in a["legs"])}
                          for a in plan],
                "bank_pct": round(st["bank"], 4)}
-        row["close_pct"] = _day_close(st, d, row)
         st["history"].append(row)
+        _rechain_from(st, d)
         if st["bank"] < 1.0:
             print(f"  BUSTED on {d} (bank {st['bank']:.1f}%)")
             break
@@ -4386,8 +4406,9 @@ def cmd_today(args, st):
         )
     gate_labels, gate_status = acca_gate.refresh(target)
     print(f"ACCA PRICE-EVIDENCE GATE: {gate_status}")
+    pool_size = len(plan_pool)
     plan_pool, price_gate_blocked = acca_price_evidence_gate(plan_pool, gate_labels)
-    log_acca_gate_run(target, gate_status, gate_labels, price_gate_blocked)
+    log_acca_gate_run(target, gate_status, gate_labels, price_gate_blocked, pool_size=pool_size)
     if price_gate_blocked:
         census["ACCA PRICE-EVIDENCE GATE: blocked label"] = sorted(
             f"{l['match']} [{(l['row'].get('price_evidence') or '').upper()}]"
