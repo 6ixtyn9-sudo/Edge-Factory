@@ -181,6 +181,35 @@ def test_main_report_layout_is_clean_and_flags_bank_breaks():
     assert "docs/operator/BANK-HISTORY-2026-10-16.md" in txt
 
 
+def test_late_earlier_settlement_corrects_later_close():
+    """Regression: a 13 Oct acca settles AFTER 14 Oct already has a stored
+    close_pct. The 14 Oct close must move with it (it used to stay stale)."""
+    st = at.fresh_state()
+    st["bank"] = 100.0
+    st["cycle_base"] = 100.0
+    st["history"] = [{"date": "2026-10-12", "staked_pct": 0.0, "returned_pct": 0.0,
+                      "accas": [], "bank_pct": 100.0, "close_pct": 100.0}]
+
+    def settle(date, odds, stake, won):
+        ret = round(stake * odds, 4) if won else 0.0
+        st["bank"] = round(st["bank"] + ret - stake, 4)  # same arithmetic as _apply_settlement
+        at._record_acca_settlement(st, date, {"odds": odds, "won": won, "stake_pct": stake,
+                                              "legs": [], "results": []})
+
+    settle("2026-10-13", 2.0, 4.0, False)   # 13 Oct close 96
+    settle("2026-10-14", 2.0, 2.0, False)   # 14 Oct close 94
+    by_date = {h["date"]: h for h in st["history"]}
+    assert by_date["2026-10-14"]["close_pct"] == pytest.approx(94.0)
+
+    settle("2026-10-13", 3.0, 3.0, True)    # late 13 Oct win: 13 Oct close 102, 14 Oct must follow
+    by_date = {h["date"]: h for h in st["history"]}
+    assert by_date["2026-10-13"]["close_pct"] == pytest.approx(102.0)
+    assert by_date["2026-10-14"]["close_pct"] == pytest.approx(100.0)
+    assert by_date["2026-10-14"]["close_pct"] == pytest.approx(st["bank"])
+    # Earlier rows are untouched by a later write.
+    assert by_date["2026-10-12"]["close_pct"] == pytest.approx(100.0)
+
+
 def test_day_close_does_not_depend_on_settlement_order():
     """Replays the 13/14 Oct settlement order from production: 14 Oct acca #1 lost
     before 13 Oct acca #2 won. The 13 Oct snapshot (bank_pct) carries the 14 Oct loss,
