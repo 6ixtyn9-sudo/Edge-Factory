@@ -71,3 +71,12 @@ def test_override_requests_only_alternate_totals_and_costs_one_per_region(monkey
     _, params, cost = calls[0]
     assert params["markets"] == "alternate_totals"
     assert cost == 1
+
+
+def test_production_default_requests_no_alternate_or_fake_totals_key():
+    """Production requests stay on real, requested-today markets: neither the
+    fake key totals_alt nor alternate_totals is in the default request list.
+    (conftest clears ODDS_API_MARKETS, so this is the code default.)"""
+    assert "totals_alt" not in tha.MARKETS
+    assert "alternate_totals" not in tha.MARKETS
+    assert "totals" in tha.MARKETS

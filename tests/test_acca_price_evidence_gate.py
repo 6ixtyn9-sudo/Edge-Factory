@@ -247,3 +247,26 @@ def test_gate_run_log_records_blocked_legs_and_empty_runs(tmp_path):
     assert first["blocked_legs"][0]["match"] == "A vs B"
     assert first["blocked_legs"][0]["label"] == "BETEXPLORER_RESCUE"
     assert json.loads(lines[1])["blocked_legs"] == []
+
+
+def test_gate_run_log_records_pool_size_and_sast_time(tmp_path):
+    """An empty blocked_legs is only readable next to pool_size: it means the gate
+    checked that many legs and none carried a blocked label. run_at is SAST."""
+    path = tmp_path / "acca_gate_log.jsonl"
+    at.log_acca_gate_run("2026-10-18", "stepped for 2026-10-18", {"BETEXPLORER_RESCUE"}, [],
+                         pool_size=7, path=path)
+    rec = json.loads(path.read_text().splitlines()[0])
+    assert rec["pool_size"] == 7
+    assert rec["blocked_count"] == 0
+    assert rec["blocked_legs"] == []
+    assert rec["run_at"].endswith("+02:00")
+
+
+def test_gate_log_write_failure_does_not_raise(tmp_path, capsys):
+    """Logging must never stop ticket placement: a failed write only warns."""
+    blocker = tmp_path / "not_a_dir"
+    blocker.write_text("x")
+    bad_path = blocker / "acca_gate_log.jsonl"  # parent is a file, so the write fails
+    at.log_acca_gate_run("2026-10-18", "stepped", {"BETEXPLORER_RESCUE"}, [], pool_size=3,
+                         path=bad_path)  # must not raise
+    assert "acca gate log not written" in capsys.readouterr().err
