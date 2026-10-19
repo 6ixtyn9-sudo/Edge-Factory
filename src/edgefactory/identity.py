@@ -246,6 +246,71 @@ TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
     ("FC Porto B", "Porto II"),
     # pinnapi probe 2026-10-10 run#4: Zemplin Michalovce–Dunajska Streda, Slovakia Super Liga
     ("Dunajska Streda", "DAC 1904"),
+    # ------------------------------------------------------------------
+    # 2026-10-21 name audit, fix 2: same-club pairs found by joining the Aug-Oct
+    # pick and odds fixtures to the archive on the fixture date (one side or
+    # both sides differ only by abbreviation, a cut, a suffix or a
+    # transliteration; the other side of each fixture matches too). Pairs where
+    # the two names could be different clubs or squads are NOT listed
+    # (e.g. Wiener SC / Wiener SK, Club America / Tigres, Valencia W / Athletic
+    # Club W, Kolos Kovalivka II, Gornik Zabrze II, Volos FC, Ararat / Ararat-Armenia).
+    ("Sarpsborg 08", "Sarpsborg FK"),
+    ("Grasshopper Zürich", "Grasshoppers"),
+    ("NK Celje", "Celje"),
+    ("Huddersfield Tow", "Huddersfield Town"),
+    ("Wimbledon", "AFC Wimbledon"),
+    ("OB Odense", "Odense"),
+    ("FC Twente Ensche", "FC Twente Enschede"),
+    ("Iraklis 1908", "Iraklis FC"),
+    ("Aris Thessaloniki", "Aris Thessalonikis"),
+    ("Atalanta BC", "Atalanta"),
+    ("AS Monaco", "Monaco"),
+    ("PFC CSKA Sofia", "CSKA Sofia"),
+    ("PFC Levski Sofia", "Levski Sofia"),
+    ("Stade Brestois 29", "Stade Brestois"),
+    ("Shelbourne Dublin", "Shelbourne FC"),
+    ("Portland Hearts", "Portland Hearts Of Pine"),
+    ("Vancouver Whitec", "Vancouver Whitecaps"),
+    ("Saint Louis City", "St. Louis City"),
+    ("Philadelphia Uni", "Philadelphia Union"),
+    ("Universidad de Chile", "Universidad Chile"),
+    ("Club Universidad de Chile", "Universidad Chile"),
+    ("Sporting Braga", "SC Braga"),
+    ("GD Estoril", "Estoril"),
+    ("Enugu Rangers In", "Enugu Rangers"),
+    ("Omonia 29is Maiou", "Omonia 29th May"),
+    ("AEK Larnaka", "AEK Larnaca"),
+    ("Qabala", "Gabala"),
+    ("AI Kahrabaa", "Al-Kahrabaa"),
+    ("Atletico-MG", "Atletico Mineiro"),
+    ("Sporting KC", "Sporting Kansas City"),
+    ("1. FC Nürnberg", "Nurnberg"),
+    ("1. FC Heidenheim", "FC Heidenheim"),
+    ("Genclerbirligi", "Gençlerbirliği S.K."),
+    ("Vukovar '91", "Vukovar 1991"),
+    ("Viimsi JK", "Viimsi"),
+    ("Viimsi MRJK", "Viimsi"),
+    ("Maccabi Kabilio Jaffa", "Maccabi Kabilio"),
+    ("Hapoel Acre", "Hapoel Ironi Acre"),
+    ("Hapoel Kfar Shalem", "Hapoel Kfar Shal"),
+    ("Bnei Yehuda Tel", "Bnei Yehuda"),
+    ("Maccabi Kiryat Gat", "Maccabi Kiryat G"),
+    ("AZ Alkmaar", "AZ"),
+    ("Kheybar Khorramabad", "Kheybar Khorrama"),
+    ("Vikingur Reykjavik", "Vikingur Reykjav"),
+    ("Throttur Reykjavik", "Trottur Reykjavik"),
+    ("Jeonbuk Hyundai Motors", "Jeonbuk Hyundai"),
+    ("Besiktas JK", "Besiktas"),
+    ("BK Hacken", "Hacken"),
+    ("Orgryte IS", "Orgryte"),
+    ("Sparta Prague", "Sparta Praha"),
+    ("NEC Nijmegen", "NEC"),
+    ("CS Maritimo", "Maritimo"),
+    ("Central Cordoba de Santiago", "Central Córdoba SdE"),
+    ("Povltava FA", "Povltavska FA"),
+    ("Comerciantes Unidos", "CD Comerciantes"),
+    ("Univ. Concepción", "Universidad de Concepción"),
+    ("Universidad de C", "Universidad de Concepción"),
 )
 
 def _curated_override_pairs() -> tuple[tuple[str, str], ...]:
@@ -400,3 +465,61 @@ def squad_marker_mismatch(a: object, b: object) -> bool:
     """
     ma, mb = squad_markers(a), squad_markers(b)
     return ma != mb
+
+
+# ---------------------------------------------------------------------------
+# Truncated archive spellings (2026-10-21 name audit, fix 1).
+#
+# The ``bettingclosed`` settled view writes team names cut at exactly
+# ``TRUNCATION_WIDTH`` characters: 6,763 of its 28,908 names sit at 16 and
+# almost none run longer, so "Hapoel Beer Shev", "Vikingur Reykjav" and
+# "Enugu Rangers In" are the archive's spelling of "Hapoel Beer Sheva",
+# "Vikingur Reykjavik" and "Enugu Rangers Int". The key function does not
+# undo a cut, so a join on ``source_team_key`` misses those fixtures.
+#
+# The rule below is deterministic and corpus-derived, not fuzzy: a name of
+# exactly TRUNCATION_WIDTH characters maps to a longer spelling only when
+# (a) the longer spelling starts with it after identity folding, (b) it is
+# the ONLY distinct longer spelling in the corpus that does, and (c) the
+# squad markers agree, so "Sporting Cristal" never folds onto a reserve
+# "Sporting Cristal II". Two different clubs cannot be collapsed by it
+# without a second longer spelling of the same prefix, which the uniqueness
+# test refuses.
+# ---------------------------------------------------------------------------
+
+TRUNCATION_WIDTH = 16
+
+
+def truncation_key_map(names) -> dict[str, str]:
+    """Map a truncated spelling's ``source_team_key`` to its full key.
+
+    ``names`` is any iterable of raw team-name strings (the whole archive is
+    fine). Returns only unambiguous, squad-consistent mappings; a name whose
+    key already equals its full key is omitted.
+    """
+    distinct = {str(n) for n in names if n}
+    long_by_fold: dict[str, set[str]] = {}
+    for full in distinct:
+        if len(full.strip()) > TRUNCATION_WIDTH:
+            long_by_fold.setdefault(fold_identity_words(full), set()).add(full)
+    out: dict[str, str] = {}
+    for short in distinct:
+        if len(short.strip()) != TRUNCATION_WIDTH:
+            continue
+        short_fold = fold_identity_words(short)
+        if not short_fold:
+            continue
+        candidates: set[str] = set()
+        for long_fold, spellings in long_by_fold.items():
+            if long_fold.startswith(short_fold) and long_fold != short_fold:
+                candidates.update(spellings)
+        candidates = {c for c in candidates
+                      if not squad_marker_mismatch(c, short)}
+        full_keys = {source_team_key(c) for c in candidates}
+        if len(full_keys) != 1:
+            continue
+        (full_key,) = full_keys
+        short_key = source_team_key(short)
+        if short_key != full_key:
+            out[short_key] = full_key
+    return out
