@@ -325,3 +325,283 @@ def test_no_prices_means_no_recommendation(monkeypatch):
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: COHORT)
     out = pt.compute_dynamic_enhancement(con, _pick(), None)
     assert out["recommended_enhancement"] is None
+
+
+@pytest.mark.parametrize("market, rate", [
+    ("match_under_15", 0.70),
+    ("match_under_25", 0.80),
+    ("match_under_35", 0.85),
+    ("match_under_45", 0.90),
+    ("home_under_15", 0.70),
+    ("home_under_25", 0.80),
+    ("away_under_15", 0.70),
+    ("away_under_35", 0.85),
+])
+def test_under_competes_at_shared_minimum_without_legacy_line_filter(monkeypatch, market, rate):
+    """A priced under below its old threshold can beat a lower-rate over.
+
+    All other quotes are below 1.30: no fallback prices, no free unders.
+    """
+    monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, "1")
+    cohort = dict(COHORT, over15=0.30, over25=0.20, over35=0.15, over45=0.10,
+                  h_o15=0.30, h_o25=0.20, a_o15=0.30, a_o35=0.15)
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
+    index = _priced_index({market: 1.30, "match_over_15": 1.50}, default=1.10)
+    out = pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), index)
+    assert out["recommended_enhancement"] == market
+    assert out["enhancement_probability"] == pytest.approx(rate)
+    assert out["enhancement_price"] == 1.30
+    assert out["event_notes"][0]["market"] == market
+    log = next(e for e in out["enh_candidate_log"] if e["market"] == market)
+    assert log["status"] == "recommended"
+
+
+@pytest.mark.parametrize("price, over35, reason", [
+    (1.29, 0.20, "below_min_leg_odds"),
+    (1.30, 0.09, "prob_outside_band"),  # 91%: existing ceiling still applies
+    (1.30, 0.80, "below_line_threshold"),  # 20%: existing lower bound
+])
+def test_under_still_respects_price_and_rate_band(monkeypatch, price, over35, reason):
+    monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, "1")
+    cohort = dict(COHORT, over35=over35)
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
+    out = pt.compute_dynamic_enhancement(
+        _empty_warehouse(), _pick(),
+        _priced_index({"match_under_35": price}, default=1.10))
+    assert out["recommended_enhancement"] is None
+    log = next(e for e in out["enh_candidate_log"] if e["market"] == "match_under_35")
+    assert log["reason"] == reason
+
+
+def test_realized_display_pairs_from_real_sql_remain_winner_only():
+    """Exercise new SQL columns and complements, not just a mocked tuple."""
+    from scripts.audit_recent_picks import parse_statistical_comment
+    con = duckdb.connect(":memory:")
+    con.execute("CREATE TABLE consensus3 (date VARCHAR, home VARCHAR, away VARCHAR, "
+                "avg_p DOUBLE, outcome VARCHAR, fb_pick VARCHAR, zb_pick VARCHAR, sa_pick VARCHAR)")
+    con.execute("CREATE TABLE forebet_settled (date VARCHAR, home VARCHAR, away VARCHAR, "
+                "hs INTEGER, gs INTEGER)")
+    for i, (hs, gs) in enumerate(((0, 0), (1, 0), (2, 0), (2, 1), (3, 1), (4, 1))):
+        outcome = "draw" if hs == gs else "home"
+        con.execute("INSERT INTO consensus3 VALUES ('2026-10-01', ?, 'Beta', 70, ?, 'home', 'home', 'home')",
+                    [f"Alpha{i}", outcome])
+        con.execute("INSERT INTO forebet_settled VALUES ('2026-10-01', ?, 'Beta', ?, ?)",
+                    [f"Alpha{i}", hs, gs])
+    comment = pt.fetch_historical_profile(con, "home", 70.0, 3)
+    assert "Win (n=5)" in comment
+    for line, over, under in (("1.5", "80.0", "20.0"), ("2.5", "60.0", "40.0"),
+                              ("3.5", "40.0", "60.0"), ("4.5", "20.0", "80.0")):
+        assert f"Over {line}: {over}% | Under {line}: {under}%" in comment
+    parsed = parse_statistical_comment(comment)
+    assert parsed["over25"] == pytest.approx(0.60)
+    assert parsed["home_o15"] == pytest.approx(0.80)
+    assert parsed["btts"] == pytest.approx(0.60)
+    assert parsed["avg_goals"] == 3.0
+    con.close()
+
+
+def test_cohort_parity_default_on_with_explicit_legacy_rollback(monkeypatch):
+    monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, "0")
+    cohort = dict(COHORT, over15=0.30, over25=0.20, over35=0.15, over45=0.10)
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
+    index = _priced_index({"match_under_25": 1.30, "match_under_45": 1.30}, default=1.10)
+    baseline = pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), index)
+    assert baseline["recommended_enhancement"] is None
+    assert not any(e["market"] == "match_under_45" for e in baseline["enh_candidate_log"])
+    monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
+    research = pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), index)
+    assert research["recommended_enhancement"] == "match_under_45"
+    assert research["enhancement_probability"] == pytest.approx(0.90)
+
+
+def test_cohort_switch_does_not_relax_the_model_only_path(monkeypatch):
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: None)
+    monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
+    baseline = pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), _priced_index())
+    monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, "0")
+    assert pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), _priced_index()) == baseline
+
+
+def test_default_selection_stress_coherent_rates_and_random_prices(monkeypatch):
+    """100 coherent score distributions: no synthetic ROI, just numeric invariants."""
+    import random
+    from edgefactory.enh_pricing import MARKET_PRICE_MAP
+    rng = random.Random(20261019)
+    monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
+    con = _empty_warehouse()
+    for _ in range(100):
+        scores = [(rng.randrange(5), rng.randrange(4)) for _ in range(200)]
+        cohort = {"n": 200, "avg_goals": sum(h+a for h, a in scores)/200,
+                  "btts": sum(h > 0 and a > 0 for h, a in scores)/200}
+        for k in (1, 2, 3, 4):
+            cohort[f"over{k}5"] = sum(h+a > k for h, a in scores)/200
+        for side, index in (("h", 0), ("a", 1)):
+            for k in range(4):
+                cohort[f"{side}_o{k}5"] = sum(s[index] > k for s in scores)/200
+        prices = {m: round(rng.uniform(1.02, 3.0), 2) for m in MARKET_PRICE_MAP}
+        monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
+        out = pt.compute_dynamic_enhancement(con, _pick(), _priced_index(prices))
+        expected = []
+        for market in set(pt.COHORT_DIRECT_KEYS) | set(pt.COHORT_COMPLEMENT_KEYS):
+            rate = pt.cohort_realized_rate(cohort, market)
+            if MARKET_PRICE_MAP.get(market) and .25 <= rate <= .90 and prices[market] >= 1.30:
+                expected.append((rate, prices[market], market))
+        if not expected:
+            assert out["recommended_enhancement"] is None
+            continue
+        best_rate, best_price, _ = max(expected)
+        assert out["enhancement_probability"] == pytest.approx(best_rate, abs=.000051)
+        assert out["enhancement_price"] == best_price
+        assert out["enhancement_price"] >= 1.30
+        assert all(.25 <= n["probability"] <= .90 for n in out["event_notes"])
+    con.close()
+
+
+@pytest.mark.parametrize('rate, price, eligible, reason', [
+    (.80, 1.40, False, 'below_line_threshold'),
+    (.8499, 1.40, False, 'below_line_threshold'),
+    (.85, 1.40, True, None),
+    (.90, 1.40, True, None),
+    (.9001, 1.40, False, 'prob_outside_band'),
+    (.85, 1.29, False, 'below_min_leg_odds'),
+])
+def test_legacy_rollback_under25_threshold_and_price_boundaries(monkeypatch, rate, price, eligible, reason):
+    monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, "0")
+    cohort = _under25_boundary_cohort(rate)
+    monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: cohort)
+    con = _empty_warehouse()
+    try:
+        out = pt.compute_dynamic_enhancement(
+            con, _pick(), _priced_index({'match_under_25': price}, default=1.10))
+    finally:
+        con.close()
+    assert (out['recommended_enhancement'] == 'match_under_25') is eligible
+    log = next(e for e in out['enh_candidate_log'] if e['market'] == 'match_under_25')
+    assert log['status'] == ('recommended' if eligible else 'excluded')
+    assert log['reason'] == reason
+
+
+def _under25_boundary_cohort(rate):
+    # Coherent two-score population: rate finish 1-0, remainder finish 3-0.
+    return {'n': 10000, 'avg_goals': 3-2*rate, 'over15': 1-rate,
+            'over25': 1-rate, 'over35': 0., 'over45': 0., 'btts': 0.,
+            'h_o05': 1., 'h_o15': 1-rate, 'h_o25': 1-rate, 'h_o35': 0.,
+            'a_o05': 0., 'a_o15': 0., 'a_o25': 0., 'a_o35': 0.}
+
+
+def test_default_eighty_percent_under25_at_one_point_four(monkeypatch):
+    monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
+    monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: _under25_boundary_cohort(.8))
+    con = _empty_warehouse()
+    try:
+        out = pt.compute_dynamic_enhancement(
+            con, _pick(), _priced_index({'match_under_25': 1.40}, default=1.10))
+    finally:
+        con.close()
+    assert out['recommended_enhancement'] == 'match_under_25'
+    assert out['enhancement_probability'] == pytest.approx(.80)
+    assert out['enhancement_price'] == 1.40
+
+
+@pytest.mark.parametrize('scenario, parity, expected', [
+    ('higher_competitor', False, 'home_over_05'),
+    ('higher_competitor', True, 'home_over_05'),
+    ('under_displaces_btts', False, 'btts_yes'),
+    ('under_displaces_btts', True, 'match_under_25'),
+    ('higher_roi_btts', True, 'match_under_25'),
+    ('under_below_price_floor', True, 'btts_yes'),
+    ('equal_rate_price_tiebreak', True, 'btts_yes'),
+])
+def test_full_market_contention_not_under25_in_isolation(monkeypatch, scenario, parity, expected):
+    """Admitting a market is not selecting it; ranking is rate, then price, not EV."""
+    if parity:
+        monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
+    else:
+        monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, '0')
+    if scenario == 'higher_competitor':
+        # U2.5=80%, home scores=83%. Both probabilities come from the same scores.
+        scores = [(0, 0)] * 17 + [(1, 0)] * 63 + [(2, 1)] * 20
+        prices = {'match_under_25': 1.40, 'home_over_05': 1.35}
+    elif scenario == 'equal_rate_price_tiebreak':
+        scores = [(1, 1)] * 60 + [(0, 0)] * 20 + [(2, 1)] * 20
+        prices = {'match_under_25': 1.40, 'btts_yes': 1.50}
+    else:
+        # U2.5=80%, BTTS=60%; legacy admits BTTS but excludes U2.5.
+        scores = [(1, 1)] * 40 + [(0, 0)] * 40 + [(2, 1)] * 20
+        prices = {'match_under_25': 1.29 if scenario == 'under_below_price_floor' else 1.40,
+                  'btts_yes': 2.10 if scenario == 'higher_roi_btts' else 1.80}
+    n = len(scores)
+    cohort = {'n': n, 'avg_goals': sum(h+a for h, a in scores)/n,
+              'btts': sum(h > 0 and a > 0 for h, a in scores)/n}
+    for k in (1, 2, 3, 4):
+        cohort[f'over{k}5'] = sum(h+a > k for h, a in scores)/n
+    for side, index in (('h', 0), ('a', 1)):
+        for k in range(4):
+            cohort[f'{side}_o{k}5'] = sum(s[index] > k for s in scores)/n
+    monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: cohort)
+    con = _empty_warehouse()
+    try:
+        out = pt.compute_dynamic_enhancement(con, _pick(), _priced_index(prices, default=1.10))
+    finally:
+        con.close()
+    assert out['recommended_enhancement'] == expected
+    if scenario == 'higher_roi_btts':
+        # 60%*2.10-1=26% exceeds 80%*1.40-1=12%; existing hit-rate policy still takes U2.5.
+        assert .60 * prices['btts_yes'] - 1 > .80 * prices['match_under_25'] - 1
+
+
+@pytest.mark.parametrize('rate, eligible', [
+    (.2499, False), (.25, True), (.7499, True), (.75, True), (.80, True),
+    (.90, True), (.9001, False),
+])
+def test_authorized_default_has_one_shared_cohort_band_not_a_new_75pct_floor(monkeypatch, rate, eligible):
+    monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
+    monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: _under25_boundary_cohort(rate))
+    con = _empty_warehouse()
+    try:
+        out = pt.compute_dynamic_enhancement(
+            con, _pick(), _priced_index({'match_under_25': 1.40}, default=1.10))
+    finally:
+        con.close()
+    assert (out['recommended_enhancement'] == 'match_under_25') is eligible
+    if eligible:
+        assert out['enhancement_cohort_rate'] == pytest.approx(rate)
+        assert out['event_notes'][0]['cohort_n'] == 10000
+
+
+def test_default_and_explicit_on_identical_with_a_cohort(monkeypatch):
+    monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: _under25_boundary_cohort(.75))
+    index = _priced_index({'match_under_25': 1.40, 'btts_no': 1.50}, default=1.10)
+    con = _empty_warehouse()
+    try:
+        monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
+        default = pt.compute_dynamic_enhancement(con, _pick(), index)
+        monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, '1')
+        assert pt.compute_dynamic_enhancement(con, _pick(), index) == default
+        monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, '0')
+        legacy = pt.compute_dynamic_enhancement(con, _pick(), index)
+        assert default['recommended_enhancement'] == 'match_under_25'
+        assert legacy['recommended_enhancement'] is None
+    finally:
+        con.close()
+
+
+def test_authorized_75pct_under_displaces_60pct_btts_with_both_priced(monkeypatch):
+    # 35% 1-1, 40% 0-0, 25% 2-1: U2.5=75%, BTTS=60%, n=100.
+    cohort = {'n': 100, 'avg_goals': 1.45, 'over15': .60, 'over25': .25,
+              'over35': 0., 'over45': 0., 'btts': .60,
+              'h_o05': .60, 'h_o15': .25, 'h_o25': 0., 'h_o35': 0.,
+              'a_o05': .60, 'a_o15': 0., 'a_o25': 0., 'a_o35': 0.}
+    monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: cohort)
+    prices = _priced_index({'match_under_25': 1.40, 'btts_yes': 1.80}, default=1.10)
+    con = _empty_warehouse()
+    try:
+        monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, '0')
+        assert pt.compute_dynamic_enhancement(con, _pick(), prices)['recommended_enhancement'] == 'btts_yes'
+        monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
+        out = pt.compute_dynamic_enhancement(con, _pick(), prices)
+    finally:
+        con.close()
+    assert out['recommended_enhancement'] == 'match_under_25'
+    assert out['enhancement_cohort_rate'] == .75
+    assert next(e for e in out['enh_candidate_log'] if e['market'] == 'btts_yes')['status'] == 'eligible_not_selected'
