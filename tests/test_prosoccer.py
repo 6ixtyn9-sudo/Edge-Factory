@@ -201,6 +201,27 @@ def test_get_raises_when_all_transports_fail(monkeypatch):
         prosoccer._get("https://www.prosoccer.gr/en/football/predictions/")
 
 
+def test_fetch_day_failure_keeps_http_cause(monkeypatch):
+    # Regression: the per-URL list kept only the class name, so every HTTP
+    # 500 read as "RuntimeError" in CI and an outage looked like a parser fault.
+    import urllib.error
+    def http500(_url, retries=3):
+        raise urllib.error.HTTPError(_url, 500, "Internal Server Error", None, None)
+    monkeypatch.setattr(prosoccer, "_get", http500)
+    with pytest.raises(RuntimeError) as info:
+        prosoccer.fetch_day("2026-10-18")
+    message = str(info.value)
+    assert "HTTPError" in message
+    assert "HTTP Error 500" in message
+
+
+def test_brief_is_one_line_and_bounded():
+    text = prosoccer._brief(ValueError("line one\nline two " + "x" * 500))
+    assert text.startswith("ValueError: line one line two")
+    assert "\n" not in text
+    assert len(text) <= len("ValueError: ") + 120
+
+
 def test_columns_cover_row_keys():
     rows = prosoccer._parse(_page("Tuesday 29 September 2026", TABLE), "2026-09-29")
     assert rows
