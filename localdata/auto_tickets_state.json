@@ -2,7 +2,49 @@
   "base_pct": 100.0,
   "bank": 164.69715400000013,
   "cycle_base": 203.9865280000001,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-10-19",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Bursaspor vs Pendikspor",
+              "pick": "HOME",
+              "prob": 0.733,
+              "odds": 1.42,
+              "result": null,
+              "fixture_key": [
+                "2026-10-19",
+                "Bursaspor",
+                "Pendikspor"
+              ]
+            },
+            {
+              "match": "Mes Shahr-e Babak vs Persepolis FC",
+              "pick": "AWAY",
+              "prob": 0.73,
+              "odds": 1.37,
+              "result": null,
+              "fixture_key": [
+                "2026-10-19",
+                "Mes Shahr-e Babak",
+                "Persepolis FC"
+              ]
+            }
+          ],
+          "odds": 1.95,
+          "stake_pct": 20.5871,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        }
+      ],
+      "staked_pct": 20.5871
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
@@ -1052,6 +1094,11 @@
     },
     "2026-10-18": {
       "frozen_at": "2026-10-18T09:38:43+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-10-19": {
+      "frozen_at": "2026-10-19T09:48:56+02:00",
       "final": true,
       "lock_source": "state"
     }

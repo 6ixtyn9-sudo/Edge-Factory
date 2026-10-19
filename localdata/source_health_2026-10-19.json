@@ -156,14 +156,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 123,
       "join_miss_counts": {
-        "fixture_key_miss": 41196,
-        "market_unsupported": 15847
+        "fixture_key_miss": 51000,
+        "market_unsupported": 19106,
+        "no_pick_for_fixture": 1446
       },
-      "op_matched": 0,
-      "op_raw": 57043,
-      "op_usable": 57043,
+      "op_matched": 1,
+      "op_raw": 71675,
+      "op_usable": 71675,
       "reason": null,
       "status": "cache_only"
     },
