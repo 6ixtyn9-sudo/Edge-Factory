@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 11,
@@ -30,7 +30,7 @@
         "selection_unmapped": 284
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-20' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -170,21 +170,21 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 6,
+      "coherence_excluded_rows": 12,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 6
+        "withheld_mixed_events_one_x_two": 12
       },
-      "coherence_withheld_fixtures": 1,
+      "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 1,
       "join_miss_counts": {
-        "fixture_key_miss": 15328,
+        "fixture_key_miss": 15309,
         "no_pick_for_fixture": 20
       },
       "pa_matched": 1,
-      "pa_raw": 824,
-      "pa_scored": 15349,
+      "pa_raw": 822,
+      "pa_scored": 15330,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -232,62 +232,74 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 8,
-        "board_league_count": 7,
+        "board_fixtures": 9,
+        "board_league_count": 6,
         "board_leagues": {
-          "argentina_-_primera_nacional": 11,
-          "brazil_-_serie_b": 3,
-          "colombia_-_primera_a": 79,
-          "el_salvador_-_primera_division": 4,
-          "guatemala_-_liga_nacional": 7,
-          "usa_-_major_league_soccer": 36,
-          "usa_-_nwsl": 60
+          "colombia_-_primera_a": 3,
+          "guatemala_-_liga_nacional": 30,
+          "hong_kong_-_premier_league": 2,
+          "mexico_-_liga_mx": 152,
+          "mexico_-_liga_mx_women": 10,
+          "nicaraguan_primera_division": 3
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 168,
+        "board_priced_rows": 16,
         "board_rows": 200,
-        "board_team_count": 16,
+        "board_team_count": 18,
         "board_team_names": {
-          "America de Cali S.A": 79,
-          "Atletico Balboa": 4,
-          "Atletico Bucaramanga": 79,
-          "Bay FC (W)": 60,
-          "CA Temperley": 5,
-          "CD Aguila": 4,
-          "Coban Imperial": 7,
-          "Columbus": 36,
-          "Deportivo Mixco": 7,
-          "Estudiantes de Caseros": 6,
-          "FC Cincinnati": 36,
-          "Godoy Cruz": 6,
-          "Novorizontino": 3,
-          "Portland Thorns (W)": 60,
-          "San Martin De San Juan": 5,
-          "Vila Nova": 3
+          "Atletico Junior": 3,
+          "CF America (W)": 2,
+          "Club America [W]": 2,
+          "Deportivo Cali": 3,
+          "Diriangen FC": 3,
+          "Marquense": 30,
+          "Monterrey": 152,
+          "Pachuca": 152,
+          "Pachuca (W)": 2,
+          "Pachuca [W]": 2,
+          "Queretaro (W)": 2,
+          "Queretaro FC [W]": 4,
+          "Rancho Santana": 3,
+          "Southern District": 2,
+          "Suchitepequez": 30,
+          "Tigres (W)": 2,
+          "Tigres [W]": 4,
+          "Wofoo Tai Po": 2
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_moneyline": 5,
+          "unknown_market:point_spread": 2,
+          "unsupported_market:double_chance": 3,
+          "unsupported_market:draw_no_bet": 2,
+          "unsupported_market:team_total_points_odd_even": 4
+        },
         "card_fixture_count": 1,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 168
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "card_fixtures_unmatched_on_board",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "fixture_key_miss": 16
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 1,
+      "sa_scored": 16,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
@@ -357,12 +369,12 @@
       "status": null
     },
     "zulubet": {
-      "blocker": "fetch returned zero rows",
-      "can_fetch_today": true,
+      "blocker": "not reliably fetched/observed today",
+      "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "reason": null,
       "status": null
     }

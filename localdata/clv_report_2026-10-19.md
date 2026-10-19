@@ -2,14 +2,14 @@
 
 ## Overall
 
-- total unique picks: 947
+- total unique picks: 948
 - picks with at least two prices: 725
 - average raw odds delta: -0.006454
 - average implied-probability delta: 0.001578
 - beat-later-price rate: 0.077241
 - beat-later-price sample: 725
-- unmatched picks: 137
-- picks with fewer than two snapshots: 87
+- unmatched picks: 138
+- picks with fewer than two snapshots: 88
 
 ## By rule
 
@@ -24,7 +24,7 @@
 - `ml-meta avg_p>=80`: n=13, two_prices=10, avg_raw=0.005, avg_ip=-0.004476, beat_rate=0.0
 - `unanimous[betclan+bzzoiro+statarea+vitibet+zulubet] avg_p>=65`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `unanimous[betclan+bzzoiro+statarea+vitibet] avg_p>=65`: n=1, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
-- `unanimous[betclan+vitibet] avg_p>=70`: n=20, two_prices=10, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
+- `unanimous[betclan+vitibet] avg_p>=70`: n=21, two_prices=10, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `unanimous[bzzoiro+statarea+vitibet+zulubet] avg_p>=65`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `unanimous[bzzoiro+statarea+vitibet] avg_p>=65`: n=5, two_prices=3, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `unanimous[bzzoiro+statarea] avg_p>=70`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
@@ -37,7 +37,7 @@
 
 - `CAUTION`: n=68, two_prices=63, avg_raw=-0.008889, avg_ip=0.003782, beat_rate=0.126984
 - `CERTIFIED_CLEAN`: n=133, two_prices=130, avg_raw=-0.004224, avg_ip=-0.00024, beat_rate=0.084615
-- `SKIPPED_VETO`: n=512, two_prices=402, avg_raw=-0.007861, avg_ip=0.001906, beat_rate=0.077114
+- `SKIPPED_VETO`: n=513, two_prices=402, avg_raw=-0.007861, avg_ip=0.001906, beat_rate=0.077114
 - `WATCHLIST_NO_ODDS`: n=86, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `WATCHLIST_SUSPECT_PRICE`: n=14, two_prices=10, avg_raw=0.005, avg_ip=-0.001161, beat_rate=0.0
 - `WATCHLIST_UNCORROBORATED_PRICE`: n=125, two_prices=110, avg_raw=-0.004182, avg_ip=0.001659, beat_rate=0.054545

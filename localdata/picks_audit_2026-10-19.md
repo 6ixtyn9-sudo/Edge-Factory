@@ -2,12 +2,12 @@
 
 ## Overall
 
-- archived pick rows: 702
+- archived pick rows: 703
 - archived pick dates: 30
 - immutable morning-baseline rows: 529
-- late-slate additions (regular-ledger rows not in the morning baseline): 175, of which on days whose regular ledger was rewritten: 170
+- late-slate additions (regular-ledger rows not in the morning baseline): 176, of which on days whose regular ledger was rewritten: 171
 - regular-ledger-only legacy rows: 0
-- unsafe regular ledgers ignored: 26
+- unsafe regular ledgers ignored: 27
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 687
 - eligible prior picks: 701
@@ -26,7 +26,7 @@
 
 - include same-day picks: False
 - same-day cutoff date: 2026-10-19
-- same-day rows excluded: 1
+- same-day rows excluded: 2
 
 ## Secondary Market Realized Rates
 
