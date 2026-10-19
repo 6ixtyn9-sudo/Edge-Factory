@@ -26,8 +26,10 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCALDATA = ROOT / "localdata"
+# forebet is retired as a results donor (2026-10-23): its settlement history
+# stays in localdata/forebet_*.csv.gz and backfill_results, but the daily
+# refresher no longer reads it.
 RESULT_SOURCES = (
-    "forebet",
     "zulubet",
     "statarea",
     "vitibet",
@@ -132,14 +134,11 @@ def _write_rows(path: Path, columns: list[str], rows: dict[tuple[str, str, str],
 
 
 def _fetch_result_rows(module: Any, source: str, day: str) -> list[dict[str, Any]]:
-    """Fetch only the market surface required for result settlement.
+    """Fetch the day's rows from one result donor.
 
-    Forebet's 1X2 payload already includes FT/HT scores and terminal status;
-    requesting O/U and BTTS here spent two extra relay calls whose prediction
-    fields are deliberately discarded by this refresher.
+    Forebet is no longer a donor, so the market-restricted fetch it used to
+    need has gone with it.
     """
-    if source == "forebet":
-        return list(module.fetch_day(day, markets=("1x2",)) or [])
     return list(module.fetch_day(day) or [])
 
 
