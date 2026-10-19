@@ -11214,3 +11214,18 @@ failure. GH cache API confirmed localdata-v2-39307259942 exists onmain129,126,92
 production cache data still needs a runner execution before reporting real mining
 results. No provider calls, quota changes, workflow dispatch or live activation
 at time of this note. See docs/operator/REMINE-PLAN.md executive supersession.
+
+Validation/delivery update: new24tests passed; fullsuite3325passed1skipped159.69s;
+after final runner annotation addition, focused+docs94passed3.92s. Local CLI
+re-executed and asserted explicit no_gradeable_prediction_history status and
+28,748result-only rows; receipt docs/operator/audits/post-forebet-remine-local-
+2026-10-19.json. git diff --check clean. Commit0896c34 saved all implementation,
+tests, plan and retained first-production attrition diagnosis on the active
+arena/e273ec97-edge-factory branch. PUSH FAILED: GitHub App refuses daily.yml
+update without workflows permission. No PR, remote branch update or workflow
+run was created; no production mining result exists yet. User informed GitHub
+connection needs workflow-write permission/update or reconnect in Arena. Do not
+retry unchanged credentials or bypass this restriction. Local snapshots/commits
+preserve the work; resume push of this SAME branch after permission is repaired,
+then dispatch existing daily.yml refarena/e273ec97-edge-factory mode=remine_only,
+inspect completed report/check annotation, and report actual cache data results.
