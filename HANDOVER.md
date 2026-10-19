@@ -10656,3 +10656,102 @@ Suite: 843 passed.
   state commit follows it. The allowlists for source-health and BetMiner probe
   receipts make newly written receipts stageable; tracked prior receipts are
   not removable by `git clean -fd`. No workflow file was changed.
+
+---
+
+## Addendum 2026-10-19: ROI measurement, exact-identity report, 4 Sep / 15 Oct diagnosis
+
+Scope: read-only analysis. No live logic, band, stake, threshold, picks, or
+state/history change. Form remains closed for both lanes (main 1X2 and O2.5,
+priced and forward-checked). Enhancement betting hold stands.
+
+### Bet-day and ticket counts
+
+- 50 bet-days = 49 settled (27 Aug to 17 Oct) + 18 Oct (open).
+- Ticket card files (counted directly from the 50 files): 106 accas, 212 legs.
+- Settled history: my own count was 103 accas (49 days); the reported
+  exact-identity run gives 105. This 2-acca difference is UNRECONCILED.
+- Earlier "49 bet-days" and "103 legs" statements are superseded
+  (103 was accumulators, not legs).
+
+### Exact-identity report (reported; script not retained in workspace)
+
+Script `t7_exact_identity_report.py` and output `t7_exact_identity_report.md`
+were written to scratch (`/home/user/backtest_form/`), which has not survived
+between sessions. The script must be recreated before re-run or commit. The
+figures below are as reported by that run and have NOT been reproduced in
+this addendum.
+
+Populations (95% day-block bootstrap; paired gaps use the same 50 date blocks):
+
+| Population | Size | Flat ROI | Stake-weighted ROI |
+|---|---|---|---|
+| Same-day 1X2 pool, all buckets incl. SKIPPED_VETO | 1,226 priced; 1,062 resolved | +1.45% (−3.48, +6.99) | n/a (no pool stakes) |
+| Ticket-card legs | 212; 173 resolved (132W/41L) | +3.77% (−5.79, +12.88) | n/a per leg |
+| Ticket-card accas | 106; 82 resolved | +0.65% (−21.26, +22.90) | −5.58% (−29.32, +19.33), rounded printed stakes |
+| Stored settlement history | 105; 105 resolved (61W/44L) | +8.50% (−10.02, +27.13) | +4.49% (−14.25, +24.03), recorded stakes/returns |
+| Receipt-verified placements | 0 | n/a | n/a |
+
+Exact card-to-pool identity joins: 208/212 matched (4 unmatched); 205 with a
+usable pool price. Price deltas: 61 above 0.01, 21 above 0.05; mean absolute
+delta 0.0293. Only 9 of 105 history accas carry leg identities.
+
+Paired card-minus-pool gap (percentage points):
+
+| Band | Gap | 95% CI |
+|---|---|---|
+| Overall | +2.32 | −6.72 to +10.68 |
+| <1.20 | −9.42 | −36.08 to +15.36 |
+| 1.20–1.30 | +7.61 | −1.53 to +16.73 |
+| 1.30–1.50 | +4.20 | −9.51 to +17.42 |
+| 1.50–1.80 | +1.21 | −25.83 to +25.58 |
+| 1.80–2.20 | −104.39 | −124.50 to −82.64 (n too small; treat as artefact until checked) |
+| ≥2.20 | +11.84 | −134.94 to +154.00 (n too small) |
+
+Card state: 14 cards locked by both markers, 36 unlocked. No bookmaker receipts
+exist in the workspace; all populations are local reconstruction.
+
+Non-clean dates (cannot be joined cleanly): 2, 5, 6, 9, 13, 15, 25, 26 Sep
+(out-of-day rows); 4 Sep (card/history count discrepancy); 10 Sep, 5 Oct,
+10 Oct, 15 Oct (unmatched exact card identities); 3 Oct (superseded marker).
+Pick files carry multiple row-level `as_of` vintages; 18 rows with a different
+embedded date were excluded from their date's pool.
+
+### Root-cause statements (reported; not yet re-traced in this addendum)
+
+- **4 Sep.** The unlocked card shows accas @2.19 and @2.01. Settlement history
+  holds one @2.01 loss and no identity for the @2.19. The retained files cannot
+  distinguish a later card re-plan or rewrite from sparse backfill or ledger
+  omission. The software ledger establishes only the @2.01 loss. Placement of
+  the @2.19 is unverified.
+- **15 Oct.** The freeze-time build record shows AZ @4.00; a later run still
+  marked frozen records the same identity with price used @1.33. Settlement
+  history records the first acca at @1.78 (AZ @1.33, Sparta @1.34) and the
+  second at @2.16, matching the card. Software settlement identity is
+  @1.78/@2.16; the card's @5.36/@2.16 is not the settled identity. Actual
+  bookmaker placement is unverified.
+
+Authoritative population for ROI until receipts exist: settled history (settled
+outcomes and recorded stakes), with card text used only for identity
+confirmation. Unlocked card text is not treated as placement evidence.
+
+### Open items (not actioned)
+
+1. Recreate the exact-identity script in a durable location before re-run or
+   commit.
+2. Trace the 4 Sep and 15 Oct writer paths (upsert, state write, force-recut,
+   price gate) to confirm the cause statements above. Read-only; not yet done
+   in this addendum.
+3. Bookmaker receipts: none. Any ROI claim stays provisional without them.
+4. Uncommitted name-fix changes (`src/edgefactory/form_intel.py`,
+   `src/edgefactory/identity.py`, `scripts/name_audit.py`, two new test files)
+   were approved for use on 21 Oct. This addendum does not commit them.
+
+### Standing constraints carried forward
+
+- No band, cap, bucket, stake, threshold or live-logic change from these
+  numbers. Subset results are not policy.
+- No forward pre-registration adopted. `PRE_REG_roi_forward_2026-10-19.md`
+  is a scratch draft and is not part of this repo.
+- Any stake-fraction change (`STAKE_FRAC`, `MAX_ACCAS`) requires separate
+  approval.
