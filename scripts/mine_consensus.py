@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""Walk-forward consensus miner on the DuckDB warehouse.
+"""Walk-forward re-mining of retained non-Forebet sources and markets.
 
-Re-validates the certified rules and scans the threshold grid, all with the
-standard gates (no mini-backtests, Wilson LB, ROI alongside hit rate).
+The existing daily entry point now scans explicit current electorates, singles,
+unanimity, strict-majority and disagreement-follow strategies. It writes the
+existing research report; it cannot activate new predicates without serving
+validation. Legacy helpers remain for frozen model protection and historical
+receipts, not as the current default mining electorate.
 
-    python3 scripts/mine_consensus.py --split 2025-06-01
+    python3 scripts/mine_consensus.py --as-of 2026-10-19 --split 2026-09-21
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import math
+from collections import Counter, defaultdict
+from datetime import date, timedelta
+from itertools import combinations
 import subprocess
 import sys
 import numpy as np
@@ -24,6 +31,8 @@ sys.path.insert(0, str(ROOT / "src"))
 import duckdb  # noqa: E402
 
 from edgefactory.assay import wilson_lb, weighted_consensus_score  # noqa: E402
+from edgefactory.identity import source_team_key
+from edgefactory.market_registry import get_bettable_markets
 from edgefactory.entities import classify_competition  # noqa: E402
 from edgefactory.config import GATES  # noqa: E402
 from edgefactory.fade import (  # noqa: E402
@@ -984,443 +993,305 @@ def run_phase_a_confirmation_levers(con, results: list[dict], split: str,
             ))
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--split", default=GATES.walkforward_split)
-    args = ap.parse_args()
+# Current-source re-mine. Keep the legacy statistical/ML helpers above for
+# historical receipts and frozen-incumbent consumers; the daily entry point
+# below no longer fits Forebet electorates or the Forebet-feature ML model.
+POST_FOREBET_START = "2026-06-13"
+REMINE_SOURCES = (
+    "zulubet", "statarea", "vitibet", "scoutingstats", "prosoccer",
+    "betclan", "bzzoiro", "predictz", "windrawwin", "soccervista",
+    "bettingclosed", "freesupertips", "afootballreport",
+)
+REMINE_MARKETS = tuple(dict.fromkeys(
+    get_bettable_markets() + ["ou_1.5", "ou_3.5", "ou_4.5"]))
+REMINE_THRESHOLDS = (0, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90)
 
-    if not DB.exists():
-        print("Warehouse does not exist, exiting gracefully.")
-        write_registry({"split": args.split, "gates": vars(GATES), "edges": []})
-        return
 
-    con = duckdb.connect(str(DB), read_only=True)
-    if _cold_cache_check(con, args.split):
-        print("COLD-CACHE GUARD: settled history insufficient for certification — "
-              "refusing to certify; existing certified edges are left in place as-is.")
-        return
+def _number(value):
+    try:
+        value = float(value)
+        return value if math.isfinite(value) else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _score_pair(row, prefix=""):
+    pair = [_number(row.get(prefix + field)) for field in ("hs", "gs")]
+    return tuple(int(v) for v in pair) if all(
+        v is not None and v >= 0 and v.is_integer() for v in pair) else None
+
+
+def _remine_key(row):
+    home, away = source_team_key(row.get("home")), source_team_key(row.get("away"))
+    if min(len(home), len(away)) < 4 or home == away:
+        return None
+    return str(row["date"])[:10], home, away
+
+
+def _remine_signal(row, market):
+    """Observed probabilities or categorical tips; never turn streaks into p.
+
+    Warehouse sources have different units, so infer one scale from the full
+    1X2 vector (when available), otherwise from the probability field itself.
+    A full vector must be finite, bounded and sum approximately to one.
+    """
+    triple = [_number(row.get(c)) for c in ("p1", "px", "p2")]
+    scale = 100.0 if any(v is not None and v > 1.5 for v in triple) else 1.0
+    if market in ("1x2", "ht_1x2"):
+        fields = ("p1", "px", "p2") if market == "1x2" else ("p1_ht", "px_ht", "p2_ht")
+        values = [_number(row.get(c)) for c in fields]
+        if market == "ht_1x2":
+            scale = 100.0 if any(v is not None and v > 1.5 for v in values) else 1.0
+        if all(v is not None and 0 <= v <= scale for v in values):
+            probs = dict(zip(("home", "draw", "away"), (v / scale for v in values)))
+            if abs(sum(probs.values()) - 1) > 0.05:
+                return None
+            best = max(probs.values())
+            leaders = [side for side, prob in probs.items() if prob == best]
+            return (leaders[0], probs) if len(leaders) == 1 else None
+        if market != "1x2":
+            return None
+        # A categorical tip is eligible for the no-probability-floor test only.
+        raw = str(row.get("pick") or row.get("pick_1x2") or row.get("tip") or "").lower()
+        side = {"1": "home", "x": "draw", "2": "away"}.get(raw, raw)
+        return (side, None) if side in ("home", "draw", "away") else None
+    field = {"ou_1.5": "p_o15", "ou_2.5": "p_o25", "ou_3.5": "p_o35",
+             "ou_4.5": "p_o45", "btts": "p_gg", "ht_ou_1.5": "p_o15_ht",
+             "ht_ou_2.5": "p_o25_ht"}[market]
+    value = _number(row.get(field))
+    yes, no = ("yes", "no") if market == "btts" else ("over", "under")
+    if value is not None:
+        if all(v is None for v in triple):
+            scale = 100.0 if value > 1.5 else 1.0
+        value /= scale
+        if not 0 <= value <= 1 or value == 0.5:
+            return None
+        return (yes if value > 0.5 else no, {yes: value, no: 1 - value})
+    raw = str(row.get("pick_btts") if market == "btts" else
+              row.get("pick_ou") if market == "ou_2.5" else "").lower()
+    raw = {"gol": "yes", "nogol": "no", "over 2.5": "over", "under 2.5": "under"}.get(raw, raw)
+    return (raw, None) if raw in (yes, no) else None
+
+
+def _remine_outcome(scores, market):
+    pair = scores.get("ht" if market.startswith("ht_") else "ft")
+    if pair is None:
+        return None
+    hs, gs = pair
+    if market.endswith("1x2"):
+        return "home" if hs > gs else "away" if hs < gs else "draw"
+    if market == "btts":
+        return "yes" if hs > 0 and gs > 0 else "no"
+    line = float(market.rsplit("_", 1)[1])
+    return "over" if hs + gs > line else "under"
+
+
+def _remine_odds(rows, market, side):
+    fields = {"1x2": {"home": ("odd1",), "draw": ("oddx",), "away": ("odd2",)},
+              "ou_2.5": {"over": ("odd_over", "odd_o25"), "under": ("odd_under", "odd_u25")},
+              "btts": {"yes": ("odd_gg",), "no": ("odd_ng",)}}.get(market, {})
+    # Conservative minimum for the SAME side/market only. Never use an
+    # opposing vote's odds, fair odds or an invented complement price.
+    prices = [_number(row.get(field)) for row in rows for field in fields.get(side, ())]
+    prices = [v for v in prices if v is not None and v > 1]
+    return min(prices) if prices else None
+
+
+def remine_current_sources(con, *, start, split, as_of):
+    """All observed non-Forebet subsets, including single and dissent tests.
+
+    Results are candidate research, not automatically served authorization.
+    The same train/validation statistics and gates are used, but absent ROI
+    cannot pass. Full source keys and scores replace legacy nine-char joins.
+    """
+    for value in (start, split, as_of):
+        if date.fromisoformat(value).isoformat() != value:
+            raise ValueError("dates must be ISO YYYY-MM-DD")
+    if not POST_FOREBET_START <= start < split < as_of:
+        raise ValueError("require 2026-06-13 <= start < split < as_of")
+    coverage, source_rows = {}, {}
+    for source in (*REMINE_SOURCES, "betexplorer"):
+        table = next((t for t in (source, source + "_settled", source + "_raw")
+                      if _table_exists(con, t)), None)
+        if table is None:
+            coverage[source] = {"status": "missing_table", "rows": 0}
+            continue
+        columns = _table_columns(con, table)
+        if not {"date", "home", "away"}.issubset(columns):
+            coverage[source] = {"status": "missing_identity_columns", "rows": 0}
+            continue
+        cursor = con.execute(f"SELECT * FROM {table} WHERE TRY_CAST(date AS DATE) >= ? "
+                             "AND TRY_CAST(date AS DATE) < ?", [start, as_of])
+        names = [col[0] for col in cursor.description]
+        rows = [dict(zip(names, values)) for values in cursor.fetchall()]
+        source_rows[source] = rows
+        coverage[source] = {"status": "present" if rows else "no_rows_in_era", "table": table,
+                            "rows": len(rows), "market_votes": {m: 0 for m in REMINE_MARKETS}}
+
+    scores = defaultdict(lambda: defaultdict(set))
+    # Only self-scoring donors. In particular do NOT use results_donor or
+    # categorical *_settled scores which may have been inherited from Forebet.
+    donors = {"zulubet", "statarea", "vitibet", "scoutingstats", "prosoccer",
+              "bettingclosed", "betexplorer"}
+    for source in donors:
+        for row in source_rows.get(source, []):
+            key = _remine_key(row)
+            if key is None or str(row.get("result_source") or source) == "forebet":
+                continue
+            for period, prefix in (("ft", ""), ("ht", "ht_")):
+                pair = _score_pair(row, prefix)
+                if pair is not None:
+                    scores[key][period].add(pair)
+    resolved = {key: {period: next(iter(values)) for period, values in periods.items()
+                      if len(values) == 1} for key, periods in scores.items()}
+    observations = defaultdict(dict)
+    ambiguous = set()
+    for source in REMINE_SOURCES:
+        for row in source_rows.get(source, []):
+            key = _remine_key(row)
+            if key is None:
+                continue
+            for market in REMINE_MARKETS:
+                signal = _remine_signal(row, market)
+                if signal is None:
+                    continue
+                identity = (key, market, source)
+                bucket = observations[(key, market)]
+                vote = {"side": signal[0], "probs": signal[1], "row": row}
+                previous = bucket.get(source)
+                if previous and (previous["side"], previous["probs"], previous["row"].get("kickoff")) != (
+                        vote["side"], vote["probs"], row.get("kickoff")):
+                    ambiguous.add(identity)
+                bucket[source] = vote
+    candidates = defaultdict(list)
+    recipes = {}
+    for (key, market), all_votes in observations.items():
+        votes = {source: vote for source, vote in all_votes.items()
+                 if (key, market, source) not in ambiguous}
+        for source in votes:
+            coverage[source]["market_votes"][market] += 1
+        outcome = _remine_outcome(resolved.get(key, {}), market)
+        if outcome is None:
+            continue
+        names = sorted(votes)
+        for size in range(1, len(names) + 1):
+            for subset in combinations(names, size):
+                electorate = [votes[source] for source in subset]
+                counts = Counter(v["side"] for v in electorate)
+                strategies = []
+                if size == 1 or len(counts) == 1:
+                    strategies.append(("single" if size == 1 else "unanimous", None, electorate[0]["side"]))
+                else:
+                    side, n = counts.most_common(1)[0]
+                    if n > size / 2:
+                        strategies.append(("majority", None, side))
+                    strategies.extend(("disagree_follow", source, votes[source]["side"]) for source in subset)
+                for strategy, follow, side in strategies:
+                    recipe = (market, subset, strategy, follow)
+                    recipes[recipe] = True
+                    contributing = [votes[follow]] if follow else electorate
+                    probability = (100 * sum(v["probs"][side] for v in contributing) / len(contributing)
+                                   if all(v["probs"] is not None for v in contributing) else None)
+                    row0 = electorate[0]["row"]
+                    candidates[recipe].append({"date": key[0], "home": row0["home"], "away": row0["away"],
+                                               "pick": side, "outcome": outcome,
+                                               "pick_odds": _remine_odds([v["row"] for v in electorate], market, side),
+                                               "avg_p": probability})
     results = []
-    
-    has_fb = _table_exists(con, "forebet_settled")
-    has_zb = _table_exists(con, "zulubet_settled")
-    has_sa = _table_exists(con, "statarea_settled")
-    has_vb = _table_exists(con, "vitibet_settled")
-    has_ss = _table_exists(con, "scoutingstats_settled")
-    has_betclan = _table_exists(con, "betclan")
-    has_bzzoiro = _table_exists(con, "bzzoiro")
+    for recipe in sorted(recipes, key=str):
+        market, subset, strategy, follow = recipe
+        frame = pd.DataFrame(candidates[recipe])
+        con.register("post_forebet_slice", frame)
+        for threshold in REMINE_THRESHOLDS:
+            where = "1=1" if threshold == 0 else f"avg_p >= {threshold}"
+            name = f"{market} {strategy}[{'+'.join(subset)}]" + (f" follow={follow}" if follow else "") + f" avg_p>={threshold}"
+            edge = evaluate(con, name, "post_forebet_slice", where, split, market)
+            holds = []
+            for period, minimum in (("train", GATES.min_n_train), ("valid", GATES.min_n_valid)):
+                st = edge[period]
+                if st["n"] < minimum:
+                    holds.append(f"{period}_sample_below_{minimum}")
+                # Requiring priced samples prevents None ROI (or one quote)
+                # from masquerading as validated betting profitability.
+                if st["n_priced"] < minimum:
+                    holds.append(f"{period}_priced_sample_below_{minimum}")
+                if st["roi"] is None:
+                    holds.append(f"{period}_roi_unavailable")
+            if edge["status"] != "certified":
+                holds.append("statistical_gates_not_met")
+            edge.update({"status": "candidate", "statistical_gates_passed": not holds,
+                         "holds": holds + ["new_predicate_requires_serving_validation"],
+                         "sources": list(subset), "strategy": strategy, "follow_source": follow,
+                         "threshold": threshold, "view": None, "where": None})
+            # post_forebet_slice is a transient evaluation relation, NOT a
+            # persisted operational view. Never publish an un-recreatable rule.
+            results.append(edge)
+        con.unregister("post_forebet_slice")
+    market_coverage = {m: {"usable_votes": sum(c.get("market_votes", {}).get(m, 0) for c in coverage.values()),
+                           "tested_rules": sum(e["market"] == m for e in results)} for m in REMINE_MARKETS}
+    for cell in market_coverage.values():
+        cell["status"] = ("tested" if cell["tested_rules"] else
+                          "no_unconflicted_results" if cell["usable_votes"] else "no_usable_signals")
+    return {"status": "mined_candidates" if results else "no_gradeable_prediction_history",
+            "mining_era": "post_forebet", "start": start, "split": split, "as_of_exclusive": as_of,
+            "gates": vars(GATES), "excluded_voters": ["forebet"], "excluded_result_donors": ["forebet"],
+            "sources": coverage, "markets": market_coverage, "edges": results,
+            "ambiguous_source_market_observations": len(ambiguous),
+            "conflicting_result_periods": sum(len(v) > 1 for p in scores.values() for v in p.values()),
+            "settled_fixture_markets": len({(key, market) for key, market in observations
+                                            if _remine_outcome(resolved.get(key, {}), market) is not None}),
+            "activation": "research_only; existing live registry and frozen model unchanged",
+            "limitations": ["Threshold grid is model selection, not untouched forward evidence.",
+                            "Source quotes are retrospective donor prices, not execution-safe ROI.",
+                            "No probability is inferred from categorical tips or streak percentages."]}
 
-    scales = {}
-    for v in ["forebet_settled", "zulubet_settled", "statarea_settled", "vitibet_settled", "scoutingstats_settled", "prosoccer_settled", "betclan", "bzzoiro"]:
-        if _table_exists(con, v):
-            scales[v] = get_scale(con, v)
-        else:
-            scales[v] = 1.0
 
-    has_results_donor = _table_exists(con, "results_donor")
-
-    if has_betclan and has_results_donor:
-        con.execute("""
-            CREATE OR REPLACE TEMP VIEW betclan_settled AS
-            WITH bc AS (SELECT DISTINCT ON (date, hkey, akey) * FROM betclan),
-                 rd AS (SELECT DISTINCT ON (date, hkey, akey) * FROM results_donor)
-            SELECT bc.*, rd.hs, rd.gs, rd.result_source,
-                   CASE WHEN bc.p1 >= bc.px AND bc.p1 >= bc.p2 THEN 'home'
-                        WHEN bc.p2 >= bc.px THEN 'away' ELSE 'draw' END AS pick,
-                   GREATEST(bc.p1, bc.px, bc.p2) AS pmax,
-                   CASE WHEN rd.hs > rd.gs THEN 'home' WHEN rd.hs < rd.gs THEN 'away' ELSE 'draw' END AS outcome
-            FROM bc JOIN rd USING (date, hkey, akey)
-        """)
-        has_betclan_settled = True
-        scales["betclan_settled"] = scales["betclan"]
+def main():
+    ap = argparse.ArgumentParser(description="Re-mine current non-Forebet electorates using retained data only")
+    ap.add_argument("--start", default=POST_FOREBET_START)
+    ap.add_argument("--as-of", default=date.today().isoformat(), help="exclusive; never include the incomplete current day")
+    ap.add_argument("--split", default=None, help="chronological train/validation boundary (default: as-of minus 28 days)")
+    ap.add_argument("--output", type=Path, default=RESEARCH_OUT)
+    args = ap.parse_args()
+    try:
+        for value in (args.start, args.as_of, args.split or args.as_of):
+            if date.fromisoformat(value).isoformat() != value:
+                raise ValueError("dates must be ISO YYYY-MM-DD")
+        split = args.split or (date.fromisoformat(args.as_of) - timedelta(days=28)).isoformat()
+    except ValueError as exc:
+        ap.error(str(exc))
+    if args.output.resolve() == OUT.resolve():
+        ap.error("the re-mine output cannot overwrite the operational registry")
+    if not POST_FOREBET_START <= args.start < split < args.as_of:
+        ap.error("require 2026-06-13 <= start < split < as-of")
+    if DB.exists():
+        con = duckdb.connect(str(DB), read_only=True)
     else:
-        has_betclan_settled = False
-
-    if has_bzzoiro and has_results_donor:
-        con.execute("""
-            CREATE OR REPLACE TEMP VIEW bzzoiro_settled AS
-            WITH bz AS (SELECT DISTINCT ON (date, hkey, akey) * FROM bzzoiro),
-                 rd AS (SELECT DISTINCT ON (date, hkey, akey) * FROM results_donor)
-            SELECT bz.*, rd.hs, rd.gs, rd.result_source,
-                   CASE WHEN bz.p1 >= bz.px AND bz.p1 >= bz.p2 THEN 'home'
-                        WHEN bz.p2 >= bz.px THEN 'away' ELSE 'draw' END AS pick,
-                   GREATEST(bz.p1, bz.px, bz.p2) AS pmax,
-                   CASE WHEN rd.hs > rd.gs THEN 'home' WHEN rd.hs < rd.gs THEN 'away' ELSE 'draw' END AS outcome
-            FROM bz JOIN rd USING (date, hkey, akey)
-        """)
-        has_bzzoiro_settled = True
-        scales["bzzoiro_settled"] = scales["bzzoiro"]
-    else:
-        has_bzzoiro_settled = False
-
-    # ---- Train and Evaluate ML Meta-Classifier -----------------------------
-    ml_model_payload, _ = train_ml_meta_classifier(con, args.split)
-    if ml_model_payload:
-        # Scan lower thresholds too: the model's live max on summer slates is
-        # ~58%, so 70+ can never fire until peak season. 55/60/65 get judged
-        # by the SAME walk-forward gates — if they certify, the edge fires
-        # NOW instead of waiting for the season; if phantom, they stay
-        # candidates. The data decides, not impatience.
-        # The ladder now starts at 30. Widening it only widens what gets
-        # JUDGED: every rung faces the identical walk-forward gates
-        # (min_n_train/min_n_valid/min_roi_valid/LB), and a rung that does not
-        # clear them stays a candidate and fires nothing.
-        for thr in (30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85):
-            results.append(evaluate(
-                con, f"ml-meta avg_p>={thr}", "ml_meta_settled",
-                f"ml_p*100 >= {thr}", args.split))
-
-        # ---- ml-fade: the inverse-selection sibling family ------------------
-        # Derive the fade slice from the SAME eligible ml-meta selections
-        # (binary 1X2 home<->away; draws excluded — no honest binary inverse),
-        # priced at the FADE selection's own odds (fb.odd1/odd2 — never the
-        # parent pick's price), then grade it through the identical
-        # walk-forward gates as every other slice. The fade edges carry their
-        # own rule names so certification, decay monitoring, purity assays and
-        # the ledger all treat them as an independent family derived from
-        # ml-meta, not as part of it.
-        try:
-            con.execute(ml_fade_settled_sql("ml_meta_raw_df"))
-            # The fade ladder mirrors the parent rung ladder so the two
-            # families are always compared rung-for-rung; the same gates
-            # decide both.
-            for thr in (30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85):
-                fade_edge = evaluate(
-                    con, f"ml-fade avg_p>={thr}", FADE_VIEW,
-                    f"ml_p*100 >= {thr}", args.split)
-                fade_edge.update(fade_edge_metadata(thr))
-                results.append(fade_edge)
-        except Exception as exc:
-            print(f"ml-fade mining skipped (failed view query): {exc}")
-
-    if has_fb and has_zb:
-        con.execute("""
-            CREATE OR REPLACE TEMP VIEW v_consensus2 AS
-            SELECT *, fb_pick AS pick FROM consensus2
-        """)
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        
-        for thr in (60, 65, 70, 75, 80):
-            results.append(evaluate(
-                con, f"2way-unanimous avg_p>={thr}", "v_consensus2",
-                f"fb_pick = zb_pick AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}", args.split))
-                
-        results.append(evaluate(
-            con, "VETO-CHECK disagree, follow forebet", "v_consensus2",
-            "fb_pick != zb_pick", args.split))
-            
-        for thr in (65, 70):
-            results.append(evaluate(
-                con, f"2way-unanimous no-draw avg_p>={thr}", "v_consensus2",
-                f"fb_pick = zb_pick AND fb_pick != 'draw' AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
-                args.split))
-
-    if has_fb and has_zb and has_sa:
-        con.execute("""
-            CREATE OR REPLACE TEMP VIEW v_consensus3 AS
-            SELECT *, fb_pick AS pick FROM consensus3
-        """)
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        ssa = scales["statarea_settled"]
-        for thr in (60, 65, 70, 75):
-            results.append(evaluate(
-                con, f"3way-unanimous avg_p>={thr}", "v_consensus3",
-                f"fb_pick = zb_pick AND zb_pick = sa_pick AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
-                args.split))
-
-    # ---- Accuracy levers ---------------------------------------------------
-    if has_fb and has_zb and has_sa:
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        ssa = scales["statarea_settled"]
-        for thr in (60, 65, 70):
-            results.append(evaluate(
-                con, f"3way-unanimous no-draw avg_p>={thr}", "v_consensus3",
-                f"fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick != 'draw' "
-                f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
-                args.split))
-
-    if has_fb and has_zb:
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        for thr in (65, 70, 75):
-            results.append(evaluate(
-                con, f"2way-unanimous min_p>=60 avg_p>={thr}", "v_consensus2",
-                f"fb_pick = zb_pick "
-                f"AND fb_p/{sfb} >= 0.60 AND zb_p/{szb} >= 0.60 "
-                f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
-                args.split))
-    if has_fb and has_zb and has_sa:
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        ssa = scales["statarea_settled"]
-        for thr in (60, 65, 70):
-            results.append(evaluate(
-                con, f"3way-unanimous min_p>=60 avg_p>={thr}", "v_consensus3",
-                f"fb_pick = zb_pick AND zb_pick = sa_pick "
-                f"AND fb_p/{sfb} >= 0.60 AND zb_p/{szb} >= 0.60 AND sa_p/{ssa} >= 0.60 "
-                f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
-                args.split))
-
-    if has_fb and has_zb:
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        for thr in (65, 70, 75):
-            results.append(evaluate(
-                con, f"2way-unanimous odds-1.20-1.75 avg_p>={thr}", "v_consensus2",
-                f"fb_pick = zb_pick "
-                f"AND pick_odds >= 1.20 AND pick_odds < 1.75 "
-                f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
-                args.split))
-    if has_fb and has_zb and has_sa:
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        ssa = scales["statarea_settled"]
-        for thr in (60, 65, 70):
-            results.append(evaluate(
-                con, f"3way-unanimous odds-1.20-1.75 avg_p>={thr}", "v_consensus3",
-                f"fb_pick = zb_pick AND zb_pick = sa_pick "
-                f"AND pick_odds >= 1.20 AND pick_odds < 1.75 "
-                f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
-                args.split))
-
-    if has_fb and has_zb:
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        for sel in ("home", "away"):
-            for thr in (65, 70):
-                results.append(evaluate(
-                    con, f"2way-unanimous {sel}-only avg_p>={thr}", "v_consensus2",
-                    f"fb_pick = zb_pick AND fb_pick = '{sel}' "
-                    f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
-                    args.split))
-    if has_fb and has_zb and has_sa:
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        ssa = scales["statarea_settled"]
-        for sel in ("home", "away"):
-            for thr in (60, 65):
-                results.append(evaluate(
-                    con, f"3way-unanimous {sel}-only avg_p>={thr}", "v_consensus3",
-                    f"fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick = '{sel}' "
-                    f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
-                    args.split))
-
-    has_bc_settled_full = _table_exists(con, "bettingclosed_settled")
-    if has_fb and has_zb and has_bc_settled_full and _table_exists(con, "v_consensus2"):
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        try:
-            con.execute("""
-                CREATE OR REPLACE TEMP VIEW consensus2_bc_confirm AS
-                WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
-                     bc AS (SELECT DISTINCT ON (date, home, away)
-                                   date, home, away,
-                                   CASE pick_1x2
-                                     WHEN '1' THEN 'home'
-                                     WHEN '2' THEN 'away'
-                                     WHEN 'x' THEN 'draw'
-                                   END AS bc_pick
-                            FROM bettingclosed_settled
-                            WHERE pick_1x2 IN ('1','2','x'))
-                SELECT c2.*,
-                       bc.bc_pick
-                FROM c2 JOIN bc USING (date, home, away)
-            """)
-            for thr in (60, 65, 70, 75):
-                results.append(evaluate(
-                    con, f"2way+bc-confirms avg_p>={thr}", "consensus2_bc_confirm",
-                    f"fb_pick = zb_pick AND fb_pick = bc_pick "
-                    f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
-                    args.split))
-        except Exception as exc:
-            print(f"skipped 2way+bc-confirms: {exc}")
-    else:
-        if not has_bc_settled_full:
-            print("skipped 2way+bc-confirms: no bettingclosed_settled data")
-
-    run_phase_a_confirmation_levers(con, results, args.split, scales)
-
-    if has_fb and has_zb and has_sa and has_vb:
-        sfb = scales["forebet_settled"]
-        szb = scales["zulubet_settled"]
-        ssa = scales["statarea_settled"]
-        svb = scales["vitibet_settled"]
-        con.execute(f"""
-            CREATE OR REPLACE TEMP VIEW consensus4 AS
-            WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
-                 zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled),
-                 sa AS (SELECT DISTINCT ON (date, hkey, akey) * FROM statarea_settled),
-                 vb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM vitibet_settled)
-            SELECT fb.sport, fb.date, fb.home, fb.away, fb.outcome,
-                   fb.pick AS pick, fb.pick AS fb_pick, zb.pick AS zb_pick, sa.pick AS sa_pick, vb.pick AS vb_pick,
-                   ((fb.pmax/{sfb} + zb.pmax/{szb} + sa.pmax/{ssa} + vb.pmax/{svb})/4)*100 AS avg_p,
-                   CASE fb.pick WHEN 'home' THEN fb.odd1 WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds,
-                   fb.league
-            FROM fb JOIN zb USING (date, hkey, akey)
-                    JOIN sa USING (date, hkey, akey)
-                    JOIN vb USING (date, hkey, akey)
-        """)
-        for thr in (60, 65, 70, 75):
-            results.append(evaluate(
-                con, f"4way-unanimous-vb avg_p>={thr}", "consensus4",
-                f"fb_pick = zb_pick AND zb_pick = sa_pick AND sa_pick = vb_pick AND avg_p >= {thr}",
-                args.split))
-    else:
-        if not has_vb: print("skipped 4way-unanimous-vb: no vitibet_settled data")
-
-    if has_fb and has_betclan_settled:
-        sfb = scales["forebet_settled"]
-        sbc = scales["betclan_settled"]
-        con.execute(f"""
-            CREATE OR REPLACE TEMP VIEW consensus2_bc AS
-            WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
-                 bc AS (SELECT DISTINCT ON (date, hkey, akey) * FROM betclan_settled)
-            SELECT fb.date, fb.outcome,
-                   fb.pick AS pick, fb.pick AS fb_pick, bc.pick AS bc_pick,
-                   ((fb.pmax/{sfb} + bc.pmax/{sbc})/2)*100 AS avg_p,
-                   CASE fb.pick WHEN 'home' THEN fb.odd1 WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds
-            FROM fb JOIN bc USING (date, hkey, akey)
-        """)
-        for thr in (60, 65, 70, 75, 80):
-            results.append(evaluate(
-                con, f"2way-unanimous-bc avg_p>={thr}", "consensus2_bc",
-                f"fb_pick = bc_pick AND avg_p >= {thr}", args.split))
-    else:
-        if not has_betclan_settled: print("skipped 2way-unanimous-bc: no betclan data")
-        
-    if has_fb and has_bzzoiro_settled:
-        sfb = scales["forebet_settled"]
-        sbz = scales["bzzoiro_settled"]
-        con.execute(f"""
-            CREATE OR REPLACE TEMP VIEW consensus2_bz AS
-            WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
-                 bz AS (SELECT DISTINCT ON (date, hkey, akey) * FROM bzzoiro_settled)
-            SELECT fb.date, fb.outcome,
-                   fb.pick AS pick, fb.pick AS fb_pick, bz.pick AS bz_pick,
-                   ((fb.pmax/{sfb} + bz.pmax/{sbz})/2)*100 AS avg_p,
-                   CASE fb.pick WHEN 'home' THEN fb.odd1 WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds
-            FROM fb JOIN bz USING (date, hkey, akey)
-        """)
-        for thr in (60, 65, 70, 75, 80):
-            results.append(evaluate(
-                con, f"2way-unanimous-bz avg_p>={thr}", "consensus2_bz",
-                f"fb_pick = bz_pick AND avg_p >= {thr}", args.split))
-    else:
-        if not has_bzzoiro_settled: print("skipped 2way-unanimous-bz: no bzzoiro data")
-
-    if has_fb and has_zb and has_sa:
-        con.execute("""
-            CREATE OR REPLACE TEMP VIEW consensus3_dense AS
-            WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
-                 zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled),
-                 sa AS (SELECT DISTINCT ON (date, hkey, akey) * FROM statarea_settled)
-            SELECT fb.date, fb.home, fb.away, fb.outcome,
-                   fb.pick AS fb_pick, zb.pick AS zb_pick, sa.pick AS sa_pick,
-                   fb.pmax AS fb_p, zb.pmax AS zb_p, sa.pmax AS sa_p,
-                   (fb.pmax + zb.pmax + sa.pmax)/3 AS avg_p,
-                   CASE fb.pick WHEN 'home' THEN fb.odd1
-                                WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds
-            FROM fb JOIN zb USING (date, hkey, akey)
-                    JOIN sa USING (date, hkey, akey)
-            WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
-        """)
-
-    if has_fb and has_sa:
-        sfb, ssa = scales["forebet_settled"], scales["statarea_settled"]
-        con.execute(f"""
-            CREATE OR REPLACE TEMP VIEW consensus_ou_dense AS
-            WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) *, 
-                               CASE WHEN p_over/{sfb} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou
-                        FROM forebet_settled),
-                 sa AS (SELECT DISTINCT ON (date, hkey, akey) *, 
-                               CASE WHEN p_o25/{ssa} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou
-                        FROM statarea_settled)
-            SELECT fb.date, fb.home, fb.away,
-                   CASE WHEN fb.hs + fb.gs >= 3 THEN 'over' ELSE 'under' END AS outcome,
-                   fb.pick_ou AS fb_pick_ou, sa.pick_ou AS sa_pick_ou, fb.pick_ou AS pick,
-                   CASE fb.pick_ou WHEN 'over' THEN fb.odd_over ELSE fb.odd_under END AS pick_odds,
-                   ((fb.p_over/{sfb} + sa.p_o25/{ssa})/2)*100 AS avg_p
-            FROM fb JOIN sa USING (date, hkey, akey)
-        """)
-        for thr in (60, 65, 70, 75):
-            results.append(evaluate(
-                con, f"ou25-unanimous-2way-sa avg_p>={thr}", "consensus_ou_dense",
-                f"fb_pick_ou = sa_pick_ou AND avg_p >= {thr}", args.split, market="ou_2.5"))
-
-    if has_fb and has_ss:
-        sfb, sss = scales["forebet_settled"], scales["scoutingstats_settled"]
-        con.execute(f"""
-            CREATE OR REPLACE TEMP VIEW consensus_btts_sparse AS
-            WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) *, 
-                               CASE WHEN p_gg/{sfb} >= 0.5 THEN 'yes' ELSE 'no' END AS pick_btts
-                        FROM forebet_settled),
-                 ss AS (SELECT DISTINCT ON (date, hkey, akey) *, 
-                               CASE WHEN p_gg/{sss} >= 0.5 THEN 'yes' ELSE 'no' END AS pick_btts
-                        FROM scoutingstats_settled)
-            SELECT fb.date,
-                   CASE WHEN fb.hs > 0 AND fb.gs > 0 THEN 'yes' ELSE 'no' END AS outcome,
-                   fb.pick_btts AS pick,
-                   CASE fb.pick_btts WHEN 'yes' THEN fb.odd_gg ELSE fb.odd_ng END AS pick_odds,
-                   ((fb.p_gg/{sfb} + ss.p_gg/{sss})/2)*100 AS avg_p
-            FROM fb JOIN ss USING (date, hkey, akey)
-        """)
-        for thr in (60, 65, 70):
-            results.append(evaluate(
-                con, f"btts-unanimous-2way-ss avg_p>={thr}", "consensus_btts_sparse",
-                f"avg_p >= {thr}", args.split, market="btts"))
-
-    source_lbs = _source_wilson_lbs(con, args.split)
-    if source_lbs:
-        print(f"\nSource Wilson LBs for weighting (training period < {args.split}):")
-        for src, mkts in sorted(source_lbs.items()):
-            for mkt, lb in sorted(mkts.items()):
-                print(f"  {src:20s} {mkt:8s}  LB={lb:.4f}")
-        _run_weighted_consensus(con, args.split, source_lbs, results, scales)
-    else:
-        print("Weighted consensus skipped: insufficient per-source training data.")
-
-    def fmt_stats(s):
-        roi = f"{s['roi']:+.1%}" if s["roi"] is not None else "  n/a"
-        return f"{s['n']:>6d} {s['hit']:.1%} {s['wilson_lb']:.3f} {roi}"
-
-    phase_a_shadow = [
-        r for r in results
-        if ("predictz-confirms" in r.get("rule", "") or "windrawwin-confirms" in r.get("rule", "")
-            or "soccervista-confirms" in r.get("rule", ""))
-        and r["train"]["n"] < GATES.min_overlap_n
-    ]
-    if phase_a_shadow:
-        print("\nPhase A shadow confirmation levers — evaluated but excluded from registry")
-        print(f"Reason: train n < min_overlap_n ({GATES.min_overlap_n}); capture-forward sources have no pre-split training yet.")
-        shdr = f"{'rule':48s} {'TRAIN n/hit/LB/roi':>26s}   {'VALID n/hit/LB/roi':>26s}  status"
-        print(shdr)
-        print("-" * len(shdr))
-        for r in phase_a_shadow:
-            print(f"{r['rule']:48s} {fmt_stats(r['train']):>26s}   {fmt_stats(r['valid']):>26s}  shadow")
-
-    hdr = f"{'rule':48s} {'TRAIN n/hit/LB/roi':>26s}   {'VALID n/hit/LB/roi':>26s}  status"
-    print(hdr)
-    print("-" * len(hdr))
-    
-    results = [r for r in results if r["train"]["n"] >= GATES.min_overlap_n]
-    results, deduped = dedupe_equivalent_certified_edges(results)
-    if deduped:
-        print(f"de-duped {len(deduped)} equivalent certified edge(s)")
-    
-    for r in results:
-        t, v = r["train"], r["valid"]
-        flag = "🏆" if r["status"] == "certified" else "  "
-        wtag = " [W]" if r.get("weighted") else ""
-        print(f"{r['rule']:48s} {fmt_stats(t):>26s}   {fmt_stats(v):>26s}  {flag} {r['status']}{wtag}")
-
-    payload = {"split": args.split, "gates": vars(GATES), "edges": results}
-    if ml_model_payload:
-        payload["ml_model"] = ml_model_payload
-
-    write_registry(payload)
-    _print_k_coverage_diagnostic()
+        from edgefactory.warehouse import connect
+        con = connect()  # Existing CSV views; no fetch, rebuild or operational write.
+    try:
+        payload = remine_current_sources(con, start=args.start, split=split, as_of=args.as_of)
+    finally:
+        con.close()
+    _atomic_registry_write(args.output, payload)
+    print(f"Post-Forebet re-mine: {args.start} <= train < {split} <= validation < {args.as_of}")
+    for source, coverage in payload["sources"].items():
+        print(f"  {source}: {coverage['status']} rows={coverage['rows']}")
+    for market, coverage in payload["markets"].items():
+        print(f"  {market}: usable_votes={coverage['usable_votes']} tested_rules={coverage['tested_rules']}")
+    print(f"Status: {payload['status']}")
+    print(f"Candidate tests: {len(payload['edges'])}; statistical gates passed: "
+          f"{sum(e['statistical_gates_passed'] for e in payload['edges'])}")
+    print(f"Report: {args.output}. Live registry/model unchanged; no serving approval inferred.")
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        # A compact runner receipt is available through check annotations even
+        # when artifact storage is inaccessible to the operator's client.
+        receipt = {"status": payload["status"], "start": args.start, "split": split,
+                   "as_of_exclusive": args.as_of, "source_rows": {s: c["rows"] for s, c in payload["sources"].items()},
+                   "markets": payload["markets"], "tested_rules": len(payload["edges"]),
+                   "statistical_gates_passed": sum(e["statistical_gates_passed"] for e in payload["edges"]),
+                   "activation": payload["activation"]}
+        print("::notice title=Post-Forebet re-mine::" + json.dumps(receipt, sort_keys=True))
 
 
 def _print_k_coverage_diagnostic() -> None:
