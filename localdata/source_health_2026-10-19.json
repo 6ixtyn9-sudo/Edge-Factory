@@ -60,7 +60,7 @@
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-19' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -158,12 +158,12 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 29148,
-        "market_unsupported": 11342
+        "fixture_key_miss": 41196,
+        "market_unsupported": 15847
       },
       "op_matched": 0,
-      "op_raw": 40490,
-      "op_usable": 40490,
+      "op_raw": 57043,
+      "op_usable": 57043,
       "reason": null,
       "status": "cache_only"
     },
