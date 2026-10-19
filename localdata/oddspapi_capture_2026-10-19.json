@@ -1,58 +1,7 @@
 {
-  "added": 14632,
-  "attempted": 10,
-  "attempted_fixtures": [
-    {
-      "away": "Persepolis FC",
-      "fixture_id": "id1000091574726248",
-      "home": "Mes Shahr-e Babak"
-    },
-    {
-      "away": "Kitchee",
-      "fixture_id": "id1000094773296472",
-      "home": "Lee Man FC"
-    },
-    {
-      "away": "Sportivo Ameliano",
-      "fixture_id": "id1002721675620214",
-      "home": "Cerro Porteno Asuncion"
-    },
-    {
-      "away": "Libertad Asuncion",
-      "fixture_id": "id1002721675620218",
-      "home": "Sportivo Trinidense"
-    },
-    {
-      "away": "The Cong - Viettel FC",
-      "fixture_id": "id1000062674090460",
-      "home": "Cong an TP Ho Chi Minh"
-    },
-    {
-      "away": "Mombasa United FC",
-      "fixture_id": "id1000164475653562",
-      "home": "Mara Sugar FC"
-    },
-    {
-      "away": "Life FC",
-      "fixture_id": "id1001925074714690",
-      "home": "Phnom Penh Crown FC"
-    },
-    {
-      "away": "Beijing WFC",
-      "fixture_id": "id1001926475107580",
-      "home": "Zhejiang Hangzhou"
-    },
-    {
-      "away": "Besiktas JK",
-      "fixture_id": "id1002991273436536",
-      "home": "Trabzonspor"
-    },
-    {
-      "away": "FC Ararat Yerevan 2",
-      "fixture_id": "id1000067275029762",
-      "home": "FC Ararat-Armenia 2"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-10-19",
     "keys": 3,
@@ -61,174 +10,16 @@
     "remaining_today": 0,
     "spent_today": 41
   },
-  "budget_deferred": 21,
-  "captured_at": "2026-10-19T07:28:00+00:00",
+  "captured_at": "2026-10-19T10:26:45+00:00",
   "date": "2026-10-19",
   "errors": [],
-  "fixtures": 194,
+  "fixtures": 0,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 335,
-  "markets": {
-    "1x2": 2502,
-    "ou_0.5": 522,
-    "ou_0.75": 94,
-    "ou_1": 160,
-    "ou_1.25": 171,
-    "ou_1.5": 920,
-    "ou_1.75": 234,
-    "ou_2": 342,
-    "ou_2.25": 612,
-    "ou_2.5": 1491,
-    "ou_2.75": 514,
-    "ou_3": 361,
-    "ou_3.25": 238,
-    "ou_3.5": 994,
-    "ou_3.75": 188,
-    "ou_4": 210,
-    "ou_4.25": 142,
-    "ou_4.5": 645,
-    "ou_4.75": 90,
-    "ou_5": 130,
-    "ou_5.25": 66,
-    "ou_5.5": 310,
-    "ou_5.75": 61,
-    "ou_6": 45,
-    "ou_6.25": 45,
-    "ou_6.5": 86,
-    "ou_6.75": 25,
-    "ou_7": 25,
-    "ou_7.25": 25,
-    "ou_7.5": 25,
-    "ou_7.75": 25,
-    "ou_8": 25,
-    "ou_8.25": 25,
-    "ou_8.5": 25,
-    "tt_away_0.5": 359,
-    "tt_away_0.75": 24,
-    "tt_away_1": 26,
-    "tt_away_1.25": 24,
-    "tt_away_1.5": 615,
-    "tt_away_1.75": 24,
-    "tt_away_2": 90,
-    "tt_away_2.25": 2,
-    "tt_away_2.5": 376,
-    "tt_away_2.75": 18,
-    "tt_away_3.5": 112,
-    "tt_away_4.5": 38,
-    "tt_away_5.5": 6,
-    "tt_home_0.5": 495,
-    "tt_home_0.75": 18,
-    "tt_home_1": 74,
-    "tt_home_1.25": 22,
-    "tt_home_1.5": 466,
-    "tt_home_1.75": 16,
-    "tt_home_2": 34,
-    "tt_home_2.5": 256,
-    "tt_home_2.75": 16,
-    "tt_home_3.5": 104,
-    "tt_home_4.5": 38,
-    "tt_home_5.5": 6
-  },
-  "markets_source": "cache",
-  "matched": 10,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 22,
-    "market_id_unknown": 2993,
-    "market_inactive": 1219,
-    "market_unsupported_clean_sheet": 144,
-    "market_unsupported_corners": 394,
-    "market_unsupported_correct_score": 1076,
-    "market_unsupported_double_chance": 870,
-    "market_unsupported_draw_no_bet": 531,
-    "market_unsupported_handicap": 4427,
-    "market_unsupported_odd_even": 951,
-    "market_unsupported_period": 10964,
-    "market_unsupported_win_to_nil": 275,
-    "outcome_inactive": 1127,
-    "unresolved_btts": 1045
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 22,
-      "market_inactive": 1219,
-      "outcome_inactive": 1127
-    },
-    "loss_or_diagnosis": {
-      "market_id_unknown": 2993,
-      "market_unsupported_clean_sheet": 144,
-      "market_unsupported_corners": 394,
-      "market_unsupported_correct_score": 1076,
-      "market_unsupported_double_chance": 870,
-      "market_unsupported_draw_no_bet": 531,
-      "market_unsupported_handicap": 4427,
-      "market_unsupported_odd_even": 951,
-      "market_unsupported_period": 10964,
-      "market_unsupported_win_to_nil": 275,
-      "unresolved_btts": 1045
-    }
-  },
-  "pending_fixtures": 31,
-  "quoted_fixtures": [
-    {
-      "away": "Persepolis FC",
-      "fixture_id": "id1000091574726248",
-      "home": "Mes Shahr-e Babak"
-    },
-    {
-      "away": "Kitchee",
-      "fixture_id": "id1000094773296472",
-      "home": "Lee Man FC"
-    },
-    {
-      "away": "Sportivo Ameliano",
-      "fixture_id": "id1002721675620214",
-      "home": "Cerro Porteno Asuncion"
-    },
-    {
-      "away": "Libertad Asuncion",
-      "fixture_id": "id1002721675620218",
-      "home": "Sportivo Trinidense"
-    },
-    {
-      "away": "The Cong - Viettel FC",
-      "fixture_id": "id1000062674090460",
-      "home": "Cong an TP Ho Chi Minh"
-    },
-    {
-      "away": "Mombasa United FC",
-      "fixture_id": "id1000164475653562",
-      "home": "Mara Sugar FC"
-    },
-    {
-      "away": "Life FC",
-      "fixture_id": "id1001925074714690",
-      "home": "Phnom Penh Crown FC"
-    },
-    {
-      "away": "Beijing WFC",
-      "fixture_id": "id1001926475107580",
-      "home": "Zhejiang Hangzhou"
-    },
-    {
-      "away": "Besiktas JK",
-      "fixture_id": "id1002991273436536",
-      "home": "Trabzonspor"
-    },
-    {
-      "away": "FC Ararat Yerevan 2",
-      "fixture_id": "id1000067275029762",
-      "home": "FC Ararat-Armenia 2"
-    }
-  ],
-  "rows": 14632,
+  "markets": {},
+  "matched": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 2,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 1,
-  "slate_provider_overlap_fixtures": 2,
-  "slate_unmatched_fixtures": [],
   "source": "oddspapi_odds",
   "status": "budget"
 }
