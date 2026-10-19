@@ -34,15 +34,16 @@ Ledger files (gitignored with the rest of ``localdata/``; never commit):
     localdata/scored_candidate_shadow_settlement_YYYY-MM-DD.jsonl  (optional,
         written only by the report CLI's explicit --write-settlement flag)
 
-Event types in the main file: ``scored_candidate``, ``candidate_status``,
-``run_summary``.  Candidate events are routed to the file of their OWN
+Event types in the main file: ``scored_candidate``, ``scored_fixture``,
+``fixture_decision``, ``candidate_status``, ``run_summary``. Full source-key
+``fixture_decision`` records are diagnostic only, never settlement/ROI inputs.  Candidate events are routed to the file of their OWN
 trading date so a status appended by the ticket builder always lands next to
 the scored event it describes.
 
 "scored=" reconciliation (one honest definition, documented):  the pipeline
 log line ``coverage: scored=N picks=M`` in scripts/picks_today.py uses
 ``ml_scored_day or n_up`` — a FIXTURE-level count (ML-model-scored fixtures,
-falling back to upcoming fixtures with >=2 sources).  Fixtures scored but
+falling back to the complete source fixture-key union).  Fixtures scored but
 never emitted as a pick candidate carry no market/selection/price and
 therefore cannot become candidate records.  The shadow ledger persists the
 CANDIDATE-level scored universe: every emitted scored candidate row (one per
@@ -59,7 +60,7 @@ import math
 import os
 import sys
 import uuid
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, Sequence
@@ -75,8 +76,19 @@ from edgefactory.util import (
     strip_squad_markers,
 )
 
+# Investigation hints, NOT selection rules or automatic promotions.
+ATTRITION_INVESTIGATIONS = {
+    "insufficient_probability_sources": "Check source presence, missing/invalid probability fields and exact team-key joins.",
+    "schedule_unstable": "Compare source kickoff dates; repair stale schedules/identity rather than bypass the guard.",
+    "voter_disagreement": "Inspect individual votes; evaluate alternate-market evidence separately, not as an automatic majority override.",
+    "no_consensus_rule_for_source_count": "Check active certified rule slots and electorate coverage.",
+    "competition_requires_more_sources": "Check competition classification and required voter count.",
+    "below_consensus_threshold": "Inspect base/adjusted threshold and shortfall; validate any policy change before lowering it.",
+}
+
 SCHEMA_VERSION = 1
 
+EVENT_FIXTURE_DECISION = "fixture_decision"
 EVENT_SCORED = "scored_candidate"
 EVENT_SCORED_FIXTURE = "scored_fixture"
 EVENT_STATUS = "candidate_status"
@@ -776,8 +788,9 @@ def scored_fixture_event(entry: Mapping[str, Any], *, trading_date: str,
         "ml_majority_pick": entry.get("ml_majority_pick"),
         "sources_used": entry.get("sources_used"),
         "candidate_materialized": bool(candidate_materialized),
-        "not_materialized_reason": (None if candidate_materialized
-                                    else "no_candidate_emitted"),
+        "decision_diagnostics": entry.get("decision_diagnostics"),
+        "not_materialized_reason": (None if candidate_materialized else
+            (entry.get("decision_diagnostics") or {}).get("primary_reason") or "no_candidate_emitted"),
         **verdict,
     }
 
@@ -788,6 +801,7 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
                        pre_collapse_rows: Sequence[Mapping[str, Any]] | None = None,
                        pipeline_scored_log: int | None = None,
                        scored_fixtures: Sequence[Mapping[str, Any]] | None = None,
+                       generation_rejections: Sequence[Mapping[str, Any]] = (),
                        ml_scored_day: int | None = None,
                        n_up: int | None = None,
                        price_supported_markets: Iterable[str] = (),
@@ -815,6 +829,13 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
     ``scored_fixture`` event so a fixture scored but never materialized into
     a candidate still has a durable record.
 
+    Full source-key decisions additionally persist as diagnostic-only
+    ``fixture_decision`` events, WITHOUT changing the ML-or-upcoming scored
+    reconciliation. ``generation_rejections`` preserves actual pre-match and
+    ML-contract failures as scored candidates/statuses (previously lost).
+    Their input rows never re-enter selection. All additions are schema-1
+    compatible; older missing reasons remain explicitly unavailable.
+
     Fail-soft: every exception is swallowed and reported on stderr.
     """
     if not _enabled():
@@ -831,8 +852,14 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
         for row in slate_rows:
             slate_ids.add(candidate_id(row, row_trading_date(row, day)))
 
+        rejected = {candidate_id(r["row"], row_trading_date(r["row"], day)): r
+                    for r in generation_rejections}
+        # Pre-match/contract rejections previously vanished before this hook.
+        # Persist them with actual predicates, never send them back to selection.
+        known_ids = {candidate_id(r, row_trading_date(r, day)) for r in scored_rows}
+        all_scored = list(scored_rows) + [r["row"] for cid, r in rejected.items() if cid not in known_ids]
         n_scored = 0
-        for row in scored_rows:
+        for row in all_scored:
             tdate = row_trading_date(row, day)
             cid = candidate_id(row, tdate)
             events.append(scored_event(row, trading_date=tdate, run_id=rid,
@@ -844,6 +871,14 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
                     stage=STAGE_PICKS_BUILD, selected_as_pick=True,
                     selected_on_ticket=False,
                     final_ticket_status="pending_ticket_build"))
+            elif cid in rejected:
+                reject = rejected[cid]
+                events.append(status_event(
+                    candidate_id_=cid, trading_date=tdate, run_id=rid,
+                    stage=STAGE_PICKS_BUILD, selected_as_pick=False,
+                    selected_on_ticket=False, final_ticket_status="not_selected",
+                    drop_stage=reject["stage"], rejection_reasons=[{
+                        "code": reject["reason"], "detail": dict(reject.get("evidence") or {})}]))
             elif cid in pre_collapse_ids:
                 events.append(status_event(
                     candidate_id_=cid, trading_date=tdate, run_id=rid,
@@ -864,14 +899,14 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
                     final_ticket_status="not_selected",
                     drop_stage="bucket_assignment",
                     rejection_reasons=[{
-                        "code": "odds_floor",
-                        "detail": "bucket_pick returned None (the loop's only "
-                                  "drop: CAUTION bucket below CAUTION_MIN_ODDS)",
+                        "code": row.get("bucket_drop_reason") or "odds_floor",
+                        "detail": "bucket_pick returned None: CAUTION below its odds floor",
+                        "observed_odds": row.get("odds"),
                     }]))
         # Candidate fixture ids (for materialization) use the candidate's
         # own trading date — the same date basis the fixture entries carry.
         candidate_fixture_ids = set()
-        for row in scored_rows:
+        for row in all_scored:
             tdate = row_trading_date(row, day)
             candidate_fixture_ids.add(fixture_id(
                 {"home": row.get("home"), "away": row.get("away")}, tdate))
@@ -893,6 +928,22 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
                 entry, trading_date=tdate, run_id=rid,
                 stage=STAGE_PICKS_BUILD, build_day=day,
                 candidate_materialized=fid in candidate_fixture_ids))
+
+        # Full source-key union, SEPARATE from the ML-or-upcoming scored
+        # universe. No price/selection/settlement semantics: diagnostic only.
+        decision_events = []
+        for entry in (scored_fixtures or ()):
+            if entry.get("kind") != "upcoming_fixture" or not entry.get("decision_diagnostics"):
+                continue
+            tdate = str(entry.get("trading_date") or day)[:10]
+            event = {"schema_version": SCHEMA_VERSION, "event_type": EVENT_FIXTURE_DECISION,
+                     "run_id": rid, "stage": STAGE_PICKS_BUILD, "trading_date": tdate,
+                     "build_day": str(day)[:10], "fixture": f"{entry.get('home')} vs {entry.get('away')}",
+                     "home_team": entry.get("home"), "away_team": entry.get("away"),
+                     "league": entry.get("league"), "kickoff_raw": entry.get("kickoff"),
+                     "decision_diagnostics": entry["decision_diagnostics"]}
+            decision_events.append(event)
+        events.extend(decision_events)
 
         # Write-time identity fail-close: if the SAME legacy fixture_id is
         # about to be written for more than one distinct occurrence (or for
@@ -940,6 +991,9 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
             "pipeline_scored_log": pipeline_scored_log,
             "pipeline_ml_scored_day": ml_scored_day,
             "pipeline_n_up": n_up,
+            "source_decision_records_scan": len(decision_events),
+            "source_decision_records_target_day": sum(e["trading_date"] == str(day)[:10]
+                                                       for e in decision_events),
             "shadow_scored_fixtures": (len(fixture_entries)
                                        if scored_fixtures is not None else None),
             "shadow_fixture_ml_entries": (n_ml_entries
@@ -1386,13 +1440,16 @@ def build_report(day: str, *, root: Path | None = None,
 
     scored_by_cid: dict[str, dict[str, Any]] = {}
     fixture_events: list[dict[str, Any]] = []
+    decision_events: list[dict[str, Any]] = []
     fixture_entry_counts_by_run: dict[str, int] = defaultdict(int)
     status_by_run: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
     picks_status_by_cid: dict[str, dict[str, Any]] = {}
     run_summaries: list[dict[str, Any]] = []
     for e in events:
         etype = e.get("event_type")
-        if etype == EVENT_SCORED_FIXTURE and str(e.get("trading_date")) == day10:
+        if etype == EVENT_FIXTURE_DECISION and str(e.get("trading_date")) == day10:
+            decision_events.append(dict(e))
+        elif etype == EVENT_SCORED_FIXTURE and str(e.get("trading_date")) == day10:
             # In-memory identity backfill for pre-v2 records; persisted
             # ledgers are never rewritten.
             fixture_events.append(ensure_fixture_identity(e, day10))
@@ -1521,6 +1578,52 @@ def build_report(day: str, *, root: Path | None = None,
         cands_by_fid[_cand_fid(c)].append(c)
 
     picks_run_id = str((picks_summary or {}).get("run_id") or "")
+    # Never borrow reasons from an earlier run to explain a later build.
+    source_decisions = [e for e in decision_events if str(e.get("run_id")) == picks_run_id]
+    reason_counts = Counter()
+    route_counts = {route: Counter() for route in ("consensus", "ml", "ml_fade")}
+    examples = defaultdict(list)
+    source_coverage = defaultdict(Counter)
+    for e in source_decisions:
+        diagnostic = e["decision_diagnostics"]
+        reason = diagnostic.get("primary_reason") or "unknown_generation_failure"
+        reason_counts[reason] += 1
+        for vote in diagnostic.get("source_votes") or []:
+            coverage = source_coverage[str(vote.get("source") or "unknown")]
+            coverage["present"] += bool(vote.get("present"))
+            coverage["complete_probabilities"] += bool(vote.get("probabilities_available"))
+            coverage["incomplete_probability_rows"] += bool(vote.get("present") and not vote.get("probabilities_available"))
+        for route in route_counts:
+            state = diagnostic.get(route) or {}
+            route_counts[route][state.get("reason") or state.get("status") or "unknown"] += 1
+        if len(examples[reason]) < 3:
+            examples[reason].append(e)
+    operational_counts = Counter()
+    for e in events:
+        if e.get("event_type") == EVENT_STATUS and str(e.get("run_id")) == picks_run_id:
+            for reason in e.get("rejection_reasons") or []:
+                operational_counts[f"{e.get('drop_stage')}:{reason.get('code')}"] += 1
+    expected = (picks_summary or {}).get("source_decision_records_target_day")
+    source_attrition = {
+        "available": bool(source_decisions) or expected == 0 and
+            (picks_summary or {}).get("pipeline_n_up") == 0,
+        "run_id": picks_run_id or None,
+        "scan_source_keys": (picks_summary or {}).get("pipeline_n_up"),
+        "expected_target_day_records": expected,
+        "observed_target_day_records": len(source_decisions),
+        "reconciliation_ok": len(source_decisions) == expected if expected is not None else None,
+        "reason_counts": dict(sorted(reason_counts.items())),
+        "source_probability_coverage": {s: dict(c) for s, c in sorted(source_coverage.items())},
+        "route_reason_counts": {r: dict(sorted(c.items())) for r, c in route_counts.items()},
+        "operational_candidate_rejections": dict(sorted(operational_counts.items())),
+        "examples_by_reason": dict(examples),
+        "investigations": {r: ATTRITION_INVESTIGATIONS[r] for r in reason_counts
+                           if r in ATTRITION_INVESTIGATIONS},
+        "note": "Source-key observations, NOT unique bettable games or the ML-scored universe. "
+                "Primary reason is the first consensus failure only when no 1X2 route emitted a candidate. "
+                "ML/fade routes are independent; binary generators and enhancements are not this universe; operational counts are candidates, not source keys. "
+                "Historical missing reasons are unavailable, never reconstructed from today's inputs.",
+    }
     selected_events = [f for f in fixture_events
                        if not picks_run_id
                        or str(f.get("run_id")) == picks_run_id]
@@ -1996,6 +2099,8 @@ def build_report(day: str, *, root: Path | None = None,
                 "not_execution_safe": agg_of(lambda c: not is_exec_safe(c)),
             },
         },
+        "source_attrition": source_attrition,
+        "fixture_decisions": source_decisions,
         "fixture_funnel": fixture_funnel,
         "identity_safety": identity_safety,
         "shadow_gradeability": shadow_gradeability,
@@ -2103,6 +2208,35 @@ def render_report(report: Mapping[str, Any]) -> str:
         "  <- never execution-safe; graded below at captured odds when the scorer saw a price",
         "",
     ]
+    attrition = report.get("source_attrition") or {}
+    lines += ["1X2 SOURCE-KEY ATTRITION (separate from scored universe; latest picks build):",
+              f"  picks_run: {attrition.get('run_id') or 'none'}",
+              f"  scan source keys: {attrition.get('scan_source_keys', 'n/a')}",
+              f"  target-day decision records: {attrition.get('observed_target_day_records', 0)}"
+              f" / {attrition.get('expected_target_day_records')}"
+              f" (reconciled={attrition.get('reconciliation_ok')})"]
+    if not attrition.get("available"):
+        lines.append("  Reasons unavailable: this historical run predates detailed decision logging.")
+    for reason, count in (attrition.get("reason_counts") or {}).items():
+        lines.append(f"  {reason}: {count}")
+        if reason in (attrition.get("investigations") or {}):
+            lines.append(f"    investigate: {attrition['investigations'][reason]}")
+    for source, coverage in (attrition.get("source_probability_coverage") or {}).items():
+        lines.append(f"  source {source}: present={coverage.get('present', 0)} "
+                     f"complete_probabilities={coverage.get('complete_probabilities', 0)} "
+                     f"incomplete_rows={coverage.get('incomplete_probability_rows', 0)}")
+    for route, counts in (attrition.get("route_reason_counts") or {}).items():
+        lines.append(f"  {route} route (independent): {json.dumps(counts, sort_keys=True)}")
+    for reason, count in (attrition.get("operational_candidate_rejections") or {}).items():
+        lines.append(f"  operational candidate {reason}: {count}")
+    for reason, examples in (attrition.get("examples_by_reason") or {}).items():
+        if reason == "candidate_emitted":
+            continue
+        for example in examples:
+            diagnostic = example["decision_diagnostics"]
+            lines.append(f"    {reason}: {example['fixture']} | "
+                         f"{json.dumps(diagnostic.get('consensus'), sort_keys=True)}")
+    lines += ["  Full per-source probabilities, votes and rule evidence: --json report.", ""]
     if ff.get("fixture_id_collision_note"):
         lines.append("  " + str(ff["fixture_id_collision_note"]))
         lines.append("")

@@ -11055,3 +11055,97 @@ receipts remain historical to7355957. `audit_enh_market_competition.py` now acce
 requiring every input hash to match. No merge, deployment, provider spending or
 operational-data changes. Full follow-up suite3275passed147.41s after final Python
 changes; subsequent new report/runbook docs checked separately (receipt has count).
+
+### Game-attrition diagnosis — 2026-10-19 (read-only)
+
+User asked why so many games are discarded. Inspected latest local persisted
+Oct19 build 13:27UTC, SHA7ed725e3, using EXISTING scored_candidate_shadow_report
+and actual threshold loaders; no fetch/run dispatch, settings or production edits.
+Raw union858 keys is not858 bettable games. ML-scored42, materialized1(Bursaspor),
+41 generic no_candidate_emitted. Merged daily archive2 unique fixtures retains
+previous Mes Shahr-e Babak–Persepolis; frozen main slip2legs/1acca. Three candidate
+IDs in aggregate shadow report include two Bursaspor electorate variants, not
+three games. Do not compare these unlike populations as one simple funnel.
+
+Main bottleneck precedes enhancements: >=2 full probability sources, unanimity
+of ALL participating voters, consensusavg70(two)/65(3+), extra cup/friendly gates.
+Serving ML model exists but NO certified ml-meta/fade emission rules; direct
+OU/BTTS loaders also returnNone. Enhancements only run on surviving parent picks;
+broader market eligibility does NOT broaden this upstream fixture universe.
+858->42 cannot be entirely attributed to missing second source: ML branch also
+requires a usable legacy-source input. Exact41 gate split unavailable: logger
+retains only no_candidate_emitted, not individual votes/first failed predicate.
+GH log download failed via inaccessible results host (not authentication).
+Next observability change should enrich EXISTING scored-fixture events; no new
+shadow architecture or automatic lowering of thresholds authorized by this query.
+
+Pricing also constrained:18/42 no shadow price;24 Zulubet audit prices have no
+proven kickoff, NOT necessarily execution-safe books. OddsPapi latest daily
+budget0remaining, TheOddsAPI no rows/Iran unsupported/Bursa failed-attempt6h
+cooldown, Bzz odds403, Sportytraderchallenge, Betminer404, FP500. Do not count
+monthly raw quote join misses as distinct discarded games. Existing two parents
+DID get usable prices and both are on the slip.
+
+IMPORTANT CORRECTION to preceding replay note: SKIPPED_VETO is ticket-eligible.
+`[SKIPPED_VETO parent]` is informational and legs ARE staked by the existing
+builder; auto_tickets.py4664 explicitly says so. It is NOT a parent-veto/paper
+placement block. Prior implication corrected in readable replay report; numerical
+receipts remain historical. Lack of independent bookmaker receipts is separate.
+
+Recorded slips predate PR100 merge16:14UTC;16:00UTC running workflow also has
+pre-merge8abefc45 HEAD. No claim ON-default has run yet. Archived logs still show
+legacy under line gates and noU4.5. Market exclusions on2parentrows:31line/26missing
+cohort/7unpriced/4belowfloor/6eligiblebutbeaten/2chosen — NOT74discarded games.
+Report docs/operator/audits/GAME-ATTRITION-2026-10-19.md, compact machine receipt
+adjacent game-attrition-2026-10-19.json. Production/operational data untouched.
+
+### Implemented requested attrition logging — 2026-10-19
+
+User authorized adding logs so discarded games can be diagnosed/fixed. Implemented
+in the EXISTING picks/scored-candidate ledger/report; NO betting policy changes.
+Current session branch is arena/bea981ce-edge-factory (active), based on9e52ed2;
+do not push to the earlier session's merged branch/PR100.
+
+`eval_1x2` now logs decision-time source presence/names/league/kickoffs, complete
+probability triples, missing/invalid fields and actual votes. Real gate branches
+stamp insufficient_probability_sources, schedule_unstable, voter_disagreement,
+no_consensus_rule_for_source_count, competition_requires_more_sources,
+below_consensus_threshold, or candidate_emitted. Base/competition-adjusted
+threshold, required/actual voter count, average/shortfall and selected rule
+retained. Registry qualifier/electorate mismatches explicitly say relabel, not
+reject. ML/fade have separate rule availability/qualification/draw-inverse
+reasons; an ML emission is NOT falsely discarded just because consensus fails.
+
+Full raw source-key union persists as additive `fixture_decision` events in the
+existing JSONL, separate from existing ML-or-upcoming `scored_fixture` counter.
+No selection/price/settlement/ROI semantics attached to diagnostic-only events.
+The existing report shows source-key counts/first consensus failure when no1X2
+route emitted, source probability coverage, independent routes, 3examples/reason,
+full JSON evidence and investigation hints. Scope1X2 is explicit: rawkeys aren't
+unique bettable games; direct binary/enhancement markets have their existing logs.
+No new shadow lane, provider requests or model fitting. Existing ledger switch
+and fail-soft IO preserved. Normal job stderr prints `fixture attrition` totals.
+
+Pre-match and actually removed ML-contract candidates no longer vanish before
+the existing ledger hook: diagnostic copies get scored/status records with true
+stage/reason/as_of/minlead/kickoff fields, NEVER re-enter picks. Bucket drops
+retain actual bucket_drop_reason and observed odds. Existing collapse/ticket
+reasons unchanged. Date routing distinguishes scan-wide rawkeys vs target-day
+expected records, and report never borrows earlier-run reasons for latest builds.
+Historical no_candidate_emitted rows remain unavailable, not retrospectively
+invented. Earlier game-attrition JSON hashes describe PRE-instrumentation state.
+
+Validation:23new tests; 300seeded cases whole pick dicts/veto/counts/collector rows
+identical to immutable9e52ed2 selector. Full suite3301passed153.63s. Four in-memory
+mutations caught (generic gate reason, omitted raw-union events, lost pre-match
+rejections, mixed-run explanations), source files untouched by probes. Six-key
+SYNTHETIC end-to-end example reconciles6raw/4ML/2emitted/1pre-match-rejected/1kept.
+Actual historical Oct19 report still correctly shows reasons unavailable; no
+live rerun dispatched. Optional older env0 verifier could not rerun because its
+8abefc45 baseline lacks the source path in this checkout; don't claim a fresh
+200-case receipt from it. Current immutable9e52 300-case logging parity succeeded.
+
+Guide: docs/operator/GAME-ATTRITION-LOGGING.md; numerical/source-hash receipt:
+docs/operator/audits/game-attrition-logging-validation-2026-10-19.json. No localdata,
+workflow, price floor, stake, freeze, lane setting or settlement edits. Logs become
+available on runs executing deployed code, not on already-frozen historical slips.
