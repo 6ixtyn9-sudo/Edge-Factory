@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 2,
-  "captured_at": "2026-10-19T16:28:44+00:00",
+  "captured_at": "2026-10-19T19:27:37+00:00",
   "date": "2026-10-19",
   "due_reasons": {},
   "errors": [],
@@ -13,12 +13,12 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "retry_cooldown": 1,
-    "too_close_for_first_capture": 1
+    "kickoff_already_passed": 1,
+    "retry_cooldown": 1
   },
   "skipped": [
     "Mes Shahr-e Babak|Persepolis FC (retry cooldown (6h after failed attempt))",
-    "Bursaspor|Pendikspor (too close to kickoff for first capture)"
+    "Bursaspor|Pendikspor (kickoff already passed)"
   ],
   "source": "theoddsapi",
   "status": "not_due",
