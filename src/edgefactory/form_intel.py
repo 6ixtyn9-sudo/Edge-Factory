@@ -37,6 +37,7 @@ from __future__ import annotations
 import csv
 import gzip
 import json
+import re
 from bisect import bisect_left
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -44,6 +45,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from .identity import (canonical_league_key, source_team_key, squad_marker_mismatch,
+                       truncation_key_map,
                        squad_markers)
 from .util import norm_team
 
@@ -137,12 +139,19 @@ class ResultsArchive:
     rows: list[dict]
     by_team: dict[str, list[dict]] = field(default_factory=dict)
     by_pair: dict[tuple[str, str], list[dict]] = field(default_factory=dict)
+    # Truncated archive spellings -> full key (identity.truncation_key_map).
+    # Applied on every lookup so a cut name joins the club it was cut from.
+    trunc: dict[str, str] = field(default_factory=dict)
+
+    def _key(self, name: object) -> str:
+        key = source_team_key(name)
+        return self.trunc.get(key, key)
 
     def __post_init__(self) -> None:
         team_idx: dict[str, list[dict]] = defaultdict(list)
         pair_idx: dict[tuple[str, str], list[dict]] = defaultdict(list)
         for row in self.rows:
-            hk, ak = source_team_key(row["home"]), source_team_key(row["away"])
+            hk, ak = self._key(row["home"]), self._key(row["away"])
             team_idx[hk].append(row)
             team_idx[ak].append(row)
             pair_idx[tuple(sorted((hk, ak)))].append(row)
@@ -166,13 +175,13 @@ class ResultsArchive:
         ("FC Barcelona" and "Barcelona SC" share a key), and a bucket that
         wrong is polluted with or without the collapse.
         """
-        key = source_team_key(team)
+        key = self._key(team)
         out: list[dict] = []
         seen: set[tuple[str, int, int]] = set()
         for row in self.by_team.get(key, []):
-            if not _team_side_matches(row, key, team):
+            if not _team_side_matches(row, key, team, key_of=self._key):
                 continue
-            scored, conceded = _own_goals(row, key)
+            scored, conceded = _own_goals(row, key, key_of=self._key)
             signature = (row["date"], scored, conceded)
             if signature in seen:
                 continue
@@ -182,9 +191,9 @@ class ResultsArchive:
 
     def squad_excluded(self, team: str) -> list[dict]:
         """Rows under the same canonical key that the squad guard keeps out."""
-        key = source_team_key(team)
+        key = self._key(team)
         return [r for r in self.by_team.get(key, [])
-                if not _team_side_matches(r, key, team)]
+                if not _team_side_matches(r, key, team, key_of=self._key)]
 
     def prior_rows(self, team: str, as_of: str) -> list[dict]:
         """Every row for the team dated strictly before ``as_of``."""
@@ -194,33 +203,35 @@ class ResultsArchive:
 
     def pair_rows(self, home: str, away: str, as_of: str) -> list[dict]:
         """Meetings of the pair (either orientation) dated before ``as_of``."""
-        hk, ak = source_team_key(home), source_team_key(away)
+        hk, ak = self._key(home), self._key(away)
         rows = [r for r in self.by_pair.get(tuple(sorted((hk, ak))), [])
-                if _pair_matches(r, hk, ak, home, away)]
+                if _pair_matches(r, hk, ak, home, away, key_of=self._key)]
         days = [r["date"] for r in rows]
         return rows[:bisect_left(days, as_of)]
 
 
-def _own_goals(row: Mapping[str, Any], key: str) -> tuple[int, int]:
+def _own_goals(row: Mapping[str, Any], key: str, *,
+               key_of=source_team_key) -> tuple[int, int]:
     """The row's scoreline from ``key``'s side: scored, then conceded."""
-    if source_team_key(row["home"]) == key:
+    if key_of(row["home"]) == key:
         return int(row["hs"]), int(row["gs"])
     return int(row["gs"]), int(row["hs"])
 
 
-def _team_side_matches(row: Mapping[str, Any], key: str, team: object) -> bool:
-    if source_team_key(row["home"]) == key:
+def _team_side_matches(row: Mapping[str, Any], key: str, team: object, *,
+                       key_of=source_team_key) -> bool:
+    if key_of(row["home"]) == key:
         return _same_squad(row["home"], team)
-    if source_team_key(row["away"]) == key:
+    if key_of(row["away"]) == key:
         return _same_squad(row["away"], team)
     return False
 
 
 def _pair_matches(row: Mapping[str, Any], hk: str, ak: str,
-                  home: object, away: object) -> bool:
-    if source_team_key(row["home"]) == hk and source_team_key(row["away"]) == ak:
+                  home: object, away: object, *, key_of=source_team_key) -> bool:
+    if key_of(row["home"]) == hk and key_of(row["away"]) == ak:
         return _same_squad(row["home"], home) and _same_squad(row["away"], away)
-    if source_team_key(row["home"]) == ak and source_team_key(row["away"]) == hk:
+    if key_of(row["home"]) == ak and key_of(row["away"]) == hk:
         return _same_squad(row["home"], away) and _same_squad(row["away"], home)
     return False
 
@@ -252,7 +263,9 @@ def load_archive(localdata: str | Path) -> ResultsArchive:
             row = _settled_row(raw)
             if row is not None:
                 rows.setdefault(_row_key(row), row)
-    return ResultsArchive(sorted(rows.values(), key=_row_key))
+    all_rows = sorted(rows.values(), key=_row_key)
+    names = [r["home"] for r in all_rows] + [r["away"] for r in all_rows]
+    return ResultsArchive(all_rows, trunc=truncation_key_map(names))
 
 
 # -- per-team features -----------------------------------------------------
@@ -275,8 +288,8 @@ def _laplace(hits: int, n: int) -> float | None:
     return (hits + 1) / (n + 2)
 
 
-def _match_view(row: Mapping[str, Any], key: str) -> dict:
-    home_key = source_team_key(row["home"])
+def _match_view(row: Mapping[str, Any], key: str, *, key_of=source_team_key) -> dict:
+    home_key = key_of(row["home"])
     venue = "home" if home_key == key else "away"
     scored, conceded = (row["hs"], row["gs"]) if venue == "home" else (row["gs"], row["hs"])
     return {"date": row["date"], "opponent": row["away"] if venue == "home" else row["home"],
@@ -286,14 +299,14 @@ def _match_view(row: Mapping[str, Any], key: str) -> dict:
 
 def team_form(archive: ResultsArchive, team: str, as_of: str, *, window: int = 10) -> dict:
     """One team's record over its last ``window`` matches before ``as_of``."""
-    key = source_team_key(team)
+    key = archive._key(team)
     all_prior = archive.prior_rows(team, as_of)
     prior = all_prior[-window:]
     wins = draws = losses = gf = ga = 0
     over15 = over25 = over35 = btts = 0
     home_n = home_pts = away_n = away_pts = 0
     for row in prior:
-        view = _match_view(row, key)
+        view = _match_view(row, key, key_of=archive._key)
         if view["venue"] == "home":
             home_n += 1
         else:
@@ -332,20 +345,20 @@ def team_form(archive: ResultsArchive, team: str, as_of: str, *, window: int = 1
         "btts_hits": btts,
         "home_split": {"n": home_n, "points": home_pts},
         "away_split": {"n": away_n, "points": away_pts},
-        "matches": [_match_view(row, key) for row in prior],
+        "matches": [_match_view(row, key, key_of=archive._key) for row in prior],
     }
 
 
 def pair_history(archive: ResultsArchive, home: str, away: str, as_of: str, *,
                  window: int = 10) -> dict:
     """The pair's meetings before ``as_of``, read from the fixture's home side."""
-    hk = source_team_key(home)
+    hk = archive._key(home)
     prior = archive.pair_rows(home, away, as_of)[-window:]
     home_wins = draws = away_wins = 0
     gf_home = gf_away = 0
     over15 = over25 = over35 = btts = 0
     for row in prior:
-        view = _match_view(row, hk)
+        view = _match_view(row, hk, key_of=archive._key)
         gf_home += view["scored"]
         gf_away += view["conceded"]
         if view["scored"] > view["conceded"]:
@@ -702,3 +715,117 @@ def paired_bootstrap_delta(pairs_a: Sequence[tuple[float, bool]],
     hi_i = min(resamples - 1, int((1 + confidence) / 2 * resamples))
     return {"n": n, "delta": point, "lo": deltas[lo_i], "hi": deltas[hi_i],
             "metric": metric, "resamples": resamples, "seed": seed}
+
+
+# -- every market the archive can score (2026-10-21) -----------------------
+#
+# The original estimator above answers one market (over/under a match total
+# plus BTTS, via MARKET_OUTCOMES). The enhancement lane prices team totals,
+# goal ranges and BTTS, and the main lane prices 1x2. This section answers all
+# of them from the same archive with the same rules: a Laplace-smoothed rate per
+# component (each team's own history, plus head-to-head once there are
+# H2H_MIN_MEETINGS meetings), equal weight across components, nothing returned
+# when either team has thin history. Selections are plain strings:
+#   home_win | draw | away_win                 (1x2)
+#   over_2.5 | under_2.5                       (match total, half lines only)
+#   btts_yes | btts_no
+#   home_over_0.5 | away_under_3.5 | ...       (team goals, half lines only)
+# Whole-line totals (push possible) are refused rather than guessed.
+
+_SELECTION_RE = re.compile(r"^(?:(home|away)_)?(over|under)_(\d+\.5)$")
+
+
+def parse_selection(selection: str) -> tuple:
+    """Parse a selection string; raises ValueError on anything unsupported."""
+    if selection in ("home_win", "draw", "away_win"):
+        return ("1x2", selection)
+    if selection in ("btts_yes", "btts_no"):
+        return ("btts", selection)
+    m = _SELECTION_RE.match(selection)
+    if not m:
+        raise ValueError(f"unsupported selection: {selection!r}")
+    side, direction, line = m.group(1), m.group(2), float(m.group(3))
+    return ("team" if side else "match", side, direction, line)
+
+
+def _component(rows: Sequence[Mapping[str, Any]], predicate, key_of_team, key_of) -> tuple[int, int]:
+    hits = n = 0
+    for row in rows:
+        verdict = predicate(row, key_of_team, key_of)
+        if verdict is None:
+            continue
+        n += 1
+        hits += 1 if verdict else 0
+    return hits, n
+
+
+def selection_form_probability(archive: "ResultsArchive", selection: str, home: str,
+                               away: str, as_of: str, *, window: int = 10) -> dict:
+    """Form estimate for one selection on one fixture, from archive results only."""
+    spec = parse_selection(selection)
+    kind = spec[0]
+    hk, ak = archive._key(home), archive._key(away)
+    hist_h = archive.prior_rows(home, as_of)[-window:]
+    hist_a = archive.prior_rows(away, as_of)[-window:]
+    h2h = archive.pair_rows(home, away, as_of)[-window:]
+    home_prior = len(archive.prior_rows(home, as_of))
+    away_prior = len(archive.prior_rows(away, as_of))
+    thin = min(home_prior, away_prior) < MIN_HISTORY
+
+    def outcome_of(team_key):
+        def pred(row, _k, key_of):
+            scored, conceded = _own_goals(row, team_key, key_of=key_of)
+            if scored > conceded:
+                return "W"
+            return "D" if scored == conceded else "L"
+        return pred
+
+    components: dict[str, tuple[int, int]] = {}
+    if kind == "1x2":
+        want_h = {"home_win": "W", "draw": "D", "away_win": "L"}[selection]
+        want_a = {"home_win": "L", "draw": "D", "away_win": "W"}[selection]
+        want_pair_home = {"home_win": "W", "draw": "D", "away_win": "L"}[selection]
+        components["home_form"] = _component(hist_h, lambda r, _k, ko: outcome_of(hk)(r, hk, ko) == want_h, hk, archive._key)
+        components["away_form"] = _component(hist_a, lambda r, _k, ko: outcome_of(ak)(r, ak, ko) == want_a, ak, archive._key)
+        components["h2h"] = _component(h2h, lambda r, _k, ko: outcome_of(hk)(r, hk, ko) == want_pair_home, hk, archive._key)
+    elif kind == "btts":
+        yes = selection == "btts_yes"
+        pred = lambda r, _k, ko: ((int(r["hs"]) > 0 and int(r["gs"]) > 0) == yes)
+        components["home_form"] = _component(hist_h, pred, hk, archive._key)
+        components["away_form"] = _component(hist_a, pred, ak, archive._key)
+        components["h2h"] = _component(h2h, pred, hk, archive._key)
+    elif kind == "match":
+        _, _side, direction, line = spec
+        over = direction == "over"
+        pred = lambda r, _k, ko: ((int(r["hs"]) + int(r["gs"]) > line) == over)
+        components["home_form"] = _component(hist_h, pred, hk, archive._key)
+        components["away_form"] = _component(hist_a, pred, ak, archive._key)
+        components["h2h"] = _component(h2h, pred, hk, archive._key)
+    else:  # team totals: the named side's own goals only
+        _, side, direction, line = spec
+        team, tk = (home, hk) if side == "home" else (away, ak)
+        over = direction == "over"
+        hist = hist_h if side == "home" else hist_a
+
+        def own_pred(r, _k, ko, tk=tk, over=over, line=line):
+            scored, _c = _own_goals(r, tk, key_of=ko)
+            return (scored > line) == over
+
+        components["team_form"] = _component(hist, own_pred, tk, archive._key)
+        components["h2h"] = _component(h2h, own_pred, tk, archive._key)
+
+    # Equal-weight average of the components that have enough data.
+    probs: dict[str, float | None] = {}
+    for name, (hits, n) in components.items():
+        if name == "h2h" and n < H2H_MIN_MEETINGS:
+            probs[name] = None
+        else:
+            probs[name] = _laplace(hits, n)
+    available = [p for p in probs.values() if p is not None]
+    p = None if (thin or not available) else sum(available) / len(available)
+    return {"selection": selection, "home": home, "away": away, "as_of": as_of,
+            "p": p, "components": probs,
+            "counts": {k: v[1] for k, v in components.items()},
+            "insufficient_history": thin,
+            "reason": ("insufficient_history" if thin else
+                       None if p is not None else "no_prior_matches")}
