@@ -2,9 +2,9 @@
 """Read-only red team of cohort parity, NOT a validated/as-traded backtest.
 
 Use archived cohort rates, never refit on today's warehouse; use only strictly
-pre-decision, prematch, exact-identity captured prices. Final daily archives are
-not freeze-time snapshots and their cohort training cutoffs are unverified.
-Consequently this report cannot approve live promotion, regardless of its ROI.
+pre-decision, prematch, exact-identity captured prices. Retained daily/morning
+archives are not full freeze-time universes; cohort training cutoffs are
+unverified. This report cannot establish incremental ROI, regardless of returns.
 No providers, state writes, synthetic odds, result-based selection or tuning.
 """
 from __future__ import annotations
@@ -19,9 +19,11 @@ import hashlib
 import inspect
 import json
 import math
+import os
 from pathlib import Path
 import random
 import sys
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / "src"), str(ROOT / "scripts")]
@@ -151,6 +153,11 @@ def quotes_for(row, raw_rows, counts):
 
 
 def choose(rates, quotes, thresholds, parity):
+    """Legacy pool explainer only; performance replay uses production_choice.
+
+    This old helper does not reproduce the production raw-candidate tie order.
+    Kept for reproducing historical competition reports, not ticket evaluation.
+    """
     candidates = []
     for market, rate in rates.items():
         if market == "match_under_45" and not parity:
@@ -164,6 +171,145 @@ def choose(rates, quotes, thresholds, parity):
         candidates.append({"market": market, "rate": rate, **quote})
     return max(candidates, key=lambda c: (c["rate"], c["price"]), default=None)
 
+
+
+def archived_cohort(row, rates):
+    """Partial archived rates + witnessed n, never a new warehouse/model fit.
+
+    Missing columns stay unknown. The production cohort resolver excludes them;
+    model-prior calculations only supply unused labels, not eligible rates.
+    """
+    if row.get("pick") not in {"home", "away", "draw"} or number(row.get("avg_p")) is None:
+        return None
+    sizes = {e.get("cohort_n") for e in row.get("event_notes", [])
+             if isinstance(e, dict) and e.get("cohort_n") is not None}
+    if len(sizes) != 1:
+        return None
+    n = next(iter(sizes))
+    if isinstance(n, bool) or not isinstance(n, int) or n < pt.HYBRID_MIN_N:
+        return None
+    cohort = {"n": n}
+    for market, rate in rates.items():
+        field = pt.COHORT_DIRECT_KEYS.get(market)
+        value = rate
+        if field is None:
+            field = pt.COHORT_COMPLEMENT_KEYS.get(market)
+            value = 1 - rate
+        if field is not None:
+            if field in cohort and abs(cohort[field] - value) > .00015:
+                return None
+            cohort[field] = value
+    return cohort
+
+
+class _NoWarehouse:
+    """No historical replay may read today's warehouse priors/results."""
+    def execute(self, *args, **kwargs):
+        return self
+
+    def fetchone(self):
+        return None
+
+    def fetchall(self):
+        return []
+
+
+def production_choice(row, rates, quotes, parity):
+    """Run the actual selector, replacing ONLY archived inputs/local readers.
+
+    No outcomes passed in; no fabricated prices/n/rates. Environment and module
+    bindings are restored even on failure. Use in this single-process CLI only.
+    """
+    cohort = archived_cohort(row, rates)
+    if cohort is None:
+        raise ValueError("archived coherent cohort sample size required")
+
+    def attach(probe, index):
+        quote = index.get(MARKET_PRICE_MAP.get(probe.get("recommended_enhancement")))
+        probe["enhancement_priced"] = bool(quote)
+        if quote:
+            probe.update(enhancement_price=quote["price"],
+                         enhancement_price_book=quote.get("book"),
+                         enhancement_price_source=quote.get("source"))
+        return probe
+
+    fetched = []
+
+    def fetch(*args, **kwargs):
+        fetched.append(True)
+        return cohort
+
+    with patch.dict(os.environ, {pt.ENH_COHORT_PARITY_ENV: "1" if parity else "0",
+                                 pt.ENV_FLAG: "0"}), patch.multiple(
+            pt, fetch_match_cohort=fetch,
+            attach_enhancement_price=attach,
+            load_rolling_audit_hit_rates=lambda: {},
+            load_enhancement_calibration=lambda *a, **k: {}):
+        out = pt.compute_dynamic_enhancement(_NoWarehouse(), dict(row), quotes)
+    if not fetched:
+        raise ValueError("production selector did not consume archived cohort")
+    market = out["recommended_enhancement"]
+    if market is None:
+        return None
+    quote = quotes[MARKET_PRICE_MAP[market]]
+    return {"market": market, "rate": pt.cohort_realized_rate(cohort, market),
+            **quote, "price": out["enhancement_price"]}
+
+
+def plan_selected(selected, days):
+    """One production recipe for both arms; results never enter selection."""
+    plans, metadata = {}, {}
+    for parity in (False, True):
+        plans[parity], metadata[parity] = {}, {}
+        for day in days:
+            pool = at.enhancement_pool(at.enhancement_legs(selected[parity][day]))
+            plans[parity][day] = at.plan_day(
+                pool, 100, stake_frac=at.ENHANCEMENT_LANE.stake_frac,
+                max_accas=at.ENH_MAX_ACCAS, rank=at.ENHANCEMENT_RANK)
+            metadata[parity][day] = {(leg["match"], leg["pick"]): leg for leg in pool}
+    return plans, metadata
+
+
+def selected_row(row, choice):
+    return {**row, "recommended_enhancement": choice["market"],
+            "enhancement_label": choice["market"], "enhancement_price": choice["price"],
+            "enhancement_probability": choice["rate"],
+            "enhancement_price_book": choice.get("book"),
+            "enhancement_price_source": choice.get("source")}
+
+
+def reselect_price_stress(cases, days, results, haircut):
+    """Haircut quotes BEFORE eligibility/ranking, rebuild cards, then settle.
+
+    Distinct from settlement-only slippage: a price falling below 1.30 can
+    displace a winner, admit a different market or turn a date into no-bet.
+    """
+    selected = {False: defaultdict(list), True: defaultdict(list)}
+    changes = []
+    for row, rates, quotes in cases:
+        effective = {key: {**q, "price": q["price"] * (1-haircut)}
+                     for key, q in quotes.items()}
+        choices = {arm: production_choice(row, rates, effective, arm) for arm in (False, True)}
+        if choices[False] != choices[True]:
+            changes.append({"fixture": list(identity(row)), "baseline": choices[False],
+                            "proposed": choices[True]})
+        for arm, choice in choices.items():
+            if choice:
+                selected[arm][row["date"]].append(selected_row(row, choice))
+    plans, metadata = plan_selected(selected, days)
+    arms = {arm: {d: evaluate_card(plans[arm][d], metadata[arm][d], results) for d in days}
+            for arm in (False, True)}
+    changed_cards = [d for d in days if plans[False][d] != plans[True][d]]
+    return {"decimal_price_haircut_before_selection": haircut,
+            "changed_fixture_choices": changes, "changed_card_dates": changed_cards,
+            "baseline": summarize(list(arms[False].values())),
+            "proposed": summarize(list(arms[True].values())),
+            "paired": paired_bootstrap(arms[False], arms[True], changed_days=changed_cards),
+            "changed_card_net_difference_bounds": [
+                sum(arms[True][d]["worst_net"] - arms[False][d]["best_net"] for d in changed_cards),
+                sum(arms[True][d]["best_net"] - arms[False][d]["worst_net"] for d in changed_cards)],
+            "plans": {d: {"baseline": plans[False][d], "proposed": plans[True][d]} for d in changed_cards},
+            "by_day": {d: {"baseline": arms[False][d], "proposed": arms[True][d]} for d in days}}
 
 def result_index(root):
     out = defaultdict(set)
@@ -225,7 +371,10 @@ def summarize(days):
     stake = sum(d["resolved_stake"] for d in days)
     net = sum(d["net"] for d in days)
     logs = [d["log_growth"] for d in days if d["bets"] and d["log_growth"] is not None]
-    return {"days": len(days), "bet_days": sum(bool(d["bets"]) for d in days),
+    return {"total_planned_stake": sum(d["stake"] for d in days),
+            "total_net_bounds": [sum(d["worst_net"] for d in days), sum(d["best_net"] for d in days)],
+            "resolved_subset_roi": net / stake if stake else None,
+            "days": len(days), "bet_days": sum(bool(d["bets"]) for d in days),
             "accas": sum(d["bets"] for d in days), "resolved": sum(d["resolved"] for d in days),
             "unknown": sum(d["unknown"] for d in days),
             "stake": stake, "net": net, "roi": net / stake if stake else None,
@@ -237,11 +386,21 @@ def summarize(days):
             "markets": dict(sum((Counter(d["markets"]) for d in days), Counter()))}
 
 
-def paired_bootstrap(a, b, *, reps=2000, seed=20261019):
-    days = [d for d in sorted(set(a) & set(b)) if not a[d]["unknown"] and not b[d]["unknown"]]
-    if a == b:
+def paired_bootstrap(a, b, *, reps=2000, seed=20261019, changed_days=None):
+    days = [d for d in sorted(set(a) & set(b)) if not a[d]["unknown"] and not b[d]["unknown"]
+            and (a[d]["bets"] or b[d]["bets"])]
+    if (changed_days is None and a == b) or changed_days == []:
         return {"status": "NO_OP", "paired_fully_resolved_days": len(days),
                 "valid_replicates": 0, "roi_gap_95pct": None}
+    changed = set(changed_days if changed_days is not None else
+                  [d for d in sorted(set(a) & set(b)) if a[d] != b[d]])
+    settled_changed = changed.intersection(days)
+    if changed - settled_changed:
+        return {"status": "INCOMPLETE_CHANGED_CARDS", "paired_fully_resolved_days": len(days),
+                "settled_changed_days": len(settled_changed), "valid_replicates": 0, "roi_gap_95pct": None}
+    if len(settled_changed) < 2:
+        return {"status": "INSUFFICIENT_CHANGED_DAY_SUPPORT", "paired_fully_resolved_days": len(days),
+                "settled_changed_days": len(settled_changed), "valid_replicates": 0, "roi_gap_95pct": None}
     rng = random.Random(seed)
     gaps = []
     for _ in range(reps):
@@ -279,12 +438,19 @@ def stored_performance(root):
             "placement_receipts_verified": False}
 
 
-def audit(root, since, until):
+def archived_snapshots(root, since, until, *, snapshot_mode="final"):
+    if snapshot_mode not in {"final", "morning", "earliest"}:
+        raise ValueError("unknown snapshot mode")
     counts = Counter()
-    snapshots = {}
+    snapshots, blocked = {}, {}
     inputs = []
-    for path in sorted((root / "localdata").glob("picks_????-??-??.json")):
-        day = path.stem[6:]
+    paths = []
+    if snapshot_mode in {"final", "earliest"}:
+        paths += list((root / "localdata").glob("picks_????-??-??.json"))
+    if snapshot_mode in {"morning", "earliest"}:
+        paths += list((root / "localdata").glob("picks_morning_????-??-??.json"))
+    for path in sorted(paths):
+        day = path.stem[-10:]
         if not since <= day <= until:
             continue
         inputs.append(path)
@@ -305,12 +471,36 @@ def audit(root, since, until):
             if not rates:
                 counts["no_archived_cohort_rates"] += 1
                 continue
+            if archived_cohort(row, rates) is None:
+                counts["missing_or_invalid_archived_cohort_n"] += 1
+                continue
             key = identity(row)
+            if key in blocked:
+                if decision >= blocked[key]:
+                    counts["snapshot_blocked_by_earlier_conflict"] += 1
+                    continue
+                del blocked[key]  # a witnessed earlier decision is still usable
             if key in snapshots:
                 counts["duplicate_fixture_rows"] += 1
-                if instant(snapshots[key][0]["as_of"]) <= decision:
-                    continue  # deterministic earliest available final-archive row
-            snapshots[key] = (row, rates)
+                previous, previous_rates = snapshots[key]
+                previous_at = instant(previous["as_of"])
+                if previous_at == decision and (
+                        rates != previous_rates or
+                        archived_cohort(row, rates) != archived_cohort(previous, previous_rates) or
+                        row.get("pick") != previous.get("pick") or row.get("avg_p") != previous.get("avg_p") or
+                        kickoff != instant(previous.get("kickoff_utc"))):
+                    counts["conflicting_same_time_snapshot"] += 1
+                    del snapshots[key]
+                    blocked[key] = decision
+                    continue
+                if previous_at <= decision:
+                    continue  # earliest available coherent snapshot, never merge vintages
+            snapshots[key] = ({**row, "_replay_archive": str(path.relative_to(root))}, rates)
+    return snapshots, counts, inputs
+
+
+def audit(root, since, until, *, snapshot_mode="final"):
+    snapshots, counts, inputs = archived_snapshots(root, since, until, snapshot_mode=snapshot_mode)
     raw_by_fixture = defaultdict(list)
     months = {key[0][:7] for key in snapshots}
     for source in ("oddspapi", "theoddsapi"):
@@ -328,11 +518,27 @@ def audit(root, since, until):
     results = result_index(root)
     thresholds = legacy_thresholds()
     selected = {False: defaultdict(list), True: defaultdict(list)}
-    changes, evidence = [], []
+    changes, evidence, cases = [], [], []
+    newly_admitted_markets = Counter()
     for key, (row, rates) in sorted(snapshots.items()):
         quotes = quotes_for(row, raw_by_fixture[key], counts)
+        cases.append((row, rates, quotes))
         counts["snapshots_with_strict_quotes"] += bool(quotes)
         counts["snapshots"] += 1
+        counts["known_market_rates"] += len(rates)
+        newly_admitted_here = False
+        for market, rate in rates.items():
+            q = quotes.get(MARKET_PRICE_MAP.get(market))
+            counts["known_rates_with_strict_quote"] += bool(q)
+            if q and q["price"] >= at.MIN_LEG_ODDS and .25 <= rate <= .90:
+                counts["priced_in_band_candidate_occurrences"] += 1
+                legacy = market != "match_under_45" and rate >= thresholds.get(market, .80)
+                counts["legacy_eligible_candidate_occurrences"] += legacy
+                if not legacy:
+                    counts["newly_admitted_candidate_occurrences"] += 1
+                    newly_admitted_markets[market] += 1
+                    newly_admitted_here = True
+        counts["fixtures_with_newly_admitted_candidates"] += newly_admitted_here
         for market, rate in rates.items():
             if "under" not in market or not 0.25 <= rate <= 0.90:
                 continue
@@ -343,29 +549,17 @@ def audit(root, since, until):
                 counts["under_newly_admitted"] += (market == "match_under_45" or rate < thresholds.get(market, .80))
         choices = {}
         for parity in (False, True):
-            choice = choose(rates, quotes, thresholds, parity)
+            choice = production_choice(row, rates, quotes, parity)
             choices[parity] = choice
             if choice:
-                candidate = {**row, "recommended_enhancement": choice["market"],
-                             "enhancement_label": choice["market"], "enhancement_price": choice["price"],
-                             "enhancement_probability": choice["rate"],
-                             "enhancement_price_book": choice["book"],
-                             "enhancement_price_source": choice["source"]}
-                selected[parity][key[0]].append(candidate)
+                selected[parity][key[0]].append(selected_row(row, choice))
         if choices[False] != choices[True]:
             changes.append({"fixture": list(key), "baseline": choices[False], "proposed": choices[True]})
         evidence.append({"fixture": list(key), "as_of": row["as_of"], "kickoff_utc": row["kickoff_utc"],
+                         "archive": row["_replay_archive"], "cohort_n": archived_cohort(row, rates)["n"],
                          "cohort_rates": rates, "baseline": choices[False], "proposed": choices[True]})
     days = sorted({key[0] for key in snapshots})
-    plans, metadata = {}, {}
-    for parity in (False, True):
-        plans[parity], metadata[parity] = {}, {}
-        for day in days:
-            legs = at.enhancement_legs(selected[parity][day])
-            pool = at.enhancement_pool(legs)
-            plans[parity][day] = at.plan_day(pool, 100, stake_frac=at.ENHANCEMENT_LANE.stake_frac,
-                                            max_accas=at.ENH_MAX_ACCAS, rank=at.ENHANCEMENT_RANK)
-            metadata[parity][day] = {(l["match"], l["pick"]): l for l in pool}
+    plans, metadata = plan_selected(selected, days)
     stresses = []
     for haircut in (0, 0.02, 0.05, 0.10):
         arms = {parity: {d: evaluate_card(plans[parity][d], metadata[parity][d], results, haircut)
@@ -375,23 +569,34 @@ def audit(root, since, until):
                          "proposed": summarize(list(arms[True].values())),
                          "paired": paired_bootstrap(arms[False], arms[True]),
                          "by_day": {d: {"baseline": arms[False][d], "proposed": arms[True][d]} for d in days}})
+    selection_stresses = [reselect_price_stress(cases, days, results, h) for h in (0, .02, .05, .10)]
     inputs += [root / "localdata/settled_results.json", root / "localdata/autobets_enh_tickets_performance.json"]
     inputs += [root / p for p in ("scripts/audit_enh_under_parity.py", "scripts/picks_today.py",
-                                 "scripts/auto_tickets.py", "src/edgefactory/enh_registry.py")]
+                                 "scripts/auto_tickets.py", "src/edgefactory/enh_registry.py",
+                                 "src/edgefactory/enh_pricing.py")]
     manifest = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
-    return {"schema": 1, "verdict": "NOT_VALIDATED_DO_NOT_PROMOTE", "since": since, "until": until,
-            "limitations": ["Final daily archives, not freeze-time universes; NOT an as-traded replay.",
+    return {"schema": 2, "verdict": "LIMITED_ARCHIVED_INPUT_REPLAY_NOT_AS_TRADED",
+            "snapshot_mode": snapshot_mode, "since": since, "until": until,
+            "selector": "production compute_dynamic_enhancement, explicit env 0 vs 1",
+            "limitations": ["Retained snapshots, not complete freeze-time universes; NOT an as-traded replay.",
                             "Archived cohort training cutoffs/voter-regime comparability unverified; no refit attempted.",
                             "Only exact-name same-day result joins, no fuzzy/rescheduled substitutions.",
                             "Only time-verifiable OddsPapi/TheOddsAPI prices; missing ScoutingStats history NOT inferred.",
-                            "Rates only for archived markets or their exact complements; unknown rates excluded.",
-                            "Counterfactual cards use current production recipe; not historic placement claims.",
+                            "Rates only for archived markets or exact complements; unknown rates excluded; archived rates may be rounded.",
+                            "Rows without a witnessed, coherent n>=100 or valid original pick/avg_p cannot run the production cohort path.",
+                            "ROI/roi/stake/net fields describe the resolved subset only; total_planned_stake/net bounds include unknowns.",
+                            "Haircuts are hypothetical decimal-price stresses, not claimed executable historical quotes.",
+                            "No-op arms have zero improvement; unknown results prevent a paired ROI inference on changed cards.",
+                            "Counterfactual cards use current production recipe, reset 100/date, no freeze/rolling-bank/parent-veto lifecycle replay.",
                             "No bookmaker receipts. Small sample and policy chosen after observing history.",
                             "No parameter search, stake/bucket changes, synthetic prices, or betting-hold release."],
             "stored_lane": stored_performance(root), "coverage": dict(counts),
             "changed_fixture_choices": changes, "evidence": evidence,
-            "stresses": stresses, "inputs_sha256": manifest,
-            "settings": {"min_leg_odds": at.MIN_LEG_ODDS, "stake_frac": at.ENHANCEMENT_LANE.stake_frac,
+            "newly_admitted_candidates_by_market": dict(newly_admitted_markets),
+            "stresses": stresses, "reselection_stresses": selection_stresses, "inputs_sha256": manifest,
+            "settings": {"bankroll_basis": "100 capital points reset each date, not an as-traded rolling bank",
+                         "main_lane_parent_veto_replayed": False, "freeze_lifecycle_replayed": False,
+                         "min_leg_odds": at.MIN_LEG_ODDS, "stake_frac": at.ENHANCEMENT_LANE.stake_frac,
                          "stake_mode": at.STAKE_MODE, "max_accas": at.ENH_MAX_ACCAS,
                          "rank": at.ENHANCEMENT_RANK, "seed": 20261019}}
 
@@ -401,13 +606,14 @@ def main():
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--since", default="2026-10-14")
     parser.add_argument("--until", default="2026-10-18")
+    parser.add_argument("--snapshot-mode", choices=("final", "morning", "earliest"), default="final")
     parser.add_argument("--out", type=Path, help="Optional report only; never point at operational state")
     args = parser.parse_args()
     if args.since > args.until:
         parser.error("since must be <= until")
     if args.out and args.out.resolve().is_relative_to((args.root / "localdata").resolve()):
         parser.error("report output must be outside operational localdata")
-    report = audit(args.root.resolve(), args.since, args.until)
+    report = audit(args.root.resolve(), args.since, args.until, snapshot_mode=args.snapshot_mode)
     text = json.dumps(report, indent=2, allow_nan=False) + "\n"
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)

@@ -11003,3 +11003,55 @@ explicit legacy rollback again 200 identical baseline cases. Receipt updated at
 `docs/operator/audits/enh-under-validation-2026-10-19.json` with source SHA256,
 new/old mutation scopes distinguished and default parity NOT claimed.
 No operational archive/history, bank, workflow or registry edits; no deployment.
+
+### Requested production-path replay / stress follow-up — 2026-10-19
+
+PR #100 remains the authorized ON-default policy. Follow-up changes are audit,
+tests and documentation only; production selector/replay/staking/lifecycle,
+localdata and workflows remain unchanged relative to enablement commit 7355957.
+
+Extended EXISTING `audit_enh_under_parity.py`, not a new assay engine: actual
+`compute_dynamic_enhancement` with archived partial cohort rates AND witnessed
+n>=100, strict pre-decision quotes, production legs/pool/plan; no current warehouse
+refit, fake n/odds or outcomes in selection. Added final/morning/earliest snapshot
+modes, earlier-decision provenance and equal-time conflict refusal. Separate
+price-haircut-before-selection/rebuild stresses from settlement-only slippage.
+Counterfactual normalized bank resets to 100/date; NOT full freeze/rolling-bank/
+main-parent-veto execution replay. Frozen text contains SKIPPED_VETO parent;
+stored tracker/replayed cards are not bookmaker placement receipts.
+
+Inspected June18–Oct18: 3,406 rows; coherent cohort evidence still only Oct14–18.
+Final 78 witnessed-n fixtures/19 strict quoted/7 accas; morning49/9/4;
+earliest82/18/6. Two old final rate-only rows lack n and are refused, not assigned
+100. Morning adds four fixtures. Earliest has46 priced/in-band occurrences,
+21 additions on16 fixtures (16U2.5/3U3.5/2U4.5), ALL beaten by higher-rate incumbents.
+At archived prices ALL THREE overlapping views have zero policy choice/card
+changes and therefore zero incremental return. Earliest6 accas:4resolved2unknown;
+total planned stake62.4999, resolved37.4999; total net bounds+14.416576..+109.291576,
+identical arms. Do not market favorable selected-subset ROI as uplift.
+
+Preselection quote haircuts0/2/5/10% change final fixture choices0/1/1/4 (cards0/1/1/2),
+morning0/0/0/1 (cards0/0/0/1), earliest0/0/0/3 (cards0/0/0/1). Material adverse example:
+morning Oct17 at10%, new Salford–Crawley U2.5,30.4%@2.475, changes a winning
+Fenerbahce+Kashiwa O2.5 pair (+14.25) into two LOSING pairs including Salford U2.5
+and Kashima O2.5 (−25), net difference−39.25 normalized points. This is one
+hypothetical-price day, not a forward ROI estimate. Earliest10% changed Oct18
+card difference remains−30..+16.75 due unknown legacy result. No implicit75%floor
+or EV gate added; low-rate in-band candidates can win if stronger prices fail.
+
+Fixed audit inference traps: no bootstrap CI from one affected day or by dropping
+unknown changed cards and retaining only settled unchanged dates; all planned
+stake/return bounds exposed alongside resolved-subset legacy fields. Actual
+selector preserves generator tie order unlike old pool helper. Four in-memory
+mutations (preselection haircut omission, helper substitution, single-day CI,
+hiding unknown changed cards) all caught with source bytes unchanged.
+Existing registry-only replay rerun53betdays/108accas/42hits; NOT omitted-market
+uplift evidence. Explicit env0 rollback again200whole outputs/logs identical.
+
+Report: docs/operator/audits/ENH-COHORT-REPLAY-STRESS-2026-10-19.md and linked
+final/morning/earliest/competition JSONs, plus validation receipt. Earlier schema1
+receipts remain historical to7355957. `audit_enh_market_competition.py` now accepts
+`--source-report` and uses original archive+production selector for schema2,
+requiring every input hash to match. No merge, deployment, provider spending or
+operational-data changes. Full follow-up suite3275passed147.41s after final Python
+changes; subsequent new report/runbook docs checked separately (receipt has count).

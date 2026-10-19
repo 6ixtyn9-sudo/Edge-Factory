@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-19",
+  "production_revision": "735595737d1da25e5f2bf5656bfa1caa7f8b2fb0",
+  "scope": "Read-only replay/test/doc follow-up; production policy remains ON; no as-traded/ROI certification",
+  "full_suite": {
+    "passed": 3275,
+    "seconds": 147.41,
+    "exit_code": 0,
+    "scope_note": "After final Python changes; follow-up Markdown added subsequently and checked separately."
+  },
+  "focused_selector_replay_tests": {
+    "passed": 121,
+    "seconds": 4.74
+  },
+  "explicit_legacy_rollback": {
+    "cases": 200,
+    "baseline": "8abefc45fc4b4442a2997d0c3f18831cc6bff436",
+    "entire_outputs_and_logs_identical": true
+  },
+  "in_memory_mutations": [
+    {
+      "mutation": "omit_preselection_price_degradation",
+      "targeted_test": "test_preselection_slippage_reselects_and_rebuilds_complete_cards",
+      "caught": true
+    },
+    {
+      "mutation": "substitute_legacy_helper_for_production_selector",
+      "targeted_test": "test_actual_selector_replay_does_not_depend_on_rates_dictionary_tie_order",
+      "caught": true
+    },
+    {
+      "mutation": "bootstrap_single_affected_day",
+      "targeted_test": "test_single_changed_day_cannot_produce_a_zero_width_bootstrap_confidence_claim",
+      "caught": true
+    },
+    {
+      "mutation": "hide_unknown_changed_cards",
+      "targeted_test": "test_bootstrap_cannot_hide_unresolved_changed_cards_behind_unchanged_resolved_days",
+      "caught": true
+    }
+  ],
+  "registry_selected_history_replay": {
+    "bet_days": 53,
+    "accas": 108,
+    "hits": 42,
+    "can_estimate_broader_selection_uplift": false
+  },
+  "source_sha256": {
+    "scripts/audit_enh_under_parity.py": "074adad13f15f5c1bdcc8aaad8c94e95f61b75f29dca3e3d95b7400d96ad2acc",
+    "scripts/audit_enh_market_competition.py": "accd08abb59ee8cea032ef4a832ecf54efea3b9dc9b2e43f2c229a1407e32c79",
+    "tests/test_audit_enh_under_parity.py": "933091a56697e03296ec05f96cc13f298fa03c9af32e566d1de0cbb9493166b2",
+    "scripts/picks_today.py": "6dc698e187890c10eef8b32bb018111860aea1d6411a4190ea845b4044ae3b50",
+    "scripts/auto_tickets.py": "c537381ef29703b5c9a93363dd8aac40bcbe16494882a930ef2419981693d526",
+    "scripts/replay_harness.py": "f71d867b0069124e8b3dac9f89b49e89e0d67df8f9ccc3c40ac6439c16eae446",
+    "src/edgefactory/enh_registry.py": "cc7951f057662eb8bc6a9a1cc54c425c7841bf477fcdbccb59018898c6eddcf6",
+    "src/edgefactory/enh_pricing.py": "70fdb22b88b06318aad2e529862a163cf7bf379e93a98b4bd5d1cdf0994992eb"
+  },
+  "report_sha256": {
+    "docs/operator/audits/enh-cohort-replay-competition-2026-10-19.json": "d66f30905e4afc4578c59fd3fe785e41454f1bc0f4b137c04c09699384d45354",
+    "docs/operator/audits/enh-cohort-replay-earliest-2026-10-19.json": "8686a9ceb8a2628b81c1dced1dfb0ca7bfe5607386a1cb580004ecaa9daa3de0",
+    "docs/operator/audits/enh-cohort-replay-final-2026-10-19.json": "cebd2fba4a33b93cff550b6aaae6bf1a76d60b85020358a9e9212381c376a7c3",
+    "docs/operator/audits/enh-cohort-replay-morning-2026-10-19.json": "8ce6f8d8f30fa1be1f8f282add090c3dc8421b95afd5e1f6334ec1ac85d85731"
+  },
+  "production_and_tracked_operational_diff_from_enablement": "none",
+  "merged": false,
+  "deployed": false,
+  "providers_called": false,
+  "post_markdown_focused_and_docs_checks": {
+    "passed": 113,
+    "seconds": 0.39
+  },
+  "all_recorded_inputs_and_sources_reverified_after_full_suite": true
+}

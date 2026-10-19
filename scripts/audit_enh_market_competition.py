@@ -18,8 +18,8 @@ sys.path[:0] = [str(ROOT), str(ROOT / 'src'), str(ROOT / 'scripts')]
 from scripts import audit_enh_under_parity as audit
 
 
-def competition(root=ROOT):
-    source = root / 'docs/operator/audits/enh-under-redteam-2026-10-19.json'
+def competition(root=ROOT, source=None):
+    source = Path(source) if source is not None else root / 'docs/operator/audits/enh-under-redteam-2026-10-19.json'
     original = json.loads(source.read_text())
     for relative, expected in original['inputs_sha256'].items():
         if hashlib.sha256((root / relative).read_bytes()).hexdigest() != expected:
@@ -39,13 +39,27 @@ def competition(root=ROOT):
     winners = {False: Counter(), True: Counter()}
     details = []
     thresholds = audit.legacy_thresholds()
+    archives = {}
     for key, entry in sorted(evidence.items()):
         row = dict(zip(('date', 'home', 'away'), key),
                    as_of=entry['as_of'], kickoff_utc=entry['kickoff_utc'])
         quotes = audit.quotes_for(row, raw[key], Counter())
         rates = entry['cohort_rates']
-        baseline = audit.choose(rates, quotes, thresholds, False)
-        proposed = audit.choose(rates, quotes, thresholds, True)
+        if original.get('schema', 1) >= 2:
+            path = entry['archive']
+            if path not in original['inputs_sha256']:
+                raise ValueError(f'Archive is not in the source manifest: {path}')
+            if path not in archives:
+                archives[path] = json.loads((root / path).read_text())
+            candidates = [r for r in archives[path] if audit.identity(r) == key and
+                          r.get('as_of') == entry['as_of'] and audit.snapshot_rates(r) == rates]
+            if not candidates:
+                raise ValueError(f'Missing original decision snapshot: {key}')
+            baseline = audit.production_choice(candidates[0], rates, quotes, False)
+            proposed = audit.production_choice(candidates[0], rates, quotes, True)
+        else:
+            baseline = audit.choose(rates, quotes, thresholds, False)
+            proposed = audit.choose(rates, quotes, thresholds, True)
         # Fail rather than explaining a population different from the old audit.
         if baseline != entry['baseline'] or proposed != entry['proposed']:
             raise ValueError(f'Choice mismatch: {key}')
@@ -92,10 +106,11 @@ def competition(root=ROOT):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path)
+    parser.add_argument('--source-report', type=Path, help='Schema 1 or 2 audit; all input hashes must match')
     args = parser.parse_args()
     if args.out and args.out.resolve().is_relative_to((ROOT / 'localdata').resolve()):
         parser.error('audit output must not overwrite operational localdata')
-    text = json.dumps(competition(), indent=2, allow_nan=False) + '\n'
+    text = json.dumps(competition(source=args.source_report), indent=2, allow_nan=False) + '\n'
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(text)
