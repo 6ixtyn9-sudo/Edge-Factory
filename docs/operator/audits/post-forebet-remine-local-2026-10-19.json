@@ -1,0 +1,191 @@
+{
+  "live_registry_modified": false,
+  "production_cache_run": "not dispatched at receipt creation",
+  "report_sha256": "8450c3186e125383fd2c75c2f33df8095808e4bc383b635274121dff980f866b",
+  "result": {
+    "activation": "research_only; existing live registry and frozen model unchanged",
+    "ambiguous_source_market_observations": 0,
+    "as_of_exclusive": "2026-10-19",
+    "conflicting_result_periods": 0,
+    "edges": [],
+    "excluded_result_donors": [
+      "forebet"
+    ],
+    "excluded_voters": [
+      "forebet"
+    ],
+    "gates": {
+      "min_n_train": 340,
+      "min_n_valid": 120,
+      "min_overlap_n": 200,
+      "min_recent_n": 30,
+      "min_roi_train": -0.1,
+      "min_roi_valid": 0.0,
+      "recent_window_days": 30,
+      "walkforward_split": "2025-06-01"
+    },
+    "limitations": [
+      "Threshold grid is model selection, not untouched forward evidence.",
+      "Source quotes are retrospective donor prices, not execution-safe ROI.",
+      "No probability is inferred from categorical tips or streak percentages."
+    ],
+    "markets": {
+      "1x2": {
+        "status": "no_usable_signals",
+        "tested_rules": 0,
+        "usable_votes": 0
+      },
+      "btts": {
+        "status": "no_usable_signals",
+        "tested_rules": 0,
+        "usable_votes": 0
+      },
+      "ht_1x2": {
+        "status": "no_usable_signals",
+        "tested_rules": 0,
+        "usable_votes": 0
+      },
+      "ht_ou_1.5": {
+        "status": "no_usable_signals",
+        "tested_rules": 0,
+        "usable_votes": 0
+      },
+      "ht_ou_2.5": {
+        "status": "no_usable_signals",
+        "tested_rules": 0,
+        "usable_votes": 0
+      },
+      "ou_1.5": {
+        "status": "no_usable_signals",
+        "tested_rules": 0,
+        "usable_votes": 0
+      },
+      "ou_2.5": {
+        "status": "no_usable_signals",
+        "tested_rules": 0,
+        "usable_votes": 0
+      },
+      "ou_3.5": {
+        "status": "no_usable_signals",
+        "tested_rules": 0,
+        "usable_votes": 0
+      },
+      "ou_4.5": {
+        "status": "no_usable_signals",
+        "tested_rules": 0,
+        "usable_votes": 0
+      }
+    },
+    "mining_era": "post_forebet",
+    "settled_fixture_markets": 0,
+    "sources": {
+      "afootballreport": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "betclan": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "betexplorer": {
+        "market_votes": {
+          "1x2": 0,
+          "btts": 0,
+          "ht_1x2": 0,
+          "ht_ou_1.5": 0,
+          "ht_ou_2.5": 0,
+          "ou_1.5": 0,
+          "ou_2.5": 0,
+          "ou_3.5": 0,
+          "ou_4.5": 0
+        },
+        "rows": 28748,
+        "status": "present",
+        "table": "betexplorer"
+      },
+      "bettingclosed": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "bzzoiro": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "freesupertips": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "predictz": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "prosoccer": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "scoutingstats": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "soccervista": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "statarea": {
+        "market_votes": {
+          "1x2": 0,
+          "btts": 0,
+          "ht_1x2": 0,
+          "ht_ou_1.5": 0,
+          "ht_ou_2.5": 0,
+          "ou_1.5": 0,
+          "ou_2.5": 0,
+          "ou_3.5": 0,
+          "ou_4.5": 0
+        },
+        "rows": 0,
+        "status": "no_rows_in_era",
+        "table": "statarea"
+      },
+      "vitibet": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "windrawwin": {
+        "rows": 0,
+        "status": "missing_table"
+      },
+      "zulubet": {
+        "market_votes": {
+          "1x2": 0,
+          "btts": 0,
+          "ht_1x2": 0,
+          "ht_ou_1.5": 0,
+          "ht_ou_2.5": 0,
+          "ou_1.5": 0,
+          "ou_2.5": 0,
+          "ou_3.5": 0,
+          "ou_4.5": 0
+        },
+        "rows": 0,
+        "status": "no_rows_in_era",
+        "table": "zulubet"
+      }
+    },
+    "split": "2026-09-21",
+    "start": "2026-06-13",
+    "status": "no_gradeable_prediction_history"
+  },
+  "scope": "LOCAL checkout only; not production cache",
+  "validation": {
+    "full_suite": {
+      "passed": 3325,
+      "seconds": 159.69,
+      "skipped": 1
+    },
+    "new_tests": 24,
+    "post_annotation_focused_and_docs": {
+      "passed": 94
+    }
+  }
+}

@@ -11149,3 +11149,101 @@ Guide: docs/operator/GAME-ATTRITION-LOGGING.md; numerical/source-hash receipt:
 docs/operator/audits/game-attrition-logging-validation-2026-10-19.json. No localdata,
 workflow, price floor, stake, freeze, lane setting or settlement edits. Logs become
 available on runs executing deployed code, not on already-frozen historical slips.
+
+### First instrumented production diagnosis — run39307259942, 2026-10-19
+
+Read-only investigation on active session branch arena/e273ec97-edge-factory;
+PR101 is merged. Fetched origin/main without checkout; inspected persisted data
+at008f8cfc74f4cffea46b19a35426c2bc8d69f069, final build
+20261019T192636-3969ca2a-picks_build. No provider calls, workflow dispatch,
+operational file updates, rules, credentials or frozen-slip changes.
+
+Confirmed849full-scan keys =238Oct19 +611Oct20–26Bzzoiro-only keys. All611fail
+insufficient-source; Oct19 funnel238=184insufficient+27belowthreshold+23disagree
++4emitted; all4already started before initial21:01SAST cutoff and were correctly
+pre-match rejected. Delays did not cost these four. Daily retained2earlier picks
+and frozen slips are distinct from zero fresh eligible discoveries. Vitibet
+203present/93completeprobabilities/110missingallthree: cause not yet proven.
+
+ML40scored/14nolegacyinput; runtime0certified emission rules. Persisted14MLrows
+are6meta-benched+1meta-candidate+7fade-candidate, not14served rules. No evidence
+of loader defect or authority to bypass certification. Broader enhancement
+competition still needs surviving parents; no75%floor inference from this run.
+
+Integration target: Bzzoiro fetch_day(today) intentionally all-upcoming snapshot;
+pickerfetch_all lacks event-day scoping and keys by pair only. Confirmed mixed-
+date denominator, NOT an observed false emitted cross-date join. Preserve full
+capture-forward semantics in any future consumer repair. Other priorities:
+bounded duplicate ProSoccer refresh, repeated historical settlement passes,
+Supabase missingIDs while preserving its no-destructive-empty-sync protection.
+
+Report docs/operator/audits/GAME-ATTRITION-RUN-39307259942.md and adjacent
+JSON receipt (9immutable input hashes). Arithmetic/registry assertions executed;
+no test-suite rerun required for this documentation-only diagnosis. No production
+fix implemented yet. Remaining investigations/fixes are explicitly scoped there.
+
+### Executive post-Forebet re-mine — 2026-10-19, current work
+
+User explicitly authorized re-mining post-Forebet across markets, rejected adding
+another miner/bloat, then said proceed. Changes are directly in existing
+scripts/mine_consensus.py: replaced the default Forebet-led main scan with
+non-Forebet voter AND score-donor scan, every observed source subset, singles,
+unanimity, strict-majority and each dissent-source-follow strategy; current
+market registry plus enhancement totals. Reuses stats/evaluate/research output;
+no pseudo probabilities, FT-as-HT results, opposing-side prices, duplicate counts,
+legacy9key joins or silent omission of missing market history. Exact own-source
+prediction conflicts/result conflicts quarantined. All weak tests retained.
+Window defaults Jun13 -> asof-minus28day split -> exclusive asof; priced sample
+floors required alongside unchanged gate values. New predicates remain CANDIDATE
+with statistical_gates_passed and serving_validation hold: NO automatic serving
+approval or transient view references. Live registry/model/picker thresholds and
+frozen slips untouched. Default miner no longer refreshes old non-ML live rows;
+remaining serving/assay/pricing contract integration is EXPLICITLY unfinished.
+Do not describe the live Forebet-era threshold transition as completed.
+
+Existing build_warehouse now retains missing-own-score raw prediction tables.
+Existing daily.yml manual remine_only restores cache, rebuilds warehouse offline,
+runs same miner, skips enhancements/cache-save/git-persist/notifications/provider
+calls; uses existing artifact upload and compact check annotation. No new miner,
+workflow or registry. Prior unfinished operational/date-scope/assay-monitor edits
+were deferred/reverted before this rewrite; do not claim those fixes shipped.
+
+Local execution .cache/post-forebet-remine-2026-10-19.json/log found0era prediction
+rows, 28,748BetExplorer score rows: no_gradeable_prediction_history, NOT validation
+failure. GH cache API confirmed localdata-v2-39307259942 exists onmain129,126,923B;
+production cache data still needs a runner execution before reporting real mining
+results. No provider calls, quota changes, workflow dispatch or live activation
+at time of this note. See docs/operator/REMINE-PLAN.md executive supersession.
+
+Validation/delivery update: new24tests passed; fullsuite3325passed1skipped159.69s;
+after final runner annotation addition, focused+docs94passed3.92s. Local CLI
+re-executed and asserted explicit no_gradeable_prediction_history status and
+28,748result-only rows; receipt docs/operator/audits/post-forebet-remine-local-
+2026-10-19.json. git diff --check clean. Commit0896c34 saved all implementation,
+tests, plan and retained first-production attrition diagnosis on the active
+arena/e273ec97-edge-factory branch. PUSH FAILED: GitHub App refuses daily.yml
+update without workflows permission. No PR, remote branch update or workflow
+run was created; no production mining result exists yet. User informed GitHub
+connection needs workflow-write permission/update or reconnect in Arena. Do not
+retry unchanged credentials or bypass this restriction. Local snapshots/commits
+preserve the work; resume push of this SAME branch after permission is repaired,
+then dispatch existing daily.yml refarena/e273ec97-edge-factory mode=remine_only,
+inspect completed report/check annotation, and report actual cache data results.
+
+### Delivery unblocked by operator workflow update
+
+Operator manually saved the full workflow on main as20780f1. Fetched/deepened
+shallow history, then merged main into SAME active arena/e273ec97-edge-factory
+branch (merge86a4ed2); resolved the workflow conflict by keeping origin/main's
+exact file. Workflow diff againstmain is empty. Focused24tests passed3.72s;
+pushorigin arena/e273ec97-edge-factory succeeded. PR103 opened:
+https://github.com/6ixtyn9-sudo/Edge-Factory/pull/103 (not merged).
+
+Attempted authorized cache-only dispatch of existing daily.yml on this branch,
+mode=remine_only. GitHub refused HTTP403 Resource not accessible by integration.
+NO workflow run was created. User informed to run manually selecting session
+branch arena/e273ec97-edge-factory (NOTmain, which lacks miner changes) and
+remine_only. Need completed runner results/annotations before reporting mining
+outcomes. Dispatch needs Actions-write permission if connection is repaired;
+do not retry unchanged or ask for credentials. Prior workflow-push blocker is
+resolved; current blocker is dispatch permission only. Live rules remain unchanged.
