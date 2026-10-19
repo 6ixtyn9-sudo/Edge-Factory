@@ -233,3 +233,51 @@ def test_no_records_is_an_honest_empty_answer(monkeypatch, capsys):
     monkeypatch.setattr(rh, "enh_records", lambda root=None: [])
     assert rh.cmd_enhancements(type("A", (), {"ab": None})()) == 0
     assert "nothing to replay" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('losing_fixtures', [(), ('Team0 vs Opp0',),
+                                          ('Team0 vs Opp0', 'Team1 vs Opp1',
+                                           'Team2 vs Opp2', 'Team3 vs Opp3')])
+@pytest.mark.parametrize('mode, weights', [('per_acca', None), ('per_day', '2,1')])
+def test_simultaneous_ticket_pnl_adds_like_live_settlement(monkeypatch, losing_fixtures, mode, weights):
+    # Force two tickets so a multiplicative error cannot hide in a one-ticket test.
+    monkeypatch.setattr(at, 'ENH_MAX_ACCAS', 2)
+    records = [_rec(price=2., hit=f'Team{i} vs Opp{i}' not in losing_fixtures,
+                    match=f'Team{i} vs Opp{i}') for i in range(4)]
+    saved = []
+    actual_plan_day = at.plan_day
+
+    def spy(*a, **kw):
+        plan = actual_plan_day(*a, **kw)
+        saved.extend(plan)
+        return plan
+
+    monkeypatch.setattr(at, 'plan_day', spy)
+    day = rh.enh_day_growth(records, FLOORS, stake_frac=.25,
+                           stake_mode=mode, weights=weights)['2026-10-12']
+    assert len(saved) == day['bets'] == 2
+    # Independent cash accounting: both tickets funded from opening bank 100.
+    staked = sum(a['stake_pct'] for a in saved)
+    returned = sum(a['stake_pct'] * a['odds'] for a in saved
+                   if all(l['match'] not in losing_fixtures for l in a['legs']))
+    assert day['growth'] == pytest.approx((100 - staked + returned)/100)
+    assert day['log_growth'] == pytest.approx(math.log(day['growth']))
+    if not losing_fixtures:
+        assert day['growth'] == pytest.approx(1.75)
+        assert day['growth'] != pytest.approx(1.375**2)
+
+
+def test_live_replay_floor_gates_match_the_current_lane_on_all_mapped_markets():
+    # The live floor already matches MIN_LEG_ODDS; derived floors are a variant,
+    # not a drift repair. Do not reintroduce static floors or ceilings here.
+    from edgefactory.enh_pricing import MARKET_PRICE_MAP
+    for market, mapping in MARKET_PRICE_MAP.items():
+        if not mapping:
+            continue
+        for price in (1.29, 1.30, 1.40, 4.50):
+            records = [_rec(market=market, price=price, match='A vs B')]
+            floors = rh._root_floors(records)
+            fired = bool(rh._firing_by_day(records, floors))
+            live = at.enhancement_legs([{'recommended_enhancement': market,
+                                         'enhancement_price': price}])[0]
+            assert fired == (live['verdict'] == 'fire')

@@ -1,0 +1,2767 @@
+{
+  "schema": 2,
+  "verdict": "LIMITED_ARCHIVED_INPUT_REPLAY_NOT_AS_TRADED",
+  "snapshot_mode": "morning",
+  "since": "2026-06-18",
+  "until": "2026-10-18",
+  "selector": "production compute_dynamic_enhancement, explicit env 0 vs 1",
+  "limitations": [
+    "Retained snapshots, not complete freeze-time universes; NOT an as-traded replay.",
+    "Archived cohort training cutoffs/voter-regime comparability unverified; no refit attempted.",
+    "Only exact-name same-day result joins, no fuzzy/rescheduled substitutions.",
+    "Only time-verifiable OddsPapi/TheOddsAPI prices; missing ScoutingStats history NOT inferred.",
+    "Rates only for archived markets or exact complements; unknown rates excluded; archived rates may be rounded.",
+    "Rows without a witnessed, coherent n>=100 or valid original pick/avg_p cannot run the production cohort path.",
+    "ROI/roi/stake/net fields describe the resolved subset only; total_planned_stake/net bounds include unknowns.",
+    "Haircuts are hypothetical decimal-price stresses, not claimed executable historical quotes.",
+    "No-op arms have zero improvement; unknown results prevent a paired ROI inference on changed cards.",
+    "Counterfactual cards use current production recipe, reset 100/date, no freeze/rolling-bank/parent-veto lifecycle replay.",
+    "No bookmaker receipts. Small sample and policy chosen after observing history.",
+    "No parameter search, stake/bucket changes, synthetic prices, or betting-hold release."
+  ],
+  "stored_lane": {
+    "bet_days": 5,
+    "accas": 13,
+    "wins": 6,
+    "staked_capital_points": 111.8088,
+    "returned_capital_points": 93.7513,
+    "stake_weighted_roi": -0.16150338792653174,
+    "flat_acca_roi": -0.024615384615384595,
+    "bank_pct": 81.94237599999998,
+    "day_bootstrap_roi_95pct": [
+      -0.7910255209709407,
+      0.5877858979836987
+    ],
+    "accas_without_leg_identity": 2,
+    "placement_receipts_verified": false
+  },
+  "coverage": {
+    "archived_rows": 1347,
+    "missing_pick_timestamp": 591,
+    "out_of_day": 9,
+    "no_archived_cohort_rates": 689,
+    "late_snapshot": 9,
+    "snapshots_with_strict_quotes": 9,
+    "snapshots": 49,
+    "known_market_rates": 291,
+    "known_rates_with_strict_quote": 32,
+    "fixtures_with_newly_admitted_candidates": 8,
+    "under_rates_in_band": 100,
+    "after_decision": 289,
+    "same_time_conflict": 3369,
+    "priced_in_band_candidate_occurrences": 30,
+    "legacy_eligible_candidate_occurrences": 17,
+    "newly_admitted_candidate_occurrences": 13,
+    "under_quotes_at_minimum": 15,
+    "under_newly_admitted": 13
+  },
+  "changed_fixture_choices": [],
+  "evidence": [
+    {
+      "fixture": [
+        "2026-10-15",
+        "atalanta",
+        "pafos fc"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T19:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 790,
+      "cohort_rates": {
+        "match_over_25": 0.6873,
+        "btts_no": 0.538,
+        "btts_yes": 0.462,
+        "match_over_35": 0.457,
+        "match_under_25": 0.3127,
+        "match_under_35": 0.5429999999999999
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "az alkmaar",
+        "hapoel beer sheva"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T16:45:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 198,
+      "cohort_rates": {
+        "match_over_25": 0.7323,
+        "match_under_25": 0.26770000000000005
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "benfica",
+        "celtic"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T19:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 411,
+      "cohort_rates": {
+        "match_over_25": 0.7275,
+        "btts_no": 0.5377,
+        "match_over_35": 0.528,
+        "btts_yes": 0.4623,
+        "match_under_25": 0.27249999999999996,
+        "match_under_35": 0.472
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "bournemouth",
+        "sturm graz"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T19:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 107,
+      "cohort_rates": {
+        "match_over_25": 0.729,
+        "match_over_35": 0.5794,
+        "btts_no": 0.5514,
+        "btts_yes": 0.4486,
+        "match_under_25": 0.271,
+        "match_under_35": 0.4206
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "cska sofia",
+        "monaco"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T16:45:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 278,
+      "cohort_rates": {
+        "match_over_25": 0.6403,
+        "btts_no": 0.6187,
+        "match_over_35": 0.4784,
+        "btts_yes": 0.3813,
+        "match_under_25": 0.3597,
+        "match_under_35": 0.5216000000000001
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "lech poznan",
+        "bayer leverkusen"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T16:45:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 399,
+      "cohort_rates": {
+        "match_over_25": 0.6065,
+        "btts_no": 0.5664,
+        "btts_yes": 0.4336,
+        "match_over_35": 0.4311,
+        "match_under_25": 0.39349999999999996,
+        "match_under_35": 0.5689
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "los angeles fc",
+        "austin fc"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T02:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 2213,
+      "cohort_rates": {
+        "home_over_05": 0.8906,
+        "away_under_15": 0.8016,
+        "match_over_25": 0.5662,
+        "btts_no": 0.5084,
+        "btts_yes": 0.4916,
+        "match_over_35": 0.3461,
+        "match_under_25": 0.43379999999999996,
+        "match_under_35": 0.6538999999999999,
+        "home_under_05": 0.10940000000000005
+      },
+      "baseline": {
+        "market": "home_over_05",
+        "rate": 0.8906,
+        "price": 1.38,
+        "source": "oddspapi",
+        "book": "betfirst.be",
+        "captured_at": "2026-10-14T22:11:32.236227+00:00"
+      },
+      "proposed": {
+        "market": "home_over_05",
+        "rate": 0.8906,
+        "price": 1.38,
+        "source": "oddspapi",
+        "book": "betfirst.be",
+        "captured_at": "2026-10-14T22:11:32.236227+00:00"
+      }
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "nashville sc",
+        "sporting kansas city"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T00:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 215,
+      "cohort_rates": {
+        "away_under_15": 0.8744,
+        "home_over_15": 0.8186,
+        "match_over_25": 0.7349,
+        "match_over_35": 0.5581,
+        "match_over_45": 0.3535,
+        "match_under_25": 0.2651,
+        "match_under_35": 0.44189999999999996,
+        "match_under_45": 0.6465000000000001,
+        "home_under_15": 0.1814
+      },
+      "baseline": {
+        "market": "home_over_15",
+        "rate": 0.8186,
+        "price": 1.95,
+        "source": "oddspapi",
+        "book": "napoleonsports.be",
+        "captured_at": "2026-10-14T22:11:28.283222+00:00"
+      },
+      "proposed": {
+        "market": "home_over_15",
+        "rate": 0.8186,
+        "price": 1.95,
+        "source": "oddspapi",
+        "book": "napoleonsports.be",
+        "captured_at": "2026-10-14T22:11:28.283222+00:00"
+      }
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "panathinaikos",
+        "fk borac banja luka"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T16:45:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 1536,
+      "cohort_rates": {
+        "match_over_25": 0.6094,
+        "btts_no": 0.5391,
+        "btts_yes": 0.4609,
+        "match_over_35": 0.3932,
+        "match_under_25": 0.39059999999999995,
+        "match_under_35": 0.6068
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "riga fc",
+        "kairat almaty"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T16:45:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 1731,
+      "cohort_rates": {
+        "match_over_15": 0.8076,
+        "match_over_25": 0.5968,
+        "btts_no": 0.539,
+        "btts_yes": 0.461,
+        "match_over_35": 0.3807,
+        "match_under_15": 0.19240000000000002,
+        "match_under_25": 0.4032,
+        "match_under_35": 0.6193
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "sc freiburg",
+        "fk jablonec"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T19:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 215,
+      "cohort_rates": {
+        "match_over_25": 0.7349,
+        "btts_no": 0.5767,
+        "match_over_35": 0.5581,
+        "btts_yes": 0.4233,
+        "match_under_25": 0.2651,
+        "match_under_35": 0.44189999999999996
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-15",
+        "sparta praha",
+        "lillestrom"
+      ],
+      "as_of": "2026-10-15T00:14:47+02:00",
+      "kickoff_utc": "2026-10-15T16:45:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-15.json",
+      "cohort_n": 1731,
+      "cohort_rates": {
+        "match_over_25": 0.5968,
+        "btts_no": 0.539,
+        "btts_yes": 0.461,
+        "match_over_35": 0.3807,
+        "match_under_25": 0.4032,
+        "match_under_35": 0.6193
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "athletic club w",
+        "valencia w"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T14:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 580,
+      "cohort_rates": {
+        "match_over_15": 0.8655,
+        "match_over_25": 0.7034,
+        "btts_no": 0.5534,
+        "match_over_35": 0.4845,
+        "btts_yes": 0.4466,
+        "match_under_15": 0.13449999999999995,
+        "match_under_25": 0.2966,
+        "match_under_35": 0.5155000000000001
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "bayern munich",
+        "rb leipzig"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T16:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 1377,
+      "cohort_rates": {
+        "btts_no": 0.541,
+        "btts_yes": 0.459,
+        "match_over_35": 0.4001,
+        "match_under_35": 0.5999
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "betis",
+        "barcelona"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T16:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 624,
+      "cohort_rates": {
+        "btts_no": 0.5272,
+        "btts_yes": 0.4728,
+        "match_over_35": 0.4022,
+        "match_under_35": 0.5978
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "boreham wood",
+        "woking"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T14:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 2181,
+      "cohort_rates": {
+        "match_over_25": 0.5676,
+        "match_under_25": 0.4324
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "cavalry fc",
+        "pacific fc"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T20:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 349,
+      "cohort_rates": {
+        "match_over_35": 0.533,
+        "btts_no": 0.5272,
+        "btts_yes": 0.4728,
+        "match_over_45": 0.3467,
+        "match_under_35": 0.46699999999999997,
+        "match_under_45": 0.6533
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "eastleigh",
+        "brentwood town"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T14:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 1766,
+      "cohort_rates": {
+        "match_over_25": 0.5923,
+        "match_under_25": 0.40769999999999995
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "fenerbahce",
+        "alanyaspor"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T16:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 622,
+      "cohort_rates": {
+        "match_over_25": 0.6994,
+        "btts_no": 0.5563,
+        "match_over_35": 0.4775,
+        "btts_yes": 0.4437,
+        "match_under_25": 0.3006,
+        "match_under_35": 0.5225
+      },
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.6994,
+        "price": 1.62,
+        "source": "theoddsapi",
+        "book": "1xBet",
+        "captured_at": "2026-10-16T22:11:39.877876+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.6994,
+        "price": 1.62,
+        "source": "theoddsapi",
+        "book": "1xBet",
+        "captured_at": "2026-10-16T22:11:39.877876+00:00"
+      }
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "genclerbirligi",
+        "galatasaray"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T13:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 278,
+      "cohort_rates": {
+        "match_over_25": 0.6403,
+        "btts_no": 0.6187,
+        "match_over_35": 0.4784,
+        "btts_yes": 0.3813,
+        "match_under_25": 0.3597,
+        "match_under_35": 0.5216000000000001
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "ham-kam",
+        "bodo/glimt"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T12:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 259,
+      "cohort_rates": {
+        "match_over_25": 0.6409,
+        "btts_no": 0.6062,
+        "match_over_35": 0.4903,
+        "btts_yes": 0.3938,
+        "match_under_25": 0.3591,
+        "match_under_35": 0.5097
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "hapoel tel aviv",
+        "ironi tiberias"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T15:45:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 278,
+      "cohort_rates": {
+        "match_over_25": 0.741,
+        "btts_no": 0.5647,
+        "match_over_35": 0.5396,
+        "btts_yes": 0.4353,
+        "match_under_25": 0.259,
+        "match_under_35": 0.46040000000000003
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "inter turku",
+        "ac oulu"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T15:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 1705,
+      "cohort_rates": {
+        "match_over_25": 0.5953,
+        "btts_no": 0.5413,
+        "btts_yes": 0.4587,
+        "match_over_35": 0.3783,
+        "match_under_25": 0.40469999999999995,
+        "match_under_35": 0.6216999999999999
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "kashima antlers",
+        "v-varen nagasaki"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T06:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 2213,
+      "cohort_rates": {
+        "match_over_25": 0.5662,
+        "btts_no": 0.5084,
+        "btts_yes": 0.4916,
+        "match_over_35": 0.3461,
+        "match_under_25": 0.43379999999999996,
+        "match_under_35": 0.6538999999999999
+      },
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.5662,
+        "price": 1.75,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-16T22:11:41.007452+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.5662,
+        "price": 1.75,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-16T22:11:41.007452+00:00"
+      }
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "kashiwa reysol",
+        "nagoya grampus"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T10:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 1811,
+      "cohort_rates": {
+        "match_over_25": 0.5892,
+        "btts_no": 0.534,
+        "btts_yes": 0.466,
+        "match_over_35": 0.365,
+        "match_under_25": 0.41080000000000005,
+        "match_under_35": 0.635
+      },
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.5892,
+        "price": 1.63,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-16T22:11:41.215092+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.5892,
+        "price": 1.63,
+        "source": "theoddsapi",
+        "book": "Matchbook",
+        "captured_at": "2026-10-16T22:11:41.215092+00:00"
+      }
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "maccabi petah tikva",
+        "maccabi haifa"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T16:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 704,
+      "cohort_rates": {
+        "match_over_25": 0.6207,
+        "btts_no": 0.5128,
+        "btts_yes": 0.4872,
+        "match_over_35": 0.3963,
+        "match_under_25": 0.37929999999999997,
+        "match_under_35": 0.6037
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "manchester city",
+        "ipswich"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T14:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 552,
+      "cohort_rates": {
+        "match_over_25": 0.712,
+        "btts_no": 0.5489,
+        "match_over_35": 0.4928,
+        "btts_yes": 0.4511,
+        "match_under_25": 0.28800000000000003,
+        "match_under_35": 0.5072
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "middlesbrough",
+        "cardiff"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T11:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 1849,
+      "cohort_rates": {
+        "match_over_25": 0.5809,
+        "btts_no": 0.5295,
+        "btts_yes": 0.4705,
+        "match_over_35": 0.3607,
+        "match_under_25": 0.41910000000000003,
+        "match_under_35": 0.6393
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "philadelphia union",
+        "charlotte"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T18:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 1766,
+      "cohort_rates": {
+        "match_over_25": 0.5923,
+        "btts_no": 0.5368,
+        "btts_yes": 0.4632,
+        "match_over_35": 0.3681,
+        "match_under_25": 0.40769999999999995,
+        "match_under_35": 0.6319
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "queen of the south",
+        "ross county"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T14:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 203,
+      "cohort_rates": {
+        "match_over_25": 0.6552,
+        "btts_no": 0.6059,
+        "match_over_35": 0.4975,
+        "btts_yes": 0.3941,
+        "match_under_25": 0.3448,
+        "match_under_35": 0.5025
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "salford city",
+        "crawley town"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T14:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 671,
+      "cohort_rates": {
+        "match_over_25": 0.696,
+        "btts_no": 0.5574,
+        "match_over_35": 0.4739,
+        "btts_yes": 0.4426,
+        "match_under_25": 0.30400000000000005,
+        "match_under_35": 0.5261
+      },
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.696,
+        "price": 1.44,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-16T22:11:39.078165+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.696,
+        "price": 1.44,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-16T22:11:39.078165+00:00"
+      }
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "salisbury fc",
+        "eastbourne borough"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T14:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 754,
+      "cohort_rates": {
+        "match_over_25": 0.683,
+        "match_under_25": 0.31699999999999995
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "sanfrecce hiroshima",
+        "kyoto sanga"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T05:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 452,
+      "cohort_rates": {
+        "match_over_25": 0.7235,
+        "btts_no": 0.5465,
+        "match_over_35": 0.5133,
+        "btts_yes": 0.4535,
+        "match_under_25": 0.27649999999999997,
+        "match_under_35": 0.4867
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "slavia praha",
+        "hradec kralove"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T13:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 457,
+      "cohort_rates": {
+        "match_over_25": 0.7243,
+        "btts_no": 0.5427,
+        "match_over_35": 0.5164,
+        "btts_yes": 0.4573,
+        "match_under_25": 0.27569999999999995,
+        "match_under_35": 0.48360000000000003
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "stockport county fc",
+        "bromley"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T14:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 177,
+      "cohort_rates": {
+        "match_over_25": 0.7232,
+        "btts_no": 0.5706,
+        "match_over_35": 0.548,
+        "btts_yes": 0.4294,
+        "match_under_25": 0.27680000000000005,
+        "match_under_35": 0.45199999999999996
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "tiszakecske fc",
+        "csakvar"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T15:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 702,
+      "cohort_rates": {
+        "match_over_25": 0.6895,
+        "btts_no": 0.5427,
+        "match_over_35": 0.4715,
+        "btts_yes": 0.4573,
+        "match_over_45": 0.2991,
+        "match_under_25": 0.3105,
+        "match_under_35": 0.5285,
+        "match_under_45": 0.7009000000000001
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-17",
+        "villarreal",
+        "elche"
+      ],
+      "as_of": "2026-10-17T00:21:56+02:00",
+      "kickoff_utc": "2026-10-17T14:15:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-17.json",
+      "cohort_n": 2266,
+      "cohort_rates": {
+        "match_over_25": 0.5622,
+        "btts_no": 0.5102,
+        "btts_yes": 0.4898,
+        "match_over_35": 0.3451,
+        "match_under_25": 0.43779999999999997,
+        "match_under_35": 0.6549
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "brighton",
+        "crystal palace"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T13:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 935,
+      "cohort_rates": {
+        "match_over_25": 0.6706,
+        "btts_no": 0.5401,
+        "btts_yes": 0.4599,
+        "match_under_25": 0.3294
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "cruz azul",
+        "fc juarez"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T03:10:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 928,
+      "cohort_rates": {
+        "away_under_15": 0.8233,
+        "match_over_25": 0.6713,
+        "btts_no": 0.5399,
+        "btts_yes": 0.4601,
+        "match_over_35": 0.4483,
+        "match_over_45": 0.2726,
+        "match_under_25": 0.3287,
+        "match_under_35": 0.5517000000000001,
+        "match_under_45": 0.7274
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "hartford athletic",
+        "brooklyn"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-17T23:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 754,
+      "cohort_rates": {
+        "match_over_25": 0.683,
+        "btts_no": 0.5424,
+        "match_over_35": 0.4629,
+        "btts_yes": 0.4576,
+        "match_under_25": 0.31699999999999995,
+        "match_under_35": 0.5371
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "igdir fk",
+        "boluspor"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T10:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 124,
+      "cohort_rates": {
+        "match_over_25": 0.7177,
+        "btts_no": 0.5565,
+        "match_over_35": 0.5484,
+        "btts_yes": 0.4435,
+        "match_under_25": 0.2823,
+        "match_under_35": 0.4516
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "kongsvinger",
+        "sandnes ulf"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T15:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 552,
+      "cohort_rates": {
+        "btts_no": 0.5489,
+        "match_over_35": 0.4928,
+        "btts_yes": 0.4511,
+        "match_under_35": 0.5072
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "molde",
+        "start"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T15:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 548,
+      "cohort_rates": {
+        "match_over_25": 0.7117,
+        "btts_no": 0.5493,
+        "match_over_35": 0.4909,
+        "btts_yes": 0.4507,
+        "match_under_25": 0.2883,
+        "match_under_35": 0.5091
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "panathinaikos",
+        "asteras tripolis"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T14:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 457,
+      "cohort_rates": {
+        "match_over_25": 0.7243,
+        "btts_no": 0.5427,
+        "match_over_35": 0.5164,
+        "btts_yes": 0.4573,
+        "match_under_25": 0.27569999999999995,
+        "match_under_35": 0.48360000000000003
+      },
+      "baseline": {
+        "market": "match_over_25",
+        "rate": 0.7243,
+        "price": 1.65,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-17T22:10:30.362554+00:00"
+      },
+      "proposed": {
+        "market": "match_over_25",
+        "rate": 0.7243,
+        "price": 1.65,
+        "source": "theoddsapi",
+        "book": "Betsson",
+        "captured_at": "2026-10-17T22:10:30.362554+00:00"
+      }
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "riga fc",
+        "sk super nova"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T13:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 349,
+      "cohort_rates": {
+        "match_over_25": 0.7364,
+        "match_over_35": 0.533,
+        "btts_no": 0.5272,
+        "btts_yes": 0.4728,
+        "match_over_45": 0.3467,
+        "match_under_25": 0.26359999999999995,
+        "match_under_35": 0.46699999999999997,
+        "match_under_45": 0.6533
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "seattle sounders",
+        "cf montreal"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T02:30:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 829,
+      "cohort_rates": {
+        "away_under_15": 0.8239,
+        "match_over_25": 0.6803,
+        "btts_no": 0.538,
+        "btts_yes": 0.462,
+        "match_over_35": 0.456,
+        "match_over_45": 0.2835,
+        "match_under_25": 0.3197,
+        "match_under_35": 0.544,
+        "match_under_45": 0.7165
+      },
+      "baseline": {
+        "market": "away_under_15",
+        "rate": 0.8239,
+        "price": 2.8,
+        "source": "oddspapi",
+        "book": "napoleonsports.be",
+        "captured_at": "2026-10-17T22:10:36.173894+00:00"
+      },
+      "proposed": {
+        "market": "away_under_15",
+        "rate": 0.8239,
+        "price": 2.8,
+        "source": "oddspapi",
+        "book": "napoleonsports.be",
+        "captured_at": "2026-10-17T22:10:36.173894+00:00"
+      }
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "seoul e-land fc",
+        "gimhae city"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T05:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 580,
+      "cohort_rates": {
+        "match_over_25": 0.7034,
+        "btts_no": 0.5534,
+        "match_over_35": 0.4845,
+        "btts_yes": 0.4466,
+        "match_under_25": 0.2966,
+        "match_under_35": 0.5155000000000001
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "toluca",
+        "atletico san luis"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T01:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 1377,
+      "cohort_rates": {
+        "away_under_15": 0.8272,
+        "match_over_25": 0.6202,
+        "btts_no": 0.541,
+        "btts_yes": 0.459,
+        "match_over_35": 0.4001,
+        "match_under_25": 0.3798,
+        "match_under_35": 0.5999
+      },
+      "baseline": null,
+      "proposed": null
+    },
+    {
+      "fixture": [
+        "2026-10-18",
+        "twente",
+        "utrecht"
+      ],
+      "as_of": "2026-10-18T00:21:21+02:00",
+      "kickoff_utc": "2026-10-18T18:00:00+00:00",
+      "archive": "localdata/picks_morning_2026-10-18.json",
+      "cohort_n": 347,
+      "cohort_rates": {
+        "match_over_25": 0.7378,
+        "match_over_35": 0.5331,
+        "btts_no": 0.5274,
+        "btts_yes": 0.4726,
+        "match_under_25": 0.2622,
+        "match_under_35": 0.4669
+      },
+      "baseline": null,
+      "proposed": null
+    }
+  ],
+  "newly_admitted_candidates_by_market": {
+    "match_under_25": 8,
+    "match_under_35": 3,
+    "match_under_45": 2
+  },
+  "stresses": [
+    {
+      "decimal_price_haircut": 0,
+      "baseline": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -20.625,
+          70.75
+        ],
+        "resolved_subset_roi": 0.175,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 4.375,
+        "roi": 0.175,
+        "worst_roi": -0.4125,
+        "best_roi": 1.415,
+        "mean_log_growth_per_resolved_bet_day": 0.04281999718292814,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "proposed": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -20.625,
+          70.75
+        ],
+        "resolved_subset_roi": 0.175,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 4.375,
+        "roi": 0.175,
+        "worst_roi": -0.4125,
+        "best_roi": 1.415,
+        "mean_log_growth_per_resolved_bet_day": 0.04281999718292814,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "paired": {
+        "status": "NO_OP",
+        "paired_fully_resolved_days": 1,
+        "valid_replicates": 0,
+        "roi_gap_95pct": null
+      },
+      "by_day": {
+        "2026-10-15": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 21.125,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 21.125,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          }
+        },
+        "2026-10-17": {
+          "baseline": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 29.375,
+            "net": 4.375,
+            "unknown": 0,
+            "worst_net": 4.375,
+            "best_net": 4.375,
+            "log_growth": 0.04281999718292814,
+            "markets": {
+              "match_over_25": 4
+            }
+          },
+          "proposed": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 29.375,
+            "net": 4.375,
+            "unknown": 0,
+            "worst_net": 4.375,
+            "best_net": 4.375,
+            "log_growth": 0.04281999718292814,
+            "markets": {
+              "match_over_25": 4
+            }
+          }
+        },
+        "2026-10-18": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 45.25,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 45.25,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "decimal_price_haircut": 0.02,
+      "baseline": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -21.875,
+          65.875
+        ],
+        "resolved_subset_roi": 0.125,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 3.125,
+        "roi": 0.125,
+        "worst_roi": -0.4375,
+        "best_roi": 1.3175,
+        "mean_log_growth_per_resolved_bet_day": 0.030771658666753687,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "proposed": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -21.875,
+          65.875
+        ],
+        "resolved_subset_roi": 0.125,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 3.125,
+        "roi": 0.125,
+        "worst_roi": -0.4375,
+        "best_roi": 1.3175,
+        "mean_log_growth_per_resolved_bet_day": 0.030771658666753687,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "paired": {
+        "status": "NO_OP",
+        "paired_fully_resolved_days": 1,
+        "valid_replicates": 0,
+        "roi_gap_95pct": null
+      },
+      "by_day": {
+        "2026-10-15": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 19.75,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 19.75,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          }
+        },
+        "2026-10-17": {
+          "baseline": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 28.125,
+            "net": 3.125,
+            "unknown": 0,
+            "worst_net": 3.125,
+            "best_net": 3.125,
+            "log_growth": 0.030771658666753687,
+            "markets": {
+              "match_over_25": 4
+            }
+          },
+          "proposed": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 28.125,
+            "net": 3.125,
+            "unknown": 0,
+            "worst_net": 3.125,
+            "best_net": 3.125,
+            "log_growth": 0.030771658666753687,
+            "markets": {
+              "match_over_25": 4
+            }
+          }
+        },
+        "2026-10-18": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 43.00000000000001,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 43.00000000000001,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "decimal_price_haircut": 0.05,
+      "baseline": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -23.5,
+          59.0
+        ],
+        "resolved_subset_roi": 0.06,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 1.5,
+        "roi": 0.06,
+        "worst_roi": -0.47,
+        "best_roi": 1.18,
+        "mean_log_growth_per_resolved_bet_day": 0.014888612493750559,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "proposed": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -23.5,
+          59.0
+        ],
+        "resolved_subset_roi": 0.06,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 1.5,
+        "roi": 0.06,
+        "worst_roi": -0.47,
+        "best_roi": 1.18,
+        "mean_log_growth_per_resolved_bet_day": 0.014888612493750559,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "paired": {
+        "status": "NO_OP",
+        "paired_fully_resolved_days": 1,
+        "valid_replicates": 0,
+        "roi_gap_95pct": null
+      },
+      "by_day": {
+        "2026-10-15": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 17.875000000000004,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 17.875000000000004,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          }
+        },
+        "2026-10-17": {
+          "baseline": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 26.5,
+            "net": 1.5,
+            "unknown": 0,
+            "worst_net": 1.5,
+            "best_net": 1.5,
+            "log_growth": 0.014888612493750559,
+            "markets": {
+              "match_over_25": 4
+            }
+          },
+          "proposed": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 26.5,
+            "net": 1.5,
+            "unknown": 0,
+            "worst_net": 1.5,
+            "best_net": 1.5,
+            "log_growth": 0.014888612493750559,
+            "markets": {
+              "match_over_25": 4
+            }
+          }
+        },
+        "2026-10-18": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 39.625,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 39.625,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "decimal_price_haircut": 0.1,
+      "baseline": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -26.25,
+          47.75
+        ],
+        "resolved_subset_roi": -0.05,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": -1.25,
+        "roi": -0.05,
+        "worst_roi": -0.525,
+        "best_roi": 0.955,
+        "mean_log_growth_per_resolved_bet_day": -0.012578782206860073,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "proposed": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -26.25,
+          47.75
+        ],
+        "resolved_subset_roi": -0.05,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": -1.25,
+        "roi": -0.05,
+        "worst_roi": -0.525,
+        "best_roi": 0.955,
+        "mean_log_growth_per_resolved_bet_day": -0.012578782206860073,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "paired": {
+        "status": "NO_OP",
+        "paired_fully_resolved_days": 1,
+        "valid_replicates": 0,
+        "roi_gap_95pct": null
+      },
+      "by_day": {
+        "2026-10-15": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 14.750000000000004,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 14.750000000000004,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          }
+        },
+        "2026-10-17": {
+          "baseline": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 23.75,
+            "net": -1.25,
+            "unknown": 0,
+            "worst_net": -1.25,
+            "best_net": -1.25,
+            "log_growth": -0.012578782206860073,
+            "markets": {
+              "match_over_25": 4
+            }
+          },
+          "proposed": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 23.75,
+            "net": -1.25,
+            "unknown": 0,
+            "worst_net": -1.25,
+            "best_net": -1.25,
+            "log_growth": -0.012578782206860073,
+            "markets": {
+              "match_over_25": 4
+            }
+          }
+        },
+        "2026-10-18": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 34.25,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 34.25,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          }
+        }
+      }
+    }
+  ],
+  "reselection_stresses": [
+    {
+      "decimal_price_haircut_before_selection": 0,
+      "changed_fixture_choices": [],
+      "changed_card_dates": [],
+      "baseline": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -20.625,
+          70.75
+        ],
+        "resolved_subset_roi": 0.175,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 4.375,
+        "roi": 0.175,
+        "worst_roi": -0.4125,
+        "best_roi": 1.415,
+        "mean_log_growth_per_resolved_bet_day": 0.04281999718292814,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "proposed": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -20.625,
+          70.75
+        ],
+        "resolved_subset_roi": 0.175,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 4.375,
+        "roi": 0.175,
+        "worst_roi": -0.4125,
+        "best_roi": 1.415,
+        "mean_log_growth_per_resolved_bet_day": 0.04281999718292814,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "paired": {
+        "status": "NO_OP",
+        "paired_fully_resolved_days": 1,
+        "valid_replicates": 0,
+        "roi_gap_95pct": null
+      },
+      "changed_card_net_difference_bounds": [
+        0,
+        0
+      ],
+      "plans": {},
+      "by_day": {
+        "2026-10-15": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 21.125,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 21.125,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          }
+        },
+        "2026-10-17": {
+          "baseline": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 29.375,
+            "net": 4.375,
+            "unknown": 0,
+            "worst_net": 4.375,
+            "best_net": 4.375,
+            "log_growth": 0.04281999718292814,
+            "markets": {
+              "match_over_25": 4
+            }
+          },
+          "proposed": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 29.375,
+            "net": 4.375,
+            "unknown": 0,
+            "worst_net": 4.375,
+            "best_net": 4.375,
+            "log_growth": 0.04281999718292814,
+            "markets": {
+              "match_over_25": 4
+            }
+          }
+        },
+        "2026-10-18": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 45.25,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 45.25,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "decimal_price_haircut_before_selection": 0.02,
+      "changed_fixture_choices": [],
+      "changed_card_dates": [],
+      "baseline": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -21.875,
+          65.875
+        ],
+        "resolved_subset_roi": 0.125,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 3.125,
+        "roi": 0.125,
+        "worst_roi": -0.4375,
+        "best_roi": 1.3175,
+        "mean_log_growth_per_resolved_bet_day": 0.030771658666753687,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "proposed": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -21.875,
+          65.875
+        ],
+        "resolved_subset_roi": 0.125,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 3.125,
+        "roi": 0.125,
+        "worst_roi": -0.4375,
+        "best_roi": 1.3175,
+        "mean_log_growth_per_resolved_bet_day": 0.030771658666753687,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "paired": {
+        "status": "NO_OP",
+        "paired_fully_resolved_days": 1,
+        "valid_replicates": 0,
+        "roi_gap_95pct": null
+      },
+      "changed_card_net_difference_bounds": [
+        0,
+        0
+      ],
+      "plans": {},
+      "by_day": {
+        "2026-10-15": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 19.75,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 19.75,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          }
+        },
+        "2026-10-17": {
+          "baseline": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 28.125,
+            "net": 3.125,
+            "unknown": 0,
+            "worst_net": 3.125,
+            "best_net": 3.125,
+            "log_growth": 0.030771658666753687,
+            "markets": {
+              "match_over_25": 4
+            }
+          },
+          "proposed": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 28.125,
+            "net": 3.125,
+            "unknown": 0,
+            "worst_net": 3.125,
+            "best_net": 3.125,
+            "log_growth": 0.030771658666753687,
+            "markets": {
+              "match_over_25": 4
+            }
+          }
+        },
+        "2026-10-18": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 43.00000000000001,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 43.00000000000001,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "decimal_price_haircut_before_selection": 0.05,
+      "changed_fixture_choices": [],
+      "changed_card_dates": [],
+      "baseline": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -23.5,
+          59.0
+        ],
+        "resolved_subset_roi": 0.06,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 1.5,
+        "roi": 0.06,
+        "worst_roi": -0.47,
+        "best_roi": 1.18,
+        "mean_log_growth_per_resolved_bet_day": 0.014888612493750559,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "proposed": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -23.5,
+          59.0
+        ],
+        "resolved_subset_roi": 0.06,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": 1.5,
+        "roi": 0.06,
+        "worst_roi": -0.47,
+        "best_roi": 1.18,
+        "mean_log_growth_per_resolved_bet_day": 0.014888612493750559,
+        "markets": {
+          "home_over_05": 1,
+          "home_over_15": 1,
+          "match_over_25": 5,
+          "away_under_15": 1
+        }
+      },
+      "paired": {
+        "status": "NO_OP",
+        "paired_fully_resolved_days": 1,
+        "valid_replicates": 0,
+        "roi_gap_95pct": null
+      },
+      "changed_card_net_difference_bounds": [
+        0,
+        0
+      ],
+      "plans": {},
+      "by_day": {
+        "2026-10-15": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 17.875000000000004,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 17.875000000000004,
+            "log_growth": null,
+            "markets": {
+              "home_over_05": 1,
+              "home_over_15": 1
+            }
+          }
+        },
+        "2026-10-17": {
+          "baseline": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 26.5,
+            "net": 1.5,
+            "unknown": 0,
+            "worst_net": 1.5,
+            "best_net": 1.5,
+            "log_growth": 0.014888612493750559,
+            "markets": {
+              "match_over_25": 4
+            }
+          },
+          "proposed": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 1,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 26.5,
+            "net": 1.5,
+            "unknown": 0,
+            "worst_net": 1.5,
+            "best_net": 1.5,
+            "log_growth": 0.014888612493750559,
+            "markets": {
+              "match_over_25": 4
+            }
+          }
+        },
+        "2026-10-18": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 39.625,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 39.625,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "decimal_price_haircut_before_selection": 0.1,
+      "changed_fixture_choices": [
+        {
+          "fixture": [
+            "2026-10-17",
+            "salford city",
+            "crawley town"
+          ],
+          "baseline": null,
+          "proposed": {
+            "market": "match_under_25",
+            "rate": 0.30400000000000005,
+            "price": 2.475,
+            "source": "theoddsapi",
+            "book": "William Hill",
+            "captured_at": "2026-10-16T22:11:39.078165+00:00"
+          }
+        }
+      ],
+      "changed_card_dates": [
+        "2026-10-17"
+      ],
+      "baseline": {
+        "total_planned_stake": 37.5,
+        "total_net_bounds": [
+          -10.75,
+          86.375
+        ],
+        "resolved_subset_roi": 1.14,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 3,
+        "resolved": 1,
+        "unknown": 2,
+        "stake": 12.5,
+        "net": 14.25,
+        "roi": 1.14,
+        "worst_roi": -0.2866666666666667,
+        "best_roi": 2.3033333333333332,
+        "mean_log_growth_per_resolved_bet_day": 0.13321884378622278,
+        "markets": {
+          "home_over_15": 1,
+          "away_under_15": 2,
+          "match_over_25": 3
+        }
+      },
+      "proposed": {
+        "total_planned_stake": 50.0,
+        "total_net_bounds": [
+          -50.0,
+          47.125
+        ],
+        "resolved_subset_roi": -1.0,
+        "days": 3,
+        "bet_days": 3,
+        "accas": 4,
+        "resolved": 2,
+        "unknown": 2,
+        "stake": 25.0,
+        "net": -25.0,
+        "roi": -1.0,
+        "worst_roi": -1.0,
+        "best_roi": 0.9425,
+        "mean_log_growth_per_resolved_bet_day": -0.2876820724517809,
+        "markets": {
+          "home_over_15": 1,
+          "away_under_15": 2,
+          "match_over_25": 4,
+          "match_under_25": 1
+        }
+      },
+      "paired": {
+        "status": "INSUFFICIENT_CHANGED_DAY_SUPPORT",
+        "paired_fully_resolved_days": 1,
+        "settled_changed_days": 1,
+        "valid_replicates": 0,
+        "roi_gap_95pct": null
+      },
+      "changed_card_net_difference_bounds": [
+        -39.25,
+        -39.25
+      ],
+      "plans": {
+        "2026-10-17": {
+          "baseline": [
+            {
+              "legs": [
+                {
+                  "match": "Fenerbahce vs Alanyaspor",
+                  "pick": "over",
+                  "prob": 0.6994,
+                  "odds": 1.458,
+                  "result": null
+                },
+                {
+                  "match": "Kashiwa Reysol vs Nagoya Grampus",
+                  "pick": "over",
+                  "prob": 0.5892,
+                  "odds": 1.467,
+                  "result": null
+                }
+              ],
+              "odds": 2.14,
+              "stake_pct": 12.5
+            }
+          ],
+          "proposed": [
+            {
+              "legs": [
+                {
+                  "match": "Fenerbahce vs Alanyaspor",
+                  "pick": "over",
+                  "prob": 0.6994,
+                  "odds": 1.458,
+                  "result": null
+                },
+                {
+                  "match": "Salford City vs Crawley Town",
+                  "pick": "under",
+                  "prob": 0.30400000000000005,
+                  "odds": 2.475,
+                  "result": null
+                }
+              ],
+              "odds": 3.61,
+              "stake_pct": 12.5
+            },
+            {
+              "legs": [
+                {
+                  "match": "Kashiwa Reysol vs Nagoya Grampus",
+                  "pick": "over",
+                  "prob": 0.5892,
+                  "odds": 1.467,
+                  "result": null
+                },
+                {
+                  "match": "Kashima Antlers vs V-Varen Nagasaki",
+                  "pick": "over",
+                  "prob": 0.5662,
+                  "odds": 1.575,
+                  "result": null
+                }
+              ],
+              "odds": 2.31,
+              "stake_pct": 12.5
+            }
+          ]
+        }
+      },
+      "by_day": {
+        "2026-10-15": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 37.875,
+            "log_growth": null,
+            "markets": {
+              "home_over_15": 1,
+              "away_under_15": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 37.875,
+            "log_growth": null,
+            "markets": {
+              "home_over_15": 1,
+              "away_under_15": 1
+            }
+          }
+        },
+        "2026-10-17": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 1,
+            "wins": 1,
+            "stake": 12.5,
+            "resolved_stake": 12.5,
+            "resolved_return": 26.75,
+            "net": 14.25,
+            "unknown": 0,
+            "worst_net": 14.25,
+            "best_net": 14.25,
+            "log_growth": 0.13321884378622278,
+            "markets": {
+              "match_over_25": 2
+            }
+          },
+          "proposed": {
+            "bets": 2,
+            "resolved": 2,
+            "wins": 0,
+            "stake": 25.0,
+            "resolved_stake": 25.0,
+            "resolved_return": 0.0,
+            "net": -25.0,
+            "unknown": 0,
+            "worst_net": -25.0,
+            "best_net": -25.0,
+            "log_growth": -0.2876820724517809,
+            "markets": {
+              "match_over_25": 3,
+              "match_under_25": 1
+            }
+          }
+        },
+        "2026-10-18": {
+          "baseline": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 34.25,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          },
+          "proposed": {
+            "bets": 1,
+            "resolved": 0,
+            "wins": 0,
+            "stake": 12.5,
+            "resolved_stake": 0.0,
+            "resolved_return": 0.0,
+            "net": 0.0,
+            "unknown": 1,
+            "worst_net": -12.5,
+            "best_net": 34.25,
+            "log_growth": null,
+            "markets": {
+              "away_under_15": 1,
+              "match_over_25": 1
+            }
+          }
+        }
+      }
+    }
+  ],
+  "inputs_sha256": {
+    "localdata/picks_morning_2026-06-25.json": "9baf7854eee2dae9e00c1a76e88f39ddc8559cc48c2da6856f6bc4422fb05b61",
+    "localdata/picks_morning_2026-06-26.json": "21ffa92b6bfbdc52ae04d17c8649bca5cf540c89bac6b9b7acecc84bd1486027",
+    "localdata/picks_morning_2026-06-27.json": "94c1493ffea409840f4969f2d5c04ef26bca4ee2812fedee8d544935b4bb39af",
+    "localdata/picks_morning_2026-07-02.json": "767562ea4f661b976d25bbf13050124f079818a1accd637a99ee103feb6db0cb",
+    "localdata/picks_morning_2026-07-03.json": "ddaf2e059b8332e4e47a16500ebc3ddbd99209558584edc9daf5554b86262782",
+    "localdata/picks_morning_2026-07-04.json": "79def1da8a17fa07654783de38326a451b3c4ea31bb9dfd196c6f2ecd0d9038d",
+    "localdata/picks_morning_2026-07-07.json": "cc826e53308a1e80cda15a73f6900afab59a68478c9842ba8fb17ae3929ebf3d",
+    "localdata/picks_morning_2026-07-09.json": "1c0bb73f2025b485d625bb39ec20871b8b6aa9ff0bf6b5cb0aa07b6f35c93ef4",
+    "localdata/picks_morning_2026-07-11.json": "c3fde8461857fe405ab92bf734c39e7ebf3d84778ec87e28e01bdeb806c1ae63",
+    "localdata/picks_morning_2026-07-12.json": "ce1e8b4c51a93b05fd6fcfc3f235e7860295af604572faef95115549c400dcf7",
+    "localdata/picks_morning_2026-07-15.json": "dafbbb583bd9f354faed3a631e29d003a71aa4b916112c4f334d5e2c1af0f01e",
+    "localdata/picks_morning_2026-07-17.json": "fd9339bb74a6f1bbcaca9a5c9c7edf959deb9cc04026affb503cf604468f055d",
+    "localdata/picks_morning_2026-07-21.json": "29ebb00b385adf169b44300af7ef0b32046d91529649873888154cdfab4450a6",
+    "localdata/picks_morning_2026-07-24.json": "f61c260f0f00733cd479f09dd8a79ff442da41bc3ae1576e6a04fa27c6d5a9ab",
+    "localdata/picks_morning_2026-07-25.json": "50c56b64f0ec1c217268852e494741e4879f3d25c157e9dfb0bebbbaf0648a39",
+    "localdata/picks_morning_2026-07-26.json": "1735970e498b421cd5d68fb74b1cad1f333957d61a01ae7679bbb18f34f6489d",
+    "localdata/picks_morning_2026-07-27.json": "7bdddb063366beacf57d01677a71e1221df357d7b95c64b7f28a23ac08fcfe1a",
+    "localdata/picks_morning_2026-07-28.json": "d06f740e6ce93feb1de087898ec7cacfc1fb4bd187c7f3902e9a9a2443a30549",
+    "localdata/picks_morning_2026-07-30.json": "ec71cb97ed35932a958614b697b94023afd5b0af84c6d796f3ca29852a21ec66",
+    "localdata/picks_morning_2026-07-31.json": "c267dc7f7a201afdb06de310414e9b7d9468d6378b572b1b197c7ac47805a40f",
+    "localdata/picks_morning_2026-08-01.json": "54c3e5c8b5c370df41321bb0faf401bc0858dea9c0a2062738ee58474910b08c",
+    "localdata/picks_morning_2026-08-04.json": "21b7b93197eabddad318cec05c26649108f8829c76d2ab14c9247604fbf2295e",
+    "localdata/picks_morning_2026-08-05.json": "14e45246c7269221dfd255161659c6ea6e09c745fc663608bd95214b961f7562",
+    "localdata/picks_morning_2026-08-09.json": "7c637d79b524a47b6ea78449f4998d52ca77de23104c6ddc49e51822df2e681b",
+    "localdata/picks_morning_2026-08-10.json": "8bd786693b77a26f23538326aca61b42e8a1ac5ebc8f9ecf876f724135cc132e",
+    "localdata/picks_morning_2026-08-14.json": "6259bdec70db45fa6155ca511e051bcd3c5d873c2594c9c52342c0362a4d7e0d",
+    "localdata/picks_morning_2026-08-20.json": "f12f2367bf2cc6c63e65b8cd73ca3970051a366728acf3a20e5da026e3680010",
+    "localdata/picks_morning_2026-08-21.json": "7a98242d666558ce05ae79d3c2763fffe8819fc3751986ca3de952b87091d3a8",
+    "localdata/picks_morning_2026-08-22.json": "7141252dd23c08a5fdd15fd0c3d311eb5f89e0b52f70d7e273f6560601c73e2a",
+    "localdata/picks_morning_2026-08-23.json": "7e447fd5d891ebaefc12e0d01e7562bafa8150d43c5c3953435719d6e217c778",
+    "localdata/picks_morning_2026-08-24.json": "8676f5d9b0deb96a7ac3af1de5670c862a450ef46ec22ececd408c40a3230d39",
+    "localdata/picks_morning_2026-08-25.json": "7c942c3f2384dbd8ce080abc2bb11a14f0d0cd8b63dbc2af260718e8807f51b2",
+    "localdata/picks_morning_2026-08-26.json": "d4dfd8cb8c409164ea5c94dbec19e170166bbe84602cf11d2c22f5c5f9ef45f5",
+    "localdata/picks_morning_2026-08-27.json": "2bdaa6dacc04574e4bca754af91ddaa214756a906ccbbc51fd920650c24dc15d",
+    "localdata/picks_morning_2026-08-28.json": "9a064acbe392c41639da224af6fe89eaf5d5b3f2e0bdcbcfb6c3634f324f322c",
+    "localdata/picks_morning_2026-08-29.json": "11e2a352be3b7e76bf957f930889665c86d03465b2f2b6339796221c8f1bd723",
+    "localdata/picks_morning_2026-08-30.json": "2bb35c453055fede6641c47ccb2de3dbf9eacf05d405e43fe32db4092c0e9fd1",
+    "localdata/picks_morning_2026-08-31.json": "c8843255bbc4ef93117131013c8c800ca8039bff066c3a3d84f58d9ba3c91bf7",
+    "localdata/picks_morning_2026-09-01.json": "d46acba6c2022e3f87bf0f8017342756066949c19622fc08b0866a6adc84651b",
+    "localdata/picks_morning_2026-09-02.json": "8fa6bc03a100b7dbaf237fc83fe777e9091295b17affc2eef83b6110f9c2f4f9",
+    "localdata/picks_morning_2026-09-03.json": "bffbe851dcb0d76cca486d4e611f97fc8aacf27b7b081275dd84ce53303fb50e",
+    "localdata/picks_morning_2026-09-04.json": "a79eda68b708bd5d5bc90c75f1b2ae3d427a4954c4593cbe2fa66e04c516f064",
+    "localdata/picks_morning_2026-09-05.json": "f1e8909adbe424f180bb6ae9ee88e9753443e2971c5b28d342d2037efd5d9844",
+    "localdata/picks_morning_2026-09-06.json": "fda31d04b712445508932bdfdaa7565519518232b7bfdef1739ec88db1935399",
+    "localdata/picks_morning_2026-09-07.json": "640fc3ff92b0aba79a4c23f8b6331f085d3dfb7094c9fd359aa00f1aed4ce7cb",
+    "localdata/picks_morning_2026-09-08.json": "c476d692fcf7e053afb6fa6d0bf544393a2f35690e906c51e74820386fd31574",
+    "localdata/picks_morning_2026-09-09.json": "b44b1d5cd3799ccbec4d5d08398ed62fd7d8364721410fc58eafaa76f13e95b7",
+    "localdata/picks_morning_2026-09-10.json": "3fe78fc4a356c0171e16dd40ffabefa147a7a0fe49526ce77b5eaef68f64322b",
+    "localdata/picks_morning_2026-09-11.json": "5f5bf7724c07e85db49df47a7a338536064c8b10fd87901b90b21124ebb155e2",
+    "localdata/picks_morning_2026-09-12.json": "18f0ea1381375963379fb2a785a0ff5ad4e0221bbaf2567fa0f7b90eb789cc64",
+    "localdata/picks_morning_2026-09-13.json": "46277bea1463bc1a0b94fe1f5ec05aedbd3fc5f72bb8b97b6a3f03101852c639",
+    "localdata/picks_morning_2026-09-14.json": "8b868622160247e87f104e71f93587361db3cf0da3a7aee02629ddc4c0d09590",
+    "localdata/picks_morning_2026-09-15.json": "234ed9326effc49f4c5d7b8906e7a541f2fefe32ad7ee3d8703c213b9be8b4fe",
+    "localdata/picks_morning_2026-09-16.json": "5b086ef197f9ca9cb13a931f3a6e47608e7bd138cff3fe404a6c464b3e6f785e",
+    "localdata/picks_morning_2026-09-17.json": "9496ae9c9a3352b4faf528599bfbef455440bab626edaade24ffde2e44f64cc9",
+    "localdata/picks_morning_2026-09-18.json": "f53badac4934d4c783292920d8ce12400585d48c8fcae665e0c184c915e6f048",
+    "localdata/picks_morning_2026-09-19.json": "bda4276356ca8fcf6065416bdaed42ece604ebd9cdb5a203a50c76cccf9b3eea",
+    "localdata/picks_morning_2026-09-20.json": "849977355eedbd8e487c1f6eb870c33c52cf2076603cd39bfeaf332c09a276d1",
+    "localdata/picks_morning_2026-09-21.json": "99b761b2392b950eda567cc14e5f1ce6a6654747c06e6aade7fbd1871d932c67",
+    "localdata/picks_morning_2026-09-22.json": "b3df8bd536d1094326b72e5eb223999ad8ea15f47b362ae20feefe074e73c5c7",
+    "localdata/picks_morning_2026-09-23.json": "4c4b80e0265dda792e9edae64f19e6d50c55b792640c20b93f7b3e19260d856f",
+    "localdata/picks_morning_2026-09-24.json": "4bcb4159bdaeed660dab81ce21dc446951133011599415536a390fc33e5bc6ea",
+    "localdata/picks_morning_2026-09-25.json": "7ec9c5bcf4721090b2f5dbebdcff2feb2bc46cf60d991e97170d68a59a71a8a8",
+    "localdata/picks_morning_2026-09-26.json": "229848f4c2664eda7f3e8271927ce8d8264f54673e23dddf13177b83fa19e469",
+    "localdata/picks_morning_2026-09-27.json": "04138760146f2e22afc8641eaa6abfc4ad989fad4630ff0fd1db5500503b4fac",
+    "localdata/picks_morning_2026-09-28.json": "647d2c75531a6e438f127528f5ff2cf4b52267ff352ecd8d981b9615b8521f9b",
+    "localdata/picks_morning_2026-09-29.json": "482524c73041155a82fa4e0b71320b4d683b1e7e200abf75eb6a5c4e282ff676",
+    "localdata/picks_morning_2026-09-30.json": "c77eaf600a56e7d4cb58737c3bdc591719fd3acd965c0830ed6e25f18f45b7d2",
+    "localdata/picks_morning_2026-10-01.json": "91f3ee8b0404bddc7cc7697d3224150b2a0ece2c9b960b653fedcca519ace0cd",
+    "localdata/picks_morning_2026-10-02.json": "d37a35c304ae9e4281cbe8f072a2615044c90e30cc792c113c92679ee414afff",
+    "localdata/picks_morning_2026-10-03.json": "280165835f9cfb9a8799c82e8edb6a5a2e54ac7b685c4422164c7bdc2fa9752b",
+    "localdata/picks_morning_2026-10-04.json": "ca88a030f7e02a57ab24bc5c4bb102c239f523e34fb18d630d5443a1e35ebb2f",
+    "localdata/picks_morning_2026-10-05.json": "18d49506314f9e18ac478067de1ce725265824f7e9ce08e2e081f6d9711e8f0b",
+    "localdata/picks_morning_2026-10-06.json": "f3c60675f4a9747ab69746d51f0af595e94355b34a65d1a3d4741845d68fd529",
+    "localdata/picks_morning_2026-10-07.json": "da118a50e15cc6093d5f51c55b1308e6da87335459d7690bb9af3b6790eebb14",
+    "localdata/picks_morning_2026-10-08.json": "4a8b464057593d9d957606e16942809eeb4f9e33a3e5bb1398cd00ae91b3eee4",
+    "localdata/picks_morning_2026-10-09.json": "d5e6f2fb64416681954ddd74a981c3aab1b40d45bf51b0ab03675609ae4290df",
+    "localdata/picks_morning_2026-10-10.json": "0e1d89fdcac8556b37cd2959c668b82685aaec4d2fd953ca521b48c07d2a39dd",
+    "localdata/picks_morning_2026-10-11.json": "4b8525526c115a0d18612e189546e0e9baa9f7f7b01b27c2345b5e8fcf8c96f8",
+    "localdata/picks_morning_2026-10-12.json": "6c1c0289f5e68e269b3d3e0ee69ca919bd0d63d19494090606cc5a63ffcaa6d1",
+    "localdata/picks_morning_2026-10-13.json": "028f77b8ba61f9f286ade8989a77add4b25831e6d2e34a3ac72508495b78588d",
+    "localdata/picks_morning_2026-10-14.json": "26a7f295323b42cd3d4af7f9abafe05995a18f6f9af24c2572646a399432deee",
+    "localdata/picks_morning_2026-10-15.json": "699620ebbf0a05bc65507ab45f7069c8a4483fc1b27b930232ff8bb230add9af",
+    "localdata/picks_morning_2026-10-16.json": "121fa97b46e832b1d00881b5baf39c02e1351b8eed7e64756923bdfcb73cb904",
+    "localdata/picks_morning_2026-10-17.json": "6f7472e1a7e57dedfdfc29102762b885c70da3f0551fd130457c443e4f363f3d",
+    "localdata/picks_morning_2026-10-18.json": "05ea039a48f5cf51a57c38a60ee44538eabc10f5271a933099c121857734f71d",
+    "localdata/oddspapi_odds_2026-10.csv.gz": "ee40d736a627d48b47d6ac57a0dba9188e8885eb270ed8513f1911f06c4412da",
+    "localdata/theoddsapi_odds_2026-10.csv.gz": "918dc7caf50153b82b9a67e120b4a6795adf26b8bb4951d4d27602e02da0c391",
+    "localdata/settled_results.json": "e91cb414c331ebac2723f95e5244ea0bc6f682e8e3fc28002157aba05944a197",
+    "localdata/autobets_enh_tickets_performance.json": "27b89315063d1a517b3f06f663a8fac90722ac682a99af16d063e4723344ac48",
+    "scripts/audit_enh_under_parity.py": "074adad13f15f5c1bdcc8aaad8c94e95f61b75f29dca3e3d95b7400d96ad2acc",
+    "scripts/picks_today.py": "6dc698e187890c10eef8b32bb018111860aea1d6411a4190ea845b4044ae3b50",
+    "scripts/auto_tickets.py": "c537381ef29703b5c9a93363dd8aac40bcbe16494882a930ef2419981693d526",
+    "src/edgefactory/enh_registry.py": "cc7951f057662eb8bc6a9a1cc54c425c7841bf477fcdbccb59018898c6eddcf6",
+    "src/edgefactory/enh_pricing.py": "70fdb22b88b06318aad2e529862a163cf7bf379e93a98b4bd5d1cdf0994992eb"
+  },
+  "settings": {
+    "bankroll_basis": "100 capital points reset each date, not an as-traded rolling bank",
+    "main_lane_parent_veto_replayed": false,
+    "freeze_lifecycle_replayed": false,
+    "min_leg_odds": 1.3,
+    "stake_frac": 0.25,
+    "stake_mode": "per_acca",
+    "max_accas": 3,
+    "rank": "prob",
+    "seed": 20261019
+  }
+}

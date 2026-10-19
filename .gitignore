@@ -190,3 +190,6 @@ dist/
 !localdata/ml_fade_research_report_*.md
 !localdata/ml_fade_checkpoint_contexts_*.txt
 !localdata/ml_fade_checkpoint_price_study_*.txt
+
+# Local read-only audit/test scratch (reports belong in docs/operator).
+.cache/
