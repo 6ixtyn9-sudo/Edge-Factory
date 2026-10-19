@@ -18,6 +18,8 @@ _ROW = re.compile(r"(?=<a href='/index\.php\?clanek=match-detail)")
 _TEAM = re.compile(r"livescore-team-name'>([^<]+)<")
 _PROB = re.compile(r"prob-val[^>]*>([^<]+)<")
 _FT = re.compile(r"act-score-line[^>]*>(\d+)<")
+# Some renders put both scores in one element ("0-1") instead of two.
+_FT_PAIR = re.compile(r"act-score-line[^>]*>\s*(\d+)\s*[-:\u2013]\s*(\d+)\s*<")
 _PRED_SC = re.compile(r"livescore-score-line'[^>]*>\s*(\d+)\s*<")
 _TIP = re.compile(r"tip-indicator-circle'[^>]*>([12X])<")
 _TIME = re.compile(r"data-time='([^']+)'")
@@ -41,7 +43,22 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
             time.sleep(1.5 * (attempt + 1))
     if not html:
         return []
+    return parse_html(html, date)
 
+
+def _ft_score(chunk: str) -> tuple[int | None, int | None]:
+    """Final score for one match row, from either render shape."""
+    ft = _FT.findall(chunk)
+    if len(ft) >= 2:
+        return int(ft[0]), int(ft[1])
+    pair = _FT_PAIR.search(chunk)
+    if pair:
+        return int(pair.group(1)), int(pair.group(2))
+    return None, None
+
+
+def parse_html(html: str, date: str) -> list[dict]:
+    """Pure parser: rendered quicktips page -> one dict per match row."""
     out = []
     league = None
     for chunk in _ROW.split(html):
@@ -58,7 +75,7 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
                     p2 = float(probs[3].rstrip("%"))
                 except ValueError:
                     pass
-            ft = _FT.findall(chunk)
+            hs, gs = _ft_score(chunk)
             psc = _PRED_SC.findall(chunk)
             tip = _TIP.search(chunk)
             t = _TIME.search(chunk)
@@ -74,8 +91,8 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
                     "tip": tip.group(1) if tip else None,
                     "pred_hs": int(psc[0]) if len(psc) >= 2 else None,
                     "pred_gs": int(psc[1]) if len(psc) >= 2 else None,
-                    "hs": int(ft[0]) if len(ft) >= 2 else None,
-                    "gs": int(ft[1]) if len(ft) >= 2 else None,
+                    "hs": hs,
+                    "gs": gs,
                     "status": st.group(1) if st else None,
                 }
             )
