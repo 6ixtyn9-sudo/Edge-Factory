@@ -93,7 +93,8 @@ def test_refresh_source_writes_only_settled_score_fields(tmp_path, monkeypatch):
         "source": "forebet", "status": "OK", "raw": 2,
         "scored": 1, "terminal_status": 0, "new": 0, "updated": 1,
     }
-    assert calls == [(day, ("1x2",))]
+    # The refresher no longer restricts markets for any donor.
+    assert calls == [(day, None)]
     assert (row["p1"], row["px"], row["p2"]) == ("0.66", "0.21", "0.13")
     assert (row["hs"], row["gs"], row["status"]) == ("2", "0", "FT")
 
