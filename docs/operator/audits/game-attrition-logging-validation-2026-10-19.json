@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-19",
+  "scope": "Additive logging in the existing fixture/candidate ledger and report; no betting policy changes",
+  "immutable_baseline": "9e52ed25086113e32e1a7c8f6f7f2e9b283a36a6",
+  "seed": 20261019,
+  "seeded_baseline_cases": 300,
+  "entire_pick_dicts_vetoes_counts_and_research_rows_identical": true,
+  "new_tests": 23,
+  "full_suite": {
+    "passed": 3301,
+    "seconds": 153.63,
+    "exit_code": 0
+  },
+  "in_memory_mutations": [
+    {
+      "mutation": "generic_instead_of_actual_gate",
+      "caught": true
+    },
+    {
+      "mutation": "omit_full_source_union",
+      "caught": true
+    },
+    {
+      "mutation": "lose_prematch_rejections",
+      "caught": true
+    },
+    {
+      "mutation": "mix_reasons_across_runs",
+      "caught": true
+    }
+  ],
+  "synthetic_end_to_end_demo": {
+    "source_keys": 6,
+    "ml_scored": 4,
+    "generated_candidates": 2,
+    "pre_match_rejected_candidates": 1,
+    "kept_candidates": 1,
+    "source_and_scored_reconciliations_pass": true,
+    "synthetic_not_historical": true
+  },
+  "historical_oct19_report": {
+    "raw_source_keys": 858,
+    "new_reasons_available": false,
+    "no_retroactive_reasons_fabricated": true
+  },
+  "optional_older_legacy_verifier": {
+    "status": "baseline_source_unavailable_in_checkout",
+    "baseline": "8abefc45fc4b4442a2997d0c3f18831cc6bff436",
+    "note": "No fresh 200-case result claimed; the current immutable 9e52ed2 300-case logging comparison passed."
+  },
+  "source_sha256": {
+    "scripts/picks_today.py": "60d5d2019b6651b097802ef8992240c339f7953e11ce3218e71c888a1d94a4f3",
+    "src/edgefactory/scored_candidate_shadow.py": "7e92ba09a3f05ffec7e2c291cac84e624b65cbb2f67cf84b9a38cd9084e5d384",
+    "tests/test_fixture_decision_logging.py": "b5deedb5baac9174d819f0c59658000c9e8bc60cd1b0224b6069bd3d24e83c4d",
+    "docs/operator/GAME-ATTRITION-LOGGING.md": "bc4cb40525692550ea5aef0968ded68cfe8af00c9a6ffaba82c15b4963881376"
+  },
+  "deployed": false,
+  "providers_called": false,
+  "operational_files_changed": false,
+  "post_mutation_focused_and_docs": {
+    "passed": 225,
+    "seconds": 2.24
+  },
+  "all_source_hashes_reverified_after_mutations": true
+}
