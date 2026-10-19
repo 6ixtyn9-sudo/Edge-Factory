@@ -11229,3 +11229,21 @@ retry unchanged credentials or bypass this restriction. Local snapshots/commits
 preserve the work; resume push of this SAME branch after permission is repaired,
 then dispatch existing daily.yml refarena/e273ec97-edge-factory mode=remine_only,
 inspect completed report/check annotation, and report actual cache data results.
+
+### Delivery unblocked by operator workflow update
+
+Operator manually saved the full workflow on main as20780f1. Fetched/deepened
+shallow history, then merged main into SAME active arena/e273ec97-edge-factory
+branch (merge86a4ed2); resolved the workflow conflict by keeping origin/main's
+exact file. Workflow diff againstmain is empty. Focused24tests passed3.72s;
+pushorigin arena/e273ec97-edge-factory succeeded. PR103 opened:
+https://github.com/6ixtyn9-sudo/Edge-Factory/pull/103 (not merged).
+
+Attempted authorized cache-only dispatch of existing daily.yml on this branch,
+mode=remine_only. GitHub refused HTTP403 Resource not accessible by integration.
+NO workflow run was created. User informed to run manually selecting session
+branch arena/e273ec97-edge-factory (NOTmain, which lacks miner changes) and
+remine_only. Need completed runner results/annotations before reporting mining
+outcomes. Dispatch needs Actions-write permission if connection is repaired;
+do not retry unchanged or ask for credentials. Prior workflow-push blocker is
+resolved; current blocker is dispatch permission only. Live rules remain unchanged.
