@@ -93,3 +93,11 @@ These overlapping vintage/stress scenarios are not independent backtests or
 proof of uplift. The new report includes missing-data bounds and refuses
 single-changed-day or incomplete-card confidence claims. It does not replay
 freeze/rolling-bank/parent-veto placement lifecycle or claim actual execution.
+
+The subsequent [game-attrition diagnosis](audits/GAME-ATTRITION-2026-10-19.md)
+finds the main fixture bottleneck **before** enhancement competition and records
+an important correction: `SKIPPED_VETO` is ticket-eligible; its enhancement parent
+tag does not block staking. The prior reference above to a parent-veto placement
+lifecycle was mistaken. Other freeze/rolling-bank/placement-receipt limitations
+remain. Latest retained slips predate the merge and do not yet evidence an
+ON-default production run.
