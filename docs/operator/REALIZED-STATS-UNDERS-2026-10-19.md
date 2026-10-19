@@ -41,7 +41,7 @@ Re-running the existing retained full-pool comparison on 14–18 October still g
 
 Tests do establish behavior: a coherent 75% U2.5 at 1.40 now displaces a 60% BTTS Yes at 1.80; a stronger eligible competitor still wins; rate ties use price; out-of-band and sub-1.30 candidates are still rejected. These are synthetic correctness tests, not observed profitable bets. The 100 coherent-score/random-price cases now exercise the unset/default-on path.
 
-Machine receipts: [full-pool audit](audits/enh-under-redteam-2026-10-19.json), [market contention](audits/enh-market-competition-2026-10-19.json), and [validation](audits/enh-under-validation-2026-10-19.json). Earlier readable audit documents retain the old decision with a supersession notice; their no-uplift finding remains valid. Refreshed numerical receipts retain the same historical outcome population and record current code/input hashes.
+Machine receipts: [full-pool audit](audits/enh-under-redteam-2026-10-19.json), [market contention](audits/enh-market-competition-2026-10-19.json), and [validation](audits/enh-under-validation-2026-10-19.json). Earlier readable audit documents retain the old decision with a supersession notice; their no-uplift finding remains valid. Those numerical receipts retain the same historical outcome population and record code/input hashes at enablement commit `7355957`; they are not overwritten by the follow-up below.
 
 ## Existing replay: bounded correction, not another framework
 
@@ -70,3 +70,26 @@ The verifier's historical filename is retained for compatibility; it now explici
 - Two deliberate defects caught and restored: disabling default cohort parity failed its cross-market 75% test; restoring multiplicative ticket growth failed all six cash-accounting cases. Source hashes are recorded in the validation receipt.
 
 Deployment is separate from PR publication: pushing the branch and opening a PR do not merge it or dispatch the running bot. The enabled default takes effect when the change is deployed, unless an environment override explicitly disables it.
+
+## Requested replay/stress follow-up
+
+The [production-path replay and stress report](audits/ENH-COHORT-REPLAY-STRESS-2026-10-19.md)
+now runs the actual selector and card builder, inspects final **and morning**
+archives, and stresses prices before reselecting/rebuilding cards. Broader
+eligibility remains ON; no production policy, operational data or workflow was
+changed in this follow-up.
+
+Across 3,406 archived rows, only five dates retain usable cohort history. The
+earliest coherent view has 82 witnessed-n fixtures, 18 with strict quotes:
+21 new contenders on 16 fixtures, zero changed choices/cards at archived prices.
+Final-view replay has 78 witnessed-n fixtures (the old 80-row explanation included
+two rows with rates but no archived n); its original seven cards are unchanged.
+
+A 10% preselection quote haircut exposes an adverse **morning-view** card:
+adding a 30.4% U2.5 changes pairing from one winning acca (+14.25 normalized
+points) to two losing accas (−25.00), a −39.25-point difference. In the earliest
+view, changed-card results instead remain ambiguous (−30.00 to +16.75 points).
+These overlapping vintage/stress scenarios are not independent backtests or
+proof of uplift. The new report includes missing-data bounds and refuses
+single-changed-day or incomplete-card confidence claims. It does not replay
+freeze/rolling-bank/parent-veto placement lifecycle or claim actual execution.
