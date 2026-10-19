@@ -30,6 +30,13 @@ TABLES = [
     "vitibet_settled",
     "betexplorer_settled",
     "prosoccer_settled",
+    # Keep prediction rows even when their OWN score donor is missing. The
+    # current-source miner settles these against independent non-Forebet facts.
+    "zulubet",
+    "statarea",
+    "scoutingstats",
+    "bettingclosed",
+    "predictz_raw",
     # raw (unsettled) sources – still materialize for fast picks
     "vitibet",
     "betclan",

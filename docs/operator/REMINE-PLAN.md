@@ -76,3 +76,98 @@ freeze state, Football-Data state, Legalbet page count, and ledger/audit/raw
 paths. The prior honest sandbox receipts remain in
 `localdata/remine_audit_2026-10-02.jsonl`; relay pages are not treated as raw
 bytes and are never used for runner backfill.
+
+## Executive supersession — current-source re-mine, 19 October 2026
+
+The operator directed moving on from Forebet-led electorates and re-mining all
+supported markets. This is implemented **inside `scripts/mine_consensus.py`**,
+not as a second miner, pipeline, registry or backfill program. The preceding B0/B1
+network budgets remain unchanged: this re-mine is local/cache-only and does not
+authorize source crawling or paid API calls.
+
+### What changed
+
+The default entry point no longer fits the old Forebet pair/triple grid or
+re-trains the Forebet-feature meta-model. Historical statistical/ML helpers are
+retained because frozen-incumbent protection, tests and historical receipts use
+them; they are not the new default scan.
+
+The current scan:
+
+- Excludes Forebet as a voter **and** result donor. It does not use the old
+  Forebet-prioritized `results_donor` or inherited categorical settlement scores.
+- Uses exact date + current `source_team_key` identities, not nine-character
+  warehouse join keys. Repeated identical observations count once. Conflicting
+  source predictions/kickoffs and conflicting result periods are quarantined.
+- Tests every observed nonempty source subset, including single-source signals,
+  unanimous subsets, strict-majority subsets, and following **each** source when
+  the subset disagrees. Two-voter ties are not manufactured majorities. Another
+  source disagreeing no longer prevents a smaller agreeing subset being tested.
+- Scans the existing market registry: FT/HT 1X2, O/U 2.5, HT O/U 1.5 and 2.5,
+  BTTS; also scans the enhancement totals lines 1.5, 3.5 and 4.5. Unsupported or
+  unavailable probability/result fields show explicit zero coverage. FT scores
+  cannot supply HT outcomes. Streak percentages and confidence tags are not
+  treated as probabilities.
+- Tests no probability floor plus 35–90% in five-point steps. Categorical tips
+  can enter only the no-floor test. Both under/over and yes/no are evaluated.
+- Uses the source's probability units, exact selected-side/market prices, the
+  existing `stats`/`evaluate` functions and unchanged sample/ROI/Wilson gates.
+  In addition, it requires at least the corresponding train/validation sample
+  floor in **priced** observations; absent ROI and tiny priced subsamples do not
+  pass a profitability check. Quote returns remain retrospective donor-price
+  diagnostics, not execution-safe named-book ROI.
+
+### Chronology and running it
+
+```bash
+PYTHONPATH=src python3 scripts/mine_consensus.py \
+  --start 2026-06-13 --split 2026-09-21 --as-of 2026-10-19
+```
+
+`as-of` is exclusive, so the incomplete current day and future fixtures never
+enter evaluation. The default split is 28 days before `as-of`. Invalid/inverted
+windows and a pre-retirement training floor are rejected. The selected window
+is recorded, not described as a newly established optimal split.
+
+Output reuses `localdata/edges_consensus_research.json`; `--output` can direct a
+read-only investigation elsewhere. It cannot target the operational registry.
+The report retains weak candidate tests rather than filtering them out at the
+old overlap floor, and distinguishes missing tables, missing era rows, unusable
+signals, missing/conflicting results, sample holds and profitability holds.
+
+For the existing Actions workflow, select **`remine_only`**. This restores the
+existing production cache, rebuilds the existing warehouse offline (including
+raw prediction tables whose own score may be absent), and runs this same miner.
+It skips source capture, pricing, tickets, notifications, cache publication and
+git-state publication. Existing artifact upload retains the report. A compact
+check annotation records source/market coverage and test counts. There is no new
+workflow or separate mining command implementation.
+
+### Activation boundary — important
+
+This is **re-mining, not automatic serving activation**. New single-source,
+majority and dissent predicates cannot safely be stamped certified and sent to
+a loader that only implements the former unanimous-voter contract. Every result
+therefore remains `candidate`, with separate `statistical_gates_passed` and
+`holds` fields. Each has `new_predicate_requires_serving_validation`; transient
+DuckDB slices are not published as operational assay views.
+
+The operational `edges_consensus.json`, frozen model, certification activation,
+thresholds used by the picker and frozen slips remain unchanged. The default
+miner no longer refreshes those legacy non-ML registry rows; existing decay and
+assay steps still run on the operational registry. **The serving transition is
+not complete:** validated new predicates must be wired identically into picking,
+recreatable decay/assay views and pricing before replacing the old operating
+thresholds. Searching thousands of thresholds against one validation window is
+model selection, not untouched forward proof. No claim that 70/65 is optimal for
+replacement sources is made.
+
+### Local execution receipt
+
+The local 19 October run found **zero post-retirement prediction rows** in this
+checkout's CSV/warehouse inputs. It did find 28,748 independent BetExplorer result
+rows. That is not enough to reconstruct missing predictions. The correct result
+is `no_gradeable_prediction_history`, zero tested rules, not “all sources failed
+validation.” Production Actions has a separate restored cache; its run must be
+examined before reporting actual replacement-electorate performance. No provider
+was called to fill the gap and no candidate was certified.
