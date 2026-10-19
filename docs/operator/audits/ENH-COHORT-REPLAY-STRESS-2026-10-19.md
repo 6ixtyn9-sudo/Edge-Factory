@@ -18,7 +18,9 @@ The older pool-explanation helper remains solely for reproducing schema-1 report
 
 ### Scope boundary
 
-These are **counterfactual cards on a normalized 100-point bank reset each date**. They do not replay rolling free-bank commitments, historic freeze decisions, main-lane parent vetoes, bookmaker acceptance or placement receipts. For example, the retained 18 October ticket text includes `SKIPPED_VETO parent`. A generated/replayed card must not be called an executed bet.
+These are **counterfactual cards on a normalized 100-point bank reset each date**. They do not replay rolling free-bank commitments, historic freeze decisions, bookmaker acceptance or placement receipts. A generated/replayed card must not be called an independently verified executed bet.
+
+**Follow-up correction:** `[SKIPPED_VETO parent]` is an informational provenance tag, **not** a placement block or paper-bet marker. The ticket builder explicitly includes that bucket and stakes those legs. The original version of this paragraph incorrectly implied a parent-veto lifecycle block. See the [game-attrition diagnosis](GAME-ATTRITION-2026-10-19.md).
 
 ## Coverage and archive-vintage sensitivity
 

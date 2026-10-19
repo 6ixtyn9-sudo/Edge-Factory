@@ -12,6 +12,7 @@ import re
 import sys
 import math
 from collections import Counter
+from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
@@ -2536,6 +2537,7 @@ def filter_operational_pre_match_picks(
     *,
     as_of: datetime,
     min_lead: int,
+    rejection_audit: list | None = None,
 ) -> tuple[list[dict], dict[str, int]]:
     kept: list[dict] = []
     skipped: dict[str, int] = {}
@@ -2544,6 +2546,14 @@ def filter_operational_pre_match_picks(
         ok, reason = operational_pick_eligibility(pick, as_of=as_of, min_lead=min_lead)
         if not ok:
             skipped[reason or "unknown"] = skipped.get(reason or "unknown", 0) + 1
+            if rejection_audit is not None:
+                try:
+                    rejection_audit.append({"row": dict(pick), "stage": "pre_match_guard",
+                        "reason": reason or "unknown", "evidence": {"as_of": as_of_text,
+                        "min_lead_minutes": min_lead, "kickoff": _kickoff_value(pick),
+                        "kickoff_utc": pick.get("kickoff_utc")}})
+                except Exception as exc:
+                    print(f"pre-match rejection audit failed: {exc}", file=sys.stderr)
             continue
         pick["as_of"] = as_of_text
         pick["min_lead_minutes"] = min_lead
@@ -4892,6 +4902,90 @@ def fixture_schedule_unstable(*rows: dict) -> tuple[bool, set[str]]:
     return (parsed[-1] - parsed[0]).days > 1, dates
 
 
+def _audit_route(decision, route, status, reason=None, **evidence):
+    """Observability only: never let diagnostic failures affect a pick."""
+    if decision is not None:
+        try:
+            decision[route].update(status=status, reason=reason, **evidence)
+        except Exception as exc:
+            print(f"fixture decision audit failed: {exc}", file=sys.stderr)
+
+
+def _audit_finite(value):
+    value = _f(value)
+    return value if value is not None and math.isfinite(value) else None
+
+
+@contextmanager
+def _fixture_decision_audit(audit, key, data, picks, ml_model, ml_rules, fade_rules):
+    """Attach branch evidence to the existing upcoming/ML fixture entries.
+
+    All evidence is decision-time input, not outcomes. No source fetches,
+    candidate mutation, additional gating or warehouse/model refits.
+    """
+    decision = None
+    entry = None
+    start = len(picks)
+    if audit is not None:
+        try:
+            row0 = next((data[source][key] for source in SOURCES_1X2
+                         if key in data.get(source, {})), None) or {}
+            votes = []
+            for source in SOURCES_1X2:
+                row = data.get(source, {}).get(key)
+                probabilities = probs_1x2(row or {})
+                selection, maximum = top_pick(*probabilities) if probabilities else (None, None)
+                votes.append({"source": source, "present": bool(row),
+                              **({"home": row.get("home"), "away": row.get("away"),
+                                  "league": row.get("league"), "kickoff": row.get("kickoff") or row.get("time"),
+                                  "kickoff_utc": row.get("kickoff_utc")} if row else {}),
+                              "probabilities_available": probabilities is not None,
+                              "missing_probability_fields": [f for f in ("p1", "px", "p2")
+                                  if row and row.get(f) in (None, "")],
+                              "invalid_probability_fields": [f for f in ("p1", "px", "p2")
+                                  if row and row.get(f) not in (None, "") and _audit_finite(row.get(f)) is None],
+                              "probabilities": ({side: _audit_finite(value) for side, value in
+                                  zip(("home", "draw", "away"), probabilities)} if probabilities else None),
+                              "selection": selection, "top_probability": _audit_finite(maximum)})
+            decision = {
+                "version": 1, "scope": "1x2_candidate_generation", "source_fixture_key": list(key) if isinstance(key, tuple) else str(key),
+                "source_votes": votes,
+                "usable_probability_sources": sum(v["probabilities_available"] for v in votes),
+                "consensus": {"status": "not_evaluated", "reason": "not_reached"},
+                "ml": {"status": "not_scored", "reason": "model_unavailable" if not ml_model
+                       else "no_legacy_probability_input", "model_available": bool(ml_model),
+                       "certified_rule_count": len(ml_rules), "certified_rules": [r.get("rule") for r in ml_rules]},
+                "ml_fade": {"status": "not_scored", "reason": "model_unavailable" if not ml_model
+                       else "no_legacy_probability_input", "model_available": bool(ml_model),
+                       "certified_rule_count": len(fade_rules), "certified_rules": [r.get("rule") for r in fade_rules]},
+            }
+            entry = {"kind": "upcoming_fixture", "home": canonical_display_team(row0.get("home")),
+                     "away": canonical_display_team(row0.get("away")), "league": row0.get("league"),
+                     "kickoff": row0.get("kickoff") or row0.get("time"),
+                     "sport": row0.get("sport", "soccer"), "decision_diagnostics": decision}
+            audit.append(entry)
+        except Exception as exc:
+            decision = None
+            print(f"fixture decision audit failed: {exc}", file=sys.stderr)
+    try:
+        yield decision
+    finally:
+        if decision is not None:
+            try:
+                emitted = picks[start:]
+                decision["emitted_candidate_count"] = len(emitted)
+                decision["emitted_rules"] = [p.get("rule") for p in emitted]
+                decision["primary_reason"] = ("candidate_emitted" if emitted else
+                    decision["consensus"].get("reason") or "unknown_generation_failure")
+                # Input guards precede both independent rule-emission routes.
+                if decision["consensus"].get("reason") in {
+                        "insufficient_probability_sources", "schedule_unstable"}:
+                    for route in ("ml", "ml_fade"):
+                        _audit_route(decision, route, "not_scored", decision["consensus"]["reason"])
+            except Exception as exc:
+                print(f"fixture decision audit finalization failed: {exc}", file=sys.stderr)
+
+
 # --------------------------------------------------------------- consensus --
 def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
              research_collector: FadeResearchCollector | None = None,
@@ -4928,19 +5022,6 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
     # list is the entire effect: picks, vetoes, counters and returns are
     # untouched when fixture_audit is None (the default) and identical when
     # it is not.
-    if fixture_audit is not None:
-        for k in keys:
-            row0 = next((data[s][k] for s in SOURCES_1X2
-                         if k in data.get(s, {})), None) or {}
-            fixture_audit.append({
-                "kind": "upcoming_fixture",
-                "home": canonical_display_team(row0.get("home")),
-                "away": canonical_display_team(row0.get("away")),
-                "league": row0.get("league"),
-                "kickoff": row0.get("kickoff") or row0.get("time"),
-                "sport": row0.get("sport", "soccer"),
-            })
-
     # --- Load ML rules and model ---
     ml_rules, ml_model = load_ml_rules_and_model()
     # ml-fade: certified inverse-selection rules derived from ml-meta. They
@@ -4959,309 +5040,268 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
         rolling_hit_rate = get_rolling_hit_rate_last_14d(day)
 
     for k in keys:
-        sels, ps, used = [], [], []
-        for s in SOURCES_1X2:
-            row = data.get(s, {}).get(k)
-            if not row:
-                continue
-            pr = probs_1x2(row)
-            if pr is None:
-                continue
-            sel, pmax = top_pick(*pr)
-            sels.append(sel)
-            ps.append(pmax)
-            used.append(s)
-        if len(used) < 2:
-            continue
-            
-        fb = data.get("forebet", {}).get(k) or {}
-        fb_quote = {} if _forebet_historical(day) else fb
-        zb = data.get("zulubet", {}).get(k) or {}
-        sa = data.get("statarea", {}).get(k) or {}
-        bz = data.get("bzzoiro", {}).get(k) or {}
-        vb = data.get("vitibet", {}).get(k) or {}
-        anchor = fb or zb or sa or next(data[s][k] for s in used if k in data.get(s, {}))
-        
-        # Fixture-stability guard: a schedule still moving between dated
-        # sources is not a bet we want (stale/phantom pick class). Fail-closed.
-        unstable, ko_dates = fixture_schedule_unstable(fb, bz)
-        if unstable:
-            print(
-                f"fixture-stability guard {day}: skip "
-                f"{anchor.get('home')} vs {anchor.get('away')} "
-                f"(kickoff dates differ across sources: {sorted(ko_dates)})",
-                file=sys.stderr,
-            )
-            continue
-
-        # --- Evaluate ML Rules ---
-        # Model inference runs whenever a serving model exists (see the
-        # certification-independence note above); certified rule LOOPS inside
-        # decide emission. Research capture hooks in after ml_p is computed.
-        if ml_model and (fb or zb or sa):
-            fb_probs = probs_1x2(fb) if fb else None
-            zb_probs = probs_1x2(zb) if zb else None
-            sa_probs = probs_1x2(sa) if sa else None
-            if fb_probs or zb_probs or sa_probs:
-                # Majority pick from whichever sources are present
-                sels_maj = []
-                for pr in [fb_probs, zb_probs, sa_probs]:
-                    if not pr:
-                        continue
-                    best = max(pr)
-                    sel_m = "home" if best == pr[0] else ("draw" if best == pr[1] else "away")
-                    sels_maj.append(sel_m)
-                if not sels_maj:
+        with _fixture_decision_audit(fixture_audit, k, data, picks, ml_model,
+                                     ml_rules, ml_fade_rules) as _decision:
+            sels, ps, used = [], [], []
+            for s in SOURCES_1X2:
+                row = data.get(s, {}).get(k)
+                if not row:
                     continue
-                p1, p2, p3 = (sels_maj + [None, None, None])[:3]
-                # Guard: None == None is True in Python, so never let the
-                # padding values participate. Resolve the majority among the
-                # NON-None picks only; fall back to the first pick.
-                non_none = [x for x in (p1, p2, p3) if x is not None]
-                majority_pick = non_none[0]
-                if len(non_none) >= 3 and non_none[0] == non_none[2]:
-                    majority_pick = non_none[0]
-                elif len(non_none) >= 2 and non_none[0] == non_none[1]:
-                    majority_pick = non_none[0]
-                elif len(non_none) >= 3 and non_none[1] == non_none[2]:
-                    majority_pick = non_none[1]
-                
-                idx_map = {"home": 0, "draw": 1, "away": 2}
-                idx = idx_map[majority_pick]
-                fb_p_feat = fb_probs[idx] if fb_probs else None
-                zb_p_feat = zb_probs[idx] if zb_probs else None
-                sa_p_feat = sa_probs[idx] if sa_probs else None
-                
-                _feat_ps = [x for x in (fb_p_feat, zb_p_feat, sa_p_feat) if x is not None]
-                if not _feat_ps:
-                    _feat_ps = [0.0]
-                avg_p_feat = sum(_feat_ps) / len(_feat_ps)
-                min_p_feat = min(_feat_ps)
-                variance = sum((x - avg_p_feat)**2 for x in _feat_ps) / len(_feat_ps)
-                std_p_feat = math.sqrt(variance)
-                
-                _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
-                _col = _odds_map[majority_pick]
-                pick_odds_feat = _f(fb_quote.get(_col)) or _f(zb.get(_col)) or 1.50
-                
-                is_home = 1.0 if majority_pick == "home" else 0.0
-                is_away = 1.0 if majority_pick == "away" else 0.0
-                
-                comp_type = classify_competition(anchor.get("league"))
-                cat_friendly = 1.0 if comp_type == "friendly" else 0.0
-                cat_youth = 1.0 if comp_type == "youth" else 0.0
-                cat_women = 1.0 if comp_type == "women" else 0.0
-                cat_cup = 1.0 if comp_type == "cup" else 0.0
-                cat_league = 1.0 if comp_type == "league" else 0.0
-                
-                # orphaned-data harvest: mirror the trainer's features exactly.
-                # HT win prob of the majority pick (forebet HT probs, 0-1)
-                _fb_ht = (fb or {}).get
-                _p1h, _pxh, _p2h = _fb_ht("p1_ht"), _fb_ht("px_ht"), _fb_ht("p2_ht")
-                if None not in (_p1h, _pxh, _p2h):
-                    _ht_trip = (_p1h, _pxh, _p2h)
-                    _m = max(_ht_trip)
-                    _ht_scale = 100.0 if _m > 1.5 else 1.0
-                    ht_p_feat = float(_ht_trip[idx]) / _ht_scale
-                else:
-                    ht_p_feat = 0.5
-                _ht_hs = _f(_fb_ht("ht_hs"))
-                _ht_gs = _f(_fb_ht("ht_gs"))
-                ht_diff_feat = (_ht_hs or 0) - (_ht_gs or 0)
-                ht_total_feat = (_ht_hs or 0) + (_ht_gs or 0)
-                kelly_feat = _f(_fb_ht("kelly")) or 0.0
-                _phs, _pgs = _f(_fb_ht("pred_hs")), _f(_fb_ht("pred_gs"))
-                pred_total_feat = (_phs or 0) + (_pgs or 0)
-                pred_diff_feat = (_phs or 0) - (_pgs or 0)
-                goalsavg_feat = _f(_fb_ht("goalsavg")) or 0.0
-                _p_ng = _f(_fb_ht("p_ng"))
-                _p_under = _f(_fb_ht("p_under"))
-                _p_gg = _f(_fb_ht("p_gg"))
-                p_ng_feat = _p_ng / 100.0 if _p_ng is not None and _p_ng > 1.5 else (_p_ng or 0.0)
-                p_under_feat = _p_under / 100.0 if _p_under is not None and _p_under > 1.5 else (_p_under or 0.0)
-                p_gg_feat = _p_gg / 100.0 if _p_gg is not None and _p_gg > 1.5 else (_p_gg or 0.0)
-                
-                # Phase A: statarea half-time prob of the majority pick (0-1)
-                _sa_ht = (sa or {}).get
-                _sp1h, _spxh, _sp2h = _sa_ht("p1_ht"), _sa_ht("px_ht"), _sa_ht("p2_ht")
-                if None not in (_sp1h, _spxh, _sp2h):
-                    _sa_trip = (_sp1h, _spxh, _sp2h)
-                    _sa_scale = 100.0 if max(_sa_trip) > 1.5 else 1.0
-                    sa_ht_p_feat = float(_sa_trip[idx]) / _sa_scale
-                else:
-                    sa_ht_p_feat = 0.5
-                
-                feat_dict = {
-                    "fb_p": fb_p_feat, "zb_p": zb_p_feat, "sa_p": sa_p_feat,
-                    "avg_p": avg_p_feat, "min_p": min_p_feat, "std_p": std_p_feat,
-                    "pick_odds": pick_odds_feat,
-                    "is_home": is_home, "is_away": is_away,
-                    "cat_friendly": cat_friendly, "cat_youth": cat_youth, "cat_women": cat_women, "cat_cup": cat_cup, "cat_league": cat_league,
-                    "rolling_hit_rate": rolling_hit_rate or 0.75,
-                    "ht_p": ht_p_feat, "ht_diff": ht_diff_feat, "ht_total": ht_total_feat,
-                    "kelly": kelly_feat, "pred_total": pred_total_feat, "pred_diff": pred_diff_feat,
-                    "goalsavg": goalsavg_feat, "p_ng": p_ng_feat, "p_under": p_under_feat,
-                    "sa_ht_p": sa_ht_p_feat, "p_gg": p_gg_feat,
-                }
-                
-                coefs = ml_model["coef"]
-                intercept = ml_model["intercept"]
-                feature_cols = ml_model["feature_cols"]
-                
-                # Phase 5 K contract: the declared-source columns, built from
-                # the same per-source rows the election above used. A dark feed
-                # is REPRESENTED (available=0.0, prob None) rather than dropped,
-                # so a certified K model serves through this same loop and a
-                # returning feed is a data event, not a code change.
-                _k_sources = {}
-                for _src in PHASE5_K_SOURCES:
-                    _spr = probs_1x2(data.get(_src, {}).get(k) or {})
-                    _k_sources[_src] = (_spr[idx], True) if _spr else (None, False)
-                feat_dict.update(phase5_source_columns(_k_sources))
+                pr = probs_1x2(row)
+                if pr is None:
+                    continue
+                sel, pmax = top_pick(*pr)
+                sels.append(sel)
+                ps.append(pmax)
+                used.append(s)
+            if len(used) < 2:
+                _audit_route(_decision, "consensus", "rejected", "insufficient_probability_sources",
+                             required_sources=2, observed_sources=len(used))
+                continue
+            
+            fb = data.get("forebet", {}).get(k) or {}
+            fb_quote = {} if _forebet_historical(day) else fb
+            zb = data.get("zulubet", {}).get(k) or {}
+            sa = data.get("statarea", {}).get(k) or {}
+            bz = data.get("bzzoiro", {}).get(k) or {}
+            vb = data.get("vitibet", {}).get(k) or {}
+            anchor = fb or zb or sa or next(data[s][k] for s in used if k in data.get(s, {}))
+        
+            # Fixture-stability guard: a schedule still moving between dated
+            # sources is not a bet we want (stale/phantom pick class). Fail-closed.
+            unstable, ko_dates = fixture_schedule_unstable(fb, bz)
+            if unstable:
+                _audit_route(_decision, "consensus", "rejected", "schedule_unstable",
+                             kickoff_dates=sorted(ko_dates), max_date_spread_days=1)
+                print(
+                    f"fixture-stability guard {day}: skip "
+                    f"{anchor.get('home')} vs {anchor.get('away')} "
+                    f"(kickoff dates differ across sources: {sorted(ko_dates)})",
+                    file=sys.stderr,
+                )
+                continue
 
-                x, _imputed_cols = phase5_feature_vector(feat_dict, ml_model)
-                if _imputed_cols:
-                    _warn_imputed_features(ml_model, _imputed_cols, day)
-                z = sum(w * val for w, val in zip(coefs, x)) + intercept
-                ml_p = 1.0 / (1.0 + math.exp(-z))
-                ml_scored += 1
-                ml_max_p = max(ml_max_p, ml_p)
-
-                # AUDIT-ONLY (scored-candidate shadow): one entry per
-                # ML-scored fixture, appended at the EXACT increment that
-                # feeds `coverage: scored=` (research_collector.record below
-                # bumps .scored 1:1 with this point, and ml_scored_day is its
-                # per-day delta). Observability only — no state changes.
-                # The entry also carries the scorer's own betting intent
-                # (1x2 majority side) and the side odds VISIBLE TO THE
-                # SCORER at this instant: the same source odds columns the
-                # pick_odds feature reads, scanned without the 1.50 feature
-                # default (a feature fallback is not a price). Never fetched
-                # for this purpose, never a named-book/stakeable price —
-                # captured-price shadow grading only.
-                if fixture_audit is not None:
-                    _aud_home = canonical_display_team(anchor.get("home"))
-                    _aud_away = canonical_display_team(anchor.get("away"))
-                    _shadow_odds = None
-                    _shadow_odds_src = None
-                    for _sp_name, _sp_row in (("forebet", fb_quote),
-                                              ("zulubet", zb),
-                                              ("statarea", sa),
-                                              ("bzzoiro", bz),
-                                              ("vitibet", vb)):
-                        _sp_val = _f((_sp_row or {}).get(_col))
-                        if _sp_val is not None and _sp_val > 1.0:
-                            _shadow_odds = float(_sp_val)
-                            _shadow_odds_src = _sp_name
-                            break
-                    fixture_audit.append({
-                        "kind": "ml_scored_fixture",
-                        "home": _aud_home,
-                        "away": _aud_away,
-                        "league": anchor.get("league"),
-                        "kickoff": anchor.get("kickoff") or anchor.get("time"),
-                        "sport": anchor.get("sport", "soccer"),
-                        "ml_probability": round(float(ml_p), 6),
-                        "ml_majority_pick": majority_pick,
-                        "sources_used": list(used),
-                        "market": "1x2",
-                        "selection": majority_pick,
-                        "selection_team": (_aud_home if majority_pick == "home"
-                                           else _aud_away if majority_pick == "away"
-                                           else None),
-                        "shadow_price": _shadow_odds,
-                        "shadow_price_source": _shadow_odds_src,
-                        "shadow_price_captured_at_utc": datetime.now(
-                            timezone.utc).isoformat(timespec="seconds"),
-                        "shadow_price_as_of_basis": "fetched_this_run",
-                    })
-
-                # Research capture (certification-independent): record the
-                # parent selection + deterministic fade candidate with their
-                # own opposing-side source quotes. Goes ONLY to the research
-                # ledger via the collector — never into `picks`, so the
-                # operational slate, collapse, archives and notifications are
-                # structurally untouched by this hook.
-                if research_collector is not None:
-                    research_collector.record(
-                        day=day, anchor=anchor, fb=fb, zb=zb, used=used,
-                        majority_pick=majority_pick, ml_p=ml_p, z_score=z,
-                        model=ml_model,
-                        ml_ht_diff=ht_diff_feat, ml_ht_total=ht_total_feat,
-                    )
-
-                # Check certified ML rules
-                # Emit ONE pick at the HIGHEST qualifying threshold. A fixture
-                # clearing 60 also clears 55 — emitting both duplicated rows
-                # that the collapse then resolved to the first (>=55), which
-                # made >=60/65/70 look "never fired" in the ledger/tripwire
-                # even while the model was firing. One pick, strongest label.
-                best = None  # (threshold, rule)
-                for rule in ml_rules:
-                    m = re.search(r">=\s*([\d.]+)", rule["rule"])
-                    if m:
-                        thr = float(m.group(1))
-                        if ml_p * 100.0 >= thr and (best is None or thr > best[0]):
-                            best = (thr, rule)
-                if best is not None:
-                    thr, rule = best
-                    home = canonical_display_team(anchor.get("home"))
-                    away = canonical_display_team(anchor.get("away"))
-                    picks.append({
-                        "date": day, "market": "1x2",
-                        "match": f"{home} vs {away}",
-                        "home": home, "away": away,
-                        "kickoff": anchor.get("kickoff") or anchor.get("time"),
-                        "sport": anchor.get("sport", "soccer"),
-                        "league": anchor.get("league"), "pick": majority_pick,
-                        "avg_p": round(ml_p * 100.0, 1),
-                        "w_score": round(z, 4),
-                        "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
-                        "odds_source": ("forebet_best" if _f(fb_quote.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
-                        "bookmaker": None,
-                        "rule": rule["rule"],
-                        "edge_rule": rule["rule"],
-                        "display_rule": rule["display_rule"] if "display_rule" in rule else f"ML-META≥{thr:.0f}",
-                        "n_way": 3, "edge_n_way": 3,
-                        "confidence": _f(bz.get("confidence")) if bz else None,
-                        "model_version": bz.get("model_version") if bz else None,
-                        "vitibet_index": _f(vb.get("index")) if vb else None,
-                        "sources_used": used,
-                        "source_weights": source_weights or {},
-                        "ml_p": round(ml_p, 4),
-                        # checkpoint ⑫ contract: these MUST be 0 for any pick
-                        # that survives the pre-match guard. Recorded so the
-                        # assertion below has evidence, and so the archive can
-                        # be audited after the fact.
-                        "ml_ht_diff": ht_diff_feat,
-                        "ml_ht_total": ht_total_feat,
-                    })
-
-                # --- ml-fade: certified inverse-selection sibling family ---
-                # Derive the fade from the SAME eligible ml-meta selection:
-                # binary 1X2 home<->away, scored at the FADE side's own odds
-                # (the opposing column of the same book — never the parent
-                # pick's price). Draw selections have no honest binary
-                # inverse: they are excluded EXPLICITLY (counted + reported),
-                # never silently mapped to anything. The fade fires on its own
-                # certified thresholds, independently of whether the parent
-                # ml-meta rule fired.
-                fade_best = None
-                for fade_rule in ml_fade_rules:
-                    fm = re.search(r">=\s*([\d.]+)", fade_rule["rule"])
-                    if not fm:
+            # --- Evaluate ML Rules ---
+            # Model inference runs whenever a serving model exists (see the
+            # certification-independence note above); certified rule LOOPS inside
+            # decide emission. Research capture hooks in after ml_p is computed.
+            if ml_model and (fb or zb or sa):
+                fb_probs = probs_1x2(fb) if fb else None
+                zb_probs = probs_1x2(zb) if zb else None
+                sa_probs = probs_1x2(sa) if sa else None
+                if fb_probs or zb_probs or sa_probs:
+                    # Majority pick from whichever sources are present
+                    sels_maj = []
+                    for pr in [fb_probs, zb_probs, sa_probs]:
+                        if not pr:
+                            continue
+                        best = max(pr)
+                        sel_m = "home" if best == pr[0] else ("draw" if best == pr[1] else "away")
+                        sels_maj.append(sel_m)
+                    if not sels_maj:
                         continue
-                    fthr = float(fm.group(1))
-                    if ml_p * 100.0 >= fthr and (fade_best is None or fthr > fade_best[0]):
-                        fade_best = (fthr, fade_rule)
-                if fade_best is not None:
-                    fade_sel = inverse_selection(majority_pick)
-                    if fade_sel is None:
-                        ml_fade_draw_skipped += 1
+                    p1, p2, p3 = (sels_maj + [None, None, None])[:3]
+                    # Guard: None == None is True in Python, so never let the
+                    # padding values participate. Resolve the majority among the
+                    # NON-None picks only; fall back to the first pick.
+                    non_none = [x for x in (p1, p2, p3) if x is not None]
+                    majority_pick = non_none[0]
+                    if len(non_none) >= 3 and non_none[0] == non_none[2]:
+                        majority_pick = non_none[0]
+                    elif len(non_none) >= 2 and non_none[0] == non_none[1]:
+                        majority_pick = non_none[0]
+                    elif len(non_none) >= 3 and non_none[1] == non_none[2]:
+                        majority_pick = non_none[1]
+                
+                    idx_map = {"home": 0, "draw": 1, "away": 2}
+                    idx = idx_map[majority_pick]
+                    fb_p_feat = fb_probs[idx] if fb_probs else None
+                    zb_p_feat = zb_probs[idx] if zb_probs else None
+                    sa_p_feat = sa_probs[idx] if sa_probs else None
+                
+                    _feat_ps = [x for x in (fb_p_feat, zb_p_feat, sa_p_feat) if x is not None]
+                    if not _feat_ps:
+                        _feat_ps = [0.0]
+                    avg_p_feat = sum(_feat_ps) / len(_feat_ps)
+                    min_p_feat = min(_feat_ps)
+                    variance = sum((x - avg_p_feat)**2 for x in _feat_ps) / len(_feat_ps)
+                    std_p_feat = math.sqrt(variance)
+                
+                    _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
+                    _col = _odds_map[majority_pick]
+                    pick_odds_feat = _f(fb_quote.get(_col)) or _f(zb.get(_col)) or 1.50
+                
+                    is_home = 1.0 if majority_pick == "home" else 0.0
+                    is_away = 1.0 if majority_pick == "away" else 0.0
+                
+                    comp_type = classify_competition(anchor.get("league"))
+                    cat_friendly = 1.0 if comp_type == "friendly" else 0.0
+                    cat_youth = 1.0 if comp_type == "youth" else 0.0
+                    cat_women = 1.0 if comp_type == "women" else 0.0
+                    cat_cup = 1.0 if comp_type == "cup" else 0.0
+                    cat_league = 1.0 if comp_type == "league" else 0.0
+                
+                    # orphaned-data harvest: mirror the trainer's features exactly.
+                    # HT win prob of the majority pick (forebet HT probs, 0-1)
+                    _fb_ht = (fb or {}).get
+                    _p1h, _pxh, _p2h = _fb_ht("p1_ht"), _fb_ht("px_ht"), _fb_ht("p2_ht")
+                    if None not in (_p1h, _pxh, _p2h):
+                        _ht_trip = (_p1h, _pxh, _p2h)
+                        _m = max(_ht_trip)
+                        _ht_scale = 100.0 if _m > 1.5 else 1.0
+                        ht_p_feat = float(_ht_trip[idx]) / _ht_scale
                     else:
-                        fthr, fade_rule = fade_best
-                        _fade_col = fade_odds_column(majority_pick)
-                        fade_odds = _f(fb_quote.get(_fade_col)) or _f(zb.get(_fade_col)) or None
+                        ht_p_feat = 0.5
+                    _ht_hs = _f(_fb_ht("ht_hs"))
+                    _ht_gs = _f(_fb_ht("ht_gs"))
+                    ht_diff_feat = (_ht_hs or 0) - (_ht_gs or 0)
+                    ht_total_feat = (_ht_hs or 0) + (_ht_gs or 0)
+                    kelly_feat = _f(_fb_ht("kelly")) or 0.0
+                    _phs, _pgs = _f(_fb_ht("pred_hs")), _f(_fb_ht("pred_gs"))
+                    pred_total_feat = (_phs or 0) + (_pgs or 0)
+                    pred_diff_feat = (_phs or 0) - (_pgs or 0)
+                    goalsavg_feat = _f(_fb_ht("goalsavg")) or 0.0
+                    _p_ng = _f(_fb_ht("p_ng"))
+                    _p_under = _f(_fb_ht("p_under"))
+                    _p_gg = _f(_fb_ht("p_gg"))
+                    p_ng_feat = _p_ng / 100.0 if _p_ng is not None and _p_ng > 1.5 else (_p_ng or 0.0)
+                    p_under_feat = _p_under / 100.0 if _p_under is not None and _p_under > 1.5 else (_p_under or 0.0)
+                    p_gg_feat = _p_gg / 100.0 if _p_gg is not None and _p_gg > 1.5 else (_p_gg or 0.0)
+                
+                    # Phase A: statarea half-time prob of the majority pick (0-1)
+                    _sa_ht = (sa or {}).get
+                    _sp1h, _spxh, _sp2h = _sa_ht("p1_ht"), _sa_ht("px_ht"), _sa_ht("p2_ht")
+                    if None not in (_sp1h, _spxh, _sp2h):
+                        _sa_trip = (_sp1h, _spxh, _sp2h)
+                        _sa_scale = 100.0 if max(_sa_trip) > 1.5 else 1.0
+                        sa_ht_p_feat = float(_sa_trip[idx]) / _sa_scale
+                    else:
+                        sa_ht_p_feat = 0.5
+                
+                    feat_dict = {
+                        "fb_p": fb_p_feat, "zb_p": zb_p_feat, "sa_p": sa_p_feat,
+                        "avg_p": avg_p_feat, "min_p": min_p_feat, "std_p": std_p_feat,
+                        "pick_odds": pick_odds_feat,
+                        "is_home": is_home, "is_away": is_away,
+                        "cat_friendly": cat_friendly, "cat_youth": cat_youth, "cat_women": cat_women, "cat_cup": cat_cup, "cat_league": cat_league,
+                        "rolling_hit_rate": rolling_hit_rate or 0.75,
+                        "ht_p": ht_p_feat, "ht_diff": ht_diff_feat, "ht_total": ht_total_feat,
+                        "kelly": kelly_feat, "pred_total": pred_total_feat, "pred_diff": pred_diff_feat,
+                        "goalsavg": goalsavg_feat, "p_ng": p_ng_feat, "p_under": p_under_feat,
+                        "sa_ht_p": sa_ht_p_feat, "p_gg": p_gg_feat,
+                    }
+                
+                    coefs = ml_model["coef"]
+                    intercept = ml_model["intercept"]
+                    feature_cols = ml_model["feature_cols"]
+                
+                    # Phase 5 K contract: the declared-source columns, built from
+                    # the same per-source rows the election above used. A dark feed
+                    # is REPRESENTED (available=0.0, prob None) rather than dropped,
+                    # so a certified K model serves through this same loop and a
+                    # returning feed is a data event, not a code change.
+                    _k_sources = {}
+                    for _src in PHASE5_K_SOURCES:
+                        _spr = probs_1x2(data.get(_src, {}).get(k) or {})
+                        _k_sources[_src] = (_spr[idx], True) if _spr else (None, False)
+                    feat_dict.update(phase5_source_columns(_k_sources))
+
+                    x, _imputed_cols = phase5_feature_vector(feat_dict, ml_model)
+                    if _imputed_cols:
+                        _warn_imputed_features(ml_model, _imputed_cols, day)
+                    z = sum(w * val for w, val in zip(coefs, x)) + intercept
+                    ml_p = 1.0 / (1.0 + math.exp(-z))
+                    ml_scored += 1
+                    ml_max_p = max(ml_max_p, ml_p)
+
+                    # AUDIT-ONLY (scored-candidate shadow): one entry per
+                    # ML-scored fixture, appended at the EXACT increment that
+                    # feeds `coverage: scored=` (research_collector.record below
+                    # bumps .scored 1:1 with this point, and ml_scored_day is its
+                    # per-day delta). Observability only — no state changes.
+                    # The entry also carries the scorer's own betting intent
+                    # (1x2 majority side) and the side odds VISIBLE TO THE
+                    # SCORER at this instant: the same source odds columns the
+                    # pick_odds feature reads, scanned without the 1.50 feature
+                    # default (a feature fallback is not a price). Never fetched
+                    # for this purpose, never a named-book/stakeable price —
+                    # captured-price shadow grading only.
+                    if fixture_audit is not None:
+                        try:
+                            _aud_home = canonical_display_team(anchor.get("home"))
+                            _aud_away = canonical_display_team(anchor.get("away"))
+                            _shadow_odds = None
+                            _shadow_odds_src = None
+                            for _sp_name, _sp_row in (("forebet", fb_quote),
+                                                      ("zulubet", zb),
+                                                      ("statarea", sa),
+                                                      ("bzzoiro", bz),
+                                                      ("vitibet", vb)):
+                                _sp_val = _f((_sp_row or {}).get(_col))
+                                if _sp_val is not None and _sp_val > 1.0:
+                                    _shadow_odds = float(_sp_val)
+                                    _shadow_odds_src = _sp_name
+                                    break
+                            fixture_audit.append({
+                                "kind": "ml_scored_fixture",
+                                "decision_diagnostics": _decision,
+                                "home": _aud_home,
+                                "away": _aud_away,
+                                "league": anchor.get("league"),
+                                "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                                "sport": anchor.get("sport", "soccer"),
+                                "ml_probability": round(float(ml_p), 6),
+                                "ml_majority_pick": majority_pick,
+                                "sources_used": list(used),
+                                "market": "1x2",
+                                "selection": majority_pick,
+                                "selection_team": (_aud_home if majority_pick == "home"
+                                                   else _aud_away if majority_pick == "away"
+                                                   else None),
+                                "shadow_price": _shadow_odds,
+                                "shadow_price_source": _shadow_odds_src,
+                                "shadow_price_captured_at_utc": datetime.now(
+                                    timezone.utc).isoformat(timespec="seconds"),
+                                "shadow_price_as_of_basis": "fetched_this_run",
+                            })
+
+                        except Exception as exc:
+                            print(f"ML fixture audit failed: {exc}", file=sys.stderr)
+
+                    # Research capture (certification-independent): record the
+                    # parent selection + deterministic fade candidate with their
+                    # own opposing-side source quotes. Goes ONLY to the research
+                    # ledger via the collector — never into `picks`, so the
+                    # operational slate, collapse, archives and notifications are
+                    # structurally untouched by this hook.
+                    if research_collector is not None:
+                        research_collector.record(
+                            day=day, anchor=anchor, fb=fb, zb=zb, used=used,
+                            majority_pick=majority_pick, ml_p=ml_p, z_score=z,
+                            model=ml_model,
+                            ml_ht_diff=ht_diff_feat, ml_ht_total=ht_total_feat,
+                        )
+
+                    # Check certified ML rules
+                    # Emit ONE pick at the HIGHEST qualifying threshold. A fixture
+                    # clearing 60 also clears 55 — emitting both duplicated rows
+                    # that the collapse then resolved to the first (>=55), which
+                    # made >=60/65/70 look "never fired" in the ledger/tripwire
+                    # even while the model was firing. One pick, strongest label.
+                    best = None  # (threshold, rule)
+                    for rule in ml_rules:
+                        m = re.search(r">=\s*([\d.]+)", rule["rule"])
+                        if m:
+                            thr = float(m.group(1))
+                            if ml_p * 100.0 >= thr and (best is None or thr > best[0]):
+                                best = (thr, rule)
+                    _audit_route(_decision, "ml", "emitted" if best else "rejected",
+                                 None if best else ("no_certified_ml_rules" if not ml_rules
+                                                    else "no_qualifying_ml_rule"),
+                                 probability=_audit_finite(ml_p), selection=majority_pick,
+                                 selected_rule=best[1]["rule"] if best else None)
+                    if best is not None:
+                        thr, rule = best
                         home = canonical_display_team(anchor.get("home"))
                         away = canonical_display_team(anchor.get("away"))
                         picks.append({
@@ -5270,35 +5310,15 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                             "home": home, "away": away,
                             "kickoff": anchor.get("kickoff") or anchor.get("time"),
                             "sport": anchor.get("sport", "soccer"),
-                            "league": anchor.get("league"),
-                            "pick": fade_sel,
-                            "avg_p": fade_avg_p(ml_p),
+                            "league": anchor.get("league"), "pick": majority_pick,
+                            "avg_p": round(ml_p * 100.0, 1),
                             "w_score": round(z, 4),
-                            # The fade is ALWAYS priced at the fade selection's
-                            # own odds. The parent's price is recorded under
-                            # derived_from for audit only and is never scored.
-                            "odds": fade_odds,
-                            "odds_source": (
-                                "forebet_best" if _f(fb_quote.get(_fade_col)) is not None
-                                else "zulubet" if _f(zb.get(_fade_col)) is not None else None),
+                            "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
+                            "odds_source": ("forebet_best" if _f(fb_quote.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
                             "bookmaker": None,
-                            "rule": fade_rule["rule"],
-                            "edge_rule": fade_rule["rule"],
-                            "display_rule": (
-                                fade_rule.get("display_rule") or f"ML-FADE≥{fthr:.0f}"),
-                            # Independent identity + explicit derivation provenance
-                            "edge_family": FADE_FAMILY,
-                            "parent_family": PARENT_FAMILY,
-                            "derivation": DERIVATION,
-                            "inverse_of": majority_pick,
-                            "derived_from": {
-                                "family": PARENT_FAMILY,
-                                "rule": (fade_rule.get("parent_rule")
-                                         or f"ml-meta avg_p>={fthr:g}"),
-                                "pick": majority_pick,
-                                "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
-                                "ml_p": round(ml_p, 4),
-                            },
+                            "rule": rule["rule"],
+                            "edge_rule": rule["rule"],
+                            "display_rule": rule["display_rule"] if "display_rule" in rule else f"ML-META≥{thr:.0f}",
                             "n_way": 3, "edge_n_way": 3,
                             "confidence": _f(bz.get("confidence")) if bz else None,
                             "model_version": bz.get("model_version") if bz else None,
@@ -5306,102 +5326,217 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                             "sources_used": used,
                             "source_weights": source_weights or {},
                             "ml_p": round(ml_p, 4),
-                            # checkpoint ⑫ contract fields — the fade inherits
-                            # the parent operating point, so the same constant
-                            # -feature evidence MUST be zero (tripwire covers
-                            # the ml-fade family too).
+                            # checkpoint ⑫ contract: these MUST be 0 for any pick
+                            # that survives the pre-match guard. Recorded so the
+                            # assertion below has evidence, and so the archive can
+                            # be audited after the fact.
                             "ml_ht_diff": ht_diff_feat,
                             "ml_ht_total": ht_total_feat,
                         })
 
-        if len(set(sels)) > 1:
-            vetoes += 1
-            continue
-        edge = thr_for(len(used), t1x2)
-        if edge is None:
-            continue
-        n_req, thr = edge["n_way"], edge["threshold"]
+                    # --- ml-fade: certified inverse-selection sibling family ---
+                    # Derive the fade from the SAME eligible ml-meta selection:
+                    # binary 1X2 home<->away, scored at the FADE side's own odds
+                    # (the opposing column of the same book — never the parent
+                    # pick's price). Draw selections have no honest binary
+                    # inverse: they are excluded EXPLICITLY (counted + reported),
+                    # never silently mapped to anything. The fade fires on its own
+                    # certified thresholds, independently of whether the parent
+                    # ml-meta rule fired.
+                    fade_best = None
+                    for fade_rule in ml_fade_rules:
+                        fm = re.search(r">=\s*([\d.]+)", fade_rule["rule"])
+                        if not fm:
+                            continue
+                        fthr = float(fm.group(1))
+                        if ml_p * 100.0 >= fthr and (fade_best is None or fthr > fade_best[0]):
+                            fade_best = (fthr, fade_rule)
+                    _audit_route(_decision, "ml_fade",
+                                 "emitted" if fade_best and majority_pick != "draw" else "rejected",
+                                 ("no_certified_fade_rules" if not ml_fade_rules else
+                                  "no_qualifying_fade_rule" if not fade_best else
+                                  "draw_has_no_binary_inverse" if majority_pick == "draw" else None),
+                                 probability=_audit_finite(ml_p), parent_selection=majority_pick,
+                                 selected_rule=fade_best[1]["rule"] if fade_best else None)
+                    if fade_best is not None:
+                        fade_sel = inverse_selection(majority_pick)
+                        if fade_sel is None:
+                            ml_fade_draw_skipped += 1
+                        else:
+                            fthr, fade_rule = fade_best
+                            _fade_col = fade_odds_column(majority_pick)
+                            fade_odds = _f(fb_quote.get(_fade_col)) or _f(zb.get(_fade_col)) or None
+                            home = canonical_display_team(anchor.get("home"))
+                            away = canonical_display_team(anchor.get("away"))
+                            picks.append({
+                                "date": day, "market": "1x2",
+                                "match": f"{home} vs {away}",
+                                "home": home, "away": away,
+                                "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                                "sport": anchor.get("sport", "soccer"),
+                                "league": anchor.get("league"),
+                                "pick": fade_sel,
+                                "avg_p": fade_avg_p(ml_p),
+                                "w_score": round(z, 4),
+                                # The fade is ALWAYS priced at the fade selection's
+                                # own odds. The parent's price is recorded under
+                                # derived_from for audit only and is never scored.
+                                "odds": fade_odds,
+                                "odds_source": (
+                                    "forebet_best" if _f(fb_quote.get(_fade_col)) is not None
+                                    else "zulubet" if _f(zb.get(_fade_col)) is not None else None),
+                                "bookmaker": None,
+                                "rule": fade_rule["rule"],
+                                "edge_rule": fade_rule["rule"],
+                                "display_rule": (
+                                    fade_rule.get("display_rule") or f"ML-FADE≥{fthr:.0f}"),
+                                # Independent identity + explicit derivation provenance
+                                "edge_family": FADE_FAMILY,
+                                "parent_family": PARENT_FAMILY,
+                                "derivation": DERIVATION,
+                                "inverse_of": majority_pick,
+                                "derived_from": {
+                                    "family": PARENT_FAMILY,
+                                    "rule": (fade_rule.get("parent_rule")
+                                             or f"ml-meta avg_p>={fthr:g}"),
+                                    "pick": majority_pick,
+                                    "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
+                                    "ml_p": round(ml_p, 4),
+                                },
+                                "n_way": 3, "edge_n_way": 3,
+                                "confidence": _f(bz.get("confidence")) if bz else None,
+                                "model_version": bz.get("model_version") if bz else None,
+                                "vitibet_index": _f(vb.get("index")) if vb else None,
+                                "sources_used": used,
+                                "source_weights": source_weights or {},
+                                "ml_p": round(ml_p, 4),
+                                # checkpoint ⑫ contract fields — the fade inherits
+                                # the parent operating point, so the same constant
+                                # -feature evidence MUST be zero (tripwire covers
+                                # the ml-fade family too).
+                                "ml_ht_diff": ht_diff_feat,
+                                "ml_ht_total": ht_total_feat,
+                            })
 
-        # Option 2: Dynamic Competition-Type Gating (Custom Thresholds)
-        comp_type = classify_competition(anchor.get("league"))
-        if comp_type == "cup":
-            thr += 5.0
-        elif comp_type == "friendly":
-            thr += 10.0
-            if n_req < 3:
-                n_req = 3
+            if len(set(sels)) > 1:
+                _audit_route(_decision, "consensus", "rejected", "voter_disagreement",
+                             votes=dict(Counter(sels)))
+                vetoes += 1
+                continue
+            edge = thr_for(len(used), t1x2)
+            if edge is None:
+                _audit_route(_decision, "consensus", "rejected", "no_consensus_rule_for_source_count",
+                             observed_sources=len(used), available_source_count_slots=sorted(t1x2))
+                continue
+            n_req, thr = edge["n_way"], edge["threshold"]
 
-        if len(used) < n_req:
-            continue
+            # Option 2: Dynamic Competition-Type Gating (Custom Thresholds)
+            comp_type = classify_competition(anchor.get("league"))
+            if comp_type == "cup":
+                thr += 5.0
+            elif comp_type == "friendly":
+                thr += 10.0
+                if n_req < 3:
+                    n_req = 3
 
-        avg_p = mean(ps) * 100.0
-        if avg_p < thr:
-            continue
+            _audit_route(_decision, "consensus", "evaluated", rule=edge.get("rule"),
+                         competition_type=comp_type, base_threshold_pct=_audit_finite(edge["threshold"]),
+                         effective_threshold_pct=_audit_finite(thr), required_sources=n_req,
+                         observed_sources=len(used), observed_avg_probability_pct=_audit_finite(mean(ps)*100))
+            if len(used) < n_req:
+                _audit_route(_decision, "consensus", "rejected", "competition_requires_more_sources")
+                continue
+
+            avg_p = mean(ps) * 100.0
+            if avg_p < thr:
+                _audit_route(_decision, "consensus", "rejected", "below_consensus_threshold",
+                             shortfall_pct_points=_audit_finite(thr-avg_p))
+                continue
             
-        sel = sels[0]
-        _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
-        _col = _odds_map[sel]
-        odds = _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None
-        odds_src = ("forebet_best" if _f(fb_quote.get(_col)) is not None
-                    else "zulubet" if _f(zb.get(_col)) is not None
-                    else None)
-        home = canonical_display_team(anchor.get("home"))
-        away = canonical_display_team(anchor.get("away"))
+            sel = sels[0]
+            _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
+            _col = _odds_map[sel]
+            odds = _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None
+            odds_src = ("forebet_best" if _f(fb_quote.get(_col)) is not None
+                        else "zulubet" if _f(zb.get(_col)) is not None
+                        else None)
+            home = canonical_display_team(anchor.get("home"))
+            away = canonical_display_team(anchor.get("away"))
         
-        # Weighted consensus score
-        votes = [(sel, source_weights.get(s, 1.0)) for s, sel in zip(used, sels)]
-        _, w_score, _ = weighted_consensus_score(votes)
+            # Weighted consensus score
+            votes = [(sel, source_weights.get(s, 1.0)) for s, sel in zip(used, sels)]
+            _, w_score, _ = weighted_consensus_score(votes)
 
-        # --- Certification-contract gate (operator-authorized 2026-10-10) ---
-        # The certified label may only be stamped when the enforced predicate
-        # IS the named one: every qualifier in the rule string (min_p>=N,
-        # home-only, away-only, odds-LO-HI with INCLUSIVE lower and EXCLUSIVE
-        # upper) must actually hold, and the voter set must BE the electorate
-        # the rule was certified on. Otherwise the row is still emitted --
-        # suppression is not the remedy -- but under an HONEST label naming
-        # exactly what was enforced, never under the certified name.
-        rule_label, display_label = edge["rule"], edge["display_rule"]
-        if edge.get("from_registry"):
-            electorate = edge.get("electorate")
-            electorate_ok = (not electorate) or (set(used) == set(electorate))
-            min_p_req = edge.get("min_p")
-            min_p_ok = (min_p_req is None
-                        or min(ps) * 100.0 >= min_p_req - 1e-9)
-            side_ok = ((not edge.get("home_only") or sel == "home")
-                       and (not edge.get("away_only") or sel == "away"))
-            o_lo, o_hi = edge.get("odds_min"), edge.get("odds_max")
-            odds_ok = ((o_lo is None and o_hi is None)
-                       or (odds is not None and o_lo <= odds < o_hi))
-            if not (electorate_ok and min_p_ok and side_ok and odds_ok):
-                if electorate_ok:
-                    rule_label = display_label = (
-                        f"{edge['n_way']}way-unanimous avg_p>={thr:g}")
-                else:
-                    rule_label = display_label = (
-                        f"unanimous[{'+'.join(sorted(used))}] avg_p>={thr:g}")
+            # --- Certification-contract gate (operator-authorized 2026-10-10) ---
+            # The certified label may only be stamped when the enforced predicate
+            # IS the named one: every qualifier in the rule string (min_p>=N,
+            # home-only, away-only, odds-LO-HI with INCLUSIVE lower and EXCLUSIVE
+            # upper) must actually hold, and the voter set must BE the electorate
+            # the rule was certified on. Otherwise the row is still emitted --
+            # suppression is not the remedy -- but under an HONEST label naming
+            # exactly what was enforced, never under the certified name.
+            rule_label, display_label = edge["rule"], edge["display_rule"]
+            if edge.get("from_registry"):
+                electorate = edge.get("electorate")
+                electorate_ok = (not electorate) or (set(used) == set(electorate))
+                min_p_req = edge.get("min_p")
+                min_p_ok = (min_p_req is None
+                            or min(ps) * 100.0 >= min_p_req - 1e-9)
+                side_ok = ((not edge.get("home_only") or sel == "home")
+                           and (not edge.get("away_only") or sel == "away"))
+                o_lo, o_hi = edge.get("odds_min"), edge.get("odds_max")
+                odds_ok = ((o_lo is None and o_hi is None)
+                           or (odds is not None and o_lo <= odds < o_hi))
+                _audit_route(_decision, "consensus", "evaluated", registry_contract={
+                    "electorate_matches": electorate_ok, "required_electorate": list(electorate or ()),
+                    "min_probability_matches": min_p_ok, "required_min_probability_pct": min_p_req,
+                    "side_matches": side_ok, "odds_window_matches": odds_ok,
+                    "on_mismatch": "relabel_not_reject"})
+                if not (electorate_ok and min_p_ok and side_ok and odds_ok):
+                    if electorate_ok:
+                        rule_label = display_label = (
+                            f"{edge['n_way']}way-unanimous avg_p>={thr:g}")
+                    else:
+                        rule_label = display_label = (
+                            f"unanimous[{'+'.join(sorted(used))}] avg_p>={thr:g}")
 
-        picks.append({
-            "date": day, "market": "1x2",
-            "match": f"{home} vs {away}",
-            "home": home, "away": away,
-            "kickoff": anchor.get("kickoff") or anchor.get("time"),
-            "sport": anchor.get("sport", "soccer"),
-            "league": anchor.get("league"), "pick": sel,
-            "avg_p": round(avg_p, 1),
-            "w_score": round(w_score, 4),
-            "odds": odds,
-            "odds_source": odds_src,
-            "bookmaker": None,
-            "rule": rule_label,
-            "edge_rule": rule_label,
-            "display_rule": display_label,
-            "n_way": len(used), "edge_n_way": n_req,
-            "confidence": _f(bz.get("confidence")),
-            "model_version": bz.get("model_version"),
-            "vitibet_index": _f(vb.get("index")),
-            "sources_used": used,
-            "source_weights": source_weights or {},
-        })
+            picks.append({
+                "date": day, "market": "1x2",
+                "match": f"{home} vs {away}",
+                "home": home, "away": away,
+                "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                "sport": anchor.get("sport", "soccer"),
+                "league": anchor.get("league"), "pick": sel,
+                "avg_p": round(avg_p, 1),
+                "w_score": round(w_score, 4),
+                "odds": odds,
+                "odds_source": odds_src,
+                "bookmaker": None,
+                "rule": rule_label,
+                "edge_rule": rule_label,
+                "display_rule": display_label,
+                "n_way": len(used), "edge_n_way": n_req,
+                "confidence": _f(bz.get("confidence")),
+                "model_version": bz.get("model_version"),
+                "vitibet_index": _f(vb.get("index")),
+                "sources_used": used,
+                "source_weights": source_weights or {},
+            })
+            _audit_route(_decision, "consensus", "emitted", selected_rule=rule_label)
+    if fixture_audit is not None:
+        try:
+            diagnostics = [e["decision_diagnostics"] for e in fixture_audit
+                           if e.get("kind") == "upcoming_fixture" and e.get("decision_diagnostics")]
+            reasons = Counter(d.get("primary_reason") for d in diagnostics)
+            print(f"fixture attrition {day}: source_keys={len(keys)} "
+                  f"decision_records={len(diagnostics)} reasons={json.dumps(dict(sorted(reasons.items())))}",
+                  file=sys.stderr)
+            for route in ("consensus", "ml", "ml_fade"):
+                counts = Counter(d[route].get("reason") or d[route].get("status") for d in diagnostics)
+                print(f"fixture attrition {day} route={route}: {json.dumps(dict(sorted(counts.items())))}",
+                      file=sys.stderr)
+        except Exception as exc:
+            print(f"fixture attrition summary failed: {exc}", file=sys.stderr)
     if (ml_rules or ml_fade_rules) and ml_model and ml_scored:
         thr_list = sorted(
             {float(m.group(1)) for r in ml_rules if (m := re.search(r">=\s*([\d.]+)", r.get("rule", "")))}
@@ -6761,10 +6896,12 @@ def main():
         ml_scored_day = max(0, int(getattr(research_collector, "scored", 0) or 0) - ml_scored_before)
         total_vetoes += vetoes
         total_upcoming += n_up
+        generation_rejections = []
         picks, pre_match_skips = filter_operational_pre_match_picks(
             picks,
             as_of=as_of,
             min_lead=lead_minutes,
+            rejection_audit=generation_rejections,
         )
         if pre_match_skips:
             details = ", ".join(f"{k}={v}" for k, v in sorted(pre_match_skips.items()))
@@ -6776,6 +6913,11 @@ def main():
         # scale its threshold was never tuned for.
         _breaches = ml_meta_contract_breaches(picks)
         if _breaches:
+            generation_rejections.extend({"row": dict(p), "stage": "ml_contract",
+                "reason": "ml_meta_constant_feature_breach", "evidence": {
+                    "constant_features": {k: p.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES}}}
+                for p in picks if str(p.get("rule") or "").startswith("ml-meta")
+                and any(p.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES))
             picks = [p for p in picks
                      if not str(p.get("rule") or "").startswith("ml-meta")
                      or not any(p.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES)]
@@ -7416,6 +7558,7 @@ def main():
             _scs.record_picks_build(
                 day=day,
                 scored_rows=picks,
+                generation_rejections=generation_rejections,
                 slate_rows=collapsed_day_picks,
                 pre_collapse_rows=day_picks,
                 pipeline_scored_log=int(ml_scored_day or n_up),
