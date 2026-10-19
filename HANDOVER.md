@@ -10794,3 +10794,212 @@ Populations (50 card days; pool = same-day 1X2 candidates incl. SKIPPED_VETO; ou
 1. Decide whether the 44 backfill-shaped rows should be treated as replay rows, not placed bets.
 2. Decide on a 4 Sep bank correction (about +39 points before compounding).
 3. Decide which 15 Oct price is the record: the frozen card (4.00) or the stored slip (1.33).
+
+## Addendum 2026-10-19: realized-stat unders — red team of this session's change
+
+**Disposition:** balanced display retained; cohort-selection expansion NOT
+validated for ROI and now default-off. Enhancement betting hold stands. No
+forward preregistration or new live policy adopted. This addendum uses the
+actual 19 October date; existing later-dated headings were not treated as
+observed future evidence.
+
+### First revision and correction
+
+The initial session edit displayed complementary unders and removed asymmetric
+line thresholds for all-outcome cohort candidates by default. Unit tests proved
+eligibility, NOT profitability. On reviewing the handover, that default-on
+selection expansion was withdrawn: `EDGE_FACTORY_ENH_COHORT_PARITY=1` is now
+an isolated research opt-in, not configured in any workflow. It also gates the
+newly generated match Under 4.5 candidate. The no-cohort model fallback is
+unchanged. Do not enable this switch for betting on this report's numbers.
+
+The old filters are real: U1.5 80%, U2.5 85%, U3.5 90% versus O2.5 35%. Removing
+these is nevertheless a betting-universe change, not merely a display repair.
+The active price gate remains `MIN_LEG_ODDS=1.30`; the old registry floors are
+not the current lane's verdict gate. No EV gate was reinstated; no existing
+rate band, cap, bucket, stake, main-lane rule or workflow was changed.
+
+New `statistical_comment` displays both goal sides and explicitly labels its
+winner-only sample as descriptive history, not pre-match probability. Existing
+parser labels/sample membership stay compatible. The all-outcome cohort used
+for selection remains separate. No frontend Stats-tab implementation exists in
+this checkout; this change reaches generated reports for newly built picks.
+
+### Evidence, not an ROI claim
+
+Actual retained enhancement performance, 14–18 October: 5 bet-days, 13 accas,
+6W/7L; 111.8088 capital-points staked, 93.7513 returned. Stake-weighted ROI
+**−16.15%**, flat-acca ROI **−2.46%**; reported bank **81.9424%** of capital.
+The exploratory five-date block-bootstrap ROI interval is [−79.10%, +58.78%].
+Two accas lack leg identities; no bookmaker receipts were verified.
+
+New read-only `scripts/audit_enh_under_parity.py` consumes archived cohort rates
+and strictly pre-decision/prematch exact-identity captured prices, not a refit
+on today's warehouse. Of 130 parent rows, 80 retained cohort snapshots remain;
+19 have strict prices. There are 22 newly admitted under-market candidates,
+**zero changed fixture choices**, and identical counterfactual cards at 0%, 2%,
+5% and 10% decimal-price haircuts. The comparison is a **NO-OP** and refuses
+paired bootstrap, not evidence of improvement. Seven counterfactual accas form;
+five resolve exactly and two are unknown. Unknown outcomes have explicit
+best/worst bounds; they are not dropped before selection.
+
+The diagnostic subset's attractive absolute ROI is NOT comparable to the
+actual ledger: different prices, incomplete source coverage, final intraday
+snapshots rather than freeze-time universes, only five resolved accas. Historical
+ScoutingStats prices were unavailable and were not invented. Current cohort
+SQL has no historical decision-date cutoff and uses the old voter trio; archived
+cohort cutoff/regime validity is unverified. These limitations preclude promotion.
+
+### Red-team findings and validation
+
+- Existing `replay_harness.enh_day_growth` multiplies simultaneous ticket
+  factors. The new audit uses additive daily P&L and the production card/stake
+  recipe. Old harness and live staking arithmetic were NOT changed; do not use
+  old harness growth as acceptance evidence without fixing that diagnostic.
+- An initial assertion that U4.5 lacked settlement support was WRONG: a rule
+  already existed lower in the scorer. A mutation exposed the redundant branch
+  added during this session; that edit was removed. There is no net change to
+  `enh_registry.py`. Existing scoring is now tested for every score split of
+  totals 0–11; removing the real rule fails all 12 tests.
+- **Final full suite: 3,207 passed in 146.05s.**
+- 200 seeded comparisons to immutable base `8abefc45`: default selection and
+  candidate logs identical, including model-only cases. Stubbed, not ROI proof.
+- 100 coherent score-distribution/random-price cases exercise complements,
+  ranking and price/band bounds.
+- Four deliberate mutations caught: research gate forced on, actual U4.5 rule
+  removed, post-decision prices admitted, wrong multiplicative daily growth.
+  All restored before final full-suite run. Test environment strips the new
+  research flag for hermeticity.
+
+Durable report + reproducible JSON/input hashes + validation receipt:
+`docs/operator/audits/ENH-UNDER-REDTEAM-2026-10-19.md` and adjacent
+`enh-under-redteam-2026-10-19.json`, `enh-under-validation-2026-10-19.json`.
+Reproduce with `PYTHONPATH=src python scripts/audit_enh_under_parity.py --out
+.cache/enh_under_redteam.json` and `PYTHONPATH=src python
+tools/verify_enh_default_parity.py`. Scratch is gitignored under `.cache/`.
+
+No API calls/credits, bank/state/history edits, frozen-slip changes, push, or
+deployment. Need auditable freeze-time forward shadow comparisons and execution
+prices before any operator-approved promotion. No ROI guarantee was made.
+
+### Follow-up 2026-10-19: stress-test 80% Under 2.5 at 1.40 versus 85%
+
+The earlier example is **hypothetical**, not an observed 80% U2.5 archived
+fixture. Exact production-function tests confirm: default 80%/1.40 and
+84.99%/1.40 rejected by `below_line_threshold`; 85% and 90%/1.40 accepted
+when only this market clears pricing; 90.01% rejected by the ceiling;
+85%/1.29 rejected by the odds floor. Research opt-in allows 80%/1.40.
+New boundary fixtures are coherent 1-0/3-0 distributions. No production
+selector, config, workflow, bank, history or frozen-slip change in this follow-up.
+
+Correct economic arithmetic: break-even at 1.40 is 71.4286%, not 85%.
+If **true forward p** is 80%, expected net ROI is +12%; a historical 80%
+frequency does not establish that p. True p=75% at 1.33 (5% decimal-price
+haircut) gives -0.25%. Wilson lower endpoints at observed 80%: n100 71.1171%
+(ROI at 1.40 -0.4361%), n200 73.9145% (+3.4803%), n400 75.8030%
+(+6.1242%). These are independent/representative-trial sensitivity diagnostics,
+not guarantees, calibration fixes, accumulator ROI intervals or new live gates.
+Even 85/100 has lower-endpoint ROI -0.2686% at minimum odds 1.30.
+
+Retained Oct14-18 cohort snapshots: 80 total, 75 available U2.5 rates,
+25.90-44.01%, zero >=80% or >=85%, zero newly eligible by an 85->80 change.
+Final-snapshot coverage remains incomplete; do not generalize to all candidates.
+85% is the legacy policy, not an established ROI optimum. Available Git history
+only exposed the baseline, not optimization provenance. **No evidence supports
+blindly replacing it with 80%, 81% or price break-even.** Require frozen
+predecision, source-comparable cohorts/prices and out-of-sample paired ROI/
+calibration evidence before operator-approved promotion. No EV gate added;
+research default-off and previous hold/no-demonstrated-uplift findings unchanged.
+
+Durable report: `docs/operator/audits/UNDER25-CUTOFF-STRESS-2026-10-19.md`;
+calculations/input hashes: adjacent `under25-cutoff-stress-2026-10-19.json`.
+Reproduce via `PYTHONPATH=src .venv/bin/python scripts/audit_under25_cutoff.py`.
+Focused regression (new arithmetic + hybrid + original audit + picks tests):
+116 passed in 5.66s; baseline parity repeated: 200 identical seeded cases.
+Final follow-up full suite: **3,234 passed in 163.97s**, exit 0
+(`.cache/under25_cutoff_full_pytest.log`); supersedes the earlier 3,207 count
+for the now-expanded workspace. All five new audit input hashes verified;
+`git diff --check` clean.
+
+### Follow-up 2026-10-19: user requires cross-market contention, not U2.5 alone
+
+Direct answer: do not adjust one market's 85->80 cutoff in isolation. Joint
+common cohort eligibility is the coherent research comparison, but the retained
+full pool provides no evidence for a live adjustment or ROI improvement.
+New `scripts/audit_enh_market_competition.py` verifies EVERY prior red-team
+input hash, re-reads strict quotes, and reproduces all 80 stored fixture choices
+before explaining competition. It found 48 priced/in-band candidate occurrences,
+22 new candidates across 17 fixtures (17 U2.5, 3 U3.5, 2 U4.5); ALL 22 lose to
+strictly higher-rate incumbents, with zero fixture or downstream card changes.
+Both arms' 17 fixture choices: O2.5=14, homeO0.5=1, homeO1.5=1, awayU1.5=1.
+These are fixture recommendations, NOT the final ticket-leg count. Strict source
+coverage is incomplete, not a complete live universe; final snapshots caveat stands.
+Examples: LAFC/Austin U3.5 65.39%@1.86 loses to homeO0.5 89.06%@1.38;
+Nashville/SKC U4.5 64.65%@1.50 loses to homeO1.5 81.86%@1.95.
+
+Seven actual-selector contention tests use coherent score distributions: higher
+competitor wins regardless of admission; 80% under can displace 60% BTTS under
+parity; price floor still applies; equal-rate tie uses odds. Crucial objective
+check: current hit-rate ranking takes 80%@1.40 over 60%@2.10 despite conditional
+point ROI 12% vs 26%; high hit rate != maximum ROI. Do not silently add an EV
+gate/ranking change or call either hypothetical probability calibrated.
+Focused regression 123 passed in 4.48s; baseline parity 200 identical cases.
+Previous full-suite 3234 was before these 7 additions, NOT a fresh 3241 claim.
+No production/config/state/deployment changes, hold/research default-off intact.
+Report: `docs/operator/audits/ENH-MARKET-COMPETITION-2026-10-19.md`; adjacent
+`enh-market-competition-2026-10-19.json` contains full affected candidate pools.
+
+### Operator supersession 2026-10-19: broader cohort selector ON by default
+
+Explicit instruction: “the off switch should be on, let the best cohort win …
+i want broader selection with evidence.” This supersedes this session's
+recommendation to keep `EDGE_FACTORY_ENH_COHORT_PARITY` default-off. It does NOT
+turn retrospective diagnostic ROI into a validated forward estimate.
+
+**Implemented in the existing selector:** unset or `=1` enables common cohort
+eligibility (existing 25–90% inclusive band, actual price >=1.30, highest
+all-outcome cohort rate then price). Legacy `LINE_THRESHOLDS` no longer prefilter
+cohort-backed markets; U4.5 joins the generator. Exact `=0` is the rollback;
+other explicit values do not enable parity. Model-only fallback retains original
+thresholds. HYBRID_MIN_N=100 unchanged. No blanket 75% minimum was invented:
+75% may compete like any other in-band cohort rate, with no promised profit.
+Main lane, EV/no-EV policy, staking, caps, pairing, provider budgets and freeze
+remain unchanged. `.env.example` documents `1`; no workflow edit is necessary.
+No running-bot deployment, push/merge, lane-enable change, freeze regeneration
+or bet execution occurred. Newly built reports use this after deployment;
+old records are untouched. No new shadow lane or assay engine was added.
+
+**Important correction to my preceding “what's next” answer:** the live registry
+replay floor is ALREADY `MIN_LEG_ODDS` via `_root_floors()`. It was wrong to say
+that live arm needed conversion from old market floors. Derived slice floors
+are a research variant, not a live-gate defect. The current lane/replay price
+predicate is now compared in a test over all mapped markets and boundary prices.
+The real replay arithmetic bug IS fixed: simultaneous-ticket P&L adds from the
+same opening bank; it no longer compounds ticket factors. Six independent cash
+accounting tests cover winning, mixed and losing two-ticket days and weighted
+sizing. Production settlement and sizing code were not changed.
+
+Evidence refreshed through existing read-only diagnostics: 80 retained snapshots,
+19 strict-priced; 48 priced/in-band occurrences; 22 additional under contenders
+across 17 fixtures; all 22 beaten by strictly higher-rate incumbents; ZERO changed
+fixture choices and identical cards. No demonstrated ROI uplift; no empirically
+optimal 75/85 threshold established. Registry-only replay cannot test omitted
+candidate markets: its output now says that explicitly. 75%@1.40 displacing
+60% BTTS@1.80 is a coherent synthetic regression, NOT historical ROI evidence.
+100 random coherent-distribution cases now exercise the ON-by-default path.
+`tools/verify_enh_default_parity.py` retains its filename but now sets env `0`
+and proves explicit legacy rollback parity (200 seeded entire outputs/logs),
+not parity of the newly broader default.
+
+Current runbook: `docs/operator/REALIZED-STATS-UNDERS-2026-10-19.md`. Prior audit
+docs have visible policy-supersession notices; JSON calculations/input hashes
+were refreshed without rewriting operational archives, history or bankrolls.
+Focused regression at this point: 159 passed in 4.89s. Final suite receipt follows.
+Final authorized-enable validation: **3,259 passed in 147.25s** (full suite).
+Two deliberate mutations caught/restored: default disabled -> 1 cross-market
+75% test fails; additive P&L replaced by compounding -> all 6 cash tests fail.
+After restoring exact source bytes: 225 focused/docs-link tests passed in 4.86s;
+explicit legacy rollback again 200 identical baseline cases. Receipt updated at
+`docs/operator/audits/enh-under-validation-2026-10-19.json` with source SHA256,
+new/old mutation scopes distinguished and default parity NOT claimed.
+No operational archive/history, bank, workflow or registry edits; no deployment.

@@ -629,13 +629,16 @@ def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
         # recipe has already dropped same-fixture duplicates, so no two legs
         # on the card share one.
         hit_of = {(str(l["match"]), str(l["pick"])): bool(l["hit"]) for l in pool}
-        factor = 1.0
+        net_fraction = 0.0
         hits = 0
         for acca in plan:
             won = all(hit_of[(str(l["match"]), str(l["pick"]))] for l in acca["legs"])
             hits += 1 if won else 0
             f = acca["stake_pct"] / 100.0              # the day's per-acca fraction
-            factor *= (1.0 + f * (acca["odds"] - 1.0)) if won else (1.0 - f)
+            # All tickets are funded from the SAME opening bank. Settlements
+            # add P&L; they cannot reinvest another simultaneous ticket's return.
+            net_fraction += f * (acca["odds"] - 1.0) if won else -f
+        factor = 1.0 + net_fraction
         out[day] = {"growth": factor, "log_growth": math.log(factor) if factor > 0 else float("-inf"),
                     "bets": len(plan), "hits": hits}
     return out
@@ -683,6 +686,9 @@ def cmd_enhancements(args):
     print("=" * 74)
     print("doctrine: this can only backtest history that HAD a price. On 2026-10-12")
     print("that is over 2.5 (n=350), over 1.5 (n=33), over 3.5 (n=16), btts (n=7).")
+    print("This is selected, priced registry history, NOT the rejected-candidate")
+    print("universe: it cannot prove uplift from broader cohort eligibility.")
+    print("Daily P&L is additive across tickets from the same opening bank.")
     print("The newly-priced legs exist only going forward. Use these numbers for")
     print("RELATIVE floor comparisons — never as a prediction of bank growth.\n")
 

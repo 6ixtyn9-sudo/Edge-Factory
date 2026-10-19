@@ -64,12 +64,21 @@ def test_historical_profile_no_longer_queries_or_emits_top_scores():
             self.queries.append(query)
             if "MAX(avg_p)" in query:
                 return Result((80.0,))
-            return Result((100, 3.1, 0.65, 0.52, 0.72, 0.24))
+            return Result((100, 3.1, 0.65, 0.52, 0.72, 0.24,
+                           0.85, 0.40, 0.20, 0.90, 0.40, 0.10, 0.60, 0.10, 0.02))
 
     con = FakeConnection()
     comment = fetch_historical_profile(con, "home", 70.0, 3)
 
     assert "Avg Goals: 3.10" in comment
+    assert "Under 1.5: 15.0%" in comment
+    assert "Under 2.5: 35.0%" in comment
+    assert "Under 3.5: 60.0%" in comment
+    assert "Under 4.5: 80.0%" in comment
+    assert "Home Under 1.5 Goals: 28.0%" in comment
+    assert "Away Under 3.5 Goals: 98.0%" in comment
+    assert "BTTS-No: 48.0%" in comment
+    assert "Winner-only history, not pre-match probabilities" in comment
     assert "Top Scores" not in comment
     assert len(con.queries) == 2  # scale probe + active aggregate; no score query
     assert not any("GROUP BY 1" in query for query in con.queries)

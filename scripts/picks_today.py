@@ -400,7 +400,11 @@ CAUTION_MIN_ODDS = 1.30
 
 
 def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> str | None:
-    """Dynamically query the local database to generate 100% accurate, non-static realized stats."""
+    """Describe historical winners, not pre-match chances. Show both goal sides.
+
+    This outcome-conditioned display is deliberately separate from the all-outcome
+    cohort used to select enhancements (fetch_match_cohort).
+    """
     view_name = "consensus3" if n_way >= 3 else "consensus2"
     try:
         max_p = con.execute(f"SELECT MAX(avg_p) FROM {view_name}").fetchone()[0]
@@ -433,7 +437,16 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
             AVG(CASE WHEN f.hs + f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
             AVG(CASE WHEN f.hs > 0 AND f.gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
             AVG(CASE WHEN f.hs >= 2 THEN 1.0 ELSE 0.0 END) AS home_o15_rate,
-            AVG(CASE WHEN f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS away_o15_rate
+            AVG(CASE WHEN f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS away_o15_rate,
+            AVG(CASE WHEN f.hs + f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15_rate,
+            AVG(CASE WHEN f.hs + f.gs >= 4 THEN 1.0 ELSE 0.0 END) AS over35_rate,
+            AVG(CASE WHEN f.hs + f.gs >= 5 THEN 1.0 ELSE 0.0 END) AS over45_rate,
+            AVG(CASE WHEN f.hs >= 1 THEN 1.0 ELSE 0.0 END) AS home_o05_rate,
+            AVG(CASE WHEN f.hs >= 3 THEN 1.0 ELSE 0.0 END) AS home_o25_rate,
+            AVG(CASE WHEN f.hs >= 4 THEN 1.0 ELSE 0.0 END) AS home_o35_rate,
+            AVG(CASE WHEN f.gs >= 1 THEN 1.0 ELSE 0.0 END) AS away_o05_rate,
+            AVG(CASE WHEN f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS away_o25_rate,
+            AVG(CASE WHEN f.gs >= 4 THEN 1.0 ELSE 0.0 END) AS away_o35_rate
         FROM {view_name} c
         JOIN forebet_settled f ON c.date = f.date AND c.home = f.home AND c.away = f.away
         WHERE c.outcome = ? AND {agree_cond}
@@ -444,18 +457,27 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
         if not row or not row[0] or row[0] < 5:
             return None
             
-        n, avg_goals, over25, btts, home_o15, away_o15 = row
-        
-        # Exact Top Scores were retired after the rolling audit measured only
-        # 49/498 candidate hits (9.8%) versus 15.3% promised. Do not query or
-        # emit that surface for new picks; the audit parser still preserves
-        # legacy observations until they age out of the rolling window.
-        return (
-            f"📊 Realized Stats on {sel.capitalize()} Win (n={n}): "
-            f"Avg Goals: {avg_goals:.2f} | Over 2.5: {over25:.1%} | "
-            f"BTTS: {btts:.1%} | Home Over 1.5 Goals: {home_o15:.1%} | "
-            f"Away Over 1.5 Goals: {away_o15:.1%}"
-        )
+        (n, avg_goals, over25, btts, home_o15, away_o15,
+         over15, over35, over45, home_o05, home_o25, home_o35,
+         away_o05, away_o25, away_o35) = row
+
+        # Paired rates share the same sample: half-goal unders are exact
+        # complements, not a separate model or a hand-picked high percentage.
+        stats = [f"Avg Goals: {avg_goals:.2f}"]
+        for line, rate in (("1.5", over15), ("2.5", over25),
+                           ("3.5", over35), ("4.5", over45)):
+            stats.extend((f"Over {line}: {rate:.1%}", f"Under {line}: {1-rate:.1%}"))
+        stats.extend((f"BTTS: {btts:.1%}", f"BTTS-No: {1-btts:.1%}"))
+        for side, rates in (("Home", (home_o05, home_o15, home_o25, home_o35)),
+                            ("Away", (away_o05, away_o15, away_o25, away_o35))):
+            for line, rate in zip(("0.5", "1.5", "2.5", "3.5"), rates):
+                stats.extend((f"{side} Over {line} Goals: {rate:.1%}",
+                              f"{side} Under {line} Goals: {1-rate:.1%}"))
+        # Keep legacy labels parseable by the rolling audit. Exact Top Scores
+        # remain retired. Never feed this winner-only sample into selection.
+        return (f"📊 Realized Stats on {sel.capitalize()} Win (n={n}): "
+                + " | ".join(stats)
+                + " | Winner-only history, not pre-match probabilities")
     except Exception:
         return None
 
@@ -481,6 +503,10 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
 # only: registry, pricing and certification paths are untouched.
 HYBRID_MIN_N = 100        # thinner cohorts stay pure model prior
 HYBRID_SHRINK_K = 150.0   # pseudo-count pulling back toward the model prior
+# Operator-authorized 2026-10-19: let all cohort-backed markets compete under
+# the existing shared rate/price rules. Default ON; explicit 0 rolls back to
+# legacy market filters. This is an eligibility policy, not proven ROI uplift.
+ENH_COHORT_PARITY_ENV = "EDGE_FACTORY_ENH_COHORT_PARITY"
 
 
 def _hybrid_pick_n_way(pick: dict) -> int:
@@ -747,11 +773,14 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
     """Query the local database to find deep league & team context and determine
     the single highest probable enhancement.
 
-    When prices_index is supplied, candidate enhancements are priced from the
-    captured odds and ranked by REAL edge (probability * best_odds - 1), not by
-    raw probability. This is what prevents Home Team Over 0.5 Goals from being
-    recommended on every home favourite: a 92% event at 1.08 odds is not a tip.
+    With prices_index, rank eligible candidates by realized all-outcome cohort
+    rate (model fallback when no cohort exists), then price. Edge is
+    informational only; an unpriced or sub-minimum market cannot be chosen.
+    Cohort-backed markets share eligibility by default (explicit env 0 restores
+    legacy filters). Model-only fallback is unchanged. Broader eligibility is
+    operator-authorized, not an established ROI improvement.
     """
+    cohort_parity = os.environ.get(ENH_COHORT_PARITY_ENV, "1") == "1"
     out = {
         "recommended_enhancement": None,
         "enhancement_probability": 0.0,
@@ -1066,6 +1095,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         "away_over_25": 0.85,
         "away_under_25": 0.85,
         "match_under_35": 0.90,
+        "match_under_45": 0.90,
         "home_over_35": 0.90,
         "home_under_35": 0.90,
         "away_over_35": 0.90,
@@ -1129,6 +1159,11 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         ("match_over_45", prob_over_45_poisson, "Match Over 4.5 Goals", f"Poisson expected hit rate is {prob_over_45_poisson:.1%}"),
     ]
     
+    if cohort_parity and cohort is not None:
+        raw_candidates.append((
+            "match_under_45", 1.0 - prob_over_45_poisson, "Match Under 4.5 Goals",
+            f"Combined Under 4.5 is {1.0 - prob_over_45_poisson:.1%}"))
+
     dc_label = "1X" if pick_sel == "home" else "X2" if pick_sel == "away" else "12"
     raw_candidates.append(
         ("double_chance", prob_double_chance, f"Double Chance {dc_label}", f"Combined double-chance expectation is {prob_double_chance:.1%}")
@@ -1150,6 +1185,10 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
     candidates = []
     enh_log: list = []  # candidate log for the audit; see _enh_log_entry
 
+    # One shared eligibility band for all cohort-backed markets, regardless
+    # of goal direction. The legacy model fallback keeps its line thresholds.
+    MIN_PROB = 0.25
+    MAX_PROB = 0.90
     for market, prob, label, reason in raw_candidates:
         cohort_rate = cohort_realized_rate(cohort, market)
         if cohort is not None and cohort_rate is None:
@@ -1182,7 +1221,13 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             prob_adjusted = prob_adjusted * (1.0 + 0.5 * (realized / promised - 1.0))
             prob_adjusted = max(0.01, min(0.99, prob_adjusted))
         
-        thr = LINE_THRESHOLDS.get(market, 0.80)
+        # Legacy model thresholds were asymmetric (e.g. O2.5=35%, U2.5=85%)
+        # and silently blocked unders before the shared rate/price gates below.
+        # Operator-authorized default: cohort-backed rates compete equally.
+        # Explicit env 0 restores legacy filters; model-only fallback always
+        # retains them. No market-specific 85/75 tuning or new EV gate.
+        thr = (MIN_PROB if cohort_parity and cohort_rate is not None
+               else LINE_THRESHOLDS.get(market, 0.80))
         if prob_adjusted < thr:
             _push_enh_log(enh_log, _enh_log_entry(market, label, "excluded", "below_line_threshold",
                                           probability=prob_adjusted, raw_probability=prob,
@@ -1236,8 +1281,6 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         if _scripts_dir not in sys.path:
             sys.path.insert(0, _scripts_dir)
         from auto_tickets import MIN_LEG_ODDS  # one minimum for both lanes
-        MIN_PROB = 0.25
-        MAX_PROB = 0.90
 
         eligible = []
         if prices_index is None:
