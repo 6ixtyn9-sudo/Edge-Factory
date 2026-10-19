@@ -177,12 +177,12 @@
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 1,
+      "join_matched_rows": 3,
       "join_miss_counts": {
-        "fixture_key_miss": 15309,
+        "fixture_key_miss": 15307,
         "no_pick_for_fixture": 20
       },
-      "pa_matched": 1,
+      "pa_matched": 2,
       "pa_raw": 15330,
       "pa_scored": 15330,
       "reason": null,
@@ -366,10 +366,10 @@
       "status": null
     },
     "zulubet": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "can_fetch_today": true,
-      "can_price": false,
-      "can_vote": false,
+      "can_price": true,
+      "can_vote": true,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
