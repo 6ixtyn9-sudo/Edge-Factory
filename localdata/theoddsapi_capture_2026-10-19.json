@@ -1,11 +1,21 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Persepolis FC",
+      "date": "2026-10-19",
+      "home": "Mes Shahr-e Babak",
+      "kickoff": "2026-10-19T14:00:00+02:00",
+      "league": "Iran: Persian Gulf Pro League"
+    }
+  ],
   "candidate_fixtures": 2,
-  "captured_at": "2026-10-19T10:30:19+00:00",
+  "captured_at": "2026-10-19T13:28:20+00:00",
   "date": "2026-10-19",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -13,13 +23,17 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "retry_cooldown": 2
+    "retry_cooldown": 1
   },
   "skipped": [
-    "Mes Shahr-e Babak|Persepolis FC (retry cooldown (6h after failed attempt))",
     "Bursaspor|Pendikspor (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Mes Shahr-e Babak vs Persepolis FC (league not covered: Iran: Persian Gulf Pro League)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Iran: Persian Gulf Pro League": 1
+  }
 }
