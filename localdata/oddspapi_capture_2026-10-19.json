@@ -1,284 +1,87 @@
 {
-  "added": 40227,
-  "attempted": 14,
+  "added": 263,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Caracas FC Femenino",
-      "fixture_id": "id1002017874929440",
-      "home": "SC Corinthians SP"
-    },
-    {
-      "away": "Universitario de Deportes",
-      "fixture_id": "id1002017874930592",
-      "home": "Dragonas IDV"
-    },
-    {
-      "away": "CD Guastatoya",
-      "fixture_id": "id1002739672475026",
-      "home": "CSD Municipal"
-    },
-    {
-      "away": "Nueva Santa Rosa Cdf",
-      "fixture_id": "id1004800074508548",
-      "home": "CSD Sacachispas"
-    },
-    {
-      "away": "Queretaro FC",
-      "fixture_id": "id1002895373204650",
-      "home": "CF Tigres UANL"
-    },
-    {
-      "away": "San Jose Earthquakes II",
-      "fixture_id": "id1003647975530958",
-      "home": "Austin FC II"
-    },
-    {
-      "away": "Taurinos Cayey",
-      "fixture_id": "id1004876975661090",
-      "home": "Academia Quintana"
-    },
-    {
-      "away": "Diriangen FC Diriamba",
-      "fixture_id": "id1001924274321162",
-      "home": "Rancho Santana FC"
-    },
-    {
-      "away": "CD Genesis PN",
-      "fixture_id": "id1002741474486320",
-      "home": "Lobos UPNFM"
-    },
-    {
-      "away": "CF Pachuca",
-      "fixture_id": "id1002746472055334",
-      "home": "CF Monterrey"
-    },
-    {
-      "away": "CF Pachuca",
-      "fixture_id": "id1002895373204652",
-      "home": "Club America"
-    },
-    {
-      "away": "Csd Amatitlan",
-      "fixture_id": "id1004800074508456",
-      "home": "Huehuetecos FC"
-    },
-    {
-      "away": "CD Junior FC",
-      "fixture_id": "id1002707072335210",
-      "home": "Deportivo Cali"
-    },
-    {
-      "away": "CD Suchitepequez",
-      "fixture_id": "id1002739672475022",
-      "home": "CD Marquense"
+      "away": "Besiktas JK SRL",
+      "fixture_id": "id1003222575727792",
+      "home": "Trabzonspor SRL"
     }
   ],
   "budget": {
     "day": "2026-10-19",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 221,
-    "remaining_today": 25,
-    "spent_today": 16
+    "month_spent": 222,
+    "remaining_today": 24,
+    "spent_today": 17
   },
-  "captured_at": "2026-10-18T22:24:54+00:00",
+  "captured_at": "2026-10-19T01:26:00+00:00",
   "date": "2026-10-19",
   "errors": [],
   "fixtures": 200,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 636,
+  "market_census_distinct": 86,
   "markets": {
-    "1x2": 5735,
-    "ou_0.5": 1163,
-    "ou_0.75": 90,
-    "ou_1": 406,
-    "ou_1.25": 236,
-    "ou_1.5": 2263,
-    "ou_1.75": 392,
-    "ou_10.5": 6,
-    "ou_11.5": 6,
-    "ou_12.5": 6,
-    "ou_13.5": 6,
-    "ou_14.5": 3,
-    "ou_2": 761,
-    "ou_2.25": 797,
-    "ou_2.5": 3036,
-    "ou_2.75": 996,
-    "ou_3": 1127,
-    "ou_3.25": 833,
-    "ou_3.5": 3110,
-    "ou_3.75": 592,
-    "ou_4": 706,
-    "ou_4.25": 404,
-    "ou_4.5": 2391,
-    "ou_4.75": 382,
-    "ou_5": 394,
-    "ou_5.25": 205,
-    "ou_5.5": 1472,
-    "ou_5.75": 110,
-    "ou_6": 136,
-    "ou_6.25": 88,
-    "ou_6.5": 505,
-    "ou_6.75": 34,
-    "ou_7": 71,
-    "ou_7.25": 25,
-    "ou_7.5": 234,
-    "ou_7.75": 25,
-    "ou_8": 25,
-    "ou_8.25": 25,
-    "ou_8.5": 113,
-    "ou_9.5": 6,
-    "tt_away_0.5": 1877,
-    "tt_away_0.75": 54,
-    "tt_away_1": 152,
-    "tt_away_1.25": 48,
-    "tt_away_1.5": 1313,
-    "tt_away_1.75": 16,
-    "tt_away_2": 50,
-    "tt_away_2.25": 22,
-    "tt_away_2.5": 967,
-    "tt_away_2.75": 16,
-    "tt_away_3": 34,
-    "tt_away_3.5": 358,
-    "tt_away_4": 33,
-    "tt_away_4.5": 111,
-    "tt_away_5.5": 21,
-    "tt_away_6.5": 3,
-    "tt_home_0.5": 1044,
-    "tt_home_0.75": 20,
-    "tt_home_1": 98,
-    "tt_home_1.25": 16,
-    "tt_home_1.5": 1770,
-    "tt_home_1.75": 22,
-    "tt_home_2": 120,
-    "tt_home_2.25": 32,
-    "tt_home_2.5": 1564,
-    "tt_home_2.75": 32,
-    "tt_home_3": 72,
-    "tt_home_3.5": 819,
-    "tt_home_3.75": 16,
-    "tt_home_4": 50,
-    "tt_home_4.25": 16,
-    "tt_home_4.5": 404,
-    "tt_home_5": 16,
-    "tt_home_5.5": 98,
-    "tt_home_6.5": 17,
-    "tt_home_7.5": 11
+    "1x2": 45,
+    "ou_0.5": 24,
+    "ou_1.5": 26,
+    "ou_2": 12,
+    "ou_2.25": 12,
+    "ou_2.5": 30,
+    "ou_2.75": 12,
+    "ou_3": 12,
+    "ou_3.5": 26,
+    "ou_4.5": 24,
+    "ou_5.5": 10,
+    "tt_away_1.5": 14,
+    "tt_home_0.5": 16
   },
-  "markets_source": "fetch",
-  "matched": 13,
+  "markets_source": "cache",
+  "matched": 1,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "alt_line_skipped": 14,
-    "market_id_unknown": 8392,
-    "market_inactive": 2703,
-    "market_unsupported_clean_sheet": 599,
-    "market_unsupported_corners": 5744,
-    "market_unsupported_correct_score": 2555,
-    "market_unsupported_double_chance": 1910,
-    "market_unsupported_draw_no_bet": 1428,
-    "market_unsupported_handicap": 11823,
-    "market_unsupported_odd_even": 2372,
-    "market_unsupported_period": 34923,
-    "market_unsupported_win_to_nil": 908,
-    "outcome_inactive": 4064,
-    "unresolved_btts": 2693
+    "market_id_unknown": 49,
+    "market_unsupported_clean_sheet": 12,
+    "market_unsupported_correct_score": 5,
+    "market_unsupported_double_chance": 15,
+    "market_unsupported_draw_no_bet": 8,
+    "market_unsupported_handicap": 60,
+    "market_unsupported_odd_even": 16,
+    "market_unsupported_period": 231,
+    "market_unsupported_win_to_nil": 12,
+    "unresolved_btts": 16
   },
   "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 14,
-      "market_inactive": 2703,
-      "outcome_inactive": 4064
-    },
+    "expected": {},
     "loss_or_diagnosis": {
-      "market_id_unknown": 8392,
-      "market_unsupported_clean_sheet": 599,
-      "market_unsupported_corners": 5744,
-      "market_unsupported_correct_score": 2555,
-      "market_unsupported_double_chance": 1910,
-      "market_unsupported_draw_no_bet": 1428,
-      "market_unsupported_handicap": 11823,
-      "market_unsupported_odd_even": 2372,
-      "market_unsupported_period": 34923,
-      "market_unsupported_win_to_nil": 908,
-      "unresolved_btts": 2693
+      "market_id_unknown": 49,
+      "market_unsupported_clean_sheet": 12,
+      "market_unsupported_correct_score": 5,
+      "market_unsupported_double_chance": 15,
+      "market_unsupported_draw_no_bet": 8,
+      "market_unsupported_handicap": 60,
+      "market_unsupported_odd_even": 16,
+      "market_unsupported_period": 231,
+      "market_unsupported_win_to_nil": 12,
+      "unresolved_btts": 16
     }
   },
-  "pending_fixtures": 14,
+  "pending_fixtures": 1,
   "quoted_fixtures": [
     {
-      "away": "Caracas FC Femenino",
-      "fixture_id": "id1002017874929440",
-      "home": "SC Corinthians SP"
-    },
-    {
-      "away": "Universitario de Deportes",
-      "fixture_id": "id1002017874930592",
-      "home": "Dragonas IDV"
-    },
-    {
-      "away": "CD Guastatoya",
-      "fixture_id": "id1002739672475026",
-      "home": "CSD Municipal"
-    },
-    {
-      "away": "Nueva Santa Rosa Cdf",
-      "fixture_id": "id1004800074508548",
-      "home": "CSD Sacachispas"
-    },
-    {
-      "away": "Queretaro FC",
-      "fixture_id": "id1002895373204650",
-      "home": "CF Tigres UANL"
-    },
-    {
-      "away": "San Jose Earthquakes II",
-      "fixture_id": "id1003647975530958",
-      "home": "Austin FC II"
-    },
-    {
-      "away": "Diriangen FC Diriamba",
-      "fixture_id": "id1001924274321162",
-      "home": "Rancho Santana FC"
-    },
-    {
-      "away": "CD Genesis PN",
-      "fixture_id": "id1002741474486320",
-      "home": "Lobos UPNFM"
-    },
-    {
-      "away": "CF Pachuca",
-      "fixture_id": "id1002746472055334",
-      "home": "CF Monterrey"
-    },
-    {
-      "away": "CF Pachuca",
-      "fixture_id": "id1002895373204652",
-      "home": "Club America"
-    },
-    {
-      "away": "Csd Amatitlan",
-      "fixture_id": "id1004800074508456",
-      "home": "Huehuetecos FC"
-    },
-    {
-      "away": "CD Junior FC",
-      "fixture_id": "id1002707072335210",
-      "home": "Deportivo Cali"
-    },
-    {
-      "away": "CD Suchitepequez",
-      "fixture_id": "id1002739672475022",
-      "home": "CD Marquense"
+      "away": "Besiktas JK SRL",
+      "fixture_id": "id1003222575727792",
+      "home": "Trabzonspor SRL"
     }
   ],
-  "rows": 40227,
+  "rows": 263,
   "schema": 1,
-  "slate_candidate_fixtures": 1,
+  "slate_candidate_fixtures": 2,
   "slate_match_mode": "exact_normalized_pair",
   "slate_priority_fixtures": 0,
-  "slate_provider_overlap_fixtures": 1,
+  "slate_provider_overlap_fixtures": 2,
   "slate_unmatched_fixtures": [],
   "source": "oddspapi_odds"
 }
