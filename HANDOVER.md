@@ -10755,3 +10755,42 @@ confirmation. Unlocked card text is not treated as placement evidence.
   is a scratch draft and is not part of this repo.
 - Any stake-fraction change (`STAKE_FRAC`, `MAX_ACCAS`) requires separate
   approval.
+
+## Addendum 2026-10-23: exact-identity report, 4 Sep / 15 Oct trace
+
+**Report (read-only).** `scripts/audit_exact_identity.py`, commit `8264d72`. Re-run from repo root:
+`PYTHONPATH=src python3 scripts/audit_exact_identity.py --out <path> --json <path>`. Seed 20261019, 5,000 day-block bootstrap reps, 95% percentile intervals. Output is not committed.
+
+Populations (50 card days; pool = same-day 1X2 candidates incl. SKIPPED_VETO; outcomes from `form_intel.load_archive`):
+
+| Population | Size | Flat ROI | 95% CI | Stake-weighted |
+|---|---|---|---|---|
+| Pool, all buckets | 1,164 resolved | +1.00% | [−3.96, +6.39] | n/a |
+| Card legs | 200 resolved (212 printed) | +4.98% | [−4.14, +14.10] | n/a |
+| Card accas | 96 resolved (106 printed) | +13.33% | [−6.03, +32.33] | +8.76% |
+| Settled history | 103 accas / 49 days | +8.68% | [−10.39, +27.54] | +4.65% |
+
+- Identity: 209 of 212 card legs join the pool exactly; 3 do not. 75 matched legs differ by more than 0.01 in price; 29 by more than 0.05.
+- Paired card minus pool, 49 days: +0.55 pp [−10.18, +11.02]. By band, sample sizes are small (3–34 days) and no band is distinguishable from zero.
+- Non-clean days are listed in the report output (out-of-day pool rows, fixtures without a clean result, unmatched legs, 4 Sep card/history acca-count mismatch, 18 Oct card-only).
+- **Not reconciled:** the 19 Oct figures above (card legs 173 resolved, +3.77%; card accas 82) use a different population definition. Until that is reconciled, do not cite either set as "the" card ROI.
+
+**History row shape.** 44 of 49 settled history rows (28 Aug–12 Oct) match the `cmd_backfill` key set and carry no per-acca legs. 14 and 15 Oct carry live-style legs. 13, 16 and 17 Oct carry extra keys (`correction`, `close_pct`). `cmd_backfill` is manual (`--backfill`); no workflow or scheduled job calls it.
+
+**4 Sep: cause statement.**
+- Authoritative identity: the card and the slice ledger (lines 227–230), which show two accas: @2.19 (CD Olimpia v Platense; Heracles v De Graafschap) and @2.01 (Connah's Quay v Haverfordwest; Almere v Jong Ajax). Card is unlocked; no freeze record exists for 4 Sep.
+- History keeps only the @2.01 acca (lost), so the row is backfill-shaped and the @2.19 acca is missing. Per public results, the @2.19 acca won; its return of about 39.2 points is missing.
+- Cause (medium confidence): backfill-written row. Re-plan (an earlier single-acca plan, with the card later re-planned without a freeze) is not excluded; the backfill run log would settle it.
+- Bank effect: `bank` is rebuilt from history, so 165.11 is likely understated by about 39 points before compounding. Not recomputed; no correction made.
+
+**15 Oct: cause statement.**
+- Authoritative card: the FROZEN FINAL card (09:40:59+02:00, `lock_source: state`), with AZ Alkmaar HOME @4.00 and acca #1 @5.36. The slice ledger (lines 377–380) matches.
+- Settled history instead uses AZ @1.33 (acca #1 @1.78). Leg odds in history are copied from the stored open slip at settlement (`_settled_leg_record`). No code path rewrites leg odds after storage (checked). No file or board in the workspace shows 1.33 for AZ.
+- The 4.00 price comes from the morning `pinnapi_odds` source, which is SKIPPED_VETO. The afternoon board has AZ at 1.25–1.37. So the frozen card carried a vetoed price, and the stored slip carried a different one.
+- Cause class: freeze/price-gate mismatch between the printed card and the stored slip. A force-recut or state write is not confirmed; no run log is retained.
+- Bank effect: none. Acca #1 lost either way; acca #2 (@2.16, returned 50.9) matches history.
+
+**Open, needs approval (no state change made):**
+1. Decide whether the 44 backfill-shaped rows should be treated as replay rows, not placed bets.
+2. Decide on a 4 Sep bank correction (about +39 points before compounding).
+3. Decide which 15 Oct price is the record: the frozen card (4.00) or the stored slip (1.33).
