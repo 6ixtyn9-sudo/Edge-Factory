@@ -4858,6 +4858,24 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
     for s in SOURCES_1X2:
         keys |= set(data.get(s, {}))
 
+    # Diagnostic only: the 1X2 gate needs >=2 sources with probabilities per
+    # fixture. Log how many fixtures reach it and what each source contributes,
+    # so a silent source drop (e.g. vitibet) shows up in the run log.
+    _gate_per_source = {
+        s: sum(1 for k in data.get(s, {}) if probs_1x2(data[s][k] or {}) is not None)
+        for s in SOURCES_1X2
+    }
+    _gate_pass = sum(
+        1 for k in keys
+        if sum(1 for s in SOURCES_1X2
+               if probs_1x2((data.get(s, {}).get(k)) or {}) is not None) >= 2
+    )
+    print(
+        f"1x2 gate {day}: upcoming={len(keys)} with_2plus_sources={_gate_pass} "
+        f"per_source_probs={_gate_per_source}",
+        file=sys.stderr,
+    )
+
     # AUDIT-ONLY (scored-candidate shadow): mirror the exact fixture-level
     # universe behind the `coverage: scored=` log value. Its fallback
     # definition n_up is len(keys) — the return below — so one
