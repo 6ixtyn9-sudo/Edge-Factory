@@ -214,6 +214,23 @@ def _cffi_get(url: str, impersonate: str) -> str | None:
     return r.text
 
 
+def _brief(exc: BaseException, limit: int = 120) -> str:
+    """``Type: message`` for a failure, one line, bounded.
+
+    The bare class name hid the cause: every HTTP 500 and every transport
+    error logged as ``RuntimeError`` in the health line, so an outage on the
+    site looked like a parser fault. The message (e.g. ``HTTP Error 500``)
+    is what tells the two apart.
+    """
+    text = " ".join(str(exc).split())
+    name = type(exc).__name__
+    if not text:
+        return name
+    if len(text) > limit:
+        text = text[: limit - 1] + "…"
+    return f"{name}: {text}"
+
+
 def _get(url: str, retries: int = 3) -> str | None:
     """urllib -> curl_cffi ladder, then operator relays. Returns None when the
     page legitimately does not exist; raises when every transport failed."""
@@ -230,7 +247,7 @@ def _get(url: str, retries: int = 3) -> str | None:
         try:
             return request()
         except Exception as exc:  # noqa: BLE001 - retry with a distinct transport
-            errors.append(f"{name}={type(exc).__name__}")
+            errors.append(f"{name}={_brief(exc)}")
             if attempt + 1 < attempt_limit:
                 time.sleep(1.5 * (attempt + 1))
     relay_errors = []
@@ -241,7 +258,7 @@ def _get(url: str, retries: int = 3) -> str | None:
                 return None if "Page not found" in text else text
             relay_errors.append(f"operator:{relay_name}=unvalidated")
         except Exception as exc:  # noqa: BLE001 - try the next independent relay
-            relay_errors.append(f"operator:{relay_name}={type(exc).__name__}")
+            relay_errors.append(f"operator:{relay_name}={_brief(exc)}")
     if relay_errors or not errors:
         errors.extend(relay_errors or ["no transport available"])
     raise RuntimeError(f"ProSoccer GET failed {url}: {', '.join(errors)}")
@@ -290,7 +307,7 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
         try:
             html = _get(url, retries=retries)
         except Exception as exc:  # noqa: BLE001 - try another alias before failing
-            errors.append(f"{url}={type(exc).__name__}")
+            errors.append(f"{url}={_brief(exc)}")
             continue
         if not html:
             errors.append(f"{url}=empty")
