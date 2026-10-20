@@ -6,8 +6,21 @@ import pytest
 
 from edgefactory.sources import public_relay, soccervista
 
-TODAY = _date.today().isoformat()
-_TODAY_DD = _date.today()
+# A suite can be collected before UTC midnight and execute after it. Keep
+# the requested date AND the adapter's notion of today on the same fixed clock.
+TODAY = "2026-09-30"
+_TODAY_DD = _date.fromisoformat(TODAY)
+
+
+@pytest.fixture(autouse=True)
+def fixed_source_clock(monkeypatch):
+    class FixedDate(_date):
+        @classmethod
+        def today(cls):
+            return cls.fromisoformat(TODAY)
+
+    monkeypatch.setattr(soccervista, "_date", FixedDate)
+
 _MARKER = _TODAY_DD.strftime("%b") + " " + str(_TODAY_DD.day)
 
 PAGE = """<!doctype html><html><head><title>SoccerVista - Today's Football Betting Predictions &amp; Statistics</title></head>
@@ -260,3 +273,21 @@ def test_columns_cover_row_keys():
     assert rows
     for row in rows:
         assert set(row) == set(soccervista.COLUMNS)
+
+
+def test_previous_capture_date_after_midnight_is_out_of_coverage(monkeypatch):
+    """Preserve the real guard that caused the old wall-clock tests to fail."""
+    from datetime import timedelta
+
+    class NextDay(_date):
+        @classmethod
+        def today(cls):
+            return _date.fromisoformat(TODAY) + timedelta(days=1)
+
+    monkeypatch.setattr(soccervista, "_date", NextDay)
+
+    def no_fetch(*args, **kwargs):
+        raise AssertionError("yesterday must not be requested from today's homepage")
+
+    monkeypatch.setattr(soccervista, "_get", no_fetch)
+    assert soccervista.fetch_day(TODAY) == []
