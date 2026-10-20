@@ -30,6 +30,8 @@ sys.path.insert(0, str(ROOT / "src"))
 import auto_tickets as at  # noqa: E402
 from edgefactory import enh_registry as reg  # noqa: E402
 
+from enhancement_fixtures import with_evidence
+
 DAY = "2026-10-12"
 
 
@@ -38,12 +40,12 @@ def _pick(home="Pyunik Yerevan", away="BKMA", market="match_over_25", *,
           label="Match Over 2.5 Goals", book="Stake.com"):
     # A real card row always carries a kickoff; the live guard withdraws legs
     # without one. Default to a kickoff still ahead of the pinned 08:00 SAST run.
-    return {"home": home, "away": away, "match": f"{home} vs {away}", "date": DAY,
+    return with_evidence({"home": home, "away": away, "match": f"{home} vs {away}", "date": DAY,
             "bucket": bucket, "rule": rule, "recommended_enhancement": market,
             "enhancement_label": label, "enhancement_probability": prob,
             "enhancement_price": price, "enhancement_price_book": book,
             "enhancement_price_source": "oddspapi",
-            "kickoff_utc": f"{DAY}T16:00:00+00:00"}
+            "kickoff_utc": f"{DAY}T16:00:00+00:00"})
 
 
 class _PinnedDatetime(datetime):
@@ -223,7 +225,7 @@ def test_the_card_is_two_leg_accas_barbelled_at_the_main_lanes_stake(tmp_path, _
     assert "[ENH #" not in txt
     assert txt.count("— stake 12.5% of capital (12.5% of free bank)") == 2
     # per-leg evidence: stated %, the market's registry line, its floor, the book
-    assert "(realized 46%)" in txt
+    assert "(realized 46%, n=200)" in txt
     assert "[registry" not in txt and "floor 1.60" not in txt
     assert "deploying 25% of free bank today = 25.0% of capital" in txt
 
@@ -688,9 +690,13 @@ def test_the_board_shows_a_bet_at_the_minimum_and_no_bet_below_it():
 
     # A floorless market that is not a team under fires: no floor gate any more.
     assert pt.enhancement_board_line(_pick(market="match_over_45", price=3.75)).startswith("     🔬 ")
-    # A team under with no evidence for its side is still not a bet.
-    floorless = pt.enhancement_board_line(_pick(market="away_under_35", price=1.90))
-    assert "no bet: no settled evidence for this side" in floorless
+    # A realized-contract-backed team under competes without a price floor.
+    assert pt.enhancement_board_line(_pick(market="away_under_35", price=1.90)).startswith("     🔬 ")
+    # But a model-only row is refused by BOTH presentations, regardless of price.
+    model = _pick(market="away_under_35", price=1.90)
+    model.pop("event_notes")
+    assert "no bet: no valid realized contract-cohort evidence" in pt.enhancement_board_line(model)
+    assert at.enhancement_legs([model])[0]["verdict"] == "no_cohort_evidence"
 
     # Nothing to say when there is no price, or when the price is junk.
     assert pt.enhancement_board_line(_pick(price=None)) is None

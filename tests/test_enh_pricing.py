@@ -129,7 +129,7 @@ def test_unmapped_type_never_priced(tmp_path):
 
 def test_missing_file_fail_soft(tmp_path):
     idx = load_prices_index(tmp_path, "2026-08-03")
-    assert idx == {"pairs": {}, "spread": {}, "names": {}}
+    assert idx == {"pairs": {}, "spread": {}, "names": {}, "fixture_quotes": {}}
     p = attach_enhancement_price(_pick(), idx)
     assert p["enhancement_price"] is None  # explicit null, no raise
 

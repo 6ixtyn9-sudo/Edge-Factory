@@ -4677,27 +4677,13 @@ def _enh_price(pick: dict):
 
 def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                      floors: dict | None = None, team_floors: dict | None = None) -> list[dict]:
-    """One candidate per enhancement on the board, with its gate verdict.
+    """One selected-market leg with the shared realized-evidence verdict.
 
-    Verdicts: ``fire`` (priced at or above its slice's floor), ``no_floor`` (a
-    team under with no evidence for its side), ``outlier_price`` (the best quote
-    clears the floor but the median quote does not), ``below_floor``
-    (priced under the floor — no bet, not paper, not shadow), ``unpriced`` (the
-    market is priced by some feed but this leg has no price today) and
-    ``unpriceable`` (no feed carries this market at all — team totals). Every
-    candidate carries the parent pick's bucket and rule so the settled record
-    can be sliced by them.
-
-    ``floors`` is the day's derived floor table (``enh_registry.derive_floors``):
-    the leg's floor is its LEAGUE slice's when one is known, else the market
-    root — never a team slice (report-only). Without it the operator's static
-    table applies, which is the pre-R2 behaviour, byte for byte.
-
-    ``team_floors`` is the day's team-under table (``enh_team_floors``), keyed
-    ``market|side`` where side is ``1`` (home 1X2 pick) or ``2`` (away). A team
-    under leg with no entry for its side has no floor and does not fire.
+    Require an exact-parent all-outcome cohort (n >= 100), then the shared
+    MIN_LEG_ODDS minimum. No model fallback, EV veto, price floor or ceiling.
+    Floor/slice tables remain descriptive metadata only, never eligibility.
     """
-    from edgefactory.enh_registry import ceiling_for, floor_for, floor_for_slice
+    from edgefactory.enh_registry import ceiling_for, floor_for, floor_for_slice, enhancement_cohort_evidence
     from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS as TEAM_UNDERS
     try:
         from edgefactory.enh_pricing import MARKET_PRICE_MAP
@@ -4723,7 +4709,10 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
             leg_floor, leg_basis = floor_for_slice(floors, market, pick.get("league"))
         else:
             leg_floor, leg_basis = floor_for(market), "inherited"
-        if price is None:
+        evidence = enhancement_cohort_evidence(pick)
+        if evidence is None:
+            verdict = "no_cohort_evidence"
+        elif price is None:
             mapped = MARKET_PRICE_MAP.get(market, "missing")
             # "Unpriceable" means no feed maps the market at all (goal_range_2_3,
             # or a missing mapping). A team total IS mapped (tt_*, OddsPapi), so
@@ -4748,7 +4737,8 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                 pick.get("date") or "", pick.get("home"), pick.get("away"), "HOME"),
             "market": market,
             "label": pick.get("enhancement_label") or str(market).replace("_", " ").upper(),
-            "probability": pick.get("enhancement_probability"),
+            "probability": evidence["rate"] if evidence else None,
+            "cohort_evidence": evidence,
             "price": price,
             "price_book": pick.get("enhancement_price_book"),
             "price_source": pick.get("enhancement_price_source"),
@@ -4879,6 +4869,7 @@ def enhancement_pool(legs: list[dict]) -> list[dict]:
             "prob": float(prob),
             "odds": leg.get("price"),
             "row": leg.get("row") or {},
+            "cohort_evidence": leg.get("cohort_evidence"),
             "market": leg.get("market"),
             "label": leg.get("label"),
             "floor": leg.get("floor"),
@@ -4909,7 +4900,7 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
             meta = by_key.get((str(leg.get("match")), str(leg.get("pick"))))
             if not meta:
                 continue
-            for key in ("market", "label", "floor", "floor_basis", "league",
+            for key in ("cohort_evidence", "market", "label", "floor", "floor_basis", "league",
                         "price_book", "shadow"):
                 leg[key] = meta.get(key)
 
@@ -4988,9 +4979,12 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                 f"({a['stake_pct'] / bank_eff:.1%} of free bank)" + (ENH_SHADOW_TAG if shadow else ""))
             for l in a["legs"]:
                 # realized cohort rate from the card, not the registry
-                prob = l.get("prob")
-                realized = prob if isinstance(prob, (int, float)) and not isinstance(prob, bool) else 0.0
-                detail = f" @ {l['odds']:.2f} (realized {realized:.0%})"
+                evidence = l.get("cohort_evidence") or {}
+                rate = evidence.get("rate")
+                if type(rate) in (int, float) and math.isfinite(rate) and 0 <= rate <= 1:
+                    detail = f" @ {l['odds']:.2f} (realized {rate:.0%}, n={evidence['n']})"
+                else:
+                    detail = f" @ {l['odds']:.2f} (realized evidence unavailable)"
                 lines.append(f"   {str(l.get('match')):46s} {l.get('label')}{detail}")
             lines.append("")
     else:

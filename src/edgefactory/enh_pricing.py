@@ -180,10 +180,14 @@ def _parse_price(raw: object) -> float | None:
 
 
 def _put(out: dict[str, Any], nh: str, na: str, mkt: str, sel: str,
-         price: float, book: str, at: str, source: str) -> None:
+         price: float, book: str, at: str, source: str, *, kickoff=None) -> None:
     """Best across sources wins the pair slot; per-source best retained for the
     divergence record (max/min across source bests)."""
     key = (nh, na)
+    # Keep the fixture witness BEFORE best-price aggregation discards it.
+    if "fixture_quotes" in out:
+        out["fixture_quotes"].setdefault(key, {}).setdefault((mkt, sel), []).append(
+            (price, book, at, source, kickoff))
     pairs = out["pairs"].setdefault(key, {})
     slot = (mkt, sel)
     if mkt.startswith("tt_"):
@@ -267,7 +271,7 @@ def _accumulate_unified(path: Path, *, day: str, source_tag: str,
                     continue
                 nh, na = norm_team(home), norm_team(away)
                 _put(out, nh, na, mkt, sel, price,
-                     row.get("bookmaker") or "", row.get("captured_at") or "", source_tag)
+                     row.get("bookmaker") or "", row.get("captured_at") or "", source_tag, kickoff=row.get("kickoff"))
                 out["names"].setdefault((nh, na), (home, away))
     except Exception:
         return
@@ -305,7 +309,7 @@ def _accumulate_scoutingstats(path: Path, *, day: str, out: dict[str, Any]) -> N
                     if price is None:
                         continue
                     _put(out, nh, na, slot[0], slot[1], price, "", "",
-                         SCOUTINGSTATS_SOURCE)
+                         SCOUTINGSTATS_SOURCE, kickoff=row.get("kickoff"))
                 out["names"].setdefault((nh, na), (home, away))
     except Exception:
         return
@@ -422,7 +426,8 @@ def _accumulate_betexplorer(path: Path, *, day: str, out: dict[str, Any]) -> Non
             nh, na = norm_team(home), norm_team(away)
             for (market, selection) in highest:
                 price, book, at = flagged.get((market, selection)) or highest[(market, selection)]
-                _put(out, nh, na, market, selection, price, book, at, BETEXPLORER_SOURCE)
+                _put(out, nh, na, market, selection, price, book, at, BETEXPLORER_SOURCE,
+                     kickoff=entry.get("kickoff"))
             out["names"].setdefault((nh, na), (home, away))
     except Exception:
         return
@@ -460,7 +465,7 @@ def _accumulate_sharpapi(path: Path, *, day: str, out: dict[str, Any]) -> None:
             nh, na = norm_team(home), norm_team(away)
             _put(out, nh, na, mkt, sel, price,
                  row.get("bookmaker") or row.get("book") or "",
-                 row.get("captured_at") or "", SHARPAPI_SOURCE)
+                 row.get("captured_at") or "", SHARPAPI_SOURCE, kickoff=row.get("kickoff"))
             out["names"].setdefault((nh, na), (home, away))
     except Exception:
         return
@@ -472,7 +477,7 @@ def load_prices_index(root: Path, day: str) -> dict[str, Any]:
      "spread": {(nh,na): {(market,sel): {source: best_price_for_that_source}}},
      "names":  {(nh,na): (raw_home, raw_away)}}.
     Fail-soft: any subset of sources may be missing."""
-    out: dict[str, Any] = {"pairs": {}, "spread": {}, "names": {}}
+    out: dict[str, Any] = {"pairs": {}, "spread": {}, "names": {}, "fixture_quotes": {}}
     month = _month_of(day)
     localdata = Path(root) / "localdata"
     _accumulate_unified(localdata / f"theoddsapi_odds_{month}.csv.gz",
@@ -538,6 +543,8 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
     pick["enhancement_price_book"] = None
     pick["enhancement_price_at"] = None
     pick["enhancement_price_source"] = None
+    pick["enhancement_price_kickoff"] = None
+    pick["enhancement_price_rejection"] = None
     pick["enhancement_priced"] = False
     pick["enhancement_mapped"] = False
     pick.pop("enhancement_breakeven", None)
@@ -582,6 +589,45 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
         elif swapped and mapping[0].startswith("tt_away_"):
             mapping = ("tt_home_" + mapping[0][len("tt_away_"):], mapping[1])
         got = pairs.get(hit_key, {}).get(mapping)
+        matched_quotes = None
+        if "fixture_quotes" in index and (pick.get("kickoff_utc")
+                                         or pick.get("contract_schema") == "post_forebet_v1"):
+            # No pair-only fallback once the current fixture has a normalized
+            # kickoff. A missing/naive provider stamp is not a matching witness.
+            def aware(value):
+                try:
+                    parsed = datetime.fromisoformat(str(value))
+                    return parsed.astimezone(timezone.utc) if parsed.tzinfo else None
+                except (TypeError, ValueError):
+                    return None
+            expected = aware(pick.get("kickoff_utc"))
+            decision = aware(pick.get("as_of"))
+            matched_quotes = []
+            for quote in index["fixture_quotes"].get(hit_key, {}).get(mapping, []):
+                ko, captured = aware(quote[4]), aware(quote[2])
+                if expected is None or ko is None or abs((ko - expected).total_seconds()) > 15 * 60:
+                    continue
+                if captured is None or captured > ko or (decision is not None and captured > decision):
+                    continue
+                matched_quotes.append(quote)
+            # Latest witnessed offer per bookmaker, not best-of-past quotes.
+            # Contradictory prices at the same instant are quarantined.
+            latest, ambiguous = {}, set()
+            for quote in matched_quotes:
+                key = (quote[3], quote[1])
+                previous = latest.get(key)
+                if previous is None or aware(quote[2]) > aware(previous[2]):
+                    latest[key] = quote
+                    ambiguous.discard(key)
+                elif aware(quote[2]) == aware(previous[2]) and quote[0] != previous[0]:
+                    ambiguous.add(key)
+            matched_quotes = [q for key, q in latest.items() if key not in ambiguous]
+            if not matched_quotes:
+                pick["enhancement_price_rejection"] = "no_matching_kickoff_and_capture_witness"
+                return pick
+            selected = max(matched_quotes, key=lambda q: q[0])
+            got = selected[:4]
+            pick["enhancement_price_kickoff"] = selected[4]
         if not got:
             return pick
         price, book, at, source = got
@@ -593,12 +639,18 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
         pick["enhancement_breakeven"] = round(1.0 / float(price), 4)
         quotes = [q for q in ((index.get("quotes") or {}).get(hit_key, {}).get(mapping) or [])
                   if q > 1.0]
+        if matched_quotes is not None:
+            quotes = [q[0] for q in matched_quotes]
         if quotes:
             pick["enhancement_consensus_price"] = round(statistics.median(quotes), 3)
         prob = pick.get("enhancement_probability")
         if prob:
             pick["enhancement_edge_sample"] = round(float(prob) * float(price) - 1.0, 4)
         per_src = (index.get("spread") or {}).get(hit_key, {}).get(mapping, {})
+        if matched_quotes is not None:
+            per_src = {}
+            for q in matched_quotes:
+                per_src[q[3]] = max(per_src.get(q[3], 0.), q[0])
         if isinstance(per_src, dict):
             pick["enhancement_multi_source"] = (
                 sum(1 for v in per_src.values() if isinstance(v, (int, float)) and v > 1.0) >= 2)
