@@ -1,7 +1,7 @@
 [
   {
-    "as_of": "2026-10-20T06:28:43+02:00",
-    "avg_p": 83.4,
+    "as_of": "2026-10-20T07:19:33+02:00",
+    "avg_p": 83.7,
     "away": "Slovan Bratislava",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
@@ -622,7 +622,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.17,
+      "odds": 1.15,
       "source": "zulubet"
     },
     "odds_source": "betexplorer_odds",
@@ -716,14 +716,14 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=21): Avg Goals: 4.48 | Over 1.5: 90.5% | Under 1.5: 9.5% | Over 2.5: 81.0% | Under 2.5: 19.0% | Over 3.5: 66.7% | Under 3.5: 33.3% | Over 4.5: 38.1% | Under 4.5: 61.9% | BTTS: 57.1% | BTTS-No: 42.9% | Home Over 0.5 Goals: 100.0% | Home Under 0.5 Goals: 0.0% | Home Over 1.5 Goals: 90.5% | Home Under 1.5 Goals: 9.5% | Home Over 2.5 Goals: 76.2% | Home Under 2.5 Goals: 23.8% | Home Over 3.5 Goals: 47.6% | Home Under 3.5 Goals: 52.4% | Away Over 0.5 Goals: 57.1% | Away Under 0.5 Goals: 42.9% | Away Over 1.5 Goals: 14.3% | Away Under 1.5 Goals: 85.7% | Away Over 2.5 Goals: 4.8% | Away Under 2.5 Goals: 95.2% | Away Over 3.5 Goals: 0.0% | Away Under 3.5 Goals: 100.0% | Winner-only history, not pre-match probabilities",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=19): Avg Goals: 4.42 | Over 1.5: 94.7% | Under 1.5: 5.3% | Over 2.5: 84.2% | Under 2.5: 15.8% | Over 3.5: 68.4% | Under 3.5: 31.6% | Over 4.5: 36.8% | Under 4.5: 63.2% | BTTS: 57.9% | BTTS-No: 42.1% | Home Over 0.5 Goals: 100.0% | Home Under 0.5 Goals: 0.0% | Home Over 1.5 Goals: 94.7% | Home Under 1.5 Goals: 5.3% | Home Over 2.5 Goals: 78.9% | Home Under 2.5 Goals: 21.1% | Home Over 3.5 Goals: 47.4% | Home Under 3.5 Goals: 52.6% | Away Over 0.5 Goals: 57.9% | Away Under 0.5 Goals: 42.1% | Away Over 1.5 Goals: 15.8% | Away Under 1.5 Goals: 84.2% | Away Over 2.5 Goals: 5.3% | Away Under 2.5 Goals: 94.7% | Away Over 3.5 Goals: 0.0% | Away Under 3.5 Goals: 100.0% | Winner-only history, not pre-match probabilities",
     "veto_reason": "context VETO in ['competition_type']",
     "vitibet_index": 4.15,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-20T06:28:43+02:00",
-    "avg_p": 75.5,
+    "as_of": "2026-10-20T07:19:33+02:00",
+    "avg_p": 75.0,
     "away": "AEK Athens FC",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
@@ -758,7 +758,7 @@
     "edge_status": "certified",
     "enh_candidate_log": [
       {
-        "cohort_rate": 0.1229,
+        "cohort_rate": 0.1232,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 1.5 Goals",
@@ -766,13 +766,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.1229,
-        "raw_probability": 0.1922,
+        "probability": 0.1232,
+        "raw_probability": 0.1858,
         "reason": "below_line_threshold",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.0399,
+        "cohort_rate": 0.0401,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 0.5 Goals",
@@ -780,13 +780,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.0399,
-        "raw_probability": 0.1209,
+        "probability": 0.0401,
+        "raw_probability": 0.1133,
         "reason": "below_line_threshold",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.1794,
+        "cohort_rate": 0.1948,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 1.5 Goals",
@@ -794,13 +794,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.1794,
-        "raw_probability": 0.3321,
+        "probability": 0.1948,
+        "raw_probability": 0.3282,
         "reason": "below_line_threshold",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.1395,
+        "cohort_rate": 0.1519,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Over 1.5 Goals",
@@ -808,13 +808,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.1395,
-        "raw_probability": 0.2039,
+        "probability": 0.1519,
+        "raw_probability": 0.2064,
         "reason": "below_line_threshold",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.0233,
+        "cohort_rate": 0.0315,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Over 2.5 Goals",
@@ -822,13 +822,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.0233,
-        "raw_probability": 0.0711,
+        "probability": 0.0315,
+        "raw_probability": 0.0723,
         "reason": "below_line_threshold",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.0033,
+        "cohort_rate": 0.0057,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Over 3.5 Goals",
@@ -836,7 +836,7 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.0033,
+        "probability": 0.0057,
         "raw_probability": 0.021,
         "reason": "below_line_threshold",
         "status": "excluded"
@@ -851,7 +851,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.1397,
+        "raw_probability": 0.1386,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -865,7 +865,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.4046,
+        "raw_probability": 0.4036,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -879,7 +879,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.318,
+        "raw_probability": 0.3188,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -893,7 +893,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.3931,
+        "raw_probability": 0.3945,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -907,7 +907,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.1378,
+        "raw_probability": 0.139,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -921,7 +921,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.0626,
+        "raw_probability": 0.0633,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -935,7 +935,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.0313,
+        "raw_probability": 0.031,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -949,7 +949,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.1084,
+        "raw_probability": 0.1077,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -963,7 +963,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.1878,
+        "raw_probability": 0.187,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -977,7 +977,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.2168,
+        "raw_probability": 0.2166,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -991,7 +991,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.1878,
+        "raw_probability": 0.1881,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -1005,7 +1005,7 @@
         "price_book": null,
         "price_source": null,
         "probability": null,
-        "raw_probability": 0.1302,
+        "raw_probability": 0.1307,
         "reason": "no_cohort_rate",
         "status": "excluded"
       },
@@ -1024,7 +1024,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.8771,
+        "cohort_rate": 0.8768,
         "engine": "hybrid_cohort",
         "implied_probability": 0.9259,
         "label": "Match Over 1.5 Goals",
@@ -1032,13 +1032,13 @@
         "price": 1.08,
         "price_book": null,
         "price_source": "scoutingstats",
-        "probability": 0.8771,
-        "raw_probability": 0.8078,
+        "probability": 0.8768,
+        "raw_probability": 0.8142,
         "reason": "below_min_leg_odds",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.2525,
+        "cohort_rate": 0.2636,
         "engine": "hybrid_cohort",
         "implied_probability": 0.2597,
         "label": "Match Under 2.5 Goals",
@@ -1046,13 +1046,13 @@
         "price": 3.85,
         "price_book": "Betsson",
         "price_source": "theoddsapi",
-        "probability": 0.2525,
-        "raw_probability": 0.356,
+        "probability": 0.2636,
+        "raw_probability": 0.3538,
         "reason": null,
         "status": "eligible_not_selected"
       },
       {
-        "cohort_rate": 0.4585,
+        "cohort_rate": 0.467,
         "engine": "hybrid_cohort",
         "implied_probability": 0.4739,
         "label": "Match Under 3.5 Goals",
@@ -1060,13 +1060,13 @@
         "price": 2.11,
         "price_book": "Stake.com",
         "price_source": "betexplorer",
-        "probability": 0.4585,
-        "raw_probability": 0.487,
+        "probability": 0.467,
+        "raw_probability": 0.4896,
         "reason": null,
         "status": "eligible_not_selected"
       },
       {
-        "cohort_rate": 0.7475,
+        "cohort_rate": 0.7364,
         "engine": "hybrid_cohort",
         "implied_probability": 0.7752,
         "label": "Match Over 2.5 Goals",
@@ -1074,13 +1074,13 @@
         "price": 1.29,
         "price_book": "bet365.us",
         "price_source": "betexplorer",
-        "probability": 0.7475,
-        "raw_probability": 0.644,
+        "probability": 0.7364,
+        "raw_probability": 0.6462,
         "reason": "below_min_leg_odds",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.4551,
+        "cohort_rate": 0.4728,
         "engine": "hybrid_cohort",
         "implied_probability": 0.4762,
         "label": "Both Teams to Score - Yes (BTTS-Yes)",
@@ -1088,13 +1088,13 @@
         "price": 2.1,
         "price_book": "BetMGM.us",
         "price_source": "betexplorer",
-        "probability": 0.4551,
-        "raw_probability": 0.4468,
+        "probability": 0.4728,
+        "raw_probability": 0.4599,
         "reason": null,
         "status": "eligible_not_selected"
       },
       {
-        "cohort_rate": 0.5449,
+        "cohort_rate": 0.5272,
         "engine": "hybrid_cohort",
         "implied_probability": 0.5714,
         "label": "Both Teams to Score - No (BTTS-No)",
@@ -1102,13 +1102,13 @@
         "price": 1.75,
         "price_book": "Stake.com",
         "price_source": "betexplorer",
-        "probability": 0.5449,
-        "raw_probability": 0.5532,
+        "probability": 0.5272,
+        "raw_probability": 0.5401,
         "reason": null,
-        "status": "recommended"
+        "status": "eligible_not_selected"
       },
       {
-        "cohort_rate": 0.9601,
+        "cohort_rate": 0.9599,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 0.5 Goals",
@@ -1116,13 +1116,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.9601,
-        "raw_probability": 0.8791,
+        "probability": 0.9599,
+        "raw_probability": 0.8867,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.8206,
+        "cohort_rate": 0.8052,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 1.5 Goals",
@@ -1130,13 +1130,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.8206,
-        "raw_probability": 0.6679,
+        "probability": 0.8052,
+        "raw_probability": 0.6718,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.6213,
+        "cohort_rate": 0.6046,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 2.5 Goals",
@@ -1144,13 +1144,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.6213,
-        "raw_probability": 0.4674,
+        "probability": 0.6046,
+        "raw_probability": 0.4705,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.3688,
+        "cohort_rate": 0.3553,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 3.5 Goals",
@@ -1158,13 +1158,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.3688,
-        "raw_probability": 0.2656,
+        "probability": 0.3553,
+        "raw_probability": 0.2661,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.3787,
+        "cohort_rate": 0.3954,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 2.5 Goals",
@@ -1172,13 +1172,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.3787,
-        "raw_probability": 0.5326,
+        "probability": 0.3954,
+        "raw_probability": 0.5295,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.6312,
+        "cohort_rate": 0.6447,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 3.5 Goals",
@@ -1186,13 +1186,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.6312,
-        "raw_probability": 0.7344,
+        "probability": 0.6447,
+        "raw_probability": 0.7339,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.4684,
+        "cohort_rate": 0.4871,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Over 0.5 Goals",
@@ -1200,13 +1200,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.4684,
-        "raw_probability": 0.5392,
+        "probability": 0.4871,
+        "raw_probability": 0.5455,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.5316,
+        "cohort_rate": 0.5129,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Under 0.5 Goals",
@@ -1214,13 +1214,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.5316,
-        "raw_probability": 0.4608,
+        "probability": 0.5129,
+        "raw_probability": 0.4545,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.8605,
+        "cohort_rate": 0.8481,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Under 1.5 Goals",
@@ -1228,13 +1228,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.8605,
-        "raw_probability": 0.7961,
+        "probability": 0.8481,
+        "raw_probability": 0.7936,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.9767,
+        "cohort_rate": 0.9685,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Under 2.5 Goals",
@@ -1242,13 +1242,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.9767,
-        "raw_probability": 0.9289,
+        "probability": 0.9685,
+        "raw_probability": 0.9277,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.9967,
+        "cohort_rate": 0.9943,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Under 3.5 Goals",
@@ -1256,13 +1256,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.9967,
+        "probability": 0.9943,
         "raw_probability": 0.979,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.5415,
+        "cohort_rate": 0.533,
         "engine": "hybrid_cohort",
         "implied_probability": 0.578,
         "label": "Match Over 3.5 Goals",
@@ -1270,13 +1270,13 @@
         "price": 1.73,
         "price_book": "bet365.us",
         "price_source": "betexplorer",
-        "probability": 0.5415,
-        "raw_probability": 0.513,
+        "probability": 0.533,
+        "raw_probability": 0.5104,
         "reason": null,
-        "status": "eligible_not_selected"
+        "status": "recommended"
       },
       {
-        "cohort_rate": 0.3555,
+        "cohort_rate": 0.3467,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Over 4.5 Goals",
@@ -1284,13 +1284,13 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.3555,
-        "raw_probability": 0.3264,
+        "probability": 0.3467,
+        "raw_probability": 0.3236,
         "reason": "unpriced",
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.6445,
+        "cohort_rate": 0.6533,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 4.5 Goals",
@@ -1298,99 +1298,99 @@
         "price": null,
         "price_book": null,
         "price_source": null,
-        "probability": 0.6445,
-        "raw_probability": 0.6736,
+        "probability": 0.6533,
+        "raw_probability": 0.6764,
         "reason": "unpriced",
         "status": "excluded"
       }
     ],
     "enh_cluster_id": "2026-10-20|Manchester City|AEK Athens FC",
-    "enhancement_breakeven": 0.5714,
-    "enhancement_cohort_rate": 0.5449,
+    "enhancement_breakeven": 0.578,
+    "enhancement_cohort_rate": 0.533,
     "enhancement_consensus_price": null,
-    "enhancement_edge_sample": -0.0464,
-    "enhancement_label": "Both Teams to Score - No (BTTS-No)",
+    "enhancement_edge_sample": -0.0779,
+    "enhancement_label": "Match Over 3.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": true,
-    "enhancement_price": 1.75,
-    "enhancement_price_at": "2026-10-20T02:09",
-    "enhancement_price_book": "Stake.com",
+    "enhancement_price": 1.73,
+    "enhancement_price_at": "2026-10-19T22:24",
+    "enhancement_price_book": "bet365.us",
     "enhancement_price_source": "betexplorer",
     "enhancement_priced": true,
-    "enhancement_probability": 0.5449,
-    "enhancement_reason": "League BTTS is 41.7%, Home BTTS is 41.7%, Away BTTS is 45.9% (realized cohort 54.5%, n=301; stated 55.3%)",
+    "enhancement_probability": 0.533,
+    "enhancement_reason": "Poisson expected hit rate is 51.0% (realized cohort 53.3%, n=349; stated 51.0%)",
     "enhancement_state": "PAPER",
-    "enhancement_stated_probability": 0.5532,
+    "enhancement_stated_probability": 0.5104,
     "event_notes": [
       {
-        "cohort_n": 301,
-        "cohort_rate": 0.5449,
+        "cohort_n": 349,
+        "cohort_rate": 0.533,
         "engine": "hybrid_cohort",
-        "enhancement_edge_sample": -0.0465,
-        "enhancement_price": 1.75,
-        "enhancement_price_book": "Stake.com",
-        "enhancement_price_source": "betexplorer",
-        "label": "Both Teams to Score - No (BTTS-No)",
-        "market": "btts_no",
-        "probability": 0.5448504983388704,
-        "raw_probability": 0.5532032714626516,
-        "reason": "League BTTS is 41.7%, Home BTTS is 41.7%, Away BTTS is 45.9% (realized cohort 54.5%, n=301; stated 55.3%)"
-      },
-      {
-        "cohort_n": 301,
-        "cohort_rate": 0.5415,
-        "engine": "hybrid_cohort",
-        "enhancement_edge_sample": -0.0632,
+        "enhancement_edge_sample": -0.078,
         "enhancement_price": 1.73,
         "enhancement_price_book": "bet365.us",
         "enhancement_price_source": "betexplorer",
         "label": "Match Over 3.5 Goals",
         "market": "match_over_35",
-        "probability": 0.5415282392026578,
-        "raw_probability": 0.5129980097417912,
-        "reason": "Poisson expected hit rate is 51.3% (realized cohort 54.2%, n=301; stated 51.3%)"
+        "probability": 0.5329512893982808,
+        "raw_probability": 0.5103560516489466,
+        "reason": "Poisson expected hit rate is 51.0% (realized cohort 53.3%, n=349; stated 51.0%)"
       },
       {
-        "cohort_n": 301,
-        "cohort_rate": 0.4585,
+        "cohort_n": 349,
+        "cohort_rate": 0.5272,
         "engine": "hybrid_cohort",
-        "enhancement_edge_sample": -0.0326,
-        "enhancement_price": 2.11,
+        "enhancement_edge_sample": -0.0774,
+        "enhancement_price": 1.75,
         "enhancement_price_book": "Stake.com",
         "enhancement_price_source": "betexplorer",
-        "label": "Match Under 3.5 Goals",
-        "market": "match_under_35",
-        "probability": 0.4584717607973422,
-        "raw_probability": 0.4870019902582088,
-        "reason": "Safe low-scoring expectation: Combined Under 3.5 is 48.7% (realized cohort 45.8%, n=301; stated 48.7%)"
+        "label": "Both Teams to Score - No (BTTS-No)",
+        "market": "btts_no",
+        "probability": 0.5272206303724929,
+        "raw_probability": 0.5400694898389897,
+        "reason": "League BTTS is 41.7%, Home BTTS is 41.7%, Away BTTS is 45.9% (realized cohort 52.7%, n=349; stated 54.0%)"
       },
       {
-        "cohort_n": 301,
-        "cohort_rate": 0.4551,
+        "cohort_n": 349,
+        "cohort_rate": 0.4728,
         "engine": "hybrid_cohort",
-        "enhancement_edge_sample": -0.0442,
+        "enhancement_edge_sample": -0.0072,
         "enhancement_price": 2.1,
         "enhancement_price_book": "BetMGM.us",
         "enhancement_price_source": "betexplorer",
         "label": "Both Teams to Score - Yes (BTTS-Yes)",
         "market": "btts_yes",
-        "probability": 0.45514950166112955,
-        "raw_probability": 0.44679672853734836,
-        "reason": "Mathematical expectation is 44.7% (realized cohort 45.5%, n=301; stated 44.7%)"
+        "probability": 0.47277936962750716,
+        "raw_probability": 0.4599305101610102,
+        "reason": "Mathematical expectation is 46.0% (realized cohort 47.3%, n=349; stated 46.0%)"
       },
       {
-        "cohort_n": 301,
-        "cohort_rate": 0.2525,
+        "cohort_n": 349,
+        "cohort_rate": 0.467,
         "engine": "hybrid_cohort",
-        "enhancement_edge_sample": -0.0279,
+        "enhancement_edge_sample": -0.0145,
+        "enhancement_price": 2.11,
+        "enhancement_price_book": "Stake.com",
+        "enhancement_price_source": "betexplorer",
+        "label": "Match Under 3.5 Goals",
+        "market": "match_under_35",
+        "probability": 0.46704871060171915,
+        "raw_probability": 0.4896439483510534,
+        "reason": "Safe low-scoring expectation: Combined Under 3.5 is 49.0% (realized cohort 46.7%, n=349; stated 49.0%)"
+      },
+      {
+        "cohort_n": 349,
+        "cohort_rate": 0.2636,
+        "engine": "hybrid_cohort",
+        "enhancement_edge_sample": 0.0149,
         "enhancement_price": 3.85,
         "enhancement_price_book": "Betsson",
         "enhancement_price_source": "theoddsapi",
         "label": "Match Under 2.5 Goals",
         "market": "match_under_25",
-        "probability": 0.25249169435215946,
-        "raw_probability": 0.3559901133880644,
-        "reason": "Highly defensive context: Combined Under 2.5 is 35.6% (realized cohort 25.2%, n=301; stated 35.6%)"
+        "probability": 0.26361031518624645,
+        "raw_probability": 0.35381070368340095,
+        "reason": "Highly defensive context: Combined Under 2.5 is 35.4% (realized cohort 26.4%, n=349; stated 35.4%)"
       }
     ],
     "home": "Manchester City",
@@ -1414,7 +1414,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.09,
+      "odds": 1.11,
       "source": "zulubet"
     },
     "odds_source": "betexplorer_odds",
@@ -1456,7 +1456,7 @@
     "price_named_book_corroborated": false,
     "price_odds_kind": "bookmaker",
     "price_push_eligible": true,
-    "recommended_enhancement": "btts_no",
+    "recommended_enhancement": "match_over_35",
     "recommended_market": "keep_1x2",
     "rule": "unanimous[bzzoiro+statarea+vitibet+zulubet] avg_p>=65",
     "source_weights": {
@@ -1469,13 +1469,13 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=260): Avg Goals: 4.18 | Over 1.5: 90.0% | Under 1.5: 10.0% | Over 2.5: 80.4% | Under 2.5: 19.6% | Over 3.5: 57.7% | Under 3.5: 42.3% | Over 4.5: 39.2% | Under 4.5: 60.8% | BTTS: 41.5% | BTTS-No: 58.5% | Home Over 0.5 Goals: 100.0% | Home Under 0.5 Goals: 0.0% | Home Over 1.5 Goals: 90.0% | Home Under 1.5 Goals: 10.0% | Home Over 2.5 Goals: 70.4% | Home Under 2.5 Goals: 29.6% | Home Over 3.5 Goals: 42.3% | Home Under 3.5 Goals: 57.7% | Away Over 0.5 Goals: 41.5% | Away Under 0.5 Goals: 58.5% | Away Over 1.5 Goals: 9.6% | Away Under 1.5 Goals: 90.4% | Away Over 2.5 Goals: 0.8% | Away Under 2.5 Goals: 99.2% | Away Over 3.5 Goals: 0.0% | Away Under 3.5 Goals: 100.0% | Winner-only history, not pre-match probabilities",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=296): Avg Goals: 4.14 | Over 1.5: 89.5% | Under 1.5: 10.5% | Over 2.5: 80.1% | Under 2.5: 19.9% | Over 3.5: 57.4% | Under 3.5: 42.6% | Over 4.5: 38.9% | Under 4.5: 61.1% | BTTS: 42.6% | BTTS-No: 57.4% | Home Over 0.5 Goals: 100.0% | Home Under 0.5 Goals: 0.0% | Home Over 1.5 Goals: 89.5% | Home Under 1.5 Goals: 10.5% | Home Over 2.5 Goals: 69.6% | Home Under 2.5 Goals: 30.4% | Home Over 3.5 Goals: 41.6% | Home Under 3.5 Goals: 58.4% | Away Over 0.5 Goals: 42.6% | Away Under 0.5 Goals: 57.4% | Away Over 1.5 Goals: 10.5% | Away Under 1.5 Goals: 89.5% | Away Over 2.5 Goals: 1.7% | Away Under 2.5 Goals: 98.3% | Away Over 3.5 Goals: 0.0% | Away Under 3.5 Goals: 100.0% | Winner-only history, not pre-match probabilities",
     "veto_reason": "context VETO in ['competition_type']",
     "vitibet_index": 4.24,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-20T06:28:43+02:00",
+    "as_of": "2026-10-20T07:19:33+02:00",
     "avg_p": 67.0,
     "away": "Pyramids FC",
     "bookmaker": "scoutingstats_odds",
@@ -2278,7 +2278,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-20T06:28:43+02:00",
+    "as_of": "2026-10-20T07:19:33+02:00",
     "avg_p": 66.3,
     "away": "Peterborough",
     "bookmaker": "betexplorer_best",
@@ -3080,7 +3080,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-20T06:28:43+02:00",
+    "as_of": "2026-10-20T07:19:33+02:00",
     "avg_p": 66.0,
     "away": "Swindon Town",
     "bookmaker": "Betfair",
@@ -4908,7 +4908,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-20T06:28:43+02:00",
+    "as_of": "2026-10-20T07:19:33+02:00",
     "avg_p": 76.0,
     "away": "Lask Linz",
     "bookmaker": "Pinnacle",
@@ -5600,7 +5600,7 @@
         "line": null,
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 1.22,
+        "odds": 1.2,
         "odds_kind": "provider_average",
         "price_coherence": null,
         "price_independence_family": "scoutingstats_average",
@@ -5640,7 +5640,7 @@
         "line": null,
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 11.0,
+        "odds": 12.0,
         "odds_kind": "provider_average",
         "price_coherence": null,
         "price_independence_family": "scoutingstats_average",
@@ -5683,7 +5683,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-20T06:28:43+02:00",
+    "as_of": "2026-10-20T07:19:33+02:00",
     "avg_p": 74.0,
     "away": "Viking",
     "bookmaker": "Pinnacle",
@@ -6458,7 +6458,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-20T06:28:43+02:00",
+    "as_of": "2026-10-20T07:19:33+02:00",
     "avg_p": 72.0,
     "away": "RB Leipzig",
     "bookmaker": "Pinnacle",
@@ -6483,7 +6483,7 @@
       "resolution_verdict": "CAUTION",
       "side_role": "home",
       "team_a": "ALLOW",
-      "team_h": "BOOST"
+      "team_h": "VETO"
     },
     "date": "2026-10-21",
     "decay_verdict": "WATCH",
@@ -7228,7 +7228,7 @@
     ],
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=728): Avg Goals: 3.76 | Over 1.5: 87.5% | Under 1.5: 12.5% | Over 2.5: 73.6% | Under 2.5: 26.4% | Over 3.5: 48.6% | Under 3.5: 51.4% | Over 4.5: 31.9% | Under 4.5: 68.1% | BTTS: 41.6% | BTTS-No: 58.4% | Home Over 0.5 Goals: 100.0% | Home Under 0.5 Goals: 0.0% | Home Over 1.5 Goals: 87.5% | Home Under 1.5 Goals: 12.5% | Home Over 2.5 Goals: 62.1% | Home Under 2.5 Goals: 37.9% | Home Over 3.5 Goals: 34.6% | Home Under 3.5 Goals: 65.4% | Away Over 0.5 Goals: 41.6% | Away Under 0.5 Goals: 58.4% | Away Over 1.5 Goals: 9.5% | Away Under 1.5 Goals: 90.5% | Away Over 2.5 Goals: 1.4% | Away Under 2.5 Goals: 98.6% | Away Over 3.5 Goals: 0.0% | Away Under 3.5 Goals: 100.0% | Winner-only history, not pre-match probabilities",
-    "veto_reason": "context VETO in ['competition_type']",
+    "veto_reason": "context VETO in ['team_h', 'competition_type']",
     "vitibet_index": 3.66,
     "w_score": 1.0
   }

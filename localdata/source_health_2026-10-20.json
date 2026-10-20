@@ -45,7 +45,7 @@
     "betexplorer": {
       "be_matched": 3,
       "be_raw": 12,
-      "be_usable": 9,
+      "be_usable": 12,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -54,6 +54,7 @@
       "freshness_h": null,
       "join_matched_rows": 3,
       "join_miss_counts": {
+        "fixture_key_miss": 3,
         "no_pick_for_fixture": 6
       },
       "reason": null,
@@ -158,12 +159,12 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 11794,
-        "market_unsupported": 4083
+        "fixture_key_miss": 23200,
+        "market_unsupported": 8721
       },
       "op_matched": 0,
-      "op_raw": 15877,
-      "op_usable": 15877,
+      "op_raw": 31921,
+      "op_usable": 31921,
       "reason": null,
       "status": "cache_only"
     },
