@@ -14,23 +14,23 @@
     },
     "betbetter": {
       "bb_matched": 0,
-      "bb_raw": 492,
-      "bb_scored": 492,
+      "bb_raw": 662,
+      "bb_scored": 662,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "market_unmapped": 11,
-        "market_unsupported": 165,
-        "out_of_window": 32,
-        "selection_unmapped": 284
+        "market_unmapped": 1,
+        "market_unsupported": 248,
+        "out_of_window": 35,
+        "selection_unmapped": 378
       },
       "reason": null,
-      "status": "cache_only"
+      "status": "ok"
     },
     "betclan": {
       "blocker": null,
@@ -85,21 +85,21 @@
     },
     "boggio": {
       "bg_matched": 0,
-      "bg_raw": 6,
-      "bg_scored": 6,
+      "bg_raw": 47,
+      "bg_scored": 47,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "join_matched_rows": 0,
+      "freshness_h": 0.0,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 4,
-        "selection_unsupported": 2
+        "fixture_key_miss": 28,
+        "selection_unsupported": 17
       },
       "reason": null,
-      "status": "cache_only"
+      "status": "ok"
     },
     "bzzoiro": {
       "blocker": null,
@@ -157,44 +157,50 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 164,
       "join_miss_counts": {
-        "fixture_key_miss": 23200,
-        "market_unsupported": 8721
+        "fixture_key_miss": 51268,
+        "market_unsupported": 21171,
+        "no_pick_for_fixture": 2899
       },
-      "op_matched": 0,
-      "op_raw": 31921,
-      "op_usable": 31921,
+      "op_matched": 1,
+      "op_raw": 75502,
+      "op_usable": 75502,
       "reason": null,
       "status": "cache_only"
     },
     "pinnapi_odds": {
-      "auth_attempts": [],
-      "auth_mechanism": null,
+      "auth_attempts": [
+        {
+          "auth": "header",
+          "status": 200
+        }
+      ],
+      "auth_mechanism": "header",
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 12,
+      "coherence_excluded_rows": 66,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 12
+        "withheld_mixed_events_one_x_two": 66
       },
-      "coherence_withheld_fixtures": 2,
+      "coherence_withheld_fixtures": 11,
       "event_type": "prematch",
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "join_matched_rows": 5,
       "join_miss_counts": {
-        "fixture_key_miss": 15269,
+        "fixture_key_miss": 16959,
         "no_pick_for_fixture": 56
       },
-      "pa_matched": 4,
-      "pa_raw": 15330,
-      "pa_scored": 15330,
+      "pa_matched": 2,
+      "pa_raw": 913,
+      "pa_scored": 17020,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "cache_only",
+      "status": "ok",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -240,69 +246,64 @@
     "sharpapi_odds": {
       "blocker": null,
       "board_summary": {
-        "board_fixtures": 9,
-        "board_league_count": 6,
+        "board_fixtures": 5,
+        "board_league_count": 4,
         "board_leagues": {
-          "colombia_-_primera_a": 3,
-          "guatemala_-_liga_nacional": 30,
-          "hong_kong_-_premier_league": 2,
-          "mexico_-_liga_mx": 152,
-          "mexico_-_liga_mx_women": 10,
-          "nicaraguan_primera_division": 3
+          "egypt_-_premier_league": 81,
+          "indonesia_-_liga_1": 68,
+          "indonesia_-_super_league": 3,
+          "romania_-_liga_ii": 48
         },
-        "board_non_prematch_rows": 168,
-        "board_priced_rows": 16,
+        "board_non_prematch_rows": 0,
+        "board_priced_rows": 42,
         "board_rows": 200,
-        "board_team_count": 18,
+        "board_team_count": 10,
         "board_team_names": {
-          "Atletico Junior": 3,
-          "CF America (W)": 2,
-          "Club America [W]": 2,
-          "Deportivo Cali": 3,
-          "Diriangen FC": 3,
-          "Marquense": 30,
-          "Monterrey": 152,
-          "Pachuca": 152,
-          "Pachuca (W)": 2,
-          "Pachuca [W]": 2,
-          "Queretaro (W)": 2,
-          "Queretaro FC [W]": 4,
-          "Rancho Santana": 3,
-          "Southern District": 2,
-          "Suchitepequez": 30,
-          "Tigres (W)": 2,
-          "Tigres [W]": 4,
-          "Wofoo Tai Po": 2
+          "ASA Targu Mures": 48,
+          "Asyut Petroleum": 11,
+          "Chindia Targoviste": 48,
+          "Dewa United": 68,
+          "Isenmulang Kalteng": 3,
+          "Java United": 3,
+          "Modern Sport FC": 70,
+          "Persijap Jepara": 68,
+          "ZED FC": 70,
+          "Zamalek": 11
         },
         "board_truncated": false,
         "canonicalization_drop_reasons": {
-          "unknown_market:1st_half_moneyline": 5,
-          "unknown_market:point_spread": 2,
-          "unsupported_market:double_chance": 3,
-          "unsupported_market:draw_no_bet": 2,
-          "unsupported_market:team_total_points_odd_even": 4
+          "unknown_market:1st_half_correct_score": 21,
+          "unknown_market:1st_half_moneyline": 9,
+          "unknown_market:2nd_half_moneyline": 6,
+          "unknown_market:match_result_total_goals": 18,
+          "unknown_market:point_spread": 10,
+          "unknown_market:team_clean_sheet": 7,
+          "unsupported_market:correct_score": 18,
+          "unsupported_market:team_total_exact": 20,
+          "unsupported_market:team_total_goals": 24,
+          "unsupported_market:team_total_points_odd_even": 8
         },
         "card_fixture_count": 5,
+        "card_fixtures_on_board": 0,
+        "card_fixtures_reversed": 0,
+        "card_priced_rows": 0,
         "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 168
-        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 16
+        "fixture_key_miss": 42
       },
-      "reason": "cache_rows_pending_join",
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 16,
-      "sa_scored": 16,
-      "status": "cache_only"
+      "sa_raw": 5,
+      "sa_scored": 42,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
@@ -343,12 +344,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 76,
+      "join_matched_rows": 60,
       "join_miss_counts": {
-        "fixture_key_miss": 50,
-        "no_pick_for_fixture": 132
+        "fixture_key_miss": 110,
+        "no_pick_for_fixture": 88
       },
-      "oa_matched": 4,
+      "oa_matched": 3,
       "oa_raw": 258,
       "oa_usable": 258,
       "reason": null,

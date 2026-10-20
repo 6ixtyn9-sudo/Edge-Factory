@@ -14,7 +14,8 @@
     "2": {
       "excluded_sources": [
         "vitibet",
-        "betclan"
+        "betclan",
+        "scoutingstats"
       ],
       "reason": "\u226599% pre-kickoff timing; contaminated sources are excluded from S",
       "status": "pass_with_source_exclusions"
@@ -60,13 +61,12 @@
     "betminer"
   ],
   "eligible_s_after_timing": [
-    "bzzoiro",
-    "scoutingstats"
+    "bzzoiro"
   ],
   "era_start": "2026-10-08",
-  "evaluated_at": "2026-10-20T06:03:17+00:00",
+  "evaluated_at": "2026-10-20T08:30:55+00:00",
   "failing_clauses": [],
-  "findings_changed": false,
+  "findings_changed": true,
   "full_evaluation_status": "not_run_not_due_or_weekly_cooldown",
   "malformed_attempts": 0,
   "malformed_rows": 0,
@@ -101,11 +101,11 @@
       "latest_success_day": "2026-10-20",
       "max_gap_between_success_days": 1,
       "missing_scheduled_attempt_days": 0,
-      "official_attempt_records": 22,
+      "official_attempt_records": 23,
       "pre_kickoff_rate": 0.0,
       "projected_90_day_maturity": null,
       "realized_membership": true,
-      "rows": 742,
+      "rows": 787,
       "scheduled_days_since_era_start": 13,
       "successful_capture_days": 13,
       "trailing_30_scheduled_days": 13,
@@ -119,7 +119,7 @@
       "latest_success_day": null,
       "max_gap_between_success_days": null,
       "missing_scheduled_attempt_days": 0,
-      "official_attempt_records": 20,
+      "official_attempt_records": 21,
       "pre_kickoff_rate": null,
       "projected_90_day_maturity": null,
       "realized_membership": false,
@@ -137,11 +137,11 @@
       "latest_success_day": "2026-10-20",
       "max_gap_between_success_days": 1,
       "missing_scheduled_attempt_days": 0,
-      "official_attempt_records": 22,
+      "official_attempt_records": 23,
       "pre_kickoff_rate": 1.0,
       "projected_90_day_maturity": "2027-01-05",
       "realized_membership": true,
-      "rows": 11126,
+      "rows": 11775,
       "scheduled_days_since_era_start": 13,
       "successful_capture_days": 13,
       "trailing_30_scheduled_days": 13,
@@ -151,15 +151,15 @@
     "scoutingstats": {
       "capture_timestamp_rate": 1.0,
       "current_gap_aware_streak_days": 13,
-      "eligible_after_timing": true,
+      "eligible_after_timing": false,
       "latest_success_day": "2026-10-20",
       "max_gap_between_success_days": 1,
       "missing_scheduled_attempt_days": 0,
-      "official_attempt_records": 22,
-      "pre_kickoff_rate": 0.990512,
-      "projected_90_day_maturity": "2027-01-05",
+      "official_attempt_records": 23,
+      "pre_kickoff_rate": 0.98996,
+      "projected_90_day_maturity": null,
       "realized_membership": true,
-      "rows": 2424,
+      "rows": 2490,
       "scheduled_days_since_era_start": 13,
       "successful_capture_days": 13,
       "trailing_30_scheduled_days": 13,
@@ -173,11 +173,11 @@
       "latest_success_day": "2026-10-20",
       "max_gap_between_success_days": 1,
       "missing_scheduled_attempt_days": 0,
-      "official_attempt_records": 22,
-      "pre_kickoff_rate": 0.973031,
+      "official_attempt_records": 23,
+      "pre_kickoff_rate": 0.971291,
       "projected_90_day_maturity": null,
       "realized_membership": true,
-      "rows": 6934,
+      "rows": 7071,
       "scheduled_days_since_era_start": 13,
       "successful_capture_days": 13,
       "trailing_30_scheduled_days": 13,
@@ -185,5 +185,5 @@
       "trailing_30_success_rate": 1.0
     }
   },
-  "status_signature": "9b80705fd5b63b236fb32827574f2d5ca0fbeaf7e486b243a9b48ac1ec0e9733"
+  "status_signature": "d70eca99d0dd71aea4e3de723d0c87fe4216ac4fa0b7aa68fb0c7e6d47123db8"
 }

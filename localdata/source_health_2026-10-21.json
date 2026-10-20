@@ -14,23 +14,23 @@
     },
     "betbetter": {
       "bb_matched": 0,
-      "bb_raw": 665,
-      "bb_scored": 665,
+      "bb_raw": 662,
+      "bb_scored": 662,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "market_unmapped": 2,
-        "market_unsupported": 247,
-        "out_of_window": 37,
-        "selection_unmapped": 379
+        "market_unmapped": 1,
+        "market_unsupported": 248,
+        "out_of_window": 35,
+        "selection_unmapped": 378
       },
       "reason": null,
-      "status": "cache_only"
+      "status": "ok"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -158,32 +158,37 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [],
-      "auth_mechanism": null,
+      "auth_attempts": [
+        {
+          "auth": "header",
+          "status": 200
+        }
+      ],
+      "auth_mechanism": "header",
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 60,
+      "coherence_excluded_rows": 66,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 60
+        "withheld_mixed_events_one_x_two": 66
       },
-      "coherence_withheld_fixtures": 10,
+      "coherence_withheld_fixtures": 11,
       "event_type": "prematch",
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "join_matched_rows": 3,
       "join_miss_counts": {
-        "fixture_key_miss": 16113,
+        "fixture_key_miss": 16957,
         "no_pick_for_fixture": 60
       },
       "pa_matched": 3,
-      "pa_raw": 16176,
-      "pa_scored": 16176,
+      "pa_raw": 913,
+      "pa_scored": 17020,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "cache_only",
+      "status": "ok",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -232,61 +237,61 @@
         "board_fixtures": 5,
         "board_league_count": 4,
         "board_leagues": {
-          "egypt_-_premier_league": 31,
+          "egypt_-_premier_league": 81,
           "indonesia_-_liga_1": 68,
-          "indonesia_-_super_league": 99,
-          "jamaica_-_premier_league": 2
+          "indonesia_-_super_league": 7,
+          "romania_-_liga_ii": 44
         },
-        "board_non_prematch_rows": 2,
-        "board_priced_rows": 48,
+        "board_non_prematch_rows": 0,
+        "board_priced_rows": 44,
         "board_rows": 200,
         "board_team_count": 10,
         "board_team_names": {
-          "Asyut Petroleum": 31,
-          "Bhayangkara FC": 72,
+          "ASA Targu Mures": 44,
+          "Asyut Petroleum": 11,
+          "Chindia Targoviste": 44,
           "Dewa United": 68,
-          "Isenmulang Kalteng": 27,
-          "Java United": 27,
-          "PSIM Yogyakarta": 72,
+          "Isenmulang Kalteng": 7,
+          "Java United": 7,
+          "Modern Sport FC": 70,
           "Persijap Jepara": 68,
-          "Racing United FC": 2,
-          "Waterhouse FC": 2,
-          "Zamalek": 31
+          "ZED FC": 70,
+          "Zamalek": 11
         },
         "board_truncated": false,
         "canonicalization_drop_reasons": {
-          "unknown_market:1st_half_moneyline": 10,
-          "unknown_market:2nd_half_moneyline": 10,
-          "unknown_market:match_result_total_goals": 28,
-          "unknown_market:point_spread": 10,
-          "unknown_market:team_clean_sheet": 9,
-          "unsupported_market:double_chance": 10,
-          "unsupported_market:draw_no_bet": 5,
-          "unsupported_market:team_total_exact": 25,
-          "unsupported_market:team_total_goals": 27,
-          "unsupported_market:team_total_points_odd_even": 12
+          "unknown_market:1st_half_correct_score": 21,
+          "unknown_market:1st_half_moneyline": 9,
+          "unknown_market:2nd_half_moneyline": 6,
+          "unknown_market:match_result_total_goals": 18,
+          "unknown_market:point_spread": 12,
+          "unknown_market:team_clean_sheet": 7,
+          "unsupported_market:correct_score": 14,
+          "unsupported_market:team_total_exact": 20,
+          "unsupported_market:team_total_goals": 24,
+          "unsupported_market:team_total_points_odd_even": 8
         },
         "card_fixture_count": 3,
+        "card_fixtures_on_board": 0,
+        "card_fixtures_reversed": 0,
+        "card_priced_rows": 0,
         "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 2
-        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 48
+        "fixture_key_miss": 44
       },
-      "reason": "cache_rows_pending_join",
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 48,
-      "sa_scored": 48,
-      "status": "cache_only"
+      "sa_raw": 5,
+      "sa_scored": 44,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
