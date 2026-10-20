@@ -94,7 +94,13 @@ def fold_league_identity(name: object) -> str:
 # pool/verdict lookups resolve.
 LEAGUE_ALIASES: dict[str, str] = {
     "england fa cup": "fa",  # 2026-09-22 Dagenham vs Waltham Abbey under both
-    "england national league south": "enterprise national league south",
+    # The 2026-10-20 persisted assay registry has 19 `nls` contexts, not
+    # the former sponsored-name key. The committed capture has 538 matching
+    # date/team fixtures under NLs and the exact Statarea regular-season label.
+    # Preserve the CODE already used by those contexts; never invent evidence
+    # under a missing sponsor key or fold North/youth/playoffs into this league.
+    "england national league south": "nls",
+    "enterprise national league south": "nls",
 }
 
 
