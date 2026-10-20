@@ -1,50 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 164.69715400000013,
+  "bank": 184.25489900000014,
   "cycle_base": 203.9865280000001,
-  "open_slips": [
-    {
-      "date": "2026-10-19",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Bursaspor vs Pendikspor",
-              "pick": "HOME",
-              "prob": 0.733,
-              "odds": 1.42,
-              "result": null,
-              "fixture_key": [
-                "2026-10-19",
-                "Bursaspor",
-                "Pendikspor"
-              ]
-            },
-            {
-              "match": "Mes Shahr-e Babak vs Persepolis FC",
-              "pick": "AWAY",
-              "prob": 0.73,
-              "odds": 1.37,
-              "result": null,
-              "fixture_key": [
-                "2026-10-19",
-                "Mes Shahr-e Babak",
-                "Persepolis FC"
-              ]
-            }
-          ],
-          "odds": 1.95,
-          "stake_pct": 20.5871,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 20.5871
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -1015,6 +973,35 @@
       ],
       "bank_pct": 164.6972,
       "close_pct": 164.6971
+    },
+    {
+      "date": "2026-10-19",
+      "staked_pct": 20.5871,
+      "returned_pct": 40.1448,
+      "accas": [
+        {
+          "odds": 1.95,
+          "won": true,
+          "stake_pct": 20.5871,
+          "returned_pct": 40.1448,
+          "legs": [
+            {
+              "match": "Bursaspor vs Pendikspor",
+              "pick": "HOME",
+              "odds": 1.42,
+              "result": "win"
+            },
+            {
+              "match": "Mes Shahr-e Babak vs Persepolis FC",
+              "pick": "AWAY",
+              "odds": 1.37,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 184.2549,
+      "close_pct": 184.2548
     }
   ],
   "events": [
