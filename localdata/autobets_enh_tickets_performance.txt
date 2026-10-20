@@ -1,18 +1,20 @@
 ENHANCEMENT TICKETS (ROLLING) — performance, percent of capital
 ==============================================================
-generated 2026-10-20T11:53:33+02:00
+generated 2026-10-20T14:06:54
 
 BANK     100.0%   x1.00 of the 100% base
 CYCLE    baseline 100.0%   next take-profit notice at 200.0%   (+100% per cycle)
 RECORD   no settled accas yet
-OPEN     0 open slips   0 held accas   0 take-profit notice(s) to date
+OPEN     1 open slips   1 held accas   0 take-profit notice(s) to date
 
 BET-DAYS, oldest first (0 of 0)
+
+HELD (not yet settled; stake counted as committed)
+  2026-10-20   ACCA @2.16   stake 12.5%   HELD (not settled)
+      MATCH OVER 2.5 GOALS @1.50
+      MATCH OVER 2.5 GOALS @1.44
 
 NOTES
   Stake, returned and net are % of capital. Bank is the stored close for each day.
   Bank breaks in the history are documented in docs/operator/BANK-HISTORY-2026-10-16.md.
   Bet-days recorded before leg detail was kept show the acca result only.
-
-OPERATOR RESET — 2026-10-20: none placed; prior enhancement ticket withdrawn.
-No bank or settled history change. No replacement ticket; evidence recovery remains pending.
