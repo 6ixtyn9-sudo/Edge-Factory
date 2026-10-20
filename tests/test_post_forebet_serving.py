@@ -370,3 +370,28 @@ def test_duplicate_quote_updates_cannot_inflate_roi_by_row_order(reverse):
         edge = dict(sources=["scoutingstats"], market="1x2", strategy="single", follow_source=None, threshold=65)
         projected = list(cc.contract_rows(observed, ambiguous, resolved, edge))
         assert len(projected) == 1 and projected[0]["pick_odds"] == 1.7
+
+
+def test_active_contract_path_ignores_shadow_only_and_conflicting_votes(prepared, monkeypatch):
+    """Keep the real activated registry enabled, with a working positive control."""
+    from edgefactory.phase5_shadow import append_shadow_rows
+
+    registry = activate(prepared)
+    assert picker.load_post_forebet_registry() == registry
+    monkeypatch.setattr(picker, 'fetch_all', lambda _: pytest.fail('legacy/network route'))
+    before = picker.run_day(DAY, {}, None, None)
+    assert before[0]  # genuine warehouse observations DO serve these contracts
+    assert {p['sources_used'][0] for p in before[0]} == {'scoutingstats'}
+
+    # Same authorized voter, both a new fixture and a contradictory vote for
+    # the live fixture. Neither may enter observation/quarantine/selection.
+    receipt = append_shadow_rows('scoutingstats', [
+        observation(name='Shadow Only Alpha'),
+        observation(p1=.1, px=.2, p2=.7),
+    ], capture_day=DAY, captured_at=f'{DAY}T10:00:00Z',
+       root=prepared[0].parent)
+    assert receipt['rows_appended'] == 2
+    assert picker.load_post_forebet_registry() == registry
+    after = picker.run_day(DAY, {}, None, None)
+    assert after == before
+    assert not any('Shadow Only' in p['home'] for p in after[0])
