@@ -84,7 +84,7 @@ def test_league_alias_pairs_resolve_to_registry_keys():
     assert canonical_league_key("FA") == "fa"
     assert (
         canonical_league_key("England,National League South")
-        == "enterprise national league south"
+        == "nls"
     )
     # Unaliased leagues pass through folded, untouched.
     assert canonical_league_key("Scotland,Championship") == "scotland championship"
@@ -243,3 +243,93 @@ def test_curated_cup_canonical_stays_distinct_from_its_league():
 
     assert canonical_league("Japan Emperor Cup") == "japan emperor cup"
     assert canonical_league("Japan Emperor Cup") != canonical_league("Japan J1 League")
+
+
+@pytest.mark.parametrize("label", [
+    "England,National League South", "Enterprise National League South",
+    "NLs", "NlS", "nls",
+])
+def test_national_league_south_uses_existing_registry_code(label):
+    from edgefactory.entities import canonical_league
+
+    assert canonical_league_key(label) == canonical_league(label) == "nls"
+
+
+@pytest.mark.parametrize("kind", ["override", "learned"])
+def test_stale_sponsor_alias_outputs_cannot_orphan_registry_contexts(monkeypatch, kind):
+    from edgefactory import entities
+
+    label = "provider south label"
+    target = "Enterprise National League South"
+    monkeypatch.setattr(entities, "load_overrides", lambda: {
+        "leagues": {label: target} if kind == "override" else {}})
+    monkeypatch.setattr(entities, "load_registry", lambda: {
+        "alias_index": {"leagues": {label: target} if kind == "learned" else {}}})
+    assert entities.canonical_league(label) == "nls"
+    assert entities.canonical_league(target) == "nls"
+
+
+@pytest.mark.parametrize("other", [
+    "England,National League North", "NLn", "England,National League",
+    "England,National League South Women", "England,National League South U21",
+    "England,National League South Playoff",
+])
+def test_south_alias_does_not_merge_other_competitions(other):
+    from edgefactory.entities import canonical_league
+
+    assert canonical_league_key(other) != "nls"
+    assert canonical_league(other) != "nls"
+
+
+@pytest.mark.parametrize("label", [
+    "England,National League South", "Enterprise National League South", "NLs",
+])
+def test_assay_and_exact_contract_lookup_share_south_key_and_preserve_veto(label):
+    import duckdb
+    from scripts import assay_purity, picks_today
+    from edgefactory.entities import classify_competition
+
+    rule = "test_exact_south_contract"
+    with duckdb.connect() as con:
+        con.create_function("classify_competition", classify_competition)
+        con.execute("""
+            CREATE TABLE south_assay AS
+            SELECT ? AS league, 'home' AS pick, 'away' AS outcome,
+                   2.0 AS pick_odds, DATE '2026-10-19' AS date,
+                   'Home Team' AS home, 'Away Team' AS away
+            FROM range(40)
+        """, [label])
+        contexts = assay_purity.assay_edge(con, dict(
+            rule=rule, view="south_assay", market="1x2", sport="soccer",
+            contract_schema="post_forebet_v1"), window_days=36500)
+    league = contexts[0]
+    key = f"soccer|nls|1x2|{rule}|home"
+    assert league[key]["n"] == 40
+    assert league[key]["roi"] == -1.0
+    assert league[key]["verdict"] == "VETO"
+    purity = {"contract_contexts": {rule: dict(zip(
+        ("league", "team", "odds_band", "competition_type", "niche"), contexts))}}
+    pick = dict(league=label, market="1x2", rule=rule, pick="home",
+                contract_schema="post_forebet_v1", home="Home Team", away="Away Team")
+    for spelling in ("NLs", "England,National League South", "Enterprise National League South"):
+        ctx = picks_today.lookup_context(purity, {**pick, "league": spelling})
+        assert ctx["league_key"] == "nls"
+        assert ctx["league"] == "VETO"
+    for other in ("NLn", "England,National League North", "Unknown Competition"):
+        ctx = picks_today.lookup_context(purity, {**pick, "league": other})
+        assert ctx["league"] == "UNKNOWN"  # no cross-league/fuzzy evidence borrowing
+
+
+@pytest.mark.parametrize("target", ["Custom & League", "Åland / Cup", "!!!",
+                                    "National League South Playoff"])
+@pytest.mark.parametrize("kind", ["override", "learned"])
+def test_alias_output_fix_preserves_unrelated_persisted_league_keys(monkeypatch, target, kind):
+    from edgefactory import entities
+    from edgefactory.util import norm_league
+
+    label = "provider other label"
+    monkeypatch.setattr(entities, "load_overrides", lambda: {
+        "leagues": {label: target} if kind == "override" else {}})
+    monkeypatch.setattr(entities, "load_registry", lambda: {
+        "alias_index": {"leagues": {label: target} if kind == "learned" else {}}})
+    assert entities.canonical_league(label) == norm_league(target)
