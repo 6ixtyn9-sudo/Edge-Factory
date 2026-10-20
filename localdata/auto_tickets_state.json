@@ -2,7 +2,44 @@
   "base_pct": 100.0,
   "bank": 184.25489900000014,
   "cycle_base": 203.9865280000001,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-10-20",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Huddersfield vs Peterborough",
+              "pick": "HOME",
+              "prob": 0.6629999999999999,
+              "odds": 1.55,
+              "result": null,
+              "fixture_key": [
+                "2026-10-20",
+                "Huddersfield",
+                "Peterborough"
+              ]
+            },
+            {
+              "match": "Barnet vs Swindon Town",
+              "pick": "HOME",
+              "prob": 0.66,
+              "odds": 1.53,
+              "result": null,
+              "fixture_key": [
+                "2026-10-20",
+                "Barnet",
+                "Swindon Town"
+              ]
+            }
+          ],
+          "odds": 2.37,
+          "stake_pct": 23.0319
+        }
+      ],
+      "staked_pct": 23.0319
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",

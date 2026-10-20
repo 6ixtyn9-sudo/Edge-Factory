@@ -22,7 +22,7 @@
       "w_score": 1.0
     },
     {
-      "avg_p": 67.3,
+      "avg_p": 67.0,
       "away": "Pyramids FC",
       "date": "2026-10-20",
       "home": "El Geish",
@@ -52,27 +52,25 @@
       "w_score": 1.0
     }
   ],
-  "be_429": 2,
-  "be_cached": 0,
-  "be_cooling_down": true,
-  "be_rows_rejected": 3,
-  "be_rows_rejected_reasons": {
-    "row teams do not both match the pick": 3
-  },
+  "be_429": 0,
+  "be_cached": 3,
+  "be_cooling_down": false,
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
   "candidate_fixtures": 5,
-  "captured_at": "2026-10-20T01:26:04.439011+00:00",
+  "captured_at": "2026-10-20T04:27:36.480624+00:00",
   "date": "2026-10-20",
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 4,
   "market_budget_stop": false,
-  "market_requests": 15,
+  "market_requests": 10,
   "match_detail": {
-    "bookmakers": 43,
+    "bookmakers": 79,
     "challenge_pages": 0,
-    "fixtures": 3,
-    "market_rows": 123,
-    "markets": 17,
-    "named_rows": 123,
+    "fixtures": 5,
+    "market_rows": 234,
+    "markets": 29,
+    "named_rows": 234,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -99,10 +97,30 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 66.3,
+      "away": "Peterborough",
+      "date": "2026-10-20",
+      "home": "Huddersfield",
+      "league": "England,League One",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 66.0,
+      "away": "Swindon Town",
+      "date": "2026-10-20",
+      "home": "Barnet",
+      "league": "England,League Two",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
     }
   ],
-  "requests": 24,
-  "rows": 6,
+  "requests": 16,
+  "rows": 12,
   "schema": 1,
   "status": "ok"
 }

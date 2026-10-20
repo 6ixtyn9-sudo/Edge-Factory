@@ -1,9 +1,9 @@
 {
-  "as_of_last": "2026-10-19",
+  "as_of_last": "2026-10-20",
   "blocked": {
     "BETEXPLORER_RESCUE": {
       "since": "2026-10-15",
-      "z": -0.333
+      "z": -0.541
     }
   },
   "params": {
@@ -21,46 +21,46 @@
       "z": 0.721
     },
     "BETEXPLORER_RESCUE": {
-      "hit_rate": 0.6952,
-      "implied_rate": 0.7093,
-      "n": 105,
-      "roi": -0.0283,
-      "z": -0.333
+      "hit_rate": 0.7,
+      "implied_rate": 0.7244,
+      "n": 90,
+      "roi": -0.0322,
+      "z": -0.541
     },
     "BZZOIRO_PRIMARY": {
-      "hit_rate": 0.8333,
-      "implied_rate": 0.6719,
-      "n": 6,
-      "roi": 0.1917,
-      "z": 0.873
+      "hit_rate": 1.0,
+      "implied_rate": 0.6976,
+      "n": 4,
+      "roi": 0.4625,
+      "z": 1.348
     },
     "NAMED_BOOKMAKER_PRICE": {
-      "hit_rate": 0.7324,
-      "implied_rate": 0.6766,
-      "n": 213,
-      "roi": 0.0902,
-      "z": 1.84
+      "hit_rate": 0.7349,
+      "implied_rate": 0.677,
+      "n": 215,
+      "roi": 0.0929,
+      "z": 1.916
     },
     "SCOUTINGSTATS_SOLE": {
-      "hit_rate": 0.6875,
-      "implied_rate": 0.6958,
-      "n": 160,
-      "roi": -0.0114,
-      "z": -0.235
+      "hit_rate": 0.6885,
+      "implied_rate": 0.7049,
+      "n": 122,
+      "roi": -0.0212,
+      "z": -0.408
     },
     "SOURCE_FALLBACK": {
-      "hit_rate": 0.6615,
-      "implied_rate": 0.6378,
-      "n": 65,
-      "roi": 0.0248,
-      "z": 0.415
+      "hit_rate": 0.6393,
+      "implied_rate": 0.6365,
+      "n": 61,
+      "roi": -0.0093,
+      "z": 0.048
     },
     "SUSPECT_ALIAS_FUZZY": {
-      "hit_rate": 0.6154,
-      "implied_rate": 0.6327,
-      "n": 26,
-      "roi": -0.0342,
-      "z": -0.192
+      "hit_rate": 0.625,
+      "implied_rate": 0.6323,
+      "n": 24,
+      "roi": -0.0392,
+      "z": -0.077
     }
   }
 }
