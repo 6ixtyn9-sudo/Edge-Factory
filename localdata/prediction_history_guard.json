@@ -1,0 +1,354 @@
+{
+  "schema": 1,
+  "reference_key": "localdata-v2-39371954018",
+  "cutoff": "2026-10-20",
+  "run_id": "39411904810",
+  "source_fixture_counts": {
+    "afootballreport": 12124,
+    "betclan": 2207,
+    "bettingclosed": 19506,
+    "bzzoiro": 3654,
+    "freesupertips": 55,
+    "predictz": 2706,
+    "prosoccer": 1673,
+    "scoutingstats": 11664,
+    "statarea": 499969,
+    "vitibet": 42699,
+    "windrawwin": 1411,
+    "zulubet": 72989
+  },
+  "reference_files": {
+    "afootballreport_2026-08.csv.gz": {
+      "source": "afootballreport",
+      "rows": 1286,
+      "earliest": "2026-08-28",
+      "latest": "2026-08-31",
+      "train_unique": 1052
+    },
+    "afootballreport_2026-09.csv.gz": {
+      "source": "afootballreport",
+      "rows": 8759,
+      "earliest": "2026-09-01",
+      "latest": "2026-09-30",
+      "train_unique": 4389
+    },
+    "afootballreport_2026-10.csv.gz": {
+      "source": "afootballreport",
+      "rows": 5535,
+      "earliest": "2026-10-02",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    },
+    "betclan_2026-08.csv.gz": {
+      "source": "betclan",
+      "rows": 164,
+      "earliest": "2026-08-28",
+      "latest": "2026-08-31",
+      "train_unique": 160
+    },
+    "betclan_2026-09.csv.gz": {
+      "source": "betclan",
+      "rows": 1255,
+      "earliest": "2026-09-01",
+      "latest": "2026-09-30",
+      "train_unique": 849
+    },
+    "betclan_2026-10.csv.gz": {
+      "source": "betclan",
+      "rows": 916,
+      "earliest": "2026-10-02",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    },
+    "bettingclosed_2026-07.csv.gz": {
+      "source": "bettingclosed",
+      "rows": 398,
+      "earliest": "2026-07-29",
+      "latest": "2026-07-31",
+      "train_unique": 398
+    },
+    "bettingclosed_2026-08.csv.gz": {
+      "source": "bettingclosed",
+      "rows": 7306,
+      "earliest": "2026-08-01",
+      "latest": "2026-08-31",
+      "train_unique": 7306
+    },
+    "bettingclosed_2026-09.csv.gz": {
+      "source": "bettingclosed",
+      "rows": 7046,
+      "earliest": "2026-09-01",
+      "latest": "2026-09-30",
+      "train_unique": 5817
+    },
+    "bettingclosed_2026-10.csv.gz": {
+      "source": "bettingclosed",
+      "rows": 4871,
+      "earliest": "2026-10-01",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    },
+    "bzzoiro_2026-08.csv.gz": {
+      "source": "bzzoiro",
+      "rows": 500,
+      "earliest": "2026-08-27",
+      "latest": "2026-09-17",
+      "train_unique": 500
+    },
+    "bzzoiro_2026-09.csv.gz": {
+      "source": "bzzoiro",
+      "rows": 2116,
+      "earliest": "2026-08-31",
+      "latest": "2026-10-07",
+      "train_unique": 1566
+    },
+    "bzzoiro_2026-10.csv.gz": {
+      "source": "bzzoiro",
+      "rows": 2014,
+      "earliest": "2026-10-01",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    },
+    "freesupertips_2026-09.csv.gz": {
+      "source": "freesupertips",
+      "rows": 16,
+      "earliest": "2026-09-24",
+      "latest": "2026-09-30",
+      "train_unique": 0
+    },
+    "freesupertips_2026-10.csv.gz": {
+      "source": "freesupertips",
+      "rows": 48,
+      "earliest": "2026-10-03",
+      "latest": "2026-10-14",
+      "train_unique": 0
+    },
+    "predictz_2026-08.csv.gz": {
+      "source": "predictz",
+      "rows": 293,
+      "earliest": "2026-08-08",
+      "latest": "2026-08-31",
+      "train_unique": 293
+    },
+    "predictz_2026-09.csv.gz": {
+      "source": "predictz",
+      "rows": 1696,
+      "earliest": "2026-09-01",
+      "latest": "2026-09-30",
+      "train_unique": 1418
+    },
+    "predictz_2026-10.csv.gz": {
+      "source": "predictz",
+      "rows": 717,
+      "earliest": "2026-10-01",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    },
+    "prosoccer_2026-09.csv.gz": {
+      "source": "prosoccer",
+      "rows": 43,
+      "earliest": "2026-09-29",
+      "latest": "2026-09-30",
+      "train_unique": 0
+    },
+    "prosoccer_2026-10.csv.gz": {
+      "source": "prosoccer",
+      "rows": 1630,
+      "earliest": "2026-10-01",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    },
+    "scoutingstats_2026-07.csv.gz": {
+      "source": "scoutingstats",
+      "rows": 228,
+      "earliest": "2026-07-29",
+      "latest": "2026-07-31",
+      "train_unique": 228
+    },
+    "scoutingstats_2026-08.csv.gz": {
+      "source": "scoutingstats",
+      "rows": 4595,
+      "earliest": "2026-08-01",
+      "latest": "2026-08-31",
+      "train_unique": 4595
+    },
+    "scoutingstats_2026-09.csv.gz": {
+      "source": "scoutingstats",
+      "rows": 4072,
+      "earliest": "2026-09-01",
+      "latest": "2026-09-30",
+      "train_unique": 3467
+    },
+    "scoutingstats_2026-10.csv.gz": {
+      "source": "scoutingstats",
+      "rows": 2780,
+      "earliest": "2026-10-01",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    },
+    "statarea.csv.gz": {
+      "source": "statarea",
+      "rows": 489399,
+      "earliest": "2017-01-01",
+      "latest": "2026-06-12",
+      "train_unique": 0
+    },
+    "statarea_2026-07.csv.gz": {
+      "source": "statarea",
+      "rows": 125,
+      "earliest": "2026-07-29",
+      "latest": "2026-07-31",
+      "train_unique": 125
+    },
+    "statarea_2026-08.csv.gz": {
+      "source": "statarea",
+      "rows": 3695,
+      "earliest": "2026-08-01",
+      "latest": "2026-08-31",
+      "train_unique": 3695
+    },
+    "statarea_2026-09.csv.gz": {
+      "source": "statarea",
+      "rows": 4057,
+      "earliest": "2026-09-01",
+      "latest": "2026-09-30",
+      "train_unique": 3320
+    },
+    "statarea_2026-10.csv.gz": {
+      "source": "statarea",
+      "rows": 2847,
+      "earliest": "2026-10-01",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    },
+    "vitibet_2026-07.csv.gz": {
+      "source": "vitibet",
+      "rows": 734,
+      "earliest": "2026-07-29",
+      "latest": "2026-07-31",
+      "train_unique": 734
+    },
+    "vitibet_2026-08.csv.gz": {
+      "source": "vitibet",
+      "rows": 14675,
+      "earliest": "2026-08-01",
+      "latest": "2026-08-31",
+      "train_unique": 14675
+    },
+    "vitibet_2026-09.csv.gz": {
+      "source": "vitibet",
+      "rows": 16023,
+      "earliest": "2026-09-01",
+      "latest": "2026-09-30",
+      "train_unique": 12638
+    },
+    "vitibet_2026-10.csv.gz": {
+      "source": "vitibet",
+      "rows": 11544,
+      "earliest": "2026-10-01",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    },
+    "windrawwin_2026-08.csv.gz": {
+      "source": "windrawwin",
+      "rows": 90,
+      "earliest": "2026-08-29",
+      "latest": "2026-08-31",
+      "train_unique": 90
+    },
+    "windrawwin_2026-09.csv.gz": {
+      "source": "windrawwin",
+      "rows": 999,
+      "earliest": "2026-09-01",
+      "latest": "2026-09-30",
+      "train_unique": 872
+    },
+    "windrawwin_2026-10.csv.gz": {
+      "source": "windrawwin",
+      "rows": 322,
+      "earliest": "2026-10-01",
+      "latest": "2026-10-17",
+      "train_unique": 0
+    },
+    "zulubet.csv.gz": {
+      "source": "zulubet",
+      "rows": 67216,
+      "earliest": "2024-01-01",
+      "latest": "2026-06-12",
+      "train_unique": 0
+    },
+    "zulubet_2026-07.csv.gz": {
+      "source": "zulubet",
+      "rows": 148,
+      "earliest": "2026-07-29",
+      "latest": "2026-07-31",
+      "train_unique": 148
+    },
+    "zulubet_2026-08.csv.gz": {
+      "source": "zulubet",
+      "rows": 2149,
+      "earliest": "2026-08-01",
+      "latest": "2026-08-31",
+      "train_unique": 2149
+    },
+    "zulubet_2026-09.csv.gz": {
+      "source": "zulubet",
+      "rows": 2116,
+      "earliest": "2026-09-01",
+      "latest": "2026-09-30",
+      "train_unique": 1627
+    },
+    "zulubet_2026-10.csv.gz": {
+      "source": "zulubet",
+      "rows": 1409,
+      "earliest": "2026-10-01",
+      "latest": "2026-10-19",
+      "train_unique": 0
+    }
+  },
+  "inserted_rows": {
+    "afootballreport_2026-08.csv.gz": 1286,
+    "afootballreport_2026-09.csv.gz": 8759,
+    "afootballreport_2026-10.csv.gz": 5256,
+    "betclan_2026-08.csv.gz": 164,
+    "betclan_2026-09.csv.gz": 1254,
+    "betclan_2026-10.csv.gz": 872,
+    "bettingclosed_2026-07.csv.gz": 398,
+    "bettingclosed_2026-08.csv.gz": 7306,
+    "bettingclosed_2026-09.csv.gz": 5235,
+    "bettingclosed_2026-10.csv.gz": 133,
+    "bzzoiro_2026-08.csv.gz": 500,
+    "bzzoiro_2026-09.csv.gz": 2116,
+    "bzzoiro_2026-10.csv.gz": 1408,
+    "freesupertips_2026-09.csv.gz": 16,
+    "freesupertips_2026-10.csv.gz": 39,
+    "predictz_2026-08.csv.gz": 293,
+    "predictz_2026-09.csv.gz": 1696,
+    "predictz_2026-10.csv.gz": 717,
+    "prosoccer_2026-09.csv.gz": 43,
+    "prosoccer_2026-10.csv.gz": 1630,
+    "scoutingstats_2026-07.csv.gz": 228,
+    "scoutingstats_2026-08.csv.gz": 4595,
+    "scoutingstats_2026-09.csv.gz": 3159,
+    "scoutingstats_2026-10.csv.gz": 121,
+    "statarea.csv.gz": 0,
+    "statarea_2026-07.csv.gz": 125,
+    "statarea_2026-08.csv.gz": 3695,
+    "statarea_2026-09.csv.gz": 4057,
+    "statarea_2026-10.csv.gz": 2392,
+    "vitibet_2026-07.csv.gz": 734,
+    "vitibet_2026-08.csv.gz": 14675,
+    "vitibet_2026-09.csv.gz": 12063,
+    "vitibet_2026-10.csv.gz": 432,
+    "windrawwin_2026-08.csv.gz": 90,
+    "windrawwin_2026-09.csv.gz": 999,
+    "windrawwin_2026-10.csv.gz": 322,
+    "zulubet.csv.gz": 0,
+    "zulubet_2026-07.csv.gz": 148,
+    "zulubet_2026-08.csv.gz": 2149,
+    "zulubet_2026-09.csv.gz": 1514,
+    "zulubet_2026-10.csv.gz": 29
+  },
+  "operational_state": "current tree restored; only prediction CSVs merged",
+  "certification": "none; existing miner/activation gates still required"
+}
