@@ -196,3 +196,7 @@ dist/
 
 # Explicit operator-approved, unplaced enhancement resets survive stale caches.
 !localdata/autobets_enh_tickets_20*_reset.json
+
+# Compact recovery receipt only; raw history and key inventories stay cached.
+!localdata/prediction_history_guard.json
+localdata/prediction_history_keys.json.gz
