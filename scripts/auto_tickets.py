@@ -73,8 +73,11 @@ import os
 import re
 import sys
 import subprocess
+import time
 from functools import lru_cache
 from collections import Counter
+from collections.abc import Mapping
+from heapq import merge
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import NamedTuple
@@ -1898,7 +1901,43 @@ _SETTLED_SOURCES = [
 ]
 
 
-def _collect_settled_facts() -> tuple[dict, dict, dict]:
+class _SettledOutcomes(Mapping):
+    """Read-only facts for one invocation, indexed without changing tie order.
+
+    Keep entries/scores with their outcome map so settlement consumers share
+    ONE donor build and the same ambiguity/identity decisions. No cross-run
+    cache: a later invocation must observe newly landed results.
+    """
+
+    def __init__(self, outcomes, entries, scores):
+        self._outcomes = outcomes
+        self.entries = entries
+        self.scores = scores
+        self._by_date = {}
+        for position, (key, outcome) in enumerate(outcomes.items()):
+            self._by_date.setdefault(key[0], []).append((position, key, outcome))
+
+    def __getitem__(self, key):
+        return self._outcomes[key]
+
+    def __iter__(self):
+        return iter(self._outcomes)
+
+    def __len__(self):
+        return len(self._outcomes)
+
+    def items(self):
+        return self._outcomes.items()
+
+    def items_for_dates(self, days):
+        # Merge by ORIGINAL insertion position, not date. Equal fuzzy scores
+        # must keep the same winner as the old full-map scan.
+        buckets = (self._by_date[d] for d in days if d in self._by_date)
+        for _, key, outcome in merge(*buckets, key=lambda row: row[0]):
+            yield key, outcome
+
+
+def _collect_settled_facts() -> tuple[_SettledOutcomes, dict, dict]:
     """(key_to_outcome, entries_by_date, scores_by_key) from the same donors.
 
     key_to_outcome is the exact-lookup map (warehouse wins on conflict, then
@@ -1910,6 +1949,8 @@ def _collect_settled_facts() -> tuple[dict, dict, dict]:
     """
     from edgefactory.util import norm_team
 
+    started = time.perf_counter()
+    print("settlement_facts status=building", file=sys.stderr, flush=True)
     key_to: dict = {}
     entries: dict[str, list[dict]] = {}
     scores: dict = {}
@@ -2020,7 +2061,10 @@ def _collect_settled_facts() -> tuple[dict, dict, dict]:
     if EMPTY_KEY_FIXTURES:
         print(f"settlement_nameless_fixture={len(EMPTY_KEY_FIXTURES)}",
               file=sys.stderr)
-    return key_to, entries, scores
+    outcomes = _SettledOutcomes(key_to, entries, scores)
+    print(f"settlement_facts status=ready keys={len(outcomes)} dates={len(entries)} "
+          f"seconds={time.perf_counter() - started:.1f}", file=sys.stderr, flush=True)
+    return outcomes, entries, scores
 
 
 # Keys that covered two different real fixtures in the last load; kept for
@@ -2523,7 +2567,9 @@ def _lookup_fallback(settled, day, home, away, markers=None, pick=None):
                         return oc
     fh, fa = _fold(home), _fold(away)
     best, best_oc = 0.0, None
-    for (d, h, a), oc in settled.items():
+    candidates = (settled.items_for_dates(cands)
+                  if isinstance(settled, _SettledOutcomes) else settled.items())
+    for (d, h, a), oc in candidates:
         if d not in cands:
             continue
         if _marker_boundary_blocks(mh, ma, d, h, a):
@@ -3833,7 +3879,10 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
     if archives is None:
         archives = load_archived_picks()
     if entries_by_date is None:
-        entries_by_date = load_settled_entries()
+        entries_by_date = (settled.entries if isinstance(settled, _SettledOutcomes)
+                           else load_settled_entries())
+    if scores is None and isinstance(settled, _SettledOutcomes):
+        scores = settled.scores
     index = {}
     for p in archives:
         day = str(p.get("date") or p.get("_archive_day") or "")[:10]
@@ -4269,8 +4318,8 @@ def _main_recut(st: dict, target: str, now, plan: list[dict], slip_txt: Path) ->
     return 0
 
 
-def cmd_today(args, st):
-    settled = load_settled()
+def cmd_today(args, st, *, settled=None):
+    settled = load_settled() if settled is None else settled
     now = datetime.now(TZ)
     target = args.date or now.strftime("%Y-%m-%d")
     slip_txt = LOCALDATA / f"auto_tickets_{target}.txt"
@@ -5166,7 +5215,7 @@ def _enhancement_recut(st: dict, target: str, now, slip_txt: Path, legs: list[di
     return 0
 
 
-def cmd_enhancement(args, st) -> int:
+def cmd_enhancement(args, st, *, scores=None) -> int:
     """Draft / freeze / re-print the enhancement lane's card for `args.date`."""
     now = datetime.now(TZ)
     target = args.date or now.strftime("%Y-%m-%d")
@@ -5215,7 +5264,9 @@ def cmd_enhancement(args, st) -> int:
     from edgefactory.enh_team_floors import team_under_floors
     team_floors = team_under_floors(LOCALDATA.parent, target)
     legs = enhancement_legs(slate, floors=floors, team_floors=team_floors)
-    withdrawn = apply_enhancement_timing(legs, now, target, load_settled_scores())
+    if scores is None:
+        scores = load_settled_scores()
+    withdrawn = apply_enhancement_timing(legs, now, target, scores)
     for reason, names in withdrawn.items():
         print(f"enhancement leg withdrawn ({reason}): {', '.join(str(n) for n in names)}")
     pool = enhancement_pool(legs)
@@ -5369,12 +5420,14 @@ def main():
             st = fresh_state()
             save_state(st, ENHANCEMENT_LANE)
         if args.settle or wants_today:
-            for line in settle_open_slips(st, load_settled(), lane=ENHANCEMENT_LANE):
+            settled = load_settled()
+            for line in settle_open_slips(st, settled, lane=ENHANCEMENT_LANE):
                 print(line)
             if not wants_today:
                 print_status(st)
                 return 0
-            return cmd_enhancement(args, st)
+            scores = settled.scores if isinstance(settled, _SettledOutcomes) else None
+            return cmd_enhancement(args, st, scores=scores)
         print_status(st)
         return 0
 
@@ -5388,13 +5441,14 @@ def main():
         st = fresh_state()   # first production run starts a fresh walk-forward at 100%
         save_state(st)
     if args.settle or wants_today:
-        for line in settle_open_slips(st, load_settled()):
+        settled = load_settled()
+        for line in settle_open_slips(st, settled):
             print(line)
         if not wants_today:
             print_status(st)
             _report_marker_guarded_settlement()
             return 0
-        rc = cmd_today(args, st)
+        rc = cmd_today(args, st, settled=settled)
         _report_marker_guarded_settlement()
         return rc
     print_status(st)
