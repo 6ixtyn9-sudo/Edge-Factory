@@ -93,6 +93,7 @@ def test_shadow_ledger_cannot_vote_or_emit_picks(tmp_path, monkeypatch):
 
     monkeypatch.setattr(picks, "load_ml_rules_and_model", lambda: ([], None))
     monkeypatch.setattr(picks, "load_ml_fade_rules", lambda: [])
+    monkeypatch.setattr(picks, "load_post_forebet_registry", lambda: None)
     day = "2099-01-01"
     thresholds = {
         2: {
