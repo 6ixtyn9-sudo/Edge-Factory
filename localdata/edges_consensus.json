@@ -1,10 +1,1893 @@
 {
   "edges": [
     {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_cddf4106a3d45b6e455d8c73",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5181,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
       "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=0",
+      "rule": "pfc_cddf4106a3d45b6e455d8c73",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 0,
+      "train": {
+        "avg_odds": 1.85,
+        "hit": 0.5346,
+        "n": 1850,
+        "n_priced": 1850,
+        "roi": -0.0542,
+        "wilson_lb": 0.5118,
+        "wins": 989
+      },
+      "valid": {
+        "avg_odds": 1.784,
+        "hit": 0.6014,
+        "n": 138,
+        "n_priced": 138,
+        "roi": 0.0193,
+        "wilson_lb": 0.5181,
+        "wins": 83
+      },
+      "view": "pfc_cddf4106a3d45b6e455d8c73",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5222,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=35",
+      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 35,
+      "train": {
+        "avg_odds": 1.85,
+        "hit": 0.5346,
+        "n": 1850,
+        "n_priced": 1850,
+        "roi": -0.0542,
+        "wilson_lb": 0.5118,
+        "wins": 989
+      },
+      "valid": {
+        "avg_odds": 1.779,
+        "hit": 0.6058,
+        "n": 137,
+        "n_priced": 137,
+        "roi": 0.0267,
+        "wilson_lb": 0.5222,
+        "wins": 83
+      },
+      "view": "pfc_f56fe4a2759e9b17b9bdb116",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_d94d447efe0742440e953722",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.566,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=40",
+      "rule": "pfc_d94d447efe0742440e953722",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 40,
+      "train": {
+        "avg_odds": 1.8,
+        "hit": 0.5492,
+        "n": 1688,
+        "n_priced": 1688,
+        "roi": -0.0497,
+        "wilson_lb": 0.5253,
+        "wins": 927
+      },
+      "valid": {
+        "avg_odds": 1.718,
+        "hit": 0.6532,
+        "n": 124,
+        "n_priced": 124,
+        "roi": 0.0985,
+        "wilson_lb": 0.566,
+        "wins": 81
+      },
+      "view": "pfc_d94d447efe0742440e953722",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_3bfaf30507905754f7faab2a",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6136,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+vitibet] avg_p>=50",
+      "rule": "pfc_3bfaf30507905754f7faab2a",
+      "sources": [
+        "scoutingstats",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.629,
+        "hit": 0.6171,
+        "n": 1413,
+        "n_priced": 1413,
+        "roi": -0.0314,
+        "wilson_lb": 0.5915,
+        "wins": 872
+      },
+      "valid": {
+        "avg_odds": 1.612,
+        "hit": 0.6512,
+        "n": 645,
+        "n_priced": 645,
+        "roi": 0.0144,
+        "wilson_lb": 0.6136,
+        "wins": 420
+      },
+      "view": "pfc_3bfaf30507905754f7faab2a",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_0b290b623e2a54ea7df3006c",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6298,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+vitibet+zulubet] avg_p>=50",
+      "rule": "pfc_0b290b623e2a54ea7df3006c",
+      "sources": [
+        "scoutingstats",
+        "vitibet",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.522,
+        "hit": 0.6871,
+        "n": 473,
+        "n_priced": 473,
+        "roi": 0.0002,
+        "wilson_lb": 0.644,
+        "wins": 325
+      },
+      "valid": {
+        "avg_odds": 1.476,
+        "hit": 0.6965,
+        "n": 201,
+        "n_priced": 201,
+        "roi": 0.0005,
+        "wilson_lb": 0.6298,
+        "wins": 140
+      },
+      "view": "pfc_0b290b623e2a54ea7df3006c",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_d17123b85e11155f22e40051",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6471,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+vitibet+zulubet] avg_p>=55",
+      "rule": "pfc_d17123b85e11155f22e40051",
+      "sources": [
+        "scoutingstats",
+        "vitibet",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 55,
+      "train": {
+        "avg_odds": 1.458,
+        "hit": 0.7222,
+        "n": 396,
+        "n_priced": 396,
+        "roi": 0.0179,
+        "wilson_lb": 0.6761,
+        "wins": 286
+      },
+      "valid": {
+        "avg_odds": 1.428,
+        "hit": 0.7175,
+        "n": 177,
+        "n_priced": 177,
+        "roi": 0.0043,
+        "wilson_lb": 0.6471,
+        "wins": 127
+      },
+      "view": "pfc_d17123b85e11155f22e40051",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_a460a0e9dcb1f980cde169c0",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6434,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+zulubet] avg_p>=45",
+      "rule": "pfc_a460a0e9dcb1f980cde169c0",
+      "sources": [
+        "scoutingstats",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 45,
+      "train": {
+        "avg_odds": 1.577,
+        "hit": 0.6433,
+        "n": 712,
+        "n_priced": 712,
+        "roi": -0.0411,
+        "wilson_lb": 0.6074,
+        "wins": 458
+      },
+      "valid": {
+        "avg_odds": 1.514,
+        "hit": 0.6962,
+        "n": 316,
+        "n_priced": 316,
+        "roi": 0.0101,
+        "wilson_lb": 0.6434,
+        "wins": 220
+      },
+      "view": "pfc_a460a0e9dcb1f980cde169c0",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_fb2e721d2bb8a41fe9fa3713",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6532,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+zulubet] avg_p>=50",
+      "rule": "pfc_fb2e721d2bb8a41fe9fa3713",
+      "sources": [
+        "scoutingstats",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.51,
+        "hit": 0.6869,
+        "n": 610,
+        "n_priced": 610,
+        "roi": -0.0017,
+        "wilson_lb": 0.649,
+        "wins": 419
+      },
+      "valid": {
+        "avg_odds": 1.474,
+        "hit": 0.7079,
+        "n": 291,
+        "n_priced": 291,
+        "roi": 0.0015,
+        "wilson_lb": 0.6532,
+        "wins": 206
+      },
+      "view": "pfc_fb2e721d2bb8a41fe9fa3713",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_1ba3ab3c75e6f3a9680ae43c",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7011,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+zulubet] avg_p>=55",
+      "rule": "pfc_1ba3ab3c75e6f3a9680ae43c",
+      "sources": [
+        "scoutingstats",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 55,
+      "train": {
+        "avg_odds": 1.446,
+        "hit": 0.7115,
+        "n": 506,
+        "n_priced": 506,
+        "roi": -0.0054,
+        "wilson_lb": 0.6705,
+        "wins": 360
+      },
+      "valid": {
+        "avg_odds": 1.408,
+        "hit": 0.7581,
+        "n": 248,
+        "n_priced": 248,
+        "roi": 0.0446,
+        "wilson_lb": 0.7011,
+        "wins": 188
+      },
+      "view": "pfc_1ba3ab3c75e6f3a9680ae43c",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_40b163633fc01fd0ff7d0ef1",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7272,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+zulubet] avg_p>=60",
+      "rule": "pfc_40b163633fc01fd0ff7d0ef1",
+      "sources": [
+        "scoutingstats",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 60,
+      "train": {
+        "avg_odds": 1.357,
+        "hit": 0.7722,
+        "n": 360,
+        "n_priced": 360,
+        "roi": 0.0224,
+        "wilson_lb": 0.7262,
+        "wins": 278
+      },
+      "valid": {
+        "avg_odds": 1.351,
+        "hit": 0.7897,
+        "n": 195,
+        "n_priced": 195,
+        "roi": 0.0507,
+        "wilson_lb": 0.7272,
+        "wins": 154
+      },
+      "view": "pfc_40b163633fc01fd0ff7d0ef1",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_439097cb9bb700e9996c0b07",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6479,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[scoutingstats] avg_p>=50",
+      "rule": "pfc_439097cb9bb700e9996c0b07",
+      "sources": [
+        "scoutingstats"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.534,
+        "hit": 0.6566,
+        "n": 2787,
+        "n_priced": 2783,
+        "roi": -0.0151,
+        "wilson_lb": 0.6388,
+        "wins": 1830
+      },
+      "valid": {
+        "avg_odds": 1.514,
+        "hit": 0.6745,
+        "n": 1235,
+        "n_priced": 1235,
+        "roi": 0.0024,
+        "wilson_lb": 0.6479,
+        "wins": 833
+      },
+      "view": "pfc_439097cb9bb700e9996c0b07",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_0f100c9da356ed1c05d9c642",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7265,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[scoutingstats] avg_p>=60",
+      "rule": "pfc_0f100c9da356ed1c05d9c642",
+      "sources": [
+        "scoutingstats"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 60,
+      "train": {
+        "avg_odds": 1.353,
+        "hit": 0.753,
+        "n": 1231,
+        "n_priced": 1227,
+        "roi": 0.0078,
+        "wilson_lb": 0.7282,
+        "wins": 927
+      },
+      "valid": {
+        "avg_odds": 1.329,
+        "hit": 0.7633,
+        "n": 566,
+        "n_priced": 566,
+        "roi": 0.0036,
+        "wilson_lb": 0.7265,
+        "wins": 432
+      },
+      "view": "pfc_0f100c9da356ed1c05d9c642",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_b011652ec3e473fbc0afbb6a",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5854,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[vitibet+zulubet] avg_p>=45",
+      "rule": "pfc_b011652ec3e473fbc0afbb6a",
+      "sources": [
+        "vitibet",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 45,
+      "train": {
+        "avg_odds": 1.694,
+        "hit": 0.6288,
+        "n": 1363,
+        "n_priced": 1363,
+        "roi": 0.0148,
+        "wilson_lb": 0.6028,
+        "wins": 857
+      },
+      "valid": {
+        "avg_odds": 1.71,
+        "hit": 0.6291,
+        "n": 488,
+        "n_priced": 488,
+        "roi": 0.0108,
+        "wilson_lb": 0.5854,
+        "wins": 307
+      },
+      "view": "pfc_b011652ec3e473fbc0afbb6a",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_234f16641d9893e8ec2a01f0",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.619,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[vitibet+zulubet] avg_p>=50",
+      "rule": "pfc_234f16641d9893e8ec2a01f0",
+      "sources": [
+        "vitibet",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.639,
+        "hit": 0.641,
+        "n": 1234,
+        "n_priced": 1234,
+        "roi": 0.0019,
+        "wilson_lb": 0.6138,
+        "wins": 791
+      },
+      "valid": {
+        "avg_odds": 1.621,
+        "hit": 0.6651,
+        "n": 427,
+        "n_priced": 427,
+        "roi": 0.0408,
+        "wilson_lb": 0.619,
+        "wins": 284
+      },
+      "view": "pfc_234f16641d9893e8ec2a01f0",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_2bd498a3472b7bbd71982ece",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6316,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[vitibet+zulubet] avg_p>=55",
+      "rule": "pfc_2bd498a3472b7bbd71982ece",
+      "sources": [
+        "vitibet",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 55,
+      "train": {
+        "avg_odds": 1.557,
+        "hit": 0.6834,
+        "n": 1017,
+        "n_priced": 1017,
+        "roi": 0.0255,
+        "wilson_lb": 0.6541,
+        "wins": 695
+      },
+      "valid": {
+        "avg_odds": 1.556,
+        "hit": 0.6816,
+        "n": 358,
+        "n_priced": 358,
+        "roi": 0.0243,
+        "wilson_lb": 0.6316,
+        "wins": 244
+      },
+      "view": "pfc_2bd498a3472b7bbd71982ece",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_3dc0fa6511953bf09bc4c845",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5039,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[zulubet] avg_p>=0",
+      "rule": "pfc_3dc0fa6511953bf09bc4c845",
+      "sources": [
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 0,
+      "train": {
+        "avg_odds": 2.171,
+        "hit": 0.5421,
+        "n": 3549,
+        "n_priced": 3549,
+        "roi": 0.0284,
+        "wilson_lb": 0.5257,
+        "wins": 1924
+      },
+      "valid": {
+        "avg_odds": 2.245,
+        "hit": 0.5274,
+        "n": 1733,
+        "n_priced": 1732,
+        "roi": 0.0128,
+        "wilson_lb": 0.5039,
+        "wins": 914
+      },
+      "view": "pfc_3dc0fa6511953bf09bc4c845",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_61cb1dd2a3157c4231070cdb",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5036,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[zulubet] avg_p>=35",
+      "rule": "pfc_61cb1dd2a3157c4231070cdb",
+      "sources": [
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 35,
+      "train": {
+        "avg_odds": 2.17,
+        "hit": 0.5423,
+        "n": 3544,
+        "n_priced": 3544,
+        "roi": 0.0281,
+        "wilson_lb": 0.5259,
+        "wins": 1922
+      },
+      "valid": {
+        "avg_odds": 2.245,
+        "hit": 0.5271,
+        "n": 1732,
+        "n_priced": 1731,
+        "roi": 0.0123,
+        "wilson_lb": 0.5036,
+        "wins": 913
+      },
+      "view": "pfc_61cb1dd2a3157c4231070cdb",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_1e9cfc6500aaac77afa1eaf9",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5085,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[zulubet] avg_p>=40",
+      "rule": "pfc_1e9cfc6500aaac77afa1eaf9",
+      "sources": [
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 40,
+      "train": {
+        "avg_odds": 2.143,
+        "hit": 0.5514,
+        "n": 3386,
+        "n_priced": 3386,
+        "roi": 0.0331,
+        "wilson_lb": 0.5346,
+        "wins": 1867
+      },
+      "valid": {
+        "avg_odds": 2.221,
+        "hit": 0.5325,
+        "n": 1660,
+        "n_priced": 1659,
+        "roi": 0.0093,
+        "wilson_lb": 0.5085,
+        "wins": 884
+      },
+      "view": "pfc_1e9cfc6500aaac77afa1eaf9",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_14ee12458803822df3013bcd",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5304,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[zulubet] avg_p>=45",
+      "rule": "pfc_14ee12458803822df3013bcd",
+      "sources": [
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 45,
+      "train": {
+        "avg_odds": 2.079,
+        "hit": 0.5668,
+        "n": 3052,
+        "n_priced": 3052,
+        "roi": 0.0335,
+        "wilson_lb": 0.5492,
+        "wins": 1730
+      },
+      "valid": {
+        "avg_odds": 2.159,
+        "hit": 0.5558,
+        "n": 1488,
+        "n_priced": 1487,
+        "roi": 0.0249,
+        "wilson_lb": 0.5304,
+        "wins": 827
+      },
+      "view": "pfc_14ee12458803822df3013bcd",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_4cf3df8552488297d7ccf526",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.546,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[zulubet] avg_p>=50",
+      "rule": "pfc_4cf3df8552488297d7ccf526",
+      "sources": [
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.965,
+        "hit": 0.5913,
+        "n": 2496,
+        "n_priced": 2496,
+        "roi": 0.0414,
+        "wilson_lb": 0.5719,
+        "wins": 1476
+      },
+      "valid": {
+        "avg_odds": 2.013,
+        "hit": 0.5737,
+        "n": 1241,
+        "n_priced": 1240,
+        "roi": 0.0054,
+        "wilson_lb": 0.546,
+        "wins": 712
+      },
+      "view": "pfc_4cf3df8552488297d7ccf526",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6134,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[zulubet] avg_p>=55",
+      "rule": "pfc_1607fec83282d02c5254c2bf",
+      "sources": [
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 55,
+      "train": {
+        "avg_odds": 1.744,
+        "hit": 0.643,
+        "n": 1787,
+        "n_priced": 1787,
+        "roi": 0.0494,
+        "wilson_lb": 0.6205,
+        "wins": 1149
+      },
+      "valid": {
+        "avg_odds": 1.722,
+        "hit": 0.6458,
+        "n": 864,
+        "n_priced": 863,
+        "roi": 0.041,
+        "wilson_lb": 0.6134,
+        "wins": 558
+      },
+      "view": "pfc_1607fec83282d02c5254c2bf",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_35f7e50bf23db96c2d3dd59d",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6387,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[zulubet] avg_p>=60",
+      "rule": "pfc_35f7e50bf23db96c2d3dd59d",
+      "sources": [
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 60,
+      "train": {
+        "avg_odds": 1.605,
+        "hit": 0.6608,
+        "n": 1241,
+        "n_priced": 1241,
+        "roi": 0.0096,
+        "wilson_lb": 0.634,
+        "wins": 820
+      },
+      "valid": {
+        "avg_odds": 1.589,
+        "hit": 0.6761,
+        "n": 633,
+        "n_priced": 632,
+        "roi": 0.0378,
+        "wilson_lb": 0.6387,
+        "wins": 428
+      },
+      "view": "pfc_35f7e50bf23db96c2d3dd59d",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_5954379f3a12700edcfd8387",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6555,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[zulubet] avg_p>=65",
+      "rule": "pfc_5954379f3a12700edcfd8387",
+      "sources": [
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 65,
+      "train": {
+        "avg_odds": 1.513,
+        "hit": 0.6991,
+        "n": 821,
+        "n_priced": 821,
+        "roi": 0.0237,
+        "wilson_lb": 0.6669,
+        "wins": 574
+      },
+      "valid": {
+        "avg_odds": 1.502,
+        "hit": 0.6998,
+        "n": 443,
+        "n_priced": 442,
+        "roi": 0.024,
+        "wilson_lb": 0.6555,
+        "wins": 310
+      },
+      "view": "pfc_5954379f3a12700edcfd8387",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_c8cbcf76ea758fd6de596ae1",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6809,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 single[zulubet] avg_p>=70",
+      "rule": "pfc_c8cbcf76ea758fd6de596ae1",
+      "sources": [
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "single",
+      "threshold": 70,
+      "train": {
+        "avg_odds": 1.4,
+        "hit": 0.7506,
+        "n": 437,
+        "n_priced": 437,
+        "roi": 0.0336,
+        "wilson_lb": 0.7079,
+        "wins": 328
+      },
+      "valid": {
+        "avg_odds": 1.408,
+        "hit": 0.7397,
+        "n": 242,
+        "n_priced": 241,
+        "roi": 0.0268,
+        "wilson_lb": 0.6809,
+        "wins": 179
+      },
+      "view": "pfc_c8cbcf76ea758fd6de596ae1",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_4f2df06575151e798727a6b0",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7295,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "ou_1.5",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "ou_1.5 unanimous[scoutingstats+statarea] avg_p>=0",
+      "rule": "pfc_4f2df06575151e798727a6b0",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 0,
+      "train": {
+        "avg_odds": 1.249,
+        "hit": 0.7553,
+        "n": 2105,
+        "n_priced": 2105,
+        "roi": -0.0662,
+        "wilson_lb": 0.7365,
+        "wins": 1590
+      },
+      "valid": {
+        "avg_odds": 1.284,
+        "hit": 0.8062,
+        "n": 129,
+        "n_priced": 129,
+        "roi": 0.0224,
+        "wilson_lb": 0.7295,
+        "wins": 104
+      },
+      "view": "pfc_4f2df06575151e798727a6b0",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_054448b499623dd39b072b38",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7295,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "ou_1.5",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "ou_1.5 unanimous[scoutingstats+statarea] avg_p>=35",
+      "rule": "pfc_054448b499623dd39b072b38",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 35,
+      "train": {
+        "avg_odds": 1.249,
+        "hit": 0.7553,
+        "n": 2105,
+        "n_priced": 2105,
+        "roi": -0.0662,
+        "wilson_lb": 0.7365,
+        "wins": 1590
+      },
+      "valid": {
+        "avg_odds": 1.284,
+        "hit": 0.8062,
+        "n": 129,
+        "n_priced": 129,
+        "roi": 0.0224,
+        "wilson_lb": 0.7295,
+        "wins": 104
+      },
+      "view": "pfc_054448b499623dd39b072b38",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_6cd236448d9fd967f8dcb591",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7295,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "ou_1.5",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "ou_1.5 unanimous[scoutingstats+statarea] avg_p>=40",
+      "rule": "pfc_6cd236448d9fd967f8dcb591",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 40,
+      "train": {
+        "avg_odds": 1.249,
+        "hit": 0.7553,
+        "n": 2105,
+        "n_priced": 2105,
+        "roi": -0.0662,
+        "wilson_lb": 0.7365,
+        "wins": 1590
+      },
+      "valid": {
+        "avg_odds": 1.284,
+        "hit": 0.8062,
+        "n": 129,
+        "n_priced": 129,
+        "roi": 0.0224,
+        "wilson_lb": 0.7295,
+        "wins": 104
+      },
+      "view": "pfc_6cd236448d9fd967f8dcb591",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_e37e7d70a4d046d7a07da0a4",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7295,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "ou_1.5",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "ou_1.5 unanimous[scoutingstats+statarea] avg_p>=45",
+      "rule": "pfc_e37e7d70a4d046d7a07da0a4",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 45,
+      "train": {
+        "avg_odds": 1.249,
+        "hit": 0.7553,
+        "n": 2105,
+        "n_priced": 2105,
+        "roi": -0.0662,
+        "wilson_lb": 0.7365,
+        "wins": 1590
+      },
+      "valid": {
+        "avg_odds": 1.284,
+        "hit": 0.8062,
+        "n": 129,
+        "n_priced": 129,
+        "roi": 0.0224,
+        "wilson_lb": 0.7295,
+        "wins": 104
+      },
+      "view": "pfc_e37e7d70a4d046d7a07da0a4",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_f51b5fdaf32bcca063f4b2cc",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7295,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "ou_1.5",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "ou_1.5 unanimous[scoutingstats+statarea] avg_p>=50",
+      "rule": "pfc_f51b5fdaf32bcca063f4b2cc",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.249,
+        "hit": 0.7553,
+        "n": 2105,
+        "n_priced": 2105,
+        "roi": -0.0662,
+        "wilson_lb": 0.7365,
+        "wins": 1590
+      },
+      "valid": {
+        "avg_odds": 1.284,
+        "hit": 0.8062,
+        "n": 129,
+        "n_priced": 129,
+        "roi": 0.0224,
+        "wilson_lb": 0.7295,
+        "wins": 104
+      },
+      "view": "pfc_f51b5fdaf32bcca063f4b2cc",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_4e2583010bf805466e33c2d0",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7295,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "ou_1.5",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "ou_1.5 unanimous[scoutingstats+statarea] avg_p>=55",
+      "rule": "pfc_4e2583010bf805466e33c2d0",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 55,
+      "train": {
+        "avg_odds": 1.248,
+        "hit": 0.7557,
+        "n": 2104,
+        "n_priced": 2104,
+        "roi": -0.0658,
+        "wilson_lb": 0.7369,
+        "wins": 1590
+      },
+      "valid": {
+        "avg_odds": 1.284,
+        "hit": 0.8062,
+        "n": 129,
+        "n_priced": 129,
+        "roi": 0.0224,
+        "wilson_lb": 0.7295,
+        "wins": 104
+      },
+      "view": "pfc_4e2583010bf805466e33c2d0",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_a90a9b922d2318a2446434ce",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.7362,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "ou_1.5",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "ou_1.5 unanimous[scoutingstats+statarea] avg_p>=60",
+      "rule": "pfc_a90a9b922d2318a2446434ce",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 60,
+      "train": {
+        "avg_odds": 1.246,
+        "hit": 0.7579,
+        "n": 2090,
+        "n_priced": 2090,
+        "roi": -0.0643,
+        "wilson_lb": 0.7391,
+        "wins": 1584
+      },
+      "valid": {
+        "avg_odds": 1.281,
+        "hit": 0.8125,
+        "n": 128,
+        "n_priced": 128,
+        "roi": 0.0304,
+        "wilson_lb": 0.7362,
+        "wins": 104
+      },
+      "view": "pfc_a90a9b922d2318a2446434ce",
+      "where": "1=1"
+    },
+    {
+      "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous avg_p>=60",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.413,
         "hit": 0.7315,
@@ -28,9 +1911,10 @@
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous avg_p>=65",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.32,
         "hit": 0.7667,
@@ -53,10 +1937,27 @@
       "where": "fb_pick = zb_pick AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 65"
     },
     {
+      "decay": {
+        "baseline_lb": 0.823,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous avg_p>=70",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.256,
         "hit": 0.784,
@@ -76,29 +1977,14 @@
         "wins": 270
       },
       "view": "v_consensus2",
-      "where": "fb_pick = zb_pick AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 70",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.823,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 70"
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "VETO-CHECK disagree, follow forebet",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 3.023,
         "hit": 0.3326,
@@ -122,9 +2008,10 @@
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous no-draw avg_p>=65",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.32,
         "hit": 0.7667,
@@ -148,9 +2035,10 @@
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous avg_p>=60",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.352,
         "hit": 0.7503,
@@ -173,10 +2061,27 @@
       "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 60"
     },
     {
+      "decay": {
+        "baseline_lb": 0.7851,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous avg_p>=65",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.262,
         "hit": 0.7944,
@@ -196,29 +2101,14 @@
         "wins": 421
       },
       "view": "v_consensus3",
-      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 65",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.7851,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 65"
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous avg_p>=70",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.198,
         "hit": 0.8382,
@@ -242,9 +2132,10 @@
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous no-draw avg_p>=60",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.352,
         "hit": 0.7503,
@@ -268,9 +2159,10 @@
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous no-draw avg_p>=70",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.198,
         "hit": 0.8382,
@@ -293,10 +2185,27 @@
       "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick != 'draw' AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 70"
     },
     {
+      "decay": {
+        "baseline_lb": 0.7634,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous min_p>=60 avg_p>=65",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.332,
         "hit": 0.7625,
@@ -316,29 +2225,30 @@
         "wins": 487
       },
       "view": "v_consensus2",
-      "where": "fb_pick = zb_pick AND fb_p/100.0 >= 0.60 AND zb_p/100.0 >= 0.60 AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 65",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.7634,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND fb_p/100.0 >= 0.60 AND zb_p/100.0 >= 0.60 AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 65"
     },
     {
+      "decay": {
+        "baseline_lb": 0.8138,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous min_p>=60 avg_p>=70",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.265,
         "hit": 0.7818,
@@ -358,29 +2268,30 @@
         "wins": 249
       },
       "view": "v_consensus2",
-      "where": "fb_pick = zb_pick AND fb_p/100.0 >= 0.60 AND zb_p/100.0 >= 0.60 AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 70",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.8138,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND fb_p/100.0 >= 0.60 AND zb_p/100.0 >= 0.60 AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 70"
     },
     {
+      "decay": {
+        "baseline_lb": 0.782,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous min_p>=60 avg_p>=60",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.281,
         "hit": 0.8067,
@@ -400,29 +2311,30 @@
         "wins": 280
       },
       "view": "v_consensus3",
-      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND fb_p/100.0 >= 0.60 AND zb_p/100.0 >= 0.60 AND sa_p/100.0 >= 0.60 AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 60",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.782,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND fb_p/100.0 >= 0.60 AND zb_p/100.0 >= 0.60 AND sa_p/100.0 >= 0.60 AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 60"
     },
     {
+      "decay": {
+        "baseline_lb": 0.7867,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous min_p>=60 avg_p>=65",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.259,
         "hit": 0.8149,
@@ -442,29 +2354,14 @@
         "wins": 258
       },
       "view": "v_consensus3",
-      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND fb_p/100.0 >= 0.60 AND zb_p/100.0 >= 0.60 AND sa_p/100.0 >= 0.60 AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 65",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.7867,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND fb_p/100.0 >= 0.60 AND zb_p/100.0 >= 0.60 AND sa_p/100.0 >= 0.60 AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 65"
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous odds-1.20-1.75 avg_p>=65",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.393,
         "hit": 0.7065,
@@ -488,9 +2385,10 @@
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous odds-1.20-1.75 avg_p>=70",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.363,
         "hit": 0.7069,
@@ -514,9 +2412,10 @@
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous odds-1.20-1.75 avg_p>=60",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.398,
         "hit": 0.7193,
@@ -539,10 +2438,27 @@
       "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND pick_odds >= 1.20 AND pick_odds < 1.75 AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 60"
     },
     {
+      "decay": {
+        "baseline_lb": 0.6881,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous odds-1.20-1.75 avg_p>=65",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.352,
         "hit": 0.7358,
@@ -562,29 +2478,30 @@
         "wins": 215
       },
       "view": "v_consensus3",
-      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND pick_odds >= 1.20 AND pick_odds < 1.75 AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 65",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.6881,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND pick_odds >= 1.20 AND pick_odds < 1.75 AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 65"
     },
     {
+      "decay": {
+        "baseline_lb": 0.7756,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous home-only avg_p>=65",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.304,
         "hit": 0.7661,
@@ -604,29 +2521,14 @@
         "wins": 464
       },
       "view": "v_consensus2",
-      "where": "fb_pick = zb_pick AND fb_pick = 'home' AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 65",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.7756,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND fb_pick = 'home' AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 65"
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous home-only avg_p>=70",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.236,
         "hit": 0.7967,
@@ -650,9 +2552,10 @@
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "2way-unanimous away-only avg_p>=65",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.361,
         "hit": 0.7683,
@@ -675,10 +2578,27 @@
       "where": "fb_pick = zb_pick AND fb_pick = 'away' AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 65"
     },
     {
+      "decay": {
+        "baseline_lb": 0.7565,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous home-only avg_p>=60",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.345,
         "hit": 0.7496,
@@ -698,29 +2618,30 @@
         "wins": 629
       },
       "view": "v_consensus3",
-      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick = 'home' AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 60",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.7565,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick = 'home' AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 60"
     },
     {
+      "decay": {
+        "baseline_lb": 0.7746,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous home-only avg_p>=65",
       "sport": "soccer",
-      "status": "certified",
+      "status": "retired",
       "train": {
         "avg_odds": 1.258,
         "hit": 0.8013,
@@ -740,29 +2661,14 @@
         "wins": 331
       },
       "view": "v_consensus3",
-      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick = 'home' AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 65",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-20",
-        "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
-          "hit": 0.0,
-          "wilson_lb": 0.0,
-          "roi": null
-        },
-        "baseline_lb": 0.7746,
-        "recent_lb": 0.0,
-        "recent_ub": 1.0
-      }
+      "where": "fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick = 'home' AND ((fb_p/100.0 + zb_p/100.0 + sa_p/100.0)/3)*100 >= 65"
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "3way-unanimous away-only avg_p>=60",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.378,
         "hit": 0.7527,
@@ -786,9 +2692,10 @@
     },
     {
       "market": "ou_2.5",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "ou25-unanimous-2way-sa avg_p>=60",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.607,
         "hit": 0.6096,
@@ -812,9 +2719,10 @@
     },
     {
       "market": "ou_2.5",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "ou25-unanimous-2way-sa avg_p>=65",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.541,
         "hit": 0.6387,
@@ -838,9 +2746,10 @@
     },
     {
       "market": "ou_2.5",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "ou25-unanimous-2way-sa avg_p>=70",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.482,
         "hit": 0.6722,
@@ -864,9 +2773,10 @@
     },
     {
       "market": "ou_2.5",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "ou25-unanimous-2way-sa avg_p>=75",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": 1.424,
         "hit": 0.6913,
@@ -890,6 +2800,7 @@
     },
     {
       "market": "1x2",
+      "retirement_reason": "post_forebet_contract_migration",
       "rule": "weighted-1x2 w_score>=0.55",
       "source_weights": {
         "forebet": 0.4664,
@@ -902,7 +2813,7 @@
         "statarea"
       ],
       "sport": "soccer",
-      "status": "candidate",
+      "status": "retired",
       "train": {
         "avg_odds": null,
         "hit": 0.5035,
@@ -1489,6 +3400,27 @@
       "p_gg"
     ],
     "intercept": -3.77665467091692
+  },
+  "operating_contract": "post_forebet_v1",
+  "post_forebet_validation": {
+    "as_of_exclusive": "2026-10-20",
+    "gates": {
+      "min_n_train": 340,
+      "min_n_valid": 120,
+      "min_overlap_n": 200,
+      "min_recent_n": 30,
+      "min_roi_train": -0.1,
+      "min_roi_valid": 0.0,
+      "recent_window_days": 30,
+      "walkforward_split": "2025-06-01"
+    },
+    "limitations": [
+      "Threshold grid is model selection, not untouched forward evidence.",
+      "Source quotes are retrospective donor prices, not execution-safe ROI.",
+      "No probability is inferred from categorical tips or streak percentages."
+    ],
+    "split": "2026-09-22",
+    "start": "2026-06-13"
   },
   "split": "2025-06-01"
 }
