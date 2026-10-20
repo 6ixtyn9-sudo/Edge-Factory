@@ -188,7 +188,15 @@ def archived_cohort(row, rates):
     n = next(iter(sizes))
     if isinstance(n, bool) or not isinstance(n, int) or n < pt.HYBRID_MIN_N:
         return None
-    cohort = {"n": n}
+    identity = row.get("contract_id")
+    notes = row.get("event_notes") or []
+    if (row.get("contract_schema") != "post_forebet_v1" or not identity
+            or any(e.get("cohort_contract_id") != identity
+                   or e.get("cohort_as_of_exclusive") != row.get("date")
+                   or e.get("engine") != "hybrid_cohort"
+                   for e in notes if isinstance(e, dict))):
+        return None
+    cohort = {"n": n, "contract_id": identity, "as_of_exclusive": row["date"]}
     for market, rate in rates.items():
         field = pt.COHORT_DIRECT_KEYS.get(market)
         value = rate
@@ -222,7 +230,7 @@ def production_choice(row, rates, quotes, parity):
     """
     cohort = archived_cohort(row, rates)
     if cohort is None:
-        raise ValueError("archived coherent cohort sample size required")
+        raise ValueError("archived coherent cohort sample size and exact-contract provenance required")
 
     def attach(probe, index):
         quote = index.get(MARKET_PRICE_MAP.get(probe.get("recommended_enhancement")))
@@ -271,7 +279,18 @@ def plan_selected(selected, days):
 
 
 def selected_row(row, choice):
-    return {**row, "recommended_enhancement": choice["market"],
+    cohort = archived_cohort(row, {choice["market"]: choice["rate"]})
+    if cohort is None:
+        raise ValueError("cannot plan a replay leg without archived exact-cohort evidence")
+    note = {"market": choice["market"], "engine": "hybrid_cohort",
+            "cohort_rate": choice["rate"], "cohort_n": cohort["n"],
+            "cohort_contract_id": cohort["contract_id"],
+            "cohort_as_of_exclusive": cohort["as_of_exclusive"], "counterfactual": True}
+    return {**row, "event_notes": [note],
+            "enhancement_cohort_rate": choice["rate"],
+            "enhancement_cohort_n": cohort["n"],
+            "enhancement_cohort_contract_id": cohort["contract_id"],
+            "enhancement_cohort_as_of_exclusive": cohort["as_of_exclusive"], "recommended_enhancement": choice["market"],
             "enhancement_label": choice["market"], "enhancement_price": choice["price"],
             "enhancement_probability": choice["rate"],
             "enhancement_price_book": choice.get("book"),
@@ -472,7 +491,7 @@ def archived_snapshots(root, since, until, *, snapshot_mode="final"):
                 counts["no_archived_cohort_rates"] += 1
                 continue
             if archived_cohort(row, rates) is None:
-                counts["missing_or_invalid_archived_cohort_n"] += 1
+                counts["missing_or_invalid_archived_cohort_evidence"] += 1
                 continue
             key = identity(row)
             if key in blocked:

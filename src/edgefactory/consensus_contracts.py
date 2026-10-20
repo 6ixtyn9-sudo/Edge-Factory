@@ -361,3 +361,39 @@ def recreate_contract_views(con, edges, *, as_of=None):
         con.register(edge["view"], frame)
         available.add(edge["view"])
     return available
+
+
+def enhancement_cohort(con, edge, *, as_of, selection, min_n=100):
+    """All outcomes of the exact parent recipe; never condition on its winning.
+
+    No Forebet voter/result inheritance, substitute electorate, future fixtures
+    or probability-band proxy. This is descriptive evidence, NOT certification
+    of an enhancement market or an estimate of betting returns.
+    """
+    identity = validate_contract(edge)
+    if date.fromisoformat(as_of).isoformat() != as_of or edge['activated_as_of'] > as_of:
+        raise ValueError('cohort precedes activation or has an invalid boundary')
+    _, observations, ambiguous, resolved, _ = collect_observations(
+        con, start=edge['mining_window']['start'], as_of=as_of)
+    pairs = []
+    for row in contract_rows(observations, ambiguous, resolved, edge):
+        if row['pick'] != selection:
+            continue
+        pair = resolved.get(_remine_key(row), {}).get('ft')
+        if pair is not None:
+            pairs.append(pair)
+    n = len(pairs)
+    if n < min_n:
+        return None
+    def rate(predicate):
+        return sum(predicate(h, a) for h, a in pairs) / n
+    result = {'n': n, 'avg_goals': sum(h + a for h, a in pairs) / n,
+              'contract_id': identity, 'as_of_exclusive': as_of}
+    for goals in (2, 3, 4, 5):
+        result[f'over{goals - 1}5'] = rate(lambda h, a: h + a >= goals)
+    result['btts'] = rate(lambda h, a: h > 0 and a > 0)
+    for side in ('h', 'a'):
+        for goals in (1, 2, 3, 4):
+            result[f'{side}_o{goals - 1}5'] = rate(
+                lambda h, a: (h if side == 'h' else a) >= goals)
+    return result

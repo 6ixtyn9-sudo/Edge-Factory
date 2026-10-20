@@ -1,5 +1,6 @@
 """Adversarial inputs: refuse invented prices/outcomes and favourable accounting."""
 from copy import deepcopy
+from enhancement_fixtures import IDENTITY, contract_pick
 from datetime import datetime, timezone
 import math
 
@@ -141,8 +142,9 @@ def test_new_under_45_has_a_real_settlement_rule_and_complements_over(total):
 
 
 def archived_row(**overrides):
-    return {"date": "2026-10-18", "home": "A", "away": "B", "pick": "home", "avg_p": 65.0,
-            "event_notes": [{"cohort_n": 200}], **overrides}
+    return contract_pick({"date": "2026-10-18", "home": "A", "away": "B", "pick": "home", "avg_p": 65.0,
+            "event_notes": [{"cohort_n": 200, "cohort_contract_id": IDENTITY,
+                             "cohort_as_of_exclusive": "2026-10-18", "engine": "hybrid_cohort"}], **overrides})
 
 
 def test_actual_selector_replay_uses_archived_rates_not_priors_or_current_warehouse():
@@ -225,7 +227,9 @@ def write_archives(tmp_path, final_rows, morning_rows):
 
 def snapshot_row(at="2026-10-18T12:00:00Z", rate=.6):
     return archived_row(as_of=at, kickoff_utc="2026-10-18T16:00:00Z",
-                        event_notes=[{"cohort_n": 200, "market": "match_over_25", "cohort_rate": rate}])
+                        event_notes=[{"cohort_n": 200, "market": "match_over_25", "cohort_rate": rate,
+                                      "cohort_contract_id": IDENTITY, "engine": "hybrid_cohort",
+                                      "cohort_as_of_exclusive": "2026-10-18"}])
 
 
 def test_earliest_snapshot_never_borrows_later_rates(tmp_path):

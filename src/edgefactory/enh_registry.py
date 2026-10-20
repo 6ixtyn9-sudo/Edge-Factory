@@ -963,3 +963,45 @@ def all_statuses(root: Path | None = None) -> dict[str, str]:
                 for k, v in reg.get("markets", {}).items()}
     except Exception:
         return {}
+
+
+MIN_COHORT_N = 100
+
+
+def enhancement_cohort_evidence(pick: dict) -> dict | None:
+    """Validate the selected market's REALIZED evidence at board/slip seams.
+
+    A model estimate, global calibration, winner-only prose, another market's
+    evidence, or an inherited Forebet cohort is not a realized contract rate.
+    No price-floor/EV rule is added here; broad market competition stays on.
+    """
+    from edgefactory.consensus_contracts import SCHEMA
+    try:
+        market = pick['recommended_enhancement']
+        identity = pick['contract_id']
+        if (pick.get('contract_schema') != SCHEMA or not isinstance(identity, str)
+                or not identity.startswith('pfc_') or len(identity) != 28):
+            return None
+        notes = [r for r in pick.get('event_notes', [])
+                 if isinstance(r, dict) and r.get('market') == market]
+        if len(notes) != 1:
+            return None
+        note = notes[0]
+        rate, n = note.get('cohort_rate'), note.get('cohort_n')
+        if (note.get('engine') != 'hybrid_cohort' or type(n) is not int or n < MIN_COHORT_N
+                or type(rate) not in (int, float) or not math.isfinite(rate) or not 0 <= rate <= 1
+                or note.get('cohort_contract_id') != identity
+                or note.get('cohort_as_of_exclusive') != pick.get('date')
+                or pick.get('enhancement_cohort_contract_id') != identity
+                or pick.get('enhancement_cohort_n') != n
+                or pick.get('enhancement_cohort_as_of_exclusive') != pick.get('date')):
+            return None
+        date.fromisoformat(pick['date'])
+        for value in (pick.get('enhancement_probability'), pick.get('enhancement_cohort_rate')):
+            if (type(value) not in (int, float) or not math.isfinite(value)
+                    or abs(value - rate) > 0.000051):
+                return None
+        return {'rate': rate, 'n': n, 'contract_id': identity,
+                'as_of_exclusive': pick['date'], 'market': market}
+    except (KeyError, TypeError, ValueError):
+        return None
