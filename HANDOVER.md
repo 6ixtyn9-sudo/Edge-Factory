@@ -11472,3 +11472,38 @@ Validation:36focusedpassed0.46s; full3454passed1skipped1failed138.45s. Sole fail
 is unchanged identity/league-alias registry tripwire (`enterprise national league
 south` missing). Nothing suppressed/weakened. Actual workflow not modified;
 current registry, tickets, main state and bank data untouched by this change.
+
+### 20 October 2026 — fix the logged National League South regression
+
+Operator deleted recovery run39408883332 and explicitly requested a fix for the
+pasted regression error. Reproduced the exact failing identity tripwire BEFORE
+editing: `enterprise national league south` was not in the persisted purity
+league keyspace. Root cause is a stale alias target, not missing competition
+history: the unchanged registry already has19 `nls` league contexts, including
+CAUTION as well as ALLOW/UNKNOWN. Do NOT fabricate a sponsored-name registry row,
+disable the test, or relabel the failure as a new recovery/activation result.
+
+Existing identity aliases now resolve BOTH `England,National League South` and
+`Enterprise National League South` to the existing `nls` code. Entity manual and
+learned alias OUTPUTS apply the same explicit map after legacy normalization,
+so a stale learned sponsor target cannot bypass it. Unrelated persisted output
+keys retain their historical normalization, including punctuation/ampersands.
+No registry/miner/gate/workflow/financial-data changes.
+
+Identity-only corpus evidence: committed forebet.csv.gz has1426 `NLs`/`NlS`
+fixtures; statarea.csv.gz has3812 with EXACT `England,National League South`.
+Using (date, shared source_team_key(home), source_team_key(away)) gives538 matches
+between these exact labels (543 if Statarea playoff labels are also included;
+those labels are deliberately NOT added to the aliases). Example2026-04-25:
+Horsham–Chippenham under both; Slough Town–Dagenham &/and Redbridge under both;
+Worthing FC/Worthing–Ebbsfleet Utd/United under both. This historical cross-feed
+comparison is identity evidence ONLY, not revived Forebet betting evidence.
+
+Original registry-membership tripwire is retained, unskipped and now passes.
+Updated only the obsolete sponsor-key golden to the actual `nls` key. Added24
+cases covering spelling/idempotence, stale manual/learned targets, unrelated-key
+compatibility, North/national/youth/women/playoff separation and actual DuckDB
+assay → exact-contract pick-context VETO preservation across all three labels.
+447 focused tests passed14.29s; full regression receipt follows. No production
+recovery was dispatched by this change; deleted run cannot be resumed. Recovery,
+activation and replacement/NO BET remain a SINGLE recover_and_rebuild execution.

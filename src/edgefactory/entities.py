@@ -122,10 +122,13 @@ def canonical_league(raw: object) -> str:
     """Return canonical league key for purity/reporting contexts."""
     override = _override_lookup("leagues", raw)
     if override:
-        return norm_league(override)
+        return canonical_league_key(norm_league(override))
     learned = _registry_lookup("leagues", raw)
     if learned:
-        return norm_league(learned)
+        # An older learned registry may still return the sponsored spelling.
+        # Normalize alias OUTPUTS too so assay writes and pick lookups cannot
+        # bypass the same explicit league identity table.
+        return canonical_league_key(norm_league(learned))
     # Folded identity fallback: identical to norm_league(raw) for clean
     # names; unifies '&' -> 'and' spellings and applies evidence aliases
     # (e.g. "England,Fa Cup" -> "fa"). See edgefactory/identity.py.
