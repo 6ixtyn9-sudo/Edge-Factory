@@ -348,11 +348,23 @@ def persist_localdata(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("restore", "persist"))
+    parser.add_argument("action", choices=("restore", "persist", "history-prepare", "history-recover", "history-check"))
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--run-id", default=None)
+    parser.add_argument("--reference-hit", choices=("true", "false"), default="false")
     args = parser.parse_args(argv)
 
+    if args.action.startswith("history-"):
+        sys.path.insert(0, str(args.repo / "src"))
+        from edgefactory import prediction_history as history
+        if args.action == "history-prepare":
+            result = history.prepare(args.repo)
+        elif args.action == "history-recover":
+            result = history.recover(args.repo, reference_hit=args.reference_hit == "true")
+        else:
+            result = history.check(args.repo)
+        print("PREDICTION_HISTORY " + json.dumps(result, sort_keys=True))
+        return 0
     if args.action == "restore":
         result = restore_committed_localdata(args.repo)
         print(

@@ -134,6 +134,7 @@ def main(argv=None):
     ap.add_argument("--lane", choices=sorted(LANES), default="main",
                     help="which lane to report (default: main)")
     ap.add_argument("--last", type=int, default=0, help="bet-days to show in the txt report (0 = all)")
+    ap.add_argument("--no-settle", action="store_true", help="render current lane state only; no settlements")
     args = ap.parse_args(argv)
 
     lane, label, stem = LANES[args.lane]
@@ -144,8 +145,9 @@ def main(argv=None):
         else:
             print(f"no {args.lane} lane state yet — nothing to report")
         return 0
-    for line in at.settle_open_slips(st, at.load_settled(), lane=lane):
-        print(line)
+    if not args.no_settle:
+        for line in at.settle_open_slips(st, at.load_settled(), lane=lane):
+            print(line)
 
     accas = [a for h in st["history"] for a in h["accas"]]
     wins = sum(1 for a in accas if a["won"])
