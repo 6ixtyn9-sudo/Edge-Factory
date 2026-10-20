@@ -14,6 +14,7 @@ on:
           - forecast_refresh
           - clv_only
           - remine_only
+          - recover_and_rebuild
 
 permissions:
   contents: write
@@ -56,11 +57,8 @@ jobs:
       ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '70' }}
       EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: '90'
       EDGE_FACTORY_CARD_ENRICH_RESERVE: '20'
-      # Enhancement lane (PR #61): the enhancement slip is generated, frozen
-      # and settled on its own state. Unset/removing this line reverts the
-      # daily run to exactly its previous behaviour - the lane then does
-      # nothing at all (no artifact, no state file).
       EDGE_FACTORY_ENH_BOARD: '1'
+      EDGE_FACTORY_ENH_COHORT_PARITY: '1'
       TZ: 'Africa/Johannesburg'
 
     steps:
@@ -93,7 +91,78 @@ jobs:
           python3 scripts/phase5_persistence.py restore
           echo "certified edges present: $(python3 -c "import json;d=json.load(open('localdata/edges_consensus.json'));print(sum(1 for e in d.get('edges',[]) if e.get('status')=='certified'))" 2>/dev/null || echo n/a)"
 
+      - name: Invalidate the approved unplaced enhancement ticket
+        if: inputs.mode == 'recover_and_rebuild'
+        run: PYTHONPATH=src python3 scripts/auto_tickets.py --enhancements --apply-unplaced-resets
+
+      - name: Stage current state before historical restore
+        id: history_stage
+        if: inputs.mode == 'recover_and_rebuild'
+        run: python3 scripts/phase5_persistence.py history-prepare
+
+      - name: Restore exact healthy prediction-history cache
+        id: history_reference
+        if: inputs.mode == 'recover_and_rebuild'
+        uses: actions/cache/restore@v4
+        with:
+          path: localdata
+          key: localdata-v2-39371954018
+
+      - name: Merge prediction history and restore current operational state
+        if: always() && inputs.mode == 'recover_and_rebuild' && steps.history_stage.outcome == 'success'
+        run: python3 scripts/phase5_persistence.py history-recover --reference-hit "${{ steps.history_reference.outputs.cache-hit || 'false' }}"
+
+      - name: Verify retained prediction history before mining or publication
+        run: python3 scripts/phase5_persistence.py history-check
+
+      - name: Recover, validate, activate and rebuild enhancement ticket
+        id: recovery
+        if: inputs.mode == 'recover_and_rebuild'
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python3 scripts/build_warehouse.py
+          PYTHONPATH=src python3 scripts/mine_consensus.py --activate
+          if python3 -c "import json,sys; d=json.load(open('localdata/edges_consensus.json')); sys.exit(0 if d.get('operating_contract') == 'post_forebet_v1' and any(e.get('contract_schema') == 'post_forebet_v1' and e.get('status') == 'certified' for e in d.get('edges', [])) else 1)"; then
+            PYTHONPATH=src python3 scripts/assay_purity.py
+            PYTHONPATH=src python3 scripts/decay_monitor.py
+          fi
+          PYTHONPATH=src python3 scripts/auto_tickets.py --enhancements --rebuild-unplaced
+          PYTHONPATH=src python3 scripts/auto_tickets_grade.py --lane enh --no-settle
+          python3 scripts/phase5_persistence.py history-check
+
+      - name: Contract and replacement evidence in run summary
+        if: always() && inputs.mode == 'recover_and_rebuild'
+        env:
+          RECOVERY_OUTCOME: ${{ steps.recovery.outcome }}
+        run: |
+          python3 - <<'PY_EVIDENCE'
+          import json, os
+          from datetime import date
+          from pathlib import Path
+          root = Path('localdata')
+          root.mkdir(exist_ok=True)
+          outcome = os.environ.get('RECOVERY_OUTCOME', 'skipped')
+          slip = root / f'autobets_enh_tickets_{date.today().isoformat()}.txt'
+          if outcome != 'success' and not slip.exists():
+              slip.write_text('NO BET — recovery/validation incomplete; no replacement authorised.\nNo stake committed by this attempt.\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+              out.write(f'## Recovery and enhancement rebuild: {outcome}\n')
+              out.write('Current registry snapshot follows; research passes alone are not activation.\n')
+              try:
+                  registry = json.loads((root / 'edges_consensus.json').read_text())
+                  edges = [e for e in registry.get('edges', []) if e.get('contract_schema') == 'post_forebet_v1']
+                  out.write(f"Post-Forebet contracts: {len(edges)}; certified: {sum(e.get('status') == 'certified' for e in edges)}\n")
+                  for edge in edges:
+                      evidence = {k: edge.get(k) for k in ('contract_id', 'research_rule', 'status', 'sources', 'strategy', 'threshold', 'activated_as_of', 'train', 'valid', 'decay')}
+                      out.write('```json\n' + json.dumps(evidence, indent=2) + '\n```\n')
+              except (OSError, ValueError) as error:
+                  out.write(f'Registry unavailable: {type(error).__name__}\n')
+              if slip.exists():
+                  out.write('### Enhancement artifact (a newer frozen replacement is never overwritten)\n```text\n' + slip.read_text() + '\n```\n')
+          PY_EVIDENCE
+
       - name: Execute Autonomous Smart Schedule
+        if: inputs.mode != 'recover_and_rebuild'
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" != "auto" ]; then
             echo ">>> Executing explicit manual mode: ${{ inputs.mode }}"
@@ -104,8 +173,6 @@ jobs:
             elif [ "${{ inputs.mode }}" = "clv_only" ]; then
               PYTHONPATH=src python3 scripts/daily.py --clv-only
             elif [ "${{ inputs.mode }}" = "remine_only" ]; then
-              # Use restored production data, with no capture, pricing,
-              # tickets, notification, model promotion or state publication.
               PYTHONPATH=src python3 scripts/build_warehouse.py
               PYTHONPATH=src python3 scripts/mine_consensus.py
             fi
@@ -113,27 +180,14 @@ jobs:
             PYTHONPATH=src python3 scripts/daily.py --auto-once
           fi
 
-      # Enhancement lane, after the board this run produced (its prices come
-      # from the day's captures). Main-lane command semantics: the run first
-      # SETTLES every open enhancement slip on the shared lifecycle, then
-      # builds the day's 2-leg acca card exactly as autobets does and
-      # freezes it on the first run at/after 09:00 SAST (a run before that
-      # prints a DRAFT and freezes later). A frozen day re-prints unchanged
-      # (write-once; --force cannot rewrite it) and a day that cannot form
-      # an acca writes NO card and NO lock. Advisory: it can never fail the
-      # daily run.
       - name: Enhancement tickets (generate/freeze)
-        if: inputs.mode != 'remine_only'
+        if: inputs.mode != 'remine_only' && inputs.mode != 'recover_and_rebuild'
         continue-on-error: true
         run: |
           PYTHONPATH=src python3 scripts/auto_tickets.py --enhancements
 
-      # NEW: enhancement performance report. Runs after the step above has
-      # settled and saved the enhancement state, and writes
-      # localdata/autobets_enh_performance.txt/.json. Advisory, like the step
-      # above: it can never fail the daily run.
       - name: Enhancement performance report
-        if: inputs.mode != 'remine_only'
+        if: inputs.mode != 'remine_only' && inputs.mode != 'recover_and_rebuild'
         continue-on-error: true
         run: |
           PYTHONPATH=src python3 scripts/auto_tickets_grade.py --lane enh
@@ -144,15 +198,19 @@ jobs:
         run: |
           PYTHONPATH=src python3 scripts/fit_phase5_candidate.py --explain || true
 
+      - name: Final history completeness publication gate
+        if: inputs.mode != 'remine_only'
+        run: python3 scripts/phase5_persistence.py history-check
+
       - name: Persist localdata State (Cache)
         uses: actions/cache/save@v4
-        if: always() && inputs.mode != 'remine_only'
+        if: success() && inputs.mode != 'remine_only'
         with:
           path: localdata
           key: localdata-v2-${{ github.run_id }}
 
       - name: Persist pipeline state to git (single source of truth)
-        if: always() && inputs.mode != 'remine_only'
+        if: success() && inputs.mode != 'remine_only'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
