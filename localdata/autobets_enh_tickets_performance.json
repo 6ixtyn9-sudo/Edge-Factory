@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-19T22:26:37",
+  "generated_at": "2026-10-20T04:36:45",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 81.94237599999998,
-  "multiple": 0.8194237599999998,
+  "bank_pct": 71.69957599999998,
+  "multiple": 0.7169957599999998,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 5,
+  "bet_days": 6,
   "accas": {
     "wins": 6,
-    "losses": 7
+    "losses": 8
   },
   "open_slips": [
     {
-      "date": "2026-10-19",
-      "staked_pct": 10.2428
+      "date": "2026-10-20",
+      "staked_pct": 17.9248
     }
   ],
   "events": [],
@@ -312,6 +312,37 @@
       ],
       "bank_pct": 81.9424,
       "close_pct": 81.9425
+    },
+    {
+      "date": "2026-10-19",
+      "staked_pct": 10.2428,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.24,
+          "won": false,
+          "stake_pct": 10.2428,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Mes Shahr-e Babak vs Persepolis FC",
+              "pick": "over",
+              "odds": 1.4,
+              "result": null,
+              "label": "Match Over 1.5 Goals"
+            },
+            {
+              "match": "Bursaspor vs Pendikspor",
+              "pick": "over",
+              "odds": 1.6,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 71.6996,
+      "close_pct": 71.6997
     }
   ]
 }

@@ -1,0 +1,52 @@
+{
+  "added": 72,
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "AEK Athens FC",
+      "date": "2026-10-20",
+      "home": "Manchester City",
+      "kickoff": "20-10, 20:00",
+      "league": "World UEFA Champions League"
+    }
+  ],
+  "candidate_fixtures": 5,
+  "captured_at": "2026-10-20T01:31:26+00:00",
+  "date": "2026-10-20",
+  "due_reasons": {
+    "first_at": 1
+  },
+  "errors": [],
+  "fixtures_with_rows": 1,
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
+  "quoted_fixtures": [
+    {
+      "away": "AEK Athens",
+      "date": "2026-10-20",
+      "home": "Manchester City",
+      "kickoff": "2026-10-20T19:00:00Z",
+      "league": "World UEFA Champions League"
+    }
+  ],
+  "rows": 72,
+  "schema": 1,
+  "skip_reasons": {
+    "kickoff_mismatch": 1,
+    "priced": 2,
+    "priced_close_window_not_open": 1,
+    "retry_cooldown": 1
+  },
+  "skipped": [
+    "WARN kickoff-mismatch AS Roma|Slovan Bratislava: pick legacy display says 20:00 SAST, captured rows say 21:00 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "AS Roma|Slovan Bratislava (priced, close window not open)",
+    "El Geish|Pyramids FC (retry cooldown (6h after failed attempt))",
+    "Huddersfield|Peterborough (priced)",
+    "Barnet|Swindon Town (priced)"
+  ],
+  "source": "theoddsapi",
+  "status": "ok",
+  "unmatched": [],
+  "unmatched_reasons": {}
+}

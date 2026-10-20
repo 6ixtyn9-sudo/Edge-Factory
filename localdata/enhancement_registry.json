@@ -1407,10 +1407,10 @@
    "status_since": null
   },
   "match_over_15@v1": {
-   "hits": 35,
-   "inv_price_sum": 38.771951969505125,
+   "hits": 36,
+   "inv_price_sum": 39.48623768379084,
    "multi_n": 3,
-   "n": 45,
+   "n": 46,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -1480,9 +1480,10 @@
     "2026-10-17|Athletic Club W vs Valencia W|match_over_15@v1",
     "2026-10-17|Tokyo Verdy vs FC Tokyo|match_over_15@v1",
     "2026-10-17|Maring\u00e1 vs Ferrovi\u00e1ria|match_over_15@v1",
-    "2026-10-18|JS Kabylie vs US Biskra|match_over_15@v1"
+    "2026-10-18|JS Kabylie vs US Biskra|match_over_15@v1",
+    "2026-10-19|Mes Shahr-e Babak vs Persepolis FC|match_over_15@v1"
    ],
-   "profit": -4.16,
+   "profit": -3.76,
    "records": [
     {
      "away": "Aston Villa",
@@ -2105,6 +2106,23 @@
      "rule": "unanimous[betclan+vitibet] avg_p>=70",
      "source": "scoutingstats",
      "stated": 0.8024
+    },
+    {
+     "away": "Persepolis FC",
+     "away_key": "persepolis",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.843,
+     "date": "2026-10-19",
+     "hit": true,
+     "home": "Mes Shahr-e Babak",
+     "home_key": "messhahrebabak",
+     "league": "Iran: Persian Gulf Pro League",
+     "match": "Mes Shahr-e Babak vs Persepolis FC",
+     "multi_source": false,
+     "price": 1.4,
+     "rule": "unanimous[betclan+vitibet] avg_p>=70",
+     "source": "oddspapi",
+     "stated": 0.7915
     }
    ],
    "status": "PAPER",
@@ -2113,9 +2131,9 @@
   },
   "match_over_25@v1": {
    "hits": 291,
-   "inv_price_sum": 290.9593731269285,
-   "multi_n": 81,
-   "n": 444,
+   "inv_price_sum": 291.5843731269285,
+   "multi_n": 82,
+   "n": 445,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -2804,18 +2822,11 @@
     "2026-10-18|Brighton vs Crystal Palace|match_over_25@v1",
     "2026-10-18|Real Madrid vs Sevilla|match_over_25@v1",
     "2026-10-18|Lyon vs Nice|match_over_25@v1",
-    "2026-10-18|Kayserispor vs Batman Petrolspor|match_over_25@v1"
+    "2026-10-18|Kayserispor vs Batman Petrolspor|match_over_25@v1",
+    "2026-10-19|Bursaspor vs Pendikspor|match_over_25@v1"
    ],
-   "profit": 1.797,
+   "profit": 0.797,
    "records": [
-    {
-     "date": "2026-08-21",
-     "hit": false,
-     "match": "Drogheda United vs St. Patricks Athletic",
-     "multi_source": true,
-     "price": 2.04,
-     "source": "theoddsapi"
-    },
     {
      "date": "2026-08-22",
      "hit": true,
@@ -8333,6 +8344,23 @@
      "rule": "unanimous[statarea+vitibet+zulubet] avg_p>=65",
      "source": "scoutingstats",
      "stated": 0.601
+    },
+    {
+     "away": "Pendikspor",
+     "away_key": "pendikspor",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6895,
+     "date": "2026-10-19",
+     "hit": false,
+     "home": "Bursaspor",
+     "home_key": "bursaspor",
+     "league": "Turkey,1. Lig",
+     "match": "Bursaspor vs Pendikspor",
+     "multi_source": true,
+     "price": 1.6,
+     "rule": "unanimous[statarea+vitibet] avg_p>=70",
+     "source": "scoutingstats",
+     "stated": 0.6688
     }
    ],
    "status": "PAPER",
