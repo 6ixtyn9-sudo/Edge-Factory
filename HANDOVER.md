@@ -11507,3 +11507,8 @@ assay → exact-contract pick-context VETO preservation across all three labels.
 447 focused tests passed14.29s; full regression receipt follows. No production
 recovery was dispatched by this change; deleted run cannot be resumed. Recovery,
 activation and replacement/NO BET remain a SINGLE recover_and_rebuild execution.
+Final alias-fix regression: **3479 passed, 1 skipped, 0 failed**,174.96s.
+The original failing registry-membership check passes unchanged. Final focused
+suite447passed14.29s; diff-check clean and zero localdata/workflow modifications.
+PR109 carries the fix on arena/07d37123-edge-factory. No recovery dispatch or
+production activation is claimed by this test/merge receipt.
