@@ -11586,3 +11586,40 @@ shadow-isolation fixture correction. The initial pre-main-refresh run was
 3497passed/1skipped before the final freshness case was added. Focused refreshed
 performance + shadow-isolation run18passed0.51s. PR111 carries the bounded-work
 fix and requested receipt deletion; no recovery/financial execution performed.
+
+### 20 October 2026 — follow-up audit of active-path coverage (not a safety sign-off)
+
+Operator worried other errors remained after Grok's shadow-isolation fixture fix.
+Added a complementary test in test_post_forebet_serving.py: keep the REAL activated
+synthetic post-Forebet registry/warehouse path enabled, require nonempty positive
+control picks, inject both shadow-only and contradictory same-fixture votes from
+an authorized source, then require identical entire run_day outputs. The legacy
+fetch route is forbidden. This adds coverage; no runtime or financial change.
+Focused audit:154passed23.09s across remine/serving/shadow isolation/enhancement
+provenance/offline rebuild/history/persistence/settlement performance tests.
+Current31 active contracts validate (24 1x2,7 ou_1.5); local registry Git blob
+690f13f0fff15f015e8c7e4c11e800f3482e552e matches remote main independently.
+
+Two additional fault-injection findings are UNFIXED; neither observed live:
+* Missing or truncated edges_consensus.json makes load_post_forebet_registry
+  return None and load_thresholds select legacy2/3-way fallback. Normal run_day
+  then takes the legacy route. Offline rebuild explicitly refuses this case.
+  Existing test_missing_registry_reports_1x2_fallback EXPECTS that legacy policy,
+  so a green suite does not certify normal post-Forebet fail-closed behavior.
+* An explicitly post-Forebet registry with edges=[None] crashes eval_post_forebet
+  with AttributeError before its malformed-contract guard. It does not emit an
+  unsafe pick, but is not a controlled data-quality rejection.
+Reproductions used temporary files only. No thresholds/gates/registry policy,
+provider capture, dispatch, financial state or main changes made in this audit.
+Run39426708379 now reports cancelled (not cancelled by this audit).
+Final local audit regression:3499passed,1skipped,0failed163.44s. The skip is
+test_fixture_decision_logging::test_300_seeded_outputs_equal_immutable_prelogging_selector:
+its immutable baseline commit is unavailable in this shallow checkout. The real
+production-quote audit passes separately. This is not a fresh Actions end-to-end
+run and does not close either fault-injection finding above.
+Fetched the exact immutable baseline object9e52ed25086113e32e1a7c8f6f7f2e9b283a36a6
+without switching branches; the previously skipped300-case parity test then
+passed0.89s. Thus all3500 collected tests were exercised across the full run and
+this targeted follow-up, with zero failures; not a single3500-pass full-run receipt.
+Only test coverage and this handover changed locally; no production fix/merge
+for the two outstanding registry failure paths is claimed.
