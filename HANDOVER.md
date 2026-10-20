@@ -11512,3 +11512,31 @@ The original failing registry-membership check passes unchanged. Final focused
 suite447passed14.29s; diff-check clean and zero localdata/workflow modifications.
 PR109 carries the fix on arena/07d37123-edge-factory. No recovery dispatch or
 production activation is claimed by this test/merge receipt.
+
+### 20 October 2026 — coverage audit: fail on unpublished pipeline state
+
+Operator asked whether everything was covered after PR109 fixed the alias test.
+Read-only checks: main still has ZERO post_forebet_v1 contracts and no replacement
+recovery run is listed after the operator deleted39408883332. Exact healthy
+reference cache9201685918/keylocaldata-v2-39371954018 remains listed. Existing
+installed daily.yml includes the recovery/activation/assay/decay/rebuild path;
+no workflow edit is needed for this correction.
+
+Audit found a remaining false-success path: phase5_persistence.py main returned0
+for `not_persisted`, including rejected pushes. A green recovery computation/
+summary therefore did not establish that the actual registry reached main.
+CLI now returns0 ONLY for pushed/no_changes and1 for failed/unknown publication.
+Library result/status and evidence-preserving bounded rebase logic unchanged;
+cache may already contain valid computed state, but is not proof of Git publish.
+No rerun/capture/threshold/registry/financial-data changes, no new architecture.
+
+Tests cover success/no_changes/failure/unknown status and a REAL local bare
+remote with a rejecting pre-receive hook: CLI exits1, remote HEAD unchanged,
+appended local evidence preserved for the always-uploaded artifact fallback.
+All existing merge/cache/lifecycle tests retained.45focusedpassed1.26s; full
+regression receipt follows. End-to-end success STILL requires a completed live
+recovery attempt, actual main contract IDs/stats and replacement or explicit
+NO BET; passing tests alone are not activation or betting evidence.
+Final publication-safety regression: **3484 passed, 1 skipped, 0 failed**,173.63s.
+45focusedpassed1.26s; diff-check clean; zero workflow/localdata modifications.
+No dispatch attempted and no new activated contract/replacement claimed.
