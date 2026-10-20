@@ -1111,7 +1111,9 @@ def remine_current_sources(con, *, start, split, as_of):
         raise ValueError("require 2026-06-13 <= start < split < as_of")
     coverage, source_rows = {}, {}
     for source in (*REMINE_SOURCES, "betexplorer"):
-        table = next((t for t in (source, source + "_settled", source + "_raw")
+        # Raw predictions must win over a pre-settled convenience view:
+        # another independent donor may settle rows absent from that view.
+        table = next((t for t in (source, source + "_raw", source + "_settled")
                       if _table_exists(con, t)), None)
         if table is None:
             coverage[source] = {"status": "missing_table", "rows": 0}
@@ -1246,6 +1248,78 @@ def remine_current_sources(con, *, start, split, as_of):
                             "No probability is inferred from categorical tips or streak percentages."]}
 
 
+def _publish_remine_results(payload):
+    """Expose research passes without requiring an artifact download.
+
+    Numbered notice batches are readable via the checks API; the human summary
+    is a second view of the same report, never a serving/activation registry.
+    """
+    passed = [e for e in payload["edges"] if e["statistical_gates_passed"]]
+    receipt = {key: value for key, value in payload.items() if key != "edges"}
+    receipt.update(source_rows={s: c["rows"] for s, c in payload["sources"].items()},
+                   tested_rules=len(payload["edges"]), statistical_gates_passed=len(passed))
+    summary = ["## Post-Forebet re-mine — research only",
+               "These passes are not approved live rules. Shared fixtures and searched "
+               "thresholds are not independent forward evidence; donor-price ROI is retrospective.",
+               "```json", json.dumps(receipt, sort_keys=True, indent=2), "```",
+               "### Passing candidates",
+               "Train/validation cells: n / priced n / hit / ROI / Wilson lower bound.",
+               "| Rule | Train | Validation | Remaining holds |",
+               "| --- | --- | --- | --- |"]
+    summary_size = sum(len(line.encode("utf-8")) + 1 for line in summary)
+    for edge in passed:
+        cells = [str(edge["rule"])]
+        for period in ("train", "valid"):
+            stats = edge[period]
+            cells.append(" / ".join(str(stats.get(k)) for k in
+                                    ("n", "n_priced", "hit", "roi", "wilson_lb")))
+        cells.append(", ".join(edge["holds"]))
+        line = "| " + " | ".join(c.replace("|", "&#124;").replace("\n", " ").replace("\r", " ")
+                                  for c in cells) + " |"
+        summary_size += len(line.encode("utf-8")) + 1
+        if summary_size > 900_000:  # GitHub caps a step summary at 1 MiB.
+            summary.append("Summary table shortened; ALL passing candidates remain in the numbered check annotations.")
+            break
+        summary.append(line)
+    if not passed:
+        summary.append("No candidates passed the statistical and priced-sample gates.")
+    summary.append("Full passing-candidate records, including electorates, strategies, thresholds "
+                   "and holds, are in the numbered Post-Forebet passing candidates check annotations.")
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        try:
+            with open(summary_path, "a", encoding="utf-8") as handle:
+                handle.write("\n" + "\n\n".join(summary[:7]) + "\n" + "\n".join(summary[7:]) + "\n")
+        except OSError as exc:
+            print(f"Could not write GitHub step summary ({type(exc).__name__}); research report retained.")
+
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        for edge in passed:
+            print("Passing research candidate: " + json.dumps(edge, sort_keys=True))
+        return
+
+    def notice(title, data):
+        # Escape workflow-command data, including literal provider %0A tokens.
+        text = json.dumps(data, sort_keys=True, separators=(",", ":")).replace("%", "%25")
+        print(f"::notice title={title}::" + text)
+
+    notice("Post-Forebet re-mine", receipt)
+    batches, batch, size = [], [], 0
+    for edge in passed:
+        length = len(json.dumps(edge, sort_keys=True).replace("%", "%25").encode("utf-8")) + 1
+        if batch and size + length > 45_000:  # Stay below the 64 KiB annotation limit.
+            batches.append(batch)
+            batch, size = [], 0
+        batch.append(edge)
+        size += length
+    if batch:
+        batches.append(batch)
+    for index, batch in enumerate(batches, 1):
+        notice(f"Post-Forebet passing candidates {index}/{len(batches)}",
+               {"part": index, "parts": len(batches), "research_only": True,
+                "passing_candidates": batch})
+
+
 def main():
     ap = argparse.ArgumentParser(description="Re-mine current non-Forebet electorates using retained data only")
     ap.add_argument("--start", default=POST_FOREBET_START)
@@ -1283,15 +1357,7 @@ def main():
     print(f"Candidate tests: {len(payload['edges'])}; statistical gates passed: "
           f"{sum(e['statistical_gates_passed'] for e in payload['edges'])}")
     print(f"Report: {args.output}. Live registry/model unchanged; no serving approval inferred.")
-    if os.environ.get("GITHUB_ACTIONS") == "true":
-        # A compact runner receipt is available through check annotations even
-        # when artifact storage is inaccessible to the operator's client.
-        receipt = {"status": payload["status"], "start": args.start, "split": split,
-                   "as_of_exclusive": args.as_of, "source_rows": {s: c["rows"] for s, c in payload["sources"].items()},
-                   "markets": payload["markets"], "tested_rules": len(payload["edges"]),
-                   "statistical_gates_passed": sum(e["statistical_gates_passed"] for e in payload["edges"]),
-                   "activation": payload["activation"]}
-        print("::notice title=Post-Forebet re-mine::" + json.dumps(receipt, sort_keys=True))
+    _publish_remine_results(payload)
 
 
 def _print_k_coverage_diagnostic() -> None:

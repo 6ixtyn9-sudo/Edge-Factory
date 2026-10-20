@@ -203,7 +203,7 @@ def test_rejects_forebet_era_or_inverted_windows(con):
         miner.remine_current_sources(con, start=START, split=END, as_of=SPLIT)
 
 
-def test_main_writes_existing_research_report_not_live_registry(con, tmp_path, monkeypatch):
+def test_main_writes_existing_research_report_not_live_registry(con, tmp_path, monkeypatch, capsys):
     table(con, "zulubet_settled", [row()])
     db = tmp_path / "warehouse.duckdb"
     con.execute(f"ATTACH '{db}' AS persisted")
@@ -213,6 +213,9 @@ def test_main_writes_existing_research_report_not_live_registry(con, tmp_path, m
     live.write_text('{"ml_model":{"frozen":true},"edges":[]}')
     before = live.read_bytes()
     research = tmp_path / "edges_consensus_research.json"
+    summary = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
     monkeypatch.setattr(miner, "DB", db)
     monkeypatch.setattr(miner, "OUT", live)
     monkeypatch.setattr(miner, "_print_k_coverage_diagnostic", lambda: None)
@@ -223,6 +226,10 @@ def test_main_writes_existing_research_report_not_live_registry(con, tmp_path, m
     assert payload["edges"]
     assert live.read_bytes() == before
     assert not list(tmp_path.glob("*.tmp"))
+    assert "Post-Forebet re-mine" in summary.read_text()
+    receipt, = notices(capsys.readouterr().out)
+    assert receipt["tested_rules"] == len(payload["edges"])
+    assert receipt["statistical_gates_passed"] == 0
 
 
 def test_live_registry_cannot_be_selected_as_report_destination(tmp_path, monkeypatch):
@@ -248,3 +255,119 @@ def test_cache_only_manual_execution_is_not_a_second_workflow():
     for name in ("Enhancement tickets (generate/freeze)", "Enhancement performance report",
                  "Persist localdata State (Cache)", "Persist pipeline state to git (single source of truth)"):
         assert "inputs.mode != 'remine_only'" in next(s for s in steps if s["name"] == name)["if"]
+
+
+def test_raw_predictions_precede_settled_subset_and_use_independent_results(con):
+    # Both views exist in the production warehouse; prefer all captures, not
+    # only the subset the legacy results-donor join happened to settle.
+    table(con, "predictz_raw", [row(p1=None, px=None, p2=None, pick="home", hs=None, gs=None),
+                               row(home="Gamma Town", p1=None, px=None, p2=None,
+                                   pick="away", hs=None, gs=None)])
+    table(con, "predictz_settled", [row(p1=None, px=None, p2=None, pick="home", result_source="forebet")])
+    table(con, "betexplorer_settled", [row(), row(home="Gamma Town", hs=0, gs=2)])
+    report = mine(con)
+    assert report["sources"]["predictz"]["table"] == "predictz_raw"
+    assert report["sources"]["predictz"]["rows"] == 2
+    result = edges(report, "single", ["predictz"])[0]
+    assert result["train"]["n"] == result["train"]["wins"] == 2
+
+
+@pytest.fixture
+def publication_report(con, monkeypatch):
+    monkeypatch.setattr(miner, "GATES", SimpleNamespace(
+        min_n_train=1, min_n_valid=1, min_roi_train=-.1, min_roi_valid=0.))
+    table(con, "zulubet_settled", [
+        row(day, home=f"Alpha Town {i}", p_o25=.8, p_gg=.8, odd_o25=1.7, odd_gg=1.7)
+        for day in ("2026-09-01", "2026-10-01") for i in range(8)])
+    return mine(con)
+
+
+def notices(output):
+    # Model the Actions runner's workflow-command data unescaping order.
+    return [json.loads(line.split("::", 2)[2].replace("%0D", "\r").replace("%0A", "\n").replace("%25", "%"))
+            for line in output.splitlines() if line.startswith("::notice ")]
+
+
+def test_passing_rules_are_readable_without_artifacts(publication_report, tmp_path, monkeypatch, capsys):
+    import copy
+    report = publication_report
+    expected = [e for e in report["edges"] if e["statistical_gates_passed"]]
+    assert {e["market"] for e in expected} == {"1x2", "ou_2.5", "btts"}
+    # Force multiple annotation batches, not only the easy one-passing-rule case.
+    report["edges"] = copy.deepcopy(report["edges"] * 8)
+    expected = [e for e in report["edges"] if e["statistical_gates_passed"]]
+    before = copy.deepcopy(report)
+    summary = tmp_path / "summary.md"
+    summary.write_text("Earlier step output\n")
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    miner._publish_remine_results(report)
+    output = capsys.readouterr().out
+    receipt, *batches = notices(output)
+    assert receipt["tested_rules"] == len(report["edges"])
+    assert receipt["statistical_gates_passed"] == len(expected)
+    assert receipt["split"] == SPLIT
+    assert receipt["as_of_exclusive"] == END
+    assert receipt["gates"] == report["gates"]
+    assert receipt["markets"] == report["markets"]
+    assert receipt["sources"] == report["sources"]
+    assert receipt["excluded_voters"] == receipt["excluded_result_donors"] == ["forebet"]
+    assert len(batches) > 1
+    assert [b["part"] for b in batches] == list(range(1, len(batches) + 1))
+    assert all(b["parts"] == len(batches) and b["research_only"] for b in batches)
+    assert [e for b in batches for e in b["passing_candidates"]] == expected
+    assert all(len(line.encode("utf-8")) < 64_000 for line in output.splitlines())
+    text = summary.read_text()
+    assert text.startswith("Earlier step output\n")
+    assert "not approved live rules" in text
+    assert "donor-price ROI is retrospective" in text
+    for edge in expected:
+        assert edge["rule"] in text
+        assert all(hold in text for hold in edge["holds"])
+    assert report == before  # Publication must not certify, clear holds or alter metrics.
+
+
+def test_empty_passes_still_publish_coverage(con, tmp_path, monkeypatch, capsys):
+    report = mine(con)
+    summary = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    miner._publish_remine_results(report)
+    receipt, = notices(capsys.readouterr().out)
+    assert receipt["statistical_gates_passed"] == receipt["tested_rules"] == 0
+    assert receipt["markets"] == report["markets"]
+    assert "No candidates passed" in summary.read_text()
+
+
+def test_notice_data_cannot_inject_workflow_commands(publication_report, tmp_path, monkeypatch, capsys):
+    report = publication_report
+    edge = next(e for e in report["edges"] if e["statistical_gates_passed"])
+    edge["rule"] = "literal %0A %0D %25 | rule\n::error::not a command"
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    summary = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    miner._publish_remine_results(report)
+    output = capsys.readouterr().out
+    assert "\n::error::" not in output
+    recovered = [e for b in notices(output)[1:] for e in b["passing_candidates"]]
+    assert edge in recovered
+    assert "&#124;" in summary.read_text()
+
+
+def test_missing_summary_destination_does_not_lose_api_receipt(publication_report, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "missing" / "summary.md"))
+    miner._publish_remine_results(publication_report)
+    output = capsys.readouterr().out
+    assert "Could not write GitHub step summary" in output
+    assert notices(output)[1]["passing_candidates"]
+
+
+def test_local_execution_prints_passes_without_workflow_commands(publication_report, monkeypatch, capsys):
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    miner._publish_remine_results(publication_report)
+    output = capsys.readouterr().out
+    assert "Passing research candidate:" in output
+    assert "new_predicate_requires_serving_validation" in output
+    assert "::notice" not in output
