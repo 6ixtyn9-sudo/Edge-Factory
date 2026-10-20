@@ -171,3 +171,55 @@ is `no_gradeable_prediction_history`, zero tested rules, not “all sources fail
 validation.” Production Actions has a separate restored cache; its run must be
 examined before reporting actual replacement-electorate performance. No provider
 was called to fill the gap and no candidate was certified.
+
+### Production execution and narrow follow-up — 20 October 2026
+
+PR103 merged as `9a409c3`. Production full run
+[39350936425](https://github.com/6ixtyn9-sudo/Edge-Factory/actions/runs/39350936425)
+succeeded: **73,476 tested rules / 39 statistical passes**, with the independent
+production regression **3,327 passed / 1 skipped**. This supersedes the earlier
+local-only evidence gap, not the activation boundary. Existing operational steps
+still use the legacy registry; the `auto` run also published operational state.
+
+The follow-up fixes existing raw-versus-settled table preference so that raw
+captures are not silently restricted to a legacy donor's settled subset, and
+makes SoccerVista's tests deterministic across midnight without weakening its
+production today-only guard. Local validation: **44 focused tests passed**;
+**3,329 passed / 1 skipped** in the full suite. No threshold or serving activation
+was changed. Full receipt and outstanding evidence/operational findings:
+[`audits/POST-FOREBET-RUN-39350936425.md`](audits/POST-FOREBET-RUN-39350936425.md).
+The research JSON itself remains uninspected because its artifact download
+redirect is blocked; aggregate pass counts are not enough to choose a live rule.
+
+### Artifact-free readout — follow-up on the active session branch
+
+The operator cannot attach files here. The existing miner now appends a readable
+passing-candidate table to `GITHUB_STEP_SUMMARY` and publishes the **full** passing
+candidate records as numbered `Post-Forebet passing candidates` notice
+annotations. They include each electorate, strategy, threshold, train/validation
+and priced counts, hit/ROI/Wilson statistics, and remaining serving holds. The
+existing metadata annotation now also retains source statuses, market coverage,
+gates and limitations. Larger passing lists are batched below the annotation
+size limit; a bounded summary table never removes records from the batches.
+The original full research JSON and its artifact remain unchanged in purpose.
+
+No workflow edit, separate miner, tracked research registry or activation was
+introduced. This readout does not certify candidates or clear any holds. It is
+available on branch `arena/e47b4655-edge-factory`; it is not on main until merged.
+For an artifact-free production-data readout, manually run the **existing**
+`daily.yml`, choose that branch, and select **`remine_only`**. This uses restored
+cache data, skips provider captures/pricing/tickets/notifications and does not
+publish cache or git state. Results are a fresh evaluation of the retained
+cache, not recovery of the precise original 39-pass artifact.
+
+The agent verified read access to the existing metadata notice at
+`repos/6ixtyn9-sudo/Edge-Factory/check-runs/118394690889/annotations` through `gh api`.
+For the new run, get check-run IDs from that run's check suite and read their
+annotations (paginated) through the same API; reconstruct passing records from
+numbered JSON batches. Do not ask the operator to download or attach the JSON.
+Earlier manual workflow dispatch was denied; no new dispatch was attempted.
+
+Validation: **49 focused tests passed** (4.50 seconds); **3,335 passed, 1 skipped**
+(159.47 seconds) in the full suite. Coverage includes the actual main-entry-point
+hook, multi-batch lossless records across 1X2/O/U/BTTS, empty passes, summary append,
+workflow-command escaping, missing-summary fallback and unchanged input holds.

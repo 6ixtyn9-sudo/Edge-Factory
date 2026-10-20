@@ -11247,3 +11247,51 @@ remine_only. Need completed runner results/annotations before reporting mining
 outcomes. Dispatch needs Actions-write permission if connection is repaired;
 do not retry unchanged or ask for credentials. Prior workflow-push blocker is
 resolved; current blocker is dispatch permission only. Live rules remain unchanged.
+
+### 2026-10-20 — production re-mine executed; serving transition still outstanding
+
+This supersedes the preceding PR/dispatch/warm-data status: PR103 merged as
+9a409c3, and the operator executed both remine_only39333627994 and full
+auto39350936425 on main. Latest full run succeeded, published state/cache, and
+reported3327passed1skipped plus73476research tests/39statistical passes. Earlier
+remine-only reported40passes. Neither count means approved live replacements;
+old registry still feeds assay/decay/selection. Auto operational steps can mutate
+that registry even though the new miner does not write it. No new dispatch is
+needed to prove execution; no claim that the serving migration is complete.
+
+Current follow-up branch is arena/e47b4655-edge-factory. Narrow local fixes:
+SoccerVista tests share a fixed adapter/request date, retain the production
+current-day guard and test midnight rollover; existing miner prefers raw
+prediction captures over pre-settled fallback subsets (PredictZ production had
+2706raw vs1944selected settled rows). Independent-result regression added.
+Focused44passed3.51s; full3329passed1skipped141.16s. Not deployed at this note.
+
+See docs/operator/audits/POST-FOREBET-RUN-39350936425.md for cross-market counts,
+operational attrition, bad competition context, price-card coverage discrepancy,
+Supabase warning and enhancement-draft findings. These operational findings are
+not fixed by this narrow follow-up. GitHub run API works, but artifact download
+fails at the storage-host redirect. Need the existing edges_consensus_research.json
+uploaded to inspect/rank39passes; need both reports to explain the exact40-to39
+delta. Do not claim the full research report was inspected or request another
+provider-consuming full run to recover it. Broader cohort competition stays ON;
+no75percent-floor, veto-bypass or new certification decision made.
+
+### Artifact-free research inspection — operator-selected follow-up
+
+Operator cannot attach files; selected the earlier GitHub readout option instead.
+Existing mine_consensus.py now publishes full passing research candidates in
+numbered API-readable notice batches and a human step-summary table; expanded
+metadata preserves source statuses, gates, coverage and limitations. Existing
+JSON output unchanged; no workflow edit/new registry/activation. Earlier raw
+priority and deterministic SoccerVista test fixes are included on this branch.
+Verified existing notice read access through gh api check-runs118394690889/
+annotations. Need production execution of THIS code to inspect fresh passing
+results; original39artifact still not recovered. Do not request file upload again.
+
+Validation49focused passed4.50s; full3335passed1skipped159.47s; diffcheckclean.
+Next operator action after push: existing daily.yml, branch
+arena/e47b4655-edge-factory, mode remine_only (not auto/main). Agent can read
+numbered passing-candidate annotations afterwards. No new dispatch attempted:
+earlier dispatch permission denied, and no reason to retry unchanged permission.
+Existing remine_only avoids provider calls, tickets and cache/git publication.
+See docs/operator/REMINE-PLAN.md artifact-free readout section for retrieval.
