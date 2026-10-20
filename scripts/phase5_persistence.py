@@ -374,7 +374,9 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
     result = persist_localdata(args.repo, run_id=args.run_id)
-    return 0 if result["status"] in {"pushed", "no_changes", "not_persisted"} else 1
+    # The CLI is the workflow publication gate. A warning/artifact fallback
+    # preserves evidence, but is NOT successful publication of the registry.
+    return 0 if result["status"] in {"pushed", "no_changes"} else 1
 
 
 if __name__ == "__main__":

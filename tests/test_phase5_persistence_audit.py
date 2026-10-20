@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from edgefactory.phase5_shadow import append_capture_attempt, append_shadow_rows
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -208,3 +210,46 @@ def test_upload_artifact_patterns_cover_nested_phase5_evidence():
     persistence = yaml.split("- name: Persist pipeline state to git", 1)[1]
     assert "scripts/phase5_persistence.py persist" in persistence
     assert "dropping regenerable state commit" not in persistence
+
+
+@pytest.mark.parametrize("status,expected", [
+    ("pushed", 0), ("no_changes", 0), ("not_persisted", 1), ("unexpected", 1),
+])
+def test_persistence_cli_only_reports_actual_publication_success(tmp_path, monkeypatch, status, expected):
+    module = _persistence_module()
+    calls = []
+
+    def persist(repo, *, run_id):
+        calls.append((repo, run_id))
+        return {"status": status}
+
+    monkeypatch.setattr(module, "persist_localdata", persist)
+    assert module.main(["persist", "--repo", str(tmp_path), "--run-id", "publication-test"]) == expected
+    assert calls == [(tmp_path, "publication-test")]
+
+
+def test_rejected_git_push_fails_workflow_cli_and_preserves_local_evidence(tmp_path):
+    repo = tmp_path / "runner"
+    repo.mkdir()
+    _seed_repo(repo)
+    bare = tmp_path / "origin.git"
+    _git(tmp_path, "init", "-q", "--bare", "--initial-branch=main", str(bare))
+    _git(repo, "remote", "add", "origin", str(bare))
+    _git(repo, "push", "-q", "-u", "origin", "main")
+    before = _git(bare, "rev-parse", "main").stdout
+    hook = bare / "hooks/pre-receive"
+    hook.write_text("#!/bin/sh\necho 'test publication rejection' >&2\nexit 1\n")
+    hook.chmod(0o755)
+    _append_fixture(repo, "Unpublished")
+    evidence = (repo / LEDGER).read_bytes()
+
+    cli = subprocess.run([
+        sys.executable, str(ROOT / "scripts/phase5_persistence.py"),
+        "persist", "--repo", str(repo), "--run-id", "rejected-publication",
+    ], text=True, capture_output=True)
+    assert cli.returncode == 1, cli.stdout + cli.stderr
+    assert "Pipeline state commit was not pushed" in cli.stdout
+    assert "PHASE5_PERSISTENCE pushed" not in cli.stdout
+    assert _git(bare, "rev-parse", "main").stdout == before
+    assert (repo / LEDGER).read_bytes() == evidence
+    assert b"Unpublished Home FC" in evidence  # retained for always-uploaded artifacts

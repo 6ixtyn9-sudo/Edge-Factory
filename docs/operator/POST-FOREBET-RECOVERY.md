@@ -44,6 +44,10 @@ Cache/git publication is now success-only, not `always()`; the cancelled run
 39404758959 previously saved a newer cache despite an incomplete pipeline.
 Read the run summary for actual registry contract IDs, full train/validation
 stats and the replacement/NO BET artifact. A failed attempt is not activation.
+Also require the Git persistence step to succeed: the summary is a runner-local
+snapshot written BEFORE publication, not proof that main was updated. The
+persistence CLI now exits nonzero when commit/rebase/push fails; preserved cache
+or fallback artifacts must not be mistaken for successful Git publication.
 Artifacts remain supplementary, not the operator's required readout channel.
 
 ## Complete replacement for the EXISTING daily.yml
