@@ -72,6 +72,7 @@ import math
 import os
 import re
 import sys
+import subprocess
 from functools import lru_cache
 from collections import Counter
 from datetime import date, datetime, timedelta
@@ -5251,8 +5252,13 @@ def cmd_enhancement(args, st) -> int:
                                      bank_eff=bank_eff,
                                      fixture_report=fixture_report,
                                      floors=floors)
+    if getattr(args, "rebuild_unplaced", False) and not plan:
+        census = Counter(f"{l.get('market', '?')}:{l.get('verdict', 'unknown')}" for l in legs)
+        txt += "\nCandidate outcomes (all competing markets): " + json.dumps(dict(census), sort_keys=True)
+        if not legs:
+            txt += "\nNo current exact-contract enhancement candidates; prior slate is not evidence."
     print(txt)
-    if plan:
+    if plan or getattr(args, "rebuild_unplaced", False):
         slip_txt.write_text(txt)
     if should_freeze and freeze_record:
         print(f"\nSTATUS: ✅ {freeze_footer(freeze_record)} enhancement slip; later runs "
@@ -5263,6 +5269,48 @@ def cmd_enhancement(args, st) -> int:
               f"{FREEZE_HOUR:02d}:00 freeze.")
     return 0
 
+
+
+def cmd_rebuild_unplaced_enhancement(args, st):
+    """Only the approved unplaced day: rebuild without settling any lane.
+
+    No old slate may substitute for a failed build. A no-bet result is a real,
+    persisted artifact, but not a freeze or a financial commitment.
+    """
+    target = args.date or datetime.now(TZ).date().isoformat()
+    if target != datetime.now(TZ).date().isoformat():
+        raise ValueError("unplaced rebuild is only allowed for today's approved date")
+    receipt = LOCALDATA / f"autobets_enh_tickets_{target}_reset.json"
+    if not receipt.exists():
+        raise ValueError("unplaced rebuild requires an approved none-placed reset receipt")
+    # load_state validated/applied the receipt before this call.
+    slip = LOCALDATA / f"autobets_enh_tickets_{target}.txt"
+    if is_frozen(st, target, ENHANCEMENT_LANE) or _frozen_text_on_disk(slip):
+        return cmd_enhancement(args, st)  # preserve a newer replacement
+    reason = None
+    if not st:
+        reason = "current enhancement bank state unavailable; no bank/history initialization permitted"
+    else:
+        registry = json.loads((LOCALDATA / "edges_consensus.json").read_text())
+        active = [e for e in registry.get("edges", [])
+                  if e.get("contract_schema") == "post_forebet_v1" and e.get("status") == "certified"]
+        if registry.get("operating_contract") != "post_forebet_v1" or not active:
+            reason = "zero active validated post-Forebet contracts; prior slate/inherited Forebet evidence forbidden"
+    if reason:
+        text = f"{ENHANCEMENT_LANE.label} — {target}\nNO BET — {reason}\nNo stake committed; bank/history unchanged.\n"
+        slip.write_text(text)
+        print(text)
+        return 0
+    from edgefactory.prediction_history import check
+    check(LOCALDATA.parent)
+    env = dict(os.environ, EDGE_FACTORY_OFFLINE_REBUILD="1", EDGE_FACTORY_CANDIDATE_ONLY="0")
+    try:
+        subprocess.run([sys.executable, str(ROOT / "scripts/picks_today.py"), "--date", target],
+                       cwd=ROOT, env=env, check=True)
+    except subprocess.CalledProcessError:
+        slip.write_text(f"{ENHANCEMENT_LANE.label} — {target}\nNO BET — cache-only pick build failed; old slate forbidden.\n")
+        raise
+    return cmd_enhancement(args, st)
 
 
 def main():
@@ -5277,10 +5325,16 @@ def main():
     ap.add_argument("--reset", action="store_true")
     ap.add_argument("--apply-unplaced-resets", action="store_true",
                     help="enhancement lane only: apply committed unplaced-ticket receipts; no settlement/build")
+    ap.add_argument("--rebuild-unplaced", action="store_true",
+                    help="approved enhancement date only: cache-only rebuild or persist explicit NO BET; no settlement")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--enhancements", action="store_true",
                     help=f"the enhancement lane's own slip (needs {ENH_BOARD_FLAG}=1)")
     args = ap.parse_args()
+    if args.rebuild_unplaced and (not args.enhancements or args.force or args.reset
+                                 or args.backfill or args.settle or args.status
+                                 or args.apply_unplaced_resets):
+        ap.error("--rebuild-unplaced requires enhancement lane only; no reset/force/settle/backfill/status")
     if args.apply_unplaced_resets and not args.enhancements:
         ap.error("--apply-unplaced-resets requires --enhancements; main lane cannot be reset")
 
@@ -5299,6 +5353,8 @@ def main():
 
     if args.enhancements and enhancement_board_enabled():
         st = load_state(ENHANCEMENT_LANE)
+        if args.rebuild_unplaced:
+            return cmd_rebuild_unplaced_enhancement(args, st)
         if args.apply_unplaced_resets:
             print("Enhancement unplaced-ticket resets applied; no settlement, capture, build or bank reset.")
             return 0

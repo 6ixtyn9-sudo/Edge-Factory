@@ -296,6 +296,11 @@ def min_lead_minutes() -> int:
     except (TypeError, ValueError):
         return DEFAULT_MIN_LEAD_MINUTES
 
+def offline_rebuild() -> bool:
+    """Reprice from captured boards only; never invoke a provider capture."""
+    return os.environ.get("EDGE_FACTORY_OFFLINE_REBUILD") == "1"
+
+
 def candidate_only_build() -> bool:
     """True for the first, non-ticketable pass of the two-pass daily build."""
     return os.environ.get("EDGE_FACTORY_CANDIDATE_ONLY", "").strip().lower() in {
@@ -3379,7 +3384,7 @@ def bzzoiro_odds_bundle(
 ) -> dict[str, dict]:
     cached_rows = _read_cached_bzzoiro_odds(day)
     live_rows: list[dict] = []
-    if live and (_refresh_bzzoiro_odds() or not cached_rows):
+    if live and not offline_rebuild() and (_refresh_bzzoiro_odds() or not cached_rows):
         live_rows = _fetch_live_bzzoiro_odds(day, stats=stats)
 
     bundle = _odds_bundle_from_rows(cached_rows + live_rows, provider=BZZOIRO_ODDS_SOURCE, stats=stats)
@@ -4052,6 +4057,8 @@ def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, 
     per-date ledgers + health rows only. None enters consensus weights or
     the pick path; adapters are inert without their env keys and never raise.
     """
+    if offline_rebuild():
+        return _zero_shadow_stats("cache_only")
     if candidate_only_build():
         return _zero_shadow_stats("candidate_only")
     if os.environ.get("EDGE_FACTORY_SHADOW_CAPTURE", "on").strip().lower() in {"0", "off", "false", "no"}:
@@ -6905,6 +6912,8 @@ def main():
         days = [argv[0].split("=", 1)[1]]
     else:
         days = argv or [date.today().isoformat()]
+    if offline_rebuild() and load_post_forebet_registry() is None:
+        raise SystemExit("offline rebuild refused: no post-Forebet operating registry; no legacy fallback")
     t1x2, ou_edge, btts_edge, fallback = load_thresholds()
     edge_meta = load_edge_meta()
     purity = load_purity()
@@ -7037,7 +7046,7 @@ def main():
 
         bzz_stats: dict = {}
         scouting_stats: dict = {}
-        odds_bundle = bzzoiro_odds_bundle(day, live=not candidate_only, stats=bzz_stats)
+        odds_bundle = bzzoiro_odds_bundle(day, live=not (candidate_only or offline_rebuild()), stats=bzz_stats)
         # Persist upstream zero-run evidence for visibility only. This never
         # alters enrichment, certification, or ticket eligibility.
         record_bzzoiro_run(day, bzz_stats)
@@ -7131,7 +7140,7 @@ def main():
         if candidate_only:
             be_stats["status"] = "candidate_only"
             be_enriched = 0
-        elif _allow_live_betexplorer_rescue():
+        elif not offline_rebuild() and _allow_live_betexplorer_rescue():
             # Emergency-only compatibility route. Normal final cards already
             # have a bounded pre-build snapshot in betexplorer_bundle.
             be_enriched = enrich_unmatched_with_betexplorer(
