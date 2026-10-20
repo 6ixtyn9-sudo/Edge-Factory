@@ -11424,3 +11424,51 @@ complete companion YAML to the operator separately. Reset helper + receipt do
 not depend on that workflow edit: normal enhancement loads apply the receipt.
 Remote reset execution remains unobserved. New housekeeping CLI test proves no
 settlement/build/results calls; no main-bank/ticket changes.
+
+### 20 October 2026 — history recovery + rebuild implementation, NOT activation
+
+The reset-only interpretation above is superseded: the operator requires an
+immediate replacement evaluation or explicit persisted NO BET, not housekeeping
+alone. Production main was rechecked: operating_contract absent, ZERO
+post_forebet_v1 contracts. Do not describe research passes as activation.
+
+Recovered six COMPLETE UNMASKED candidate records from successful run
+39371954018/check118461574636; durable exact records and API provenance are in
+`docs/operator/post-forebet-research-39371954018.json`. Masked/truncated records
+were omitted without inference. Threshold55 SS+Statarea is unanimous **1X2**, NOT
+home-only: train556priced/wins394/hit.7086/ROI-.0008; validation289priced/wins216/
+hit.7474/ROI.0401/WilsonLB.6943. Research only; serving-validation hold remained.
+
+Extended existing phase5_persistence CLI with history-prepare/recover/check:
+stage CURRENT whole tree, restore EXACT reference cache at original localdata
+path (9201685918/keylocaldata-v2-39371954018, still listed), merge only raw
+non-Forebet prediction CSVs, restore current bank/tickets/registry/ledgers/DB.
+Flat Statarea/Zulubet are included; donor odds and Forebet are excluded. Exact
+full-row union retains conflicts for shared miner quarantine. Sanity checks and
+fixture-key high-water mark detect missing/truncated history; missing/corrupt
+reference restores current state and fails closed. No-op core CSVs retain bytes.
+The small receipt may be committed; raw history/key inventory remain cached.
+
+Existing auto_tickets --enhancements --rebuild-unplaced requires today's approved
+none-placed receipt, applies reset before processing, never settles either lane,
+rebuilds picks from the activated registry and cached boards, and persists a
+replacement or explicit NO BET/reasons. Missing bank is NOT initialized; newer
+frozen replacement is preserved. Offline picks refuse legacy fallback and skip
+provider/shadow/rescue capture. --no-settle grade only renders current state.
+Competition flag remains ON; no gate/model/forebet fallback changes.
+
+Complete replacement for EXISTING daily.yml is INLINE in
+`docs/operator/POST-FOREBET-RECOVERY.md` (also supplied in chat). It stages/restores
+history, rebuilds warehouse, mines --activate, assays/decays, rebuilds enhancement,
+publishes actual contract IDs/stats + ticket in the run summary. Cache/git save
+are success-only with completeness checks, fixing observed cancelled-run cache
+publication39404758959. It performs NO heavyweight capture. No second workflow,
+miner or registry was installed. App previously rejected workflow edits for lack
+of workflows permission: actual .github/workflows/daily.yml remains unchanged;
+manual application is still REQUIRED. NO recovery run dispatched/observed and
+NO activated contract/replacement claimed by this implementation.
+
+Validation:36focusedpassed0.46s; full3454passed1skipped1failed138.45s. Sole failure
+is unchanged identity/league-alias registry tripwire (`enterprise national league
+south` missing). Nothing suppressed/weakened. Actual workflow not modified;
+current registry, tickets, main state and bank data untouched by this change.

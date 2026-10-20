@@ -148,3 +148,99 @@ def test_reset_receipt_is_stageable():
     result = subprocess.run(['git', 'check-ignore', '-q',
         'localdata/autobets_enh_tickets_2099-01-01_reset.json'], cwd=ROOT)
     assert result.returncode == 1
+
+
+@pytest.fixture
+def rebuild_clock(monkeypatch):
+    from datetime import datetime
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 10, 20, 13, tzinfo=tz)
+
+    monkeypatch.setattr(at, 'datetime', Clock)
+    monkeypatch.setenv('EDGE_FACTORY_ENH_BOARD', '1')
+    return SimpleNamespace(date=DAY, force=False, rebuild_unplaced=True)
+
+
+def test_rebuild_zero_contracts_publishes_no_bet_not_old_slate(setup, rebuild_clock, monkeypatch):
+    local, _, _, _ = setup
+    st = at.load_state(at.ENHANCEMENT_LANE)
+    (local / 'edges_consensus.json').write_text(json.dumps({'edges': []}))
+    (local / 'picks_today.json').write_text('[{"rule":"retired Forebet"}]')
+    before = at.ENHANCEMENT_LANE.state_file.read_bytes()
+    monkeypatch.setattr(at.subprocess, 'run', lambda *a, **k: pytest.fail('no capture/build on zero contracts'))
+    monkeypatch.setattr(at, 'settle_open_slips', lambda *a, **k: pytest.fail('must not settle'))
+    assert at.cmd_rebuild_unplaced_enhancement(rebuild_clock, st) == 0
+    artifact = (local / f'autobets_enh_tickets_{DAY}.txt').read_text()
+    assert 'NO BET' in artifact and 'zero active validated post-Forebet' in artifact
+    assert 'FROZEN AT ' not in artifact and 'ACCA #' not in artifact
+    assert at.ENHANCEMENT_LANE.state_file.read_bytes() == before
+
+
+def test_rebuild_without_current_bank_never_initializes_bank(setup, rebuild_clock):
+    local, _, _, _ = setup
+    at.load_state(at.ENHANCEMENT_LANE)
+    at.ENHANCEMENT_LANE.state_file.unlink()
+    assert at.cmd_rebuild_unplaced_enhancement(rebuild_clock, {}) == 0
+    assert not at.ENHANCEMENT_LANE.state_file.exists()
+    assert 'bank state unavailable' in (local / f'autobets_enh_tickets_{DAY}.txt').read_text()
+
+
+def test_rebuild_reprices_fresh_all_market_slate_and_persists_no_plan(setup, rebuild_clock, monkeypatch):
+    import edgefactory.prediction_history as history
+    import edgefactory.enh_registry as registry
+    import edgefactory.enh_team_floors as team
+
+    local, _, _, _ = setup
+    st = at.load_state(at.ENHANCEMENT_LANE)
+    before = at.ENHANCEMENT_LANE.state_file.read_bytes()
+    (local / 'edges_consensus.json').write_text(json.dumps({
+        'operating_contract': 'post_forebet_v1',
+        'edges': [{'contract_schema': 'post_forebet_v1', 'status': 'certified'}]}))
+    fresh = [{'market': x, 'date': DAY} for x in ('1x2', 'ou25', 'btts')]
+    checks, calls = [], []
+    monkeypatch.setattr(history, 'check', lambda root: checks.append(root))
+
+    def build(argv, **kwargs):
+        calls.append(argv)
+        assert argv[-2:] == ['--date', DAY]
+        assert kwargs['check'] is True
+        assert kwargs['env']['EDGE_FACTORY_OFFLINE_REBUILD'] == '1'
+        assert kwargs['env']['EDGE_FACTORY_CANDIDATE_ONLY'] == '0'
+        (local / 'picks_today.json').write_text(json.dumps(fresh))
+
+    def legs(slate, **kwargs):
+        assert slate == fresh  # all competing markets, not old card/O2.5-only
+        return []
+
+    monkeypatch.setattr(at.subprocess, 'run', build)
+    monkeypatch.setattr(at, 'enhancement_legs', legs)
+    monkeypatch.setattr(at, 'settle_open_slips', lambda *a, **k: pytest.fail('must not settle'))
+    monkeypatch.setattr(at, 'load_settled_scores', lambda: {})
+    monkeypatch.setattr(registry, 'derive_floors_for_day', lambda *a: {})
+    monkeypatch.setattr(team, 'team_under_floors', lambda *a: {})
+    assert at.cmd_rebuild_unplaced_enhancement(rebuild_clock, st) == 0
+    assert len(calls) == len(checks) == 1
+    assert 'NO BET' in (local / f'autobets_enh_tickets_{DAY}.txt').read_text()
+    assert at.ENHANCEMENT_LANE.state_file.read_bytes() == before
+
+
+def test_rebuild_needs_approved_today_and_never_unfreezes_newer_card(setup, rebuild_clock, monkeypatch):
+    local, path, _, _ = setup
+    st = at.load_state(at.ENHANCEMENT_LANE)
+    path.unlink()
+    with pytest.raises(ValueError, match='approved none-placed'):
+        at.cmd_rebuild_unplaced_enhancement(rebuild_clock, st)
+    rebuild_clock.date = '2026-10-19'
+    with pytest.raises(ValueError, match="today"):
+        at.cmd_rebuild_unplaced_enhancement(rebuild_clock, st)
+    rebuild_clock.date = DAY
+    path.write_text('{}')  # call uses state already validated/applied by load_state
+    st['frozen_by_date'][DAY] = {'frozen_at': '2026-10-20T11:00:00Z'}
+    artifact = local / f'autobets_enh_tickets_{DAY}.txt'
+    artifact.write_text('NEW REPLACEMENT\nFROZEN AT 13:00 — FINAL')
+    monkeypatch.setattr(at.subprocess, 'run', lambda *a, **k: pytest.fail('new frozen card preserved'))
+    assert at.cmd_rebuild_unplaced_enhancement(rebuild_clock, st) == 0
+    assert artifact.read_text() == 'NEW REPLACEMENT\nFROZEN AT 13:00 — FINAL'
