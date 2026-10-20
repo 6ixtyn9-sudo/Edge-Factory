@@ -11393,3 +11393,34 @@ not suppressed or weakened. Final regression and merge receipt follows.
 Final enhancement regression:3415passed1skipped1failed147.96s; sole failure is
 unchanged baseline identity/persisted-registry alias tripwire reproduced above.
 259focusedpassed6.61s; diff-checkclean,zero trackedlocaldata changes.
+
+### Operator-approved enhancement withdrawal — 20 October 2026
+
+Operator asked to delete/start over and explicitly answered **none placed**.
+Approved exception is limited to today's UNPLACED enhancement ticket. Main bank,
+main ticket, settled history and enhancement bank/cycle/events are unchanged.
+Original artifact/performance archived under docs/operator/withdrawn-tickets;
+active enhancement ticket removed, report now zero open/held commitments.
+Committed date/lane/approval/hash receipt allows cached enhancement open entries
+and locks to be removed before settlement, idempotently, retaining audit details.
+Later replacements survive; already-settled history/unknown artifacts fail closed.
+No global --reset/backfill, cache deletion or statistical gate change.
+
+Companion workflow YAML prepared for manual application: enhancement_reset housekeeping mode: apply receipts
+only; no capture, settlement, mining, rebuild, grade, notification, state publish
+or degraded-cache publication. Auto entry/grade also apply pending receipts before
+settlement. Local housekeeping command ran successfully; remote cache execution
+not yet verified. History recovery still outstanding; no replacement endorsed.
+143 focused tests passed8.86s; includes 14 new reset/receipt/cache/main-isolation
+checks. Final full-suite and deployment receipt follow.
+Final reset regression:3430passed1skipped1failed151.58s. Sole failure remains the
+unchanged, independently reproduced identity/league-alias registry tripwire.
+No reset/enhancement regression failed; no test suppressed. Main state/ticket
+diff empty, main state blob remains9de29f237df8a33b35b9569c5c595ceb849c601c.
+
+Workflow-file push was rejected (GitHub App lacks workflows permission). Kept
+.github/workflows/daily.yml unchanged in the published code change; supplied
+complete companion YAML to the operator separately. Reset helper + receipt do
+not depend on that workflow edit: normal enhancement loads apply the receipt.
+Remote reset execution remains unobserved. New housekeeping CLI test proves no
+settlement/build/results calls; no main-bank/ticket changes.
