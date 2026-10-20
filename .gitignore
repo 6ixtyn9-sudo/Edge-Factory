@@ -193,3 +193,6 @@ dist/
 
 # Local read-only audit/test scratch (reports belong in docs/operator).
 .cache/
+
+# Explicit operator-approved, unplaced enhancement resets survive stale caches.
+!localdata/autobets_enh_tickets_20*_reset.json
