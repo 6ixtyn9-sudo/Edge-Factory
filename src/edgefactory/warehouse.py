@@ -47,6 +47,21 @@ def _src_view(con, name: str, glob: str, select: str) -> None:
         f"CREATE OR REPLACE VIEW {name} AS SELECT {select} "
         f"FROM read_csv_auto('{glob}', all_varchar=true, union_by_name=true)"
     )
+    # Operational contracts must retain capture identity/timing and explicit
+    # line/period prices. Older monthly schemas may lack these fields: preserve
+    # only observed columns, never invent a kickoff, provenance or a price.
+    observed = {r[0] for r in con.execute(
+        f"DESCRIBE SELECT * FROM read_csv_auto('{glob}', all_varchar=true, union_by_name=true)"
+    ).fetchall()}
+    selected = {r[0] for r in con.execute(f"DESCRIBE {name}").fetchall()}
+    optional = ("kickoff", "time", "status", "captured_at", "result_source",
+                "odd_o15", "odd_u15", "odd_o35", "odd_u35", "odd_o45", "odd_u45",
+                "odd1_ht", "oddx_ht", "odd2_ht", "odd_o15_ht", "odd_u15_ht",
+                "odd_o25_ht", "odd_u25_ht")
+    extra = [c for c in optional if c in observed and c not in selected]
+    if extra:
+        con.execute(f"CREATE OR REPLACE VIEW {name} AS SELECT {select}, {', '.join(extra)} "
+                    f"FROM read_csv_auto('{glob}', all_varchar=true, union_by_name=true)")
 
 def _table_exists(con, name: str) -> bool:
     try:

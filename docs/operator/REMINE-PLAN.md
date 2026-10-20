@@ -254,3 +254,86 @@ the observed4096-character truncation and numeric masks, verify exact record
 recovery, and reject incomplete/corrupted packets. This correction is NOT yet
 observed in a runner. It requires no provider calls or full official rerun; the
 existing cache-only mode is sufficient. No dispatch attempted in this follow-up.
+
+## Operator-authorized serving migration — 20 October 2026 (PR105)
+
+This supersedes the earlier **serving-deferred** boundary, not its evidence or
+price-provenance warnings. The operator authorized connecting validated current
+contracts to selection, pricing, assay and decay, with red-team testing and merge.
+
+- The **existing miner** still searches the same subsets, strategies, markets,
+  thresholds and train/validation gates. Its normal daily invocations now pass
+  `--activate`; the existing workflow's `remine_only` command does **not**. Direct
+  research runs remain non-operational unless explicitly given `--activate`.
+- Shared predicate/observation code lives in `edgefactory.consensus_contracts`;
+  it is not another miner, workflow, data store or registry. The live registry
+  remains `localdata/edges_consensus.json` and purity remains
+  `localdata/purity_registry.json`. Exact recipe IDs hash schema + market + sorted
+  electorate + strategy + followed source + threshold. Labels cannot substitute
+  for these structured fields. Historical source-count fallbacks are disabled
+  once the registry declares `operating_contract: post_forebet_v1`, including
+  when it has zero eligible contracts.
+- Activation requires the unchanged 340/120 sample **and priced-sample** floors,
+  train ROI >= -10%, validation ROI >= 0%, validation Wilson LB >= 50%, finite
+  returns, and an exact recreation of both periods' complete reported statistics.
+  A mismatch aborts before the atomic registry write. Missing incumbent state,
+  missing completed-era history or zero passes preserve the existing registry;
+  cold-cache emptiness is not proof that incumbents failed. No original 39-pass
+  artifact is presumed recovered, and no list of 39 contracts is hardcoded.
+- Same-day selection reads the existing warehouse captures with exact date and
+  source-team identities, including categorical/no-floor contracts. Missing or
+  conflicted electorate members cannot be substituted, and extra dissent outside
+  the named subset cannot veto it. Singles, unanimity, strict-majority and each
+  disagreement-follow predicate use the same projection as mining and audits.
+  Identical predictions count once; repeated quote updates use conservative
+  field-wise minimums, not whichever historical row happened to come last.
+- Warehouse views retain **observed** kickoff/time, result provenance and explicit
+  line/period prices rather than dropping them. O/U 1.5/3.5/4.5 and explicitly
+  named HT prices remain separate from O/U 2.5 and FT prices. The live price index
+  recognizes all nine canonical markets; no fuzzy period inference was added.
+  HT and FT books cannot combine into a supposedly coherent three-way book.
+  Missing HT/other-market historical prices still prevent certification.
+- Every newly selected row starts **unpriced**. Historical donor quotes cannot
+  become execution quotes. Existing enrichment, freshness, same-side/market,
+  named-book, corroboration, price-quarantine and context-veto gates remain in
+  force. No provider request or budget was added. Unsupported/unavailable live
+  quotes remain unpriced, not inferred from another side, period or goals line.
+- Assay/decay recreate the actual contract, not legacy Forebet views. Purity maps
+  are scoped by exact contract **inside the existing purity registry**, including
+  team contexts whose legacy keys lacked a rule dimension. New contracts cannot
+  inherit other electorates' contexts or fuzzy-league matches. Purity denominators
+  include priced observations only; unpriced predictions are not synthetic losses.
+  The five-context-map return contract is also fixed on assay failure paths.
+- Newly accepted contracts start WATCH, not HEALTHY. Activation is not backdated
+  by a historical `--as-of`. Decay uses only completed observations on/after the
+  original activation date, excluding the searched validation baseline. Fewer
+  than the existing minimum recent **priced** observations cannot earn HEALTHY.
+  Revalidation keeps incumbents' original baseline, activation date, decay and
+  bench. An existing bench cannot be reset by re-running the threshold search.
+  Frozen ML payload/rules are preserved verbatim; this does not reactivate ML.
+- Current-contract selection retains fixture-decision audit reconciliation across
+  the full surviving-source roster. Legacy Forebet profile text is not attached
+  as if it explained the new certification. Broader enhancement competition stays
+  ON and its existing parent, price, probability and veto requirements remain.
+
+Red-team receipt: **87 focused tests passed** (17.99s), including real-sized
+synthetic 340/120 datasets, all nine price-index identities, wrong-side/line/period
+refusal, forged stats, missing/conflicting votes, minority-follow semantics,
+immutable benches, forward-only decay, unpriced-forward health refusal, scoped
+assay, historical activation boundaries and row-order-invariant duplicate prices.
+These synthetic tests are engineering evidence, not production betting returns.
+Final full-suite/merge receipt follows below. The earlier production 39 passes
+were on an older price projection; exposing already captured line prices and
+stricter timing quarantine can change a fresh run's counts legitimately.
+
+Deployment is effective on a run **executing the merged code with restored
+prediction history**. Merge does not change an already running job's checkout,
+rebuild an already frozen morning slip, recover the old artifact, prove 75% is
+optimal, or guarantee a new pushed bet. The original official-morning run is
+already complete; no duplicate full run or paid capture was dispatched here.
+
+Final local validation on the complete migration: **3,381 passed, 1 skipped** in
+162.35s; focused **87 passed** in17.99s; additional pricing/normalization/coherent-
+book/warehouse regression selection **58 passed** in0.67s. `git diff --check` clean.
+No tracked `localdata/` file changed. Runner activation remains unobserved until
+an existing daily mode executes the merged code; no dispatch was attempted.
