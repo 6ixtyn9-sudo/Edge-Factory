@@ -11321,3 +11321,45 @@ context still wrong. OddsPAPI3boardoverlaps but0pendingpriorities and0cardmatche
 42dailycredits exhausted. Supabase5missingIDs refuseddelete. Main26.4min ticket
 builder +10.1min grade +20.4min enhancements +15min enhancementgrade dominate
 ~106min workflow, not5.5min miner. No frozen slips rewritten.
+
+### Authorized post-Forebet serving migration — 20 October 2026, PR105
+
+Operator explicitly reversed serving deferral: implement selection/pricing/
+assay/decay consistency, red-team and merge ASAP. Existing miner now shares exact
+observation/predicate code with consumers (consensus_contracts module, NOT a new
+miner/workflow/registry). Normal daily miner commands pass --activate;
+remine_only/direct research remain read-only by default. Activation uses unchanged
+340/120 statistical AND priced gates, finite ROI, plus exact reconstruction of
+both train/valid statistics before an atomic write to existing live registry.
+No 39-row list hardcoded; missing/zero/cold history preserves incumbent state.
+
+Structured recipe hashes identify exact source set/market/strategy/follow/floor.
+Post-migration selection uses same-day warehouse captures and never falls back
+to Forebet-era count slots, even when all current contracts are benched. All four
+strategy types share miner projection. Current fixtures retain decision audit
+reconciliation. Warehouse preserves observed timing/provenance and explicit
+line/period prices; all nine canonical price indexes separate sides/lines/FT/HT.
+Quote-only duplicates choose minimum explicit historical prices independent of
+row order. Live candidates start UNPRICED and use unchanged enrichment/provenance/
+corroboration/quarantine/context gates. Broader competition remains ON, not proof
+75% is optimal. No new network capture, provider budget or frozen-ticket edits.
+
+Assay and decay rebuild exact current contracts. Existing purity_registry now
+has contract_contexts to stop pooled team/other-rule/fuzzy-league certification
+inheritance; priced-only purity, no unpriced synthetic losses. Assay early exits
+fixed to return five maps. Newly approved edges start WATCH; untouched decay
+begins actual activation day (not historical --as-of), excludes validation, needs
+minimum recent priced sample for HEALTHY. Daily revalidation preserves original
+baseline/activation/decay/bench; ML model and ML rules preserved verbatim, no ML
+reactivation. Zero/partial/malformed/benched contract states fail closed in live
+selection. Details + operational conditions: docs/operator/REMINE-PLAN.md latest
+supersession section. 87 focused tests passed17.99s, synthetic real-size evidence;
+final full-suite and merge receipt pending. No claim to have beaten09:00SAST,
+recovered original39 artifact, or activated production before a merged-code run.
+
+Final migration validation:3381passed1skipped162.35s;87focused17.99s;
+58additionalprice/normalization/coherentbook/warehousetests0.67s. Diff-checkclean;
+zero trackedlocaldata changes. PR105 is the merge target on fixed session branch
+arena/74772619-edge-factory. Existing CloudflareWorkers check alreadyfailed on
+prior readout-onlycommit; not claimedgreen. Production activation unobserved,
+no workflowdispatch. Merge receipt follows after GitHub confirms operation.

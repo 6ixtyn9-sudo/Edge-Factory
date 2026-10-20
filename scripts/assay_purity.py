@@ -544,17 +544,21 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
     sport = edge.get("sport", "soccer")
 
     if not view:
-        return {}, {}, {}, {}
+        return {}, {}, {}, {}, {}
 
     try:
         _safe_ident(view)
         cols = _columns(con, view)
     except Exception:
-        return {}, {}, {}, {}
+        return {}, {}, {}, {}, {}
 
     # required columns
     if not {"pick", "outcome"}.issubset(cols):
-        return {}, {}, {}, {}
+        return {}, {}, {}, {}, {}
+
+    if edge.get("contract_schema") == "post_forebet_v1":
+        # Purity is a priced-return assay, not a loss count for unpriced tips.
+        where = f"({where}) AND pick_odds IS NOT NULL"
 
     has_league = "league" in cols
     has_home = "home" in cols
@@ -830,6 +834,8 @@ def main():
     avail = recreate_views(con)
 
     # High-density base fallback views to resolve purity context sparsity
+    from edgefactory.consensus_contracts import recreate_contract_views
+    avail.update(recreate_contract_views(con, certified))
     high_density_bases = []
     if "v_consensus2" in avail:
         high_density_bases.append({
@@ -864,6 +870,7 @@ def main():
             "sport": "soccer",
         })
 
+    contract_contexts: dict = {}
     league_all: dict = {}
     team_all: dict = {}
     odds_all: dict = {}
@@ -883,6 +890,9 @@ def main():
                 print(f"{rule:45s}  SKIP – view {view} unavailable")
                 continue
         l_ctx, t_ctx, o_ctx, c_ctx, n_ctx = assay_edge(con, e, args.window)
+        if e.get("contract_schema") == "post_forebet_v1":
+            contract_contexts[rule] = dict(league=l_ctx, team=t_ctx, odds_band=o_ctx,
+                                           competition_type=c_ctx, niche=n_ctx)
         league_all.update(l_ctx)
         team_all.update(t_ctx)
         odds_all.update(o_ctx)
@@ -903,6 +913,7 @@ def main():
     registry = {
         "generated_at": datetime.now(timezone.utc).isoformat() + "Z",
         "window_days": args.window,
+        "contract_contexts": contract_contexts,
         "contexts": {
             "league": league_all,
             "team": team_all,

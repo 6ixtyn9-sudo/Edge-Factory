@@ -1457,7 +1457,97 @@ def _prefer_entry(new: dict, old: dict | None) -> bool:
     return new_penalty < old_penalty
 
 
+def load_post_forebet_registry():
+    from edgefactory.consensus_contracts import SCHEMA
+    try:
+        registry = json.loads(EDGES_PATH.read_text())
+        if isinstance(registry, dict) and registry.get("operating_contract") == SCHEMA:
+            return registry
+    except (OSError, ValueError, TypeError):
+        pass
+    return None
+
+
+def eval_post_forebet(day, registry, fixture_audit=None):
+    """Serve only exact validated subsets from the existing warehouse capture.
+
+    No network re-fetch changes a recipe's units/identity, and absent capture
+    never falls back to a retired electorate. Historical donor odds are NOT
+    execution prices: all emitted rows start unpriced and go through the same
+    existing market/side-specific enrichment and evidence gates as other picks.
+    """
+    from datetime import timedelta
+    from edgefactory.consensus_contracts import (
+        SCHEMA, REMINE_SOURCES, collect_observations, contract_rows, validate_contract,
+    )
+    edges = []
+    for edge in registry.get("edges", []):
+        if edge.get("status") != "certified" or edge.get("contract_schema") != SCHEMA:
+            continue
+        try:
+            validate_contract(edge)
+            if day < edge["activated_as_of"]:
+                continue
+            edges.append(edge)
+        except (KeyError, TypeError, ValueError):
+            print("POST_FOREBET_SELECTION blocked malformed contract", file=sys.stderr)
+    data, picks = {}, []
+    if not edges or not (LOCALDATA / "warehouse.duckdb").exists():
+        return picks, 0, 0, data
+    import duckdb
+    with duckdb.connect(str(LOCALDATA / "warehouse.duckdb"), read_only=True) as con:
+        _, observations, ambiguous, resolved, _ = collect_observations(
+            con, start=day, as_of=(date.fromisoformat(day) + timedelta(days=1)).isoformat())
+    for (key, market), votes in observations.items():
+        for source, vote in votes.items():
+            if (key, market, source) not in ambiguous:
+                data.setdefault(source, {})[(key[1], key[2])] = vote["row"]
+    for edge in edges:
+        for row in contract_rows(observations, ambiguous, resolved, edge, settled=False):
+            unstable, _ = fixture_schedule_unstable(*row["source_rows"])
+            if unstable:
+                continue
+            home, away = canonical_display_team(row["home"]), canonical_display_team(row["away"])
+            picks.append({
+                "date": day, "market": edge["market"], "sport": "soccer",
+                "match": f"{home} vs {away}", "home": home, "away": away,
+                "league": row["league"], "kickoff": row["kickoff"], "pick": row["pick"],
+                "avg_p": row["avg_p"] if row["avg_p"] is not None else 0.0,
+                "probability_available": row["avg_p"] is not None,
+                "w_score": float(edge["valid"]["wilson_lb"]),
+                "odds": None, "odds_source": None, "bookmaker": None,
+                "rule": edge["rule"], "edge_rule": edge["rule"],
+                "display_rule": edge.get("research_rule", edge["rule"]),
+                "contract_schema": SCHEMA, "contract_id": edge["contract_id"],
+                "n_way": len(edge["sources"]), "edge_n_way": len(edge["sources"]),
+                "sources_used": list(edge["sources"]), "source_weights": {},
+            })
+    attach_kickoff_normalisation(picks, data)
+    if fixture_audit is not None:
+        by_fixture = {}
+        for pick in picks:
+            key = (source_team_key(pick["home"]), source_team_key(pick["away"]))
+            by_fixture.setdefault(key, []).append(pick)
+        for key in sorted({(key[1], key[2]) for key, _ in observations}):
+            emitted = []
+            with _fixture_decision_audit(fixture_audit, key, data, emitted, None, [], [],
+                                         audit_sources=REMINE_SOURCES) as decision:
+                emitted.extend(by_fixture.get(key, []))
+                if decision is not None:
+                    decision["scope"] = SCHEMA
+                _audit_route(decision, "consensus", "emitted" if emitted else "rejected",
+                             None if emitted else "no_validated_contract_match",
+                             operating_contract=SCHEMA)
+    picks.sort(key=lambda r: (-r["w_score"], -r["avg_p"], r["rule"]))
+    print(f"POST_FOREBET_SELECTION {day}: contracts={len(edges)} candidates={len(picks)} "
+          f"ambiguous_votes={len(ambiguous)}", file=sys.stderr)
+    return picks, 0, len({key for key, _ in observations}), data
+
+
 def load_thresholds():
+    if load_post_forebet_registry() is not None:
+        # The structured registry is authoritative, including zero active edges.
+        return {}, None, None, False
     edges = []
     try:
         data = json.loads(EDGES_PATH.read_text(encoding="utf-8"))
@@ -1658,7 +1748,7 @@ def load_edge_meta():
                 continue
             status = e.get("status", "certified")
             decay = e.get("decay", {})
-            verdict = decay.get("verdict", "HEALTHY")
+            verdict = decay.get("verdict", "WATCH" if e.get("contract_schema") == "post_forebet_v1" else "HEALTHY")
             meta = {"status": status, "decay_verdict": verdict}
             out[rule] = meta
             entry = _edge_entry(e)
@@ -1770,7 +1860,13 @@ def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
 
 
 def lookup_context(purity: dict, pick: dict) -> dict:
-    ctx = purity.get("contexts", {}) if purity else {}
+    exact_contract = pick.get("contract_schema") == "post_forebet_v1"
+    if exact_contract:
+        # Team keys in the legacy pooled map have no rule dimension. Keep
+        # every context dimension scoped to this exact operational recipe.
+        ctx = (purity or {}).get("contract_contexts", {}).get(pick.get("edge_rule") or pick.get("rule"), {})
+    else:
+        ctx = purity.get("contexts", {}) if purity else {}
     league_ctx = ctx.get("league", {})
     team_ctx = ctx.get("team", {})
     odds_ctx = ctx.get("odds_band", {})
@@ -1790,7 +1886,7 @@ def lookup_context(purity: dict, pick: dict) -> dict:
         k.split("|")[1] for k in league_ctx
         if isinstance(k, str) and k.count("|") >= 1
     }
-    if league and known_league_keys:
+    if league and known_league_keys and not exact_contract:
         league_prefix = f"{sport}|{league}|"
         has_exact = any(k.startswith(league_prefix) for k in league_ctx)
         if not has_exact:
@@ -1825,7 +1921,7 @@ def lookup_context(purity: dict, pick: dict) -> dict:
         prefix=f"{sport}|{league}|{market}|",
         suffix=f"|{sel}",
     )
-    league_v, league_meta = _best_ctx([league_exact, league_fallback])
+    league_v, league_meta = _best_ctx([league_exact] if exact_contract else [league_exact, league_fallback])
 
     team_h_key = f"{sport}|{home_norm}|{league}|{market}|home"
     team_a_key = f"{sport}|{away_norm}|{league}|{market}|away"
@@ -2949,7 +3045,10 @@ def _scoutingstats_rows_to_odds(rows: list[dict]) -> list[dict]:
         }
         for market, mapping in (
             ("1x2", {"home": "odd1", "draw": "oddx", "away": "odd2"}),
+            ("ou_1.5", {"over": "odd_o15", "under": "odd_u15"}),
             ("ou_2.5", {"over": "odd_o25", "under": "odd_u25"}),
+            ("ou_3.5", {"over": "odd_o35", "under": "odd_u35"}),
+            ("ou_4.5", {"over": "odd_o45", "under": "odd_u45"}),
             ("btts", {"yes": "odd_gg", "no": "odd_ng"}),
         ):
             for selection, col in mapping.items():
@@ -3101,10 +3200,11 @@ def _gate_one_x_two_rows(rows: list[dict]) -> tuple[list[dict], list[dict], dict
         "withheld_fixture_names": [], "reason_counts": {},
     }
     for row in rows:
-        if str(row.get("market") or "") != "1x2":
+        if str(row.get("market") or "") not in ("1x2", "ht_1x2"):
             kept.append(row)
             continue
         key = (
+            str(row.get("market") or ""),
             str(row.get("date") or ""),
             odds_team_key(row.get("home") or ""),
             odds_team_key(row.get("away") or ""),
@@ -4307,7 +4407,7 @@ def donor_vocabulary_lines(report: dict[str, dict], *, limit: int = 12) -> list[
 
 
 PRICE_COVERAGE_SOURCES = ("betexplorer", "oddspapi", "theoddsapi")
-_PRICE_SUPPORTED_MARKETS = {"1x2", "ou_2.5", "btts"}
+_PRICE_SUPPORTED_MARKETS = {"1x2", "ht_1x2", "ou_1.5", "ou_2.5", "ou_3.5", "ou_4.5", "btts", "ht_ou_1.5", "ht_ou_2.5"}
 
 
 def _coverage_fixture_key(obj: dict, fallback_day: str | None = None) -> tuple[str, str, str] | None:
@@ -4917,21 +5017,23 @@ def _audit_finite(value):
 
 
 @contextmanager
-def _fixture_decision_audit(audit, key, data, picks, ml_model, ml_rules, fade_rules):
+def _fixture_decision_audit(audit, key, data, picks, ml_model, ml_rules, fade_rules,
+                            audit_sources=None):
     """Attach branch evidence to the existing upcoming/ML fixture entries.
 
     All evidence is decision-time input, not outcomes. No source fetches,
     candidate mutation, additional gating or warehouse/model refits.
     """
+    audit_sources = audit_sources or SOURCES_1X2
     decision = None
     entry = None
     start = len(picks)
     if audit is not None:
         try:
-            row0 = next((data[source][key] for source in SOURCES_1X2
+            row0 = next((data[source][key] for source in audit_sources
                          if key in data.get(source, {})), None) or {}
             votes = []
-            for source in SOURCES_1X2:
+            for source in audit_sources:
                 row = data.get(source, {}).get(key)
                 probabilities = probs_1x2(row or {})
                 selection, maximum = top_pick(*probabilities) if probabilities else (None, None)
@@ -5692,6 +5794,9 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
 def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = None,
             research_collector: FadeResearchCollector | None = None,
             fixture_audit: list | None = None):
+    current_registry = load_post_forebet_registry()
+    if current_registry is not None:
+        return eval_post_forebet(day, current_registry, fixture_audit=fixture_audit)
     data = fetch_all(day)
     effective_weights = dict(source_weights_1x2 or {})
     if _forebet_historical(day):
@@ -7467,8 +7572,12 @@ def main():
             # decay monitor's explicit HEALTHY verdict earns the clean bucket.
             meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "WATCH"})
             ctx = lookup_context(purity, p)
+            resolution_contexts, resolution_pools = _veto_contexts, _veto_pools
+            if p.get("contract_schema") == "post_forebet_v1":
+                resolution_contexts = (purity or {}).get("contract_contexts", {}).get(rule, {})
+                resolution_pools = build_pool_table(resolution_contexts)
             ctx = apply_resolution_to_ctx(
-                ctx, _veto_contexts, _veto_pools, veto_resolution_on,
+                ctx, resolution_contexts, resolution_pools, veto_resolution_on,
                 sport=p.get("sport", "soccer"),
                 market=p.get("market", "1x2"),
                 rule=p.get("edge_rule") or p.get("rule", ""),
@@ -7499,7 +7608,10 @@ def main():
             
             annotate_market_recommendation(p)
             
-            p["statistical_comment"] = get_statistical_comment(con, p.get("pick"), p.get("avg_p"), p.get("n_way", 3))
+            p["statistical_comment"] = (
+                "Exact post-Forebet contract; searched validation is not untouched forward proof."
+                if p.get("contract_schema") == "post_forebet_v1" else
+                get_statistical_comment(con, p.get("pick"), p.get("avg_p"), p.get("n_way", 3)))
             
             # Compute deep dynamic enhancement overlay
             enh = compute_dynamic_enhancement(con, p, prices_index)
