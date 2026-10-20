@@ -1,32 +1,45 @@
 {
   "ceilings": [],
   "edge_silent_days": 14,
-  "edges": [
-    {
-      "decay": "WATCH",
-      "last_fired": "2026-10-11",
-      "n_last_window": 32,
-      "rule": "2way-unanimous avg_p>=70",
-      "silent": false
-    },
-    {
-      "decay": "WATCH",
-      "last_fired": "2026-08-10",
-      "n_last_window": 0,
-      "rule": "3way-unanimous avg_p>=65",
-      "silent": true
-    }
-  ],
-  "generated_at": "2026-10-20T10:31:05",
+  "edges": [],
+  "generated_at": "2026-10-20T21:51:03",
   "ignored_non_operational_rules": [
-    "2way-unanimous home-only avg_p>=65",
-    "2way-unanimous min_p>=60 avg_p>=65",
-    "2way-unanimous min_p>=60 avg_p>=70",
-    "3way-unanimous home-only avg_p>=60",
-    "3way-unanimous home-only avg_p>=65",
-    "3way-unanimous min_p>=60 avg_p>=60",
-    "3way-unanimous min_p>=60 avg_p>=65",
-    "3way-unanimous odds-1.20-1.75 avg_p>=65"
+    "pfc_0ad08cd1b2e75a2c9051189e",
+    "pfc_0aed63f3d04b46330958121d",
+    "pfc_0b290b623e2a54ea7df3006c",
+    "pfc_0f100c9da356ed1c05d9c642",
+    "pfc_14ee12458803822df3013bcd",
+    "pfc_1607fec83282d02c5254c2bf",
+    "pfc_1ba3ab3c75e6f3a9680ae43c",
+    "pfc_1e9cfc6500aaac77afa1eaf9",
+    "pfc_234f16641d9893e8ec2a01f0",
+    "pfc_2bd498a3472b7bbd71982ece",
+    "pfc_3072388544a60552346bd162",
+    "pfc_35f7e50bf23db96c2d3dd59d",
+    "pfc_3bfaf30507905754f7faab2a",
+    "pfc_3dc0fa6511953bf09bc4c845",
+    "pfc_3fbabd0ade3f89853e43fb10",
+    "pfc_40b163633fc01fd0ff7d0ef1",
+    "pfc_439097cb9bb700e9996c0b07",
+    "pfc_4a1f2bb2278d13c8189148d0",
+    "pfc_4cf3df8552488297d7ccf526",
+    "pfc_5208b9e15194a691590430ad",
+    "pfc_527524a94e98cff9740d499c",
+    "pfc_5954379f3a12700edcfd8387",
+    "pfc_5f861bad9f49ebf6d6fe2c16",
+    "pfc_61cb1dd2a3157c4231070cdb",
+    "pfc_73b036a8ee8dd5a4dea48134",
+    "pfc_7d20e19c2c26174fa21e9e86",
+    "pfc_92ab281aa7c2173e7502ba49",
+    "pfc_a460a0e9dcb1f980cde169c0",
+    "pfc_b011652ec3e473fbc0afbb6a",
+    "pfc_b11e22bfdd27d85fad78ba74",
+    "pfc_c8cbcf76ea758fd6de596ae1",
+    "pfc_cd84fb2c3ed889c0ae9eb89e",
+    "pfc_d17123b85e11155f22e40051",
+    "pfc_e25602082a90cb64fb9c5451",
+    "pfc_f2b2a2e84093abe72bbc01c0",
+    "pfc_fb2e721d2bb8a41fe9fa3713"
   ],
   "retired_captures": 1,
   "source_stale_days": 7,
@@ -73,17 +86,19 @@
     },
     {
       "name": "predictz",
-      "newest_date": null,
-      "newest_file": null,
+      "newest_date": "2026-10-19",
+      "newest_file": "predictz_2026-10.csv.gz",
+      "retired": null,
       "role": "shadow",
-      "stale": null
+      "stale": false
     },
     {
       "name": "windrawwin",
-      "newest_date": null,
-      "newest_file": null,
+      "newest_date": "2026-10-17",
+      "newest_file": "windrawwin_2026-10.csv.gz",
+      "retired": null,
       "role": "shadow",
-      "stale": null
+      "stale": false
     },
     {
       "name": "afootballreport",
@@ -126,5 +141,5 @@
       "stale": false
     }
   ],
-  "warn_count": 1
+  "warn_count": 0
 }

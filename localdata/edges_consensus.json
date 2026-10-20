@@ -2,7 +2,7 @@
   "edges": [
     {
       "activated_as_of": "2026-10-20",
-      "contract_id": "pfc_cddf4106a3d45b6e455d8c73",
+      "contract_id": "pfc_92ab281aa7c2173e7502ba49",
       "contract_schema": "post_forebet_v1",
       "decay": {
         "verdict": "WATCH",
@@ -16,7 +16,7 @@
           "wilson_lb": 0.0,
           "roi": null
         },
-        "baseline_lb": 0.5181,
+        "baseline_lb": 0.5405,
         "recent_lb": 0.0,
         "recent_ub": 1.0
       },
@@ -29,9 +29,10 @@
         "start": "2026-06-13"
       },
       "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
-      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=0",
-      "rule": "pfc_cddf4106a3d45b6e455d8c73",
+      "research_rule": "1x2 unanimous[bzzoiro+scoutingstats+statarea] avg_p>=0",
+      "rule": "pfc_92ab281aa7c2173e7502ba49",
       "sources": [
+        "bzzoiro",
         "scoutingstats",
         "statarea"
       ],
@@ -41,29 +42,29 @@
       "strategy": "unanimous",
       "threshold": 0,
       "train": {
-        "avg_odds": 1.85,
-        "hit": 0.5346,
-        "n": 1850,
-        "n_priced": 1850,
-        "roi": -0.0542,
-        "wilson_lb": 0.5118,
-        "wins": 989
+        "avg_odds": 1.826,
+        "hit": 0.5366,
+        "n": 410,
+        "n_priced": 410,
+        "roi": -0.0802,
+        "wilson_lb": 0.4882,
+        "wins": 220
       },
       "valid": {
-        "avg_odds": 1.784,
-        "hit": 0.6014,
-        "n": 138,
-        "n_priced": 138,
-        "roi": 0.0193,
-        "wilson_lb": 0.5181,
-        "wins": 83
+        "avg_odds": 1.8,
+        "hit": 0.595,
+        "n": 321,
+        "n_priced": 321,
+        "roi": 0.0361,
+        "wilson_lb": 0.5405,
+        "wins": 191
       },
-      "view": "pfc_cddf4106a3d45b6e455d8c73",
+      "view": "pfc_92ab281aa7c2173e7502ba49",
       "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
-      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "contract_id": "pfc_73b036a8ee8dd5a4dea48134",
       "contract_schema": "post_forebet_v1",
       "decay": {
         "verdict": "WATCH",
@@ -77,7 +78,7 @@
           "wilson_lb": 0.0,
           "roi": null
         },
-        "baseline_lb": 0.5222,
+        "baseline_lb": 0.5405,
         "recent_lb": 0.0,
         "recent_ub": 1.0
       },
@@ -90,9 +91,10 @@
         "start": "2026-06-13"
       },
       "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
-      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=35",
-      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+      "research_rule": "1x2 unanimous[bzzoiro+scoutingstats+statarea] avg_p>=35",
+      "rule": "pfc_73b036a8ee8dd5a4dea48134",
       "sources": [
+        "bzzoiro",
         "scoutingstats",
         "statarea"
       ],
@@ -102,29 +104,29 @@
       "strategy": "unanimous",
       "threshold": 35,
       "train": {
-        "avg_odds": 1.85,
-        "hit": 0.5346,
-        "n": 1850,
-        "n_priced": 1850,
-        "roi": -0.0542,
-        "wilson_lb": 0.5118,
-        "wins": 989
+        "avg_odds": 1.826,
+        "hit": 0.5366,
+        "n": 410,
+        "n_priced": 410,
+        "roi": -0.0802,
+        "wilson_lb": 0.4882,
+        "wins": 220
       },
       "valid": {
-        "avg_odds": 1.779,
-        "hit": 0.6058,
-        "n": 137,
-        "n_priced": 137,
-        "roi": 0.0267,
-        "wilson_lb": 0.5222,
-        "wins": 83
+        "avg_odds": 1.8,
+        "hit": 0.595,
+        "n": 321,
+        "n_priced": 321,
+        "roi": 0.0361,
+        "wilson_lb": 0.5405,
+        "wins": 191
       },
-      "view": "pfc_f56fe4a2759e9b17b9bdb116",
+      "view": "pfc_73b036a8ee8dd5a4dea48134",
       "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
-      "contract_id": "pfc_d94d447efe0742440e953722",
+      "contract_id": "pfc_cd84fb2c3ed889c0ae9eb89e",
       "contract_schema": "post_forebet_v1",
       "decay": {
         "verdict": "WATCH",
@@ -138,7 +140,7 @@
           "wilson_lb": 0.0,
           "roi": null
         },
-        "baseline_lb": 0.566,
+        "baseline_lb": 0.5522,
         "recent_lb": 0.0,
         "recent_ub": 1.0
       },
@@ -151,9 +153,10 @@
         "start": "2026-06-13"
       },
       "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
-      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=40",
-      "rule": "pfc_d94d447efe0742440e953722",
+      "research_rule": "1x2 unanimous[bzzoiro+scoutingstats+statarea] avg_p>=40",
+      "rule": "pfc_cd84fb2c3ed889c0ae9eb89e",
       "sources": [
+        "bzzoiro",
         "scoutingstats",
         "statarea"
       ],
@@ -163,24 +166,579 @@
       "strategy": "unanimous",
       "threshold": 40,
       "train": {
-        "avg_odds": 1.8,
-        "hit": 0.5492,
-        "n": 1688,
-        "n_priced": 1688,
-        "roi": -0.0497,
-        "wilson_lb": 0.5253,
-        "wins": 927
+        "avg_odds": 1.786,
+        "hit": 0.5445,
+        "n": 382,
+        "n_priced": 382,
+        "roi": -0.0866,
+        "wilson_lb": 0.4944,
+        "wins": 208
       },
       "valid": {
-        "avg_odds": 1.718,
-        "hit": 0.6532,
-        "n": 124,
-        "n_priced": 124,
-        "roi": 0.0985,
-        "wilson_lb": 0.566,
-        "wins": 81
+        "avg_odds": 1.733,
+        "hit": 0.6098,
+        "n": 287,
+        "n_priced": 287,
+        "roi": 0.0267,
+        "wilson_lb": 0.5522,
+        "wins": 175
       },
-      "view": "pfc_d94d447efe0742440e953722",
+      "view": "pfc_cd84fb2c3ed889c0ae9eb89e",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_0aed63f3d04b46330958121d",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6013,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=45",
+      "rule": "pfc_0aed63f3d04b46330958121d",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 45,
+      "train": {
+        "avg_odds": 1.68,
+        "hit": 0.5849,
+        "n": 1255,
+        "n_priced": 1255,
+        "roi": -0.0513,
+        "wilson_lb": 0.5574,
+        "wins": 734
+      },
+      "valid": {
+        "avg_odds": 1.636,
+        "hit": 0.6426,
+        "n": 540,
+        "n_priced": 540,
+        "roi": 0.0266,
+        "wilson_lb": 0.6013,
+        "wins": 347
+      },
+      "view": "pfc_0aed63f3d04b46330958121d",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_5f861bad9f49ebf6d6fe2c16",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6311,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=50",
+      "rule": "pfc_5f861bad9f49ebf6d6fe2c16",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.55,
+        "hit": 0.6427,
+        "n": 834,
+        "n_priced": 834,
+        "roi": -0.0294,
+        "wilson_lb": 0.6096,
+        "wins": 536
+      },
+      "valid": {
+        "avg_odds": 1.509,
+        "hit": 0.6801,
+        "n": 372,
+        "n_priced": 372,
+        "roi": 0.0033,
+        "wilson_lb": 0.6311,
+        "wins": 253
+      },
+      "view": "pfc_5f861bad9f49ebf6d6fe2c16",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_f2b2a2e84093abe72bbc01c0",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6903,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=55",
+      "rule": "pfc_f2b2a2e84093abe72bbc01c0",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 55,
+      "train": {
+        "avg_odds": 1.436,
+        "hit": 0.7069,
+        "n": 522,
+        "n_priced": 522,
+        "roi": -0.0022,
+        "wilson_lb": 0.6665,
+        "wins": 369
+      },
+      "valid": {
+        "avg_odds": 1.414,
+        "hit": 0.749,
+        "n": 239,
+        "n_priced": 239,
+        "roi": 0.0431,
+        "wilson_lb": 0.6903,
+        "wins": 179
+      },
+      "view": "pfc_f2b2a2e84093abe72bbc01c0",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_0ad08cd1b2e75a2c9051189e",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5654,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=0",
+      "rule": "pfc_0ad08cd1b2e75a2c9051189e",
+      "sources": [
+        "scoutingstats",
+        "statarea",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 0,
+      "train": {
+        "avg_odds": 1.799,
+        "hit": 0.5478,
+        "n": 1057,
+        "n_priced": 1057,
+        "roi": -0.0565,
+        "wilson_lb": 0.5177,
+        "wins": 579
+      },
+      "valid": {
+        "avg_odds": 1.756,
+        "hit": 0.6119,
+        "n": 438,
+        "n_priced": 438,
+        "roi": 0.0289,
+        "wilson_lb": 0.5654,
+        "wins": 268
+      },
+      "view": "pfc_0ad08cd1b2e75a2c9051189e",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_7d20e19c2c26174fa21e9e86",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5654,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=35",
+      "rule": "pfc_7d20e19c2c26174fa21e9e86",
+      "sources": [
+        "scoutingstats",
+        "statarea",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 35,
+      "train": {
+        "avg_odds": 1.799,
+        "hit": 0.5478,
+        "n": 1057,
+        "n_priced": 1057,
+        "roi": -0.0565,
+        "wilson_lb": 0.5177,
+        "wins": 579
+      },
+      "valid": {
+        "avg_odds": 1.756,
+        "hit": 0.6119,
+        "n": 438,
+        "n_priced": 438,
+        "roi": 0.0289,
+        "wilson_lb": 0.5654,
+        "wins": 268
+      },
+      "view": "pfc_7d20e19c2c26174fa21e9e86",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_4a1f2bb2278d13c8189148d0",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5751,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=40",
+      "rule": "pfc_4a1f2bb2278d13c8189148d0",
+      "sources": [
+        "scoutingstats",
+        "statarea",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 40,
+      "train": {
+        "avg_odds": 1.783,
+        "hit": 0.555,
+        "n": 1027,
+        "n_priced": 1027,
+        "roi": -0.0495,
+        "wilson_lb": 0.5245,
+        "wins": 570
+      },
+      "valid": {
+        "avg_odds": 1.738,
+        "hit": 0.6221,
+        "n": 426,
+        "n_priced": 426,
+        "roi": 0.0406,
+        "wilson_lb": 0.5751,
+        "wins": 265
+      },
+      "view": "pfc_4a1f2bb2278d13c8189148d0",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_e25602082a90cb64fb9c5451",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5871,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=45",
+      "rule": "pfc_e25602082a90cb64fb9c5451",
+      "sources": [
+        "scoutingstats",
+        "statarea",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 45,
+      "train": {
+        "avg_odds": 1.711,
+        "hit": 0.5741,
+        "n": 871,
+        "n_priced": 871,
+        "roi": -0.0543,
+        "wilson_lb": 0.541,
+        "wins": 500
+      },
+      "valid": {
+        "avg_odds": 1.669,
+        "hit": 0.6371,
+        "n": 372,
+        "n_priced": 372,
+        "roi": 0.0246,
+        "wilson_lb": 0.5871,
+        "wins": 237
+      },
+      "view": "pfc_e25602082a90cb64fb9c5451",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_3fbabd0ade3f89853e43fb10",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6281,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=50",
+      "rule": "pfc_3fbabd0ade3f89853e43fb10",
+      "sources": [
+        "scoutingstats",
+        "statarea",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 50,
+      "train": {
+        "avg_odds": 1.615,
+        "hit": 0.614,
+        "n": 645,
+        "n_priced": 645,
+        "roi": -0.0378,
+        "wilson_lb": 0.5758,
+        "wins": 396
+      },
+      "valid": {
+        "avg_odds": 1.555,
+        "hit": 0.6842,
+        "n": 285,
+        "n_priced": 285,
+        "roi": 0.0418,
+        "wilson_lb": 0.6281,
+        "wins": 195
+      },
+      "view": "pfc_3fbabd0ade3f89853e43fb10",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_527524a94e98cff9740d499c",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.6381,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=55",
+      "rule": "pfc_527524a94e98cff9740d499c",
+      "sources": [
+        "scoutingstats",
+        "statarea",
+        "vitibet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 55,
+      "train": {
+        "avg_odds": 1.504,
+        "hit": 0.646,
+        "n": 435,
+        "n_priced": 435,
+        "roi": -0.0606,
+        "wilson_lb": 0.5999,
+        "wins": 281
+      },
+      "valid": {
+        "avg_odds": 1.484,
+        "hit": 0.7023,
+        "n": 215,
+        "n_priced": 215,
+        "roi": 0.026,
+        "wilson_lb": 0.6381,
+        "wins": 151
+      },
+      "view": "pfc_527524a94e98cff9740d499c",
       "where": "1=1"
     },
     {
@@ -730,6 +1288,189 @@
         "wins": 432
       },
       "view": "pfc_0f100c9da356ed1c05d9c642",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_b11e22bfdd27d85fad78ba74",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5549,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[statarea+zulubet] avg_p>=0",
+      "rule": "pfc_b11e22bfdd27d85fad78ba74",
+      "sources": [
+        "statarea",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 0,
+      "train": {
+        "avg_odds": 1.737,
+        "hit": 0.6051,
+        "n": 790,
+        "n_priced": 790,
+        "roi": -0.0055,
+        "wilson_lb": 0.5705,
+        "wins": 478
+      },
+      "valid": {
+        "avg_odds": 1.734,
+        "hit": 0.6127,
+        "n": 284,
+        "n_priced": 283,
+        "roi": 0.0037,
+        "wilson_lb": 0.5549,
+        "wins": 174
+      },
+      "view": "pfc_b11e22bfdd27d85fad78ba74",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_3072388544a60552346bd162",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5549,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[statarea+zulubet] avg_p>=35",
+      "rule": "pfc_3072388544a60552346bd162",
+      "sources": [
+        "statarea",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 35,
+      "train": {
+        "avg_odds": 1.737,
+        "hit": 0.6051,
+        "n": 790,
+        "n_priced": 790,
+        "roi": -0.0055,
+        "wilson_lb": 0.5705,
+        "wins": 478
+      },
+      "valid": {
+        "avg_odds": 1.734,
+        "hit": 0.6127,
+        "n": 284,
+        "n_priced": 283,
+        "roi": 0.0037,
+        "wilson_lb": 0.5549,
+        "wins": 174
+      },
+      "view": "pfc_3072388544a60552346bd162",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_5208b9e15194a691590430ad",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "n": 0,
+          "wins": 0,
+          "n_priced": 0,
+          "hit": 0.0,
+          "wilson_lb": 0.0,
+          "roi": null
+        },
+        "baseline_lb": 0.5604,
+        "recent_lb": 0.0,
+        "recent_ub": 1.0
+      },
+      "follow_source": null,
+      "holds": [],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[statarea+zulubet] avg_p>=40",
+      "rule": "pfc_5208b9e15194a691590430ad",
+      "sources": [
+        "statarea",
+        "zulubet"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "certified",
+      "strategy": "unanimous",
+      "threshold": 40,
+      "train": {
+        "avg_odds": 1.72,
+        "hit": 0.6059,
+        "n": 774,
+        "n_priced": 774,
+        "roi": -0.0147,
+        "wilson_lb": 0.5711,
+        "wins": 469
+      },
+      "valid": {
+        "avg_odds": 1.721,
+        "hit": 0.6187,
+        "n": 278,
+        "n_priced": 277,
+        "roi": 0.0107,
+        "wilson_lb": 0.5604,
+        "wins": 172
+      },
+      "view": "pfc_5208b9e15194a691590430ad",
       "where": "1=1"
     },
     {
@@ -1457,26 +2198,217 @@
     },
     {
       "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_cddf4106a3d45b6e455d8c73",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "baseline_lb": 0.5181,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
+      "follow_source": null,
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=0",
+      "rule": "pfc_cddf4106a3d45b6e455d8c73",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "candidate",
+      "strategy": "unanimous",
+      "threshold": 0,
+      "train": {
+        "avg_odds": 1.85,
+        "hit": 0.5346,
+        "n": 1850,
+        "n_priced": 1850,
+        "roi": -0.0542,
+        "wilson_lb": 0.5118,
+        "wins": 989
+      },
+      "valid": {
+        "avg_odds": 1.784,
+        "hit": 0.6014,
+        "n": 138,
+        "n_priced": 138,
+        "roi": 0.0193,
+        "wilson_lb": 0.5181,
+        "wins": 83
+      },
+      "view": "pfc_cddf4106a3d45b6e455d8c73",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "baseline_lb": 0.5222,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
+      "follow_source": null,
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=35",
+      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "candidate",
+      "strategy": "unanimous",
+      "threshold": 35,
+      "train": {
+        "avg_odds": 1.85,
+        "hit": 0.5346,
+        "n": 1850,
+        "n_priced": 1850,
+        "roi": -0.0542,
+        "wilson_lb": 0.5118,
+        "wins": 989
+      },
+      "valid": {
+        "avg_odds": 1.779,
+        "hit": 0.6058,
+        "n": 137,
+        "n_priced": 137,
+        "roi": 0.0267,
+        "wilson_lb": 0.5222,
+        "wins": 83
+      },
+      "view": "pfc_f56fe4a2759e9b17b9bdb116",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
+      "contract_id": "pfc_d94d447efe0742440e953722",
+      "contract_schema": "post_forebet_v1",
+      "decay": {
+        "baseline_lb": 0.566,
+        "checked_at": "2026-10-20",
+        "recent": {
+          "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
+          "wilson_lb": 0.0,
+          "wins": 0
+        },
+        "recent_lb": 0.0,
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
+      },
+      "follow_source": null,
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
+      "market": "1x2",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-20",
+        "split": "2026-09-22",
+        "start": "2026-06-13"
+      },
+      "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+      "research_rule": "1x2 unanimous[scoutingstats+statarea] avg_p>=40",
+      "rule": "pfc_d94d447efe0742440e953722",
+      "sources": [
+        "scoutingstats",
+        "statarea"
+      ],
+      "sport": "soccer",
+      "statistical_gates_passed": true,
+      "status": "candidate",
+      "strategy": "unanimous",
+      "threshold": 40,
+      "train": {
+        "avg_odds": 1.8,
+        "hit": 0.5492,
+        "n": 1688,
+        "n_priced": 1688,
+        "roi": -0.0497,
+        "wilson_lb": 0.5253,
+        "wins": 927
+      },
+      "valid": {
+        "avg_odds": 1.718,
+        "hit": 0.6532,
+        "n": 124,
+        "n_priced": 124,
+        "roi": 0.0985,
+        "wilson_lb": 0.566,
+        "wins": 81
+      },
+      "view": "pfc_d94d447efe0742440e953722",
+      "where": "1=1"
+    },
+    {
+      "activated_as_of": "2026-10-20",
       "contract_id": "pfc_4f2df06575151e798727a6b0",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.7295,
         "checked_at": "2026-10-20",
         "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
           "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
           "wilson_lb": 0.0,
-          "roi": null
+          "wins": 0
         },
-        "baseline_lb": 0.7295,
         "recent_lb": 0.0,
-        "recent_ub": 1.0
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
-      "holds": [],
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
       "market": "ou_1.5",
       "mining_window": {
         "as_of_exclusive": "2026-10-20",
@@ -1492,7 +2424,7 @@
       ],
       "sport": "soccer",
       "statistical_gates_passed": true,
-      "status": "certified",
+      "status": "candidate",
       "strategy": "unanimous",
       "threshold": 0,
       "train": {
@@ -1521,23 +2453,25 @@
       "contract_id": "pfc_054448b499623dd39b072b38",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.7295,
         "checked_at": "2026-10-20",
         "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
           "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
           "wilson_lb": 0.0,
-          "roi": null
+          "wins": 0
         },
-        "baseline_lb": 0.7295,
         "recent_lb": 0.0,
-        "recent_ub": 1.0
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
-      "holds": [],
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
       "market": "ou_1.5",
       "mining_window": {
         "as_of_exclusive": "2026-10-20",
@@ -1553,7 +2487,7 @@
       ],
       "sport": "soccer",
       "statistical_gates_passed": true,
-      "status": "certified",
+      "status": "candidate",
       "strategy": "unanimous",
       "threshold": 35,
       "train": {
@@ -1582,23 +2516,25 @@
       "contract_id": "pfc_6cd236448d9fd967f8dcb591",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.7295,
         "checked_at": "2026-10-20",
         "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
           "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
           "wilson_lb": 0.0,
-          "roi": null
+          "wins": 0
         },
-        "baseline_lb": 0.7295,
         "recent_lb": 0.0,
-        "recent_ub": 1.0
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
-      "holds": [],
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
       "market": "ou_1.5",
       "mining_window": {
         "as_of_exclusive": "2026-10-20",
@@ -1614,7 +2550,7 @@
       ],
       "sport": "soccer",
       "statistical_gates_passed": true,
-      "status": "certified",
+      "status": "candidate",
       "strategy": "unanimous",
       "threshold": 40,
       "train": {
@@ -1643,23 +2579,25 @@
       "contract_id": "pfc_e37e7d70a4d046d7a07da0a4",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.7295,
         "checked_at": "2026-10-20",
         "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
           "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
           "wilson_lb": 0.0,
-          "roi": null
+          "wins": 0
         },
-        "baseline_lb": 0.7295,
         "recent_lb": 0.0,
-        "recent_ub": 1.0
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
-      "holds": [],
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
       "market": "ou_1.5",
       "mining_window": {
         "as_of_exclusive": "2026-10-20",
@@ -1675,7 +2613,7 @@
       ],
       "sport": "soccer",
       "statistical_gates_passed": true,
-      "status": "certified",
+      "status": "candidate",
       "strategy": "unanimous",
       "threshold": 45,
       "train": {
@@ -1704,23 +2642,25 @@
       "contract_id": "pfc_f51b5fdaf32bcca063f4b2cc",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.7295,
         "checked_at": "2026-10-20",
         "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
           "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
           "wilson_lb": 0.0,
-          "roi": null
+          "wins": 0
         },
-        "baseline_lb": 0.7295,
         "recent_lb": 0.0,
-        "recent_ub": 1.0
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
-      "holds": [],
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
       "market": "ou_1.5",
       "mining_window": {
         "as_of_exclusive": "2026-10-20",
@@ -1736,7 +2676,7 @@
       ],
       "sport": "soccer",
       "statistical_gates_passed": true,
-      "status": "certified",
+      "status": "candidate",
       "strategy": "unanimous",
       "threshold": 50,
       "train": {
@@ -1765,23 +2705,25 @@
       "contract_id": "pfc_4e2583010bf805466e33c2d0",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.7295,
         "checked_at": "2026-10-20",
         "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
           "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
           "wilson_lb": 0.0,
-          "roi": null
+          "wins": 0
         },
-        "baseline_lb": 0.7295,
         "recent_lb": 0.0,
-        "recent_ub": 1.0
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
-      "holds": [],
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
       "market": "ou_1.5",
       "mining_window": {
         "as_of_exclusive": "2026-10-20",
@@ -1797,7 +2739,7 @@
       ],
       "sport": "soccer",
       "statistical_gates_passed": true,
-      "status": "certified",
+      "status": "candidate",
       "strategy": "unanimous",
       "threshold": 55,
       "train": {
@@ -1826,23 +2768,25 @@
       "contract_id": "pfc_a90a9b922d2318a2446434ce",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.7362,
         "checked_at": "2026-10-20",
         "recent": {
-          "n": 0,
-          "wins": 0,
-          "n_priced": 0,
           "hit": 0.0,
+          "n": 0,
+          "n_priced": 0,
+          "roi": null,
           "wilson_lb": 0.0,
-          "roi": null
+          "wins": 0
         },
-        "baseline_lb": 0.7362,
         "recent_lb": 0.0,
-        "recent_ub": 1.0
+        "recent_ub": 1.0,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
-      "holds": [],
+      "holds": [
+        "current_revalidation_not_passed"
+      ],
       "market": "ou_1.5",
       "mining_window": {
         "as_of_exclusive": "2026-10-20",
@@ -1858,7 +2802,7 @@
       ],
       "sport": "soccer",
       "statistical_gates_passed": true,
-      "status": "certified",
+      "status": "candidate",
       "strategy": "unanimous",
       "threshold": 60,
       "train": {
