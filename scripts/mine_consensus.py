@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import math
+import zlib
 from collections import Counter, defaultdict
 from datetime import date, timedelta
 from itertools import combinations
@@ -996,106 +997,11 @@ def run_phase_a_confirmation_levers(con, results: list[dict], split: str,
 # Current-source re-mine. Keep the legacy statistical/ML helpers above for
 # historical receipts and frozen-incumbent consumers; the daily entry point
 # below no longer fits Forebet electorates or the Forebet-feature ML model.
-POST_FOREBET_START = "2026-06-13"
-REMINE_SOURCES = (
-    "zulubet", "statarea", "vitibet", "scoutingstats", "prosoccer",
-    "betclan", "bzzoiro", "predictz", "windrawwin", "soccervista",
-    "bettingclosed", "freesupertips", "afootballreport",
+from edgefactory.consensus_contracts import (
+    POST_FOREBET_START, REMINE_SOURCES, REMINE_MARKETS, REMINE_THRESHOLDS,
+    _number, _score_pair, _remine_key, _remine_signal, _remine_outcome, _remine_odds,
+    collect_observations, project_votes,
 )
-REMINE_MARKETS = tuple(dict.fromkeys(
-    get_bettable_markets() + ["ou_1.5", "ou_3.5", "ou_4.5"]))
-REMINE_THRESHOLDS = (0, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90)
-
-
-def _number(value):
-    try:
-        value = float(value)
-        return value if math.isfinite(value) else None
-    except (TypeError, ValueError):
-        return None
-
-
-def _score_pair(row, prefix=""):
-    pair = [_number(row.get(prefix + field)) for field in ("hs", "gs")]
-    return tuple(int(v) for v in pair) if all(
-        v is not None and v >= 0 and v.is_integer() for v in pair) else None
-
-
-def _remine_key(row):
-    home, away = source_team_key(row.get("home")), source_team_key(row.get("away"))
-    if min(len(home), len(away)) < 4 or home == away:
-        return None
-    return str(row["date"])[:10], home, away
-
-
-def _remine_signal(row, market):
-    """Observed probabilities or categorical tips; never turn streaks into p.
-
-    Warehouse sources have different units, so infer one scale from the full
-    1X2 vector (when available), otherwise from the probability field itself.
-    A full vector must be finite, bounded and sum approximately to one.
-    """
-    triple = [_number(row.get(c)) for c in ("p1", "px", "p2")]
-    scale = 100.0 if any(v is not None and v > 1.5 for v in triple) else 1.0
-    if market in ("1x2", "ht_1x2"):
-        fields = ("p1", "px", "p2") if market == "1x2" else ("p1_ht", "px_ht", "p2_ht")
-        values = [_number(row.get(c)) for c in fields]
-        if market == "ht_1x2":
-            scale = 100.0 if any(v is not None and v > 1.5 for v in values) else 1.0
-        if all(v is not None and 0 <= v <= scale for v in values):
-            probs = dict(zip(("home", "draw", "away"), (v / scale for v in values)))
-            if abs(sum(probs.values()) - 1) > 0.05:
-                return None
-            best = max(probs.values())
-            leaders = [side for side, prob in probs.items() if prob == best]
-            return (leaders[0], probs) if len(leaders) == 1 else None
-        if market != "1x2":
-            return None
-        # A categorical tip is eligible for the no-probability-floor test only.
-        raw = str(row.get("pick") or row.get("pick_1x2") or row.get("tip") or "").lower()
-        side = {"1": "home", "x": "draw", "2": "away"}.get(raw, raw)
-        return (side, None) if side in ("home", "draw", "away") else None
-    field = {"ou_1.5": "p_o15", "ou_2.5": "p_o25", "ou_3.5": "p_o35",
-             "ou_4.5": "p_o45", "btts": "p_gg", "ht_ou_1.5": "p_o15_ht",
-             "ht_ou_2.5": "p_o25_ht"}[market]
-    value = _number(row.get(field))
-    yes, no = ("yes", "no") if market == "btts" else ("over", "under")
-    if value is not None:
-        if all(v is None for v in triple):
-            scale = 100.0 if value > 1.5 else 1.0
-        value /= scale
-        if not 0 <= value <= 1 or value == 0.5:
-            return None
-        return (yes if value > 0.5 else no, {yes: value, no: 1 - value})
-    raw = str(row.get("pick_btts") if market == "btts" else
-              row.get("pick_ou") if market == "ou_2.5" else "").lower()
-    raw = {"gol": "yes", "nogol": "no", "over 2.5": "over", "under 2.5": "under"}.get(raw, raw)
-    return (raw, None) if raw in (yes, no) else None
-
-
-def _remine_outcome(scores, market):
-    pair = scores.get("ht" if market.startswith("ht_") else "ft")
-    if pair is None:
-        return None
-    hs, gs = pair
-    if market.endswith("1x2"):
-        return "home" if hs > gs else "away" if hs < gs else "draw"
-    if market == "btts":
-        return "yes" if hs > 0 and gs > 0 else "no"
-    line = float(market.rsplit("_", 1)[1])
-    return "over" if hs + gs > line else "under"
-
-
-def _remine_odds(rows, market, side):
-    fields = {"1x2": {"home": ("odd1",), "draw": ("oddx",), "away": ("odd2",)},
-              "ou_2.5": {"over": ("odd_over", "odd_o25"), "under": ("odd_under", "odd_u25")},
-              "btts": {"yes": ("odd_gg",), "no": ("odd_ng",)}}.get(market, {})
-    # Conservative minimum for the SAME side/market only. Never use an
-    # opposing vote's odds, fair odds or an invented complement price.
-    prices = [_number(row.get(field)) for row in rows for field in fields.get(side, ())]
-    prices = [v for v in prices if v is not None and v > 1]
-    return min(prices) if prices else None
-
 
 def remine_current_sources(con, *, start, split, as_of):
     """All observed non-Forebet subsets, including single and dissent tests.
@@ -1109,62 +1015,8 @@ def remine_current_sources(con, *, start, split, as_of):
             raise ValueError("dates must be ISO YYYY-MM-DD")
     if not POST_FOREBET_START <= start < split < as_of:
         raise ValueError("require 2026-06-13 <= start < split < as_of")
-    coverage, source_rows = {}, {}
-    for source in (*REMINE_SOURCES, "betexplorer"):
-        # Raw predictions must win over a pre-settled convenience view:
-        # another independent donor may settle rows absent from that view.
-        table = next((t for t in (source, source + "_raw", source + "_settled")
-                      if _table_exists(con, t)), None)
-        if table is None:
-            coverage[source] = {"status": "missing_table", "rows": 0}
-            continue
-        columns = _table_columns(con, table)
-        if not {"date", "home", "away"}.issubset(columns):
-            coverage[source] = {"status": "missing_identity_columns", "rows": 0}
-            continue
-        cursor = con.execute(f"SELECT * FROM {table} WHERE TRY_CAST(date AS DATE) >= ? "
-                             "AND TRY_CAST(date AS DATE) < ?", [start, as_of])
-        names = [col[0] for col in cursor.description]
-        rows = [dict(zip(names, values)) for values in cursor.fetchall()]
-        source_rows[source] = rows
-        coverage[source] = {"status": "present" if rows else "no_rows_in_era", "table": table,
-                            "rows": len(rows), "market_votes": {m: 0 for m in REMINE_MARKETS}}
-
-    scores = defaultdict(lambda: defaultdict(set))
-    # Only self-scoring donors. In particular do NOT use results_donor or
-    # categorical *_settled scores which may have been inherited from Forebet.
-    donors = {"zulubet", "statarea", "vitibet", "scoutingstats", "prosoccer",
-              "bettingclosed", "betexplorer"}
-    for source in donors:
-        for row in source_rows.get(source, []):
-            key = _remine_key(row)
-            if key is None or str(row.get("result_source") or source) == "forebet":
-                continue
-            for period, prefix in (("ft", ""), ("ht", "ht_")):
-                pair = _score_pair(row, prefix)
-                if pair is not None:
-                    scores[key][period].add(pair)
-    resolved = {key: {period: next(iter(values)) for period, values in periods.items()
-                      if len(values) == 1} for key, periods in scores.items()}
-    observations = defaultdict(dict)
-    ambiguous = set()
-    for source in REMINE_SOURCES:
-        for row in source_rows.get(source, []):
-            key = _remine_key(row)
-            if key is None:
-                continue
-            for market in REMINE_MARKETS:
-                signal = _remine_signal(row, market)
-                if signal is None:
-                    continue
-                identity = (key, market, source)
-                bucket = observations[(key, market)]
-                vote = {"side": signal[0], "probs": signal[1], "row": row}
-                previous = bucket.get(source)
-                if previous and (previous["side"], previous["probs"], previous["row"].get("kickoff")) != (
-                        vote["side"], vote["probs"], row.get("kickoff")):
-                    ambiguous.add(identity)
-                bucket[source] = vote
+    coverage, observations, ambiguous, resolved, scores = collect_observations(
+        con, start=start, as_of=as_of)
     candidates = defaultdict(list)
     recipes = {}
     for (key, market), all_votes in observations.items():
@@ -1191,14 +1043,15 @@ def remine_current_sources(con, *, start, split, as_of):
                 for strategy, follow, side in strategies:
                     recipe = (market, subset, strategy, follow)
                     recipes[recipe] = True
-                    contributing = [votes[follow]] if follow else electorate
-                    probability = (100 * sum(v["probs"][side] for v in contributing) / len(contributing)
-                                   if all(v["probs"] is not None for v in contributing) else None)
+                    projected = project_votes(votes, subset, strategy, follow)
+                    if projected is None:
+                        continue
+                    side, probability = projected
                     row0 = electorate[0]["row"]
                     candidates[recipe].append({"date": key[0], "home": row0["home"], "away": row0["away"],
                                                "pick": side, "outcome": outcome,
                                                "pick_odds": _remine_odds([v["row"] for v in electorate], market, side),
-                                               "avg_p": probability})
+                                               "avg_p": probability, "league": row0.get("league")})
     results = []
     for recipe in sorted(recipes, key=str):
         market, subset, strategy, follow = recipe
@@ -1246,6 +1099,113 @@ def remine_current_sources(con, *, start, split, as_of):
             "limitations": ["Threshold grid is model selection, not untouched forward evidence.",
                             "Source quotes are retrospective donor prices, not execution-safe ROI.",
                             "No probability is inferred from categorical tips or streak percentages."]}
+
+
+def activate_post_forebet_contracts(con, report):
+    """Promote only re-created, priced, statistically validated exact recipes.
+
+    Existing registry/model is required. Every accepted incumbent keeps its
+    original baseline, activation boundary, decay and bench; daily threshold
+    searches cannot unbench it or reset its forward clock. No ticket is touched.
+    """
+    from copy import deepcopy
+    from edgefactory.consensus_contracts import (
+        SCHEMA, contract_identity, validate_contract, recreate_contract_views,
+    )
+    def passed(edge):
+        try:
+            tr, va = edge["train"], edge["valid"]
+            return (edge.get("statistical_gates_passed") is True and not
+                    any(not math.isfinite(float(v)) for v in
+                        (tr["roi"], va["roi"], va["wilson_lb"]))
+                    and tr["n"] >= GATES.min_n_train and va["n"] >= GATES.min_n_valid
+                    and tr["n_priced"] >= GATES.min_n_train
+                    and va["n_priced"] >= GATES.min_n_valid
+                    and tr["roi"] >= GATES.min_roi_train and va["roi"] >= GATES.min_roi_valid
+                    and va["wilson_lb"] >= .5)
+        except (KeyError, TypeError, ValueError):
+            return False
+
+    if (report.get("status") != "mined_candidates" or report.get("mining_era") != "post_forebet"
+            or report["as_of_exclusive"] > date.today().isoformat()):
+        print("POST_FOREBET_ACTIVATION held: no completed-era candidate history")
+        return False
+    try:
+        current = json.loads(OUT.read_text())
+        if not isinstance(current, dict) or not isinstance(current.get("edges"), list):
+            raise ValueError("registry has no edges")
+    except (OSError, ValueError, TypeError):
+        print("POST_FOREBET_ACTIVATION held: incumbent registry missing/unreadable")
+        return False
+    accepted = []
+    for edge in report["edges"]:
+        if not passed(edge):
+            continue
+        edge = deepcopy(edge)
+        identity = contract_identity(edge)
+        edge.update(contract_schema=SCHEMA, contract_id=identity, rule=identity, view=identity,
+                    where="1=1", research_rule=edge["rule"], status="certified", holds=[],
+                    mining_window={k: report[k] for k in ("start", "split", "as_of_exclusive")},
+                    activated_as_of=date.today().isoformat(),
+                    decay={"verdict": "WATCH", "reason": "awaiting untouched forward observations"},
+                    price_basis="retrospective_same_side_donor; live prices require existing evidence gates")
+        validate_contract(edge)
+        accepted.append(edge)
+    if not accepted:
+        print("POST_FOREBET_ACTIVATION held: zero priced statistical passes; incumbent preserved")
+        return False
+    # Refuse the whole write on a predicate/statistics mismatch, not partial
+    # publication that could disguise a migration bug as missing coverage.
+    available = recreate_contract_views(con, accepted, as_of=report["as_of_exclusive"])
+    for edge in accepted:
+        if edge["view"] not in available:
+            raise RuntimeError("post-Forebet contract recreation unavailable")
+        check = evaluate(con, edge["rule"], edge["view"], edge["where"], report["split"], edge["market"])
+        if any(check[p] != edge[p] for p in ("train", "valid")) or check["status"] != "certified":
+            raise RuntimeError("post-Forebet contract recreation statistics mismatch")
+    incumbents = {e.get("contract_id"): e for e in current["edges"]
+                  if e.get("contract_schema") == SCHEMA}
+    merged = []
+    for edge in accepted:
+        incumbent = incumbents.get(edge["contract_id"])
+        if incumbent and incumbent.get("status") in ("certified", "benched"):
+            validate_contract(incumbent)
+            edge = deepcopy(incumbent)
+        merged.append(edge)
+    included = {e["contract_id"] for e in merged}
+    for incumbent in current["edges"]:
+        if incumbent.get("contract_schema") == SCHEMA and incumbent.get("contract_id") not in included:
+            # Never erase a bench. A formerly accepted recipe that lost its
+            # priced/sample gate is disabled, not served on yesterday's proof.
+            held = deepcopy(incumbent)
+            if held.get("status") != "benched":
+                held.update(status="candidate", holds=["current_revalidation_not_passed"])
+            merged.append(held)
+        elif incumbent.get("contract_schema") != SCHEMA:
+            from edgefactory.phase5_registry_guard import is_ml_rule
+            if not is_ml_rule(incumbent.get("rule")):
+                retired = deepcopy(incumbent)
+                if retired.get("status") != "benched":
+                    retired.update(status="retired", retirement_reason="post_forebet_contract_migration")
+                merged.append(retired)
+    payload = deepcopy(current)
+    payload.update(operating_contract=SCHEMA, edges=merged,
+                   post_forebet_validation={k: report[k] for k in
+                       ("start", "split", "as_of_exclusive", "gates", "limitations")})
+    safe, _ = preserve_live_ml_payload(payload, current)
+    _atomic_registry_write(OUT, safe)
+    operational = {e.get("contract_id"): e for e in safe["edges"] if e.get("contract_schema") == SCHEMA}
+    for edge in report["edges"]:
+        if not passed(edge):
+            continue
+        identity = contract_identity(edge)
+        if identity in operational:
+            live = operational[identity]
+            edge["operational_contract_id"] = identity
+            edge["activation_status"] = live["status"]
+            edge["holds"] = [] if live["status"] == "certified" else ["operational_contract_benched"]
+    print(f"POST_FOREBET_ACTIVATION operational contracts={len(accepted)}; model/benches preserved")
+    return True
 
 
 def _publish_remine_results(payload):
@@ -1299,15 +1259,25 @@ def _publish_remine_results(payload):
         return
 
     def notice(title, data):
-        # Escape workflow-command data, including literal provider %0A tokens.
-        text = json.dumps(data, sort_keys=True, separators=(",", ":")).replace("%", "%25")
-        print(f"::notice title={title}::" + text)
+        # Only research statistics enter this transport, never environment or
+        # credentials. Production truncates messages at 4096 characters and
+        # short numeric configuration secrets can mask ordinary metrics. Use
+        # compressed uppercase A-P hex so those masks do not corrupt numbers.
+        # Decode: A-P -> 0-f, bytes.fromhex, zlib.decompress, json.loads.
+        raw = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        encoded = zlib.compress(raw).hex().translate(
+            str.maketrans("0123456789abcdef", "ABCDEFGHIJKLMNOP"))
+        chunks = [encoded[i:i + 2800] for i in range(0, len(encoded), 2800)]
+        for index, chunk in enumerate(chunks, 1):
+            packet = {"encoding": "zlib-base16-ap", "chunk": index,
+                      "chunks": len(chunks), "data": chunk}
+            print(f"::notice title={title} fragment {index}/{len(chunks)}::" + json.dumps(packet))
 
     notice("Post-Forebet re-mine", receipt)
     batches, batch, size = [], [], 0
     for edge in passed:
         length = len(json.dumps(edge, sort_keys=True).replace("%", "%25").encode("utf-8")) + 1
-        if batch and size + length > 45_000:  # Stay below the 64 KiB annotation limit.
+        if batch and size + length > 45_000:  # Bound intermediate records; notice() fragments the transport.
             batches.append(batch)
             batch, size = [], 0
         batch.append(edge)
@@ -1322,6 +1292,7 @@ def _publish_remine_results(payload):
 
 def main():
     ap = argparse.ArgumentParser(description="Re-mine current non-Forebet electorates using retained data only")
+    ap.add_argument("--activate", action="store_true", help="publish re-created validated contracts to existing registry")
     ap.add_argument("--start", default=POST_FOREBET_START)
     ap.add_argument("--as-of", default=date.today().isoformat(), help="exclusive; never include the incomplete current day")
     ap.add_argument("--split", default=None, help="chronological train/validation boundary (default: as-of minus 28 days)")
@@ -1345,6 +1316,9 @@ def main():
         con = connect()  # Existing CSV views; no fetch, rebuild or operational write.
     try:
         payload = remine_current_sources(con, start=args.start, split=split, as_of=args.as_of)
+        if args.activate:
+            activated = activate_post_forebet_contracts(con, payload)
+            payload["activation"] = "validated_contracts_published" if activated else "held; incumbent preserved"
     finally:
         con.close()
     _atomic_registry_write(args.output, payload)
@@ -1356,7 +1330,7 @@ def main():
     print(f"Status: {payload['status']}")
     print(f"Candidate tests: {len(payload['edges'])}; statistical gates passed: "
           f"{sum(e['statistical_gates_passed'] for e in payload['edges'])}")
-    print(f"Report: {args.output}. Live registry/model unchanged; no serving approval inferred.")
+    print(f"Report: {args.output}. Activation: {payload['activation']}")
     _publish_remine_results(payload)
 
 
