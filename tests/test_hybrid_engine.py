@@ -110,6 +110,13 @@ def test_hybrid_pick_n_way():
 # compute_dynamic_enhancement — end-to-end over an empty-stats warehouse
 # --------------------------------------------------------------------------
 
+from enhancement_fixtures import compute_with_fixture_cohort
+
+
+def _compute(con, row, prices):
+    return compute_with_fixture_cohort(pt, con, row, prices)
+
+
 def _empty_warehouse():
     con = duckdb.connect(":memory:")
     con.execute(
@@ -143,8 +150,8 @@ def _priced_index(prices=None, default=1.50):
 
 def test_compute_provenance_and_legacy_parity(monkeypatch):
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: None)
-    notes = pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), _priced_index())["event_notes"]
-    assert notes, "defaults must still emit candidates (threshold sanity)"
+    notes = _compute(_empty_warehouse(), _pick(), _priced_index())["event_notes"]
+    assert notes == [], "model priors must never authorize a realized-cohort bet"
     assert all(n["engine"] == "model" for n in notes)
     assert all(n["cohort_n"] is None for n in notes)
     assert all(0.0 < n["probability"] <= 1.0 for n in notes)
@@ -165,10 +172,10 @@ def test_compute_cohort_override_math(monkeypatch):
 
     def run(cohort):
         monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
-        return {n["market"]: n for n in pt.compute_dynamic_enhancement(con, _pick(), _priced_index())["event_notes"]}
+        return {n["market"]: n for n in _compute(con, _pick(), _priced_index())["event_notes"]}
 
     base = run(None)
-    assert base, "defaults must still emit candidates"
+    assert base == {}, "no model-only recommendations"
 
     n_c = 150
     cohort = {"n": n_c, "avg_goals": 1.1, "over15": 0.99, "over25": 0.72,
@@ -181,44 +188,13 @@ def test_compute_cohort_override_math(monkeypatch):
                for n in hyb.values())
     assert all(0.0 < n["probability"] <= 1.0 for n in hyb.values())
 
-    K = pt.HYBRID_SHRINK_K
-    undermap = {
-        "home_under_15": "h_o15", "home_under_25": "h_o25", "home_under_35": "h_o35",
-        "away_under_15": "a_o15", "away_under_25": "a_o25", "away_under_35": "a_o35",
-    }
-    shared = 0
-    for mkt, field in list(FIELDMAP.items()) + list(undermap.items()):
-        if mkt not in base or mkt not in hyb:
-            continue
-        expect = (n_c * cohort[field] + K * base[mkt]["raw_probability"]) / (n_c + K)
-        if mkt in undermap:
-            # Implementation computes under = 1 - shrink(over_rate). Because the
-            # legacy under prior is itself the complement of the over prior,
-            # this equals shrinking the UNDER rates directly — pinned here:
-            base_under_prior = base[mkt]["raw_probability"]
-            expect = (n_c * (1.0 - cohort[field]) + K * base_under_prior) / (n_c + K)
-        assert hyb[mkt]["raw_probability"] == pytest.approx(expect, abs=1e-9), (
-            f"{mkt}: {hyb[mkt]['raw_probability']} != {expect}")
-        shared += 1
-    # btts complement pair: emitted side must be the exact complement
-    if "btts_yes" in hyb and "btts_no" in hyb:
-        assert hyb["btts_yes"]["raw_probability"] + hyb["btts_no"]["raw_probability"] == pytest.approx(1.0)
-    # the observed failure mode (audit: btts_yes over-promised by -11.3pp) is
-    # corrected toward the cohort when the cohort rate is below the prior
-    if "btts_yes" in base and "btts_yes" in hyb:
-        if base["btts_yes"]["raw_probability"] > cohort["btts"]:
-            assert hyb["btts_yes"]["raw_probability"] < base["btts_yes"]["raw_probability"]
-    assert shared >= 2, f"too few shared candidates to pin the override math ({shared})"
-
-    # Poisson lambda anchor: empty stats -> model lam = 0.4*2.5 + 0.6*2.5 = 2.5
-    # exactly; cohort run anchors it to the shrunk cohort avg_goals.
-    if "exact_2" in base and "exact_2" in hyb:
-        lam_model = 2.5
-        lam_exp = (n_c * cohort["avg_goals"] + K * lam_model) / (n_c + K)
-        assert base["exact_2"]["raw_probability"] == pytest.approx(
-            math.exp(-lam_model) * lam_model ** 2 / 2, abs=1e-9)
-        assert hyb["exact_2"]["raw_probability"] == pytest.approx(
-            math.exp(-lam_exp) * lam_exp ** 2 / 2, abs=1e-9)
+    # Raw/model priors remain diagnostics; only actual realized cohort rates
+    # are used to select/rank. No model-only baseline can place a bet.
+    for market, note in hyb.items():
+        assert note['probability'] == pytest.approx(pt.cohort_realized_rate(cohort, market))
+        assert note['raw_probability'] is not None
+    if 'btts_yes' in hyb and 'btts_no' in hyb:
+        assert hyb['btts_yes']['raw_probability'] + hyb['btts_no']['raw_probability'] == pytest.approx(1.0)
 
     json.dumps(hyb)
 
@@ -233,7 +209,7 @@ def test_btts_is_a_recommendable_market_after_the_opt_out_was_lifted(monkeypatch
               "h_o05": 0.95, "h_o15": 0.70, "h_o25": 0.40, "h_o35": 0.20,
               "a_o05": 0.90, "a_o15": 0.60, "a_o25": 0.30, "a_o35": 0.10}
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
-    markets = {n["market"] for n in pt.compute_dynamic_enhancement(con, _pick(), _priced_index())["event_notes"]}
+    markets = {n["market"] for n in _compute(con, _pick(), _priced_index())["event_notes"]}
     assert "btts_yes" in markets
 
 
@@ -261,7 +237,7 @@ def test_event_notes_are_ordered_by_realized_cohort_rate(monkeypatch):
     not by the enhancement registry or by stated probability."""
     con = _empty_warehouse()
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: COHORT)
-    notes = pt.compute_dynamic_enhancement(con, _pick(), _priced_index())["event_notes"]
+    notes = _compute(con, _pick(), _priced_index())["event_notes"]
     ranked = [pt.cohort_realized_rate(COHORT, n["market"]) for n in notes]
     assert len(ranked) >= 2, "need at least two candidates to order"
     assert ranked == sorted(ranked, reverse=True)
@@ -273,7 +249,7 @@ def test_with_a_cohort_every_candidate_is_its_realized_rate(monkeypatch):
     cohort cannot speak to (double chance, exact scores) are not candidates."""
     con = _empty_warehouse()
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: COHORT)
-    notes = pt.compute_dynamic_enhancement(con, _pick(), _priced_index())["event_notes"]
+    notes = _compute(con, _pick(), _priced_index())["event_notes"]
     assert notes, "the cohort should leave at least one candidate"
     for n in notes:
         assert n["probability"] == pytest.approx(
@@ -282,14 +258,14 @@ def test_with_a_cohort_every_candidate_is_its_realized_rate(monkeypatch):
         assert n["market"] not in {"double_chance"} and not n["market"].startswith("exact_")
 
 
-def test_without_a_cohort_the_stated_path_is_unchanged(monkeypatch):
+def test_without_a_cohort_the_stated_path_cannot_place_a_bet(monkeypatch):
     """No cohort (no warehouse, thin cohort, draw pick) keeps the legacy stated
     probability path, so no candidate is dropped for lack of a realized rate."""
     con = _empty_warehouse()
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: None)
-    out = pt.compute_dynamic_enhancement(con, _pick(), _priced_index())
-    for n in out["event_notes"]:
-        assert "realized cohort" not in n["reason"]
+    out = _compute(con, _pick(), _priced_index())
+    assert out["event_notes"] == []
+    assert out["recommended_enhancement"] is None
 
 
 def test_selection_takes_the_highest_hit_rate_among_priced_at_the_minimum(monkeypatch):
@@ -304,7 +280,7 @@ def test_selection_takes_the_highest_hit_rate_among_priced_at_the_minimum(monkey
     for m in ("match_over_15", "match_over_45", "btts_yes", "btts_no"):
         prices[m] = 1.10
     index = _priced_index(prices, default=1.10)
-    out = pt.compute_dynamic_enhancement(con, _pick(), index)
+    out = _compute(con, _pick(), index)
     assert out["recommended_enhancement"] == "match_over_25"
     assert all(n["enhancement_price"] >= 1.30 for n in out["event_notes"])  # MIN_LEG_ODDS
 
@@ -314,7 +290,7 @@ def test_no_recommendation_when_nothing_is_priced_at_the_minimum(monkeypatch):
     an unpriced fallback (the old path picked 98-99% unders at 1.02)."""
     con = _empty_warehouse()
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: COHORT)
-    out = pt.compute_dynamic_enhancement(con, _pick(), _priced_index(default=1.05))
+    out = _compute(con, _pick(), _priced_index(default=1.05))
     assert out["recommended_enhancement"] is None
     assert out["event_notes"] == []
 
@@ -323,7 +299,7 @@ def test_no_prices_means_no_recommendation(monkeypatch):
     """Without a price index nothing can be eligible, so nothing is recommended."""
     con = _empty_warehouse()
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: COHORT)
-    out = pt.compute_dynamic_enhancement(con, _pick(), None)
+    out = _compute(con, _pick(), None)
     assert out["recommended_enhancement"] is None
 
 
@@ -347,7 +323,7 @@ def test_under_competes_at_shared_minimum_without_legacy_line_filter(monkeypatch
                   h_o15=0.30, h_o25=0.20, a_o15=0.30, a_o35=0.15)
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
     index = _priced_index({market: 1.30, "match_over_15": 1.50}, default=1.10)
-    out = pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), index)
+    out = _compute(_empty_warehouse(), _pick(), index)
     assert out["recommended_enhancement"] == market
     assert out["enhancement_probability"] == pytest.approx(rate)
     assert out["enhancement_price"] == 1.30
@@ -365,7 +341,7 @@ def test_under_still_respects_price_and_rate_band(monkeypatch, price, over35, re
     monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, "1")
     cohort = dict(COHORT, over35=over35)
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
-    out = pt.compute_dynamic_enhancement(
+    out = _compute(
         _empty_warehouse(), _pick(),
         _priced_index({"match_under_35": price}, default=1.10))
     assert out["recommended_enhancement"] is None
@@ -405,11 +381,11 @@ def test_cohort_parity_default_on_with_explicit_legacy_rollback(monkeypatch):
     cohort = dict(COHORT, over15=0.30, over25=0.20, over35=0.15, over45=0.10)
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
     index = _priced_index({"match_under_25": 1.30, "match_under_45": 1.30}, default=1.10)
-    baseline = pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), index)
+    baseline = _compute(_empty_warehouse(), _pick(), index)
     assert baseline["recommended_enhancement"] is None
     assert not any(e["market"] == "match_under_45" for e in baseline["enh_candidate_log"])
     monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
-    research = pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), index)
+    research = _compute(_empty_warehouse(), _pick(), index)
     assert research["recommended_enhancement"] == "match_under_45"
     assert research["enhancement_probability"] == pytest.approx(0.90)
 
@@ -417,9 +393,9 @@ def test_cohort_parity_default_on_with_explicit_legacy_rollback(monkeypatch):
 def test_cohort_switch_does_not_relax_the_model_only_path(monkeypatch):
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: None)
     monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
-    baseline = pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), _priced_index())
+    baseline = _compute(_empty_warehouse(), _pick(), _priced_index())
     monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, "0")
-    assert pt.compute_dynamic_enhancement(_empty_warehouse(), _pick(), _priced_index()) == baseline
+    assert _compute(_empty_warehouse(), _pick(), _priced_index()) == baseline
 
 
 def test_default_selection_stress_coherent_rates_and_random_prices(monkeypatch):
@@ -440,7 +416,7 @@ def test_default_selection_stress_coherent_rates_and_random_prices(monkeypatch):
                 cohort[f"{side}_o{k}5"] = sum(s[index] > k for s in scores)/200
         prices = {m: round(rng.uniform(1.02, 3.0), 2) for m in MARKET_PRICE_MAP}
         monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
-        out = pt.compute_dynamic_enhancement(con, _pick(), _priced_index(prices))
+        out = _compute(con, _pick(), _priced_index(prices))
         expected = []
         for market in set(pt.COHORT_DIRECT_KEYS) | set(pt.COHORT_COMPLEMENT_KEYS):
             rate = pt.cohort_realized_rate(cohort, market)
@@ -471,7 +447,7 @@ def test_legacy_rollback_under25_threshold_and_price_boundaries(monkeypatch, rat
     monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: cohort)
     con = _empty_warehouse()
     try:
-        out = pt.compute_dynamic_enhancement(
+        out = _compute(
             con, _pick(), _priced_index({'match_under_25': price}, default=1.10))
     finally:
         con.close()
@@ -494,7 +470,7 @@ def test_default_eighty_percent_under25_at_one_point_four(monkeypatch):
     monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: _under25_boundary_cohort(.8))
     con = _empty_warehouse()
     try:
-        out = pt.compute_dynamic_enhancement(
+        out = _compute(
             con, _pick(), _priced_index({'match_under_25': 1.40}, default=1.10))
     finally:
         con.close()
@@ -541,7 +517,7 @@ def test_full_market_contention_not_under25_in_isolation(monkeypatch, scenario, 
     monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: cohort)
     con = _empty_warehouse()
     try:
-        out = pt.compute_dynamic_enhancement(con, _pick(), _priced_index(prices, default=1.10))
+        out = _compute(con, _pick(), _priced_index(prices, default=1.10))
     finally:
         con.close()
     assert out['recommended_enhancement'] == expected
@@ -559,7 +535,7 @@ def test_authorized_default_has_one_shared_cohort_band_not_a_new_75pct_floor(mon
     monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: _under25_boundary_cohort(rate))
     con = _empty_warehouse()
     try:
-        out = pt.compute_dynamic_enhancement(
+        out = _compute(
             con, _pick(), _priced_index({'match_under_25': 1.40}, default=1.10))
     finally:
         con.close()
@@ -575,11 +551,11 @@ def test_default_and_explicit_on_identical_with_a_cohort(monkeypatch):
     con = _empty_warehouse()
     try:
         monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
-        default = pt.compute_dynamic_enhancement(con, _pick(), index)
+        default = _compute(con, _pick(), index)
         monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, '1')
-        assert pt.compute_dynamic_enhancement(con, _pick(), index) == default
+        assert _compute(con, _pick(), index) == default
         monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, '0')
-        legacy = pt.compute_dynamic_enhancement(con, _pick(), index)
+        legacy = _compute(con, _pick(), index)
         assert default['recommended_enhancement'] == 'match_under_25'
         assert legacy['recommended_enhancement'] is None
     finally:
@@ -597,9 +573,9 @@ def test_authorized_75pct_under_displaces_60pct_btts_with_both_priced(monkeypatc
     con = _empty_warehouse()
     try:
         monkeypatch.setenv(pt.ENH_COHORT_PARITY_ENV, '0')
-        assert pt.compute_dynamic_enhancement(con, _pick(), prices)['recommended_enhancement'] == 'btts_yes'
+        assert _compute(con, _pick(), prices)['recommended_enhancement'] == 'btts_yes'
         monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
-        out = pt.compute_dynamic_enhancement(con, _pick(), prices)
+        out = _compute(con, _pick(), prices)
     finally:
         con.close()
     assert out['recommended_enhancement'] == 'match_under_25'

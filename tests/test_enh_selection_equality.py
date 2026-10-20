@@ -5,6 +5,7 @@ and a stubbed price lookup, so it reaches the priced/eligible branch without any
 network or local data. Only the two log keys may differ between runs.
 """
 import pytest
+from enhancement_fixtures import contract_pick, compute_with_fixture_cohort
 
 import scripts.picks_today as pt
 
@@ -40,12 +41,17 @@ def _fake_attach(pick, index, **kw):
 @pytest.fixture
 def priced(monkeypatch):
     monkeypatch.setattr(pt, "attach_enhancement_price", _fake_attach)
+    monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: {
+        "n": 200, "avg_goals": 2.5, "over15": .7, "over25": .6,
+        "over35": .4, "over45": .2, "btts": .6,
+        "h_o05": .7, "h_o15": .6, "h_o25": .4, "h_o35": .2,
+        "a_o05": .7, "a_o15": .6, "a_o25": .4, "a_o35": .2})
     monkeypatch.setattr(pt, "ENH_CANDIDATE_LOG_ENABLED", True)
     return monkeypatch
 
 
 def _run(pick=PICK):
-    return pt.compute_dynamic_enhancement(_StubCon(), dict(pick), {})
+    return compute_with_fixture_cohort(pt, _StubCon(), dict(pick), {})
 
 
 def _selection(out):

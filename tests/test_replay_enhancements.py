@@ -270,6 +270,7 @@ def test_simultaneous_ticket_pnl_adds_like_live_settlement(monkeypatch, losing_f
 def test_live_replay_floor_gates_match_the_current_lane_on_all_mapped_markets():
     # The live floor already matches MIN_LEG_ODDS; derived floors are a variant,
     # not a drift repair. Do not reintroduce static floors or ceilings here.
+    from enhancement_fixtures import with_evidence
     from edgefactory.enh_pricing import MARKET_PRICE_MAP
     for market, mapping in MARKET_PRICE_MAP.items():
         if not mapping:
@@ -278,6 +279,7 @@ def test_live_replay_floor_gates_match_the_current_lane_on_all_mapped_markets():
             records = [_rec(market=market, price=price, match='A vs B')]
             floors = rh._root_floors(records)
             fired = bool(rh._firing_by_day(records, floors))
-            live = at.enhancement_legs([{'recommended_enhancement': market,
-                                         'enhancement_price': price}])[0]
+            live = at.enhancement_legs([with_evidence({'recommended_enhancement': market,
+                                         'enhancement_probability': .6,
+                                         'enhancement_price': price})])[0]
             assert fired == (live['verdict'] == 'fire')
