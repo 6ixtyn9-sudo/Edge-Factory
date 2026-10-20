@@ -5,6 +5,7 @@ Pins: the floor formula, the no-lookahead cut, the side key, the minimum sample,
 that the floor moves with the record, and the gate's verdicts for team legs.
 """
 from __future__ import annotations
+from enhancement_fixtures import with_evidence
 
 import json
 import sys
@@ -90,9 +91,9 @@ def test_a_team_under_leg_with_evidence_fires_at_any_price_above_the_minimum():
             "bucket": "CERTIFIED_CLEAN", "rule": "r1", "recommended_enhancement": "home_under_35",
             "enhancement_label": "Home Under 3.5", "enhancement_probability": 0.96,
             "enhancement_price_book": "b", "enhancement_price_source": "oddspapi"}
-    below = at.enhancement_legs([{**pick, "enhancement_price": 1.25}], team_floors=table)[0]
-    at_min = at.enhancement_legs([{**pick, "enhancement_price": 1.30,
-                                   "enhancement_consensus_price": 1.30}], team_floors=table)[0]
+    below = at.enhancement_legs([with_evidence({**pick, "enhancement_price": 1.25})], team_floors=table)[0]
+    at_min = at.enhancement_legs([with_evidence({**pick, "enhancement_price": 1.30,
+                                   "enhancement_consensus_price": 1.30})], team_floors=table)[0]
     assert below["verdict"] == "below_min_odds"
     assert at_min["verdict"] == "fire"
     assert at_min["floor_basis"] == "pick_evidence"
@@ -106,18 +107,18 @@ def test_a_team_under_leg_on_a_side_without_evidence_does_not_fire():
             "enhancement_label": "Home Under 3.5", "enhancement_probability": 0.96,
             "enhancement_price": 3.00, "enhancement_price_book": "b",
             "enhancement_price_source": "oddspapi"}
-    leg = at.enhancement_legs([pick], team_floors=table)[0]
+    leg = at.enhancement_legs([with_evidence(pick)], team_floors=table)[0]
     assert leg["verdict"] == "fire"          # no floor gate (rule 6)
     assert leg["floor"] is None
 
 
 def _team_pick(price, consensus, *, market="away_under_25", side="away"):
-    return {"home": "H", "away": "A", "match": "H vs A", "date": DAY, "pick": side,
+    return with_evidence({"home": "H", "away": "A", "match": "H vs A", "date": DAY, "pick": side,
             "bucket": "CERTIFIED_CLEAN", "rule": "r1", "recommended_enhancement": market,
             "enhancement_label": "Away Under 2.5", "enhancement_probability": 0.92,
             "enhancement_price": price, "enhancement_price_book": "b",
             "enhancement_price_source": "oddspapi",
-            "enhancement_consensus_price": consensus}
+            "enhancement_consensus_price": consensus})
 
 
 def test_the_median_quote_no_longer_gates_a_team_leg():

@@ -478,7 +478,8 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
         # remain retired. Never feed this winner-only sample into selection.
         return (f"📊 Realized Stats on {sel.capitalize()} Win (n={n}): "
                 + " | ".join(stats)
-                + " | Winner-only history, not pre-match probabilities")
+                + " | Winner-only history, not pre-match probabilities"
+                + " | Legacy Forebet-era electorate, not exact current-source evidence")
     except Exception:
         return None
 
@@ -502,7 +503,7 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
 # Notes are tagged engine="hybrid_cohort" | "model" (+ cohort_n) so the audit
 # can grade the engines separately (by-engine table). Display/context layer
 # only: registry, pricing and certification paths are untouched.
-HYBRID_MIN_N = 100        # thinner cohorts stay pure model prior
+HYBRID_MIN_N = 100        # thinner cohorts cannot authorize an enhancement bet
 HYBRID_SHRINK_K = 150.0   # pseudo-count pulling back toward the model prior
 # Operator-authorized 2026-10-19: let all cohort-backed markets compete under
 # the existing shared rate/price rules. Default ON; explicit 0 rolls back to
@@ -528,14 +529,35 @@ def _hybrid_shrink(p_cohort, n: int, p_model: float) -> float:
     return (n * float(p_cohort) + HYBRID_SHRINK_K * float(p_model)) / float(n + HYBRID_SHRINK_K)
 
 
-def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int) -> dict | None:
-    """Realized frequencies of the outcome-UNCONDITIONED 'matches like this
-    one' cohort (all-sources-unanimous pick + avg_p band, settled results
-    joined). Same consensus view, agreement clause and avg_p band logic as
-    fetch_historical_profile(), but WITHOUT its `c.outcome = selection`
-    filter (Addendum 17). Returns None when the cohort is thinner than
-    HYBRID_MIN_N or anything fails — the caller then keeps the model prior.
+def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=None) -> dict | None:
+    """Live: exact activated parent recipe, all outcomes, strictly before day.
+
+    Missing/invalid/thin evidence returns None, never a model betting fallback.
+    Without ``pick`` this retains the old SQL for explicitly historical/offline
+    diagnostics only; no production enhancement call uses that legacy path.
     """
+    if pick is not None:
+        # Production never proxies a dynamic electorate through consensus3/2.
+        # The no-pick SQL below remains for historical/offline diagnostics only.
+        from edgefactory.consensus_contracts import enhancement_cohort, validate_contract
+        try:
+            registry = load_post_forebet_registry()
+            edges = [e for e in (registry or {}).get("edges", [])
+                     if e.get("status") == "certified"
+                     and e.get("contract_id") == pick.get("contract_id")]
+            if len(edges) != 1:
+                return None
+            edge = edges[0]
+            identity = validate_contract(edge)
+            if (pick.get("contract_schema") != edge.get("contract_schema")
+                    or pick.get("market") != edge["market"]
+                    or sorted(pick.get("sources_used", [])) != edge["sources"]
+                    or pick.get("edge_rule") != identity):
+                return None
+            return enhancement_cohort(con, edge, as_of=pick["date"],
+                                      selection=selection, min_n=HYBRID_MIN_N)
+        except (KeyError, TypeError, ValueError):
+            return None
     view_name = "consensus3" if n_way >= 3 else "consensus2"
     try:
         max_p = con.execute(f"SELECT MAX(avg_p) FROM {view_name}").fetchone()[0]
@@ -775,10 +797,10 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
     the single highest probable enhancement.
 
     With prices_index, rank eligible candidates by realized all-outcome cohort
-    rate (model fallback when no cohort exists), then price. Edge is
+    rate from the exact validated parent contract, then price. Edge is
     informational only; an unpriced or sub-minimum market cannot be chosen.
     Cohort-backed markets share eligibility by default (explicit env 0 restores
-    legacy filters). Model-only fallback is unchanged. Broader eligibility is
+    legacy market filters). No realized cohort means no bet. Broader eligibility is
     operator-authorized, not an established ROI improvement.
     """
     cohort_parity = os.environ.get(ENH_COHORT_PARITY_ENV, "1") == "1"
@@ -974,8 +996,8 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
     _cohort_sel = str(pick.get("pick") or "").lower()
     _cohort_avg_p = pick.get("avg_p")
     try:
-        if _cohort_sel in ("home", "away", "draw") and isinstance(_cohort_avg_p, (int, float)):
-            cohort = fetch_match_cohort(con, _cohort_sel, float(_cohort_avg_p), _hybrid_pick_n_way(pick))
+        if _cohort_sel and isinstance(_cohort_avg_p, (int, float)):
+            cohort = fetch_match_cohort(con, _cohort_sel, float(_cohort_avg_p), _hybrid_pick_n_way(pick), pick=pick)
     except Exception:
         cohort = None
     if cohort is not None:
@@ -1170,63 +1192,26 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         ("double_chance", prob_double_chance, f"Double Chance {dc_label}", f"Combined double-chance expectation is {prob_double_chance:.1%}")
     )
 
-    rolling_hit_rates = load_rolling_audit_hit_rates()
-    # ML assist (light): per-market calibration learned from the audit's own
-    # promised-vs-realized data (n-weighted), applied to the raw probability.
-    # This replaces the single global multiplier with a market-aware shrink
-    # toward the realized rate. Same markets, same wording — just a smarter
-    # probability. Train/test is handled by the audit's rolling window: the
-    # correction uses settled history, so it is walk-forward by construction.
-    calib = load_enhancement_calibration(AUDIT_ROLLING_PATH)
-    # Addendum 19 (engine-aware debias): off by default. When enabled, damp
-    # factors come from the full-surface by_market + per-engine x market cells
-    # (edgefactory.debias) instead of the tiny recommendation overlay.
-    engine_aware_debias = os.environ.get(ENV_FLAG) == "1"
-    debias_map = load_engine_aware_debias_map(AUDIT_ROLLING_PATH) if engine_aware_debias else {}
     candidates = []
     enh_log: list = []  # candidate log for the audit; see _enh_log_entry
 
     # One shared eligibility band for all cohort-backed markets, regardless
-    # of goal direction. The legacy model fallback keeps its line thresholds.
+    # of goal direction. Model-only priors cannot enter the candidate pool.
     MIN_PROB = 0.25
     MAX_PROB = 0.90
     for market, prob, label, reason in raw_candidates:
         cohort_rate = cohort_realized_rate(cohort, market)
-        if cohort is not None and cohort_rate is None:
-            _push_enh_log(enh_log, _enh_log_entry(market, label, "excluded", "no_cohort_rate",
-                                          raw_probability=prob))
+        if cohort_rate is None:
+            _push_enh_log(enh_log, _enh_log_entry(market, label, "excluded", "no_realized_cohort",
+                                          raw_probability=prob, engine="model"))
             continue  # cohort replaces the stated probability: no realized rate, no candidate
-        engine = "hybrid_cohort" if cohort is not None else "model"
-        hr = rolling_hit_rates.get(market, 1.0)
-        if engine_aware_debias:
-            hr = resolve_debias_hr(market, engine, debias_map)
-        prob_adjusted = prob * hr if cohort_rate is None else cohort_rate
-        # ML-assisted calibration: n-weighted correction from the audit.
-        # Over-promising markets get pulled down, under-promising get lifted.
-        if cohort_rate is None and market in calib and calib[market]["n"] >= 10:
-            realized = calib[market]["realized"]
-            promised = calib[market]["mean_promised"]
-            n = calib[market]["n"]
-            # shrink the raw probability toward the realized rate, weighted by
-            # evidence (n) and capped so we never fully trust a young sample
-            w = min(1.0, n / 40.0)          # evidence weight, saturates at n=40
-            # Scale by the realized / promised ratio (was an additive gap times
-            # prob, which under-corrected: over 2.5 is 44.8% promised, 61.1% realized).
-            prob_adjusted = prob_adjusted * (1.0 + w * (realized / promised - 1.0))
-            prob_adjusted = max(0.01, min(0.99, prob_adjusted))
-            reason = reason + (f" (ML-calibrated {promised:.1%}->{realized:.1%}, n={n})")
-        elif cohort_rate is None and market in calib:
-            # young sample: still nudge, weakly
-            realized = calib[market]["realized"]
-            promised = calib[market]["mean_promised"]
-            prob_adjusted = prob_adjusted * (1.0 + 0.5 * (realized / promised - 1.0))
-            prob_adjusted = max(0.01, min(0.99, prob_adjusted))
-        
+        engine = "hybrid_cohort"
+        prob_adjusted = cohort_rate
         # Legacy model thresholds were asymmetric (e.g. O2.5=35%, U2.5=85%)
         # and silently blocked unders before the shared rate/price gates below.
         # Operator-authorized default: cohort-backed rates compete equally.
-        # Explicit env 0 restores legacy filters; model-only fallback always
-        # retains them. No market-specific 85/75 tuning or new EV gate.
+        # Explicit env 0 restores legacy market filters, NOT model fallback.
+        # No market-specific 85/75 tuning or new EV gate.
         thr = (MIN_PROB if cohort_parity and cohort_rate is not None
                else LINE_THRESHOLDS.get(market, 0.80))
         if prob_adjusted < thr:
@@ -1241,13 +1226,12 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 # Realized cohort rate the card ranks on; None when no cohort.
                 "cohort_rate": (round(cohort_rate, 4) if cohort_rate is not None else None),
                 "label": label,
-                "reason": reason + (
-                    f" (realized cohort {cohort_rate:.1%}, n={cohort['n']}; stated {prob:.1%})"
-                    if cohort_rate is not None else
-                    (f" (Performance feedback: HR={hr:.1%}, Adjusted Prob: {prob_adjusted:.1%})" if hr < 1.0 else "")),
+                "reason": reason + f" (realized cohort {cohort_rate:.1%}, n={cohort['n']}; stated {prob:.1%})",
                 # Addendum 17: provenance so the audit can grade engines separately.
                 "engine": engine,
-                "cohort_n": (cohort["n"] if cohort is not None else None),
+                "cohort_n": cohort["n"],
+                "cohort_contract_id": cohort.get("contract_id"),
+                "cohort_as_of_exclusive": cohort.get("as_of_exclusive"),
             })
 
     if candidates:
@@ -1317,6 +1301,18 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                     _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "prob_outside_band",
                                                   price=price, **_log_kw))
                     continue
+                from edgefactory.enh_registry import enhancement_cohort_evidence
+                evidence_probe = dict(pick, recommended_enhancement=market,
+                                      enhancement_probability=round(prob, 4),
+                                      enhancement_cohort_rate=c["cohort_rate"],
+                                      enhancement_cohort_n=c["cohort_n"],
+                                      enhancement_cohort_contract_id=c["cohort_contract_id"],
+                                      enhancement_cohort_as_of_exclusive=c["cohort_as_of_exclusive"],
+                                      event_notes=[c])
+                if enhancement_cohort_evidence(evidence_probe) is None:
+                    _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded",
+                                                        "invalid_cohort_provenance", price=price, **_log_kw))
+                    continue
                 c = dict(c)
                 c["enhancement_price"] = round(price, 3)
                 c["enhancement_price_source"] = probe.get("enhancement_price_source")
@@ -1337,6 +1333,9 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 "enhancement_probability": round(best["probability"], 4),
                 "enhancement_stated_probability": round(best["raw_probability"], 4),
                 "enhancement_cohort_rate": best.get("cohort_rate"),
+                "enhancement_cohort_n": best.get("cohort_n"),
+                "enhancement_cohort_contract_id": best.get("cohort_contract_id"),
+                "enhancement_cohort_as_of_exclusive": best.get("cohort_as_of_exclusive"),
                 "enhancement_reason": best["reason"],
                 "enhancement_label": best["label"],
             })
@@ -6575,28 +6574,11 @@ def _enh_floor_table(day: str) -> dict:
 
 
 def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
-    """The board's one enhancement line for a pick, or None when it has none.
+    """The same exact-cohort evidence + minimum-price verdict as the slip.
 
-    Marker 🔬 = priced at or above MIN_LEG_ODDS: a real candidate the
-    operator can act on, still short of registry certification. Marker 🚫 = the
-    Stage 2 floor gate fired, so there is no bet — not paper, not shadow.
-
-    The gate is ``enh_registry.clears_floor`` itself, the same call the
-    enhancement slip uses for its ``[NO BET]`` audit lines, so the board and the
-    slip can never disagree about what is a bet. The floor is the pick's slice
-    floor — its LEAGUE slice's when the derived table has one, else the market
-    root, exactly what ``auto_tickets.enhancement_legs`` applies — and the line
-    says which basis it came from (``inherited`` still means the operator's
-    table, where a team slice always stays). Operator ruling: "betting on ev
-    will lead us to not bet at all ... we just need prices above a certain
-    threshold, like how autobets does it." EV stays on the row as information
-    and gates nothing here.
-
-    A floorless market never clears (``clears_floor`` is False without a
-    threshold), which is why the team unders that used to print a 🔬 line now
-    print nothing to bet on. Unpriced enhancements return None and print
-    nothing: the EV selector already prefers priced markets, and showing
-    "Home O0.5 (unpriced)" on every favourite is noise.
+    No EV veto, derived price-floor or ceiling. All supported cohort-backed
+    markets compete. A model/calibrated/legacy/mismatched rate is NO BET, not
+    "realized". Unpriced rows have no actionable enhancement line.
     """
     rec_market = p.get("recommended_enhancement")
     if not rec_market:
@@ -6617,20 +6599,19 @@ def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     edge = p.get("enhancement_edge_sample")
     edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int, float)) else ""
     # Operator 2026-10-14: no floor and no ceiling. The board gate is the slip's
-    # gate: the shared MIN_LEG_ODDS minimum, plus a team under with no evidence
-    # (no derived floor) does not fire, as in auto_tickets.enhancement_legs.
-    from auto_tickets import MIN_LEG_ODDS
-    from edgefactory.enh_registry import floor_for_slice
-    from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS
-    table = _enh_floor_table(p.get("date")) if floors is None else floors
-    floor, _basis = floor_for_slice(table, rec_market, p.get("league"))
+    # gate: the shared MIN_LEG_ODDS minimum and valid realized cohort evidence.
+    try:
+        from auto_tickets import MIN_LEG_ODDS
+    except ModuleNotFoundError:  # imported as scripts.picks_today in isolated tests
+        from scripts.auto_tickets import MIN_LEG_ODDS
+    from edgefactory.enh_registry import enhancement_cohort_evidence
     below_min = rec_price < MIN_LEG_ODDS
-    team_without_evidence = rec_market in TEAM_UNDER_MARKETS and floor is None
-    if not below_min and not team_without_evidence:
+    evidence = enhancement_cohort_evidence(p)
+    if not below_min and evidence is not None:
         return (f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
                 f"{edge_txt}{src} — minimum {MIN_LEG_ODDS:.2f}")
     why = (f"below minimum {MIN_LEG_ODDS:.2f}" if below_min
-           else "no settled evidence for this side")
+           else "no valid realized contract-cohort evidence")
     return (f"     🚫 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}"
             f" — no bet: {why}{src}")
 

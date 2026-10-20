@@ -11363,3 +11363,33 @@ zero trackedlocaldata changes. PR105 is the merge target on fixed session branch
 arena/74772619-edge-factory. Existing CloudflareWorkers check alreadyfailed on
 prior readout-onlycommit; not claimedgreen. Production activation unobserved,
 no workflowdispatch. Merge receipt follows after GitHub confirms operation.
+
+### Roma enhancement incident — 20 October 2026
+
+User interrupted prediction-history recovery to prioritise an unsafe enhancement
+slip. Confirmed 87.35% was a model/default 82% inflated by global calibration,
+with no realized cohort/n, then labelled "realized" by the renderer. The 18-row
+winner-only display is also legacy Forebet-electorate history, not the current
+source contract. Independent price defect: Roma parent 19:00UTC versus all99
+OddsPAPI team-under quotes 12:00UTC; 2.49 is not verified for that kickoff.
+
+Repair connects enhancement cohort lookup to the existing activated exact-parent
+contracts/shared projection, all outcomes before day, n>=100; no model betting
+fallback. Shared chosen-market/contract/n/date/rate evidence check at selector,
+board and slip, carried through plan/freeze. Quote-level kickoff/capture identity
+retained before aggregation; current fixtures reject missing/conflicting timing,
+future/post-KO captures and same-time quote conflicts; latest/book then best
+eligible book. No wrong-fixture quote corroboration. Broad competition stays ON;
+no new EV/price-floor gate or ceiling; historical floors descriptive only.
+
+No tracked localdata, frozen slips/banks/history rewritten; no workflow dispatch.
+Old frozen card remains historical, not current eligibility approval. With current
+activation held, unsupported enhancements become NO BET, not false realized bets.
+Cache-history recovery is STILL PENDING; no cache deleted/restored/published.
+See docs/operator/ENH-ROMA-2026-10-20.md for evidence, scope and receipts.
+Focused259passed6.61s. Full-suite known baseline tripwire (missing persisted league
+alias target) reproduced using unchanged dbba34f source/test/Config/registry;
+not suppressed or weakened. Final regression and merge receipt follows.
+Final enhancement regression:3415passed1skipped1failed147.96s; sole failure is
+unchanged baseline identity/persisted-registry alias tripwire reproduced above.
+259focusedpassed6.61s; diff-checkclean,zero trackedlocaldata changes.
