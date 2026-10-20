@@ -11579,3 +11579,10 @@ localdata/autobets_enh_tickets_2026-10-20_reset.json. Original withdrawn-ticket
 audit retained; replacement ticket/bank/history not edited. This removes the
 tracked approval receipt, not a running workflow; do not repeat recovery/rebuild
 (the dedicated rebuild command deliberately requires an approval receipt).
+Final updated-main regression: **3499 passed, 0 failed, 0 skipped**,170.79s.
+This includes all14 new performance/identity/accounting tests, the existing
+settlement/freeze suites, current production registry data and main's independent
+shadow-isolation fixture correction. The initial pre-main-refresh run was
+3497passed/1skipped before the final freshness case was added. Focused refreshed
+performance + shadow-isolation run18passed0.51s. PR111 carries the bounded-work
+fix and requested receipt deletion; no recovery/financial execution performed.
