@@ -11540,3 +11540,42 @@ NO BET; passing tests alone are not activation or betting evidence.
 Final publication-safety regression: **3484 passed, 1 skipped, 0 failed**,173.63s.
 45focusedpassed1.26s; diff-check clean; zero workflow/localdata modifications.
 No dispatch attempted and no new activated contract/replacement claimed.
+
+### 20 October 2026 — recovery published; bound intraday settlement work
+
+Recovery run39411904810 completed successfully and remote-main contents were
+independently checked: operating_contract=post_forebet_v1,31certified contracts
+(24 1x2,7 ou_1.5), all WATCH/recent n0. Cache and Git publication succeeded.
+The replacement enhancement card was published; this is NOT forward-performance
+proof. Parent 1x2 certification is not an O2.5 enhancement certification.
+
+Operator reported the15:00SAST run39426708379 taking nearly four hours.
+GitHub job metadata confirms Smart Schedule13:01:24–16:44:29UTC; enhancement
+build then completed16:59:37UTC and performance reporting started. These are
+step timings, NOT proof that one particular function consumed all that time.
+The separate regression job failed; exact failure log was unavailable here.
+Main independently acquired a shadow-isolation test monkeypatch meanwhile.
+
+Code audit confirmed repeated full donor builds and full-map iteration for each
+fuzzy settlement lookup. The existing date filter already excluded comparisons
+outside ±3days; the defect was scanning all historical keys to reach that filter.
+The existing auto_tickets implementation now returns a read-only, date-indexed
+outcome snapshot carrying its matching entries/scores. CLI settle/build share it;
+the grader also reuses its entries/scores. No cross-invocation cache. Merging
+indexed date buckets by original insertion position preserves tied fuzzy winners.
+No new matcher, thresholds, skipped grading, timeout increase, workflow change,
+financial replay, freeze override or production dispatch. Donor-build start/end
+counters now report keys/dates/elapsed time. Plain injected dicts remain supported.
+
+Synthetic500210-key benchmark,40lookups per case: occupied ±3day window1.083s
+full scan vs0.172s indexed (6.29x), identical outcomes; empty window0.958s vs
+0.000796s. NOT a production SLA or a claim the entire four-hour run is fixed.
+14 new tests cover insertion-order/tie parity, bounded visitation, marker guards,
+invalid dates, full settlement accounting parity, snapshot reuse in both lanes,
+empty snapshots and fresh results on subsequent loads. Full-suite receipt follows.
+
+At the operator's separate explicit request, deleted ONLY
+localdata/autobets_enh_tickets_2026-10-20_reset.json. Original withdrawn-ticket
+audit retained; replacement ticket/bank/history not edited. This removes the
+tracked approval receipt, not a running workflow; do not repeat recovery/rebuild
+(the dedicated rebuild command deliberately requires an approval receipt).
