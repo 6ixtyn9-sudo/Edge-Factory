@@ -11295,3 +11295,29 @@ numbered passing-candidate annotations afterwards. No new dispatch attempted:
 earlier dispatch permission denied, and no reason to retry unchanged permission.
 Existing remine_only avoids provider calls, tickets and cache/git publication.
 See docs/operator/REMINE-PLAN.md artifact-free readout section for retrieval.
+
+### Run39371954018 completed — production readout defect found and corrected locally
+
+Operator supplied full official_morning logs on889da9e. Regression3335passed1skip;
+mining73476tests39passes327.3s; PredictZ2706raw proves raw-priority fix executed.
+API verified successful run. Both research notices were exactly4096chars and
+invalid JSON, also corrupted by short numeric secret masks. Previous64KiB
+assumption was wrong; do NOT claim all39results were recovered. User need not
+repeat PowerShell/upload attempts. See REMINE-PLAN production correction.
+
+Current active branch arena/74772619-edge-factory. Existing miner now uses
+research-only zlib/A-P-hex packets of2800chars, tested complete annotation lines
+<3500bytes; human summary/full report remain. Missing/corrupted fragments rejected
+by decoding tests. Focused50passed4.75s; full3336passed1skip156.33s. No workflow edit,
+new registry, provider calls, dispatch, activation or threshold changes.
+
+Visible first results: ScoutingStats+Statarea unanimous threshold55 train556 /
+valid289, ROI−0.08%/+4.01%, valid hit74.74%. Threshold40 valid815 ROI+0.14%;50
+valid442 ROI+1.50%. Three-source +Vitibet thresholds0/35 have identical statistics
+(n1125/523, ROI−6.83%/+2.63%) and are not independent edges. Other passing markets
+cannot be ranked from truncated records. Serving/assay/decay still legacy; final
+854keys ->797insufficient+41below+11disagree+5emitted, allveto. ElGeish Egypt->Thai
+context still wrong. OddsPAPI3boardoverlaps but0pendingpriorities and0cardmatches,
+42dailycredits exhausted. Supabase5missingIDs refuseddelete. Main26.4min ticket
+builder +10.1min grade +20.4min enhancements +15min enhancementgrade dominate
+~106min workflow, not5.5min miner. No frozen slips rewritten.

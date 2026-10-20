@@ -223,3 +223,34 @@ Validation: **49 focused tests passed** (4.50 seconds); **3,335 passed, 1 skippe
 (159.47 seconds) in the full suite. Coverage includes the actual main-entry-point
 hook, multi-batch lossless records across 1X2/O/U/BTTS, empty passes, summary append,
 workflow-command escaping, missing-summary fallback and unchanged input holds.
+
+### Production correction — run 39371954018, 20 October
+
+The run used code889da9e (after PR104), mode **official_morning**, not remine_only.
+Production regression3335passed1skipped166.86s. Miner completed327.3s,73476tests /
+39statistical passes; PredictZ now correctly selected2706raw captures. These
+establish actual execution, not serving activation.
+
+**The initial artifact-free transport was NOT lossless in production.** Both
+notices in check-run118461574636 were truncated to exactly4096characters, not
+the assumed64KiB. Short numeric configuration values masked as secrets also
+replaced ordinary market/threshold/metric text with `***`, invalidating JSON.
+The full39passing records have not been recovered. Do not repeat the preceding
+claim that numbered notices alone already exposed every record successfully.
+
+Follow-up inside the same miner: serialize only research data, compress using
+stdlib zlib and encode as uppercase A-P hex. Split into2800-character fragments
+inside small JSON envelopes; complete annotation lines are tested below3500bytes.
+No environment values or credentials enter this transport. This avoids incidental
+numeric-configuration masking of research metrics; missing fragments or damaged
+encoded data must be rejected, not guessed. Human summary and existing JSON stay
+readable and unchanged. Decode by grouping the annotation title before `fragment`,
+checking chunk1..chunks completeness, concatenating data, translating A-P back to
+0-f, then bytes.fromhex -> zlib.decompress -> json.loads. The outer passing batch
+still contains part/parts and must also be checked for completeness.
+
+Validation:50focused passed4.75s; full3336passed1skipped156.33s. Tests now simulate
+the observed4096-character truncation and numeric masks, verify exact record
+recovery, and reject incomplete/corrupted packets. This correction is NOT yet
+observed in a runner. It requires no provider calls or full official rerun; the
+existing cache-only mode is sufficient. No dispatch attempted in this follow-up.

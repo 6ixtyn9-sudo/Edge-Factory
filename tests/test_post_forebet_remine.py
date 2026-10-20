@@ -283,9 +283,26 @@ def publication_report(con, monkeypatch):
 
 
 def notices(output):
-    # Model the Actions runner's workflow-command data unescaping order.
-    return [json.loads(line.split("::", 2)[2].replace("%0D", "\r").replace("%0A", "\n").replace("%25", "%"))
-            for line in output.splitlines() if line.startswith("::notice ")]
+    import zlib
+    groups = {}
+    for line in output.splitlines():
+        if not line.startswith("::notice "):
+            continue
+        _, title, data = line.split("::", 2)
+        group = title.rsplit(" fragment ", 1)[0]
+        packet = json.loads(data)
+        assert packet["encoding"] == "zlib-base16-ap"
+        groups.setdefault(group, []).append(packet)
+    decoded = []
+    for packets in groups.values():
+        packets.sort(key=lambda p: p["chunk"])
+        assert [p["chunk"] for p in packets] == list(range(1, packets[0]["chunks"] + 1))
+        assert all(p["chunks"] == len(packets) for p in packets)
+        text = "".join(p["data"] for p in packets)
+        assert set(text) <= set("ABCDEFGHIJKLMNOP")
+        compressed = bytes.fromhex(text.translate(str.maketrans("ABCDEFGHIJKLMNOP", "0123456789abcdef")))
+        decoded.append(json.loads(zlib.decompress(compressed)))
+    return decoded
 
 
 def test_passing_rules_are_readable_without_artifacts(publication_report, tmp_path, monkeypatch, capsys):
@@ -316,7 +333,8 @@ def test_passing_rules_are_readable_without_artifacts(publication_report, tmp_pa
     assert [b["part"] for b in batches] == list(range(1, len(batches) + 1))
     assert all(b["parts"] == len(batches) and b["research_only"] for b in batches)
     assert [e for b in batches for e in b["passing_candidates"]] == expected
-    assert all(len(line.encode("utf-8")) < 64_000 for line in output.splitlines())
+    assert all(len(line.encode("utf-8")) < 3500 for line in output.splitlines())
+    assert notices("\n".join(line[:4096] for line in output.replace("45", "***").replace("2.5", "***").splitlines())) == [receipt, *batches]
     text = summary.read_text()
     assert text.startswith("Earlier step output\n")
     assert "not approved live rules" in text
@@ -371,3 +389,16 @@ def test_local_execution_prints_passes_without_workflow_commands(publication_rep
     assert "Passing research candidate:" in output
     assert "new_predicate_requires_serving_validation" in output
     assert "::notice" not in output
+
+
+def test_incomplete_or_corrupted_notice_transport_is_rejected(publication_report, monkeypatch, capsys):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    miner._publish_remine_results(publication_report)
+    lines = capsys.readouterr().out.splitlines()
+    with pytest.raises((ValueError, AssertionError)):
+        notices(lines[0][:-20])
+    packet = json.loads(lines[0].split("::", 2)[2])
+    packet["chunks"] += 1
+    with pytest.raises(AssertionError):
+        notices(lines[0].split("::", 2)[0] + "::" + lines[0].split("::", 2)[1] + "::" + json.dumps(packet))

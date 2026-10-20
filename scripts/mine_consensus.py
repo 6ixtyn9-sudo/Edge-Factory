@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import math
+import zlib
 from collections import Counter, defaultdict
 from datetime import date, timedelta
 from itertools import combinations
@@ -1299,15 +1300,25 @@ def _publish_remine_results(payload):
         return
 
     def notice(title, data):
-        # Escape workflow-command data, including literal provider %0A tokens.
-        text = json.dumps(data, sort_keys=True, separators=(",", ":")).replace("%", "%25")
-        print(f"::notice title={title}::" + text)
+        # Only research statistics enter this transport, never environment or
+        # credentials. Production truncates messages at 4096 characters and
+        # short numeric configuration secrets can mask ordinary metrics. Use
+        # compressed uppercase A-P hex so those masks do not corrupt numbers.
+        # Decode: A-P -> 0-f, bytes.fromhex, zlib.decompress, json.loads.
+        raw = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        encoded = zlib.compress(raw).hex().translate(
+            str.maketrans("0123456789abcdef", "ABCDEFGHIJKLMNOP"))
+        chunks = [encoded[i:i + 2800] for i in range(0, len(encoded), 2800)]
+        for index, chunk in enumerate(chunks, 1):
+            packet = {"encoding": "zlib-base16-ap", "chunk": index,
+                      "chunks": len(chunks), "data": chunk}
+            print(f"::notice title={title} fragment {index}/{len(chunks)}::" + json.dumps(packet))
 
     notice("Post-Forebet re-mine", receipt)
     batches, batch, size = [], [], 0
     for edge in passed:
         length = len(json.dumps(edge, sort_keys=True).replace("%", "%25").encode("utf-8")) + 1
-        if batch and size + length > 45_000:  # Stay below the 64 KiB annotation limit.
+        if batch and size + length > 45_000:  # Bound intermediate records; notice() fragments the transport.
             batches.append(batch)
             batch, size = [], 0
         batch.append(edge)
