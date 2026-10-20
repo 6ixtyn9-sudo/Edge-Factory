@@ -539,7 +539,7 @@ def recent_stats(con, view: str, where: str, since: str):
     n, wins, pnl, n_priced = con.sql(q).fetchone()
     n, wins, n_priced = int(n or 0), int(wins or 0), int(n_priced or 0)
     return {
-        "n": n, "wins": wins,
+        "n": n, "wins": wins, "n_priced": n_priced,
         "hit": round(wins / n, 4) if n else 0.0,
         "wilson_lb": round(wilson_lb(wins, n), 4),
         "roi": round(pnl / n_priced, 4) if n_priced else None,
@@ -586,6 +586,8 @@ def main():
         expected_model_key=expected_ml_model_key,
         require_ml_provenance=True,
     )
+    from edgefactory.consensus_contracts import recreate_contract_views
+    avail.update(recreate_contract_views(con, certified))
     since = (date.today() - timedelta(days=args.window)).isoformat()
     today = date.today().isoformat()
 
@@ -610,7 +612,12 @@ def main():
             continue
 
         try:
-            rec = recent_stats(con, view, where, since)
+            recent_since = since
+            if e.get("contract_schema") == "post_forebet_v1":
+                # No overlap with the locked validation baseline. Re-mining
+                # preserves this boundary; it cannot reset the decay clock.
+                recent_since = max(since, e["activated_as_of"])
+            rec = recent_stats(con, view, where, recent_since)
         except Exception as ex:
             e["decay"] = {"verdict": "UNKNOWN", "window_days": args.window,
                           "checked_at": today, "reason": str(ex)[:120]}
@@ -620,6 +627,10 @@ def main():
         rep = decay_verdict(b_wins, b_n, rec["wins"], rec["n"],
                             min_recent=GATES.min_recent_n,
                             recent_roi=rec["roi"])
+        if (e.get("contract_schema") == "post_forebet_v1" and rep.verdict == "HEALTHY"
+                and rec["n_priced"] < GATES.min_recent_n):
+            from dataclasses import replace
+            rep = replace(rep, verdict="WATCH")
         bench = should_bench(rep, rec["roi"])
         e["decay"] = {
             "verdict": rep.verdict, "window_days": args.window,

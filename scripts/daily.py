@@ -1014,7 +1014,7 @@ def run_pipeline(
             "export_settled_results (Addendum 21 overlay)",
         )
         run(get_build_entity_registry_cmd(), "build_entity_registry")
-        run("PYTHONPATH=src python3 scripts/mine_consensus.py", "mine_consensus")
+        run("PYTHONPATH=src python3 scripts/mine_consensus.py --activate", "mine_consensus")
         run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
         run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
 
@@ -1174,7 +1174,7 @@ def run_pipeline(
             "export_settled_results (Addendum 21 overlay)",
         )
         run(get_build_entity_registry_cmd(), "build_entity_registry")
-        run("PYTHONPATH=src python3 scripts/mine_consensus.py", "mine_consensus")
+        run("PYTHONPATH=src python3 scripts/mine_consensus.py --activate", "mine_consensus")
         run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
         run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
 
@@ -1282,7 +1282,7 @@ def run_pipeline(
     elif mode == "forecast":
         # Fast non-official forecast refresh (Human research mode)
         run(get_build_entity_registry_cmd(), "build_entity_registry")
-        run("PYTHONPATH=src python3 scripts/mine_consensus.py", "mine_consensus")
+        run("PYTHONPATH=src python3 scripts/mine_consensus.py --activate", "mine_consensus")
         run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
         run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
 

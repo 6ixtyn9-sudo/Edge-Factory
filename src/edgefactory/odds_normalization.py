@@ -293,6 +293,18 @@ def canonical_market(market: object, line: object = None) -> tuple[str | None, s
         raw.startswith(prefix) for prefix in _UNSUPPORTED_MARKET_PREFIXES
     ):
         return None, f"unsupported_market:{raw or 'empty'}"
+    # Explicit canonical half-time keys remain distinct from full-time.
+    # Do not infer a period from a vague provider container or a handicap.
+    if raw == "ht_1x2":
+        if _line_present(line):
+            return None, "unsupported_market:ht_1x2_with_line"
+        return "ht_1x2", None
+    half_total = {"ht_ou_1_5": "ht_ou_1.5", "ht_ou_2_5": "ht_ou_2.5"}.get(raw)
+    if half_total:
+        embedded = half_total.rsplit("_", 1)[1]
+        if _line_present(line) and _line_from(line) != embedded:
+            return None, "unsupported_market:ht_totals_line_conflict"
+        return half_total, embedded
     if raw in _1X2_TOKENS or compact in {"1x2", "headtohead", "headtohead3way", "matchodds"}:
         # A 1x2 token carrying a line is NOT the full-time three-way market:
         # the line is the provider's own statement that this is a handicap /
@@ -348,7 +360,7 @@ def canonical_selection(
     away: object = None,
 ) -> tuple[str | None, str | None]:
     """Return a canonical selection or an explicit unmappable reason."""
-    if market == "1x2":
+    if market in ("1x2", "ht_1x2"):
         value = _team_side(selection, home, away)
         if value:
             return value, None
@@ -362,7 +374,7 @@ def canonical_selection(
         if token in {"no", "n", "false", "ng", "notboth"}:
             return "no", None
         return None, f"unknown_selection:{_token(selection) or 'empty'}"
-    if market.startswith("ou"):
+    if market.startswith("ou") or market.startswith("ht_ou_"):
         token = _compact(selection)
         if token in {"over", "o", "more", "yes"}:
             return "over", None
@@ -394,7 +406,7 @@ def canonical_market_selection(
     )
     if selection_key is None:
         return None, _failure(selection_reason or "unknown_selection:empty")
-    normalized_line = _line_from(line) or _line_from(market) if market_key.startswith("ou_") else line
+    normalized_line = _line_from(line) or _line_from(market) if market_key.startswith(("ou_", "ht_ou_")) else line
     return CanonicalMarketSelection(market_key, selection_key, normalized_line), None
 
 
