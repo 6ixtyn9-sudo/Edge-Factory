@@ -2890,10 +2890,79 @@ def alias_outcome_conflict(pick, entries_by_date) -> bool:
 
 
 # ---------------- state (all percentages of capital) ----------------
+def _apply_unplaced_enhancement_resets(st: dict, localdata: Path) -> bool:
+    """Apply committed operator receipts BEFORE enhancement settlement.
+
+    This is a date-scoped cancellation of explicitly UNPLACED recommendations,
+    not --reset/backfill, a bank rollback or a general freeze override. Old cache
+    copies are invalidated once; replacement cards frozen after approval survive.
+    Settled history is never removed or recalculated. Unknown artifacts fail
+    closed rather than being mistaken for the withdrawn, hash-witnessed ticket.
+    """
+    changed = False
+    for path in sorted(localdata.glob("autobets_enh_tickets_20??-??-??_reset.json")):
+        raw = path.read_bytes()
+        receipt = json.loads(raw)
+        target = receipt["date"]
+        if (date.fromisoformat(target).isoformat() != target
+                or path.name != f"autobets_enh_tickets_{target}_reset.json"
+                or receipt.get("schema") != 1
+                or receipt.get("action") != "reset_unplaced_enhancement"
+                or receipt.get("lane") != "enh"
+                or receipt.get("confirmed_none_placed") is not True):
+            raise ValueError(f"invalid unplaced-enhancement reset receipt: {path.name}")
+        cutoff = datetime.fromisoformat(receipt["approved_at"])
+        expected = receipt["withdrawn_ticket_sha256"]
+        if cutoff.tzinfo is None or re.fullmatch(r"[0-9a-f]{64}", expected) is None:
+            raise ValueError(f"invalid reset approval/witness: {path.name}")
+        identity = hashlib.sha256(raw).hexdigest()
+        book = st.get("unplaced_enhancement_resets") or {}
+        if book.get(target, {}).get("receipt_sha256") == identity:
+            continue
+        frozen = frozen_entry(st, target)
+        if frozen:
+            stamp = datetime.fromisoformat(frozen["frozen_at"])
+            if stamp.tzinfo is None:
+                raise ValueError("cannot reset an enhancement freeze without an aware timestamp")
+            if stamp > cutoff:
+                continue  # an explicitly newer replacement, not the withdrawn card
+        if any(str(h.get("date")) == target for h in st.get("history", [])):
+            raise ValueError(f"enhancement reset {target} refused: settled history exists; reconciliation required")
+        slip = localdata / f"autobets_enh_tickets_{target}.txt"
+        if slip.exists() and hashlib.sha256(slip.read_bytes()).hexdigest() != expected:
+            raise ValueError(f"enhancement reset {target} refused: active artifact differs from approved ticket")
+        recut = localdata / f"autobets_enh_tickets_{target}_force_recut.txt"
+        if recut.exists():
+            raise ValueError(f"enhancement reset {target} refused: review the existing force-recut artifact")
+        removed = [x for x in st.get("open_slips", []) if str(x.get("date")) == target]
+        if st:
+            # Preserve original entries inside an audit receipt, not the active
+            # settlement queue. Bank/history/events/cycle values are untouched.
+            st["open_slips"] = [x for x in st.get("open_slips", []) if str(x.get("date")) != target]
+            old_frozen = st.get(FROZEN_BOOK_KEY, {}).pop(target, None)
+            old_superseded = st.get(SUPERSEDED_BOOK_KEY, {}).pop(target, None)
+            st.setdefault("unplaced_enhancement_resets", {})[target] = {
+                "receipt_sha256": identity, "approved_at": receipt["approved_at"],
+                "confirmed_none_placed": True, "removed_open_slips": removed,
+                "previous_freeze": old_frozen, "previous_supersession": old_superseded,
+            }
+            changed = True
+        # Both are old recommendation locks, never proof of a placed bet.
+        slip.unlink(missing_ok=True)
+        (localdata / f"autobets_enh_tickets_{target}.frozen").unlink(missing_ok=True)
+        print(f"ENHANCEMENT_RESET {target}: unplaced ticket withdrawn; bank/history unchanged")
+    return changed
+
+
 def load_state(lane: "Lane | None" = None) -> dict:
     try:
         st = json.loads(state_path(lane).read_text())
     except Exception:
+        st = {}
+    if lane is not None and lane.state_file == ENHANCEMENT_LANE.state_file:
+        if _apply_unplaced_enhancement_resets(st, state_path(lane).parent) and st:
+            save_state(st, lane)
+    if not st:
         return {}
     slips = st.get("open_slips") or []
     if slips:
@@ -5206,10 +5275,14 @@ def main():
     ap.add_argument("--to", default=None)
     ap.add_argument("--date", default=None)
     ap.add_argument("--reset", action="store_true")
+    ap.add_argument("--apply-unplaced-resets", action="store_true",
+                    help="enhancement lane only: apply committed unplaced-ticket receipts; no settlement/build")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--enhancements", action="store_true",
                     help=f"the enhancement lane's own slip (needs {ENH_BOARD_FLAG}=1)")
     args = ap.parse_args()
+    if args.apply_unplaced_resets and not args.enhancements:
+        ap.error("--apply-unplaced-resets requires --enhancements; main lane cannot be reset")
 
     # Additive lane, own state: it shares the lifecycle functions but never the
     # main lane's state file or artifact. Without the flag every command below
@@ -5226,6 +5299,9 @@ def main():
 
     if args.enhancements and enhancement_board_enabled():
         st = load_state(ENHANCEMENT_LANE)
+        if args.apply_unplaced_resets:
+            print("Enhancement unplaced-ticket resets applied; no settlement, capture, build or bank reset.")
+            return 0
         # The lane's command semantics are the main lane's, exactly: a bare
         # `--enhancements` (what the wired daily step runs) settles open
         # slips first and then builds/freezes today's card; `--settle` alone
