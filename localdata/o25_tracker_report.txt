@@ -1,11 +1,11 @@
-O2.5 TRACKER — graded 770/810 listed overs (window 2026-07-31..2026-10-21)
+O2.5 TRACKER — graded 773/822 listed overs (window 2026-07-31..2026-10-22)
 
 cut                                   n    hit      stated  p_n     ROI
-ALL priced                          405    65%         52%  405   -1.5%
-band 50-60%                         113    65%         53%  113   -5.3%
+ALL priced                          408    65%         52%  408   -1.4%
+band 50-60%                         116    66%         53%  116   -4.9%
 band <50%                           221    64%         47%  221   +0.5%
 band >=60%                           71    66%         68%   71   -1.7%
-SHARP-priced (theoddsapi/betexpl)    66    64%         53%   66   -2.3%
+SHARP-priced (theoddsapi/betexpl)    69    64%         53%   69   -1.8%
 SOFT-priced (scoutingstats)         298    64%         50%  298   -1.7%
 
 --- goals surface by rule ---
@@ -20,6 +20,8 @@ rule ml-meta avg_p>=70                7    86%         49%    7  +16.1%
 rule ml-meta avg_p>=75                0      -       -       -
 rule ml-meta avg_p>=80                3    67%         47%    3  -17.3%
 rule ou25-unanimous-2way-sa avg_p>=70   34    59%         60%   34  -20.4%
+rule pfc_0ad08cd1b2e75a2c9051189e     1   100%         57%    1  +66.0%
+rule pfc_d94d447efe0742440e953722     2    50%         56%    2  -18.5%
 rule unanimous[betclan+statarea+vitibet    1   100%         61%    1  +44.0%
 rule unanimous[betclan+vitibet] avg_p>=    0      -       -       -
 rule unanimous[bzzoiro+statarea+vitibet    3   100%         68%    3  +42.7%
@@ -30,25 +32,25 @@ rule unanimous[vitibet+zulubet] avg_p>=    1     0%         74%    1 -100.0%
 --- goals surface by bucket ---
 bucket CAUTION                       20    70%         52%   20  +12.7%
 bucket CERTIFIED_CLEAN               21    43%         54%   21  -35.9%
-bucket SKIPPED_VETO                 240    68%         52%  240   +1.4%
+bucket SKIPPED_VETO                 243    67%         52%  243   +1.5%
 bucket WATCHLIST_NO_ODDS              5    60%         51%    5  -12.0%
 bucket WATCHLIST_SUSPECT_PRICE       19    79%         58%   19  +10.9%
 bucket WATCHLIST_UNCORROBORATED_PRICE   96    59%         52%   96   -7.2%
 bucket WATCHLIST_UNKNOWN_CTX          4    75%         50%    4  +23.2%
-GATE cut: 50-60% AND sharp           21    67%         53%   21   +2.5%
+GATE cut: 50-60% AND sharp           24    67%         54%   24   +3.4%
 
 CHECKPOINT 3 GATE (50-60% band, priced):
-   band 50-60% priced               113    65%         53%  113   -5.3%
-   STATUS: PENDING — hit 65% < 70%, ROI -5.3% <= 0
+   band 50-60% priced               116    66%         53%  116   -4.9%
+   STATUS: PENDING — hit 66% < 70%, ROI -4.9% <= 0
 
-pending priced overs (results not yet filed): 11
-   2026-08-22 50% @ 1.61 (scoutingstats)
-   2026-08-22 48% @ 1.8 (scoutingstats)
-   2026-08-22 45% @ 1.57 (scoutingstats)
-   2026-08-23 47% @ 1.7 (scoutingstats)
-   2026-09-05 70% @ 1.5 (scoutingstats_odds)
-   2026-09-22 45% @ 2.37 (scoutingstats)
-   2026-10-11 52% @ 1.37 (theoddsapi)
-   2026-10-21 57% @ 1.66 (theoddsapi)
-   2026-10-21 56% @ 1.36 (theoddsapi)
-   2026-10-21 56% @ 1.63 (theoddsapi)
+pending priced overs (results not yet filed): 20
+   2026-10-22 58% @ 1.65 (theoddsapi)
+   2026-10-22 58% @ 1.93 (theoddsapi)
+   2026-10-22 59% @ 1.81 (theoddsapi)
+   2026-10-22 59% @ 1.55 (theoddsapi)
+   2026-10-22 58% @ 1.89 (theoddsapi)
+   2026-10-22 58% @ 1.88 (theoddsapi)
+   2026-10-22 59% @ 2.16 (theoddsapi)
+   2026-10-22 59% @ 2.22 (theoddsapi)
+   2026-10-22 62% @ 2.37 (theoddsapi)
+   2026-10-22 61% @ 1.5 (theoddsapi)
