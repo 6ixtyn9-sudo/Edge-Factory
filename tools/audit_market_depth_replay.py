@@ -149,6 +149,7 @@ def audit_detail_files() -> dict:
             "eligible_pre_match_decision": 0,      # requires verified aware ISO kickoff > cutoff
             "unverified_kickoff_timezone": 0,      # bare clock; timezone not established
             "ineligible_already_started": 0,       # verified kickoff <= cutoff
+            "ineligible_post_cutoff_capture": 0,   # verified kickoff > cutoff, but captured >= cutoff
             "ineligible_post_kickoff_capture": 0,  # verified capture >= kickoff
             "invalid_timestamp": 0                 # missing or malformed timestamp
         },

@@ -49,6 +49,7 @@ An audit across all 10 BetExplorer detail files (`localdata/betexplorer_match_de
 - **`eligible_pre_match_decision`:** **0** (Zero fixtures have verified aware kickoff timestamps).
 - **`unverified_kickoff_timezone`:** **116** (Held pending authoritative timezone resolution).
 - **`ineligible_already_started`:** **0**
+- **`ineligible_post_cutoff_capture`:** **0** (Initialized and tested for aware ISO captures on/after 07:00 UTC).
 - **`ineligible_post_kickoff_capture`:** **0**
 - **`invalid_timestamp`:** **0**
 
