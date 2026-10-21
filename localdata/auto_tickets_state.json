@@ -1,50 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 184.25489900000014,
+  "bank": 161.22299900000013,
   "cycle_base": 203.9865280000001,
-  "open_slips": [
-    {
-      "date": "2026-10-20",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Huddersfield vs Peterborough",
-              "pick": "HOME",
-              "prob": 0.6629999999999999,
-              "odds": 1.55,
-              "result": null,
-              "fixture_key": [
-                "2026-10-20",
-                "Huddersfield",
-                "Peterborough"
-              ]
-            },
-            {
-              "match": "Barnet vs Swindon Town",
-              "pick": "HOME",
-              "prob": 0.66,
-              "odds": 1.53,
-              "result": null,
-              "fixture_key": [
-                "2026-10-20",
-                "Barnet",
-                "Swindon Town"
-              ]
-            }
-          ],
-          "odds": 2.37,
-          "stake_pct": 23.0319,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 23.0319
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -1044,6 +1002,35 @@
       ],
       "bank_pct": 184.2549,
       "close_pct": 184.2548
+    },
+    {
+      "date": "2026-10-20",
+      "staked_pct": 23.0319,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.37,
+          "won": false,
+          "stake_pct": 23.0319,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Huddersfield vs Peterborough",
+              "pick": "HOME",
+              "odds": 1.55,
+              "result": "win"
+            },
+            {
+              "match": "Barnet vs Swindon Town",
+              "pick": "HOME",
+              "odds": 1.53,
+              "result": "loss"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 161.223,
+      "close_pct": 161.2229
     }
   ],
   "events": [
