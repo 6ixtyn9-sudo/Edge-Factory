@@ -395,3 +395,25 @@ def test_active_contract_path_ignores_shadow_only_and_conflicting_votes(prepared
     after = picker.run_day(DAY, {}, None, None)
     assert after == before
     assert not any('Shadow Only' in p['home'] for p in after[0])
+
+
+def test_revalidation_snapshot_does_not_certify_preserved_historical_stats(prepared):
+    registry = activate(prepared)
+    db, path, report, _ = prepared
+    contract = next(e for e in registry['edges'] if e.get('contract_schema') == cc.SCHEMA)
+    assert contract['input_snapshot_id'] in registry['input_snapshots']
+    # Historical baseline is deliberately not today's query result. Existing
+    # decay/activation policy preserves it; today's hash cannot prove it.
+    contract.pop('input_snapshot_id')
+    contract['input_verification_status'] = 'historical_snapshot_unavailable'
+    contract['train']['roi'] = .1234
+    saved = deepcopy(contract)
+    path.write_text(json.dumps(registry))
+    with duckdb.connect(str(db)) as con:
+        assert miner.activate_post_forebet_contracts(con, report)
+    after = json.loads(path.read_text())
+    assert saved in after['edges']
+    check = after['contract_revalidations'][saved['contract_id']]
+    assert check['status'] == 'reproduced_at_revalidation'
+    assert check['train']['roi'] != saved['train']['roi']
+    assert check['input_snapshot_id'] in after['input_snapshots']

@@ -1,0 +1,236 @@
+"""Adversarial audit regressions: populations, retention, provenance and ENH finance."""
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+
+import duckdb
+import pytest
+
+from edgefactory import enh_registry as er, consensus_contracts as cc
+from scripts import assay_purity as assay, picks_today as pt, auto_tickets as at
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_assay_unpriced_losses_cannot_change_roi_or_inflate_verdict_n():
+    con = duckdb.connect()
+    con.create_function('classify_competition', lambda s: 'league', return_type='VARCHAR')
+    con.execute('CREATE TABLE sample(date DATE, home VARCHAR, away VARCHAR, league VARCHAR, pick VARCHAR, outcome VARCHAR, pick_odds DOUBLE)')
+    # Three priced wins; 36 unpriced losses. A positive ROI is not enough to
+    # turn these THREE priced observations into an ALLOW with n=39.
+    con.execute("INSERT INTO sample SELECT CURRENT_DATE, 'Alpha', 'Bravo', 'Test', 'home', 'home', 2.1 FROM range(3)")
+    con.execute("INSERT INTO sample SELECT CURRENT_DATE, 'Alpha', 'Bravo', 'Test', 'home', 'away', NULL FROM range(36)")
+    league, team, odds, comp, niche = assay.assay_edge(con, {'view': 'sample', 'rule': 'test'}, 60)
+    assert league and team and odds and comp and niche
+    row = next(iter(league.values()))
+    assert row['n'] == row['n_priced'] == 3
+    assert row['n_settled'] == 39
+    assert row['roi'] == pytest.approx(1.1)
+    assert row['recent_roi'] is None
+    assert row['verdict'] == 'UNKNOWN'
+    for group in (team, comp):
+        assert all(r['n'] == 3 and r['verdict'] == 'UNKNOWN' for r in group.values())
+    con.close()
+
+
+@pytest.mark.parametrize('price', [float('nan'), float('inf'), 1., -1.])
+def test_invalid_prices_cannot_fund_purity_evidence(price):
+    con = duckdb.connect()
+    con.execute('CREATE TABLE sample(pick VARCHAR, outcome VARCHAR, pick_odds DOUBLE)')
+    con.execute("INSERT INTO sample VALUES ('home','away',?)", [price])
+    league, *_ = assay.assay_edge(con, {'view': 'sample'}, 60)
+    row = next(iter(league.values()))
+    assert row['n'] == 0 and row['roi'] is None and row['verdict'] == 'UNKNOWN'
+    con.close()
+
+
+def test_records_survive_more_than_old_cap_and_keys_remain_idempotent(tmp_path):
+    path = er.registry_path(tmp_path)
+    path.parent.mkdir(parents=True)
+    records = [dict(date='2026-10-01', match=f'A{i} vs B', price=2., hit=True) for i in range(400)]
+    entry = er._blank()
+    entry.update(n=400, hits=400, records=records, inv_price_sum=200., multi_n=400)
+    path.write_text(json.dumps({'markets': {er.versioned('match_over_25'): entry}}))
+    er.record_outcome(tmp_path, date_='2026-10-02', match='Last vs B', market='match_over_25', price=2., hit=True, today='2026-10-03')
+    row = json.loads(path.read_text())['markets'][er.versioned('match_over_25')]
+    assert row['n'] == len(row['records']) == 401
+    # Key absent from processed but retained in the ledger must not double count.
+    assert not er.record_outcome(tmp_path, date_='2026-10-01', match='A0 vs B', market='match_over_25', price=2., hit=True)['recorded']
+
+
+def test_incomplete_ledger_cannot_certify_or_derive_a_data_floor():
+    entry = er._blank()
+    entry.update(n=447, hits=447, status='ELIGIBLE', multi_n=447, inv_price_sum=223.5,
+                 records=[dict(date='2026-10-01', price=2, hit=True)] * 400)
+    er._evaluate(entry, '2026-10-21')
+    assert entry['status'] == 'PAPER' and entry['records_truncated']
+    result = er.derive_floors({'markets': {er.versioned('match_over_25'): entry}}, '2026-10-21', parent_floors={'match_over_25': 1.3}, margin=.02)
+    assert result['coverage']['records'] == 0
+
+
+def test_missing_rolling_rate_never_becomes_perfect(monkeypatch, tmp_path):
+    path = tmp_path / 'audit.json'
+    path.write_text(json.dumps({'enhancements_audit': {'by_enhancement': {
+        'missing': {'recommended': 10}, 'zero': {'recommended': 10, 'hit_rate': 0},
+        'bad': {'recommended': 10, 'hit_rate': '1.0'}}}}))
+    monkeypatch.setattr(pt, 'AUDIT_ROLLING_PATH', path)
+    assert pt.load_rolling_audit_hit_rates() == {'zero': 0.}
+
+
+def test_new_pick_output_does_not_publish_unknown_as_zero():
+    picks = [{'enhancement_probability': 0.0}]
+    pt.stamp_pick_evidence(picks, git_sha='measured-build', built_at='2026-10-21T00:00:00Z')
+    assert picks[0]['enhancement_probability'] is None
+    assert picks[0]['build_git_sha'] == 'measured-build'
+    with pytest.raises(ValueError, match='cohort identity'):
+        pt.stamp_pick_evidence([{'recommended_enhancement': 'match_over_25', 'enhancement_probability': .8}], git_sha='x', built_at='x')
+
+
+def test_new_snapshot_hash_is_order_independent_and_window_bound():
+    def manifest(order):
+        con = duckdb.connect()
+        con.execute('CREATE TABLE scoutingstats(date DATE, home VARCHAR, away VARCHAR, p1 DOUBLE, px DOUBLE, p2 DOUBLE)')
+        for home in order:
+            con.execute("INSERT INTO scoutingstats VALUES ('2026-10-01',?,'Bravo',.6,.2,.2)", [home])
+        coverage, *_ = cc.collect_observations(con, start='2026-10-01', as_of='2026-10-02', include_snapshot=True)
+        con.close()
+        return coverage['scoutingstats']
+    left, right = manifest(['Alpha', 'Charlie']), manifest(['Charlie', 'Alpha'])
+    assert left['observation_sha256'] == right['observation_sha256']
+    assert left['rows'] == 2 and left['first_date'] == left['last_date'] == '2026-10-01'
+
+
+def test_missing_financial_state_cannot_rebase_published_history(tmp_path):
+    lane = at.ENHANCEMENT_LANE._replace(state_file=tmp_path / 'enhancement_tickets_state.json')
+    (tmp_path / f'{lane.slip_prefix}_performance.json').write_text('{"bet_days":6}')
+    with pytest.raises(RuntimeError, match='recovery required'):
+        at.load_state(lane)
+    lane.state_file.write_text('{broken')
+    with pytest.raises(RuntimeError, match='unreadable financial state'):
+        at.load_state(lane)
+
+
+def test_enh_recovery_preserves_six_days_and_actual_later_stakes():
+    audit = ROOT / 'docs/operator/audits/2026-10-21-enh-recovery'
+    before = json.loads((audit / 'before-reset.json').read_text())
+    after = json.loads((audit / 'after-reset.json').read_text())
+    st = json.loads((ROOT / 'localdata/enhancement_tickets_state.json').read_text())
+    assert st['history'][:6] == before['history']
+    assert len(st['history']) == 7
+    assert st['bank'] == pytest.approx(before['bank_pct'] + 27 - 12.5)
+    assert st['bank'] == pytest.approx(86.199576)
+    assert st['history'][-1]['staked_pct'] == after['history'][-1]['staked_pct'] == 12.5
+    assert st['open_slips'][0]['staked_pct'] == after['open_slips'][0]['staked_pct'] == 14.3125
+    assert st['integrity_recovery']['new_settlements_executed'] == 0
+    assert hashlib.sha256((audit / 'before-reset.json').read_bytes()).hexdigest() == st['integrity_recovery']['before_reset_sha256']
+
+
+def test_held_purity_verdicts_are_not_reused():
+    pick = dict(contract_schema=cc.SCHEMA, edge_rule='pfc_uncovered')
+    ctx = pt.lookup_context({'roi_population_status': 'unverified_legacy_population'}, pick)
+    assert ctx['purity_evidence_status'] == 'unavailable_exact_contract_context'
+    assert ctx['league'] == ctx['odds_band'] == 'UNKNOWN'
+
+
+def test_legacy_consensus_normalizes_each_vector_and_filters_identity(tmp_path, monkeypatch):
+    import csv, gzip
+    from edgefactory import warehouse
+    cols = ('date home away hs gs p1 px p2 odd1 oddx odd2 ht_hs ht_gs p_under p_over odd_under odd_over p_gg p_ng odd_gg odd_ng p1_ht px_ht p2_ht kelly pred_hs pred_gs goalsavg league status tip p_o15 p_o25 p_o35').split()
+    for source, probs in [('forebet', [60, 25, 15]), ('zulubet', [.6, .25, .15]), ('statarea', [60, 25, 15])]:
+        with gzip.open(tmp_path / f'{source}_2026-10.csv.gz', 'wt') as f:
+            writer = csv.DictWriter(f, fieldnames=cols); writer.writeheader()
+            for home in ['Alpha Town', 'A']:
+                row = dict.fromkeys(cols, '')
+                row.update(date='2026-10-01', home=home, away='Bravo United', hs=2, gs=1,
+                           p1=probs[0], px=probs[1], p2=probs[2], odd1=2., oddx=3., odd2=4., league='Test')
+                writer.writerow(row)
+    monkeypatch.setattr(warehouse, 'LOCALDATA', tmp_path)
+    con = warehouse.connect()
+    assert con.execute('SELECT count(*) FROM forebet').fetchone()[0] == 2
+    assert con.execute('SELECT count(*) FROM forebet_settled').fetchone()[0] == 1
+    assert con.execute('SELECT avg_p FROM consensus2').fetchone()[0] == pytest.approx(60)
+    assert con.execute('SELECT avg_p FROM consensus3').fetchone()[0] == pytest.approx(60)
+    con.close()
+
+
+def test_financial_cache_cannot_discard_committed_history(tmp_path):
+    import subprocess
+    from scripts import phase5_persistence as persistence
+    def git(*args):
+        return subprocess.run(['git', *args], cwd=tmp_path, check=True, capture_output=True)
+    git('init', '-q'); git('config', 'user.name', 'Test'); git('config', 'user.email', 'test@example.invalid')
+    p = tmp_path / persistence.ENH_STATE; p.parent.mkdir()
+    first = {'date': '2026-10-19', 'staked_pct': 10, 'returned_pct': 0, 'accas': []}
+    second = {'date': '2026-10-20', 'staked_pct': 12.5, 'returned_pct': 27, 'accas': []}
+    head = {'bank': 104.5, 'history': [first, second], 'open_slips': []}
+    p.write_text(json.dumps(head)); git('add', '.'); git('commit', '-qm', 'financial fixture')
+    p.write_text(json.dumps({'bank': 114.5, 'history': [second], 'open_slips': []}))
+    recovered = json.loads(persistence._retain_financial_state(tmp_path))
+    assert recovered['bank'] == 104.5 and len(recovered['history']) == 2
+    # A genuinely newer full ledger survives; no rollback on checkout.
+    third = {'date': '2026-10-21', 'staked_pct': 5, 'returned_pct': 0, 'accas': []}
+    p.write_text(json.dumps({'bank': 99.5, 'history': [first, second, third], 'open_slips': []}))
+    assert json.loads(persistence._retain_financial_state(tmp_path))['bank'] == 99.5
+    p.write_text(json.dumps({'bank': 123, 'history': [first, second, third], 'open_slips': []}))
+    with pytest.raises(persistence.EvidenceMergeError, match='bank does not reconcile'):
+        persistence._retain_financial_state(tmp_path)
+
+
+def test_restored_registry_matches_all_original_counters():
+    reg = json.loads((ROOT / 'localdata/enhancement_registry.json').read_text())
+    row = reg['markets']['match_over_25@v1']
+    records = row['records']
+    assert len(records) == row['n'] == 447
+    assert len({(r['date'], r['match']) for r in records}) == 447
+    assert sum(bool(r['hit']) for r in records) == row['hits'] == 293
+    assert sum(bool(r.get('multi_source')) for r in records) == row['multi_n'] == 84
+    assert sum((r['price'] - 1) if r['hit'] else -1 for r in records) == pytest.approx(row['profit'])
+    assert sum(1 / r['price'] for r in records) == pytest.approx(row['inv_price_sum'])
+    assert er.evidence_complete(row)
+
+
+def test_cache_can_extend_a_partially_settled_day(tmp_path):
+    import subprocess
+    from scripts import phase5_persistence as persistence
+    def git(*args):
+        return subprocess.run(['git', *args], cwd=tmp_path, check=True, capture_output=True)
+    git('init', '-q'); git('config', 'user.name', 'Test'); git('config', 'user.email', 'test@example.invalid')
+    p = tmp_path / persistence.ENH_STATE; p.parent.mkdir()
+    a = {'stake_pct': 5, 'returned_pct': 0, 'won': False}
+    h = {'date': '2026-10-20', 'staked_pct': 5, 'returned_pct': 0, 'accas': [a]}
+    p.write_text(json.dumps({'bank': 95, 'history': [h], 'open_slips': []}))
+    git('add', '.'); git('commit', '-qm', 'partial settlement fixture')
+    b = {'stake_pct': 5, 'returned_pct': 10, 'won': True}
+    h2 = dict(h, staked_pct=10, returned_pct=10, accas=[a, b])
+    p.write_text(json.dumps({'bank': 100, 'history': [h2], 'open_slips': []}))
+    assert json.loads(persistence._retain_financial_state(tmp_path))['bank'] == 100
+
+
+def test_legacy_vector_guard_rejects_out_of_range_and_incoherent_inputs():
+    from edgefactory.warehouse import _pmax_pct
+    con = duckdb.connect()
+    for vector in [(1.04, 0, 0), (70, 70, 0), (float('nan'), .2, .2)]:
+        result = con.execute(f'SELECT {_pmax_pct("v")} FROM (SELECT ?::DOUBLE p1, ?::DOUBLE px, ?::DOUBLE p2, ?::DOUBLE pmax) v', [*vector, max(vector)]).fetchone()[0]
+        assert result is None
+    con.close()
+
+
+def test_no_price_column_is_unknown_not_a_synthetic_loss():
+    con = duckdb.connect()
+    con.execute("CREATE TABLE sample AS SELECT 'home' pick, 'away' outcome")
+    league, *_ = assay.assay_edge(con, {'view': 'sample'}, 60)
+    row = next(iter(league.values()))
+    assert row['n_settled'] == 1 and row['n_priced'] == row['n'] == 0
+    assert row['roi'] is None and row['verdict'] == 'UNKNOWN'
+    con.close()
+
+
+@pytest.mark.parametrize('bank', [float('nan'), float('inf'), True])
+def test_corrupt_bank_cannot_be_loaded_as_financial_state(tmp_path, bank):
+    lane = at.ENHANCEMENT_LANE._replace(state_file=tmp_path / 'enhancement_tickets_state.json')
+    state = at.fresh_state()
+    state['bank'] = bank
+    lane.state_file.write_text(json.dumps(state))
+    with pytest.raises(RuntimeError, match='invalid financial state'):
+        at.load_state(lane)

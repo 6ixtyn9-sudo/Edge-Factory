@@ -2165,6 +2165,12 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
             settled_rows, "price_quarantine_reason"
         ),
         "secondary_stats": sec_stats,
+        "population_definitions": {
+            "hit_rate": "wins / all settled picks, including unpriced",
+            "roi": "priced-leg P&L / valid priced picks",
+            "secondary_stats": "fixture outcomes counted once per settled pick; not enhancement bets",
+            "enhancement_hit_rate": "hits / settled recommended enhancements",
+            "enhancement_priced_roi": "priced enhancement P&L / priced_n"},
         "enhancements_audit": serialized_enh_audit,
         "enhancement_registry": registry_states,
         "settled_ledger": settled_ledger,
@@ -2219,9 +2225,9 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)}",
         f"- ambiguous result picks: {report.get('ambiguous_result_picks', 0)}",
         f"- wins: {overall.get('wins', 0)}",
-        f"- hit rate: {_summary_pct(overall.get('hit_rate'))}",
+        f"- hit rate: {_summary_pct(overall.get('hit_rate'))} (wins/settled: {overall.get('wins', 0)}/{overall.get('settled_picks', 0)})",
         f"- priced picks: {overall.get('priced_picks', 0)}",
-        f"- ROI: {_summary_pct(overall.get('roi'))}",
+        f"- ROI: {_summary_pct(overall.get('roi'))} (P&L / {overall.get('priced_picks', 0)} priced picks)",
         "",
         "## Settlement policy",
         "",
@@ -2231,6 +2237,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         "",
     ]
     
+    lines.append("Fixture-level secondary rates below score the fixture behind every settled pick; they are not enhancement-bet returns.")
     # Render Secondary Market realized stats
     sec = report.get("secondary_stats", {})
     if sec and sec.get("over25_total", 0) > 0:
@@ -2287,8 +2294,8 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 cls = summary.get("price_source_class", "")
                 note = summary.get("price_note") or ""
                 lines.append(
-                    f"- `{key}`: recommended={rec}, settled={settled}, hit_rate={hr:.1%}, "
-                    f"priced_n={p_n}, registry_processed={proc}, class={cls}"
+                    f"- `{key}`: recommended={rec}, settled={settled}, hit_rate={hr:.1%} (hits={hits}/recommended={rec}), "
+                    f"priced_n={p_n}, priced_ROI={summary.get('priced_roi')} (denominator={p_n}), registry_processed={proc}, class={cls}"
                     + (f" — {note}" if note else ""))
         lines.append("")
 
@@ -2303,7 +2310,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
     else:
         for key, summary in by_rule.items():
             lines.append(
-                f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')}, ROI={summary.get('roi')}"
+                f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')} (settled n={summary.get('settled_picks', 0)}), ROI={summary.get('roi')} (priced n={summary.get('priced_picks', 0)})"
             )
     lines.extend(["", "## By bucket", ""])
     by_bucket = report.get("by_bucket", {})
@@ -2312,7 +2319,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
     else:
         for key, summary in by_bucket.items():
             lines.append(
-                f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')}, ROI={summary.get('roi')}"
+                f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')} (settled n={summary.get('settled_picks', 0)}), ROI={summary.get('roi')} (priced n={summary.get('priced_picks', 0)})"
             )
     lines.extend(["", "## By odds source", ""])
     by_source = report.get("by_odds_source", {})
@@ -2321,7 +2328,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
     else:
         for key, summary in by_source.items():
             lines.append(
-                f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')}, ROI={summary.get('roi')}"
+                f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')} (settled n={summary.get('settled_picks', 0)}), ROI={summary.get('roi')} (priced n={summary.get('priced_picks', 0)})"
             )
     lines.extend(["", "## By odds match method", ""])
     by_method = report.get("by_odds_match_method", {})
@@ -2330,7 +2337,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
     else:
         for key, summary in by_method.items():
             lines.append(
-                f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')}, ROI={summary.get('roi')}"
+                f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')} (settled n={summary.get('settled_picks', 0)}), ROI={summary.get('roi')} (priced n={summary.get('priced_picks', 0)})"
             )
 
     # Addendum 26: these are deliberately separate from raw source/method
@@ -2586,11 +2593,12 @@ def render_track_record(root: Path | None = None) -> str:
         rate = f"{r['rate']:.1%}" if r["n"] else "--"
         be = f"{r['breakeven']:.3f}" if r.get("breakeven") else "--"
         floor = f"{r['floor']:.2f}" if r.get("floor") else "none"
-        warn = ""
+        warn = (f"  INCOMPLETE: slices retain {r['retained_n']}/{r['n']}; certification/floor derivation blocked"
+                if r.get("records_truncated") else "")
         if r["n"] < 30:
-            warn = "  ⚠ small-n"
+            warn += "  ⚠ small-n"
         elif r.get("breakeven") and r.get("floor") and r["floor"] < r["breakeven"]:
-            warn = "  ⚠ floor below breakeven"
+            warn += "  ⚠ floor below breakeven"
         out.append(f"  {r['market']:<18}{r['status']:<10}{r['n']:>5}{r['hits']:>6}"
                    f"{rate:>8}{be:>11}{floor:>7}{r['profit']:>+10.3f}u{warn}")
     undefined = sorted(set(ENHANCEMENT_PRICE_FLOORS)
@@ -2603,7 +2611,7 @@ def render_track_record(root: Path | None = None) -> str:
             slices = slice_for_market(root, r["market"], key)
             if not slices:
                 continue
-            out.append(f"  {r['market']} by {key}:")
+            out.append(f"  {r['market']} by {key} (retained sample n={r.get('retained_n', r['n'])}, cumulative n={r['n']}):")
             for name, s in slices.items():
                 rate = f"{s['rate']:.1%}" if s["n"] else "--"
                 out.append(f"    {name:<32}n={s['n']:<5}hits={s['hits']:<5}"
@@ -2662,8 +2670,8 @@ def main() -> int:
     print(f" voided event picks: {report.get('voided_event_picks', 0)}")
     print(f" settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)}")
     print(f" ambiguous result picks: {report.get('ambiguous_result_picks', 0)}")
-    print(f" hit rate: {overall.get('hit_rate')}")
-    print(f" ROI: {overall.get('roi')}")
+    print(f" hit rate: {overall.get('hit_rate')} (wins/settled: {overall.get('wins', 0)}/{overall.get('settled_picks', 0)})")
+    print(f" ROI: {overall.get('roi')} (priced n={overall.get('priced_picks', 0)})")
     _vd = report.get("veto_deep_dive", {}) or {}
     if _vd.get("overall"):
         _ov = _vd["overall"]

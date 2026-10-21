@@ -8,8 +8,8 @@ Settles anything settleable via the engine, then writes a report for one lane:
 
 Each report gives bank as % of capital, performance multiple, acca record,
 and any TAKE-PROFIT NOTIFICATION events. Both lanes share one layout.
-The enhancement lane's state is gitignored runtime state, so its report only
-exists where that state is.
+Both lane states are durable financial evidence. A missing or corrupt state
+must never silently reset a published bank to 100%.
 
 Usage:
   PYTHONPATH=src python3 scripts/auto_tickets_grade.py
@@ -86,6 +86,8 @@ def render_lines(st, label, last, held, accas, wins, generated):
     bet-day table to the most recent N days; 0 or less shows every day."""
     multiple = st["bank"] / st["base_pct"]
     history = st["history"]
+    if len({h["date"] for h in history}) != len(history):
+        raise ValueError("duplicate financial bet-days; refusing a misleading performance report")
     rows = []
     add = rows.append
     add(f"{label} — performance, percent of capital")

@@ -916,7 +916,7 @@ def test_a_team_slice_is_never_consulted_for_a_leg(tmp_path, _tmp_lane, monkeypa
 def test_enhancement_slips_are_named_and_tracked_beside_autobets():
     """The enhancement slip is autobets_enh_tickets_<day>.txt and is NOT ignored
     by git, so it is committed to main like the main lane's auto_tickets slip.
-    The state file stays ignored (runtime state)."""
+    The state file is durable, like the main lane: a cache miss must not rebase it."""
     import subprocess
     from pathlib import Path
     root = Path(__file__).resolve().parent.parent
@@ -931,7 +931,7 @@ def test_enhancement_slips_are_named_and_tracked_beside_autobets():
     ign = subprocess.run(["git", "check-ignore", "-q", slip], cwd=root)
     assert ign.returncode == 1, "enhancement slip must not be gitignored"
     ign_state = subprocess.run(["git", "check-ignore", "-q", state], cwd=root)
-    assert ign_state.returncode == 0, "enhancement state file stays ignored"
+    assert ign_state.returncode == 1, "enhancement financial state must survive cache loss in Git"
 
 
 # ---- ranking by hit rate (approved 2026-10-13) ------------------------------
