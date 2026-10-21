@@ -360,6 +360,15 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
 
 REGISTRY: dict[str, PriceSourceSpec] = {spec.name: spec for spec in _SPECS}
 
+# Enhancement pricing emits these producer labels. Resolve them to existing
+# adapter specs, never a second independent source or a relaxed permission.
+_SOURCE_ALIASES = {"oddspapi": "oddspapi_odds", "scoutingstats": "scoutingstats_odds"}
+
+
+def _source_key(name) -> str:
+    key = str(name or "").strip()
+    return _SOURCE_ALIASES.get(key, key)
+
 #: Sources that only ever donate votes, never prices.
 VOTE_ONLY_SOURCES: frozenset[str] = frozenset({
     "bzzoiro", "zulubet", "statarea", "vitibet", "betclan", "bettingclosed",
@@ -383,7 +392,7 @@ _UNKNOWN = PriceSourceSpec(
 
 def spec(name: str | None) -> PriceSourceSpec:
     """Registry lookup. Unknown names fail closed as non-donors."""
-    key = str(name or "").strip()
+    key = _source_key(name)
     found = REGISTRY.get(key)
     if found is not None:
         return found
@@ -398,7 +407,7 @@ def spec(name: str | None) -> PriceSourceSpec:
 
 
 def known(name: str | None) -> bool:
-    return str(name or "").strip() in REGISTRY
+    return _source_key(name) in REGISTRY
 
 
 def resolvable(name: str | None) -> bool:
@@ -417,7 +426,7 @@ def resolvable(name: str | None) -> bool:
     mean "is in REGISTRY" (price-donor ranking, shadow-ledger provenance) and
     whose behaviour must not change.
     """
-    key = str(name or "").strip()
+    key = _source_key(name)
     return key in REGISTRY or key in VOTE_ONLY_SOURCES
 
 
