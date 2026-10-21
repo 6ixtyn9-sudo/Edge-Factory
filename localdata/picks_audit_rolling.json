@@ -38,10 +38,10 @@
   "archived_pick_rows": 704,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.622642,
-      "priced_picks": 53,
-      "roi": 0.016104,
-      "settled_picks": 53,
+      "hit_rate": 0.611111,
+      "priced_picks": 54,
+      "roi": -0.002713,
+      "settled_picks": 54,
       "wins": 33
     },
     "CERTIFIED_CLEAN": {
@@ -107,10 +107,10 @@
       "wins": 62
     },
     "exact": {
-      "hit_rate": 0.720222,
-      "priced_picks": 361,
-      "roi": 0.06768,
-      "settled_picks": 361,
+      "hit_rate": 0.718232,
+      "priced_picks": 362,
+      "roi": 0.064731,
+      "settled_picks": 362,
       "wins": 260
     },
     "fallback": {
@@ -172,10 +172,10 @@
       "wins": 5
     },
     "pinnapi_odds": {
-      "hit_rate": 0.637681,
-      "priced_picks": 69,
-      "roi": 0.086588,
-      "settled_picks": 69,
+      "hit_rate": 0.628571,
+      "priced_picks": 70,
+      "roi": 0.071066,
+      "settled_picks": 70,
       "wins": 44
     },
     "scoutingstats_odds": {
@@ -230,10 +230,10 @@
       "wins": 4
     },
     "NAMED_BOOKMAKER_PRICE": {
-      "hit_rate": 0.725322,
-      "priced_picks": 233,
-      "roi": 0.086483,
-      "settled_picks": 233,
+      "hit_rate": 0.722222,
+      "priced_picks": 234,
+      "roi": 0.08184,
+      "settled_picks": 234,
       "wins": 169
     },
     "SCOUTINGSTATS_SOLE": {
@@ -268,10 +268,10 @@
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.706131,
-      "priced_picks": 368,
-      "roi": 0.054436,
-      "settled_picks": 473,
+      "hit_rate": 0.704641,
+      "priced_picks": 369,
+      "roi": 0.051579,
+      "settled_picks": 474,
       "suspect_price_captures": 0,
       "wins": 334
     },
@@ -363,10 +363,10 @@
       "wins": 7
     },
     "pfc_0f100c9da356ed1c05d9c642": {
-      "hit_rate": 1.0,
-      "priced_picks": 3,
-      "roi": 0.463067,
-      "settled_picks": 3,
+      "hit_rate": 0.75,
+      "priced_picks": 4,
+      "roi": 0.0973,
+      "settled_picks": 4,
       "wins": 3
     },
     "pfc_14ee12458803822df3013bcd": {
@@ -1197,13 +1197,20 @@
   "late_additions_on_rewritten_ledgers": 149,
   "morning_baseline_rows": 529,
   "overall": {
-    "hit_rate": 0.699074,
-    "priced_picks": 533,
-    "roi": 0.040005,
-    "settled_picks": 648,
+    "hit_rate": 0.697997,
+    "priced_picks": 534,
+    "roi": 0.038057,
+    "settled_picks": 649,
     "wins": 453
   },
-  "pending_result_picks": 12,
+  "pending_result_picks": 11,
+  "population_definitions": {
+    "enhancement_hit_rate": "hits / settled recommended enhancements",
+    "enhancement_priced_roi": "priced enhancement P&L / priced_n",
+    "hit_rate": "wins / all settled picks, including unpriced",
+    "roi": "priced-leg P&L / valid priced picks",
+    "secondary_stats": "fixture outcomes counted once per settled pick; not enhancement bets"
+  },
   "regular_only_rows": 0,
   "rescheduled_examples": [
     {
@@ -1368,11 +1375,11 @@
   "same_day_cutoff": "2026-10-21",
   "same_day_excluded": 41,
   "secondary_stats": {
-    "btts_total": 648,
+    "btts_total": 649,
     "btts_wins": 341,
-    "over25_total": 648,
+    "over25_total": 649,
     "over25_wins": 391,
-    "team_o15_total": 644,
+    "team_o15_total": 645,
     "team_o15_wins": 429
   },
   "settled_ledger": [
@@ -39093,6 +39100,35 @@
       "won": true
     },
     {
+      "avg_p": 60.510204081632644,
+      "date": "2026-10-20",
+      "gs": 0,
+      "hs": 1,
+      "market": "1x2",
+      "match": "C\u00facuta Deportivo vs Atl\u00e9tico Nacional",
+      "notes_audit": [],
+      "odds": 1.5848,
+      "odds_match_method": "exact",
+      "odds_source": "pinnapi_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": null,
+        "away_o15_hit": null,
+        "btts_expected": null,
+        "btts_hit": null,
+        "home_o15_expected": null,
+        "home_o15_hit": null,
+        "over25_expected": null,
+        "over25_hit": null,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": false
+    },
+    {
       "avg_p": 58.940995753139966,
       "date": "2026-10-20",
       "gs": 2,
@@ -39702,7 +39738,7 @@
       "won": true
     }
   ],
-  "settled_via_overlay_picks": 21,
+  "settled_via_overlay_picks": 25,
   "start": "2026-09-22",
   "statline_calibration": {
     "avg_goals": {
@@ -40039,27 +40075,9 @@
       "pick": "away",
       "reason": "pending_or_unmatched_result",
       "rule": "unanimous[betclan+vitibet] avg_p>=70"
-    },
-    {
-      "away": "Atl\u00e9tico Nacional",
-      "away_key_candidates": [
-        "nacional"
-      ],
-      "bucket": "CAUTION",
-      "date": "2026-10-20",
-      "home": "C\u00facuta Deportivo",
-      "home_key_candidates": [
-        "cucuta"
-      ],
-      "league": "Liga BetPlay",
-      "match": "C\u00facuta Deportivo vs Atl\u00e9tico Nacional",
-      "odds": 1.5848,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_0f100c9da356ed1c05d9c642"
     }
   ],
-  "unmatched_result_picks": 12,
+  "unmatched_result_picks": 11,
   "unsafe_regular_ledger_dates": [
     "2026-09-22",
     "2026-09-23",
@@ -40101,13 +40119,13 @@
         "z_vs_implied": -0.988
       },
       "CAUTION|1.50-2.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.785714,
-        "implied_hit_rate": 0.593695,
-        "priced_picks": 14,
-        "roi": 0.326671,
-        "settled_picks": 14,
+        "hit_rate": 0.733333,
+        "implied_hit_rate": 0.596182,
+        "priced_picks": 15,
+        "roi": 0.238227,
+        "settled_picks": 15,
         "wins": 11,
-        "z_vs_implied": 1.467
+        "z_vs_implied": 1.086
       },
       "CAUTION|1.50-2.00|SOURCE_FALLBACK": {
         "hit_rate": 0.666667,
@@ -41067,13 +41085,13 @@
         "z_vs_implied": -0.988
       },
       "1.50-2.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.785714,
-        "implied_hit_rate": 0.593695,
-        "priced_picks": 14,
-        "roi": 0.326671,
-        "settled_picks": 14,
+        "hit_rate": 0.733333,
+        "implied_hit_rate": 0.596182,
+        "priced_picks": 15,
+        "roi": 0.238227,
+        "settled_picks": 15,
         "wins": 11,
-        "z_vs_implied": 1.467
+        "z_vs_implied": 1.086
       },
       "1.50-2.00|SOURCE_FALLBACK": {
         "hit_rate": 0.666667,
@@ -41174,10 +41192,10 @@
         "wins": 9
       },
       "NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.72,
-        "priced_picks": 25,
-        "roi": 0.20646,
-        "settled_picks": 25,
+        "hit_rate": 0.692308,
+        "priced_picks": 26,
+        "roi": 0.160058,
+        "settled_picks": 26,
         "wins": 18
       },
       "SOURCE_FALLBACK": {
