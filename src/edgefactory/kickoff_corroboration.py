@@ -37,16 +37,21 @@ SOURCE_FAMILIES: dict[str, str] = {
     "betexplorer_odds": "betexplorer",
     "betexplorer_match": "betexplorer",
     "betexplorer_detail": "betexplorer",
+    "betexplorerodds": "betexplorer",
     "theoddsapi": "theoddsapi",
     "the_odds_api": "theoddsapi",
+    "theodds_api": "theoddsapi",
     "oddspapi": "oddspapi",
     "forebet": "forebet",
     "scoutingstats": "scoutingstats",
+    "scouting_stats": "scoutingstats",
     "statarea": "statarea",
+    "stat_area": "statarea",
     "vitibet": "vitibet",
     "bzzoiro": "bzzoiro",
     "pinnacle": "pinnacle",
     "betway": "betway",
+    "warehouse": "warehouse",
     "warehouse_schedule": "warehouse",
 }
 
@@ -54,13 +59,22 @@ MAX_PERMITTED_TOLERANCE_MINUTES = 30.0
 
 
 def normalize_source_family(src: object) -> str | None:
-    """Normalize a source string to its canonical lineage family."""
+    """Normalize a source string to its canonical lineage family.
+
+    Strictly fails closed: returns None if the source is not in the recognized
+    canonical lineage mapping.
+    """
     if not src or not isinstance(src, str):
         return None
-    cleaned = re.sub(r"[^a-z0-9_]", "", src.strip().lower())
+    # Normalize hyphens and spaces to underscores, then strip invalid characters
+    cleaned = src.strip().lower()
+    cleaned = re.sub(r"[\s\-]+", "_", cleaned)
+    cleaned = re.sub(r"[^a-z0-9_]", "", cleaned)
     if not cleaned:
         return None
-    return SOURCE_FAMILIES.get(cleaned, cleaned)
+    # Check normalized form, and also compacted form (without underscores)
+    compacted = cleaned.replace("_", "")
+    return SOURCE_FAMILIES.get(cleaned) or SOURCE_FAMILIES.get(compacted)
 
 
 def interpret_betexplorer_data_dt(
@@ -174,12 +188,16 @@ def corroborate_kickoff_witness(
     fix_fam = normalize_source_family(fixture_source)
     wit_fam = normalize_source_family(witness_source)
 
+    if not fix_fam:
+        out["reason"] = "unrecognized_or_empty_fixture_source"
+        return out
+
     if not wit_fam:
-        out["reason"] = "invalid_or_empty_witness_source"
+        out["reason"] = "unrecognized_or_empty_witness_source"
         return out
     out["witness_family"] = wit_fam
 
-    if not fix_fam or fix_fam == wit_fam:
+    if fix_fam == wit_fam:
         out["reason"] = "circular_corroboration_rejected"
         return out
 
