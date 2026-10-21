@@ -4991,8 +4991,10 @@ passed.
   pytest, test_capture_plan_kickoff timezone, test_assay wilson_ub).
 
 **Doc 1 — BENCHED rule lifecycle runbook (code-verified, decay_monitor.py):**
-a certified edge whose recent-window ROI goes DEAD/DECAYING, or < -5% on
-n>=30, is auto-flipped to status "benched" in the registry by
+a certified edge whose recent-window ROI goes DEAD/DECAYING, or is negative
+on at least 30 PRICED legs (n_priced, the ROI's own denominator; the older
+"< -5%" wording here was never implemented — 2026-10-21), is auto-flipped to
+status "benched" in the registry by
 `scripts/decay_monitor.py` (verdict via edgefactory.assay.decay_verdict /
 should_bench; edges whose views cannot be rebuilt report UNKNOWN and are
 left untouched — never crash, never guess). picks_today.py consumes ONLY
@@ -9650,7 +9652,8 @@ of that source count and would quietly shrink the slate. That is a money decisio
 cosmetic ticket, which is why it is recorded here instead of done.
 
 **The bench asymmetry, which is the operationally useful part.** `decay_monitor.py` flips a
-certified edge to `status: "benched"` on DEAD/DECAYING (or recent ROI < -5% at n >= 30), and
+certified edge to `status: "benched"` on DEAD/DECAYING (or a negative recent ROI over
+at least 30 PRICED legs — n_priced, not the settled count), and
 `picks_today` only loads `status == "certified"`. But because the loosest rule owns each slot,
 **benching a tier that does not own the slot changes nothing at all** — on 2026-09-24 the monitor
 benched `ml-meta avg_p>=70` and `>=75` and no leg, label or floor moved. Only benching the
