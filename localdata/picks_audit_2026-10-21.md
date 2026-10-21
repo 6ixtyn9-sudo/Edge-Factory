@@ -48,15 +48,15 @@ Performance of deep context-derived recommended enhancements overlay:
 - `away_under_15`: recommended=5, settled=5, hit_rate=100.0% (hits=5/recommended=5), priced_n=5, priced_ROI=2.034 (denominator=5), registry_processed=5, class=priced
 - `away_under_25`: recommended=3, settled=3, hit_rate=66.7% (hits=2/recommended=3), priced_n=3, priced_ROI=0.423 (denominator=3), registry_processed=35, class=priced
 - `away_under_35`: recommended=175, settled=175, hit_rate=96.6% (hits=169/recommended=175), priced_n=1, priced_ROI=0.435 (denominator=1), registry_processed=305, class=priced
-- `btts_no`: recommended=8, settled=8, hit_rate=37.5% (hits=3/recommended=8), priced_n=8, priced_ROI=-0.30875 (denominator=8), registry_processed=8, class=priced
-- `btts_yes`: recommended=5, settled=5, hit_rate=100.0% (hits=5/recommended=5), priced_n=5, priced_ROI=0.864 (denominator=5), registry_processed=18, class=priced
+- `btts_no`: recommended=8, settled=8, hit_rate=37.5% (hits=3/recommended=8), priced_n=6, priced_ROI=-0.541667 (denominator=6), registry_processed=8, class=priced
+- `btts_yes`: recommended=5, settled=5, hit_rate=100.0% (hits=5/recommended=5), priced_n=3, priced_ROI=0.853333 (denominator=3), registry_processed=18, class=priced
 - `home_over_05`: recommended=23, settled=23, hit_rate=87.0% (hits=20/recommended=23), priced_n=1, priced_ROI=0.38 (denominator=1), registry_processed=186, class=priced
 - `home_under_15`: recommended=2, settled=2, hit_rate=100.0% (hits=2/recommended=2), priced_n=2, priced_ROI=0.381 (denominator=2), registry_processed=2, class=priced
 - `home_under_25`: recommended=1, settled=1, hit_rate=0.0% (hits=0/recommended=1), priced_n=1, priced_ROI=-1.0 (denominator=1), registry_processed=41, class=priced
 - `home_under_35`: recommended=51, settled=51, hit_rate=98.0% (hits=50/recommended=51), priced_n=0, priced_ROI=None (denominator=0), registry_processed=74, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
-- `match_over_15`: recommended=24, settled=24, hit_rate=87.5% (hits=21/recommended=24), priced_n=20, priced_ROI=0.091 (denominator=20), registry_processed=71, class=priced
-- `match_over_25`: recommended=262, settled=262, hit_rate=60.7% (hits=159/recommended=262), priced_n=188, priced_ROI=-0.041543 (denominator=188), registry_processed=691, class=priced
-- `match_over_35`: recommended=18, settled=18, hit_rate=77.8% (hits=14/recommended=18), priced_n=12, priced_ROI=1.008333 (denominator=12), registry_processed=43, class=priced
+- `match_over_15`: recommended=24, settled=24, hit_rate=87.5% (hits=21/recommended=24), priced_n=18, priced_ROI=0.08 (denominator=18), registry_processed=71, class=priced
+- `match_over_25`: recommended=262, settled=262, hit_rate=60.7% (hits=159/recommended=262), priced_n=179, priced_ROI=-0.042011 (denominator=179), registry_processed=691, class=priced
+- `match_over_35`: recommended=18, settled=18, hit_rate=77.8% (hits=14/recommended=18), priced_n=11, priced_ROI=1.036364 (denominator=11), registry_processed=43, class=priced
 - `match_over_45`: recommended=2, settled=2, hit_rate=100.0% (hits=2/recommended=2), priced_n=2, priced_ROI=4.0 (denominator=2), registry_processed=2, class=priced
 
 ## Possible Events (🔥) Full-Surface Audit
