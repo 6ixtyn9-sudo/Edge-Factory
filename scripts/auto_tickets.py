@@ -3002,8 +3002,17 @@ def _apply_unplaced_enhancement_resets(st: dict, localdata: Path) -> bool:
 def load_state(lane: "Lane | None" = None) -> dict:
     try:
         st = json.loads(state_path(lane).read_text())
-    except Exception:
+    except FileNotFoundError:
         st = {}
+    except (ValueError, OSError) as exc:
+        raise RuntimeError(f"unreadable financial state; refusing bank reset: {state_path(lane)}") from exc
+    if not st and lane is not None:
+        report = state_path(lane).parent / f"{lane.slip_prefix}_performance.json"
+        if report.exists() and json.loads(report.read_text()).get("bet_days", 0):
+            raise RuntimeError("financial state missing despite published history; recovery required, not a fresh 100% bank")
+    if st and any(k in st and (isinstance(st[k], bool) or not isinstance(st[k], (int, float))
+                              or not math.isfinite(st[k])) for k in ("bank", "base_pct", "cycle_base")):
+        raise RuntimeError("invalid financial state; refusing non-finite bank/base")
     if lane is not None and lane.state_file == ENHANCEMENT_LANE.state_file:
         if _apply_unplaced_enhancement_resets(st, state_path(lane).parent) and st:
             save_state(st, lane)
@@ -3021,7 +3030,16 @@ def load_state(lane: "Lane | None" = None) -> dict:
 
 
 def save_state(st: dict, lane: "Lane | None" = None) -> None:
-    state_path(lane).write_text(json.dumps(st, indent=2, default=str))
+    import tempfile
+    path = state_path(lane)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Atomic writes avoid a partial JSON file turning a later run into a reset.
+    with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False) as f:
+        tmp = Path(f.name)
+        json.dump(st, f, indent=2, default=str)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
 
 
 def fresh_state() -> dict:
@@ -4887,6 +4905,9 @@ def _enh_slice_lines(root: Path | None = None) -> list[str]:
         be = f"{r['breakeven']:.3f}" if r["breakeven"] else "—"
         lines.append(f"  {r['market']:<18}{r['n']:>6}{r['hits']:>7}"
                      f"{r['rate'] * 100:>7.1f}%{be:>12}{r['profit']:>+9.2f}u")
+    for r in rows:
+        if r.get("records_truncated"):
+            lines.append(f"  INCOMPLETE {r['market']}: slices retain {r['retained_n']}/{r['n']}; no certification/derived floor from this sample")
     for key, title in (("bucket", "by bucket"), ("rule", "by rule")):
         merged: dict[str, dict] = {}
         for r in rows:
@@ -4975,9 +4996,9 @@ def enhancement_pool(legs: list[dict]) -> list[dict]:
     for leg in legs or []:
         if leg.get("verdict") != "fire":
             continue
-        prob = leg.get("probability")
-        if not isinstance(prob, (int, float)) or isinstance(prob, bool):
-            prob = 0.0
+        prob = finite_probability(leg.get("probability"))
+        if prob is None:
+            continue
         pool.append({
             "match": leg.get("match"),
             "pick": _market_selection(leg.get("market")),

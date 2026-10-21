@@ -63,6 +63,15 @@ def _src_view(con, name: str, glob: str, select: str) -> None:
         con.execute(f"CREATE OR REPLACE VIEW {name} AS SELECT {select}, {', '.join(extra)} "
                     f"FROM read_csv_auto('{glob}', all_varchar=true, union_by_name=true)")
 
+def _pmax_pct(alias):
+    """Whole-vector scale inference, not a per-cell >1 guess."""
+    total = f"({alias}.p1 + {alias}.px + {alias}.p2)"
+    valid = " AND ".join(f"isfinite({alias}.{c}) AND {alias}.{c}>=0" for c in ("p1", "px", "p2"))
+    return (f"(CASE WHEN {valid} THEN CASE WHEN {total} BETWEEN .95 AND 1.05 AND {alias}.pmax<=1 "
+            f"THEN {alias}.pmax*100 WHEN {total} BETWEEN 95 AND 105 AND {alias}.pmax<=100 "
+            f"THEN {alias}.pmax ELSE NULL END ELSE NULL END)")
+
+
 def _table_exists(con, name: str) -> bool:
     try:
         con.execute(f"SELECT 1 FROM {name} LIMIT 0")
@@ -133,7 +142,8 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
                 f"CREATE OR REPLACE VIEW {v}_settled AS "
                 f"SELECT *, {pick} AS pick, GREATEST(p1, px, p2) AS pmax, {outcome} AS outcome "
                 f"FROM {v} WHERE hs IS NOT NULL AND gs IS NOT NULL "
-                f"AND p1 IS NOT NULL AND px IS NOT NULL AND p2 IS NOT NULL"
+                f"AND p1 IS NOT NULL AND px IS NOT NULL AND p2 IS NOT NULL "
+                f"AND length(hkey)>=4 AND length(akey)>=4 AND hkey<>akey"
             )
 
     # predictz: categorical picks + odds (no probs). Its settled view is built
@@ -167,8 +177,9 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
                    CASE WHEN hs > gs THEN 'home' WHEN hs < gs THEN 'away'
                         ELSE 'draw' END AS outcome
             FROM scoutingstats
-            WHERE hs IS NOT NULL AND p1 IS NOT NULL AND px IS NOT NULL
+            WHERE hs IS NOT NULL AND gs IS NOT NULL AND p1 IS NOT NULL AND px IS NOT NULL
               AND p2 IS NOT NULL
+              AND length(hkey)>=4 AND length(akey)>=4 AND hkey<>akey
         """)
 
     # betexplorer: results-only donor (no probabilities). Settled by its own
@@ -249,6 +260,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             SELECT *, {pick} AS pick, GREATEST(p1, px, p2) AS pmax, {outcome} AS outcome
             FROM vitibet WHERE hs IS NOT NULL AND gs IS NOT NULL
               AND p1 IS NOT NULL AND px IS NOT NULL AND p2 IS NOT NULL
+              AND length(hkey)>=4 AND length(akey)>=4 AND hkey<>akey
         """)
 
     # betclan: 1x2 probs are % (0-100)
@@ -322,6 +334,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             SELECT *, {pick} AS pick, GREATEST(p1, px, p2) AS pmax, {outcome} AS outcome
             FROM prosoccer WHERE hs IS NOT NULL AND gs IS NOT NULL
               AND p1 IS NOT NULL AND px IS NOT NULL AND p2 IS NOT NULL
+              AND length(hkey)>=4 AND length(akey)>=4 AND hkey<>akey
         """)
 
     # soccervista: categorical 1X2 pick + avg odds + goals/score tips, no probs
@@ -393,14 +406,14 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
     # without requiring Forebet.
     # 2-way consensus: forebet x zulubet
     if _table_exists(con, "forebet_settled") and _table_exists(con, "zulubet_settled"):
-        con.execute("""
+        con.execute(f"""
             CREATE OR REPLACE VIEW consensus2 AS
             WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
                  zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled)
             SELECT fb.sport, fb.date, fb.home, fb.away, fb.outcome,
                    fb.pick AS fb_pick, zb.pick AS zb_pick,
                    fb.pmax AS fb_p, zb.pmax AS zb_p,
-                   (fb.pmax + zb.pmax)/2 AS avg_p,
+                   ({_pmax_pct("fb")} + {_pmax_pct("zb")})/2 AS avg_p,
                    fb.odd1, fb.oddx, fb.odd2,
                    CASE fb.pick WHEN 'home' THEN fb.odd1
                                 WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds,
@@ -411,7 +424,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
 
     # 3-way consensus: + statarea
     if _table_exists(con, "forebet_settled") and _table_exists(con, "zulubet_settled") and _table_exists(con, "statarea_settled"):
-        con.execute("""
+        con.execute(f"""
             CREATE OR REPLACE VIEW consensus3 AS
             WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
                  zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled),
@@ -419,7 +432,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             SELECT fb.sport, fb.date, fb.home, fb.away, fb.outcome,
                    fb.pick AS fb_pick, zb.pick AS zb_pick, sa.pick AS sa_pick,
                    fb.pmax AS fb_p, zb.pmax AS zb_p, sa.pmax AS sa_p,
-                   (fb.pmax + zb.pmax + sa.pmax)/3 AS avg_p,
+                   ({_pmax_pct("fb")} + {_pmax_pct("zb")} + {_pmax_pct("sa")})/3 AS avg_p,
                    CASE fb.pick WHEN 'home' THEN fb.odd1
                                 WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds,
                    fb.league,

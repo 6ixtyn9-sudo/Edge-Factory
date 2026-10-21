@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import subprocess
 import sys
@@ -160,9 +161,81 @@ def _tracked_localdata_paths(repo: Path) -> list[str]:
     return [os.fsdecode(path) for path in result.stdout.split(b"\0") if path]
 
 
+ENH_STATE = "localdata/enhancement_tickets_state.json"
+
+
+def _financial_rows(state):
+    rows = {}
+    for row in state.get("history", []):
+        day = row["date"]
+        if day in rows:
+            raise EvidenceMergeError("duplicate financial bet-day")
+        rows[day] = {k: row.get(k) for k in ("staked_pct", "returned_pct", "accas")}
+    return rows
+
+
+def _retain_financial_state(repo):
+    """Cache is never allowed to reset/truncate durable enhancement finance.
+
+    A verified extension can survive checkout. Conflicts/new unmergeable stakes
+    stop restoration for investigation instead of silently choosing a bank.
+    """
+    blob = _head_blob(repo, ENH_STATE)
+    if not blob:
+        return None
+    head = json.loads(blob)
+    path = repo / ENH_STATE
+    if not path.exists():
+        return blob
+    cache = json.loads(path.read_bytes())
+    hrows, crows = _financial_rows(head), _financial_rows(cache)
+    for state in (head, cache):
+        bank = state.get("bank")
+        if isinstance(bank, bool) or not isinstance(bank, (int, float)) or not math.isfinite(bank):
+            raise EvidenceMergeError("non-finite enhancement bank")
+    def extends(new, old):
+        for day, original in old.items():
+            if day not in new:
+                return False
+            current = new[day]
+            if current == original:
+                continue
+            before, after = original.get("accas") or [], current.get("accas") or []
+            if after[:len(before)] != before or len(after) <= len(before):
+                return False
+            extra = after[len(before):]
+            if any("stake_pct" not in a or "returned_pct" not in a for a in extra):
+                return False
+            for field, acca_field in (("staked_pct", "stake_pct"), ("returned_pct", "returned_pct")):
+                expected = original[field] + sum(a[acca_field] for a in extra)
+                if abs(current[field] - expected) > .001:
+                    return False
+        return True
+    if extends(crows, hrows):
+        delta = (sum(r["returned_pct"] - r["staked_pct"] for r in crows.values())
+                 - sum(r["returned_pct"] - r["staked_pct"] for r in hrows.values()))
+        if not math.isfinite(delta) or abs(cache["bank"] - head["bank"] - delta) > .001:
+            raise EvidenceMergeError("cached enhancement bank does not reconcile to committed history")
+        return path.read_bytes()
+    if extends(hrows, crows):
+        # Known cold-cache reset / stale cache. Do not discard an unknown open
+        # position while restoring committed settled history.
+        def positions(st):
+            return sorted((sl["date"], a["stake_pct"], a["odds"],
+                           sorted((l["match"], l["odds"]) for l in a["legs"]))
+                          for sl in st.get("open_slips", []) for a in sl.get("accas", []))
+        if positions(cache) != positions(head):
+            raise EvidenceMergeError("stale cache has different open enhancement positions; manual recovery required")
+        # Preserve the full captured open-leg metadata if available; never resize.
+        head["open_slips"] = cache.get("open_slips", [])
+        return json.dumps(head, indent=2).encode()
+    raise EvidenceMergeError("divergent enhancement financial histories")
+
+
 def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     """Restore ordinary tracked state without overwriting cached append-only evidence."""
     repo = Path(repo)
+    financial_blob = _retain_financial_state(repo)
     try:
         merge_counts = merge_cached_phase5_evidence(repo)
     except (OSError, EvidenceMergeError) as exc:
@@ -184,6 +257,8 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
             )
         restored.append(relative)
 
+    if financial_blob is not None:
+        _atomic_write(repo / ENH_STATE, financial_blob)
     clean = _run(
         repo,
         "clean", "-fd", "localdata/",
