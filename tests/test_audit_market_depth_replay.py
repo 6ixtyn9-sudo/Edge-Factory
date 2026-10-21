@@ -328,7 +328,9 @@ def test_schedule_unproven_witnesses_fail_closed(tmp_path, monkeypatch, row):
 
 def test_schedule_explicit_theoddsapi_origin_can_corroborate(tmp_path, monkeypatch):
     rep = _schedule_audit(tmp_path, monkeypatch, rows=[
-        {"source": "theoddsapi", "kickoff_origin": "provider_commence_time"}])
+        {"source": "theoddsapi", "kickoff_origin": "provider_commence_time",
+         "fixture_identity_origin": "provider_participants", "provider_event_id": "test-event-id",
+         "provider_commence_time": "2026-10-21T19:00:00Z"}])
     fix, = rep["fixtures"]
     witness, = fix["kickoff_resolution"]["witnesses"]
     assert witness["source"] == "theoddsapi"

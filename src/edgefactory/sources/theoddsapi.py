@@ -98,6 +98,7 @@ SPORTS_CACHE_TTL_DAYS = 7
 COLUMNS = [
     "source", "source_type", "sport", "date", "kickoff", "league", "home", "away",
     "market", "selection", "odds", "bookmaker", "captured_at",
+    "kickoff_origin", "provider_event_id", "provider_commence_time", "fixture_identity_origin",
 ]
 
 # Manual league-title hints for containment misses (normalized league_raw
@@ -1026,14 +1027,25 @@ def _market_row(base: dict, market: str, selection: str, odds: object, bookmaker
 
 def rows_from_event_odds(pick: dict, event: dict, payload: dict) -> list[dict]:
     """Flatten bookmakers -> markets -> outcomes into COLUMNS-shaped rows."""
+    from edgefactory.kickoff_corroboration import parse_iso_utc
+
+    raw_commence = event.get("commence_time")
+    origin = ("provider_commence_time" if parse_iso_utc(raw_commence) is not None
+              else "provider_unverified_clock" if raw_commence else "pick_fallback")
     home = event.get("home_team") or pick.get("home")
     away = event.get("away_team") or pick.get("away")
+    provider_identity = all(isinstance(event.get(k), str) and event[k].strip()
+                            for k in ("home_team", "away_team"))
     base = {
         "source": "theoddsapi",
         "source_type": "odds",
         "sport": "soccer",
         "date": pick.get("date"),
-        "kickoff": event.get("commence_time") or pick.get("kickoff"),
+        "kickoff": raw_commence or pick.get("kickoff"),
+        "kickoff_origin": origin,
+        "provider_event_id": event.get("id"),
+        "provider_commence_time": raw_commence,
+        "fixture_identity_origin": "provider_participants" if provider_identity else "pick_fallback",
         "league": pick.get("league") or payload.get("sport_title") or "",
         "home": home,
         "away": away,
