@@ -3,13 +3,17 @@
 
 Strictly read-only tool. Evaluates the 10 available BetExplorer detail files
 (2026-10-12 to 2026-10-21) and performs exact, rigorous, fail-closed verification:
-  1. Capture timestamp vs decision cutoff (09:00 SAST = 07:00 UTC) and kickoff.
+  1. Authoritative vs Assumed-UTC Decision-Time Eligibility:
+     - Replay eligibility requires a VERIFIED aware kickoff timestamp.
+     - When kickoff is an unverified local clock (bare 'HH:MM'), authoritative
+       eligibility is strictly 'unverified_kickoff_timezone' (never promoted to
+       decision-eligible without verified metadata).
+     - Assumed-UTC classifications are reported strictly as diagnostic breakdown
+       counts ('diagnostic_assumed_utc_breakdown'), never as authoritative 'kickoff_utc'.
+     - Full clock string validation: rejects partial/garbage clocks like '18:00:garbage'.
      - Never silently replaces an invalid/malformed fixture timestamp with a file timestamp.
-     - Distinguishes 'pre_cutoff_upcoming' (captured < cutoff AND cutoff < kickoff)
-       from 'pre_cutoff_started_before_cutoff' (kickoff <= cutoff) and 'post_cutoff'.
-     - Accurately tracks kickoff timezone provenance: bare 'HH:MM' is explicitly
-       recorded as 'unverified_local_clock' per betexplorer_odds.py:1198.
-  2. Market-column completeness and shape enforcement:
+  2. Quote shape, non-dictionary handling, and completeness:
+     - Non-dict rows receive an explicit 'row_not_dict' counter.
      - Rejects empty odds lists, non-list scalar odds, and column-width mismatches.
      - Validates named bookmaker non-empty identity and finite odds > 1.0.
 
@@ -19,6 +23,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -29,16 +34,16 @@ TZ_UTC = ZoneInfo("UTC")
 ROOT = Path(__file__).resolve().parent.parent
 LOCALDATA = ROOT / "localdata"
 
-# Standard market column counts
 MARKET_EXPECTED_WIDTHS: dict[str, int] = {
     "1x2": 3,
     "dc": 3,
     "ha": 2,
     "bts": 2,
-    # ah and ou are line-based (home, away) or (over, under) = 2 per line
     "ah": 2,
     "ou": 2,
 }
+
+_EXACT_HH_MM_RE = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
 
 
 def parse_iso_utc(ts: object) -> datetime | None:
@@ -55,14 +60,14 @@ def parse_iso_utc(ts: object) -> datetime | None:
 
 
 def parse_kickoff_instant(date_str: str, kickoff_str: object) -> tuple[datetime | None, str]:
-    """Parse match date and kickoff into a UTC instant and provenance classification.
+    """Parse match date and kickoff into an instant and provenance classification.
 
     Returns:
-      (dt_utc, provenance_status)
+      (dt_instant, provenance_status)
       provenance_status in:
-        - 'verified_aware_iso': full aware timestamp present in row
-        - 'unverified_local_clock': bare HH:MM, timezone assumed/unverified
-        - 'malformed_clock': non-HH:MM or unparseable string
+        - 'verified_aware_iso': full aware timestamp present in row (authoritative)
+        - 'unverified_local_clock': exact HH:MM, timezone unverified (diagnostic only)
+        - 'malformed_clock': unparseable or partial clock string (e.g. 18:00:garbage)
         - 'missing_clock': empty or None
     """
     if kickoff_str is None or kickoff_str == "":
@@ -70,27 +75,28 @@ def parse_kickoff_instant(date_str: str, kickoff_str: object) -> tuple[datetime 
     if not isinstance(kickoff_str, str):
         return None, "malformed_clock"
 
+    kickoff_clean = kickoff_str.strip()
+
     # If full ISO format with explicit offset
-    if "T" in kickoff_str:
-        dt = parse_iso_utc(kickoff_str)
+    if "T" in kickoff_clean:
+        dt = parse_iso_utc(kickoff_clean)
         if dt is not None:
             return dt, "verified_aware_iso"
         return None, "malformed_clock"
 
-    # If clock-only HH:MM (BetExplorer schema)
-    parts = kickoff_str.strip().split(":")
-    if len(parts) >= 2:
-        try:
-            hh, mm = int(parts[0]), int(parts[1])
-            if not (0 <= hh <= 23 and 0 <= mm <= 59):
-                return None, "malformed_clock"
-            dparts = date_str.split("-")
-            dt = datetime(int(dparts[0]), int(dparts[1]), int(dparts[2]),
-                          hh, mm, 0, tzinfo=TZ_UTC)
-            return dt, "unverified_local_clock"
-        except Exception:
-            return None, "malformed_clock"
-    return None, "malformed_clock"
+    # Strict regex check for exact HH:MM (rejects 18:00:garbage or trailing characters)
+    m = _EXACT_HH_MM_RE.match(kickoff_clean)
+    if not m:
+        return None, "malformed_clock"
+
+    hh, mm = int(m.group(1)), int(m.group(2))
+    try:
+        dparts = date_str.split("-")
+        dt = datetime(int(dparts[0]), int(dparts[1]), int(dparts[2]),
+                      hh, mm, 0, tzinfo=TZ_UTC)
+        return dt, "unverified_local_clock"
+    except Exception:
+        return None, "malformed_clock"
 
 
 def validate_quote_row(market: str, row: object) -> tuple[bool, str]:
@@ -138,12 +144,21 @@ def audit_detail_files() -> dict:
             "malformed_clock": 0,
             "missing_clock": 0
         },
-        "timing_classification": {
-            "pre_cutoff_upcoming": 0,               # captured < cutoff AND cutoff < kickoff (true decision candidate)
-            "pre_cutoff_started_before_cutoff": 0,  # captured < cutoff BUT kickoff <= cutoff (cannot be pre-match decision)
-            "post_cutoff_pre_kickoff": 0,          # captured >= cutoff BUT captured < kickoff (intraday pre-match)
-            "post_kickoff": 0,                     # captured >= kickoff (lookahead/leakage)
-            "invalid_timestamp": 0                 # unparseable / malformed / missing capture timestamp
+        # Authoritative eligibility: strictly fail-closed when kickoff timezone is unverified
+        "authoritative_eligibility": {
+            "eligible_pre_match_decision": 0,      # requires verified aware ISO kickoff > cutoff
+            "unverified_kickoff_timezone": 0,      # bare clock; timezone not established
+            "ineligible_already_started": 0,       # verified kickoff <= cutoff
+            "ineligible_post_kickoff_capture": 0,  # verified capture >= kickoff
+            "invalid_timestamp": 0                 # missing or malformed timestamp
+        },
+        # Diagnostic breakdown under the assumed-UTC interpretation
+        "diagnostic_assumed_utc_breakdown": {
+            "pre_cutoff_upcoming": 0,               # 57 under assumed-UTC
+            "pre_cutoff_started_before_cutoff": 0,  # 9 under assumed-UTC
+            "post_cutoff_pre_kickoff": 0,          # 45 under assumed-UTC
+            "post_kickoff": 0,                     # 5 under assumed-UTC
+            "invalid_timestamp": 0
         },
         "capture_provenance": {
             "fixture_timestamp": 0,
@@ -153,6 +168,7 @@ def audit_detail_files() -> dict:
         "named_book_inspection": {
             "total_quotes_checked": 0,
             "valid_named_quotes": 0,
+            "row_not_dict": 0,
             "missing_bookmaker": 0,
             "empty_odds_list": 0,
             "odds_not_list": 0,
@@ -180,7 +196,7 @@ def audit_detail_files() -> dict:
                 if m in mkts:
                     report["market_counts"][m] += 1
 
-            # Capture timestamp provenance: never silently heal malformed timestamps
+            # Capture timestamp: never silently replace a malformed timestamp with file fallback
             fix_raw_captured = fix.get("captured_at")
             capture_status = "fixture_timestamp"
             captured_dt = None
@@ -188,7 +204,6 @@ def audit_detail_files() -> dict:
             if fix_raw_captured is not None:
                 captured_dt = parse_iso_utc(fix_raw_captured)
                 if captured_dt is None:
-                    # Malformed fixture timestamp: explicit failure, do NOT fallback
                     capture_status = "invalid"
             elif file_captured_at is not None:
                 captured_dt = file_captured_at
@@ -198,29 +213,44 @@ def audit_detail_files() -> dict:
 
             report["capture_provenance"][capture_status] += 1
 
-            # Kickoff instant and provenance
             kickoff_dt, ko_prov = parse_kickoff_instant(date_str, fix.get("kickoff"))
             report["kickoff_provenance"][ko_prov] += 1
 
-            # Timing classification
-            if capture_status == "invalid" or captured_dt is None or kickoff_dt is None:
-                timing_status = "invalid_timestamp"
-            elif captured_dt >= kickoff_dt:
-                timing_status = "post_kickoff"
-            else:
-                # 09:00 SAST is 07:00 UTC on the scheduled date
-                dparts = date_str.split("-")
-                cutoff_dt = datetime(int(dparts[0]), int(dparts[1]), int(dparts[2]),
-                                     7, 0, 0, tzinfo=TZ_UTC)
-                if captured_dt < cutoff_dt:
-                    if cutoff_dt < kickoff_dt:
-                        timing_status = "pre_cutoff_upcoming"
-                    else:
-                        timing_status = "pre_cutoff_started_before_cutoff"
-                else:
-                    timing_status = "post_cutoff_pre_kickoff"
+            # Authoritative eligibility determination
+            dparts = date_str.split("-")
+            cutoff_dt = datetime(int(dparts[0]), int(dparts[1]), int(dparts[2]),
+                                 7, 0, 0, tzinfo=TZ_UTC)
 
-            report["timing_classification"][timing_status] += 1
+            if capture_status == "invalid" or captured_dt is None:
+                auth_status = "invalid_timestamp"
+            elif ko_prov != "verified_aware_iso":
+                # Unverified local clock cannot be authoritatively certified as pre-match
+                auth_status = "unverified_kickoff_timezone"
+            elif captured_dt >= kickoff_dt:
+                auth_status = "ineligible_post_kickoff_capture"
+            elif cutoff_dt >= kickoff_dt:
+                auth_status = "ineligible_already_started"
+            elif captured_dt < cutoff_dt:
+                auth_status = "eligible_pre_match_decision"
+            else:
+                auth_status = "ineligible_post_cutoff_capture"
+
+            report["authoritative_eligibility"][auth_status] += 1
+
+            # Diagnostic breakdown under assumed-UTC interpretation
+            if capture_status == "invalid" or captured_dt is None or kickoff_dt is None:
+                diag_status = "invalid_timestamp"
+            elif captured_dt >= kickoff_dt:
+                diag_status = "post_kickoff"
+            elif captured_dt < cutoff_dt:
+                if cutoff_dt < kickoff_dt:
+                    diag_status = "pre_cutoff_upcoming"
+                else:
+                    diag_status = "pre_cutoff_started_before_cutoff"
+            else:
+                diag_status = "post_cutoff_pre_kickoff"
+
+            report["diagnostic_assumed_utc_breakdown"][diag_status] += 1
 
             # Quote inspection
             for mkt_slug, mkt_data in mkts.items():
@@ -232,6 +262,8 @@ def audit_detail_files() -> dict:
                     is_valid, reason = validate_quote_row(mkt_slug, row)
                     if is_valid:
                         report["named_book_inspection"]["valid_named_quotes"] += 1
+                    elif reason == "row_not_dict":
+                        report["named_book_inspection"]["row_not_dict"] += 1
                     elif reason == "missing_bookmaker":
                         report["named_book_inspection"]["missing_bookmaker"] += 1
                     elif reason == "empty_odds_list":
@@ -240,10 +272,13 @@ def audit_detail_files() -> dict:
                         report["named_book_inspection"]["odds_not_list"] += 1
                     elif reason.startswith("width_mismatch"):
                         report["named_book_inspection"]["width_mismatches"] += 1
-                    elif reason == "non_finite_odds" or reason == "non_numeric_odds":
+                    elif reason in ("non_finite_odds", "non_numeric_odds"):
                         report["named_book_inspection"]["non_finite_odds"] += 1
                     elif reason == "odds_le_1":
                         report["named_book_inspection"]["odds_le_1"] += 1
+
+            # Do NOT expose an unverified clock as an authoritative kickoff_utc
+            verified_ko_utc = kickoff_dt.isoformat() if (ko_prov == "verified_aware_iso" and kickoff_dt) else None
 
             report["fixtures"].append({
                 "file": f.name,
@@ -252,9 +287,10 @@ def audit_detail_files() -> dict:
                 "away": fix.get("away"),
                 "capture_status": capture_status,
                 "kickoff_provenance": ko_prov,
-                "timing_status": timing_status,
+                "authoritative_eligibility": auth_status,
+                "diagnostic_assumed_utc_timing": diag_status,
                 "captured_utc": captured_dt.isoformat() if captured_dt else None,
-                "kickoff_utc": kickoff_dt.isoformat() if kickoff_dt else None
+                "kickoff_utc": verified_ko_utc
             })
 
     report["unique_fixture_keys"] = len(seen_keys)
@@ -265,8 +301,8 @@ if __name__ == "__main__":
     rep = audit_detail_files()
     print(f"Audited {rep['files_count']} files:")
     print(f"  Total Fixtures: {rep['total_fixtures']} (Unique: {rep['unique_fixture_keys']})")
-    print(f"  Markets Available: {rep['market_counts']}")
     print(f"  Kickoff Provenance: {rep['kickoff_provenance']}")
+    print(f"  Authoritative Eligibility: {rep['authoritative_eligibility']}")
+    print(f"  Diagnostic Assumed-UTC Breakdown: {rep['diagnostic_assumed_utc_breakdown']}")
     print(f"  Capture Provenance: {rep['capture_provenance']}")
-    print(f"  Timing Classifications: {rep['timing_classification']}")
     print(f"  Named Quote Inspection: {rep['named_book_inspection']}")

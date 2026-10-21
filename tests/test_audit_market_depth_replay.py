@@ -23,7 +23,7 @@ def test_parse_iso_utc_adversarial():
     assert parse_iso_utc("") is None
 
 
-def test_parse_kickoff_instant_provenance():
+def test_parse_kickoff_instant_provenance_and_strict_regex():
     # Full ISO format
     dt, prov = parse_kickoff_instant("2026-10-21", "2026-10-21T18:00:00Z")
     assert dt == datetime(2026, 10, 21, 18, 0, tzinfo=TZ_UTC)
@@ -34,7 +34,10 @@ def test_parse_kickoff_instant_provenance():
     assert dt == datetime(2026, 10, 21, 18, 0, tzinfo=TZ_UTC)
     assert prov == "unverified_local_clock"
 
-    # Malformed clocks
+    # Strict regex: partial / garbage clocks like 18:00:garbage must be rejected
+    dt, prov = parse_kickoff_instant("2026-10-21", "18:00:garbage")
+    assert dt is None and prov == "malformed_clock"
+
     dt, prov = parse_kickoff_instant("2026-10-21", "99:99")
     assert dt is None and prov == "malformed_clock"
 
@@ -48,33 +51,40 @@ def test_parse_kickoff_instant_provenance():
     assert dt is None and prov == "missing_clock"
 
 
-def test_validate_quote_row_adversarial():
-    # 1. Valid 1X2 row
+def test_validate_quote_row_adversarial_including_non_dict():
+    # 1. Non-dict row must receive explicit row_not_dict reason
+    ok, reason = validate_quote_row("1x2", "not_a_dict")
+    assert ok is False and reason == "row_not_dict"
+
+    ok, reason = validate_quote_row("1x2", None)
+    assert ok is False and reason == "row_not_dict"
+
+    # 2. Valid 1X2 row
     valid_row = {"bookmaker": "BetMGM", "odds": [1.5, 3.2, 5.0]}
     ok, reason = validate_quote_row("1x2", valid_row)
     assert ok is True and reason == "valid"
 
-    # 2. Empty odds list must be REJECTED
+    # 3. Empty odds list must be REJECTED
     empty_row = {"bookmaker": "BetMGM", "odds": []}
     ok, reason = validate_quote_row("1x2", empty_row)
     assert ok is False and reason == "empty_odds_list"
 
-    # 3. Scalar odds (non-list) must be REJECTED, not raise TypeError
+    # 4. Scalar odds (non-list) must be REJECTED, not raise TypeError
     scalar_row = {"bookmaker": "BetMGM", "odds": 1.5}
     ok, reason = validate_quote_row("1x2", scalar_row)
     assert ok is False and reason == "odds_not_list"
 
-    # 4. Incomplete market (width mismatch) must be REJECTED
+    # 5. Incomplete market (width mismatch) must be REJECTED
     incomplete_dc = {"bookmaker": "BetMGM", "odds": [1.15]} # DC requires 3 columns
     ok, reason = validate_quote_row("dc", incomplete_dc)
     assert ok is False and reason.startswith("width_mismatch")
 
-    # 5. Missing / whitespace bookmaker name must be REJECTED
+    # 6. Missing / whitespace bookmaker name must be REJECTED
     missing_book = {"bookmaker": "   ", "odds": [1.5, 3.2, 5.0]}
     ok, reason = validate_quote_row("1x2", missing_book)
     assert ok is False and reason == "missing_bookmaker"
 
-    # 6. Non-finite / string / <= 1 odds must be REJECTED
+    # 7. Non-finite / string / <= 1 odds must be REJECTED
     nan_row = {"bookmaker": "BetMGM", "odds": [1.5, float("nan"), 5.0]}
     ok, reason = validate_quote_row("1x2", nan_row)
     assert ok is False and reason == "non_finite_odds"
@@ -84,7 +94,7 @@ def test_validate_quote_row_adversarial():
     assert ok is False and reason == "odds_le_1"
 
 
-def test_audit_detail_files_reconciliation():
+def test_audit_detail_files_authoritative_vs_diagnostic():
     rep = audit_detail_files()
     assert rep["files_count"] == 10
     assert rep["total_fixtures"] == 116
@@ -94,17 +104,24 @@ def test_audit_detail_files_reconciliation():
     assert rep["kickoff_provenance"]["unverified_local_clock"] == 116
     assert rep["kickoff_provenance"]["verified_aware_iso"] == 0
 
-    # Verify timing distinctions:
-    # 57 pre_cutoff_upcoming (true decision candidates)
-    # 9 pre_cutoff_started_before_cutoff (kickoff <= 07:00 UTC)
-    # 45 post_cutoff_pre_kickoff
-    # 5 post_kickoff
-    timing = rep["timing_classification"]
-    assert timing["pre_cutoff_upcoming"] == 57
-    assert timing["pre_cutoff_started_before_cutoff"] == 9
-    assert timing["post_cutoff_pre_kickoff"] == 45
-    assert timing["post_kickoff"] == 5
-    assert sum(timing.values()) == 116
+    # CRITICAL: Authoritative eligibility must be fail-closed!
+    # Because all 116 stored kickoffs are unverified clocks, ZERO fixtures are authoritatively eligible
+    auth = rep["authoritative_eligibility"]
+    assert auth["eligible_pre_match_decision"] == 0
+    assert auth["unverified_kickoff_timezone"] == 116
+
+    # Diagnostic assumed-UTC counts are strictly preserved as diagnostic only
+    diag = rep["diagnostic_assumed_utc_breakdown"]
+    assert diag["pre_cutoff_upcoming"] == 57
+    assert diag["pre_cutoff_started_before_cutoff"] == 9
+    assert diag["post_cutoff_pre_kickoff"] == 45
+    assert diag["post_kickoff"] == 5
+    assert sum(diag.values()) == 116
+
+    # Fixture objects must NOT expose an unverified clock as authoritative kickoff_utc
+    for fix in rep["fixtures"]:
+        assert fix["kickoff_utc"] is None
+        assert fix["authoritative_eligibility"] == "unverified_kickoff_timezone"
 
     # Verify capture provenance
     assert rep["capture_provenance"]["fixture_timestamp"] == 116
@@ -114,6 +131,7 @@ def test_audit_detail_files_reconciliation():
     named = rep["named_book_inspection"]
     assert named["total_quotes_checked"] == 5217
     assert named["valid_named_quotes"] == 5203
+    assert named["row_not_dict"] == 0
     assert named["missing_bookmaker"] == 0
     assert named["empty_odds_list"] == 0
     assert named["odds_not_list"] == 0

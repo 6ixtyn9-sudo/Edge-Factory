@@ -10,13 +10,20 @@
 
 ## 1. Synthesis of Independent Review & Resolved Discrepancies
 
-The second agent identified four critical blocking issues in the previous revision:
-1. **Kickoff Timezone Ambiguity:** Stored `HH:MM` strings lack timezone offsets. Under `src/edgefactory/sources/betexplorer_odds.py:1198`, bare clocks are region-relative. They must be explicitly classified as `unverified_local_clock` rather than assumed to be verified UTC.
-2. **Pre-Cutoff vs Pre-Match Distinction:** Fixtures with kickoffs $\le 07:00\text{ UTC}$ (09:00 SAST decision cutoff) cannot be treated as pre-match decision candidates even if captured prior to 07:00 UTC. Exactly **9 fixtures** kick off $\le 07:00\text{ UTC}$, leaving **57 true upcoming decision candidates**.
-3. **No Silent Fallbacks for Malformed Timestamps:** Malformed fixture timestamps must never silently fall back to file timestamps. A malformed timestamp must fail closed with an explicit `invalid` status.
-4. **Strict Quote Shape & Completeness Validation:** Empty odds lists (`[]`), non-list scalars (`1.5`), and column-width mismatches (e.g. fewer than 3 prices for 1X2 or DC) must be rejected before declaring a quote row valid.
+The second agent identified that labeling a clock as unverified is meaningless if the code still treats it as UTC to compute decision eligibility. When a kickoff clock is region-relative or unverified, neither capture-before-kickoff nor cutoff-before-kickoff can be authoritatively certified.
 
-All four issues are now implemented in `tools/audit_market_depth_replay.py` and regression-tested with adversarial test cases in `tests/test_audit_market_depth_replay.py`.
+### Exact Corrections Implemented:
+1. **Authoritative Eligibility is Fail-Closed:**
+   - Fixtures with bare `HH:MM` clocks are strictly classified as `unverified_kickoff_timezone`.
+   - Authoritative `eligible_pre_match_decision` count is **0 / 116**, because no stored kickoff contains an aware ISO timestamp with verified timezone metadata.
+   - The diagnostic counts under the assumed-UTC interpretation (**57 pre-cutoff upcoming, 9 started before cutoff, 45 post-cutoff pre-kickoff, 5 post-kickoff**) are strictly preserved as **`diagnostic_assumed_utc_breakdown`**, clearly segregated from authoritative eligibility.
+   - The audit output **never exposes an unverified clock as an authoritative `kickoff_utc`** (`kickoff_utc: null`).
+2. **Clock Parsing Hardened Against Partial/Garbage Clocks:**
+   - Implemented strict regex `^([01]\d|2[0-3]):([0-5]\d)$`. Strings like `"18:00:garbage"` are rejected with `malformed_clock`.
+3. **Quote Row Non-Dictionary Handling:**
+   - Non-dictionary quote rows are caught and explicitly counted under `row_not_dict` in `named_book_inspection`.
+
+All corrections are implemented in `tools/audit_market_depth_replay.py` and regression-tested with adversarial test cases in `tests/test_audit_market_depth_replay.py`.
 
 ---
 
@@ -38,24 +45,28 @@ An audit across all 10 BetExplorer detail files (`localdata/betexplorer_match_de
 - **`verified_aware_iso`:** **0 / 116** (No stored kickoff carries an explicit aware ISO timestamp).
 - **`unverified_local_clock` (Bare `HH:MM`):** **116 / 116** (Documented as region-relative/unverified).
 
-### Strict Timing Provenance Breakdown (Under UTC Horizon)
-- **`pre_cutoff_upcoming` (Captured $< 07:00\text{ UTC}$ AND Kickoff $> 07:00\text{ UTC}$):** **57 fixtures**
-  - Truly eligible for morning decision-time simulation without lookahead or already-started risk.
-- **`pre_cutoff_started_before_cutoff` (Captured $< 07:00\text{ UTC}$ BUT Kickoff $\le 07:00\text{ UTC}$):** **9 fixtures**
-  - E.g. Cruz Azul vs FC Juárez (04:10 UTC), Hiroshima vs Kyoto (06:00 UTC). Correctly excluded from morning decision pool.
-- **`post_cutoff_pre_kickoff` (Captured $\ge 07:00\text{ UTC}$ but before Kickoff):** **45 fixtures**
-  - Intraday updates.
-- **`post_kickoff` (Captured on/after Kickoff):** **5 fixtures**
-  - Strictly excluded from decision-time replays to prevent lookahead leakage.
+### Authoritative Eligibility (Strictly Fail-Closed)
+- **`eligible_pre_match_decision`:** **0** (Zero fixtures have verified aware kickoff timestamps).
+- **`unverified_kickoff_timezone`:** **116** (Held pending authoritative timezone resolution).
+- **`ineligible_already_started`:** **0**
+- **`ineligible_post_kickoff_capture`:** **0**
+- **`invalid_timestamp`:** **0**
+
+### Diagnostic Assumed-UTC Breakdown (For Research Reference Only)
+- **`pre_cutoff_upcoming`:** **57 fixtures**
+- **`pre_cutoff_started_before_cutoff`:** **9 fixtures**
+- **`post_cutoff_pre_kickoff`:** **45 fixtures**
+- **`post_kickoff`:** **5 fixtures**
 - **`invalid_timestamp`:** **0 fixtures**
 
 ---
 
 ## 3. Named-Bookmaker Quote Inspection
 
-The audit tool directly inspected every quote row across all markets with column-width completeness checks:
+The audit tool directly inspected every quote row across all markets:
 - **Total Quote Rows Inspected:** **5,217**
 - **Valid Named-Book Quotes:** **5,203**
+- **Non-Dictionary Rows (`row_not_dict`):** **0**
 - **Missing Bookmaker Name:** **0**
 - **Empty Odds Lists:** **0**
 - **Non-List Scalar Odds:** **0**
@@ -69,6 +80,7 @@ The audit tool directly inspected every quote row across all markets with column
 
 - **Read-Only Invariant:** `tools/audit_market_depth_replay.py` does not write to any state files, does not touch banks, and does not alter placed tickets.
 - **Adversarial Unit Tests (`tests/test_audit_market_depth_replay.py`):**
-  - Tests invalid/naive timestamps, empty odds lists, scalar odds, column-width mismatches, missing bookmakers, non-finite floats, and odds $\le 1.0$.
-  - Reconciles the 57 pre-cutoff upcoming, 9 started before cutoff, 45 post-cutoff, and 5 post-kickoff exclusions.
-- **Regression Suite:** All 49 targeted tests pass cleanly.
+  - Tests non-dict rows (`row_not_dict`), partial clock strings (`18:00:garbage` $\rightarrow$ `malformed_clock`), empty odds lists, scalar odds, width mismatches, and non-finite floats.
+  - Asserts that all 116 fixtures receive `authoritative_eligibility: unverified_kickoff_timezone` with `kickoff_utc: null`.
+  - Reconciles the 57 / 9 / 45 / 5 diagnostic assumed-UTC counts.
+- **Regression Suite:** All tests pass cleanly.
