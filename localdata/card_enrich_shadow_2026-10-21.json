@@ -1,7 +1,7 @@
 {
   "notes": [
     "need_h2h=0",
-    "unresolved=6"
+    "unresolved=5"
   ],
   "outcome": {
     "calls_charged": 0,
@@ -11,10 +11,10 @@
       "captured": 0,
       "lane_blocked_local": 0,
       "staleness_skip": 0,
-      "unresolved_id": 6
+      "unresolved_id": 5
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 14,
+    "ledger_entries": 15,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -25,21 +25,7 @@
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "como|manchesterunited",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
         "fixture": "montevideocitytorque|atleticomineiro",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "levante|athletic",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -53,14 +39,21 @@
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "jeddah|aljabalain",
+        "fixture": "cincinnati|dcunited",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "cincinnati|dcunited",
+        "fixture": "olimpia|2demayo",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "sportingjax|louisvillecity",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -71,12 +64,12 @@
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 41
+      "88739ee5": 36
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=41 [pools=2 cap=90 reserve=20 spent=3 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=36 [pools=2 cap=90 reserve=20 spent=3 month=2026-10] -> approved",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1,
@@ -91,7 +84,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 41,
+    "spendable": 36,
     "verdict": "approved"
   },
   "provenance": {
