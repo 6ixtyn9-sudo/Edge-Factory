@@ -190,6 +190,8 @@ def test_rescheduled_draw_conflicts_and_squad_boundaries_remain_held(monkeypatch
 @pytest.mark.parametrize('played', ['2026-10-20', '2026-10-21'])
 def test_draw_ticket_pays_correct_return_in_scratch_state_only(played, tmp_path, monkeypatch):
     monkeypatch.setattr(at, 'LOCALDATA', tmp_path)
+    main_path = tmp_path / 'main_state_must_not_be_written.json'
+    monkeypatch.setattr(at, 'STATE_FILE', main_path)
     monkeypatch.setattr(at, 'SETTLED_KEY_NAMES', {})
     day = '2026-10-20'
     pick = dict(date=day, home='Alpha Town', away='Bravo City', pick='draw')
@@ -199,9 +201,12 @@ def test_draw_ticket_pays_correct_return_in_scratch_state_only(played, tmp_path,
     state['open_slips'] = [dict(date=day, staked_pct=10., accas=[
         dict(stake_pct=10., odds=3.5, legs=[leg])])]
     hk, ak = at._result_write_keys(pick['home'], pick['away'])[0]
+    lane = at.Lane(tmp_path / 'draw_state.json', 'scratch_draw', 'scratch_draw', at.STAKE_FRAC)
     at.settle_open_slips(state, {(played, hk, ak): 'draw'}, archives=[pick],
                          entries_by_date={played: [dict(pick, date=played, outcome='draw')]},
-                         scores={})
+                         scores={}, lane=lane)
+    assert (tmp_path / 'draw_state.json').exists()
+    assert not main_path.exists()
     assert state['open_slips'] == []
     assert state['bank'] == pytest.approx(125.)  # 100 - 10 + 10*3.5
     assert state['history'][0]['returned_pct'] == 35.

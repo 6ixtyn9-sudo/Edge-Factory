@@ -11685,3 +11685,10 @@ archived-profile rendering and numeric conditioning-input compatibility; both
 were corrected and the final full suite above was rerun from a fresh process.
 No test was deleted, skipped or weakened. Final diff-check clean; production
 localdata and installed workflow remain unchanged.
+Post-regression test-isolation correction: the new draw payout test redirected
+LOCALDATA but initially omitted an explicit scratch lane, so save_state used
+the separately bound default STATE_FILE in this sandbox. Restored that tracked
+file byte-for-byte from the pre-test baseline; no state-file change entered the
+commit/PR. The test now supplies its own scratch lane AND redirects the default
+state path to a temporary sentinel, asserting that the sentinel is never
+written. This closes the test-harness leak, not a production financial replay.
