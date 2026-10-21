@@ -137,7 +137,7 @@ def _remine_odds(rows, market, side):
     return min(prices) if prices else None
 
 
-def collect_observations(con, *, start, as_of):
+def collect_observations(con, *, start, as_of, include_snapshot=False):
     coverage, source_rows = {}, {}
     for source in (*REMINE_SOURCES, "betexplorer"):
         # Raw predictions must win over a pre-settled convenience view:
@@ -158,6 +158,15 @@ def collect_observations(con, *, start, as_of):
         source_rows[source] = rows
         coverage[source] = {"status": "present" if rows else "no_rows_in_era", "table": table,
                             "rows": len(rows), "market_votes": {m: 0 for m in REMINE_MARKETS}}
+        if include_snapshot:
+            coverage[source].update(
+                first_date=min((str(r["date"])[:10] for r in rows), default=None),
+                last_date=max((str(r["date"])[:10] for r in rows), default=None),
+                observation_sha256=hashlib.sha256("\n".join(sorted(
+                    json.dumps(r, sort_keys=True, default=str) for r in rows
+                )).encode()).hexdigest(),
+                hash_basis="sorted_query_rows_in_exclusive_mining_window")
+
 
     scores = defaultdict(lambda: defaultdict(set))
     # Only self-scoring donors. In particular do NOT use results_donor or

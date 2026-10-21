@@ -11774,3 +11774,62 @@ No production dispatch, historical replay, merge or deployment implied. PR113
 was OPEN/MERGEABLE at the pre-push check; its existing Workers Builds check
 was FAILURE. This addendum supersedes the prior entry's statement that the
 missing/malformed-registry findings were outside scope.
+
+### 21 October 2026 — integrity audit remediation and ENH history recovery
+
+Operator authorized the audit fixes, ENH apparent performance rebase correction,
+and a second-agent correctness check. Work is on arena/a911e4c0-edge-factory,
+based on merged PR113 /56f990fd. Detailed finding matrix, operational limitations
+and evidence: docs/operator/audits/INTEGRITY-REMEDIATION-2026-10-21.md.
+
+ENH report had lost six settled days and showed114.5%. Recovered the authentic
+six-day report bank71.69957599999998 from ca77539c, preserved Oct20 actual stake
+12.5/return27, restoring bank86.19957599999998 (display86.2%),7days,7W/8L.
+Kept Oct21 published14.3125@2.71 ticket/legs unchanged; no replay, settlement or
+resizing. Freeze times unavailable in snapshots are null, never guessed. Source
+snapshots/digests and rounding residual are in the committed recovery receipts.
+The ENH financial state is now tracked like main, with atomic writes and guards
+against missing/corrupt/nonfinite published state becoming a fresh100% bank.
+Workflow cache restore preserves reconciled financial extensions, including
+additional same-day settlements; stale/divergent histories and different stale
+open positions cannot silently replace durable money/history. Prior comments
+that ENH financial state should stay cache-only/ignored are superseded.
+
+Recovered47 missing O2.5 observations from nine historical GitHub snapshots:
+retained400->447, unchanged cumulative n447/hits293/profit1.737/multi_n84 and
+inverse-price sum292.9454842380396. Existing400 observations retain original
+content/order. All16markets have retained count matching cumulative n; absent
+historical bucket/source details remain unknown. Removed retention/idempotency
+caps and blocked incomplete-ledger certification/derived floors.
+
+Purity uses valid-priced P&L and sample gates across context families, separately
+labels settled n, excludes invalid prices, and emits exact-contract coverage.
+Unverified legacy verdicts remain retained for audit but unavailable to both
+selection and veto loaders pending a real complete-input assay. New pick output
+uses null for absent enhancement probability, validates cohort identity and
+stamps SHA/UTC time without rewriting historical archives. Missing hit rate no
+longer defaults100%; genuine measured0 remains distinct from absence. Consensus
+2/3 normalize coherent complete probability vectors per source; eligible source
+settled views reject invalid identities, and scoutingstats requires both scores.
+Audit/report denominators are explicit; main duplicate-day display was repaired
+with --no-settle and a duplicate-history guard. Main bank/state unchanged.
+
+Existing miner emits deterministic source-row/window manifests; current hashes
+identify new activation or separate fresh revalidation evidence, NEVER prove
+preserved old baseline statistics. Historical source snapshots remain unavailable
+locally; legacy mining stats are explicitly not newly reproduced. No lowered
+gates, ML reactivation, alternate miner/workflow/registry or change to broader
+cohort competition. Complete operational inputs/re-assay are still required.
+
+Final frozen-source full suite:3607passed,0failed,0skipped179.35s. Immutable old
+parity baseline9e52ed25086113e32e1a7c8f6f7f2e9b283a36a6 fetched without switching
+branches. Same process checked baseline localdata SHA256s:0changes/exit0.
+Focused139passed19.95s; diff-check clean. The obsolete test demanding ignored
+ENH state now requires durability; no test deleted/skipped to obtain green.
+
+Second-agent review is NOT executed: this environment has no such invocation
+tool. The explicit handoff is docs/operator/audits/
+INTEGRITY-SECOND-AGENT-REVIEW-2026-10-21.md. Do not mistake this for approval.
+No production workflow dispatch or financial execution. Last checked Worker
+success was base56f990fd; scheduled Python39541618593 used olderbd927703, not
+these remediation changes. Operational verification remains outstanding.

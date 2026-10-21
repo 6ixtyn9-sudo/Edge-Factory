@@ -47,7 +47,7 @@ MIN_MULTI_SOURCE_FRAC = 0.25
 WILSON_Z = 1.959963984540054
 BENCH_WINDOW_DAYS = 60
 BENCH_MIN_N = 20
-MAX_RECORDS_PER_MARKET = 400
+MAX_RECORDS_PER_MARKET = None  # retain all measured evidence; no count cap
 MAX_PROCESSED_KEYS = 1600
 
 
@@ -456,7 +456,8 @@ def derive_floors(registry: dict, as_of: str, *, parent_floors: dict,
 
     for mkey, entry in sorted(markets.items()):
         plain = mkey[: -len(f"@{REGISTRY_VERSION}")] if mkey.endswith(f"@{REGISTRY_VERSION}") else mkey
-        recs = _priced_records_before((entry or {}).get("records") if isinstance(entry, dict) else None, as_of)
+        complete = isinstance(entry, dict) and evidence_complete(entry)
+        recs = _priced_records_before(entry.get("records") if complete else None, as_of)
         priced_total += len(recs)
         with_league += sum(1 for r in recs if str(r.get("league") or "").strip())
         with_keys += sum(1 for r in recs
@@ -703,10 +704,19 @@ def wilson_lb(hits: int, n: int, z: float = WILSON_Z) -> float:
     return (centre - margin) / denom
 
 
+def evidence_complete(entry: dict) -> bool:
+    """Cumulative counters cannot certify a truncated or inconsistent ledger."""
+    return not entry.get("records_truncated") and int(entry.get("n") or 0) == len(entry.get("records") or [])
+
+
 def _evaluate(entry: dict, today: str) -> None:
     if entry.get("status") not in {"SHADOW", "PAPER", "ELIGIBLE", "BENCHED"}:
         entry["status"] = "SHADOW"
     n, hits = entry.get("n", 0), entry.get("hits", 0)
+    if not evidence_complete(entry):
+        entry.update(status="PAPER", records_truncated=True,
+                     status_reason="incomplete retained evidence; certification and derived floors blocked")
+        return
 
     if entry["status"] == "SHADOW" and n >= 1:
         entry.update(status="PAPER", status_since=today,
@@ -732,7 +742,7 @@ def _evaluate(entry: dict, today: str) -> None:
         except Exception:
             cutoff = today
         recs = [r for r in entry.get("records", [])
-                if (r.get("date") or "") >= cutoff and (r.get("price") or 0) > 1.0]
+                if cutoff <= (r.get("date") or "") <= today and (r.get("price") or 0) > 1.0]
         if len(recs) >= BENCH_MIN_N:
             roi = sum((float(r["price"]) - 1.0) if r.get("hit") else -1.0 for r in recs) / len(recs)
             if roi < 0.0:
@@ -806,7 +816,9 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
         with _locked(root):
             reg = _read(path)
             entry = reg["markets"].setdefault(mkey, _blank())
-            if pkey in set(entry.get("processed", [])):
+            if (pkey in set(entry.get("processed", [])) or any(
+                    r.get("date") == date_ and r.get("match") == match
+                    for r in entry.get("records", []))):
                 return {"status": entry.get("status"), "recorded": False}
             entry.setdefault("processed", []).append(pkey)
             # RT-2: NaN/infinite prices must never advance certification.
@@ -824,7 +836,7 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                     except Exception:
                         pass
                 entry.setdefault("records", []).append(
-                    {"date": date_, "match": match, "price": round(price_f, 3),
+                    {"date": date_, "match": match, "price": price_f,
                      "hit": bool(hit), "source": source or "",
                      "multi_source": bool(multi_source),
                      # Slice provenance (2026-10-12). "" / None means
@@ -847,10 +859,13 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                                     and not isinstance(cohort_rate, bool)
                                     and math.isfinite(float(cohort_rate))
                                     and 0.0 < float(cohort_rate) < 1.0 else None)})
-                entry["records"] = entry["records"][-MAX_RECORDS_PER_MARKET:]
+                # Retain every priced observation, including idempotency keys.
+                # Increasing retention cannot repair records already lost.
+
                 if multi_source:
                     entry["multi_n"] = entry.get("multi_n", 0) + 1
-            entry["processed"] = entry["processed"][-MAX_PROCESSED_KEYS:]
+            reg["generated_at"] = today
+            reg["evidence_schema_version"] = 1
             _evaluate(entry, today)
             _write_atomic(path, reg)
             return {"status": entry.get("status"), "recorded": True}
@@ -892,6 +907,9 @@ def market_track_record(root: Path | None = None,
                 "breakeven": (1.0 / rate) if rate else None,
                 "profit": float(entry.get("profit") or 0.0),
                 "floor": floor_for(plain),
+                "retained_n": len(entry.get("records") or []),
+                "records_truncated": not evidence_complete(entry),
+                "evidence_complete": evidence_complete(entry),
             })
         rows.sort(key=lambda r: (-r["n"], r["market"]))
         return rows
@@ -948,6 +966,8 @@ def status_for(market: str | None, root: Path | None = None) -> str:
     try:
         root = root or Path(__file__).resolve().parents[2]
         entry = _read(registry_path(root))["markets"].get(versioned(market))
+        if entry and not evidence_complete(entry):
+            return "PAPER"
         return (entry or {}).get("status") or "SHADOW"
     except Exception:
         return "SHADOW"
@@ -959,7 +979,7 @@ def all_statuses(root: Path | None = None) -> dict[str, str]:
         root = root or Path(__file__).resolve().parents[2]
         reg = _read(registry_path(root))
         suffix = f"@{REGISTRY_VERSION}"
-        return {k[: -len(suffix)] if k.endswith(suffix) else k: (v or {}).get("status", "SHADOW")
+        return {k[: -len(suffix)] if k.endswith(suffix) else k: ((v or {}).get("status", "SHADOW") if evidence_complete(v or {}) else "PAPER")
                 for k, v in reg.get("markets", {}).items()}
     except Exception:
         return {}
