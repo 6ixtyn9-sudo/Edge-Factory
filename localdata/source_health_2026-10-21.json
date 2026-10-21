@@ -43,19 +43,19 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 41,
-      "be_raw": 45,
-      "be_usable": 42,
+      "be_matched": 38,
+      "be_raw": 51,
+      "be_usable": 48,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 12,
+      "join_matched_rows": 10,
       "join_miss_counts": {
-        "fixture_key_miss": 8,
-        "no_pick_for_fixture": 22
+        "fixture_key_miss": 20,
+        "no_pick_for_fixture": 18
       },
       "reason": null,
       "status": "cache_only"
@@ -157,13 +157,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 1775,
+      "join_matched_rows": 157,
       "join_miss_counts": {
-        "fixture_key_miss": 57290,
+        "fixture_key_miss": 86548,
         "market_unsupported": 43735,
-        "no_pick_for_fixture": 29829
+        "no_pick_for_fixture": 2189
       },
-      "op_matched": 38,
+      "op_matched": 19,
       "op_raw": 132629,
       "op_usable": 132629,
       "reason": null,
@@ -184,12 +184,12 @@
       "coherence_withheld_fixtures": 11,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 32,
+      "join_matched_rows": 18,
       "join_miss_counts": {
-        "fixture_key_miss": 16518,
-        "no_pick_for_fixture": 470
+        "fixture_key_miss": 16756,
+        "no_pick_for_fixture": 246
       },
-      "pa_matched": 91,
+      "pa_matched": 62,
       "pa_raw": 17020,
       "pa_scored": 17020,
       "reason": null,
@@ -278,7 +278,7 @@
           "unsupported_market:team_total_goals": 24,
           "unsupported_market:team_total_points_odd_even": 8
         },
-        "card_fixture_count": 42,
+        "card_fixture_count": 41,
         "league_filter_requested": false,
         "requested_limit": 1000
       },
