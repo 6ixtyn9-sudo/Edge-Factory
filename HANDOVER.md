@@ -11871,3 +11871,25 @@ results, registries and workflows diff0 against current main. No live ticket CLI
 settlement, recut, capture, notification or workflow dispatch was executed.
 Implementation is in the production caller, not a shadow switch. Merge/deployment
 status must be reported separately; local tests do not imply it is running live.
+
+### 21 October 2026 — Phase 2 kickoff witnesses wired into the existing audit
+
+On arena/7d4a971b-edge-factory, imported only reviewed PR122/123 code/tests/docs
+from merged main1daccdc; left this checkout's operational files untouched.
+Existing tools/audit_market_depth_replay.py now defaults to guarded local-archive
+witness resolution. It requires preserved raw page data_dt, independent provider
+origin and identity, and aware schedule observations strictly before the decision
+cutoff. Fixed UTC+1/Prague remain separate hypotheses. Conflicts fail closed;
+legacy TheOddsAPI pick-kickoff fallback and card/warehouse labels are not proof.
+Receipts bind detail/archive bytes, source CSV row/hash and witness observation.
+Per-market capture-valid row counts are NOT live price/line/execution admission.
+No live lane, source gate, stake, bank, ticket, miner or workflow was changed.
+Actual existing10files/116fixtures still0eligible/0capture-valid rows: all116 lack
+preserved page datetime, which is never synthesized from a container/pick date.
+Structural 5203 valid / 14 invalid and diagnostics 57/9/45/5 remain unchanged.
+OddsPapi has 10 candidate schedule observations, not 10 corroborated fixtures.
+All 851 operational SHA256s unchanged. Focused 66 passed in 4.49s; final broader
+101 passed in 60.67s after the final code changes. Existing mocked refusal-path
+retry sleeps explain 51.01s of broader runtime. Full suite and independent agent
+review not claimed; no capture/dispatch/recut/merge. Details and second-review
+prompt: docs/operator/audits/DATA-ENRICHMENT-PIPES-CASE-2026-10-21.md section5.
