@@ -828,3 +828,71 @@ def test_no_context_rule_is_registered_and_no_lane_is_wired_into_the_pick_path()
     assert "h2h_dominance" not in picks
     notifier = (Path(__file__).resolve().parents[1] / "src" / "edgefactory" / "notifier.py").read_text()
     assert "card_enrich" not in notifier
+
+
+def _post_forebet_card():
+    from edgefactory.consensus_contracts import contract_identity
+    recipe = dict(sources=['scoutingstats'], market='1x2', strategy='single',
+                  follow_source=None, threshold=65, status='certified',
+                  mining_window=dict(start='2026-06-13', split='2026-09-01',
+                                     as_of_exclusive='2026-10-01'),
+                  activated_as_of='2026-10-01', contract_schema='post_forebet_v1')
+    identity = contract_identity(recipe)
+    recipe.update(contract_id=identity, rule=identity, view=identity, where='1=1')
+    row = dict(home='Real Sociedad', away='Barcelona', date=CARD_DAY,
+               market='1x2', avg_p=65.2, rule=identity, edge_rule=identity,
+               sources_used=['scoutingstats'], contract_schema='post_forebet_v1',
+               contract_id=identity, kickoff_utc='2026-10-11T15:00:00+00:00')
+    return row, {'operating_contract': 'post_forebet_v1', 'edges': [recipe]}
+
+
+def test_post_forebet_rank_uses_validated_recipe_not_the_opaque_label():
+    row, registry = _post_forebet_card()
+    chosen, _ = ce.select_candidates([row], limit=6, registry=registry)
+    assert len(chosen) == 1 and chosen[0]['margin'] == .2
+    assert ce.margin(dict(row, avg_p=64.9), registry=registry) == -.1
+    # A second market on the same fixture must not purchase a second call.
+    chosen, _ = ce.select_candidates([row, dict(row, avg_p=66.)], limit=6, registry=registry)
+    assert len(chosen) == 1 and chosen[0]['margin'] == .2
+
+
+@pytest.mark.parametrize('field,value', [
+    ('contract_id', 'pfc_forged'), ('edge_rule', '3way-unanimous avg_p>=65'),
+    ('market', 'ou_2.5'), ('sources_used', ['forebet']),
+    ('contract_schema', None), ('date', '2026-09-30'),
+    ('avg_p', None), ('avg_p', True), ('avg_p', float('nan')),
+    ('avg_p', float('inf')), ('avg_p', 101.),
+])
+def test_post_forebet_enrichment_rejects_forged_or_unmeasured_rows(field, value):
+    row, registry = _post_forebet_card()
+    assert ce.margin(dict(row, **{field: value}), registry=registry) is None
+
+
+@pytest.mark.parametrize('registry_problem', ['missing', 'benched', 'malformed', 'duplicate'])
+def test_post_forebet_enrichment_registry_fail_closed(registry_problem):
+    row, registry = _post_forebet_card()
+    if registry_problem == 'missing':
+        registry = None
+    elif registry_problem == 'benched':
+        registry['edges'][0]['status'] = 'benched'
+    elif registry_problem == 'malformed':
+        registry['edges'][0]['threshold'] = 64
+    else:
+        registry['edges'] *= 2
+    assert ce.select_candidates([row], limit=6, registry=registry)[0] == []
+
+
+def test_post_forebet_plan_loads_existing_registry_without_spending(tmp_path):
+    row, registry = _post_forebet_card()
+    (tmp_path / 'picks_today.json').write_text(json.dumps([row]))
+    (tmp_path / 'edges_consensus.json').write_text(json.dumps(registry))
+    plan = ce.plan_run(CARD_DAY, localdata=tmp_path, limit=6, bootstrap={})
+    # No key / event mapping / budget manufactured by making the row rankable.
+    assert plan['census'] and plan['census'][0]['margin'] == .2
+
+
+def test_categorical_contract_cannot_rank_on_a_placeholder_zero():
+    row, registry = _post_forebet_card()
+    assert ce.margin(dict(row, avg_p=0., probability_available=False), registry=registry) is None
+    registry.pop('operating_contract')
+    assert ce.margin(row, registry=registry) is None

@@ -534,7 +534,8 @@ def _hybrid_shrink(p_cohort, n: int, p_model: float) -> float:
     return (n * float(p_cohort) + HYBRID_SHRINK_K * float(p_model)) / float(n + HYBRID_SHRINK_K)
 
 
-def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=None) -> dict | None:
+def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=None,
+                       min_n=None, cache=None) -> dict | None:
     """Live: exact activated parent recipe, all outcomes, strictly before day.
 
     Missing/invalid/thin evidence returns None, never a model betting fallback.
@@ -560,7 +561,9 @@ def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=No
                     or pick.get("edge_rule") != identity):
                 return None
             return enhancement_cohort(con, edge, as_of=pick["date"],
-                                      selection=selection, min_n=HYBRID_MIN_N)
+                                      selection=selection,
+                                      min_n=HYBRID_MIN_N if min_n is None else min_n,
+                                      cache=cache)
         except (KeyError, TypeError, ValueError):
             return None
     view_name = "consensus3" if n_way >= 3 else "consensus2"
@@ -621,6 +624,43 @@ def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=No
         return out
     except Exception:
         return None
+
+
+def format_contract_profile(profile: dict | None) -> str | None:
+    """Render measured all-outcome rates; never synthesize missing statistics.
+
+    Archived counterfactual replays may supply only some measured markets.
+    Missing fields are omitted, never filled with priors or zeroes.
+    """
+    if not profile or not profile.get("n"):
+        return None
+    stats = []
+    if profile.get("parent_hit_rate") is not None:
+        stats.append(f"Parent hit rate: {profile['parent_hit_rate']:.1%} "
+                     f"({profile['parent_hits']}/{profile['n']})")
+    if profile.get("avg_goals") is not None:
+        stats.append(f"Avg Goals: {profile['avg_goals']:.2f}")
+    for line, key in (("1.5", "over15"), ("2.5", "over25"),
+                      ("3.5", "over35"), ("4.5", "over45")):
+        rate = profile.get(key)
+        if rate is not None:
+            stats.extend((f"Over {line}: {rate:.1%}", f"Under {line}: {1-rate:.1%}"))
+    rate = profile.get('btts')
+    if rate is not None:
+        stats.extend((f"BTTS: {rate:.1%}", f"BTTS-No: {1-rate:.1%}"))
+    for side, prefix in (("Home", "h"), ("Away", "a")):
+        for goals in range(4):
+            rate = profile.get(f'{prefix}_o{goals}5')
+            if rate is not None:
+                stats.extend((f"{side} Over {goals}.5 Goals: {rate:.1%}",
+                              f"{side} Under {goals}.5 Goals: {1-rate:.1%}"))
+    if not stats:
+        return None
+    scope = f"; selection={profile['selection']}" if profile.get('selection') else ""
+    return (f"📊 Exact-contract realized stats (n={profile['n']}{scope}; "
+            f"before {profile['as_of_exclusive']}; {profile['contract_id']}): "
+            + " | ".join(stats)
+            + " | All parent outcomes; descriptive history, not untouched forward validation")
 
 
 def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | None:
@@ -797,7 +837,8 @@ def _enh_log_mark_selected(enh_log: list, best_market: str | None) -> None:
         pass
 
 
-def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = None) -> dict:
+def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = None,
+                                *, cohort_cache=None) -> dict:
     """Query the local database to find deep league & team context and determine
     the single highest probable enhancement.
 
@@ -816,6 +857,9 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         "enhancement_label": None,
         "event_notes": []
     }
+    if pick.get("contract_schema") == "post_forebet_v1":
+        out.update(statistical_profile=None, statistical_comment=None,
+                   statistical_profile_status="unavailable_exact_contract_cohort")
     if not con:
         return out
         
@@ -1001,9 +1045,24 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
     _cohort_sel = str(pick.get("pick") or "").lower()
     _cohort_avg_p = pick.get("avg_p")
     try:
-        if _cohort_sel and isinstance(_cohort_avg_p, (int, float)):
-            cohort = fetch_match_cohort(con, _cohort_sel, float(_cohort_avg_p), _hybrid_pick_n_way(pick), pick=pick)
+        numeric_probability = (not isinstance(_cohort_avg_p, bool)
+                               and isinstance(_cohort_avg_p, (int, float))
+                               and math.isfinite(_cohort_avg_p))
+        if _cohort_sel and (numeric_probability or
+                (pick.get("contract_schema") == "post_forebet_v1" and _cohort_avg_p is None)):
+            cohort = fetch_match_cohort(
+                con, _cohort_sel, _cohort_avg_p, _hybrid_pick_n_way(pick),
+                pick=pick, min_n=1, cache=cohort_cache)
     except Exception:
+        cohort = None
+    if pick.get("contract_schema") == "post_forebet_v1":
+        # Descriptive evidence is independent of executable quotes and bet gates.
+        # A thin sample may be displayed, but cannot authorize an enhancement.
+        out["statistical_profile"] = dict(cohort) if cohort is not None else None
+        out["statistical_comment"] = format_contract_profile(cohort)
+        out["statistical_profile_status"] = (
+            "available" if cohort is not None else "unavailable_exact_contract_cohort")
+    if cohort is not None and cohort["n"] < HYBRID_MIN_N:
         cohort = None
     if cohort is not None:
         lam = _hybrid_shrink(cohort.get("avg_goals"), cohort["n"], lam)
@@ -1231,7 +1290,8 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 # Realized cohort rate the card ranks on; None when no cohort.
                 "cohort_rate": (round(cohort_rate, 4) if cohort_rate is not None else None),
                 "label": label,
-                "reason": reason + f" (realized cohort {cohort_rate:.1%}, n={cohort['n']}; stated {prob:.1%})",
+                "reason": (f"Realized exact-contract {label}: {cohort_rate:.1%}, "
+                           f"n={cohort['n']}; before {cohort.get('as_of_exclusive')}"),
                 # Addendum 17: provenance so the audit can grade engines separately.
                 "engine": engine,
                 "cohort_n": cohort["n"],
@@ -5883,6 +5943,10 @@ def _representative_score(pick: dict) -> tuple:
     comment = pick.get("statistical_comment") or ""
     mu, sigma = re.search(r"n=(\d+)", comment), re.search(r"Avg Goals: ([\d.]+)", comment)
     has_rich_stats = 2 if (mu and int(mu.group(1)) >= 100 and sigma) else (1 if comment else 0)
+    if pick.get("contract_schema") == "post_forebet_v1":
+        # Replacing the old constant comment with numeric evidence is display
+        # work, not a change to which contract represents a duplicate fixture.
+        has_rich_stats = 1
     return (
         -has_rich_stats,  # prefer picks with 📊 stats (richer = higher priority)
         _bucket_severity(pick.get("bucket")),
@@ -6979,6 +7043,9 @@ def main():
     except Exception:
         con = None
 
+    # The warehouse is immutable during this build; discard this evidence cache
+    # with this invocation, never persist it into another capture/build phase.
+    cohort_cache = {}
     for day in days:
         ml_scored_before = int(getattr(research_collector, "scored", 0) or 0)
         # Fixture-level audit mirror of the `coverage: scored=` universe
@@ -7598,13 +7665,14 @@ def main():
             
             annotate_market_recommendation(p)
             
-            p["statistical_comment"] = (
-                "Exact post-Forebet contract; searched validation is not untouched forward proof."
-                if p.get("contract_schema") == "post_forebet_v1" else
-                get_statistical_comment(con, p.get("pick"), p.get("avg_p"), p.get("n_way", 3)))
-            
-            # Compute deep dynamic enhancement overlay
-            enh = compute_dynamic_enhancement(con, p, prices_index)
+            if p.get("contract_schema") != "post_forebet_v1":
+                p["statistical_comment"] = get_statistical_comment(
+                    con, p.get("pick"), p.get("avg_p"), p.get("n_way", 3))
+
+            # One exact cohort supplies both the visible statistics and priced
+            # enhancement competition. No second warehouse scan for display.
+            enh = compute_dynamic_enhancement(con, p, prices_index,
+                                              cohort_cache=cohort_cache)
             p.update(enh)
 
             # Real-odds overlay: attach best captured price for mappable markets

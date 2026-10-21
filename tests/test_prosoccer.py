@@ -227,3 +227,14 @@ def test_columns_cover_row_keys():
     assert rows
     for row in rows:
         assert set(row) == set(prosoccer.COLUMNS)
+
+
+def test_transport_outage_does_not_multiply_ladder_by_calendar_aliases(monkeypatch):
+    calls = []
+    def failed(url, retries=3):
+        calls.append(url)
+        raise RuntimeError('all independent transports timed out')
+    monkeypatch.setattr(prosoccer, '_get', failed)
+    with pytest.raises(RuntimeError, match='transport ladder failed'):
+        prosoccer.fetch_day('2026-10-21')
+    assert len(calls) == 1  # still failure, never a successful empty capture

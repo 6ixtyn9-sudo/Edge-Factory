@@ -151,6 +151,11 @@ def main() -> None:
         ),
     )
     ap.add_argument(
+        "--forward-only",
+        action="store_true",
+        help="capture today onward only; completed dates are refreshed separately",
+    )
+    ap.add_argument(
         "--strict",
         action="store_true",
         help="exit non-zero after all adapters run if any source failed",
@@ -171,6 +176,9 @@ def main() -> None:
         ap.error(str(exc))
 
     jobs = [job for job in JOBS if selected is None or job[0] in selected]
+    if args.forward_only:
+        jobs = [(source, max(start, TODAY), end) for source, start, end in jobs
+                if end >= TODAY]
     phase5_capture_day = None
     phase5_context = os.environ.get(
         "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
@@ -198,6 +206,8 @@ def main() -> None:
         TODAY,
         TOMORROW,
     ]
+    if args.forward_only:
+        window = [day for day in window if day >= TODAY]
     failures = []
     summaries = []
     for source, start, end in jobs:

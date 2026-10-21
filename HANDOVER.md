@@ -11623,3 +11623,65 @@ passed0.89s. Thus all3500 collected tests were exercised across the full run and
 this targeted follow-up, with zero failures; not a single3500-pass full-run receipt.
 Only test coverage and this handover changed locally; no production fix/merge
 for the two outstanding registry failure paths is claimed.
+
+### 21 October 2026 — replace the stats placeholder and fix contract consumers
+
+Operator explicitly requested removal of placeholders, real numbers, and action
+on the diagnosed stats/draw-grading/enrichment fixes. The fixed no-statistics
+warning was introduced by the earlier agent integration commit de1424972725
+(`Connect validated post-Forebet contracts across operational consumers`), not
+by a provider. It prevented the legacy winner-conditioned Forebet display from
+being reused, but left the numeric replacement unwired. This change corrects
+that omission without restoring the old proxy.
+
+* Exact-contract all-outcome cohorts now supply BOTH the structured
+  statistical_profile and the numeric statistical_comment, even without a
+  quote. Display includes selected-side parent hits/n, mean goals, paired
+  O/U1.5–4.5, BTTS yes/no, and paired home/away goal lines0.5–3.5, with exact
+  contract ID and exclusive fixture-date cutoff. These are descriptive searched
+  history, NOT newly certified markets or untouched forward validation.
+* Thin samples are displayed at their actual n but still cannot authorize an
+  enhancement below the unchanged n>=100 floor. Missing exact evidence stays
+  null with an explicit status; no synthetic rates or Forebet/model fallback.
+  Partial archived replay cohorts render ONLY measured fields, never inferred
+  averages or missing rates. Recommendation explanations now state the realized
+  rate, not a conflicting model-prior explanation. Existing event_notes remain
+  price-gated; the stats display is not.
+* The shared renderer hides the retired constant on retained archived rows,
+  without rewriting their original decision-time evidence. Numeric display
+  changes cannot rerank duplicate operational post-Forebet representatives.
+* Both exact/fallback pick_result and the rescheduled 1X2 grader use selection
+  equality, so a selected draw with a drawn result wins. Conflicts, unknown
+  scores, squad boundaries and void policy remain unchanged. Scratch-state
+  tests verify the returned stake and bank arithmetic; NO production bank or
+  settled history was replayed or edited.
+* Existing card_enrich resolves opaque pfc IDs against validated, certified,
+  activated registry metadata with exact market/source identity. Missing,
+  malformed, duplicated or benched recipes and unavailable/nonfinite
+  probabilities remain unrankable. The top6/one-call-per-fixture/budget/ledger/
+  staleness machinery is unchanged. Offline on the saved Oct21 published
+  41-row snapshot:41rankable fixtures,6selected,zero provider calls. This is
+  not a fresh live capture or a guarantee of context identity/price coverage.
+* Caller-owned read-phase evidence caching shares one historical source scan
+  per connection/window/cutoff and one projection per contract/selection/floor
+  during a picks build. No persisted or cross-invocation cache; registry status
+  and identity are checked before using it. Tests require identical cached/
+  uncached profiles and prevent cross-connection/date/selection contamination.
+* ProSoccer no longer repeats an exhausted transport+relay ladder against all
+  calendar aliases. Reachable stale-date aliases still work; outages still
+  raise and remain retryable, not successful empty captures. Intraday capture
+  uses the existing capture_daily CLI's forward-only range; yesterday is
+  already covered by the separate result-donor refresh and is not fetched twice.
+
+No miner, activation/decay/price/value/cohort policy, provider budget, workflow,
+freeze override or financial replay changed. No production dispatch performed.
+The two separately documented missing/malformed-registry serving findings from
+PR112 remain outside this fix; this is not an all-system safety sign-off.
+Final frozen-source regression: **3540 passed,0failed,0skipped149.04s**.
+Focused stats/replay/grading/enrichment/capture/orchestration suite263passed
+5.75s; the subsequent expanded settlement-only suite26passed0.17s includes
+both scratch-bank payout cases. Earlier full-run failures exposed partial
+archived-profile rendering and numeric conditioning-input compatibility; both
+were corrected and the final full suite above was rerun from a fresh process.
+No test was deleted, skipped or weakened. Final diff-check clean; production
+localdata and installed workflow remain unchanged.
