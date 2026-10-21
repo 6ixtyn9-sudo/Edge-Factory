@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-20T21:50:41",
+  "generated_at": "2026-10-21T01:54:16",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 184.25489900000014,
-  "multiple": 1.8425489900000014,
+  "bank_pct": 161.22299900000013,
+  "multiple": 1.6122299900000012,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 51,
+  "bet_days": 52,
   "accas": {
     "wins": 62,
-    "losses": 44
+    "losses": 45
   },
-  "open_slips": [
-    {
-      "date": "2026-10-20",
-      "staked_pct": 23.0319
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -1026,6 +1021,35 @@
       ],
       "bank_pct": 184.2549,
       "close_pct": 184.2548
+    },
+    {
+      "date": "2026-10-20",
+      "staked_pct": 23.0319,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.37,
+          "won": false,
+          "stake_pct": 23.0319,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Huddersfield vs Peterborough",
+              "pick": "HOME",
+              "odds": 1.55,
+              "result": "win"
+            },
+            {
+              "match": "Barnet vs Swindon Town",
+              "pick": "HOME",
+              "odds": 1.53,
+              "result": "loss"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 161.223,
+      "close_pct": 161.2229
     }
   ]
 }
