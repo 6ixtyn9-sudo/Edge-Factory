@@ -83,8 +83,16 @@ def test_new_pick_output_does_not_publish_unknown_as_zero():
     pt.stamp_pick_evidence(picks, git_sha='measured-build', built_at='2026-10-21T00:00:00Z')
     assert picks[0]['enhancement_probability'] is None
     assert picks[0]['build_git_sha'] == 'measured-build'
-    with pytest.raises(ValueError, match='cohort identity'):
-        pt.stamp_pick_evidence([{'recommended_enhancement': 'match_over_25', 'enhancement_probability': .8}], git_sha='x', built_at='x')
+    # An unprovable selection is WITHHELD from its row (evidence unavailable),
+    # never published and never allowed to abort every other pick of the day.
+    row = {'date': '2026-10-21', 'match': 'A vs B', 'recommended_enhancement': 'match_over_25',
+           'enhancement_probability': .8, 'enhancement_label': 'Match Over 2.5 Goals'}
+    out = pt.stamp_pick_evidence([row], git_sha='x', built_at='x')
+    assert out == [('A vs B', 'match_over_25', 'no_valid_cohort_identity')]
+    assert row['recommended_enhancement'] is None
+    assert row['enhancement_probability'] is None
+    assert row['enhancement_label'] is None
+    assert 'no valid measured cohort identity' in row['enhancement_quarantined']
 
 
 def test_new_snapshot_hash_is_order_independent_and_window_bound():
@@ -129,7 +137,9 @@ def test_enh_recovery_preserves_six_days_and_actual_later_stakes():
 def test_held_purity_verdicts_are_not_reused():
     pick = dict(contract_schema=cc.SCHEMA, edge_rule='pfc_uncovered')
     ctx = pt.lookup_context({'roi_population_status': 'unverified_legacy_population'}, pick)
-    assert ctx['purity_evidence_status'] == 'unavailable_exact_contract_context'
+    # The hold is declared, not silent: the status names the mode, and with no
+    # negative verdict present every dimension stays UNKNOWN (never promoted).
+    assert ctx['purity_evidence_status'] == 'hold_negative_only'
     assert ctx['league'] == ctx['odds_band'] == 'UNKNOWN'
 
 
@@ -234,3 +244,60 @@ def test_corrupt_bank_cannot_be_loaded_as_financial_state(tmp_path, bank):
     lane.state_file.write_text(json.dumps(state))
     with pytest.raises(RuntimeError, match='invalid financial state'):
         at.load_state(lane)
+
+
+# ---- fail-closed purity hold (2026-10-21 second pass) -----------------------
+def _hold_pick(rule='v_consensus2_base'):
+    """A pick whose ONLY known contexts are promotions (ALLOW/BOOST)."""
+    return dict(date='2026-10-21', market='1x2', pick='away', odds=1.42,
+                league='il1', home='Alpha Town', away='Beta Town',
+                sport='soccer', rule=rule, edge_rule=rule, bucket='CERTIFIED_CLEAN')
+
+
+def _hold_registry(status):
+    return {
+        'roi_population_status': status,
+        'contexts': {
+            'league': {'soccer|il1|1x2|v_consensus2_base|away':
+                       {'n': 40, 'roi': .05, 'verdict': 'ALLOW'}},
+            'odds_band': {'soccer|1x2|v_consensus2_base|1.35-1.50':
+                          {'n': 60, 'roi': .04, 'verdict': 'ALLOW'}},
+            'team': {}, 'competition_type': {}, 'niche': {},
+        },
+        'contract_contexts': {},
+    }
+
+
+def test_held_registry_cannot_promote_a_pick_into_a_staked_bucket():
+    pick = _hold_pick()
+    active = pt.lookup_context(_hold_registry('priced_only'), pick)
+    assert active['league'] == 'ALLOW' and active['odds_band'] == 'ALLOW'
+    assert pt.bucket_pick(dict(pick), active, decay_verdict='HEALTHY') == 'CERTIFIED_CLEAN'
+
+    held = pt.lookup_context(_hold_registry('unverified_legacy_population'), pick)
+    assert held['purity_evidence_status'] == 'hold_negative_only'
+    assert held['league'] == 'UNKNOWN' and held['odds_band'] == 'UNKNOWN'
+    # UNKNOWN evidence may never reach the pushable "certified clean" bucket.
+    assert pt.bucket_pick(dict(pick), held, decay_verdict='HEALTHY') == 'CAUTION'
+
+
+def test_held_registry_never_releases_a_recorded_veto():
+    pick = _hold_pick()
+    reg = _hold_registry('unverified_legacy_population')
+    reg['contexts']['league']['soccer|il1|1x2|v_consensus2_base|away'] = {
+        'n': 39, 'roi': -8.23, 'verdict': 'VETO'}
+    ctx = pt.lookup_context(reg, pick)
+    assert ctx['league'] == 'VETO'
+    assert pt.bucket_pick(dict(pick), ctx, decay_verdict='HEALTHY') == 'SKIPPED_VETO'
+
+
+def test_hold_helper_keeps_negatives_and_drops_promotions():
+    from edgefactory.veto_resolution import hold_to_negative_only, is_held, load_registry
+    reg = _hold_registry('unverified_legacy_population')
+    reg['contexts']['league']['soccer|x|1x2|r|home'] = {'n': 5, 'roi': .9, 'verdict': 'BOOST'}
+    reg['contexts']['league']['soccer|y|1x2|r|home'] = {'n': 9, 'roi': -.2, 'verdict': 'CAUTION'}
+    out = hold_to_negative_only(reg)
+    verdicts = {k.split('|')[1]: v['verdict'] for k, v in out['contexts']['league'].items()}
+    # il1 (ALLOW) and x (BOOST) are promotions -> dropped; y (CAUTION) stays.
+    assert verdicts == {'y': 'CAUTION'}
+    assert is_held(reg) and not is_held({'roi_population_status': 'priced_only'})

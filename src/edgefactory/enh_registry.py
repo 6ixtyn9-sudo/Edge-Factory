@@ -753,8 +753,10 @@ def _evaluate(entry: dict, today: str) -> None:
 def processed_window_is_safe(keys_in_window: int, *, cap: int = MAX_PROCESSED_KEYS) -> bool:
     """Trim-safety (round 6D): can ``processed`` dedupe a whole rescan window?
 
-    ``processed`` is the registry's dedup list and it is capped at
-    ``MAX_PROCESSED_KEYS`` by trimming the OLDEST keys. That is safe only while a
+    ``processed`` is the registry's dedup list. Since 2026-10-21 it is retained
+    in full (the cap is no longer applied by ``record_outcome``), so dedup is
+    exact; this bound is kept as the guard the cap would need if trimming ever
+    returns. It is safe only while a
     key can never be re-encountered by a later run after being trimmed: a
     trimmed key that is still inside a rescan window would be recorded again,
     and if it was priced the certification counters would double-count.
