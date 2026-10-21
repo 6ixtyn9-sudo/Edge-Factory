@@ -530,11 +530,11 @@ def _registry(monkeypatch, tmp_path, statuses):
     return picks_today.load_thresholds()
 
 
-def test_certified_ou_only_registry_reports_1x2_fallback(monkeypatch, tmp_path):
+def test_certified_ou_only_registry_never_invents_1x2_thresholds(monkeypatch, tmp_path):
     """Certified non-1X2 edges do not imply a registry-supplied 1X2 floor.
 
-    The 1X2 fallback entries/thresholds and the OU entry must remain unchanged;
-    only the returned origin flag was wrong for this second fallback branch.
+    Missing 1X2 evidence must not synthesize a certified operating point.
+    The independently certified OU entry remains available.
     No activation/model state, providers or production registry are read.
     """
     ou_rule = "ou25-unanimous-2way-sa avg_p>=70"
@@ -546,23 +546,16 @@ def test_certified_ou_only_registry_reports_1x2_fallback(monkeypatch, tmp_path):
 
     t1x2, ou, btts, is_fallback = picks_today.load_thresholds()
 
-    assert {n: e["threshold"] for n, e in t1x2.items()} == {2: 70.0, 3: 65.0}
-    assert t1x2 == {
-        n: {"n_way": n, "threshold": threshold,
-            "rule": picks_today.display_rule("1x2", n, threshold),
-            "display_rule": picks_today.display_rule("1x2", n, threshold),
-            "market": "1x2"}
-        for n, threshold in picks_today.FALLBACK_1X2.items()
-    }
+    assert t1x2 == {}
     assert ou == picks_today._edge_entry({"rule": ou_rule, "market": "ou_2.5"})
     assert btts is None
     assert is_fallback is True
 
 
-def test_missing_registry_reports_1x2_fallback(monkeypatch, tmp_path):
+def test_missing_registry_fails_closed_without_guessed_thresholds(monkeypatch, tmp_path):
     monkeypatch.setattr(picks_today, "EDGES_PATH", tmp_path / "missing.json")
     t1x2, ou, btts, is_fallback = picks_today.load_thresholds()
-    assert {n: e["threshold"] for n, e in t1x2.items()} == {2: 70.0, 3: 65.0}
+    assert t1x2 == {}
     assert (ou, btts, is_fallback) == (None, None, True)
 
 

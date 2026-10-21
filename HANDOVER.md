@@ -11703,3 +11703,74 @@ then asserted `git diff --exit-code HEAD -- localdata .github` and exited0:
 no state restoration was needed after this final run. No tracked financial or
 workflow changes; diff-check clean. PR113 carries the implementation; no merge
 or production workflow dispatch is implied by this receipt.
+
+### 21 October 2026 — remove numeric stand-ins, including legacy paths
+
+Operator strengthened the requirement to “i dont want any placeholders even
+legacy ones.” This supersedes the earlier allowance for keeping model-prior
+numbers as non-authorizing diagnostics. No fake number is an acceptable
+representation of missing probability/statistical evidence.
+
+* Deleted the inherited enhancement league/team priors, Poisson calculations
+  and shrinkage helper. Candidates use measured exact-parent, selected-side,
+  all-outcome cohort rates only. Missing/unsupported markets are excluded;
+  raw_probability and enhancement_stated_probability remain null, not an
+  assumed model number. Descriptive partial evidence remains independent of
+  quotes; the n>=100 betting floor and broader-cohort competition ON remain.
+* Shared finite-probability validation rejects booleans, strings, nonfinite
+  and out-of-range numbers. probability_available=False overrides even a
+  numeric legacy avg_p. Actual measured zero is retained for evidence/display,
+  not confused with absence; zero still cannot authorize a live ticket.
+  Pick/daily/notification displays say unavailable; Supabase, scored shadow
+  and settled-audit exports preserve null. Enhancement displays also reject
+  malformed rates rather than coercing them to a percentage.
+* Removed guessed legacy 2-way>=70/3-way>=65 operating points, including the
+  standalone BetExplorer overlap reader. Missing/empty/unusable certification
+  supplies no 1X2 thresholds. Independently certified OU/BTTS entries remain
+  available. Malformed structured edge lists/non-object entries fail closed.
+* Removed legacy ML feature guesses: rolling hit rate75%, HT probability50%,
+  odds1.50, missing goal/score/staking-signal zeros, and the K builder's neutral
+  fallback table. Missing inputs remain unknown. The existing model-vector
+  mechanism can use explicitly recorded finite training means, with imputed
+  columns reported; without such a mean, scoring is refused and diagnosed
+  without dropping the fixture's separate consensus evaluation. A completely
+  unobserved training column cannot acquire a fabricated “era-train mean”;
+  candidate fitting refuses it. Legacy training uses complete measured rows.
+  No model, registry, certificate or activation history was rewritten and ML
+  was not reactivated. Recorded training-mean imputation is model math, never
+  exposed as an observed fixture/cohort probability.
+* Legacy slice-ledger serialization preserves unknown probabilities as null;
+  calibration excludes unknowns but counts genuine zero observations. This
+  is a reader/writer correction, not a replay/rewrite of an existing ledger.
+* O2.5 research tracking no longer borrows a parent 1X2 probability or price.
+  Target enhancement/primary market identity is checked. Unknown probability
+  stays out of bands and means while genuinely priced outcomes still enter
+  ROI; p_n exposes the known-probability denominator. Empty archives work.
+  Other “over” markets cannot enter the O2.5 sample just because of their side.
+
+Attribution is limited to verified patches: integration de1424972725 introduced
+both the warning-only stats text and missing avg_p->0.0; the model-prior block
+already existed in its parent3a0337421ef35a65faf167089b296c85b5a42412. Original
+prior author is not established. A shallow-boundary blame is NOT evidence of
+original authorship for the additional legacy ML defaults found this round.
+
+Regression changes intentionally replace assertions requiring retired invented
+numbers with unknown/real-evidence assertions. Existing positive ML fixtures
+now supply their synthetic observed inputs or explicit training means. The
+300-case immutable-selector comparison retains every other field; only the
+intentional missing-Forebet HT zero->null metadata change is normalized, with
+an assertion that the old value really was zero. New negative coverage proves
+missing model inputs neither emit nor enter research capture and do not bypass
+the separate consensus route. No tests deleted or skipped.
+
+Final frozen-source full suite: **3584 passed,0failed,0skipped145.57s**.
+The same process then ran `git diff --exit-code HEAD -- localdata .github` and
+returned0, with NO restoration: tracked banks, archives, registries, tickets,
+certificates and workflows unchanged. First full run was3581passed/1failed:
+an old positive research-capture fixture had no rolling-history input and
+relied on the removed75% default; supplied an explicit synthetic history input
+and reran the entire suite above. Latest53-case targeted validation passed.
+No production dispatch, historical replay, merge or deployment implied. PR113
+was OPEN/MERGEABLE at the pre-push check; its existing Workers Builds check
+was FAILURE. This addendum supersedes the prior entry's statement that the
+missing/malformed-registry findings were outside scope.

@@ -657,38 +657,38 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
     def _ht_pick_prob(row):
         p1h, pxh, p2h = row.get('p1_ht'), row.get('px_ht'), row.get('p2_ht')
         if p1h is None or pxh is None or p2h is None:
-            return 0.5
+            return None
         idx = {'home': 0, 'draw': 1, 'away': 2}.get(row['pick'], 1)
         v = (p1h, pxh, p2h)[idx]
-        return float(v) if v == v else 0.5  # NaN guard
+        return float(v) if v == v else None  # NaN stays unavailable
     df['ht_p'] = df.apply(_ht_pick_prob, axis=1)
 
     # Phase A (2026-08-10): statarea half-time win prob of the majority pick
     def _sa_ht_pick_prob(row):
         p1h, pxh, p2h = row.get('sa_p1_ht'), row.get('sa_px_ht'), row.get('sa_p2_ht')
         if p1h is None or pxh is None or p2h is None:
-            return 0.5
+            return None
         idx = {'home': 0, 'draw': 1, 'away': 2}.get(row['pick'], 1)
         v = (p1h, pxh, p2h)[idx]
-        return float(v) if v == v else 0.5
+        return float(v) if v == v else None
     df['sa_ht_p'] = df.apply(_sa_ht_pick_prob, axis=1)
 
     # HT score state
-    df['ht_diff'] = pd.to_numeric(df['ht_hs'], errors='coerce').fillna(0) - pd.to_numeric(df['ht_gs'], errors='coerce').fillna(0)
-    df['ht_total'] = pd.to_numeric(df['ht_hs'], errors='coerce').fillna(0) + pd.to_numeric(df['ht_gs'], errors='coerce').fillna(0)
+    df['ht_diff'] = pd.to_numeric(df['ht_hs'], errors='coerce') - pd.to_numeric(df['ht_gs'], errors='coerce')
+    df['ht_total'] = pd.to_numeric(df['ht_hs'], errors='coerce') + pd.to_numeric(df['ht_gs'], errors='coerce')
 
     # Kelly (forebet staking signal; raw, can be negative)
-    df['kelly'] = pd.to_numeric(df['kelly'], errors='coerce').fillna(0.0)
+    df['kelly'] = pd.to_numeric(df['kelly'], errors='coerce')
 
     # predicted score totals/diff (forebet)
-    df['pred_total'] = pd.to_numeric(df['pred_hs'], errors='coerce').fillna(0) + pd.to_numeric(df['pred_gs'], errors='coerce').fillna(0)
-    df['pred_diff'] = pd.to_numeric(df['pred_hs'], errors='coerce').fillna(0) - pd.to_numeric(df['pred_gs'], errors='coerce').fillna(0)
+    df['pred_total'] = pd.to_numeric(df['pred_hs'], errors='coerce') + pd.to_numeric(df['pred_gs'], errors='coerce')
+    df['pred_diff'] = pd.to_numeric(df['pred_hs'], errors='coerce') - pd.to_numeric(df['pred_gs'], errors='coerce')
 
     # goalsavg, BTTS-no, under probs
-    df['goalsavg'] = pd.to_numeric(df['goalsavg'], errors='coerce').fillna(0.0)
-    df['p_ng'] = pd.to_numeric(df['p_ng'], errors='coerce').fillna(0.0)
-    df['p_under'] = pd.to_numeric(df['p_under'], errors='coerce').fillna(0.0)
-    df['p_gg'] = pd.to_numeric(df['p_gg'], errors='coerce').fillna(0.0)
+    df['goalsavg'] = pd.to_numeric(df['goalsavg'], errors='coerce')
+    df['p_ng'] = pd.to_numeric(df['p_ng'], errors='coerce')
+    df['p_under'] = pd.to_numeric(df['p_under'], errors='coerce')
+    df['p_gg'] = pd.to_numeric(df['p_gg'], errors='coerce')
 
     df['date_dt'] = pd.to_datetime(df['date'])
     daily = df.groupby('date_dt').agg(wins=('y', 'sum'), total=('y', 'count')).reset_index()
@@ -698,10 +698,9 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
     daily['rolling_wins'] = daily.rolling('14D', on='date_dt')['shift_wins'].sum()
     daily['rolling_total'] = daily.rolling('14D', on='date_dt')['shift_total'].sum()
     daily['rolling_hit_rate'] = daily['rolling_wins'] / daily['rolling_total']
-    daily['rolling_hit_rate'] = daily['rolling_hit_rate'].fillna(0.75)
 
     df = df.merge(daily[['date_dt', 'rolling_hit_rate']], on='date_dt', how='left')
-    df['pick_odds'] = pd.to_numeric(df['pick_odds'], errors='coerce').fillna(1.50)
+    df['pick_odds'] = pd.to_numeric(df['pick_odds'], errors='coerce')
 
     feature_cols = [
         'fb_p', 'zb_p', 'sa_p',
@@ -722,6 +721,9 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
         'sa_ht_p', 'p_gg',
     ]
 
+    # Complete measured rows only: legacy research must not fit on invented
+    # 50%/75% rates, 1.50 odds, zero goals or zero staking signals.
+    df = df.dropna(subset=feature_cols)
     train_df = df[df['date'] < split]
     if len(train_df) < 300:
         print(f"ML Meta training skipped (insufficient train size: {len(train_df)} < 300)")

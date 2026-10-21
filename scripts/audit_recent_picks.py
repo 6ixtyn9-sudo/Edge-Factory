@@ -30,7 +30,7 @@ from edgefactory.settlement import (  # noqa: E402
     load_verified_results,
     terminal_event_disposition,
 )
-from edgefactory.util import ledger_team_key, markers_conflict, norm_team  # noqa: E402
+from edgefactory.util import ledger_team_key, markers_conflict, norm_team, pick_probability_pct, format_pick_probability  # noqa: E402
 from edgefactory.enh_registry import check_enhancement_hit  # noqa: E402
 
 
@@ -2001,7 +2001,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                     "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
                     "market": market,
                     "selection": selection,
-                    "avg_p": pick.get("avg_p") or 0.0,
+                    "avg_p": pick_probability_pct(pick),
                     "hs": hs,
                     "gs": gs,
                     "outcome": settled.outcome,
@@ -2455,7 +2455,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 "ou_2.5": "Over/Under 2.5 Pick",
                 "btts": "BTTS Pick",
             }.get(item.get("market"), "Pick")
-            lines.append(f"- **{market_label}**: Selected `{item['selection'].upper()}` @ {item['odds'] or 'n/a'} -> {status} (Expected prob: {item['avg_p']:.1f}%)")
+            lines.append(f"- **{market_label}**: Selected `{item['selection'].upper()}` @ {item['odds'] or 'n/a'} -> {status} (Expected prob: {format_pick_probability(item, digits=1)})")
             
             stats = item["parsed_stats"]
             if stats["over25_expected"] is not None:

@@ -1,4 +1,5 @@
 import json
+import pytest
 
 from scripts.audit_recent_picks import audit_team_key_candidates, settle_pick
 
@@ -1656,3 +1657,17 @@ def test_single_fuzzy_candidate_with_club_alias_still_settles(tmp_path, monkeypa
     assert report["ambiguous_result_picks"] == 0
     assert report["overall"]["settled_picks"] == 1
     assert report["overall"]["wins"] == 1
+
+
+@pytest.mark.parametrize('avg_p,flag,expected', [(None, True, None), (90, False, None), (0, True, 0)])
+def test_settled_ledger_probability_never_imputes_zero(tmp_path, monkeypatch, avg_p, flag, expected):
+    import scripts.audit_recent_picks as audit_mod
+    monkeypatch.setitem(PICK_A, 'avg_p', avg_p)
+    monkeypatch.setitem(PICK_A, 'probability_available', flag)
+    report, _ = _fixture_report(tmp_path, monkeypatch)
+    row = next(item for item in report['settled_ledger'] if item['match'] == 'Alpha vs Beta')
+    assert row['avg_p'] == expected
+    path = tmp_path / 'report.md'
+    audit_mod.write_markdown(path, report)
+    text = path.read_text()
+    assert f"Expected prob: {'unavailable' if expected is None else '0.0%'}" in text

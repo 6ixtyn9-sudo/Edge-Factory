@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.db import delete_picks_for_date, get_client, upsert_edges, upsert_picks  # noqa: E402
-from edgefactory.util import ledger_team_key  # noqa: E402
+from edgefactory.util import ledger_team_key, pick_probability_pct  # noqa: E402
 
 EDGES = ROOT / "localdata" / "edges_consensus.json"
 DEFAULT_PICKS = ROOT / "localdata" / "picks_today.json"
@@ -208,10 +208,9 @@ def build_pick_rows(
             })
             continue
         bucket = p.get("bucket") or "UNKNOWN"
-        try:
-            probability = round(float(p.get("avg_p")) / 100.0, 4)
-        except Exception:
-            probability = None
+        observed_probability = pick_probability_pct(p)
+        probability = (round(observed_probability / 100.0, 4)
+                       if observed_probability is not None else None)
         market = p.get("market", "1x2")
         selection = p.get("pick")
         conflict_key = (edge_id, event_id, market, selection)

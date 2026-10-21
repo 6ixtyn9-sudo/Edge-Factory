@@ -9,9 +9,30 @@ Important split:
 from __future__ import annotations
 
 import re
+import math
 import unicodedata
 from functools import lru_cache
 from datetime import date, datetime
+
+def finite_probability(value, *, scale=1.0) -> float | None:
+    """Validate an observed probability without coercion or imputation."""
+    if (isinstance(value, bool) or not isinstance(value, (int, float))
+            or not 0 <= value <= scale or not math.isfinite(value)):
+        return None
+    return float(value)
+
+
+def pick_probability_pct(pick) -> float | None:
+    """Respect explicit missing-evidence flags on current AND archived rows."""
+    if pick.get("probability_available") is False:
+        return None
+    return finite_probability(pick.get("avg_p"), scale=100.0)
+
+
+def format_pick_probability(pick, *, digits=0) -> str:
+    probability = pick_probability_pct(pick)
+    return f"{probability:.{digits}f}%" if probability is not None else "unavailable"
+
 
 # Historical miner/source join noise tokens. Keep byte-compatible in spirit with
 # the certified backtests.

@@ -53,6 +53,8 @@ from edgefactory.util import (  # noqa: E402
     honest_display_label,
     heal_ledger_labels,
     strip_retired_top_scores,
+    format_pick_probability,
+    pick_probability_pct,
 )
 
 REPORT_DIR = ROOT / "localdata"
@@ -571,7 +573,7 @@ def generate_daily_report(
                 lines.append("  (none)")
                 continue
 
-            for p in sorted(bpicks, key=lambda x: -float(x.get("avg_p") or 0)):
+            for p in sorted(bpicks, key=lambda x: -(pick_probability_pct(x) or 0)):
                 if p.get("odds") is not None:
                     try:
                         odds = f"@{float(p['odds']):.2f}"
@@ -593,11 +595,11 @@ def generate_daily_report(
                 match = str(p.get("match", ""))[:42]
                 kickoff = format_kickoff(p)
                 pick = str(p.get("pick", "?")).upper()
-                avg_p = float(p.get("avg_p") or 0)
+                avg_p = format_pick_probability(p)
 
                 lines.append(
                     f"  [{label}] {match:42s} KO {kickoff:5s} -> "
-                    f"{pick:5s}  avg {avg_p:.0f}%{w_str} {odds}"
+                    f"{pick:5s}  avg {avg_p}{w_str} {odds}"
                 )
                 lines.append(
                     f"     bucket={b}  "
@@ -708,7 +710,7 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
             _pick_date(p, "9999-99-99"),
             str(p.get("bucket", "")),
             -float(p.get("w_score") or 0),
-            -float(p.get("avg_p") or 0),
+            -(pick_probability_pct(p) or 0),
             str(p.get("match", "")),
         )
     )
@@ -866,7 +868,7 @@ def autonomous_intraday_merge(
             _pick_date(p, "9999-99-99"),
             str(p.get("bucket", "")),
             -float(p.get("w_score") or 0),
-            -float(p.get("avg_p") or 0),
+            -(pick_probability_pct(p) or 0),
             str(p.get("match", "")),
         )
     )
