@@ -1600,6 +1600,16 @@ def _fixture_selection_key(obj: dict) -> tuple[str, str]:
     return match, selection
 
 
+def execution_source_rejection(source_name) -> tuple[str, str] | None:
+    """One existing source policy for both live ticket lanes; no new registry."""
+    source_name = str(source_name or "").strip()
+    if not psrc.resolvable(source_name):
+        return "price_source_unregistered", f"odds_source={source_name or 'missing'}"
+    if not psrc.spec(source_name).can_execute():
+        return "price_source_not_execution_eligible", f"odds_source={source_name}"
+    return None
+
+
 def playable_leg_rejection(
     row: dict,
     *,
@@ -1631,15 +1641,9 @@ def playable_leg_rejection(
         return "price_quarantine", "price_evidence=SUSPECT_ALIAS_FUZZY"
     if execution_safe:
         source_name = str(row.get("odds_source") or "").strip()
-        source_spec = psrc.spec(source_name)
-        # `resolvable()` (not `known()`) is the correct predicate here: a
-        # vote-only donor is registered-and-intentionally-non-executable, not
-        # unrecognised. Both paths still reject the leg — this only keeps the
-        # REJECTION LEDGER reason honest.
-        if not psrc.resolvable(source_name):
-            return "price_source_unregistered", f"odds_source={source_name or 'missing'}"
-        if not source_spec.can_execute():
-            return "price_source_not_execution_eligible", f"odds_source={source_name}"
+        source_rejection = execution_source_rejection(source_name)
+        if source_rejection is not None:
+            return source_rejection
         if row.get("price_push_eligible") is False:
             return "price_push_ineligible", "price_push_eligible=false"
         if psrc.require_corroboration():
@@ -1661,7 +1665,7 @@ def playable_leg_rejection(
         odds = float(row.get("odds")) if row.get("odds") is not None else 0.0
     except (TypeError, ValueError):
         odds = 0.0
-    if odds <= 1.0:
+    if not math.isfinite(odds) or odds <= 1.0:
         return "invalid_odds", f"decimal_odds={row.get('odds')!r}"
     if odds < floor:
         return "min_odds_floor", f"decimal_odds={odds:.2f} < floor={floor:.2f}"
@@ -4809,12 +4813,18 @@ def _enh_price(pick: dict):
 
 
 def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
-                     floors: dict | None = None, team_floors: dict | None = None) -> list[dict]:
+                     floors: dict | None = None, team_floors: dict | None = None,
+                     execution_safe: bool = False) -> list[dict]:
     """One selected-market leg with the shared realized-evidence verdict.
 
     Require an exact-parent all-outcome cohort (n >= 100), then the shared
     MIN_LEG_ODDS minimum. No model fallback, EV veto, price floor or ceiling.
     Floor/slice tables remain descriptive metadata only, never eligibility.
+    The live builder passes execution_safe=True: the enhancement's own source
+    must satisfy the SAME source policy as main; contradictory price metadata
+    and an unnamed named-book quote cannot become a ticket. Parent 1X2 price
+    permissions are not evidence about a separately quoted enhancement.
+    Historical descriptive callers retain their explicit legacy default.
     """
     from edgefactory.enh_registry import ceiling_for, floor_for, floor_for_slice, enhancement_cohort_evidence
     from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS as TEAM_UNDERS
@@ -4852,6 +4862,16 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
             # when it has no price today it is "unpriced": OddsPapi answered HTTP
             # 429 from 2026-10-04, so later days are unpriced, not unpriceable.
             verdict = "unpriceable" if mapped is None else "unpriced"
+        elif execution_safe and (source_rejection := execution_source_rejection(
+                pick.get("enhancement_price_source"))) is not None:
+            verdict = source_rejection[0]
+        elif execution_safe and (pick.get("enhancement_priced") is False
+                                 or pick.get("enhancement_price_rejection")):
+            verdict = "price_evidence_rejected"
+        elif (execution_safe and psrc.spec(pick.get("enhancement_price_source")).named_bookmaker
+              and (not isinstance(pick.get("enhancement_price_book"), str)
+                   or not pick["enhancement_price_book"].strip())):
+            verdict = "price_bookmaker_missing"
         else:
             # Operator, 2026-10-14: no price floor and no price ceiling. The only
             # price gate is MIN_LEG_ODDS; any
@@ -5280,7 +5300,8 @@ def cmd_enhancement(args, st, *, scores=None) -> int:
     floors = derive_floors_for_day(LOCALDATA.parent, target)
     from edgefactory.enh_team_floors import team_under_floors
     team_floors = team_under_floors(LOCALDATA.parent, target)
-    legs = enhancement_legs(slate, floors=floors, team_floors=team_floors)
+    legs = enhancement_legs(slate, floors=floors, team_floors=team_floors,
+                            execution_safe=True)
     if scores is None:
         scores = load_settled_scores()
     withdrawn = apply_enhancement_timing(legs, now, target, scores)
