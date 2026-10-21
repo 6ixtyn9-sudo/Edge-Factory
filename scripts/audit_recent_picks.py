@@ -2194,7 +2194,41 @@ def _summary_pct(v, nd=1):
         return str(v)
 
 
-def write_markdown(path: Path, report: dict[str, Any]) -> None:
+PROVISIONAL_N = 30
+
+
+def _contract_labels(registry_path: Path | None = None) -> dict[str, str]:
+    """``pfc_<id>`` -> the rule it implements, with its live status.
+
+    A post-Forebet pick stamps the CONTRACT ID as its ``edge_rule``, so the
+    rule table would otherwise print an opaque hash where every other row
+    prints a rule. The row already carries ``display_rule``, but the audit
+    groups on ``edge_rule``; resolving through the registry keeps the report
+    readable without touching the machine-readable keys.
+    """
+    path = registry_path or (LOCALDATA / "edges_consensus.json")
+    try:
+        edges = json.loads(path.read_text()).get("edges") or []
+    except (OSError, ValueError):
+        return {}
+    out: dict[str, str] = {}
+    for edge in edges:
+        cid = edge.get("contract_id")
+        if not isinstance(cid, str) or not cid.startswith("pfc_"):
+            continue
+        rule = edge.get("research_rule") or "(rule unavailable)"
+        bits = [f"contract · {edge.get('status') or 'unknown'}"]
+        if edge.get("activated_as_of"):
+            bits.append(f"activated {edge['activated_as_of']}")
+        valid_n = (edge.get("valid") or {}).get("n")
+        if isinstance(valid_n, int):
+            bits.append(f"certified valid n={valid_n}")
+        out[cid] = f"{rule} [{', '.join(bits)}]"
+    return out
+
+
+def write_markdown(path: Path, report: dict[str, Any],
+                   registry_path: Path | None = None) -> None:
     overall = report.get("overall", {})
     lines = [
         f"# Edge Factory — Recent picks audit ({report['start']} to {report['end']})",
@@ -2308,10 +2342,28 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
     if not by_rule:
         lines.append("- none")
     else:
+        labels = _contract_labels(registry_path)
+        lines.append(
+            "Counts are frozen PICK ROWS, not bets: rows filed under "
+            "SKIPPED_VETO / WATCHLIST_* are included and were never cardable. "
+            "Cardable-only counts are in `## By bucket`.")
+        lines.append("")
         for key, summary in by_rule.items():
-            lines.append(
-                f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')} (settled n={summary.get('settled_picks', 0)}), ROI={summary.get('roi')} (priced n={summary.get('priced_picks', 0)})"
-            )
+            settled_n = int(summary.get("settled_picks", 0) or 0)
+            priced_n = int(summary.get("priced_picks", 0) or 0)
+            bits = []
+            label = labels.get(str(key), "")
+            if label:
+                bits.append(label)
+            if settled_n < PROVISIONAL_N:
+                bits.append(f"PROVISIONAL (settled n={settled_n} < {PROVISIONAL_N})")
+            roi = summary.get("roi")
+            detail = (f"hit_rate {summary.get('hit_rate')} "
+                      f"({summary.get('wins', 0)}/{settled_n} settled) · ROI "
+                      f"{'unavailable' if roi is None else roi} ({priced_n} priced)")
+            if bits:
+                detail = " — ".join(bits) + " — " + detail
+            lines.append(f"- `{key}`: {detail}")
     lines.extend(["", "## By bucket", ""])
     by_bucket = report.get("by_bucket", {})
     if not by_bucket:
