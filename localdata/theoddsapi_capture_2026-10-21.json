@@ -1,59 +1,29 @@
 {
-  "added": 60,
-  "attempted": 3,
-  "attempted_fixtures": [
-    {
-      "away": "Necaxa W",
-      "date": "2026-10-21",
-      "home": "Guadalajara W",
-      "kickoff": "21-10, 04:07",
-      "league": "Mexico Liga MX Femenil"
-    },
-    {
-      "away": "LASK Linz",
-      "date": "2026-10-21",
-      "home": "Sporting CP",
-      "kickoff": "2026-10-21T19:00:00Z",
-      "league": "Champions League"
-    },
-    {
-      "away": "FC Imabari",
-      "date": "2026-10-21",
-      "home": "Vegalta Sendai",
-      "kickoff": "05:00",
-      "league": "Japan,J. League 2"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 41,
-  "captured_at": "2026-10-20T23:41:49+00:00",
+  "captured_at": "2026-10-21T02:12:04+00:00",
   "date": "2026-10-21",
-  "due_reasons": {
-    "close_at": 1,
-    "first_at": 2
-  },
+  "due_reasons": {},
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
     "kickoff_mismatch_display_fallback_overridden": 1
   },
-  "quoted_fixtures": [
-    {
-      "away": "Necaxa",
-      "date": "2026-10-21",
-      "home": "Guadalajara",
-      "kickoff": "2026-10-21T00:07:00Z",
-      "league": "Mexico Liga MX Femenil"
-    }
-  ],
-  "rows": 60,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
     "kickoff_mismatch": 1,
     "priced": 6,
-    "retry_cooldown": 32
+    "retry_cooldown": 34
   },
   "skipped": [
     "WARN kickoff-mismatch Guadalajara W|Necaxa W: pick legacy display says 04:07 SAST, captured rows say 02:07 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Guadalajara W|Necaxa W (kickoff already passed)",
+    "Sporting CP|LASK Linz (retry cooldown (6h after failed attempt))",
     "Inter|Shakhtar Donetsk (priced)",
     "Aston Villa|Viking (retry cooldown (6h after failed attempt))",
     "Al Ahly|Olympic El Qanah (retry cooldown (6h after failed attempt))",
@@ -64,6 +34,7 @@
     "V-Varen Nagasaki|Sanfrecce Hiroshima (retry cooldown (6h after failed attempt))",
     "Olimpia|2 de Mayo (retry cooldown (6h after failed attempt))",
     "Reading|Leyton Orient (retry cooldown (6h after failed attempt))",
+    "Vegalta Sendai|FC Imabari (retry cooldown (6h after failed attempt))",
     "Real Betis|Feyenoord (priced)",
     "Kagoshima United|Kochi United (retry cooldown (6h after failed attempt))",
     "Cincinnati|DC United (retry cooldown (6h after failed attempt))",
@@ -94,13 +65,6 @@
     "Montedio Yamagata|Consadole Sapporo (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [
-    "Sporting CP vs LASK Linz (no event in soccer_uefa_champs_league)",
-    "Vegalta Sendai vs FC Imabari (no event in soccer_japan_j_league)"
-  ],
-  "unmatched_reasons": {
-    "no event in soccer_japan_j_league": 1,
-    "no event in soccer_uefa_champs_league": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }

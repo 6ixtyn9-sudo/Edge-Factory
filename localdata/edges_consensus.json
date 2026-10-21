@@ -63,23 +63,24 @@
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_0aed63f3d04b46330958121d",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6013,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 9,
-          "wins": 5,
-          "n_priced": 9,
           "hit": 0.5556,
+          "n": 9,
+          "n_priced": 9,
+          "roi": -0.2289,
           "wilson_lb": 0.2667,
-          "roi": -0.2289
+          "wins": 5
         },
-        "baseline_lb": 0.6013,
         "recent_lb": 0.2667,
-        "recent_ub": 0.8112
+        "recent_ub": 0.8112,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -120,28 +121,28 @@
         "wins": 347
       },
       "view": "pfc_0aed63f3d04b46330958121d",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_5f861bad9f49ebf6d6fe2c16",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6311,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 9,
-          "wins": 5,
-          "n_priced": 9,
           "hit": 0.5556,
+          "n": 9,
+          "n_priced": 9,
+          "roi": -0.2289,
           "wilson_lb": 0.2667,
-          "roi": -0.2289
+          "wins": 5
         },
-        "baseline_lb": 0.6311,
         "recent_lb": 0.2667,
-        "recent_ub": 0.8112
+        "recent_ub": 0.8112,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -182,28 +183,28 @@
         "wins": 253
       },
       "view": "pfc_5f861bad9f49ebf6d6fe2c16",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_f2b2a2e84093abe72bbc01c0",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6903,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 9,
-          "wins": 5,
-          "n_priced": 9,
           "hit": 0.5556,
+          "n": 9,
+          "n_priced": 9,
+          "roi": -0.2289,
           "wilson_lb": 0.2667,
-          "roi": -0.2289
+          "wins": 5
         },
-        "baseline_lb": 0.6903,
         "recent_lb": 0.2667,
-        "recent_ub": 0.8112
+        "recent_ub": 0.8112,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -244,8 +245,7 @@
         "wins": 179
       },
       "view": "pfc_f2b2a2e84093abe72bbc01c0",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
@@ -435,23 +435,24 @@
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_e25602082a90cb64fb9c5451",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.5871,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 8,
-          "wins": 4,
-          "n_priced": 8,
           "hit": 0.5,
+          "n": 8,
+          "n_priced": 8,
+          "roi": -0.2688,
           "wilson_lb": 0.2152,
-          "roi": -0.2688
+          "wins": 4
         },
-        "baseline_lb": 0.5871,
         "recent_lb": 0.2152,
-        "recent_ub": 0.7848
+        "recent_ub": 0.7848,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -493,28 +494,28 @@
         "wins": 237
       },
       "view": "pfc_e25602082a90cb64fb9c5451",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_3fbabd0ade3f89853e43fb10",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6281,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 8,
-          "wins": 4,
-          "n_priced": 8,
           "hit": 0.5,
+          "n": 8,
+          "n_priced": 8,
+          "roi": -0.2688,
           "wilson_lb": 0.2152,
-          "roi": -0.2688
+          "wins": 4
         },
-        "baseline_lb": 0.6281,
         "recent_lb": 0.2152,
-        "recent_ub": 0.7848
+        "recent_ub": 0.7848,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -556,28 +557,28 @@
         "wins": 195
       },
       "view": "pfc_3fbabd0ade3f89853e43fb10",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_527524a94e98cff9740d499c",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6381,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 7,
-          "wins": 4,
-          "n_priced": 7,
           "hit": 0.5714,
+          "n": 7,
+          "n_priced": 7,
+          "roi": -0.1643,
           "wilson_lb": 0.2505,
-          "roi": -0.1643
+          "wins": 4
         },
-        "baseline_lb": 0.6381,
         "recent_lb": 0.2505,
-        "recent_ub": 0.8418
+        "recent_ub": 0.8418,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -619,8 +620,7 @@
         "wins": 151
       },
       "view": "pfc_527524a94e98cff9740d499c",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-21",
@@ -686,23 +686,24 @@
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_3bfaf30507905754f7faab2a",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.6136,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 17,
-          "wins": 10,
-          "n_priced": 17,
           "hit": 0.5882,
+          "n": 17,
+          "n_priced": 17,
+          "roi": -0.0571,
           "wilson_lb": 0.3601,
-          "roi": -0.0571
+          "wins": 10
         },
-        "baseline_lb": 0.6136,
         "recent_lb": 0.3601,
-        "recent_ub": 0.7839
+        "recent_ub": 0.7839,
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -743,8 +744,7 @@
         "wins": 420
       },
       "view": "pfc_3bfaf30507905754f7faab2a",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
@@ -810,23 +810,24 @@
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_d17123b85e11155f22e40051",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6471,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 3,
-          "wins": 2,
-          "n_priced": 3,
           "hit": 0.6667,
+          "n": 3,
+          "n_priced": 3,
+          "roi": -0.1267,
           "wilson_lb": 0.2077,
-          "roi": -0.1267
+          "wins": 2
         },
-        "baseline_lb": 0.6471,
         "recent_lb": 0.2077,
-        "recent_ub": 0.9385
+        "recent_ub": 0.9385,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -868,28 +869,28 @@
         "wins": 127
       },
       "view": "pfc_d17123b85e11155f22e40051",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_a460a0e9dcb1f980cde169c0",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6434,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 5,
-          "wins": 3,
-          "n_priced": 5,
           "hit": 0.6,
+          "n": 5,
+          "n_priced": 5,
+          "roi": -0.144,
           "wilson_lb": 0.2307,
-          "roi": -0.144
+          "wins": 3
         },
-        "baseline_lb": 0.6434,
         "recent_lb": 0.2307,
-        "recent_ub": 0.8824
+        "recent_ub": 0.8824,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -930,28 +931,28 @@
         "wins": 220
       },
       "view": "pfc_a460a0e9dcb1f980cde169c0",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_fb2e721d2bb8a41fe9fa3713",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6532,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 5,
-          "wins": 3,
-          "n_priced": 5,
           "hit": 0.6,
+          "n": 5,
+          "n_priced": 5,
+          "roi": -0.144,
           "wilson_lb": 0.2307,
-          "roi": -0.144
+          "wins": 3
         },
-        "baseline_lb": 0.6532,
         "recent_lb": 0.2307,
-        "recent_ub": 0.8824
+        "recent_ub": 0.8824,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -992,28 +993,28 @@
         "wins": 206
       },
       "view": "pfc_fb2e721d2bb8a41fe9fa3713",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_1ba3ab3c75e6f3a9680ae43c",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.7011,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 3,
-          "wins": 2,
-          "n_priced": 3,
           "hit": 0.6667,
+          "n": 3,
+          "n_priced": 3,
+          "roi": -0.1267,
           "wilson_lb": 0.2077,
-          "roi": -0.1267
+          "wins": 2
         },
-        "baseline_lb": 0.7011,
         "recent_lb": 0.2077,
-        "recent_ub": 0.9385
+        "recent_ub": 0.9385,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -1054,28 +1055,28 @@
         "wins": 188
       },
       "view": "pfc_1ba3ab3c75e6f3a9680ae43c",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_40b163633fc01fd0ff7d0ef1",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.7272,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 3,
-          "wins": 2,
-          "n_priced": 3,
           "hit": 0.6667,
+          "n": 3,
+          "n_priced": 3,
+          "roi": -0.1267,
           "wilson_lb": 0.2077,
-          "roi": -0.1267
+          "wins": 2
         },
-        "baseline_lb": 0.7272,
         "recent_lb": 0.2077,
-        "recent_ub": 0.9385
+        "recent_ub": 0.9385,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -1116,8 +1117,7 @@
         "wins": 154
       },
       "view": "pfc_40b163633fc01fd0ff7d0ef1",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
@@ -1181,23 +1181,24 @@
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_0f100c9da356ed1c05d9c642",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.7265,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 17,
-          "wins": 11,
-          "n_priced": 17,
           "hit": 0.6471,
+          "n": 17,
+          "n_priced": 17,
+          "roi": -0.1212,
           "wilson_lb": 0.413,
-          "roi": -0.1212
+          "wins": 11
         },
-        "baseline_lb": 0.7265,
         "recent_lb": 0.413,
-        "recent_ub": 0.8269
+        "recent_ub": 0.8269,
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -1237,8 +1238,7 @@
         "wins": 432
       },
       "view": "pfc_0f100c9da356ed1c05d9c642",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-21",
@@ -1854,23 +1854,24 @@
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_2bd498a3472b7bbd71982ece",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6316,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 8,
-          "wins": 5,
-          "n_priced": 8,
           "hit": 0.625,
+          "n": 8,
+          "n_priced": 8,
+          "roi": -0.03,
           "wilson_lb": 0.3057,
-          "roi": -0.03
+          "wins": 5
         },
-        "baseline_lb": 0.6316,
         "recent_lb": 0.3057,
-        "recent_ub": 0.8632
+        "recent_ub": 0.8632,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -1911,28 +1912,28 @@
         "wins": 244
       },
       "view": "pfc_2bd498a3472b7bbd71982ece",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_3dc0fa6511953bf09bc4c845",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.5039,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 45,
-          "wins": 24,
-          "n_priced": 45,
           "hit": 0.5333,
+          "n": 45,
+          "n_priced": 45,
+          "roi": -0.0167,
           "wilson_lb": 0.3908,
-          "roi": -0.0167
+          "wins": 24
         },
-        "baseline_lb": 0.5039,
         "recent_lb": 0.3908,
-        "recent_ub": 0.6706
+        "recent_ub": 0.6706,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -1972,28 +1973,28 @@
         "wins": 914
       },
       "view": "pfc_3dc0fa6511953bf09bc4c845",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_61cb1dd2a3157c4231070cdb",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.5036,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 45,
-          "wins": 24,
-          "n_priced": 45,
           "hit": 0.5333,
+          "n": 45,
+          "n_priced": 45,
+          "roi": -0.0167,
           "wilson_lb": 0.3908,
-          "roi": -0.0167
+          "wins": 24
         },
-        "baseline_lb": 0.5036,
         "recent_lb": 0.3908,
-        "recent_ub": 0.6706
+        "recent_ub": 0.6706,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -2033,28 +2034,28 @@
         "wins": 913
       },
       "view": "pfc_61cb1dd2a3157c4231070cdb",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_1e9cfc6500aaac77afa1eaf9",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.5085,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 41,
-          "wins": 23,
-          "n_priced": 41,
           "hit": 0.561,
+          "n": 41,
+          "n_priced": 41,
+          "roi": -0.0149,
           "wilson_lb": 0.4104,
-          "roi": -0.0149
+          "wins": 23
         },
-        "baseline_lb": 0.5085,
         "recent_lb": 0.4104,
-        "recent_ub": 0.7011
+        "recent_ub": 0.7011,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -2094,28 +2095,28 @@
         "wins": 884
       },
       "view": "pfc_1e9cfc6500aaac77afa1eaf9",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_14ee12458803822df3013bcd",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.5304,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 38,
-          "wins": 22,
-          "n_priced": 38,
           "hit": 0.5789,
+          "n": 38,
+          "n_priced": 38,
+          "roi": -0.0358,
           "wilson_lb": 0.4219,
-          "roi": -0.0358
+          "wins": 22
         },
-        "baseline_lb": 0.5304,
         "recent_lb": 0.4219,
-        "recent_ub": 0.7215
+        "recent_ub": 0.7215,
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -2155,28 +2156,28 @@
         "wins": 827
       },
       "view": "pfc_14ee12458803822df3013bcd",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_4cf3df8552488297d7ccf526",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.546,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 33,
-          "wins": 19,
-          "n_priced": 33,
           "hit": 0.5758,
+          "n": 33,
+          "n_priced": 33,
+          "roi": -0.0458,
           "wilson_lb": 0.4081,
-          "roi": -0.0458
+          "wins": 19
         },
-        "baseline_lb": 0.546,
         "recent_lb": 0.4081,
-        "recent_ub": 0.7276
+        "recent_ub": 0.7276,
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -2216,8 +2217,7 @@
         "wins": 712
       },
       "view": "pfc_4cf3df8552488297d7ccf526",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
@@ -2281,23 +2281,24 @@
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_35f7e50bf23db96c2d3dd59d",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6387,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 13,
-          "wins": 8,
-          "n_priced": 13,
           "hit": 0.6154,
+          "n": 13,
+          "n_priced": 13,
+          "roi": -0.1262,
           "wilson_lb": 0.3552,
-          "roi": -0.1262
+          "wins": 8
         },
-        "baseline_lb": 0.6387,
         "recent_lb": 0.3552,
-        "recent_ub": 0.8229
+        "recent_ub": 0.8229,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -2337,8 +2338,7 @@
         "wins": 428
       },
       "view": "pfc_35f7e50bf23db96c2d3dd59d",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
@@ -2402,23 +2402,24 @@
     },
     {
       "activated_as_of": "2026-10-20",
+      "benched_at": "2026-10-21",
       "contract_id": "pfc_c8cbcf76ea758fd6de596ae1",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.6809,
         "checked_at": "2026-10-21",
         "recent": {
-          "n": 2,
-          "wins": 1,
-          "n_priced": 2,
           "hit": 0.5,
+          "n": 2,
+          "n_priced": 2,
+          "roi": -0.47,
           "wilson_lb": 0.0945,
-          "roi": -0.47
+          "wins": 1
         },
-        "baseline_lb": 0.6809,
         "recent_lb": 0.0945,
-        "recent_ub": 0.9055
+        "recent_ub": 0.9055,
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -2458,8 +2459,7 @@
         "wins": 179
       },
       "view": "pfc_c8cbcf76ea758fd6de596ae1",
-      "where": "1=1",
-      "benched_at": "2026-10-21"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",

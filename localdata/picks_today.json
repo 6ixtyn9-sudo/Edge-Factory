@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 65.07409070498427,
     "away": "Louisville City",
     "bookmaker": "betexplorer_best",
@@ -787,10 +787,10 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 62.73052314640572,
     "away": "Sanfrecce Hiroshima",
-    "bookmaker": "Pinnacle",
+    "bookmaker": "betexplorer_best",
     "bucket": "CAUTION",
     "contract_id": "pfc_439097cb9bb700e9996c0b07",
     "contract_schema": "post_forebet_v1",
@@ -1400,15 +1400,77 @@
     "match": "V-Varen Nagasaki vs Sanfrecce Hiroshima",
     "min_lead_minutes": 30,
     "n_way": 1,
-    "odds": 1.4785,
-    "odds_captured_at": "2026-10-20T07:51:17+00:00",
-    "odds_league": "Japan - J League",
+    "odds": 1.47,
+    "odds_captured_at": "2026-10-20T23:01:30.421451+00:00",
+    "odds_league": "Japan: J1 League",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
-    "odds_source": "pinnapi_odds",
+    "odds_source": "betexplorer_odds",
     "odds_tier": "low",
     "pick": "away",
     "price_board": [
+      {
+        "away": "Sanfrecce Hiroshima",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-20T23:01:30.421451+00:00",
+        "home": "V-Varen Nagasaki",
+        "kickoff": "11:00",
+        "league": "Japan: J1 League",
+        "line": null,
+        "market": "1x2",
+        "named_bookmaker": true,
+        "odds": 6.0,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "home",
+        "selection": "home",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Sanfrecce Hiroshima",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-20T23:01:30.421451+00:00",
+        "home": "V-Varen Nagasaki",
+        "kickoff": "11:00",
+        "league": "Japan: J1 League",
+        "line": null,
+        "market": "1x2",
+        "named_bookmaker": true,
+        "odds": 4.75,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "draw",
+        "selection": "draw",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Sanfrecce Hiroshima",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-20T23:01:30.421451+00:00",
+        "chosen": true,
+        "home": "V-Varen Nagasaki",
+        "kickoff": "11:00",
+        "league": "Japan: J1 League",
+        "line": null,
+        "market": "1x2",
+        "match_method": "exact",
+        "named_bookmaker": true,
+        "odds": 1.47,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "away",
+        "selection": "away",
+        "source": "betexplorer_odds"
+      },
       {
         "away": "Sanfrecce Hiroshima",
         "bookmaker": "Pinnacle",
@@ -1453,13 +1515,11 @@
         "away": "Sanfrecce Hiroshima",
         "bookmaker": "Pinnacle",
         "captured_at": "2026-10-20T07:51:17+00:00",
-        "chosen": true,
         "home": "V-Varen Nagasaki",
         "kickoff": "2026-10-21T10:00:00Z",
         "league": "Japan - J League",
         "line": null,
         "market": "1x2",
-        "match_method": "exact",
         "named_bookmaker": true,
         "odds": 1.4785,
         "odds_kind": "bookmaker",
@@ -1534,17 +1594,19 @@
     ],
     "price_corroborated": true,
     "price_corroborating_families": [
+      "pinnacle_book",
       "scoutingstats_average"
     ],
     "price_corroboration_sufficient": true,
     "price_corroborators": [
+      "pinnapi_odds",
       "scoutingstats_odds"
     ],
-    "price_disclosure": "Pinnacle named-book price (Pinnacle)",
+    "price_disclosure": "BetExplorer named-book price (betexplorer_best)",
     "price_donor_role": "named_bookmaker",
     "price_evidence": "NAMED_BOOKMAKER_PRICE",
-    "price_independence_family": "pinnacle_book",
-    "price_named_book_corroborated": false,
+    "price_independence_family": "betexplorer_book",
+    "price_named_book_corroborated": true,
     "price_odds_kind": "bookmaker",
     "price_push_eligible": true,
     "probability_available": true,
@@ -1560,7 +1622,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 56.139405371418306,
     "away": "Al Jabalain",
     "bookmaker": "Pinnacle",
@@ -5083,7 +5145,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 64.93810952738185,
     "away": "Raufoss",
     "bookmaker": "betexplorer_best",
@@ -5936,10 +5998,10 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 60.510204081632644,
     "away": "Leyton Orient",
-    "bookmaker": "Pinnacle",
+    "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
     "contract_id": "pfc_439097cb9bb700e9996c0b07",
     "contract_schema": "post_forebet_v1",
@@ -6549,26 +6611,86 @@
     "match": "Reading vs Leyton Orient",
     "min_lead_minutes": 30,
     "n_way": 1,
-    "odds": 1.5435,
-    "odds_captured_at": "2026-10-20T07:51:17+00:00",
-    "odds_league": "England - League 1",
+    "odds": 1.52,
+    "odds_captured_at": "2026-10-21T01:48:25.765372+00:00",
+    "odds_league": "England: League One",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
-    "odds_source": "pinnapi_odds",
+    "odds_source": "betexplorer_odds",
     "odds_tier": "low",
     "pick": "home",
     "price_board": [
       {
         "away": "Leyton Orient",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-21T01:48:25.765372+00:00",
+        "chosen": true,
+        "home": "Reading",
+        "kickoff": "20:00",
+        "league": "England: League One",
+        "line": null,
+        "market": "1x2",
+        "match_method": "exact",
+        "named_bookmaker": true,
+        "odds": 1.52,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "home",
+        "selection": "home",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Leyton Orient",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-21T01:48:25.765372+00:00",
+        "home": "Reading",
+        "kickoff": "20:00",
+        "league": "England: League One",
+        "line": null,
+        "market": "1x2",
+        "named_bookmaker": true,
+        "odds": 4.4,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "draw",
+        "selection": "draw",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Leyton Orient",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-21T01:48:25.765372+00:00",
+        "home": "Reading",
+        "kickoff": "20:00",
+        "league": "England: League One",
+        "line": null,
+        "market": "1x2",
+        "named_bookmaker": true,
+        "odds": 5.6,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "away",
+        "selection": "away",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Leyton Orient",
         "bookmaker": "Pinnacle",
         "captured_at": "2026-10-20T07:51:17+00:00",
-        "chosen": true,
         "home": "Reading",
         "kickoff": "2026-10-21T19:00:00Z",
         "league": "England - League 1",
         "line": null,
         "market": "1x2",
-        "match_method": "exact",
         "named_bookmaker": true,
         "odds": 1.5435,
         "odds_kind": "bookmaker",
@@ -6683,17 +6805,19 @@
     ],
     "price_corroborated": true,
     "price_corroborating_families": [
+      "pinnacle_book",
       "scoutingstats_average"
     ],
     "price_corroboration_sufficient": true,
     "price_corroborators": [
+      "pinnapi_odds",
       "scoutingstats_odds"
     ],
-    "price_disclosure": "Pinnacle named-book price (Pinnacle)",
+    "price_disclosure": "BetExplorer named-book price (betexplorer_best)",
     "price_donor_role": "named_bookmaker",
     "price_evidence": "NAMED_BOOKMAKER_PRICE",
-    "price_independence_family": "pinnacle_book",
-    "price_named_book_corroborated": false,
+    "price_independence_family": "betexplorer_book",
+    "price_named_book_corroborated": true,
     "price_odds_kind": "bookmaker",
     "price_push_eligible": true,
     "probability_available": true,
@@ -6710,7 +6834,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 57.22730739893211,
     "away": "DC United",
     "bookmaker": null,
@@ -7460,7 +7584,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 53.33208885570282,
     "away": "Mito Hollyhock",
     "bookmaker": "Pinnacle",
@@ -9193,7 +9317,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 50.78455322747345,
     "away": "Tokyo Verdy",
     "bookmaker": "Pinnacle",
@@ -11797,7 +11921,7 @@
     "w_score": 0.619
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 52.905937959745835,
     "away": "Kashiwa Reysol",
     "bookmaker": "Pinnacle",
@@ -12589,7 +12713,7 @@
     "w_score": 0.5751
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 50.61964596899936,
     "away": "Petrojet",
     "bookmaker": "Pinnacle",
@@ -13382,7 +13506,7 @@
     "w_score": 0.5654
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 47.5524559572382,
     "away": "Lens",
     "bookmaker": "Pinnacle",
@@ -14175,7 +14299,7 @@
     "w_score": 0.5654
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 42.720860540676945,
     "away": "Arsenal",
     "bookmaker": "1xBet",
@@ -14968,7 +15092,7 @@
     "w_score": 0.5654
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 58.62441314553991,
     "away": "Feyenoord",
     "bookmaker": "1xBet",
@@ -17123,7 +17247,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 53.21384287961507,
     "away": "Yokohama",
     "bookmaker": "Pinnacle",
@@ -17873,7 +17997,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 48.16815911018946,
     "away": "Kashima Antlers",
     "bookmaker": "Pinnacle",
@@ -18648,7 +18772,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 47.84485012606219,
     "away": "Vanraure Hachinohe",
     "bookmaker": "Pinnacle",
@@ -19423,7 +19547,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 47.30908162317764,
     "away": "Blaublitz Akita",
     "bookmaker": "Pinnacle",
@@ -20198,7 +20322,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 46.48613165680473,
     "away": "Oita Trinita",
     "bookmaker": "Pinnacle",
@@ -20969,7 +21093,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 44.68683572627261,
     "away": "Kataller Toyama",
     "bookmaker": "Pinnacle",
@@ -21744,7 +21868,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 43.76635514018691,
     "away": "Iwaki",
     "bookmaker": "Pinnacle",
@@ -22479,7 +22603,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 42.69884794820528,
     "away": "Atl\u00e9tico Mineiro",
     "bookmaker": "Pinnacle",
@@ -23254,7 +23378,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 41.405614167294644,
     "away": "Manchester United",
     "bookmaker": "Betfair",
@@ -25391,7 +25515,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 40.85008892633155,
     "away": "Vissel Kobe",
     "bookmaker": "Pinnacle",
@@ -26166,7 +26290,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 40.691325345964515,
     "away": "Consadole Sapporo",
     "bookmaker": "Pinnacle",
@@ -26941,7 +27065,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 60.5,
     "away": "FC Imabari",
     "bookmaker": "betexplorer_best",
@@ -27575,8 +27699,8 @@
     "match": "Vegalta Sendai vs FC Imabari",
     "min_lead_minutes": 30,
     "n_way": 2,
-    "odds": 1.44,
-    "odds_captured_at": "2026-10-20T23:00:58.907392+00:00",
+    "odds": 1.46,
+    "odds_captured_at": "2026-10-21T01:48:56.925695+00:00",
     "odds_league": "Japan: J2 League",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -27587,7 +27711,7 @@
       {
         "away": "Imabari",
         "bookmaker": "betexplorer_best",
-        "captured_at": "2026-10-20T23:00:58.907392+00:00",
+        "captured_at": "2026-10-21T01:48:56.925695+00:00",
         "chosen": true,
         "home": "Vegalta Sendai",
         "kickoff": "11:00",
@@ -27596,7 +27720,7 @@
         "market": "1x2",
         "match_method": "exact",
         "named_bookmaker": true,
-        "odds": 1.44,
+        "odds": 1.46,
         "odds_kind": "bookmaker",
         "price_coherence": null,
         "price_independence_family": "betexplorer_book",
@@ -29021,7 +29145,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 72.72727272727273,
     "away": "Olympic El Qanah",
     "bookmaker": null,
@@ -29756,7 +29880,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 56.256443902896244,
     "away": "JEF United",
     "bookmaker": null,
@@ -30491,7 +30615,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 43.04734848484848,
     "away": "Athletic Club",
     "bookmaker": null,
@@ -31168,7 +31292,7 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 62.432383699963935,
     "away": "2 de Mayo",
     "bookmaker": "scoutingstats_odds",
@@ -31878,7 +32002,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 58.602102236995776,
     "away": "Kochi United",
     "bookmaker": "scoutingstats_odds",
@@ -32588,7 +32712,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 54.40754039497306,
     "away": "Sportivo Ameliano",
     "bookmaker": "scoutingstats_odds",
@@ -33298,7 +33422,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 52.99576538426886,
     "away": "Gainare Tottori",
     "bookmaker": "scoutingstats_odds",
@@ -34008,7 +34132,7 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 80.6187509982431,
     "away": "LASK Linz",
     "bookmaker": "Pinnacle",
@@ -34800,7 +34924,7 @@
     "w_score": 0.6399
   },
   {
-    "as_of": "2026-10-21T01:01:30+02:00",
+    "as_of": "2026-10-21T03:49:28+02:00",
     "avg_p": 75.17819468132146,
     "away": "Viking",
     "bookmaker": "betexplorer_best",
