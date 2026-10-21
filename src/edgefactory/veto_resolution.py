@@ -201,15 +201,54 @@ def apply_resolution_to_ctx(ctx: dict, contexts: dict, pools: dict | None = None
     return out
 
 
+HOLD_STATUS = "unverified_legacy_population"
+
+# Verdicts that can only ever REMOVE a bet. Kept while the population is held:
+# a mislabelled VETO forgoes a stake, a mislabelled BOOST stakes money, so an
+# unverified population may never promote and need never release.
+HOLD_KEEP_VERDICTS = frozenset({"VETO", "CAUTION"})
+
+
+def is_held(payload: object) -> bool:
+    """True when the registry declares its ROI population unverified."""
+    return isinstance(payload, dict) and payload.get("roi_population_status") == HOLD_STATUS
+
+
+def hold_to_negative_only(payload: dict) -> dict:
+    """Strip promotions from a held registry, keep fail-closed verdicts.
+
+    A population-biased ROI can mislabel in BOTH directions, so "hold
+    everything" is not the conservative choice: it releases 27 recorded VETOs
+    on one live slate into a ticket-eligible CAUTION bucket. Holding the
+    promotions and keeping the negatives is the only direction that cannot
+    increase staking on evidence we cannot verify.
+    """
+    def _filter(dims):
+        return {dim: {key: slot for key, slot in (slots or {}).items()
+                      if str((slot or {}).get("verdict")) in HOLD_KEEP_VERDICTS}
+                for dim, slots in (dims or {}).items()}
+
+    out = dict(payload)
+    out["contexts"] = _filter(payload.get("contexts"))
+    contracts = payload.get("contract_contexts")
+    if isinstance(contracts, dict):
+        out["contract_contexts"] = {rule: _filter(slots) for rule, slots in contracts.items()}
+    out["integrity_hold_applied"] = "negative_verdicts_only"
+    return out
+
+
 def load_registry(root: Path) -> dict:
     """Read ``localdata/purity_registry.json`` -> contexts dict.
 
-    Read-only: never writes. Returns {} on missing/corrupt file.
+    Read-only: never writes. Returns {} on missing/corrupt file. A held
+    registry contributes only negative verdicts (see ``hold_to_negative_only``).
     """
     try:
         data = json.loads((Path(root) / "localdata" / "purity_registry.json").read_text())
-        if isinstance(data, dict) and data.get("roi_population_status") == "unverified_legacy_population":
+        if not isinstance(data, dict):
             return {}
-        return data.get("contexts", {}) if isinstance(data, dict) else {}
+        if is_held(data):
+            return hold_to_negative_only(data).get("contexts", {})
+        return data.get("contexts", {})
     except (OSError, json.JSONDecodeError):
         return {}
