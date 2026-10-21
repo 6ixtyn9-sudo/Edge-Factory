@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-21T23:00:18",
+  "generated_at": "2026-10-22T01:07:07",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 86.19957599999998,
-  "multiple": 0.8619957599999998,
+  "bank_pct": 110.67395099999999,
+  "multiple": 1.10673951,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 7,
+  "bet_days": 8,
   "accas": {
-    "wins": 7,
+    "wins": 8,
     "losses": 8
   },
   "open_slips": [
     {
-      "date": "2026-10-21",
-      "staked_pct": 14.3125
+      "date": "2026-10-22",
+      "staked_pct": 27.6684
     }
   ],
   "events": [],
@@ -376,6 +376,37 @@
       "close_pct": 86.19957599999998,
       "bank_pct_before_recovery": 114.5,
       "close_pct_before_recovery": 114.5
+    },
+    {
+      "date": "2026-10-21",
+      "staked_pct": 14.3125,
+      "returned_pct": 38.7869,
+      "accas": [
+        {
+          "odds": 2.71,
+          "won": true,
+          "stake_pct": 14.3125,
+          "returned_pct": 38.7869,
+          "legs": [
+            {
+              "match": "FC Bayern M\u00fcnchen vs Arsenal",
+              "pick": "over",
+              "odds": 1.66,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Como vs Manchester United",
+              "pick": "over",
+              "odds": 1.63,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 110.674,
+      "close_pct": 110.674
     }
   ]
 }

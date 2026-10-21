@@ -1,5 +1,6 @@
 {
  "evidence_schema_version": 1,
+ "generated_at": "2026-10-22",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -1028,10 +1029,10 @@
    "status_since": null
   },
   "home_over_05@v1": {
-   "hits": 1,
-   "inv_price_sum": 0.7246376811594204,
+   "hits": 2,
+   "inv_price_sum": 1.4879964597853745,
    "multi_n": 0,
-   "n": 1,
+   "n": 2,
    "processed": [
     "2026-08-06|FC Lugano vs NSI Runavik|home_over_05@v1",
     "2026-08-06|Twente vs Dunajska Streda|home_over_05@v1",
@@ -1218,9 +1219,10 @@
     "2026-10-06|Russia vs Nigeria|home_over_05@v1",
     "2026-10-06|Argentina vs Benin|home_over_05@v1",
     "2026-10-06|South Korea vs Uzbekistan|home_over_05@v1",
-    "2026-10-06|Algeria vs Niger|home_over_05@v1"
+    "2026-10-06|Algeria vs Niger|home_over_05@v1",
+    "2026-10-21|Malacateco vs Comunicaciones|home_over_05@v1"
    ],
-   "profit": 0.38,
+   "profit": 0.69,
    "records": [
     {
      "away": "Austin FC",
@@ -1238,6 +1240,23 @@
      "rule": "ml-meta avg_p>=60",
      "source": "oddspapi",
      "stated": 0.8862
+    },
+    {
+     "away": "Comunicaciones",
+     "away_key": "comunicaciones",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.8793,
+     "date": "2026-10-21",
+     "hit": true,
+     "home": "Malacateco",
+     "home_key": "malacateco",
+     "league": "Guatemala: Liga Nacional",
+     "match": "Malacateco vs Comunicaciones",
+     "multi_source": false,
+     "price": 1.31,
+     "rule": "pfc_234f16641d9893e8ec2a01f0",
+     "source": "oddspapi",
+     "stated": 0.8618
     }
    ],
    "records_truncated": false,
@@ -1458,10 +1477,10 @@
    "status_since": null
   },
   "match_over_15@v1": {
-   "hits": 37,
-   "inv_price_sum": 40.23811738303896,
-   "multi_n": 3,
-   "n": 47,
+   "hits": 38,
+   "inv_price_sum": 40.976669820262,
+   "multi_n": 4,
+   "n": 48,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -1533,9 +1552,10 @@
     "2026-10-17|Maring\u00e1 vs Ferrovi\u00e1ria|match_over_15@v1",
     "2026-10-18|JS Kabylie vs US Biskra|match_over_15@v1",
     "2026-10-19|Mes Shahr-e Babak vs Persepolis FC|match_over_15@v1",
-    "2026-10-20|El Geish vs Pyramids FC|match_over_15@v1"
+    "2026-10-20|El Geish vs Pyramids FC|match_over_15@v1",
+    "2026-10-21|Millonarios vs Once Caldas|match_over_15@v1"
    ],
-   "profit": -3.43,
+   "profit": -3.076,
    "records": [
     {
      "away": "Aston Villa",
@@ -2192,6 +2212,23 @@
      "rule": "unanimous[betclan+statarea+vitibet] avg_p>=65",
      "source": "scoutingstats",
      "stated": 0.7721
+    },
+    {
+     "away": "Once Caldas",
+     "away_key": "oncecaldas",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7977,
+     "date": "2026-10-21",
+     "hit": true,
+     "home": "Millonarios",
+     "home_key": "millonarios",
+     "league": "Liga BetPlay",
+     "match": "Millonarios vs Once Caldas",
+     "multi_source": true,
+     "price": 1.354,
+     "rule": "pfc_439097cb9bb700e9996c0b07",
+     "source": "oddspapi",
+     "stated": 0.7955
     }
    ],
    "records_truncated": false,
@@ -2200,11 +2237,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 293,
+   "hits": 295,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 292.9454842380396,
-   "multi_n": 84,
-   "n": 447,
+   "inv_price_sum": 294.8966849267562,
+   "multi_n": 87,
+   "n": 450,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -2896,9 +2933,12 @@
     "2026-10-18|Kayserispor vs Batman Petrolspor|match_over_25@v1",
     "2026-10-19|Bursaspor vs Pendikspor|match_over_25@v1",
     "2026-10-20|Huddersfield vs Peterborough|match_over_25@v1",
-    "2026-10-20|Barnet vs Swindon Town|match_over_25@v1"
+    "2026-10-20|Barnet vs Swindon Town|match_over_25@v1",
+    "2026-10-21|FC Bayern M\u00fcnchen vs Arsenal|match_over_25@v1",
+    "2026-10-21|Real Betis vs Feyenoord|match_over_25@v1",
+    "2026-10-21|Como vs Manchester United|match_over_25@v1"
    ],
-   "profit": 1.737,
+   "profit": 2.027,
    "records": [
     {
      "away": "Spartak Varna",
@@ -9046,6 +9086,57 @@
      "multi_source": true,
      "price": 1.68,
      "source": "theoddsapi"
+    },
+    {
+     "away": "Arsenal",
+     "away_key": "arsenal",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.5738,
+     "date": "2026-10-21",
+     "hit": true,
+     "home": "FC Bayern M\u00fcnchen",
+     "home_key": "bayernmunich",
+     "league": "Champions League",
+     "match": "FC Bayern M\u00fcnchen vs Arsenal",
+     "multi_source": true,
+     "price": 1.66,
+     "rule": "pfc_0ad08cd1b2e75a2c9051189e",
+     "source": "theoddsapi",
+     "stated": 0.5723
+    },
+    {
+     "away": "Feyenoord",
+     "away_key": "feyenoord",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.5611,
+     "date": "2026-10-21",
+     "hit": false,
+     "home": "Real Betis",
+     "home_key": "realbetis",
+     "league": "Champions League",
+     "match": "Real Betis vs Feyenoord",
+     "multi_source": true,
+     "price": 1.36,
+     "rule": "pfc_d94d447efe0742440e953722",
+     "source": "theoddsapi",
+     "stated": 0.5633
+    },
+    {
+     "away": "Manchester United",
+     "away_key": "manchesterunited",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.5611,
+     "date": "2026-10-21",
+     "hit": true,
+     "home": "Como",
+     "home_key": "como",
+     "league": "Champions League",
+     "match": "Como vs Manchester United",
+     "multi_source": true,
+     "price": 1.63,
+     "rule": "pfc_d94d447efe0742440e953722",
+     "source": "theoddsapi",
+     "stated": 0.5644
     }
    ],
    "records_truncated": false,
@@ -9530,6 +9621,38 @@
    "status": "PAPER",
    "status_reason": "first priced outcome recorded",
    "status_since": "2026-10-05"
+  },
+  "match_under_45@v1": {
+   "hits": 1,
+   "inv_price_sum": 0.49751243781094534,
+   "multi_n": 0,
+   "n": 1,
+   "processed": [
+    "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1"
+   ],
+   "profit": 1.01,
+   "records": [
+    {
+     "away": "Atlante",
+     "away_key": "atlante",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7753,
+     "date": "2026-10-21",
+     "hit": true,
+     "home": "Ju\u00e1rez",
+     "home_key": "juarez",
+     "league": "Liga MX",
+     "match": "Ju\u00e1rez vs Atlante",
+     "multi_source": false,
+     "price": 2.01,
+     "rule": "pfc_0b290b623e2a54ea7df3006c",
+     "source": "oddspapi",
+     "stated": 0.8
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-10-22"
   }
  },
  "version": 2

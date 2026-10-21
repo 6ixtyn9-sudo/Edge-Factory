@@ -1,0 +1,85 @@
+{
+  "added": 0,
+  "attempted": 2,
+  "attempted_fixtures": [
+    {
+      "away": "America de Cali",
+      "date": "2026-10-22",
+      "home": "Barranquilla",
+      "kickoff": "22-10, 01:30",
+      "league": "Colombia Copa Colombia"
+    },
+    {
+      "away": "St. Louis City",
+      "date": "2026-10-22",
+      "home": "Columbus Crew",
+      "kickoff": "22-10, 01:00",
+      "league": "USA US Open Cup"
+    }
+  ],
+  "candidate_fixtures": 38,
+  "captured_at": "2026-10-21T22:48:45+00:00",
+  "date": "2026-10-22",
+  "due_reasons": {
+    "close_at": 1,
+    "first_at": 1
+  },
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {},
+  "quoted_fixtures": [],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "priced": 22,
+    "retry_cooldown": 14
+  },
+  "skipped": [
+    "Sporting JAX|Louisville City FC (retry cooldown (6h after failed attempt))",
+    "Lincoln Red Imps|FC Twente (priced)",
+    "Jablonec|Brighton & Hove Albion (priced)",
+    "FK Jablonec|Brighton (priced)",
+    "Toluca|Tijuana (retry cooldown (6h after failed attempt))",
+    "C\u00f4ng an H\u00e0 N\u1ed9i|\u0110\u00f4ng \u00c1 Thanh Ho\u00e1 (retry cooldown (6h after failed attempt))",
+    "Santa Fe|Jaguares de C\u00f3rdoba (retry cooldown (6h after failed attempt))",
+    "Trabzonspor|Hearts (priced)",
+    "Ferencv\u00e1rosi|Torreense (priced)",
+    "Al Shahaniya|Al Sadd (retry cooldown (6h after failed attempt))",
+    "Omonia Nicosia|Benfica (retry cooldown (6h after failed attempt))",
+    "Union Saint-Gilloise|Hapoel Be'er Sheva (priced)",
+    "Al Ahli|Al Khaleej (priced)",
+    "Lillestr\u00f8m|Real Sociedad (priced)",
+    "Juventus|Rennes (retry cooldown (6h after failed attempt))",
+    "Nordsj\u00e6lland|CSKA Sofia (priced)",
+    "Olympiacos F.C.|Sparta Praha (retry cooldown (6h after failed attempt))",
+    "Celje|Salzburg (priced)",
+    "Palmeiras|Fluminense (priced)",
+    "Inter Club d'Escaldes|Universitatea Craiova (priced)",
+    "Pafos FC|Riga (priced)",
+    "FC Midtjylland|Sint-Truiden (priced)",
+    "Kairat|Panathinaikos (priced)",
+    "Kauno \u017dalgiris|Brann (priced)",
+    "Lech Pozna\u0144|Sunderland (priced)",
+    "Viktoria Plze\u0148|Levski Sofia (priced)",
+    "Borac Banja Luka|KuPS (retry cooldown (6h after failed attempt))",
+    "Getafe|Lugano (priced)",
+    "Puebla|Monterrey (retry cooldown (6h after failed attempt))",
+    "Sporting Braga|Gent (priced)",
+    "Llaneros|Deportivo Cali (retry cooldown (6h after failed attempt))",
+    "Atlas|Am\u00e9rica (retry cooldown (6h after failed attempt))",
+    "Be\u015fikta\u015f|Crystal Palace (retry cooldown (6h after failed attempt))",
+    "Monaco|SC Freiburg (priced)",
+    "Pachuca|Cruz Azul (retry cooldown (6h after failed attempt))",
+    "Ajax|Atalanta (priced)"
+  ],
+  "source": "theoddsapi",
+  "status": "empty",
+  "unmatched": [
+    "Barranquilla vs America de Cali (league not covered: Colombia Copa Colombia)",
+    "Columbus Crew vs St. Louis City (league not covered: USA US Open Cup)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Colombia Copa Colombia": 1,
+    "league not covered: USA US Open Cup": 1
+  }
+}

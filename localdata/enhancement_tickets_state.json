@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 86.19957599999998,
+  "bank": 110.67395099999999,
   "cycle_base": 100.0,
   "history": [
     {
@@ -359,70 +359,251 @@
       "close_pct": 86.19957599999998,
       "bank_pct_before_recovery": 114.5,
       "close_pct_before_recovery": 114.5
+    },
+    {
+      "date": "2026-10-21",
+      "staked_pct": 14.3125,
+      "returned_pct": 38.7869,
+      "accas": [
+        {
+          "odds": 2.71,
+          "won": true,
+          "stake_pct": 14.3125,
+          "returned_pct": 38.7869,
+          "legs": [
+            {
+              "match": "FC Bayern M\u00fcnchen vs Arsenal",
+              "pick": "over",
+              "odds": 1.66,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Como vs Manchester United",
+              "pick": "over",
+              "odds": 1.63,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 110.674,
+      "close_pct": 110.674
     }
   ],
   "events": [],
   "open_slips": [
     {
-      "date": "2026-10-21",
+      "date": "2026-10-22",
       "accas": [
         {
           "legs": [
             {
-              "match": "FC Bayern M\u00fcnchen vs Arsenal",
-              "pick": "over",
-              "prob": 0.5738,
-              "odds": 1.66,
+              "match": "Atlas vs Am\u00e9rica",
+              "pick": "under",
+              "prob": 0.8337,
+              "odds": 2.13,
               "result": null,
               "cohort_evidence": {
-                "rate": 0.5738,
-                "n": 1239,
-                "contract_id": "pfc_0ad08cd1b2e75a2c9051189e",
-                "as_of_exclusive": "2026-10-21",
-                "market": "match_over_25"
+                "rate": 0.8337,
+                "n": 403,
+                "contract_id": "pfc_4a1f2bb2278d13c8189148d0",
+                "as_of_exclusive": "2026-10-22",
+                "market": "match_under_45"
               },
-              "market": "match_over_25",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.740165297344956,
-              "floor_basis": "market",
-              "league": "Champions League",
-              "price_book": "1xBet",
-              "shadow": true,
+              "market": "match_under_45",
+              "label": "Match Under 4.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Liga MX",
+              "price_book": "hth",
+              "price_source": "oddspapi",
+              "price_at": "2026-10-21T22:24:26.775444+00:00",
+              "price_kickoff": "2026-10-22T01:00:00.000Z",
+              "price_provenance": null,
+              "shadow": false,
               "fixture_key": [
-                "2026-10-21",
-                "FC Bayern M\u00fcnchen",
-                "Arsenal"
+                "2026-10-22",
+                "Atlas",
+                "Am\u00e9rica"
               ]
             },
             {
-              "match": "Como vs Manchester United",
+              "match": "FK Jablonec vs Brighton",
               "pick": "over",
-              "prob": 0.5611,
-              "odds": 1.63,
+              "prob": 0.6127,
+              "odds": 1.5,
               "result": null,
               "cohort_evidence": {
-                "rate": 0.5611,
-                "n": 2005,
-                "contract_id": "pfc_d94d447efe0742440e953722",
-                "as_of_exclusive": "2026-10-21",
+                "rate": 0.6127,
+                "n": 142,
+                "contract_id": "pfc_5a9d3d3426ee7a4e63461d75",
+                "as_of_exclusive": "2026-10-22",
                 "market": "match_over_25"
               },
               "market": "match_over_25",
               "label": "Match Over 2.5 Goals",
-              "floor": 1.740165297344956,
-              "floor_basis": "market",
-              "league": "Champions League",
-              "price_book": "1xBet",
-              "shadow": true,
+              "floor": 1.7379988092688428,
+              "floor_basis": "inherited",
+              "league": "International,Conference League",
+              "price_book": "William Hill",
+              "price_source": "theoddsapi",
+              "price_at": "2026-10-21T22:23:58.523861+00:00",
+              "price_kickoff": "2026-10-22T16:45:00Z",
+              "price_provenance": null,
+              "shadow": false,
               "fixture_key": [
-                "2026-10-21",
-                "Como",
-                "Manchester United"
+                "2026-10-22",
+                "FK Jablonec",
+                "Brighton"
               ]
             }
           ],
-          "odds": 2.71,
-          "stake_pct": 14.3125,
+          "odds": 3.19,
+          "stake_pct": 9.2228,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
+              "match": "Pachuca vs Cruz Azul",
+              "pick": "under",
+              "prob": 0.8337,
+              "odds": 2.13,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.8337,
+                "n": 403,
+                "contract_id": "pfc_4a1f2bb2278d13c8189148d0",
+                "as_of_exclusive": "2026-10-22",
+                "market": "match_under_45"
+              },
+              "market": "match_under_45",
+              "label": "Match Under 4.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Liga MX",
+              "price_book": "hth",
+              "price_source": "oddspapi",
+              "price_at": "2026-10-21T22:24:37.340582+00:00",
+              "price_kickoff": "2026-10-22T03:10:00.000Z",
+              "price_provenance": null,
+              "shadow": false,
+              "fixture_key": [
+                "2026-10-22",
+                "Pachuca",
+                "Cruz Azul"
+              ]
+            },
+            {
+              "match": "Palmeiras vs Fluminense",
+              "pick": "over",
+              "prob": 0.6216,
+              "odds": 2.37,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.6216,
+                "n": 510,
+                "contract_id": "pfc_0b290b623e2a54ea7df3006c",
+                "as_of_exclusive": "2026-10-22",
+                "market": "match_over_25"
+              },
+              "market": "match_over_25",
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7379988092688428,
+              "floor_basis": "market",
+              "league": "Copa Libertadores",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "price_at": "2026-10-21T22:24:01.797816+00:00",
+              "price_kickoff": "2026-10-22T00:30:00Z",
+              "price_provenance": null,
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-22",
+                "Palmeiras",
+                "Fluminense"
+              ]
+            }
+          ],
+          "odds": 5.05,
+          "stake_pct": 9.2228,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
+              "match": "Puebla vs Monterrey",
+              "pick": "under",
+              "prob": 0.7959,
+              "odds": 1.89,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.7959,
+                "n": 1063,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-22",
+                "market": "match_under_45"
+              },
+              "market": "match_under_45",
+              "label": "Match Under 4.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Liga MX",
+              "price_book": "hth",
+              "price_source": "oddspapi",
+              "price_at": "2026-10-21T22:24:16.364749+00:00",
+              "price_kickoff": "2026-10-22T01:00:00.000Z",
+              "price_provenance": null,
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-22",
+                "Puebla",
+                "Monterrey"
+              ]
+            },
+            {
+              "match": "Barranquilla vs America de Cali",
+              "pick": "away",
+              "prob": 0.6545,
+              "odds": 1.741,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.6545,
+                "n": 793,
+                "contract_id": "pfc_1607fec83282d02c5254c2bf",
+                "as_of_exclusive": "2026-10-22",
+                "market": "away_under_25"
+              },
+              "market": "away_under_25",
+              "label": "Away Team Under 2.5 Goals",
+              "floor": null,
+              "floor_basis": "none",
+              "league": "Colombia Copa Colombia",
+              "price_book": "bodog.eu",
+              "price_source": "oddspapi",
+              "price_at": "2026-10-21T22:24:06.125067+00:00",
+              "price_kickoff": "2026-10-22T00:30:00.000Z",
+              "price_provenance": null,
+              "shadow": false,
+              "fixture_key": [
+                "2026-10-22",
+                "Barranquilla",
+                "America de Cali"
+              ]
+            }
+          ],
+          "odds": 3.29,
+          "stake_pct": 9.2228,
           "results": [
             null,
             null
@@ -430,7 +611,7 @@
           "won": null
         }
       ],
-      "staked_pct": 14.3125
+      "staked_pct": 27.6684
     }
   ],
   "frozen_by_date": {
@@ -491,5 +672,1266 @@
     "new_settlements_executed": 0,
     "resized_stakes": 0,
     "frozen_timestamps": "not recorded in published snapshots; explicitly unknown"
+  },
+  "enh_floor_table": {
+    "as_of": "2026-10-22",
+    "margin": 0.1,
+    "min_n": 30,
+    "floors": {
+      "away_over_05": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_under_15": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_under_25": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_under_35": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_no": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_yes": {
+        "floor": 1.85,
+        "basis": "inherited"
+      },
+      "goal_range_2_3": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "goal_range_4_6": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "home_over_05": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "home_under_15": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "home_under_25": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "home_under_35": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "match_over_15": {
+        "floor": 1.6211184774182765,
+        "basis": "market"
+      },
+      "match_over_25": {
+        "floor": 1.7379988092688428,
+        "basis": "market"
+      },
+      "match_over_35": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_45": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "match_under_45": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_over_05|Guatemala Liga Nacional": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_under_15|Mexico,Liga Mx Apertura": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_under_15|Netherlands Eredivisie": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_under_15|United States: Major League Soccer": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_under_25|World UEFA Champions League": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_under_25|World UEFA Nations League": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "away_under_35|World UEFA Nations League": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_no|Germany,Bundesliga": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_no|Kosovo: Superliga": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_no|Norway 1. Division": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_no|Norway,1. Division": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_no|Spain,Laliga": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_no|Spain,Liga F": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_no|World UEFA Champions League": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_no|World UEFA Europa Conference League": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "btts_yes|Armenia: Premier League": {
+        "floor": 1.85,
+        "basis": "inherited"
+      },
+      "btts_yes|Austria Bundesliga": {
+        "floor": 1.85,
+        "basis": "inherited"
+      },
+      "btts_yes|Netherlands: Eredivisie": {
+        "floor": 1.85,
+        "basis": "inherited"
+      },
+      "btts_yes|Scotland Premiership": {
+        "floor": 1.85,
+        "basis": "inherited"
+      },
+      "btts_yes|Singapore,Premier League": {
+        "floor": 1.85,
+        "basis": "inherited"
+      },
+      "btts_yes|World Friendlies Clubs": {
+        "floor": 1.85,
+        "basis": "inherited"
+      },
+      "btts_yes|World UEFA Champions League": {
+        "floor": 1.85,
+        "basis": "inherited"
+      },
+      "btts_yes|World UEFA Europa Conference League": {
+        "floor": 1.85,
+        "basis": "inherited"
+      },
+      "home_over_05|Guatemala: Liga Nacional": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "home_over_05|USA,Major League Soccer": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "home_under_15|Japan J-League Cup": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "home_under_15|World UEFA Champions League": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "home_under_25|World UEFA Champions League": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "match_over_15|Algeria: Ligue 1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Be1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Bg1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Brazil Serie C": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Brazil,Serie A": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Ch1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|De1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Denmark,1. Division": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Ee1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Egypt,Premier League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|England Championship": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|England,Championship": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|England,Premier League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Es1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Fr1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|France Ligue 2": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|France,Ligue 1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Germany,2. Bundesliga": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|International,Champions League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|International,Club Friendlies": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|International,Conference League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|International,Copa Sudamericana Knockout Stage": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Iran: Persian Gulf Pro League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Japan,J. League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Liga BetPlay": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Nl2": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Norway 1. Division": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Pt1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Saudi Arabia,Saudi Pro League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Sc1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Spain Primera Divisi\u00f3n Femenina": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Tr2": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Ua1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|Wl1": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|World CONCACAF Nations League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|World UEFA Champions League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|World UEFA Nations League": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_15|unattributed": {
+        "floor": 1.6211184774182765,
+        "basis": "inherited"
+      },
+      "match_over_25|Ae1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Algeria Ligue 1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Ar1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Argentina Primera Nacional": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Argentina: Liga Profesional Argentina": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Austria Bundesliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Austria Regionalliga - South": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Austria,Bundesliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Ba1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Be1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Be2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Belgium: Jupiler Pro League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Bg1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Bosnia: Premijer Liga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Br3": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|BrW": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Brazil,Serie A": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Brazil,Serie B": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Brazil: Serie A": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Bulgaria,First Professional League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Bundesliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|CH": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|CLW": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|CNL": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Ch1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Champions League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Chile,Primera Division": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|China: Super League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Cn1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Colombia,Primera A Apertura Finalizacion": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Colombia: Primera A": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Croatia,Hnl": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Czech Republic,1. Liga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Czech-Republic Czech Liga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|DFB": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|De1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|De2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|De3": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Denmark Superliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Denmark,1. Division": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Denmark,Superligaen": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Denmark: Superliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Dk1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|ECL": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|EFL": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|EPL": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Ee1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Egypt,Premier League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England Championship": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England Premier League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England,Championship": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England,Efl Cup": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England,Fa Cup": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England,League One": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England,League Two": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England,National League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England,National League South": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England,Premier League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England,Wsl": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England: League One": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|England: National League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Es1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Es2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Estonia Meistriliiga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Estonia: Meistriliiga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Finland,Veikkausliiga Championship Round": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Fr1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|France Ligue 1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|France Ligue 3": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|France,Ligue 1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Germany 2. Bundesliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Germany 3. Liga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Germany Bundesliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Germany,Bundesliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Gr1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Greece,Super League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Hr1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Hu1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Hungary NB I": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Hungary,Nb I": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Hungary,Nb Ii": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Iceland,Besta Deildin Championship Round": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Ie1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Il1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Champions League Playoff Round": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Conference League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Conference League Playoff Round": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Copa Libertadores Knockout Stage": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Copa Sudamericana Knockout Stage": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Europa League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Europa League Playoff Round": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Friendlies": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Uefa Nations League A Grp. 2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Uefa Nations League A Grp. 3": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Uefa Nations League A Grp. 4": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Uefa Nations League C Grp. 1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Uefa Nations League C Grp. 3": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|International,Uefa Nations League D Grp. 2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Ireland Premier Division": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Is1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Israel,Ligat Haal": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|It1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|It2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Italy Serie A": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Italy,Coppa Italia": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Italy,Serie A": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Italy,Serie C Grp. A": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Italy,Serie C Grp. B": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Italy,Serie C Grp. C": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Japan,J. League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Japan: J1 League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Jp1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Kr1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Kr2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|L1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|L2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Latvia,Virsliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Mexico,Liga Mx Apertura": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Mx1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|MxW": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|NCQ": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|NI1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|NL": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|NLn": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|NLs": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Netherlands Eerste Divisie": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Netherlands Eredivisie": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Netherlands: Eredivisie": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Nl1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Nl2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Nl3": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|No1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|No2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Norway 1. Division": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Norway,1. Division": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Norway,Eliteserien": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Pe1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Pl1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Pl2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Portugal Primeira Liga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Portugal,Liga Portugal": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Pt1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Qa1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Ro1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Romania,Superliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Romania: Liga I": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Rs1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Russia,Premier League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Sa1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Saudi Arabia,Saudi Pro League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Saudi Arabia: Pro League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Sc1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Sc3": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Scotland,Championship": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Scotland,League One": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Scotland,Premiership": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Se1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Slovenia,Prva Liga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|South Korea,K-league 1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|South Korea,K-league 2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Spain La Liga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Spain Primera Divisi\u00f3n RFEF - Group 2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Spain,Laliga": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Spain,Laliga2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Sweden,Allsvenskan": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Sweden: Allsvenskan": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Switzerland Schweizer Cup": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Switzerland,Super League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Thailand,Thai League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Tn1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Tr1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Tr2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Turkey 1. Lig": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Turkey S\u00fcper Lig": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Turkey,1. Lig": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Turkey,Super Lig": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Turkey: S\u00fcper Lig": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|UCL": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|UEL": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|UNL": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|USA,Major League Soccer": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|USA,Usl Championship Eastern Conference": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|United States: Major League Soccer": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|United States: USL Championship": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Uruguay,Liga Auf Clausura": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Us1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Us2": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Ve1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|WSL": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Wales Premier League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Wales,Premier League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|Wl1": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|World UEFA Champions League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|World UEFA Europa Conference League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|World UEFA Europa League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|World UEFA Nations League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|World: UEFA Europa League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|World: UEFA Nations League": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_25|unattributed": {
+        "floor": 1.7379988092688428,
+        "basis": "inherited"
+      },
+      "match_over_35|Algeria Ligue 1": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Argentina Liga Profesional Argentina": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Bg1": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Br1": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|BrW": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Brazil Serie B": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Brazil,Serie A": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Canada,Premier League": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Costa Rica,Primera Division Apertura": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|England,Championship": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|England: National League - South": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Es2": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Gr1": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|International,Champions League": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|International,Copa Sudamericana Knockout Stage": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|It2": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Italy Serie A": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Portugal,Liga Portugal": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Romania: Liga I": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Rs1": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Sweden,Allsvenskan": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Sweden: Allsvenskan": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|Wl1": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_35|World Friendlies Women": {
+        "floor": 3.3,
+        "basis": "inherited"
+      },
+      "match_over_45|World CONCACAF Nations League": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "match_over_45|World Friendlies": {
+        "floor": null,
+        "basis": "inherited"
+      },
+      "match_under_45|Liga MX": {
+        "floor": null,
+        "basis": "inherited"
+      }
+    },
+    "counts": {
+      "market": 17,
+      "league": 292,
+      "team": 0,
+      "inherited": 307,
+      "market_basis": 2,
+      "league_basis": 0,
+      "team_basis": 0,
+      "team_slices": 987
+    },
+    "coverage": {
+      "records": 562,
+      "priced": 562,
+      "with_league": 551,
+      "with_keys": 551,
+      "league_pct": 98.04270462633453,
+      "keys_pct": 98.04270462633453
+    }
   }
 }

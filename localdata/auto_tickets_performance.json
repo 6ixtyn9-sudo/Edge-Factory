@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-21T22:53:57",
+  "generated_at": "2026-10-22T00:58:41",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 161.22299900000013,
-  "multiple": 1.6122299900000012,
+  "bank_pct": 163.23817900000014,
+  "multiple": 1.6323817900000015,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 52,
+  "bet_days": 53,
   "accas": {
-    "wins": 62,
-    "losses": 45
+    "wins": 63,
+    "losses": 46
   },
-  "open_slips": [
-    {
-      "date": "2026-10-21",
-      "staked_pct": 40.3057
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -1055,6 +1050,55 @@
       ],
       "bank_pct": 161.223,
       "close_pct": 161.2229
+    },
+    {
+      "date": "2026-10-21",
+      "staked_pct": 40.3057,
+      "returned_pct": 42.3209,
+      "accas": [
+        {
+          "odds": 2.01,
+          "won": false,
+          "stake_pct": 20.1529,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Sporting JAX vs Louisville City",
+              "pick": "AWAY",
+              "odds": 1.37,
+              "result": null
+            },
+            {
+              "match": "V-Varen Nagasaki vs Sanfrecce Hiroshima",
+              "pick": "AWAY",
+              "odds": 1.47,
+              "result": "loss"
+            }
+          ]
+        },
+        {
+          "odds": 2.1,
+          "won": true,
+          "stake_pct": 20.1528,
+          "returned_pct": 42.3209,
+          "legs": [
+            {
+              "match": "Sogndal vs Raufoss",
+              "pick": "HOME",
+              "odds": 1.44,
+              "result": "win"
+            },
+            {
+              "match": "Vegalta Sendai vs Imabari",
+              "pick": "HOME",
+              "odds": 1.46,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 163.2382,
+      "close_pct": 163.2381
     }
   ]
 }
