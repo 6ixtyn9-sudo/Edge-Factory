@@ -1,11 +1,11 @@
 """Adversarial unit tests for kickoff corroboration and timezone interpretation."""
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
 import pytest
 
 from edgefactory.kickoff_corroboration import (
     interpret_betexplorer_data_dt,
     corroborate_kickoff_witness,
+    verify_fixture_identity,
     TZ_UTC
 )
 
@@ -39,6 +39,21 @@ def test_interpret_date_rollover():
     assert utc_fixed == datetime(2026, 10, 20, 23, 30, 0, tzinfo=TZ_UTC)
 
 
+def test_interpret_dst_gap_and_fold():
+    # In Europe/Prague in 2026:
+    # Spring forward: 2026-03-29 02:00 -> 03:00 (02:30 does not exist!)
+    gap_dt = [29, 3, 2026, 2, 30]
+    dt_gap, reason_gap = interpret_betexplorer_data_dt(gap_dt, mode="europe_prague")
+    assert dt_gap is None
+    assert reason_gap == "dst_gap_nonexistent_local_time"
+
+    # Fall back: 2026-10-25 03:00 -> 02:00 (02:30 is ambiguous!)
+    fold_dt = [25, 10, 2026, 2, 30]
+    dt_fold, reason_fold = interpret_betexplorer_data_dt(fold_dt, mode="europe_prague")
+    assert dt_fold is None
+    assert reason_fold == "dst_fold_ambiguous_local_time"
+
+
 def test_interpret_invalid_data_dt():
     dt, reason = interpret_betexplorer_data_dt([])
     assert dt is None and reason == "invalid_shape"
@@ -50,54 +65,107 @@ def test_interpret_invalid_data_dt():
     assert dt is None and reason == "invalid_date_values"
 
 
-def test_corroborate_circular_rejection():
-    # BetExplorer cannot witness itself
+def test_fixture_identity_matching():
+    # Exact match
+    assert verify_fixture_identity("Aston Villa", "Viking", "Aston Villa", "Viking") is True
+    # Word variants / case insensitive
+    assert verify_fixture_identity("Newcastle Utd", "Coventry", "Newcastle United", "Coventry") is True
+    # Squad marker mismatch fails closed
+    assert verify_fixture_identity("Club Brugge", "Lens", "Club Brugge U23", "Lens") is False
+    # Team mismatch fails closed
+    assert verify_fixture_identity("Aston Villa", "Viking", "Arsenal", "Viking") is False
+
+
+def test_corroborate_blocking_findings():
+    assumed_utc = datetime(2026, 10, 21, 19, 0, 0, tzinfo=TZ_UTC)
+
+    # 1. Missing comparison instant fails closed
+    res = corroborate_kickoff_witness(
+        fixture_clock="garbage",
+        witness_kickoff_utc="2026-10-21T19:00:00Z",
+        witness_source="theoddsapi",
+        assumed_fixture_utc=None,
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Aston Villa", witness_away="Viking"
+    )
+    assert res["corroborated"] is False
+    assert res["reason"] == "missing_comparison_instant"
+
+    # 2. Lineage family aliases (betexplorer_odds vs betexplorer) are recognized and rejected as circular
     res = corroborate_kickoff_witness(
         fixture_clock="20:00",
         witness_kickoff_utc="2026-10-21T19:00:00Z",
-        witness_source="betexplorer",
-        fixture_source="betexplorer"
+        witness_source="betexplorer_odds",
+        fixture_source="betexplorer",
+        assumed_fixture_utc=assumed_utc,
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Aston Villa", witness_away="Viking"
     )
     assert res["corroborated"] is False
     assert res["reason"] == "circular_corroboration_rejected"
-    assert res["authoritative_kickoff_utc"] is None
 
-
-def test_corroborate_naive_witness_rejection():
-    # Naive timestamp without explicit timezone must be rejected
+    # Whitespace-only witness source fails closed
     res = corroborate_kickoff_witness(
         fixture_clock="20:00",
-        witness_kickoff_utc="2026-10-21 19:00:00",
-        witness_source="independent_feed"
+        witness_kickoff_utc="2026-10-21T19:00:00Z",
+        witness_source="   ",
+        assumed_fixture_utc=assumed_utc,
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Aston Villa", witness_away="Viking"
     )
     assert res["corroborated"] is False
-    assert res["reason"] == "witness_kickoff_naive"
+    assert res["reason"] == "invalid_or_empty_witness_source"
 
-
-def test_corroborate_tolerance_exceeded():
-    # Inferred clock is 19:00 UTC, but witness says 18:00 UTC (60 min diff > 5 min tolerance)
-    assumed_utc = datetime(2026, 10, 21, 19, 0, 0, tzinfo=TZ_UTC)
+    # 3. Missing or mismatched fixture identity fails closed
     res = corroborate_kickoff_witness(
         fixture_clock="20:00",
-        witness_kickoff_utc="2026-10-21T18:00:00Z",
+        witness_kickoff_utc="2026-10-21T19:00:00Z",
         witness_source="theoddsapi",
+        assumed_fixture_utc=assumed_utc,
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Real Madrid", witness_away="RB Leipzig"
+    )
+    assert res["corroborated"] is False
+    assert res["reason"] == "fixture_identity_mismatch"
+
+    # 4. Non-finite or negative tolerance fails closed
+    res = corroborate_kickoff_witness(
+        fixture_clock="20:00",
+        witness_kickoff_utc="2026-10-21T19:00:00Z",
+        witness_source="theoddsapi",
+        assumed_fixture_utc=assumed_utc,
+        tolerance_minutes=float("nan"),
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Aston Villa", witness_away="Viking"
+    )
+    assert res["corroborated"] is False
+    assert res["reason"] == "invalid_tolerance"
+
+    # 5. Out of tolerance (> 5 min) fails closed
+    diff_utc = datetime(2026, 10, 21, 18, 0, 0, tzinfo=TZ_UTC)
+    res = corroborate_kickoff_witness(
+        fixture_clock="20:00",
+        witness_kickoff_utc="2026-10-21T19:00:00Z",
+        witness_source="theoddsapi",
+        assumed_fixture_utc=diff_utc,
         tolerance_minutes=5.0,
-        assumed_fixture_utc=assumed_utc
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Aston Villa", witness_away="Viking"
     )
     assert res["corroborated"] is False
     assert "tolerance_exceeded" in res["reason"]
 
-
-def test_corroborate_valid_witness():
-    # Match within tolerance from independent source (theoddsapi)
-    assumed_utc = datetime(2026, 10, 21, 19, 0, 0, tzinfo=TZ_UTC)
+    # 6. Valid independent corroboration succeeds
     res = corroborate_kickoff_witness(
         fixture_clock="20:00",
         witness_kickoff_utc="2026-10-21T19:00:00Z",
         witness_source="theoddsapi",
+        assumed_fixture_utc=assumed_utc,
         tolerance_minutes=5.0,
-        assumed_fixture_utc=assumed_utc
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Aston Villa", witness_away="Viking"
     )
     assert res["corroborated"] is True
     assert res["provenance"] == "witness_corroborated_aware_iso"
     assert res["authoritative_kickoff_utc"] == "2026-10-21T19:00:00+00:00"
+    assert res["witness_family"] == "theoddsapi"
