@@ -1098,8 +1098,8 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             for c in candidates:
                 market = c["market"]
                 # Price this candidate in a throwaway probe without mutating the
-                # real pick. attach_enhancement_price reads only home/away and
-                # recommended_enhancement.
+                # real pick. Keep fixture/as-of timestamps on the probe so
+                # the secondary receipt is checked for this actual decision.
                 probe = dict(pick)
                 probe["recommended_enhancement"] = market
                 attach_enhancement_price(probe, prices_index)
@@ -7431,6 +7431,10 @@ def main():
 
             # One exact cohort supplies both the visible statistics and priced
             # enhancement competition. No second warehouse scan for display.
+            # The same real run-as-of is serialized by operational filtering
+            # below. Make it available BEFORE pricing candidate probes too;
+            # never use a bookmaker clock or a later wall-clock to admit them.
+            p["as_of"] = as_of.isoformat(timespec="seconds")
             enh = compute_dynamic_enhancement(con, p, prices_index,
                                               cohort_cache=cohort_cache)
             p.update(enh)

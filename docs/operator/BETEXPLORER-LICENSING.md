@@ -133,7 +133,8 @@ What was built — the "click more" the page shows, made explicit:
   offers (Form, O/U, HT/FT, Top scorers; Overall/Home/Away) are each a
   separate AJAX request and are NOT fetched; the last-results selector
   (5/10/15/all) also stays at what the page serves (5 per team).
-- Consumption (Stage 1, operator directive 2026-10-12): the retained detail
+- Consumption (Stage 1, operator directive 2026-10-12; historical behavior,
+  superseded by the Phase-3 admission checks below): the retained detail
   now prices the **enhancement board** — `enh_pricing._accumulate_betexplorer`
   reads this ledger for the day and merges it into the same local price index
   the board and the enhancement slip are priced from. Read: the `ou` tabs'
@@ -156,6 +157,60 @@ parser, and one read-only fetch of the same public match page to confirm what
 the standings block serves and what "Show full table" does. Nothing was
 bypassed: no cookie, redirect, age-gate or challenge handling was added or
 attempted.
+
+## Phase 3 — verified secondary quote admission (2026-10-21)
+
+This changes the **existing live enhancement pricing and execution path**, not a
+new shadow/miner/lane. Deployment still requires merging the implementation.
+`EDGE_FACTORY_ENH_BOARD` remains the existing switch; main and ENH are not paused.
+No new endpoint, capture budget, retry policy, paid source or workflow is added.
+
+- Fresh captures use the raw five-integer page `data_dt` preserved by PR123.
+  Missing historical tuples stay missing. Neither the container/pick date nor a
+  bookmaker's timezone-free `created` clock establishes historical availability.
+- `kickoff_corroboration.load_schedule_witnesses` and
+  `resolve_schedule_witness` now serve BOTH the read-only audit and existing
+  `enh_pricing` reader. Both page-clock hypotheses remain hypotheses, promoted
+  only by independent, oriented fixture-matched provider observations. Conflicting
+  pre-cutoff schedules fail closed. Capture must precede 09:00 Johannesburg and
+  kickoff; the resolved kickoff must still be ahead of the cutoff.
+- Supported live markets remain O/U, BTTS and side-correct double chance. Exact
+  complete column semantics, full row width, finite odds >1, actual nonblank
+  bookmaker and retained valid line are required. AH/DNB/1X2 tab data remains
+  evidence-only here; no new probability/settlement contract is fabricated.
+- Admission is checked against the pick's aware kickoff and real run-as-of,
+  stamped **before** candidate pricing. Capture cannot be after that as-of;
+  schedule witnesses must also precede it. The BE cache freshness policy is reused
+  (`EDGE_FACTORY_BE_CACHE_FRESHNESS_H`, existing default 24h), and rechecked at
+  actual ticket execution time. Bookmaker creation timestamps do not set freshness.
+- Each selected quote carries `enhancement_price_provenance`: ledger SHA256,
+  raw page tuple/clock, resolved schedule and original archive/CSV-row hash
+  receipts, exact market/selection/book/price/capture, and the original comparison
+  row with hash and row/column indices. This evidence survives pool/recipe planning
+  as `price_provenance` on the slip leg. These are reproducibility receipts, not
+  cryptographic signatures proving a publisher's honesty.
+- The actual `enhancement_legs(..., execution_safe=True)` door revalidates the
+  receipt, including persisted rows and both registered BE names. A legacy
+  aggregate, source label, old price or a `corroborated` boolean alone is not enough.
+  Other source policies, realized-cohort n>=100, MIN_LEG_ODDS=1.30, staking,
+  freeze/settlement rules and both enabled lanes remain intact.
+- TheOddsAPI now writes provider clock/event/participant origins. Only a real
+  aware provider `commence_time` gets `kickoff_origin=provider_commence_time`.
+  Independent witness use additionally requires provider participants, event ID
+  and matching preserved raw commence time. Rewritten older archive rows retain
+  blank provenance; fallback/naive/malformed clocks never become independent proof.
+
+Validation is offline: the integration fixture drives the actual BE detail writer,
+TheOddsAPI row producer and monthly gzip writer, shared witness engine, existing
+price attachment, actual live gate and ticket recipe evidence carry. All fixture
+clocks/cohorts are explicitly synthetic. **No genuine new scrape, production
+workflow dispatch, historical backfill, ticket generation or financial mutation
+was performed by this implementation session.** Sandbox outbound restrictions do
+not permit the provider hosts. A real future own-card snapshot is still required
+before reporting any new eligible quote or coverage gain; this is not evidence of
+profitability. The read-only audit's `live_quote_activation=False` remains correct:
+that tool never activates anything, even though the production reader can admit
+verified quotes after deployment.
 
 ## Livesport replies
 

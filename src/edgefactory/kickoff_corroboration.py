@@ -20,14 +20,21 @@ conversions without explicit fold/gap evidence fail closed as ambiguous.
 """
 from __future__ import annotations
 
+import csv
+import gzip
+import hashlib
+import io
+import json
 import math
 import re
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timezone
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from edgefactory.identity import source_team_key, squad_marker_mismatch
 
 TZ_UTC = timezone.utc
+TZ_SAST = ZoneInfo("Africa/Johannesburg")
 TZ_PRAGUE = ZoneInfo("Europe/Prague")
 TZ_FIXED_UTC_PLUS_1 = timezone(datetime.fromisoformat("2026-01-01T01:00:00+01:00").utcoffset())
 
@@ -256,4 +263,187 @@ def corroborate_kickoff_witness(
     out["authoritative_kickoff_utc"] = w_dt.isoformat()
     out["provenance"] = "witness_corroborated_aware_iso"
     out["reason"] = f"witnessed_by_{wit_fam}"
+    return out
+
+
+def parse_iso_utc(ts: object) -> datetime | None:
+    """Parse an ISO-8601 string into an aware UTC datetime, or None."""
+    if not ts or not isinstance(ts, str):
+        return None
+    try:
+        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            return None
+        return dt.astimezone(TZ_UTC)
+    except Exception:
+        return None
+
+
+def decision_cutoff_utc(day: str) -> datetime | None:
+    """The explicit 09:00 Johannesburg decision on the ledger's decision day."""
+    try:
+        return datetime.combine(date.fromisoformat(day), time(9), TZ_SAST).astimezone(TZ_UTC)
+    except (TypeError, ValueError):
+        return None
+
+
+def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[dict, list[dict]]:
+    """Read existing provider archives, never cards, warehouse labels or the network.
+
+    OddsPapi kickoff is provider startTime (oddspapi_odds.parse_odds_response).
+    Legacy TheOddsAPI rows may inherit pick kickoff: require an explicit
+    provider_commence_time origin before treating those rows as witnesses.
+    Receipts identify the immutable archive bytes and original CSV row.
+    """
+    wanted = {(source_team_key(f.get("home")), source_team_key(f.get("away")))
+              for f in fixtures}
+    by_pair: dict[tuple, list[dict]] = {}
+    receipts = []
+    team_keys: dict[str, str] = {}
+    for provider in ("oddspapi", "theoddsapi"):
+        for path in sorted(localdata.glob(f"{provider}_odds_*.csv.gz")):
+            # Bind the digest and parser to the SAME bytes, even if a capture
+            # atomically replaces this archive while the audit is running.
+            archive_bytes = path.read_bytes()
+            receipt = {"file": path.name, "sha256": hashlib.sha256(archive_bytes).hexdigest(),
+                       "source_family": provider, "rows_scanned": 0,
+                       "matched_identity_rows": 0, "witness_records": 0,
+                       "rejections": {}}
+            receipts.append(receipt)
+            seen = set()
+            with gzip.open(io.BytesIO(archive_bytes), "rt", newline="") as handle:
+                for ordinal, row in enumerate(csv.DictReader(handle), 1):
+                    receipt["rows_scanned"] += 1
+                    home, away = row.get("home", ""), row.get("away", "")
+                    for name in (home, away):
+                        if name not in team_keys:
+                            team_keys[name] = source_team_key(name)
+                    pair = (team_keys[home], team_keys[away])
+                    if not all(pair) or pair not in wanted:
+                        continue
+                    receipt["matched_identity_rows"] += 1
+                    reason = None
+                    if normalize_source_family(row.get("source")) != provider:
+                        reason = "archive_source_mismatch"
+                    elif row.get("source_type") != "odds" or row.get("sport") != "soccer":
+                        reason = "unsupported_record_contract"
+                    elif provider == "theoddsapi" and row.get("kickoff_origin") != "provider_commence_time":
+                        reason = "provider_kickoff_origin_unproven"
+                    if provider == "theoddsapi" and reason is None:
+                        # A provider clock with pick-derived participants is not
+                        # an independently identified event. Retain both origins.
+                        if (row.get("fixture_identity_origin") != "provider_participants"
+                                or not str(row.get("provider_event_id") or "").strip()
+                                or parse_iso_utc(row.get("provider_commence_time")) != parse_iso_utc(row.get("kickoff"))):
+                            reason = "provider_event_identity_or_clock_unproven"
+                    kickoff = parse_iso_utc(row.get("kickoff"))
+                    observed = parse_iso_utc(row.get("captured_at"))
+                    if reason is None and (kickoff is None or observed is None):
+                        reason = "invalid_witness_timestamp"
+                    if reason:
+                        counts = receipt["rejections"]
+                        counts[reason] = counts.get(reason, 0) + 1
+                        continue
+                    key = (home, away, kickoff, observed)
+                    if key in seen:
+                        continue  # outcomes/books repeat the same schedule observation
+                    seen.add(key)
+                    record = {"source": provider, "home": home, "away": away,
+                              "league": row.get("league"),
+                              "kickoff_utc": kickoff.isoformat(),
+                              "observed_at_utc": observed.isoformat(),
+                              "file": path.name, "file_sha256": receipt["sha256"],
+                              "csv_data_row": ordinal,
+                              "row_sha256": hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest(),
+                              "kickoff_origin": ("provider_startTime" if provider == "oddspapi"
+                                                 else "provider_commence_time"),
+                              "fixture_identity_origin": row.get("fixture_identity_origin"),
+                              "provider_event_id": row.get("provider_event_id"),
+                              "provider_commence_time": row.get("provider_commence_time")}
+                    by_pair.setdefault(pair, []).append(record)
+                    receipt["witness_records"] += 1
+    return by_pair, receipts
+
+
+def resolve_schedule_witness(fixture: dict, cutoff: datetime, witnesses: dict) -> dict:
+    """Corroborate preserved page evidence against independent, as-of witnesses.
+
+    Try BOTH documented interpretations without selecting a site-wide default.
+    Legacy container/pick dates are never substituted for the missing page date.
+    Any conflicting same-fixture pre-cutoff schedule records leave it unresolved.
+    A witness found after cutoff cannot retroactively establish replay eligibility.
+    """
+    out = {"status": "unresolved", "reason": "missing_raw_page_datetime",
+           "kickoff_utc": None, "provenance": None, "witnesses": [],
+           "interpretations": [], "late_witness_records": 0}
+    raw = fixture.get("data_dt")
+    if not isinstance(raw, (list, tuple)) or len(raw) != 5 or any(type(v) is not int for v in raw):
+        return out
+    dd, mm, year, hour, minute = raw
+    try:
+        raw_date = date(year, mm, dd).isoformat()
+    except (ValueError, OverflowError):
+        out["reason"] = "invalid_raw_page_datetime"
+        return out
+    if fixture.get("kickoff_date") not in (None, raw_date):
+        out["reason"] = "raw_page_date_conflict"
+        return out
+    if fixture.get("kickoff") != f"{hour:02d}:{minute:02d}":
+        out["reason"] = "raw_page_clock_conflict"
+        return out
+    interpretations = []
+    for mode in ("fixed_utc_plus_1", "europe_prague"):
+        instant, label = interpret_betexplorer_data_dt(raw, mode=mode)
+        if instant is not None:
+            interpretations.append((instant, label))
+    if not interpretations:
+        out["reason"] = "invalid_raw_page_datetime"
+        return out
+    pair = (source_team_key(fixture.get("home")), source_team_key(fixture.get("away")))
+    matches = []
+    for witness in witnesses.get(pair, []):
+        if not verify_fixture_identity(fixture.get("home"), fixture.get("away"),
+                                       witness["home"], witness["away"]):
+            continue
+        kickoff = parse_iso_utc(witness["kickoff_utc"])
+        observed = parse_iso_utc(witness["observed_at_utc"])
+        # Separate repeated fixtures on other dates; not a team-only join.
+        if kickoff is None or abs((kickoff.date() - date.fromisoformat(raw_date)).days) > 1:
+            continue
+        if observed is None or observed >= kickoff:
+            continue
+        if observed >= cutoff:
+            out["late_witness_records"] += 1
+            continue
+        matches.append(witness)
+    if not matches:
+        out["reason"] = "no_independent_pre_cutoff_witness"
+        return out
+    # Never choose whichever provider/observation happens to fit our hypothesis.
+    if len({w["kickoff_utc"] for w in matches}) != 1:
+        out["reason"] = "conflicting_schedule_witnesses"
+        out["witnesses"] = matches
+        return out
+    accepted = []
+    modes = set()
+    for witness in matches:
+        for assumed, label in interpretations:
+            result = corroborate_kickoff_witness(
+                fixture.get("kickoff"), witness["kickoff_utc"],
+                witness_source=witness["source"], assumed_fixture_utc=assumed,
+                fixture_home=fixture.get("home"), fixture_away=fixture.get("away"),
+                witness_home=witness["home"], witness_away=witness["away"],
+                tolerance_minutes=5.0)
+            if result["corroborated"]:
+                if witness not in accepted:
+                    accepted.append(witness)
+                modes.add(label)
+    if not accepted:
+        out["reason"] = "page_clock_witness_disagreement"
+        out["witnesses"] = matches
+        return out
+    out.update(status="corroborated", reason="independent_pre_cutoff_schedule_witness",
+               kickoff_utc=accepted[0]["kickoff_utc"],
+               provenance="witness_corroborated_aware_iso", witnesses=accepted,
+               interpretations=sorted(modes))
     return out

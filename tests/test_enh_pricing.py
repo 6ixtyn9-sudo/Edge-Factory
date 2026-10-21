@@ -362,8 +362,8 @@ def _be_block(columns, lines, rows):
 
 def _be_fixture(markets, *, home=BE_HOME, away=BE_AWAY, league="England: Premier League"):
     return {"event_id": "tW4rOkzg", "match_url": "https://www.betexplorer.com/x/",
-            "kickoff": f"{BE_DAY}T16:30:00", "home": home, "away": away, "league": league,
-            "captured_at": f"{BE_DAY}T09:05:00+00:00", "page_param": "1",
+            "kickoff": "21:00", "data_dt": [12, 10, 2026, 21, 0], "home": home, "away": away, "league": league,
+            "captured_at": f"{BE_DAY}T06:00:00+00:00", "page_param": "1",
             "best_1x2": {"odd1": 3.10, "oddx": 3.60, "odd2": 2.20},
             "markets": markets, "market_failures": [], "page": None}
 
@@ -375,13 +375,27 @@ def _write_be_ledger(root, fixtures, *, day=BE_DAY, schema=2):
     path.write_text(json.dumps({"schema": schema, "date": day,
                                 "captured_at": f"{day}T09:05:00+00:00",
                                 "fixtures": fixtures}))
+    _write_be_witness(root, fixtures.values())
     return path
+
+
+def _write_be_witness(root, fixtures):
+    # Synthetic provider observations, deliberately separate from BE's page.
+    rows = [{"source": "oddspapi", "source_type": "odds", "sport": "soccer",
+             "home": f["home"], "away": f["away"], "kickoff": f"{BE_DAY}T20:00:00Z",
+             "captured_at": f"{BE_DAY}T05:30:00Z"} for f in fixtures]
+    if rows:
+        with gzip.open(root / "localdata" / "oddspapi_odds_2026-10.csv.gz", "wt", newline="") as fh:
+            writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
+            writer.writeheader()
+            writer.writerows(rows)
 
 
 def _be_pick(market, **kw):
     base = {"home": BE_HOME, "away": BE_AWAY, "date": BE_DAY,
             "match": f"{BE_HOME} vs {BE_AWAY}", "recommended_enhancement": market,
-            "enhancement_probability": 0.62}
+            "enhancement_probability": 0.62, "kickoff_utc": f"{BE_DAY}T20:00:00Z",
+            "as_of": f"{BE_DAY}T06:30:00Z"}
     base.update(kw)
     return base
 
@@ -447,13 +461,11 @@ def test_betexplorer_column_order_comes_from_the_blocks_own_columns(tmp_path):
     assert index["pairs"][key][("ou_2.5", "over")][:2] == (3.40, "BookA")
     assert index["pairs"][key][("ou_2.5", "under")][:2] == (1.30, "BookA")
 
-    # An unrecognised label is skipped, never read by position (9.90 is a
-    # price under a label this module does not know).
+    # An unknown/incomplete column set invalidates the entire block.
     _write_be_ledger(tmp_path, {"k": _be_fixture({"bts": _be_block(["GG", "Yes"], ["0"], [
         _be_row("BookA", "0", [9.90, 1.80])])})})
     index = load_prices_index(tmp_path, BE_DAY)
-    assert index["pairs"][key][("btts", "yes")][:2] == (1.80, "BookA")
-    assert [slot for slot in index["pairs"][key] if slot[0] == "btts"] == [("btts", "yes")]
+    assert index["pairs"] == {}  # an incomplete/unknown column set invalidates the block
 
 
 def test_betexplorer_line_outside_the_blocks_lines_prices_nothing(tmp_path):
@@ -564,7 +576,29 @@ def test_betexplorer_ledger_round_trips_through_the_capture_writer(tmp_path, mon
 
     from edgefactory.sources import betexplorer_odds as be
     monkeypatch.setattr(be, "LOCALDATA", tmp_path / "localdata")
+    from datetime import datetime, timezone
+    class SnapshotClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 10, 12, 6, tzinfo=timezone.utc)
+    monkeypatch.setattr(be, "datetime", SnapshotClock)
     rows = produced._run_pick()
+    # Real provider producer -> actual monthly gzip writer -> shared loader.
+    # The clock is synthetic and explicit; no historical operational data is written.
+    from edgefactory.sources import theoddsapi as oa
+    from scripts import capture_theodds as capture_oa
+    class ProviderClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 10, 12, 5, 30, tzinfo=timezone.utc)
+    monkeypatch.setattr(oa, "datetime", ProviderClock)
+    monkeypatch.setattr(capture_oa, "LOCALDATA", tmp_path / "localdata")
+    event = dict(id="synthetic-independent-event", home_team=produced.PICK["home"],
+                 away_team=produced.PICK["away"], commence_time=f"{BE_DAY}T20:00:00Z")
+    payload = dict(bookmakers=[dict(title="Provider Book", markets=[dict(key="totals", outcomes=[
+        dict(name="Over", point=2.5, price=1.8), dict(name="Under", point=2.5, price=1.9)])])])
+    provider_rows = oa.rows_from_event_odds(produced.PICK, event, payload)
+    assert capture_oa.append_rows(BE_DAY, provider_rows, oa.COLUMNS) == 2
     assert [row["market"] for row in rows] == ["1x2"] * 3       # the priced lane is unchanged
     assert (tmp_path / "localdata" / produced.LEDGER).exists()
 
@@ -578,7 +612,8 @@ def test_betexplorer_ledger_round_trips_through_the_capture_writer(tmp_path, mon
     over = index["pairs"][key][("ou_2.5", "over")]
     # Line 2.50 from the capture's all-bookmakers block (Stake.com 3.40/1.30).
     assert (over[0], over[1], over[3]) == (3.40, "Stake.com", BETEXPLORER_SOURCE)
-    assert index["pairs"][key][("ou_2.5", "under")][:2] == (1.30, "Stake.com")
+    assert index["pairs"][key][("ou_2.5", "under")][:2] == (1.90, "Provider Book")
+    assert any(q[:2] == (1.30, "Stake.com") for q in index["fixture_quotes"][key][("ou_2.5", "under")])
     assert index["pairs"][key][("btts", "yes")][:2] == (1.57, "bet365.us")
     assert index["pairs"][key][("btts", "no")][:2] == (2.25, "bet365.us")
     assert index["pairs"][key][("dc", "1x")][:2] == (1.26, "bet365.us")
@@ -590,6 +625,26 @@ def test_betexplorer_ledger_round_trips_through_the_capture_writer(tmp_path, mon
     assert pick["enhancement_priced"] is True
     assert pick["enhancement_price"] == 3.40
     assert pick["enhancement_price_source"] == BETEXPLORER_SOURCE
+    receipt = pick["enhancement_price_provenance"]
+    assert receipt["resolution"]["witnesses"][0]["source"] == "theoddsapi"
+    assert pick["enhancement_price_at"] == f"{BE_DAY}T06:00:00+00:00"
+    # Actual live gate and recipe carry: not merely audit eligibility.
+    from scripts import auto_tickets as at
+    from enhancement_fixtures import with_evidence
+    class DecisionClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 10, 12, 6, 30, tzinfo=timezone.utc)
+    monkeypatch.setattr(at, "datetime", DecisionClock)
+    pick = with_evidence(pick)
+    other = with_evidence(dict(pick, home="Other Home", away="Other Away", match="Other Match",
+                               enhancement_price_source="oddspapi", enhancement_price_provenance=None))
+    legs = at.enhancement_legs([pick, other], execution_safe=True)
+    assert all(leg["verdict"] == "fire" for leg in legs)
+    pool = at.enhancement_pool(legs)
+    plan = at.plan_day(pool, 100.)
+    at._carry_lane_evidence(plan, pool)
+    assert any(leg["price_provenance"] == receipt for acca in plan for leg in acca["legs"])
 
 
 def test_picks_today_loads_the_price_index_after_the_betexplorer_rescue():
