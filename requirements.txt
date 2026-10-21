@@ -1,6 +1,7 @@
 pandas
 numpy
-duckdb
+# DuckDB 2 removes relation.fetchone(), used by mining and decay.
+duckdb<2
 curl_cffi
 pytest
 pyyaml
