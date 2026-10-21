@@ -11660,7 +11660,8 @@ that omission without restoring the old proxy.
   malformed, duplicated or benched recipes and unavailable/nonfinite
   probabilities remain unrankable. The top6/one-call-per-fixture/budget/ledger/
   staleness machinery is unchanged. Offline on the saved Oct21 published
-  41-row snapshot:41rankable fixtures,6selected,zero provider calls. This is
+  41-row snapshot:40rankable current-contract fixtures,6selected; the retained
+  legacy row is rejected,zero provider calls. This is
   not a fresh live capture or a guarantee of context identity/price coverage.
 * Caller-owned read-phase evidence caching shares one historical source scan
   per connection/window/cutoff and one projection per contract/selection/floor
@@ -11692,3 +11693,13 @@ file byte-for-byte from the pre-test baseline; no state-file change entered the
 commit/PR. The test now supplies its own scratch lane AND redirects the default
 state path to a temporary sentinel, asserting that the sentinel is never
 written. This closes the test-harness leak, not a production financial replay.
+Final red-team guard: when the registry operates post_forebet_v1, a retained
+legacy textual-rule archive row cannot enter the enrichment budget pool. This
+prevents a retired electorate from consuming quota; explicit old-mode offline
+compatibility is retained. Final full-regression receipt follows.
+Final isolated-head receipt, including the retired-row quota guard and payout
+harness correction: **3541 passed,0failed,0skipped147.93s**. The same command
+then asserted `git diff --exit-code HEAD -- localdata .github` and exited0:
+no state restoration was needed after this final run. No tracked financial or
+workflow changes; diff-check clean. PR113 carries the implementation; no merge
+or production workflow dispatch is implied by this receipt.

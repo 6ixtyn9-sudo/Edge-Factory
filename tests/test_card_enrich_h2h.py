@@ -896,3 +896,12 @@ def test_categorical_contract_cannot_rank_on_a_placeholder_zero():
     assert ce.margin(dict(row, avg_p=0., probability_available=False), registry=registry) is None
     registry.pop('operating_contract')
     assert ce.margin(row, registry=registry) is None
+
+
+def test_retained_legacy_row_cannot_spend_quota_in_post_forebet_mode():
+    row, registry = _post_forebet_card()
+    legacy = dict(row, rule='3way-unanimous avg_p>=65',
+                  edge_rule='3way-unanimous avg_p>=65', contract_schema=None,
+                  contract_id=None, avg_p=65.1)
+    assert ce.margin(legacy, registry=registry) is None
+    assert ce.margin(legacy) == .1  # explicit old-mode offline compatibility
