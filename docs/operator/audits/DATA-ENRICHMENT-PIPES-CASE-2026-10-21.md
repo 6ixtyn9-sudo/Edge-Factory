@@ -1,9 +1,9 @@
 # Compelling Case & Phase 1 Audit: Decision-Time Market Depth & Provenance
 
-**Author:** Agent Session (Arena.ai)  
-**Date:** 2026-10-21  
-**Target Branch:** `arena/cc5b802f-edge-factory`  
-**Base Commit:** `cc224d40` (PR #121 merged into main)  
+**Author:** Agent Session (Arena.ai)
+**Date:** 2026-10-21
+**Target Branch:** `arena/cc5b802f-edge-factory`
+**Base Commit:** `cc224d40` (PR #121 merged into main)
 **Status:** PHASE 1 READ-ONLY AUDIT & TIMING PROVENANCE RECONCILIATION
 
 ---
@@ -85,3 +85,119 @@ The audit tool directly inspected every quote row across all markets:
   - Asserts that all 116 fixtures receive `authoritative_eligibility: unverified_kickoff_timezone` with `kickoff_utc: null`.
   - Reconciles the 57 / 9 / 45 / 5 diagnostic assumed-UTC counts.
 - **Regression Suite:** All tests pass cleanly.
+
+---
+
+## 5. Phase 2 integration — existing audit, no quote activation
+
+Implemented on `arena/7d4a971b-edge-factory` using the reviewed code from merged
+PR #123 (`1daccdc839f97750fc5f31058da488e246e36cf6`). The initial implementation checkout started at
+`cc224d40`; only merged code/tests/docs were imported for the audit and tests.
+For PR publication, the branch was subsequently rebased onto merged main; the
+PR contains no operational-file changes. The 851-file immutability measurements
+below refer to the original audit/test snapshot. No alternate miner, registry, workflow,
+pricing caller, bank rewrite or production capture was introduced.
+
+### Executable path
+
+```bash
+PYTHONPATH=src python tools/audit_market_depth_replay.py --json
+# Explicitly reproduce Phase 1 without schedule resolution:
+PYTHONPATH=src python tools/audit_market_depth_replay.py --no-witnesses --json
+```
+
+The existing audit now resolves preserved page evidence against local provider
+archives by default. Both commands print to stdout; neither writes an audit
+result or changes any input. `--json` includes the detail-input SHA256 manifest,
+archive SHA256s, original CSV data-row ordinals, row SHA256s, actual witness
+observation times, provider origin, inferred interpretation and resolution reason.
+The archive digest and parser consume the same bytes, including if a concurrent
+capture atomically replaces the archive path.
+
+**Acceptance rules:**
+- The page's full integer `data_dt` tuple is required. Its date/clock must agree
+  with the separately preserved fields when present. The decision cutoff is
+  09:00 Africa/Johannesburg on the explicit ledger decision day; this is distinct
+  from the raw page date. A candidate/container date never fills a missing page
+  datetime. Provider/page midnight rollover is preserved, not synthesized.
+- Fixed UTC+1 and Europe/Prague are tested as separate inferred hypotheses using
+  the reviewed helper. Neither becomes a site-wide timezone default. A matching
+  independent witness supplies the authoritative instant; the interpretation
+  remains explicitly inferred, not proof of the site's global timezone.
+- Only recognized provider archives are read, not candidate cards or warehouse
+  labels. Home/away identity and squad markers must match. Schedule observations
+  must be aware, strictly before both the decision cutoff and kickoff. Repeated
+  outcomes/bookmakers are deduplicated into schedule observations, not votes.
+- Disagreeing same-fixture pre-cutoff schedule instants fail closed; the audit
+  never selects whichever provider happens to fit a timezone hypothesis.
+  Post-cutoff observations cannot retroactively establish decision eligibility.
+- OddsPapi archives carry provider `startTime` directly (see
+  `oddspapi_odds.parse_odds_response`). Legacy TheOddsAPI rows are **not** accepted
+  as independent kickoff evidence: `rows_from_event_odds` can fall back to the
+  pick's kickoff. That archive contract must retain an explicit
+  `kickoff_origin=provider_commence_time` before those records can be admitted.
+  The current writer does not retain that field, so existing TheOddsAPI rows
+  remain diagnostic-only; no origin metadata is invented for them.
+- A verified kickoff cannot override a malformed or post-cutoff fixture capture.
+  Quote inspection remains per-market/per-row. `capture_valid_named_rows` counts
+  only shape/finite-price-valid rows in decision-eligible fixture snapshots;
+  each row retains its market, index, bookmaker, line and observed odds.
+  Timing uses the fixture capture stamp (the adapter stamps it after all tabs
+  return), or the separately labeled file fallback bound. This is **not**
+  per-book price freshness, selection/line certification or live execution
+  admission. `live_quote_activation` is always false.
+
+### Measured result on the unchanged local snapshot
+
+| Item | Result |
+|---|---:|
+| Detail files / unique fixtures | 10 / 116 |
+| Authoritatively eligible fixtures | **0** |
+| Unverified kickoff timezone | **116** |
+| Resolution reason: missing raw page datetime | **116** |
+| Capture-valid named quote rows | **0** |
+| Structural named rows passing / failing | 5,203 / 14 |
+| Assumed-UTC diagnostics | 57 / 9 / 45 / 5 |
+
+The OddsPapi archive contains 1,189,970 rows. Of these, 59,524 rows match stored
+team-pair identities and deduplicate to **10 candidate schedule observations**.
+These are NOT ten corroborated fixtures and have not been promoted. The matched
+3,449 legacy TheOddsAPI October rows lack explicit provider-kickoff origin and
+are rejected as witnesses. August/September TheOddsAPI files have no matching
+team pairs in this population.
+
+The 116 historical details predate raw-date preservation. A fresh recapture does
+not prove the contents or timing of a historical snapshot. Historical promotion
+requires contemporaneous raw evidence; new pre-decision captures can use this
+integration without reconstructing or rewriting old ledgers.
+
+### Verification and review handoff
+
+- Focused corroboration + audit + match-detail suite: **66 passed in 4.49s**.
+- Final broader suite including all BetExplorer tests: **101 passed in 60.67s**,
+  rerun after the final code changes.
+- Broader runtime was investigated, not hidden by a timeout increase: the
+  existing poisoned-cache test spends 51.01s in bounded retry/throttle sleeps
+  against its mocked network-refusal path; snapshot failure handling takes
+  5.11s. The first foreground attempt timed out; the background rerun completed.
+- Every synthetic audit compares its input bytes before/after. The real run's
+  recursive SHA256 manifest shows **all 851 operational files unchanged**.
+- No full-repository regression run or independent second-agent execution is
+  claimed. No source capture, ticket recut, settlement, notification, merge,
+  workflow dispatch or live quote activation was performed.
+
+Second-session review prompt:
+
+```text
+Review the current arena/7d4a971b-edge-factory changes against the reviewed
+PR123 code at 1daccdc839f97750fc5f31058da488e246e36cf6, focusing on
+ tools/audit_market_depth_replay.py and tests/test_audit_market_depth_replay.py.
+Verify source-record origin, identity/squad/date binding, as-of witness capture,
+conflict rejection, independent fixed-offset/Prague hypotheses and rollover.
+Prove missing historical page dates are not inferred from picks/containers.
+Verify quote screening is per valid row AND eligible fixture, with no live
+activation, and confirm the source/fixture inputs are never written.
+Run the three focused test files and independently reproduce the real 0/116
+eligibility and 0 capture-valid rows; do not confuse synthetic promotions or
+10 candidate schedule observations with proven historical eligibility.
+```
