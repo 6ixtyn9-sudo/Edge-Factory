@@ -10,10 +10,16 @@ For every CERTIFIED edge in localdata/edges_consensus.json, re-evaluates the
 exact stored rule (`view` + `where`, scales already baked into the where
 clause by mine_consensus.py) over the recent window and compares it against
 the certified out-of-sample baseline (the edge's `valid` stats) using
-edgefactory.assay.decay_verdict / should_bench.
+edgefactory.assay.decay_verdict / bench_decision.
 
-AUTO-BENCH: if should_bench() says so (DEAD / DECAYING, or recent ROI < -5%
-with n>=30), the edge's status is flipped to "benched" in the registry.
+AUTO-BENCH: if bench_decision() says so — DEAD / DECAYING, or a negative
+recent ROI measured over at least GATES.min_recent_n PRICED legs (30) — the
+edge's status is flipped to "benched" in the registry. A negative ROI on a
+thinner priced sample is reported (``bench_reason``
+"recent_roi_n_below_floor") and the edge stays certified: an ROI over 9 legs
+is noise, and benching on it retires a contract on a handful of matches.
+``n_priced`` is the denominator of the ROI, so a settled window with few
+priced legs cannot masquerade as a large ROI sample.
 picks_today.py only uses status=="certified", so benched edges stop being
 bet IMMEDIATELY with zero changes to picks code. The next mine_consensus.py
 run rebuilds the registry from full data and re-certifies or not — benching
@@ -35,6 +41,7 @@ import argparse
 import csv
 import gzip
 import json
+import math
 import sys
 from datetime import date, timedelta
 from pathlib import Path
@@ -42,7 +49,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.assay import decay_verdict, should_bench, wilson_lb  # noqa: E402
+from edgefactory.assay import bench_decision, decay_verdict, wilson_lb  # noqa: E402
 from edgefactory.config import GATES  # noqa: E402
 from edgefactory.fade import FADE_VIEW, ml_fade_settled_sql  # noqa: E402
 from edgefactory.ml_fade_research import model_key  # noqa: E402
@@ -538,11 +545,16 @@ def recent_stats(con, view: str, where: str, since: str):
     """
     n, wins, pnl, n_priced = con.sql(q).fetchone()
     n, wins, n_priced = int(n or 0), int(wins or 0), int(n_priced or 0)
+    roi = pnl / n_priced if n_priced else None
+    # A NaN/inf pnl (e.g. a non-finite stored price) is an unreadable ROI,
+    # not a number: report it as unavailable so no gate can read it as "ok".
+    if roi is not None and not math.isfinite(float(roi)):
+        roi = None
     return {
         "n": n, "wins": wins, "n_priced": n_priced,
         "hit": round(wins / n, 4) if n else 0.0,
         "wilson_lb": round(wilson_lb(wins, n), 4),
-        "roi": round(pnl / n_priced, 4) if n_priced else None,
+        "roi": round(float(roi), 4) if roi is not None else None,
     }
 
 
@@ -598,6 +610,7 @@ def main():
     print("-" * len(hdr))
 
     n_benched = 0
+    n_roi_held = 0
     for e in certified:
         rule, market = e.get("rule", "?"), e.get("market", "1x2")
         view, where = e.get("view"), e.get("where")
@@ -606,7 +619,8 @@ def main():
 
         if not view or not where or view not in avail or not b_n:
             e["decay"] = {"verdict": "UNKNOWN", "window_days": args.window,
-                          "checked_at": today,
+                          "checked_at": today, "bench": False,
+                          "bench_reason": "not_evaluated",
                           "reason": "view unavailable or baseline missing"}
             print(f"{rule:42s} {market:7s} {'?':>20s} {'?':>24s}  UNKNOWN (skipped)")
             continue
@@ -620,7 +634,9 @@ def main():
             rec = recent_stats(con, view, where, recent_since)
         except Exception as ex:
             e["decay"] = {"verdict": "UNKNOWN", "window_days": args.window,
-                          "checked_at": today, "reason": str(ex)[:120]}
+                          "checked_at": today, "bench": False,
+                          "bench_reason": "not_evaluated",
+                          "reason": str(ex)[:120]}
             print(f"{rule:42s} {market:7s} {'?':>20s} {'?':>24s}  UNKNOWN (query failed)")
             continue
 
@@ -631,27 +647,46 @@ def main():
                 and rec["n_priced"] < GATES.min_recent_n):
             from dataclasses import replace
             rep = replace(rep, verdict="WATCH")
-        bench = should_bench(rep, rec["roi"])
+        bench, bench_reason = bench_decision(
+            rep, rec["roi"], n_priced=rec["n_priced"],
+            min_priced_n=GATES.min_recent_n,
+        )
         e["decay"] = {
             "verdict": rep.verdict, "window_days": args.window,
             "checked_at": today, "recent": rec,
             "baseline_lb": round(rep.baseline_lb, 4),
             "recent_lb": round(rep.recent_lb, 4),
             "recent_ub": round(rep.recent_ub, 4),
+            # Why this edge was (or was not) benched, and the floor that
+            # decided it — so a -5.3% ROI on 9 legs is auditable later.
+            "bench": bench, "bench_reason": bench_reason,
+            "bench_min_priced_n": GATES.min_recent_n,
         }
         if bench:
             e["status"] = "benched"
             e["benched_at"] = today
             n_benched += 1
+        elif bench_reason == "recent_roi_n_below_floor":
+            n_roi_held += 1
 
         b_str = f"{b_n:>5d} {base.get('hit', 0):.1%} {base.get('wilson_lb', 0):.3f}"
         roi_s = f"{rec['roi']:+.1%}" if rec["roi"] is not None else "  n/a"
         r_str = f"{rec['n']:>5d} {rec['hit']:.1%} {rec['wilson_lb']:.3f} {roi_s}"
-        flag = " -> BENCHED" if bench else ""
+        if bench:
+            flag = " -> BENCHED"
+        elif bench_reason == "recent_roi_n_below_floor":
+            flag = (f" [roi n={rec['n_priced']}<{GATES.min_recent_n}:"
+                    " not benched]")
+        else:
+            flag = ""
         print(f"{rule:42s} {market:7s} {b_str:>20s} {r_str:>24s}  {rep.verdict}{flag}")
 
     print(f"\n{len(certified)} certified audited, {n_benched} benched this run, "
           f"{len(benched_already)} previously benched.")
+    if n_roi_held:
+        print(f"{n_roi_held} negative-ROI decision(s) held: fewer than "
+              f"{GATES.min_recent_n} PRICED legs in the window, so the ROI "
+              "cannot bench (see bench_reason in the registry).")
     if n_benched:
         print("Benched edges are OUT of picks_today immediately "
               "(it only reads status=='certified').")
