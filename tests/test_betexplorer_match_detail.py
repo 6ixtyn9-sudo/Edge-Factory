@@ -472,6 +472,9 @@ def test_capture_retains_every_market_from_one_response_per_market(tmp_path):
     assert payload["schema"] == 2 and payload["date"] == "2026-10-12"
     (entry,) = payload["fixtures"].values()
     assert entry["event_id"] == "tW4rOkzg"
+    assert entry["data_dt"] == [12, 10, 2026, 21, 0]
+    assert entry["kickoff_date"] == "2026-10-12"
+    assert "kickoff_utc" not in entry  # raw capture never guesses an offset
     assert entry["page_param"] == "1"
     assert entry["best_1x2"] == {"odd1": 3.10, "oddx": 3.60, "odd2": 2.20}
     assert entry["market_failures"] == []
