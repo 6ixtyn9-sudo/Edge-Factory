@@ -51,3 +51,20 @@ def test_unknown_source_and_group_fail_clearly():
 
     with pytest.raises(ValueError, match="unknown capture source.*mystery"):
         capture_daily.resolve_selected_sources("mystery", None)
+
+
+def test_forward_recapture_does_not_refetch_completed_result_donor_day(monkeypatch):
+    from types import SimpleNamespace
+    calls, resets = [], []
+    monkeypatch.setattr(capture_daily.sys, 'argv', [
+        'capture_daily.py', '--sources', 'prosoccer', '--skip-build', '--forward-only'])
+    def run(cmd, **kwargs):
+        calls.append(cmd)
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr(capture_daily.subprocess, 'run', run)
+    monkeypatch.setattr(capture_daily, 'reset_recent_state',
+                        lambda source, days: resets.append((source, days)))
+    capture_daily.main()
+    assert len(calls) == 1
+    assert calls[0][2:5] == ['prosoccer', capture_daily.TODAY, capture_daily.TOMORROW]
+    assert capture_daily.YESTERDAY not in resets[0][1]

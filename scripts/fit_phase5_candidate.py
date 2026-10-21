@@ -363,9 +363,9 @@ def _roll14(frame) -> None:
     daily = daily.sort_values("day").set_index("day")
     shifted = daily[["wins", "total"]].shift(1)
     rolling = shifted.rolling("14D").sum()
-    daily["rolling_hit_rate"] = (rolling["wins"] / rolling["total"]).fillna(0.75)
+    daily["rolling_hit_rate"] = (rolling["wins"] / rolling["total"])
     mapping = dict(zip(daily.index.date, daily["rolling_hit_rate"]))
-    frame["rolling_hit_rate"] = frame["day"].map(mapping).fillna(0.75)
+    frame["rolling_hit_rate"] = frame["day"].map(mapping)
 
 
 def build_frame(fixtures: dict):
@@ -404,7 +404,7 @@ def build_frame(fixtures: dict):
             "min_p": min(trio_probs) if trio_probs else None,
             "std_p": (sum((v - sum(trio_probs) / len(trio_probs)) ** 2 for v in trio_probs)
                       / len(trio_probs)) ** 0.5 if trio_probs else None,
-            "pick_odds": extras.get(odds_col) or 1.5,
+            "pick_odds": extras.get(odds_col),
             "is_home": 1.0 if elected == "home" else 0.0,
             "is_away": 1.0 if elected == "away" else 0.0,
             "cat_friendly": 1.0 if comp == "friendly" else 0.0,
@@ -459,8 +459,9 @@ def fit_candidate(frame, bounds) -> dict:
         base["rolling_hit_rate"] = row.get("rolling_hit_rate")
         return base
 
-    # era-train-slice means, present values only; dark columns keep the
-    # documented neutral so the artefact stays finite and honest. Presence is
+    # Era-train-slice means from finite observations only. A completely dark
+    # column has no measured mean and prevents a fit; no neutral is invented.
+    # Presence is
     # tracked from the RAW inputs, never from the imputed vector — otherwise a
     # dark feed would look "live" because its fallback value is finite.
     means = default_fallbacks()
@@ -468,7 +469,7 @@ def fit_candidate(frame, bounds) -> dict:
     for _, row in train.iterrows():
         base = base_of(row)
         for col, value in base.items():
-            if col in present and value is not None:
+            if col in present and isinstance(value, (int, float)) and math.isfinite(value):
                 present[col].append(float(value))
         for source, (prob, is_present) in row["source_probs"].items():
             col = f"{source}_p"
@@ -482,6 +483,10 @@ def fit_candidate(frame, bounds) -> dict:
     for col, values in present.items():
         if values:
             means[col] = float(sum(values) / len(values))
+
+    missing = [col for col, mean in means.items() if mean is None]
+    if missing:
+        raise ValueError("no observed era-train mean for: " + ", ".join(missing))
 
     def matrix(split):
         rows = []
@@ -703,7 +708,11 @@ def main() -> int:
         print("projected era-train floor:", _projected(frame))
         return 3
 
-    result = fit_candidate(frame, bounds)
+    try:
+        result = fit_candidate(frame, bounds)
+    except ValueError as exc:
+        print(f"fit refused — unavailable measured features: {exc}")
+        return 3
     problems = payload_problems(
         result["candidate_model_payload"],
         fallback_means=result["fallback_means"],

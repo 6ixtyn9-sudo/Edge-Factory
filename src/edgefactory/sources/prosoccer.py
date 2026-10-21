@@ -306,9 +306,14 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
     for url in urls:
         try:
             html = _get(url, retries=retries)
-        except Exception as exc:  # noqa: BLE001 - try another alias before failing
-            errors.append(f"{url}={_brief(exc)}")
-            continue
+        except Exception as exc:  # noqa: BLE001 - keep this date retryable
+            # _get already exhausted independent transports AND relays. A new
+            # calendar alias on the same host is not another egress path: six
+            # aliases multiplied a site/transport outage into ~10 minutes.
+            # Aliases remain for reachable stale-date/empty pages below.
+            raise RuntimeError(
+                f"prosoccer {date}: transport ladder failed at {url}: {_brief(exc)}"
+            ) from exc
         if not html:
             errors.append(f"{url}=empty")
             continue

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -51,7 +52,7 @@ def load_card(localdata: Path, day: str) -> list[dict]:
         if isinstance(rows, list) else []
 
 
-def margin(row: dict) -> float | None:
+def margin(row: dict, *, registry: dict | None = None) -> float | None:
     """How far this row clears its own consensus threshold - the proximity rank.
 
     A fixture already 25 points past its bar does not need another evidence
@@ -60,16 +61,49 @@ def margin(row: dict) -> float | None:
     to certification means *on the line*, not "anywhere on the card".
     """
     rule = str(row.get("rule") or row.get("edge_rule") or "")
-    match = _MATCH_RULE.match(rule.strip())
-    if not match:
-        return None
     avg_p = row.get("avg_p")
-    if isinstance(avg_p, bool) or not isinstance(avg_p, (int, float)):
+    if (row.get("probability_available") is False
+            or isinstance(avg_p, bool) or not isinstance(avg_p, (int, float))
+            or not math.isfinite(avg_p) or not 0 <= avg_p <= 100):
         return None
-    return round(float(avg_p) - float(match["threshold"]), 3)
+    if row.get("contract_schema") == "post_forebet_v1" or rule.startswith("pfc_"):
+        # Opaque IDs are not rule grammar. Resolve the exact, active recipe;
+        # never infer a floor from a display label or from another contract.
+        from edgefactory.consensus_contracts import validate_contract
+        try:
+            if (registry or {}).get("operating_contract") != "post_forebet_v1":
+                return None
+            edges = [e for e in (registry or {}).get("edges", [])
+                     if isinstance(e, dict) and e.get("contract_id") == row.get("contract_id")]
+            if len(edges) != 1:
+                return None
+            edge = edges[0]
+            identity = validate_contract(edge)
+            day = str(row.get("date") or "")[:10]
+            if (edge.get("status") != "certified" or edge["activated_as_of"] > day
+                    or row.get("contract_schema") != edge["contract_schema"]
+                    or rule != identity or row.get("edge_rule") != identity
+                    or row.get("market") != edge["market"]
+                    or sorted(row.get("sources_used", [])) != edge["sources"]):
+                return None
+            datetime.strptime(day, "%Y-%m-%d")
+            threshold = edge["threshold"]
+        except (AttributeError, KeyError, TypeError, ValueError):
+            return None
+    else:
+        # Retained archive rows do not reactivate the retired electorate or
+        # consume context quota once the operational registry has migrated.
+        if isinstance(registry, dict) and registry.get("operating_contract") == "post_forebet_v1":
+            return None
+        match = _MATCH_RULE.match(rule.strip())
+        if not match:
+            return None
+        threshold = float(match["threshold"])
+    return round(float(avg_p) - threshold, 3)
 
 
-def select_candidates(card: list[dict], *, limit: int) -> tuple[list[dict], list[dict]]:
+def select_candidates(card: list[dict], *, limit: int,
+                      registry: dict | None = None) -> tuple[list[dict], list[dict]]:
     """Pick the ``limit`` fixtures closest to certification. Returns (chosen, census).
 
     One entry per fixture (the tightest margin on that fixture wins), so a
@@ -88,7 +122,7 @@ def select_candidates(card: list[dict], *, limit: int) -> tuple[list[dict], list
             # fixture. It gets no call and no snapshot.
             skipped["squad_marker_pair"] = skipped.get("squad_marker_pair", 0) + 1
             continue
-        value = margin(row)
+        value = margin(row, registry=registry)
         if value is None:
             skipped["unrankable_rule"] = skipped.get("unrankable_rule", 0) + 1
             continue
@@ -259,7 +293,11 @@ def plan_run(day: str, *, localdata: Path, limit: int,
              bootstrap: dict[str, int], now: datetime | None = None) -> dict:
     """Every decision that can cost money, taken offline. Never touches the network."""
     card = load_card(localdata, day)
-    chosen, census = select_candidates(card, limit=limit)
+    try:
+        registry = json.loads((localdata / "edges_consensus.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        registry = None
+    chosen, census = select_candidates(card, limit=limit, registry=registry)
     snapshots = boggio.load_snapshots(localdata)
     known = last_observed_remaining(localdata, month=boggio.family_month(day))
     known.update({str(k): int(v) for k, v in (bootstrap or {}).items()})

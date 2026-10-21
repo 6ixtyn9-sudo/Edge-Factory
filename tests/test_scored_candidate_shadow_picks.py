@@ -71,7 +71,7 @@ def test_ml_scored_entries_append_at_the_inference_increment(monkeypatch):
     """With a serving model and probability-bearing sources, one
     ml_scored_fixture audit entry appears per model-scored fixture — the
     same 1:1 point that feeds research_collector.scored / ml_scored_day."""
-    model = {"coef": [0.1], "intercept": 0.0, "feature_cols": ["fb_p"]}
+    model = {"coef": [0.1], "intercept": 0.0, "feature_cols": ["fb_p"], "fallback_means": {"fb_p": .63}}
     monkeypatch.setattr(pt, "load_ml_rules_and_model", lambda: ([], model))
     data = {
         "zulubet": {"k1": _src_row("Sporting CP", "Portimonense",
@@ -110,7 +110,7 @@ def test_ml_scored_entries_append_at_the_inference_increment(monkeypatch):
 def test_ml_entry_without_source_odds_carries_no_fabricated_price(monkeypatch):
     """The 1.50 pick_odds FEATURE default must never become a shadow price:
     when no source row has odds for the side, shadow_price is None."""
-    model = {"coef": [0.1], "intercept": 0.0, "feature_cols": ["fb_p"]}
+    model = {"coef": [0.1], "intercept": 0.0, "feature_cols": ["fb_p"], "fallback_means": {"fb_p": .63}}
     monkeypatch.setattr(pt, "load_ml_rules_and_model", lambda: ([], model))
     data = {
         "zulubet": {"k1": _src_row("Sporting CP", "Portimonense",
@@ -124,3 +124,18 @@ def test_ml_entry_without_source_odds_carries_no_fabricated_price(monkeypatch):
     entry = [e for e in audit if e["kind"] == "ml_scored_fixture"][0]
     assert entry["shadow_price"] is None
     assert entry["shadow_price_source"] is None
+
+
+def test_missing_model_input_without_measured_mean_cannot_emit_or_capture(monkeypatch):
+    model = {'coef': [.1], 'intercept': 0., 'feature_cols': ['fb_p']}
+    monkeypatch.setattr(pt, 'load_ml_rules_and_model', lambda: ([{'rule': 'ml-meta avg_p>=0'}], model))
+    data = {'zulubet': {'k1': _src_row('Alpha', 'Bravo', p1=60, px=25, p2=15)},
+            'statarea': {'k1': _src_row('Alpha', 'Bravo', p1=60, px=25, p2=15)}}
+    audit, collector = [], pt.FadeResearchCollector()
+    picks, _, _ = pt.eval_1x2(DAY, data, [], fixture_audit=audit, research_collector=collector)
+    assert picks == []
+    assert collector.scored == 0
+    assert not any(e['kind'] == 'ml_scored_fixture' for e in audit)
+    decision = next(e['decision_diagnostics'] for e in audit if e['kind'] == 'upcoming_fixture')
+    assert decision['ml']['reason'] == 'unavailable_model_features'
+    assert decision['consensus']['reason'] == 'no_consensus_rule_for_source_count'

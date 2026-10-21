@@ -21,6 +21,10 @@ Two rules the contract depends on:
 """
 from __future__ import annotations
 
+import math
+
+from edgefactory.util import finite_probability
+
 from edgefactory.phase5_activation import (
     DECLARED_SOURCE_ORDER,
     K_FEATURES,
@@ -42,29 +46,14 @@ __all__ = [
 AVAILABLE_SUFFIX = "_available"
 PROB_SUFFIX = "_p"
 
-# Fail-safe neutral values, used ONLY when a column is missing and the model
-# payload records no fallback mean for it. A certified Phase 5 payload always
-# carries complete finite era-train-slice means (the activation gate rejects
-# anything else), so this table is a last-resort guard, never the normal path.
-_NEUTRAL_NON_PROB = {
-    "pick_odds": 1.50,        # mirrors the live 1x2 fallback in picks_today
-    "rolling_hit_rate": 0.75,  # mirrors get_rolling_hit_rate_last_14d's default
-}
+def default_fallbacks() -> dict[str, None]:
+    """Schema only: no invented neutral probabilities, rates, odds or goals."""
+    return dict.fromkeys(K_FEATURES)
 
 
-def default_fallbacks() -> dict[str, float]:
-    """Neutral per-column fallbacks for the whole K contract."""
-    out: dict[str, float] = {}
-    for col in K_FEATURES:
-        if col.endswith(AVAILABLE_SUFFIX):
-            out[col] = 0.0
-        elif col in _NEUTRAL_NON_PROB:
-            out[col] = _NEUTRAL_NON_PROB[col]
-        elif col.endswith(PROB_SUFFIX):
-            out[col] = 0.5
-        else:  # kelly, pred_total, pred_diff, goalsavg, cat_* flags
-            out[col] = 0.0
-    return out
+def _finite(value):
+    return (float(value) if isinstance(value, (int, float))
+            and not isinstance(value, bool) and math.isfinite(value) else None)
 
 
 def majority_pick(picks: list[str | None]) -> str | None:
@@ -101,18 +90,17 @@ def source_columns(sources: dict[str, tuple[float | None, bool]]) -> dict[str, f
     ``sources`` maps source name -> (probability for the elected pick, present).
     A source with no usable probability gets ``None`` (the vector builder then
     imputes the model's recorded mean) and ``available = 0.0`` — so a dark
-    feed is represented, never dropped. Probs are clamped to [0, 1] because a
-    percent-scaled feed that slipped through would otherwise poison the logit.
+    feed is represented, never dropped. Invalid probabilities stay unavailable;
+    a malformed or percent-scaled value is not silently clamped to certainty.
     """
     out: dict[str, float | None] = {}
     for source in DECLARED_SOURCE_ORDER:
         prob, present = sources.get(source, (None, False))
-        if prob is None or not present:
+        value = finite_probability(prob)
+        if value is None or not present:
             out[f"{source}{PROB_SUFFIX}"] = None
             out[f"{source}{AVAILABLE_SUFFIX}"] = 0.0
             continue
-        value = float(prob)
-        value = 0.0 if value < 0.0 else (1.0 if value > 1.0 else value)
         out[f"{source}{PROB_SUFFIX}"] = value
         out[f"{source}{AVAILABLE_SUFFIX}"] = 1.0
     return out
@@ -123,28 +111,29 @@ def build_k_features(
     base: dict[str, float | None],
     sources: dict[str, tuple[float | None, bool]],
     fallbacks: dict[str, float] | None = None,
-) -> dict[str, float]:
+) -> dict[str, float | None]:
     """Assemble the full K vector, in ``K_FEATURES`` order, imputing the rest.
 
     ``base`` carries the 22 non-source columns (fb_p, zb_p, sa_p, avg_p, ...);
     ``sources`` the declared-source probabilities. Anything absent falls back
     to the recorded mean for that column (``fallbacks``), never to a silent
-    zero. The returned dict has exactly ``K_FEATURES`` keys.
+    zero. Without a recorded mean it stays None. The returned dict has exactly
+    ``K_FEATURES`` keys; a fit must refuse unresolved columns.
     """
     means = dict(default_fallbacks())
     if fallbacks:
-        means.update({k: float(v) for k, v in fallbacks.items() if k in means})
+        means.update({k: _finite(v) for k, v in fallbacks.items() if k in means})
     merged: dict[str, float | None] = {}
     merged.update(source_columns(sources))
     for col, value in base.items():
         if col in merged and merged[col] is not None:
             continue
-        merged[col] = None if value is None else float(value)
+        merged[col] = _finite(value)
 
-    row: dict[str, float] = {}
+    row: dict[str, float | None] = {}
     for col in K_FEATURES:
         value = merged.get(col)
-        row[col] = float(means[col]) if value is None else float(value)
+        row[col] = means[col] if value is None else value
     return row
 
 
@@ -165,17 +154,19 @@ def feature_vector(
     means = dict(default_fallbacks())
     payload_means = model.get("fallback_means")
     if isinstance(payload_means, dict):
-        means.update({k: float(v) for k, v in payload_means.items() if k in means})
+        means.update({k: _finite(v) for k, v in payload_means.items()})
     if fallbacks:
-        means.update({k: float(v) for k, v in fallbacks.items() if k in means})
+        means.update({k: _finite(v) for k, v in fallbacks.items() if k in means})
 
     vector: list[float] = []
     imputed: list[str] = []
     for col in cols:
-        value = feat_dict.get(col)
+        value = _finite(feat_dict.get(col))
         if value is None:
             imputed.append(str(col))
-            value = means.get(col, 0.0)
+            value = means.get(col)
+        if value is None:
+            raise ValueError(f"unavailable feature without recorded training mean: {col}")
         vector.append(float(value))
     return vector, imputed
 

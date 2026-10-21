@@ -67,6 +67,7 @@ from typing import Any, Callable, Iterable, Mapping, Sequence
 
 from edgefactory import price_sources as psrc
 from edgefactory.util import (
+    pick_probability_pct,
     canonical_team_key,
     ledger_team_key,
     norm_league,
@@ -637,11 +638,8 @@ def scored_event(row: Mapping[str, Any], *, trading_date: str, run_id: str,
     elif side == "away":
         selection_team = row.get("away")
     odds = finite_odds(row.get("odds"))   # NaN/inf/<=1 stored as no-price
-    try:
-        probability = (float(row.get("avg_p")) / 100.0
-                       if row.get("avg_p") is not None else None)
-    except (TypeError, ValueError):
-        probability = None
+    observed_probability = pick_probability_pct(row)
+    probability = observed_probability / 100.0 if observed_probability is not None else None
     source_name = str(row.get("odds_source") or "").strip()
     source = psrc.spec(source_name)
     occ_ident = fixture_occurrence_identity(row, ident["trading_date"])

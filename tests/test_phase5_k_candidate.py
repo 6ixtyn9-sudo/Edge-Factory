@@ -28,7 +28,6 @@ from edgefactory.phase5_activation import (
 )
 from edgefactory.phase5_k import (
     build_k_features,
-    default_fallbacks,
     feature_vector,
     majority_pick,
     payload_problems,
@@ -57,7 +56,9 @@ def test_k_row_has_every_column_in_frozen_order():
     )
     assert list(row) == list(K_FEATURES)
     assert set(row) == set(K_FEATURES)
-    assert all(isinstance(v, float) for v in row.values())
+    assert all(v is None or isinstance(v, float) for v in row.values())
+    assert row["rolling_hit_rate"] is None
+    assert row["pick_odds"] is None
     assert row["is_home"] == 1.0
 
 
@@ -65,16 +66,14 @@ def test_dark_source_is_represented_not_dropped():
     row = build_k_features(base={}, sources={}, fallbacks={"forebet_p": 0.42})
     for source in DECLARED_SOURCE_ORDER:
         # the column exists, carries the recorded mean, and says "unavailable"
-        assert row[f"{source}_p"] == pytest.approx(
-            default_fallbacks()[f"{source}_p"] if source != "forebet" else 0.42
-        )
+        assert row[f"{source}_p"] is None
         assert row[f"{source}_available"] == 0.0
 
 
-def test_source_columns_clamp_and_flag():
+def test_source_columns_reject_invalid_and_flag():
     cols = source_columns({"vitibet": (65.0, True), "bzzoiro": (None, False)})
-    assert cols["vitibet_p"] == 1.0          # percent feed cannot poison the logit
-    assert cols["vitibet_available"] == 1.0
+    assert cols["vitibet_p"] is None  # malformed fraction cannot become certainty
+    assert cols["vitibet_available"] == 0.0
     assert cols["bzzoiro_p"] is None          # dark -> imputed by the builder
     assert cols["bzzoiro_available"] == 0.0
 
@@ -126,7 +125,7 @@ def test_feature_vector_is_identity_when_every_column_is_present():
 # --------------------------------------------------------------------------
 # The fit: shape, refusal, and acceptance by the real activation gate
 # --------------------------------------------------------------------------
-def _synthetic_fixtures(days: int = 200, per_day: int = 25) -> dict:
+def _synthetic_fixtures(days: int = 200, per_day: int = 25, full_coverage=False) -> dict:
     rng = random.Random(20261008)
     fixtures: dict = {}
     start = date(2026, 1, 1)
@@ -141,19 +140,25 @@ def _synthetic_fixtures(days: int = 200, per_day: int = 25) -> dict:
             home_p = max(probs["forebet"][0], probs["zulubet"][0], probs["statarea"][0])
             outcome = "home" if rng.random() < home_p else (
                 "draw" if rng.random() < 0.25 else "away")
+            if full_coverage:
+                for source in DECLARED_SOURCE_ORDER:
+                    probs[source] = probs["forebet"]
             key = (day, f"home{slot}", f"away{slot}")
             fixtures[key] = {
                 "sources": {s: tuple(probs[s]) for s in probs},
                 "outcome": outcome,
                 "league": "Test League",
-                "extras": {"odd1": 1.8, "oddx": 3.4, "odd2": 4.2},
+                "extras": {"odd1": 1.8, "oddx": 3.4, "odd2": 4.2,
+                           **({"kelly": .2, "pred_hs": 2, "pred_gs": 1,
+                               "goalsavg": 2.4, "p_ng": .4, "p_under": .4,
+                               "p_gg": .6} if full_coverage else {})},
             }
     return fixtures
 
 
 def test_fit_payload_is_accepted_by_the_activation_gate(tmp_path):
     module = _load_script("fit_phase5_candidate", "scripts/fit_phase5_candidate.py")
-    frame = module.build_frame(_synthetic_fixtures())
+    frame = module.build_frame(_synthetic_fixtures(full_coverage=True))
     assert len(frame) > module.MIN_ERA_TRAIN_ROWS
     assert module._shortfall(frame, module.era_bounds(frame)) == []
 
@@ -164,12 +169,11 @@ def test_fit_payload_is_accepted_by_the_activation_gate(tmp_path):
     ) == []
     assert set(result["fallback_means"]) == set(K_FEATURES)
     assert result["fallback_method"] == "era_train_slice_mean"
-    # The three election sources are live; the five declared capture sources
-    # are dark in this fixture, and the artefact says so.
+    # Every fitted probability column has observed training evidence.
     assert result["source_coverage"]["forebet"]["status"] == "live"
     for source in ("vitibet", "bzzoiro", "betclan", "scoutingstats", "betminer"):
-        assert result["source_coverage"][source]["status"] == "dark"
-        assert result["source_coverage"][source]["share"] == 0.0
+        assert result["source_coverage"][source]["status"] == "live"
+        assert result["source_coverage"][source]["share"] > 0
 
     certificate = {
         "record_type": "phase5_certification_verdict",
@@ -411,3 +415,18 @@ def test_probe_dark_source_and_table_precedence(tmp_path, monkeypatch):
         assert module._probe_text(module.probe_tables(con, date(2026, 10, 1), date(2026, 10, 9))["betminer"]) == "   (no table visible)"
         con.execute("CREATE TABLE forebet (date VARCHAR)")
         assert module._raw_relation(con, "forebet") == "forebet"
+
+
+def test_fully_dark_columns_cannot_acquire_invented_training_means():
+    module = _load_script("fit_phase5_candidate", "scripts/fit_phase5_candidate.py")
+    frame = module.build_frame(_synthetic_fixtures())
+    assert frame.iloc[0]["rolling_hit_rate"] != frame.iloc[0]["rolling_hit_rate"]
+    with pytest.raises(ValueError, match="no observed era-train mean"):
+        module.fit_candidate(frame, module.era_bounds(frame))
+
+
+def test_missing_model_feature_without_recorded_mean_fails_closed():
+    with pytest.raises(ValueError, match="unavailable feature"):
+        feature_vector({}, {"feature_cols": ["fb_p"]})
+    assert feature_vector({}, {"feature_cols": ["fb_p"],
+                               "fallback_means": {"fb_p": .62}}) == ([.62], ["fb_p"])

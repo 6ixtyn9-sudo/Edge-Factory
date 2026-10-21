@@ -32,7 +32,7 @@ def row(selection="home", probability=75, **extra):
                      "draw": (10, probability, 90-probability)}[selection]
     return {"home": "Sporting CP", "away": "Portimonense", "date": DAY,
             "league": "Portugal,Primeira Liga", "kickoff": f"{DAY}T20:30:00+00:00",
-            "sport": "soccer", "p1": probabilities[0], "px": probabilities[1],
+            "sport": "soccer", "ht_hs": 0, "ht_gs": 0, "p1": probabilities[0], "px": probabilities[1],
             "p2": probabilities[2], "odd1": 1.5, "oddx": 4, "odd2": 4, **extra}
 
 
@@ -221,6 +221,14 @@ def test_300_seeded_outputs_equal_immutable_prelogging_selector(monkeypatch):
         old_collector, new_collector = pt.FadeResearchCollector(), pt.FadeResearchCollector()
         baseline = namespace["eval_1x2"](DAY, data, edges, source_weights={}, research_collector=old_collector)
         audited = pt.eval_1x2(DAY, data, edges, source_weights={}, fixture_audit=[], research_collector=new_collector)
+        # Only the intentionally retired missing-Forebet HT numeric stand-ins
+        # differ. Preserve the immutable comparison for every other field.
+        if not data.get("forebet"):
+            for record in [*baseline[0], *old_collector.rows]:
+                for field in ("ml_ht_diff", "ml_ht_total"):
+                    if field in record:
+                        assert record[field] == 0
+                        record[field] = None
         assert audited == baseline, i
         assert new_collector.scored == old_collector.scored
         assert new_collector.rows == old_collector.rows
