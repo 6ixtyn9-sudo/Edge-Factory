@@ -363,7 +363,7 @@ def recreate_contract_views(con, edges, *, as_of=None):
     return available
 
 
-def enhancement_cohort(con, edge, *, as_of, selection, min_n=100):
+def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None):
     """All outcomes of the exact parent recipe; never condition on its winning.
 
     No Forebet voter/result inheritance, substitute electorate, future fixtures
@@ -373,22 +373,41 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100):
     identity = validate_contract(edge)
     if date.fromisoformat(as_of).isoformat() != as_of or edge['activated_as_of'] > as_of:
         raise ValueError('cohort precedes activation or has an invalid boundary')
-    _, observations, ambiguous, resolved, _ = collect_observations(
-        con, start=edge['mining_window']['start'], as_of=as_of)
+    # Caller-owned, read-phase-only cache. Never shared across warehouse builds
+    # or invocations; validation above still runs on every request.
+    start = edge['mining_window']['start']
+    snapshot_key = ('observations', con, start, as_of)
+    cohort_key = ('cohort', con, identity, start, as_of, selection, min_n)
+    if cache is not None and cohort_key in cache:
+        cached = cache[cohort_key]
+        return dict(cached) if cached is not None else None
+    if cache is not None and snapshot_key in cache:
+        snapshot = cache[snapshot_key]
+    else:
+        snapshot = collect_observations(con, start=start, as_of=as_of)
+        if cache is not None:
+            cache[snapshot_key] = snapshot
+    _, observations, ambiguous, resolved, _ = snapshot
     pairs = []
+    parent_hits = 0
     for row in contract_rows(observations, ambiguous, resolved, edge):
         if row['pick'] != selection:
             continue
         pair = resolved.get(_remine_key(row), {}).get('ft')
         if pair is not None:
             pairs.append(pair)
+            parent_hits += row['pick'] == row['outcome']
     n = len(pairs)
-    if n < min_n:
+    if not n or n < min_n:
+        if cache is not None:
+            cache[cohort_key] = None
         return None
     def rate(predicate):
         return sum(predicate(h, a) for h, a in pairs) / n
     result = {'n': n, 'avg_goals': sum(h + a for h, a in pairs) / n,
-              'contract_id': identity, 'as_of_exclusive': as_of}
+              'contract_id': identity, 'as_of_exclusive': as_of,
+              'window_start': start, 'selection': selection,
+              'parent_hits': parent_hits, 'parent_hit_rate': parent_hits / n}
     for goals in (2, 3, 4, 5):
         result[f'over{goals - 1}5'] = rate(lambda h, a: h + a >= goals)
     result['btts'] = rate(lambda h, a: h > 0 and a > 0)
@@ -396,4 +415,6 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100):
         for goals in (1, 2, 3, 4):
             result[f'{side}_o{goals - 1}5'] = rate(
                 lambda h, a: (h if side == 'h' else a) >= goals)
+    if cache is not None:
+        cache[cohort_key] = dict(result)
     return result

@@ -2863,8 +2863,6 @@ def pick_result(pick, settled):
     if outcome is None:
         return None
     sel = str(pick.get("pick") or "").lower()
-    if outcome == "draw":
-        return "loss"
     return "win" if outcome == sel else "loss"
 
 
@@ -3853,8 +3851,6 @@ def _rescheduled_leg_result(day: str, pick: dict, settled: dict):
     if outcome not in ("home", "away", "draw"):
         return None
     sel = str(pick.get("pick") or "").lower()
-    if outcome == "draw":
-        return "loss"
     return "win" if outcome == sel else "loss"
 
 

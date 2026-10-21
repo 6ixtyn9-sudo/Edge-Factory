@@ -588,6 +588,11 @@ def strip_retired_top_scores(comment: object) -> str:
     exact-score surface immediately.
     """
     text = str(comment or "")
+    # Retained archived rows can outlive the numeric-profile migration. Hide
+    # the retired no-statistics warning in human reports without rewriting
+    # the original decision-time archive or inventing replacement evidence.
+    if text.strip() == "Exact post-Forebet contract; searched validation is not untouched forward proof.":
+        return ""
     return re.sub(r"\s*\|\s*Top Scores:\s*.*$", "", text, flags=re.IGNORECASE).strip()
 
 

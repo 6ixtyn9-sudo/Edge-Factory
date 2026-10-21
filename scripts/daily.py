@@ -1157,7 +1157,7 @@ def run_pipeline(
             f"refresh result donors ({refresh_day})",
         )
         run_soft(
-            "python3 scripts/capture_daily.py --skip-build --sources prosoccer",
+            "python3 scripts/capture_daily.py --skip-build --sources prosoccer --forward-only",
             "capture_daily prosoccer intraday recapture",
         )
         run_soft(
