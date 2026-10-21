@@ -160,3 +160,54 @@ def test_later_load_observes_new_result_facts(tmp_path, monkeypatch):
     assert at.pick_result(dict(row, pick='home'), second) == 'loss'
     assert first is not second
     assert first.scores != second.scores
+
+
+@pytest.mark.parametrize('selection', ['home', 'draw', 'away'])
+@pytest.mark.parametrize('outcome', ['home', 'draw', 'away'])
+def test_every_1x2_selection_grades_by_equality_on_exact_and_rescheduled_dates(
+    selection, outcome, monkeypatch
+):
+    monkeypatch.setattr(at, 'SETTLED_KEY_NAMES', {})
+    pick = dict(date='2026-10-20', home='Alpha Town', away='Bravo City',
+                market='1x2', pick=selection)
+    hk, ak = at._result_write_keys(pick['home'], pick['away'])[0]
+    expected = 'win' if selection == outcome else 'loss'
+    assert at.pick_result(pick, {('2026-10-20', hk, ak): outcome}) == expected
+    assert at._rescheduled_leg_result(
+        pick['date'], pick, {('2026-10-21', hk, ak): outcome}) == expected
+
+
+def test_rescheduled_draw_conflicts_and_squad_boundaries_remain_held(monkeypatch):
+    monkeypatch.setattr(at, 'SETTLED_KEY_NAMES', {})
+    pick = dict(date='2026-10-20', home='Alpha Town', away='Bravo City', pick='draw')
+    hk, ak = at._result_write_keys(pick['home'], pick['away'])[0]
+    settled = {('2026-10-21', hk, ak): 'draw', ('2026-10-19', hk, ak): 'away'}
+    assert at._rescheduled_leg_result(pick['date'], pick, settled) == 'conflict'
+    youth = dict(pick, home='Alpha Town U21', away='Bravo City U21')
+    assert at._rescheduled_leg_result(pick['date'], youth, settled) is None
+
+
+@pytest.mark.parametrize('played', ['2026-10-20', '2026-10-21'])
+def test_draw_ticket_pays_correct_return_in_scratch_state_only(played, tmp_path, monkeypatch):
+    monkeypatch.setattr(at, 'LOCALDATA', tmp_path)
+    main_path = tmp_path / 'main_state_must_not_be_written.json'
+    monkeypatch.setattr(at, 'STATE_FILE', main_path)
+    monkeypatch.setattr(at, 'SETTLED_KEY_NAMES', {})
+    day = '2026-10-20'
+    pick = dict(date=day, home='Alpha Town', away='Bravo City', pick='draw')
+    leg = dict(match='Alpha Town vs Bravo City', home=pick['home'], away=pick['away'],
+               pick='draw', odds=3.5)
+    state = at.fresh_state()
+    state['open_slips'] = [dict(date=day, staked_pct=10., accas=[
+        dict(stake_pct=10., odds=3.5, legs=[leg])])]
+    hk, ak = at._result_write_keys(pick['home'], pick['away'])[0]
+    lane = at.Lane(tmp_path / 'draw_state.json', 'scratch_draw', 'scratch_draw', at.STAKE_FRAC)
+    at.settle_open_slips(state, {(played, hk, ak): 'draw'}, archives=[pick],
+                         entries_by_date={played: [dict(pick, date=played, outcome='draw')]},
+                         scores={}, lane=lane)
+    assert (tmp_path / 'draw_state.json').exists()
+    assert not main_path.exists()
+    assert state['open_slips'] == []
+    assert state['bank'] == pytest.approx(125.)  # 100 - 10 + 10*3.5
+    assert state['history'][0]['returned_pct'] == 35.
+    assert state['history'][0]['accas'][0]['legs'][0]['result'] == 'win'

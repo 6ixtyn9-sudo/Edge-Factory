@@ -98,6 +98,9 @@ def no_certified_ml_rules(monkeypatch, tmp_path):
     }))
     monkeypatch.setattr(pt, "EDGES_PATH", empty_reg)
     monkeypatch.setattr(pt, "PHASE5_ACTIVATION_ROOT", activation_root)
+    # This synthetic scoring case has an observed rolling-history input;
+    # the production getter must not invent 75% when no warehouse exists.
+    monkeypatch.setattr(pt, "get_rolling_hit_rate_last_14d", lambda day: .6)
     return pt
 
 

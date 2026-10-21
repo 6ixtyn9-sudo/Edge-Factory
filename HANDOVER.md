@@ -11623,3 +11623,154 @@ passed0.89s. Thus all3500 collected tests were exercised across the full run and
 this targeted follow-up, with zero failures; not a single3500-pass full-run receipt.
 Only test coverage and this handover changed locally; no production fix/merge
 for the two outstanding registry failure paths is claimed.
+
+### 21 October 2026 — replace the stats placeholder and fix contract consumers
+
+Operator explicitly requested removal of placeholders, real numbers, and action
+on the diagnosed stats/draw-grading/enrichment fixes. The fixed no-statistics
+warning was introduced by the earlier agent integration commit de1424972725
+(`Connect validated post-Forebet contracts across operational consumers`), not
+by a provider. It prevented the legacy winner-conditioned Forebet display from
+being reused, but left the numeric replacement unwired. This change corrects
+that omission without restoring the old proxy.
+
+* Exact-contract all-outcome cohorts now supply BOTH the structured
+  statistical_profile and the numeric statistical_comment, even without a
+  quote. Display includes selected-side parent hits/n, mean goals, paired
+  O/U1.5–4.5, BTTS yes/no, and paired home/away goal lines0.5–3.5, with exact
+  contract ID and exclusive fixture-date cutoff. These are descriptive searched
+  history, NOT newly certified markets or untouched forward validation.
+* Thin samples are displayed at their actual n but still cannot authorize an
+  enhancement below the unchanged n>=100 floor. Missing exact evidence stays
+  null with an explicit status; no synthetic rates or Forebet/model fallback.
+  Partial archived replay cohorts render ONLY measured fields, never inferred
+  averages or missing rates. Recommendation explanations now state the realized
+  rate, not a conflicting model-prior explanation. Existing event_notes remain
+  price-gated; the stats display is not.
+* The shared renderer hides the retired constant on retained archived rows,
+  without rewriting their original decision-time evidence. Numeric display
+  changes cannot rerank duplicate operational post-Forebet representatives.
+* Both exact/fallback pick_result and the rescheduled 1X2 grader use selection
+  equality, so a selected draw with a drawn result wins. Conflicts, unknown
+  scores, squad boundaries and void policy remain unchanged. Scratch-state
+  tests verify the returned stake and bank arithmetic; NO production bank or
+  settled history was replayed or edited.
+* Existing card_enrich resolves opaque pfc IDs against validated, certified,
+  activated registry metadata with exact market/source identity. Missing,
+  malformed, duplicated or benched recipes and unavailable/nonfinite
+  probabilities remain unrankable. The top6/one-call-per-fixture/budget/ledger/
+  staleness machinery is unchanged. Offline on the saved Oct21 published
+  41-row snapshot:40rankable current-contract fixtures,6selected; the retained
+  legacy row is rejected,zero provider calls. This is
+  not a fresh live capture or a guarantee of context identity/price coverage.
+* Caller-owned read-phase evidence caching shares one historical source scan
+  per connection/window/cutoff and one projection per contract/selection/floor
+  during a picks build. No persisted or cross-invocation cache; registry status
+  and identity are checked before using it. Tests require identical cached/
+  uncached profiles and prevent cross-connection/date/selection contamination.
+* ProSoccer no longer repeats an exhausted transport+relay ladder against all
+  calendar aliases. Reachable stale-date aliases still work; outages still
+  raise and remain retryable, not successful empty captures. Intraday capture
+  uses the existing capture_daily CLI's forward-only range; yesterday is
+  already covered by the separate result-donor refresh and is not fetched twice.
+
+No miner, activation/decay/price/value/cohort policy, provider budget, workflow,
+freeze override or financial replay changed. No production dispatch performed.
+The two separately documented missing/malformed-registry serving findings from
+PR112 remain outside this fix; this is not an all-system safety sign-off.
+Final frozen-source regression: **3540 passed,0failed,0skipped149.04s**.
+Focused stats/replay/grading/enrichment/capture/orchestration suite263passed
+5.75s; the subsequent expanded settlement-only suite26passed0.17s includes
+both scratch-bank payout cases. Earlier full-run failures exposed partial
+archived-profile rendering and numeric conditioning-input compatibility; both
+were corrected and the final full suite above was rerun from a fresh process.
+No test was deleted, skipped or weakened. Final diff-check clean; production
+localdata and installed workflow remain unchanged.
+Post-regression test-isolation correction: the new draw payout test redirected
+LOCALDATA but initially omitted an explicit scratch lane, so save_state used
+the separately bound default STATE_FILE in this sandbox. Restored that tracked
+file byte-for-byte from the pre-test baseline; no state-file change entered the
+commit/PR. The test now supplies its own scratch lane AND redirects the default
+state path to a temporary sentinel, asserting that the sentinel is never
+written. This closes the test-harness leak, not a production financial replay.
+Final red-team guard: when the registry operates post_forebet_v1, a retained
+legacy textual-rule archive row cannot enter the enrichment budget pool. This
+prevents a retired electorate from consuming quota; explicit old-mode offline
+compatibility is retained. Final full-regression receipt follows.
+Final isolated-head receipt, including the retired-row quota guard and payout
+harness correction: **3541 passed,0failed,0skipped147.93s**. The same command
+then asserted `git diff --exit-code HEAD -- localdata .github` and exited0:
+no state restoration was needed after this final run. No tracked financial or
+workflow changes; diff-check clean. PR113 carries the implementation; no merge
+or production workflow dispatch is implied by this receipt.
+
+### 21 October 2026 — remove numeric stand-ins, including legacy paths
+
+Operator strengthened the requirement to “i dont want any placeholders even
+legacy ones.” This supersedes the earlier allowance for keeping model-prior
+numbers as non-authorizing diagnostics. No fake number is an acceptable
+representation of missing probability/statistical evidence.
+
+* Deleted the inherited enhancement league/team priors, Poisson calculations
+  and shrinkage helper. Candidates use measured exact-parent, selected-side,
+  all-outcome cohort rates only. Missing/unsupported markets are excluded;
+  raw_probability and enhancement_stated_probability remain null, not an
+  assumed model number. Descriptive partial evidence remains independent of
+  quotes; the n>=100 betting floor and broader-cohort competition ON remain.
+* Shared finite-probability validation rejects booleans, strings, nonfinite
+  and out-of-range numbers. probability_available=False overrides even a
+  numeric legacy avg_p. Actual measured zero is retained for evidence/display,
+  not confused with absence; zero still cannot authorize a live ticket.
+  Pick/daily/notification displays say unavailable; Supabase, scored shadow
+  and settled-audit exports preserve null. Enhancement displays also reject
+  malformed rates rather than coercing them to a percentage.
+* Removed guessed legacy 2-way>=70/3-way>=65 operating points, including the
+  standalone BetExplorer overlap reader. Missing/empty/unusable certification
+  supplies no 1X2 thresholds. Independently certified OU/BTTS entries remain
+  available. Malformed structured edge lists/non-object entries fail closed.
+* Removed legacy ML feature guesses: rolling hit rate75%, HT probability50%,
+  odds1.50, missing goal/score/staking-signal zeros, and the K builder's neutral
+  fallback table. Missing inputs remain unknown. The existing model-vector
+  mechanism can use explicitly recorded finite training means, with imputed
+  columns reported; without such a mean, scoring is refused and diagnosed
+  without dropping the fixture's separate consensus evaluation. A completely
+  unobserved training column cannot acquire a fabricated “era-train mean”;
+  candidate fitting refuses it. Legacy training uses complete measured rows.
+  No model, registry, certificate or activation history was rewritten and ML
+  was not reactivated. Recorded training-mean imputation is model math, never
+  exposed as an observed fixture/cohort probability.
+* Legacy slice-ledger serialization preserves unknown probabilities as null;
+  calibration excludes unknowns but counts genuine zero observations. This
+  is a reader/writer correction, not a replay/rewrite of an existing ledger.
+* O2.5 research tracking no longer borrows a parent 1X2 probability or price.
+  Target enhancement/primary market identity is checked. Unknown probability
+  stays out of bands and means while genuinely priced outcomes still enter
+  ROI; p_n exposes the known-probability denominator. Empty archives work.
+  Other “over” markets cannot enter the O2.5 sample just because of their side.
+
+Attribution is limited to verified patches: integration de1424972725 introduced
+both the warning-only stats text and missing avg_p->0.0; the model-prior block
+already existed in its parent3a0337421ef35a65faf167089b296c85b5a42412. Original
+prior author is not established. A shallow-boundary blame is NOT evidence of
+original authorship for the additional legacy ML defaults found this round.
+
+Regression changes intentionally replace assertions requiring retired invented
+numbers with unknown/real-evidence assertions. Existing positive ML fixtures
+now supply their synthetic observed inputs or explicit training means. The
+300-case immutable-selector comparison retains every other field; only the
+intentional missing-Forebet HT zero->null metadata change is normalized, with
+an assertion that the old value really was zero. New negative coverage proves
+missing model inputs neither emit nor enter research capture and do not bypass
+the separate consensus route. No tests deleted or skipped.
+
+Final frozen-source full suite: **3584 passed,0failed,0skipped145.57s**.
+The same process then ran `git diff --exit-code HEAD -- localdata .github` and
+returned0, with NO restoration: tracked banks, archives, registries, tickets,
+certificates and workflows unchanged. First full run was3581passed/1failed:
+an old positive research-capture fixture had no rolling-history input and
+relied on the removed75% default; supplied an explicit synthetic history input
+and reran the entire suite above. Latest53-case targeted validation passed.
+No production dispatch, historical replay, merge or deployment implied. PR113
+was OPEN/MERGEABLE at the pre-push check; its existing Workers Builds check
+was FAILURE. This addendum supersedes the prior entry's statement that the
+missing/malformed-registry findings were outside scope.

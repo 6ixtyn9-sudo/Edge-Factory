@@ -220,3 +220,118 @@ def test_real_production_quote_has_no_matching_kickoff_witness(monkeypatch):
     index = load_prices_index(root, '2026-10-20')
     assert attach_enhancement_price(row, index)['enhancement_priced'] is False
     assert row['enhancement_price_rejection'] == 'no_matching_kickoff_and_capture_witness'
+
+
+def test_exact_stats_visible_without_a_quote_and_include_losses(monkeypatch):
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    con = connection(observations())
+    out = pt.compute_dynamic_enhancement(con, parent(recipe), {})
+    profile = out['statistical_profile']
+    assert profile['n'] == 100
+    assert profile['parent_hits'] == 50 and profile['parent_hit_rate'] == .5
+    assert profile['over25'] == .5 and profile['h_o15'] == .5
+    assert 'n=100' in out['statistical_comment']
+    assert 'Parent hit rate: 50.0% (50/100)' in out['statistical_comment']
+    for label in ('Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5',
+                  'Over 3.5', 'Under 3.5', 'Over 4.5', 'Under 4.5',
+                  'BTTS:', 'BTTS-No:', 'Home Over 0.5', 'Away Under 3.5'):
+        assert label in out['statistical_comment']
+    assert recipe['contract_id'] in out['statistical_comment']
+    assert 'before 2026-10-20' in out['statistical_comment']
+    assert 'All parent outcomes' in out['statistical_comment']
+    assert out['statistical_profile_status'] == 'available'
+    assert out['recommended_enhancement'] is None and not out['event_notes']
+    # Display cannot depend on an invented probability for a categorical vote.
+    other = pt.compute_dynamic_enhancement(con, dict(parent(recipe), avg_p=None), {})
+    assert other['statistical_profile'] == profile
+
+
+def test_thin_sample_is_real_display_evidence_but_cannot_authorize_a_bet(monkeypatch):
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    # Price everything above the floor: only the original n>=100 gate blocks it.
+    def price(row, _index):
+        row.update(enhancement_price=1.8, enhancement_priced=True)
+    monkeypatch.setattr(pt, 'attach_enhancement_price', price)
+    out = pt.compute_dynamic_enhancement(connection(observations(20)), parent(recipe), {})
+    assert out['statistical_profile']['n'] == 20
+    assert 'n=20' in out['statistical_comment']
+    assert out['recommended_enhancement'] is None and out['event_notes'] == []
+    assert pt.HYBRID_MIN_N == 100
+
+
+@pytest.mark.parametrize('missing', ['warehouse', 'contract', 'results'])
+def test_no_placeholder_or_forebet_proxy_when_exact_numbers_unavailable(monkeypatch, missing):
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry',
+                        lambda: {'edges': [] if missing == 'contract' else [recipe]})
+    rows = observations()
+    if missing == 'results':
+        rows = [dict(r, hs=None, gs=None) for r in rows]
+    con = None if missing == 'warehouse' else connection(rows)
+    row = dict(parent(recipe), statistical_comment='old placeholder')
+    out = pt.compute_dynamic_enhancement(con, row, {})
+    assert out['statistical_comment'] is None and out['statistical_profile'] is None
+    assert out['statistical_profile_status'] == 'unavailable_exact_contract_cohort'
+    assert not out['event_notes'] and out['recommended_enhancement'] is None
+
+
+def test_build_scoped_cache_matches_uncached_numbers_and_avoids_rescans(monkeypatch):
+    recipe = edge()
+    con = connection(observations())
+    cache, calls = {}, []
+    original = cc.collect_observations
+    def counted(*args, **kwargs):
+        calls.append((args, kwargs))
+        return original(*args, **kwargs)
+    monkeypatch.setattr(cc, 'collect_observations', counted)
+    kwargs = dict(as_of='2026-10-20', selection='home', min_n=1)
+    plain = cc.enhancement_cohort(con, recipe, **kwargs)
+    calls.clear()
+    first = cc.enhancement_cohort(con, recipe, cache=cache, **kwargs)
+    assert first == plain
+    first['over25'] = 999  # caller cannot poison the next row's cached profile
+    assert cc.enhancement_cohort(con, recipe, cache=cache, **kwargs) == plain
+    # Another market/side/threshold uses its own exact projection, same snapshot.
+    other = edge('ou_2.5')
+    cc.enhancement_cohort(con, other, cache=cache, **dict(kwargs, selection='over'))
+    assert len(calls) == 1
+    cc.enhancement_cohort(con, recipe, cache=cache, **dict(kwargs, as_of='2026-10-21'))
+    assert len(calls) == 2
+    cc.enhancement_cohort(connection(observations()), recipe, cache=cache, **kwargs)
+    assert len(calls) == 3  # different warehouse connection cannot borrow a result
+    cc.enhancement_cohort(con, recipe, cache={}, **kwargs)
+    assert len(calls) == 4  # next invocation starts fresh
+    with pytest.raises(ValueError):
+        cc.enhancement_cohort(con, dict(recipe, contract_id='pfc_forged'), cache=cache, **kwargs)
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    assert pt.fetch_match_cohort(con, 'home', 80., 3, pick=parent(recipe), cache=cache)
+    recipe['status'] = 'benched'
+    assert pt.fetch_match_cohort(con, 'home', 80., 3, pick=parent(recipe), cache=cache) is None
+
+
+def test_display_numbers_cannot_rerank_duplicate_operational_contracts():
+    row = dict(parent(edge()), rule=edge()['rule'], odds=1.8,
+               bucket='CAUTION', statistical_comment='old constant comment')
+    before = pt._representative_score(row)
+    profile = cc.enhancement_cohort(connection(observations()), edge(),
+                                    as_of=row['date'], selection='home')
+    row['statistical_comment'] = pt.format_contract_profile(profile)
+    row['statistical_profile'] = profile
+    assert pt._representative_score(row) == before
+    row['statistical_comment'] = None
+    assert pt._representative_score(row) == before
+
+
+def test_retained_archives_no_longer_render_the_retired_placeholder():
+    from edgefactory.util import strip_retired_top_scores
+    comment = 'Exact post-Forebet contract; searched validation is not untouched forward proof.'
+    row = {'statistical_comment': comment}
+    assert strip_retired_top_scores(row['statistical_comment']) == ''
+    assert row['statistical_comment'] == comment  # decision-time audit unchanged
+    partial = dict(n=200, contract_id='pfc_test', as_of_exclusive='2026-10-20', over25=.6)
+    numeric = pt.format_contract_profile(partial)
+    assert strip_retired_top_scores(numeric) == numeric
+    assert 'Over 2.5: 60.0%' in numeric and 'Under 2.5: 40.0%' in numeric
+    assert 'Avg Goals' not in numeric and 'BTTS:' not in numeric  # no invented fields
