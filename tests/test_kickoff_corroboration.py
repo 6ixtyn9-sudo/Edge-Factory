@@ -114,7 +114,50 @@ def test_corroborate_blocking_findings():
         witness_home="Aston Villa", witness_away="Viking"
     )
     assert res["corroborated"] is False
-    assert res["reason"] == "invalid_or_empty_witness_source"
+    assert res["reason"] == "unrecognized_or_empty_witness_source"
+    assert res["authoritative_kickoff_utc"] is None
+
+    # Regression Case 1: Unrecognized witness source fails closed
+    res = corroborate_kickoff_witness(
+        fixture_clock="20:00",
+        witness_kickoff_utc="2026-10-21T19:00:00Z",
+        witness_source="not_a_real_schedule_provider",
+        fixture_source="betexplorer",
+        assumed_fixture_utc=assumed_utc,
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Aston Villa", witness_away="Viking"
+    )
+    assert res["corroborated"] is False
+    assert res["reason"] == "unrecognized_or_empty_witness_source"
+    assert res["authoritative_kickoff_utc"] is None
+
+    # Regression Case 2: Unrecognized fixture source fails closed
+    res = corroborate_kickoff_witness(
+        fixture_clock="20:00",
+        witness_kickoff_utc="2026-10-21T19:00:00Z",
+        witness_source="theoddsapi",
+        fixture_source="unknown_fixture_feed",
+        assumed_fixture_utc=assumed_utc,
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Aston Villa", witness_away="Viking"
+    )
+    assert res["corroborated"] is False
+    assert res["reason"] == "unrecognized_or_empty_fixture_source"
+    assert res["authoritative_kickoff_utc"] is None
+
+    # Regression Case 3: Separator variants (betexplorer-odds vs betexplorer) are recognized and rejected as circular
+    res = corroborate_kickoff_witness(
+        fixture_clock="20:00",
+        witness_kickoff_utc="2026-10-21T19:00:00Z",
+        witness_source="betexplorer-odds",
+        fixture_source="betexplorer",
+        assumed_fixture_utc=assumed_utc,
+        fixture_home="Aston Villa", fixture_away="Viking",
+        witness_home="Aston Villa", witness_away="Viking"
+    )
+    assert res["corroborated"] is False
+    assert res["reason"] == "circular_corroboration_rejected"
+    assert res["authoritative_kickoff_utc"] is None
 
     # 3. Missing or mismatched fixture identity fails closed
     res = corroborate_kickoff_witness(
