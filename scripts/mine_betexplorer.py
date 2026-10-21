@@ -228,12 +228,16 @@ def _is_qualified_rule(rule: str) -> bool:
 
 
 def load_operational_thresholds() -> dict[int, float]:
-    thresholds = {2: 70.0, 3: 65.0}
+    thresholds = {}
     try:
         data = json.loads(EDGES_PATH.read_text())
     except Exception:
         return thresholds
-    for e in data.get("edges", []):
+    if not isinstance(data, dict) or not isinstance(data.get("edges"), list):
+        return thresholds
+    for e in data["edges"]:
+        if not isinstance(e, dict):
+            continue
         if e.get("status") != "certified" or e.get("market", "1x2") != "1x2":
             continue
         rule = e.get("rule", "")
@@ -257,7 +261,7 @@ def load_edge_candidates(warehouse: Path, start: str, end: str) -> list[dict]:
     thresholds = load_operational_thresholds()
     out: list[dict] = []
 
-    t2 = thresholds.get(2, 70.0)
+    t2 = thresholds.get(2)
     try:
         rows = con.execute(f"""
             SELECT date, home, away, outcome, fb_pick AS pick,
@@ -271,14 +275,14 @@ def load_edge_candidates(warehouse: Path, start: str, end: str) -> list[dict]:
         for date_, home, away, outcome_, pick, avg_p, pick_odds, league, edge_family in rows:
             out.append({
                 "date": str(date_)[:10], "home": home, "away": away, "outcome": outcome_,
-                "edge_pick": pick, "edge_avg_p": float(avg_p or 0),
+                "edge_pick": pick, "edge_avg_p": float(avg_p) if avg_p is not None else None,
                 "edge_pick_odds": pick_odds, "league": league, "edge_family": edge_family,
                 "edge_rule": f"2way-unanimous avg_p>={t2:g}",
             })
     except Exception as exc:
         print(f"WARN: consensus2 overlap query failed: {exc}")
 
-    t3 = thresholds.get(3, 65.0)
+    t3 = thresholds.get(3)
     try:
         rows = con.execute(f"""
             SELECT date, home, away, outcome, fb_pick AS pick,
@@ -292,7 +296,7 @@ def load_edge_candidates(warehouse: Path, start: str, end: str) -> list[dict]:
         for date_, home, away, outcome_, pick, avg_p, pick_odds, league, edge_family in rows:
             out.append({
                 "date": str(date_)[:10], "home": home, "away": away, "outcome": outcome_,
-                "edge_pick": pick, "edge_avg_p": float(avg_p or 0),
+                "edge_pick": pick, "edge_avg_p": float(avg_p) if avg_p is not None else None,
                 "edge_pick_odds": pick_odds, "league": league, "edge_family": edge_family,
                 "edge_rule": f"3way-unanimous avg_p>={t3:g}",
             })

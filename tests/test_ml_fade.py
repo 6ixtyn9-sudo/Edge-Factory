@@ -403,6 +403,10 @@ def _serve_data(majority="home"):
     p = per_sel[majority]
     base = {"home": "Alpha", "away": "Beta", "league": "Test League",
             "kickoff": "15-01, 19:00",
+            "p1_ht": .6, "px_ht": .25, "p2_ht": .15,
+            "ht_hs": 0, "ht_gs": 0, "kelly": .2,
+            "pred_hs": 2, "pred_gs": 1, "goalsavg": 2.4,
+            "p_ng": .4, "p_under": .4, "p_gg": .6,
             "odd1": 1.50, "oddx": 4.00, "odd2": 6.00}
     fb = {**base, "p1": p[0], "px": p[1], "p2": p[2]}
     zb = {**base, "p1": p[0], "px": p[1], "p2": p[2]}

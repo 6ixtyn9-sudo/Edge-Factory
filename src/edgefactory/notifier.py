@@ -17,7 +17,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from edgefactory.util import honest_display_label
+from edgefactory.util import honest_display_label, format_pick_probability, finite_probability, pick_probability_pct
 
 BUCKET_CLEAN = "CERTIFIED_CLEAN"
 BUCKET_CAUTION = "CAUTION"
@@ -123,46 +123,46 @@ def format_whatsapp_summary(
     clean_picks = buckets.get(BUCKET_CLEAN, [])
     if clean_picks:
         lines.append(f"✅ *CERTIFIED CLEAN* ({len(clean_picks)} Strong Edges)")
-        for p in sorted(clean_picks, key=lambda x: -float(x.get("avg_p") or 0)):
+        for p in sorted(clean_picks, key=lambda x: -(pick_probability_pct(x) or 0)):
             match = str(p.get("match", "?"))
             selection = str(p.get("pick", "?")).upper()
             odds = format_odds_display(p)
             ko = format_kickoff(p)
-            prob = float(p.get("avg_p") or 0)
+            prob = format_pick_probability(p)
             w_score = p.get("w_score")
             w_str = f", w={w_score:.2f}" if w_score is not None else ""
             rule = _pick_rule_label(p)
             enh_label = p.get("enhancement_label")
-            enh_prob = p.get("enhancement_probability")
+            enh_prob = finite_probability(p.get("enhancement_probability"))
             
             lines.append(f"• *{match}* ➡️ *{selection}* {odds}")
-            if enh_label and enh_prob:
-                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}")
-                lines.append(f"   {enhancement_marker(p)} *Combo:* {enh_label} ({enh_prob:.1%})\n")
+            if enh_label:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob}{w_str}")
+                lines.append(f"   {enhancement_marker(p)} *Combo:* {enh_label} ({f'{enh_prob:.1%}' if enh_prob is not None else 'unavailable'})\n")
             else:
-                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}\n")
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob}{w_str}\n")
 
     caution_picks = buckets.get(BUCKET_CAUTION, [])
     if caution_picks:
         lines.append(f"⚠️ *CAUTION* ({len(caution_picks)} Qualitative / Unrated Context Edges)")
-        for p in sorted(caution_picks, key=lambda x: -float(x.get("avg_p") or 0)):
+        for p in sorted(caution_picks, key=lambda x: -(pick_probability_pct(x) or 0)):
             match = str(p.get("match", "?"))
             selection = str(p.get("pick", "?")).upper()
             odds = format_odds_display(p)
             ko = format_kickoff(p)
-            prob = float(p.get("avg_p") or 0)
+            prob = format_pick_probability(p)
             w_score = p.get("w_score")
             w_str = f", w={w_score:.2f}" if w_score is not None else ""
             rule = _pick_rule_label(p)
             enh_label = p.get("enhancement_label")
-            enh_prob = p.get("enhancement_probability")
+            enh_prob = finite_probability(p.get("enhancement_probability"))
             
             lines.append(f"• *{match}* ➡️ *{selection}* {odds}")
-            if enh_label and enh_prob:
-                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}")
-                lines.append(f"   {enhancement_marker(p)} *Combo:* {enh_label} ({enh_prob:.1%})\n")
+            if enh_label:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob}{w_str}")
+                lines.append(f"   {enhancement_marker(p)} *Combo:* {enh_label} ({f'{enh_prob:.1%}' if enh_prob is not None else 'unavailable'})\n")
             else:
-                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}\n")
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob}{w_str}\n")
 
     skipped_count = sum(len(v) for k, v in buckets.items() if str(k).startswith("SKIPPED"))
     watchlist_count = sum(len(v) for k, v in buckets.items() if str(k).startswith("WATCHLIST"))
@@ -189,18 +189,18 @@ def format_whatsapp_discovery_summary(target_date: str, picks: list[dict[str, An
 
     if no_odds:
         lines.append(f"🔎 *NO MATCHED ODDS* ({len(no_odds)})")
-        for p in sorted(no_odds, key=lambda x: -float(x.get("avg_p") or 0)):
+        for p in sorted(no_odds, key=lambda x: -(pick_probability_pct(x) or 0)):
             lines.append(f"• *{p.get('match', '?')}* ➡️ *{str(p.get('pick', '?')).upper()}* @n/a")
             lines.append(
-                f"   └ [KO: {format_kickoff(p)}] | Rule: {_pick_rule_label(p)} | Prob: {float(p.get('avg_p') or 0):.0f}%\n"
+                f"   └ [KO: {format_kickoff(p)}] | Rule: {_pick_rule_label(p)} | Prob: {format_pick_probability(p)}\n"
             )
 
     if unknown_ctx:
         lines.append(f"🧩 *UNKNOWN CONTEXT* ({len(unknown_ctx)})")
-        for p in sorted(unknown_ctx, key=lambda x: -float(x.get("avg_p") or 0)):
+        for p in sorted(unknown_ctx, key=lambda x: -(pick_probability_pct(x) or 0)):
             lines.append(f"• *{p.get('match', '?')}* ➡️ *{str(p.get('pick', '?')).upper()}* {format_odds_display(p)}")
             lines.append(
-                f"   └ [KO: {format_kickoff(p)}] | Rule: {_pick_rule_label(p)} | Prob: {float(p.get('avg_p') or 0):.0f}%\n"
+                f"   └ [KO: {format_kickoff(p)}] | Rule: {_pick_rule_label(p)} | Prob: {format_pick_probability(p)}\n"
             )
 
     if not picks:
@@ -256,7 +256,7 @@ def _tg_pick_card(p: dict[str, Any]) -> str:
     match = str(p.get("match", "?"))
     selection = str(p.get("pick", "?")).upper()
     ko = _tg_short_kickoff(format_kickoff(p))
-    prob = float(p.get("avg_p") or 0)
+    prob = format_pick_probability(p)
     rule = _pick_rule_label(p)
     book = p.get("bookmaker") or ""
     odds_val = p.get("odds")
@@ -270,14 +270,14 @@ def _tg_pick_card(p: dict[str, Any]) -> str:
     book_txt = f"  ·  {book}" if book else ""
     lines = [
         f"  {match}",
-        f"     ➜ {selection}  @ {odds_txt}{book_txt}   [{prob:.0f}% · {ko} · {rule}]",
+        f"     ➜ {selection}  @ {odds_txt}{book_txt}   [{prob} · {ko} · {rule}]",
     ]
     # Enhancement / combo line. Mirror the txt report: only render when the
     # EV selector attached a real captured price. Unpriced fallback picks
     # (the legacy "Home O0.5 on every favourite" path) are hidden entirely —
     # no price means no recommendation, no noise on Telegram.
     enh_label = p.get("enhancement_label")
-    enh_prob = p.get("enhancement_probability")
+    enh_prob = finite_probability(p.get("enhancement_probability"))
     enh_priced = bool(p.get("enhancement_priced"))
     if enh_label and enh_priced:
         bits = [enhancement_marker(p), enh_label]
@@ -286,6 +286,8 @@ def _tg_pick_card(p: dict[str, Any]) -> str:
                 bits.append(f"{float(enh_prob):.0%}")
             except (TypeError, ValueError):
                 pass
+        else:
+            bits.append("unavailable")
         enh_price = p.get("enhancement_price")
         enh_edge = p.get("enhancement_edge_sample")
         if enh_price:
@@ -362,7 +364,7 @@ def format_telegram_official(target_date: str, picks: list[dict[str, Any]],
         emoji, title, subtitle = _TG_BUCKET_META[str(bucket)]
         lines.extend(_tg_section_header(emoji, title, subtitle, None))
         lines.append(f"     {len(rows)} pick{'s' if len(rows) != 1 else ''}")
-        for p in sorted(rows, key=lambda x: -float(x.get("avg_p") or 0)):
+        for p in sorted(rows, key=lambda x: -(pick_probability_pct(x) or 0)):
             lines.append(_tg_pick_card(p))
         lines.append("")
 
@@ -399,7 +401,7 @@ def format_telegram_shadow(target_date: str, picks: list[dict[str, Any]],
             break
         rows = sorted(
             (p for p in picks if p.get("bucket") == bucket),
-            key=lambda x: -float(x.get("avg_p") or 0),
+            key=lambda x: -(pick_probability_pct(x) or 0),
         )
         if not rows:
             continue
@@ -479,7 +481,7 @@ def format_telegram_discovery(target_date: str, picks: list[dict[str, Any]]) -> 
     if not picks:
         lines.append("No new same-day watchlist discoveries.")
         return "\n".join(lines)
-    for p in sorted(picks, key=lambda x: -float(x.get("avg_p") or 0)):
+    for p in sorted(picks, key=lambda x: -(pick_probability_pct(x) or 0)):
         lines.append(_tg_pick_card(p))
     lines.append("")
     lines.append("Discovery alerts only — not yet fully actionable.")
@@ -755,13 +757,13 @@ def _format_shadow_pick_line(p: dict[str, Any]) -> str:
     of its stream context."""
     line = (
         f"• *{p.get('match', '?')}* ➡️ *{str(p.get('pick', '?')).upper()}* "
-        f"{format_odds_display(p)} · {float(p.get('avg_p') or 0):.0f}% · "
+        f"{format_odds_display(p)} · {format_pick_probability(p)} · "
         f"KO {format_kickoff(p)} · {_pick_rule_label(p)}"
     )
     enh_label = p.get("enhancement_label")
-    enh_prob = p.get("enhancement_probability")
+    enh_prob = finite_probability(p.get("enhancement_probability"))
     if enh_label:
-        prob_txt = ""
+        prob_txt = " (unavailable)"
         if enh_prob is not None:
             try:
                 prob_txt = f" ({float(enh_prob):.0%})"
@@ -804,7 +806,7 @@ def _shadow_blocks(
             break
         rows = sorted(
             (p for p in picks if p.get("bucket") == bucket),
-            key=lambda x: -float(x.get("avg_p") or 0),
+            key=lambda x: -(pick_probability_pct(x) or 0),
         )
         if not rows:
             continue

@@ -100,6 +100,7 @@ from edgefactory.assay import grade as assay_grade                  # noqa: E402
 from edgefactory.assay import wilson_lb                              # noqa: E402
 from edgefactory.config import GATES                                 # noqa: E402
 from edgefactory.enh_registry import check_enhancement_hit           # noqa: E402
+from edgefactory.util import finite_probability, pick_probability_pct
 from edgefactory import acca_gate                                    # noqa: E402
 from edgefactory import price_sources as psrc                        # noqa: E402
 
@@ -669,7 +670,7 @@ def _slice_clean_row(row):
         "away": str(row.get("away") or ""),
         "match": str(row.get("match") or ""),
         "pick": str(row.get("pick") or "").upper(),
-        "prob_stated": float(row.get("prob_stated") or 0.0),
+        "prob_stated": finite_probability(row.get("prob_stated")),
         "odds": float(row.get("odds") or 0.0),
         "bucket": str(row.get("bucket") or ""),
         "src": str(row.get("src") or ""),
@@ -763,7 +764,8 @@ def upsert_slice_day(rows, target, path=None, *, allow_empty=False):
 
 def _printed_prob_value(prob):
     """Probability represented by the frozen ``.0%`` slip print."""
-    return float(f"{float(prob):.0%}".rstrip("%")) / 100.0
+    prob = finite_probability(prob)
+    return float(f"{prob:.0%}".rstrip("%")) / 100.0 if prob is not None else None
 
 
 def _archive_index_for_slice(archives):
@@ -793,7 +795,7 @@ def _slice_row_from_archive(day, printed_match, pick, prob, odds, archive_row,
     return {
         "date": day, "home": home, "away": away,
         "match": f"{home} vs {away}", "pick": str(pick).upper(),
-        "prob_stated": float(prob), "odds": float(odds),
+        "prob_stated": finite_probability(prob), "odds": float(odds),
         "bucket": str(archive_row.get("bucket") or ""), "src": src,
         "seeded": bool(seeded), "shadow": bool(shadow),
     }
@@ -884,7 +886,7 @@ def _replay_seed_rows(archives, settled, real_keys):
                 row = source.get("row") or {}
                 item = _slice_row_from_archive(
                     day, leg.get("match") or "", leg.get("pick"),
-                    float(leg.get("prob") or 0.0), float(leg.get("odds") or 0.0), row,
+                    finite_probability(leg.get("prob")), float(leg.get("odds") or 0.0), row,
                     src="replay", seeded=True,
                 )
                 if _slice_row_key(item) in real_keys:
@@ -1020,11 +1022,8 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
         day = _slice_day(row.get("date"))
         if day > today_text:
             continue
-        try:
-            prob = float(row.get("prob_stated") or 0.0)
-        except (TypeError, ValueError):
-            continue
-        if prob <= 0.0:
+        prob = finite_probability(row.get("prob_stated"))
+        if prob is None:
             continue
         result = pick_result({"date": day, "home": row.get("home"),
                               "away": row.get("away"),
@@ -1212,7 +1211,7 @@ def _slice_plan_rows(target, plan, pool_by_key, *, shadow=False):
                 "home": home, "away": away,
                 "match": f"{home} vs {away}",
                 "pick": str(leg.get("pick") or "").upper(),
-                "prob_stated": _printed_prob_value(leg.get("prob") or 0.0),
+                "prob_stated": _printed_prob_value(leg.get("prob")),
                 "odds": float(leg.get("odds") or 0.0),
                 "bucket": str(source_row.get("bucket") or ""),
                 "src": "slip", "seeded": False, "shadow": bool(shadow),
@@ -1655,8 +1654,9 @@ def playable_leg_rejection(
     selection = str(row.get("pick") or "").lower()
     if selection in ("over", "under", "yes", "no"):
         return "selection_not_ticket_eligible", f"selection={selection}"
-    if not row.get("avg_p"):
-        return "missing_probability", "avg_p is missing or zero"
+    probability = pick_probability_pct(row)
+    if probability is None or probability == 0:
+        return "missing_probability", "avg_p is unavailable, invalid or zero"
     try:
         odds = float(row.get("odds")) if row.get("odds") is not None else 0.0
     except (TypeError, ValueError):

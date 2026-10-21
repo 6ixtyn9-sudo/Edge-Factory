@@ -83,20 +83,16 @@ def test_fetch_match_cohort_gate_and_bad_input():
 # _hybrid_shrink / _hybrid_pick_n_way — pure math
 # --------------------------------------------------------------------------
 
-def test_hybrid_shrink_math():
-    K = pt.HYBRID_SHRINK_K
-    # exact empirical-Bayes pin
-    assert pt._hybrid_shrink(0.41, 220, 0.525) == pytest.approx(
-        (220 * 0.41 + K * 0.525) / (220 + K), abs=1e-12)
-    # missing cohort rate -> prior untouched
-    assert pt._hybrid_shrink(None, 220, 0.525) == 0.525
-    # convex combo: stays strictly inside the extremes
-    lo = pt._hybrid_shrink(0.0, 500, 0.6)
-    hi = pt._hybrid_shrink(1.0, 500, 0.6)
-    assert 0.0 < lo < 0.6 < hi < 1.0
-    # deeper cohort pulls harder; higher cohort rate ranks higher
-    assert pt._hybrid_shrink(0.7, 1000, 0.5) > pt._hybrid_shrink(0.7, 100, 0.5)
-    assert pt._hybrid_shrink(0.8, 100, 0.5) > pt._hybrid_shrink(0.6, 100, 0.5)
+def test_prior_shrinkage_and_imputed_model_path_are_retired():
+    import inspect
+    assert not hasattr(pt, "_hybrid_shrink")
+    assert not hasattr(pt, "HYBRID_SHRINK_K")
+    source = inspect.getsource(pt.compute_dynamic_enhancement)
+    assert "forebet_settled" not in source
+    assert "poisson(" not in source
+    assert "league_stats" not in source
+    assert "home_stats" not in source
+    assert "away_stats" not in source
 
 
 def test_hybrid_pick_n_way():
@@ -188,13 +184,13 @@ def test_compute_cohort_override_math(monkeypatch):
                for n in hyb.values())
     assert all(0.0 < n["probability"] <= 1.0 for n in hyb.values())
 
-    # Raw/model priors remain diagnostics; only actual realized cohort rates
+    # No raw/model priors remain; only actual realized cohort rates
     # are used to select/rank. No model-only baseline can place a bet.
     for market, note in hyb.items():
         assert note['probability'] == pytest.approx(pt.cohort_realized_rate(cohort, market))
-        assert note['raw_probability'] is not None
+        assert note['raw_probability'] is None
     if 'btts_yes' in hyb and 'btts_no' in hyb:
-        assert hyb['btts_yes']['raw_probability'] + hyb['btts_no']['raw_probability'] == pytest.approx(1.0)
+        assert hyb['btts_yes']['probability'] + hyb['btts_no']['probability'] == pytest.approx(1.0)
 
     json.dumps(hyb)
 
@@ -245,7 +241,7 @@ def test_event_notes_are_ordered_by_realized_cohort_rate(monkeypatch):
 
 def test_with_a_cohort_every_candidate_is_its_realized_rate(monkeypatch):
     """Cohort replaces stated: each candidate's probability is the cohort rate
-    for its market, the stated value is kept as raw_probability, and markets the
+    for its market, raw_probability stays unavailable, and markets the
     cohort cannot speak to (double chance, exact scores) are not candidates."""
     con = _empty_warehouse()
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: COHORT)
@@ -254,13 +250,12 @@ def test_with_a_cohort_every_candidate_is_its_realized_rate(monkeypatch):
     for n in notes:
         assert n["probability"] == pytest.approx(
             pt.cohort_realized_rate(COHORT, n["market"]))
-        assert n["raw_probability"] is not None  # stated value kept for audit
+        assert n["raw_probability"] is None  # no invented model diagnostics
         assert n["market"] not in {"double_chance"} and not n["market"].startswith("exact_")
 
 
 def test_without_a_cohort_the_stated_path_cannot_place_a_bet(monkeypatch):
-    """No cohort (no warehouse, thin cohort, draw pick) keeps the legacy stated
-    probability path, so no candidate is dropped for lack of a realized rate."""
+    """No cohort means no invented probability, candidate or recommendation."""
     con = _empty_warehouse()
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: None)
     out = _compute(con, _pick(), _priced_index())

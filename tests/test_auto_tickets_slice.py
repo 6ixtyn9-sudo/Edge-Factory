@@ -346,16 +346,17 @@ def test_streak_does_not_compound_same_day_and_caution_demotes_on_day_two(sandbo
     assert policy2["rank_caps"]["CAUTION"] == pytest.approx(0.70)
 
 
-def test_zero_probability_and_unsettled_fail_open(sandbox):
+def test_measured_zero_counts_unknown_and_unsettled_do_not(sandbox):
     rows = [_row("2026-09-23", "CAUTION", 0, prob=0.0),
             _row("2026-09-23", "CAUTION", 1, prob=0.80),
-            _row("2026-09-23", "CAUTION", 2, prob=0.80)]
+            _row("2026-09-23", "CAUTION", 2, prob=0.80),
+            _row("2026-09-23", "CAUTION", 3, prob=None)]
     path, state = sandbox / "ledger.jsonl", sandbox / "state.json"
     at.write_slice_ledger(rows, path)
-    settled = _settled(rows, ["home", "void", "home"])
+    settled = _settled(rows, ["home", "void", "home", "home"])
     policy, verdicts = at.compute_bucket_slice(
         "2026-09-23", path=path, state_path=state, settled=settled)
-    assert verdicts["CAUTION"]["n"] == 1
+    assert verdicts["CAUTION"]["n"] == 2
     assert verdicts["CAUTION"]["verdict"] == "UNKNOWN"
     assert verdicts["CAUTION"]["demote_streak"] == 0
     assert policy["rank_caps"] == {}
