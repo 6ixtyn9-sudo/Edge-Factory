@@ -1,21 +1,11 @@
 {
   "added": 0,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Imabari",
-      "date": "2026-10-21",
-      "home": "Vegalta Sendai",
-      "kickoff": "2026-10-21T10:00:00Z",
-      "league": "J2-League"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 41,
-  "captured_at": "2026-10-21T07:59:04+00:00",
+  "captured_at": "2026-10-21T10:44:44+00:00",
   "date": "2026-10-21",
-  "due_reasons": {
-    "first_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -28,7 +18,7 @@
     "kickoff_already_passed": 1,
     "kickoff_mismatch": 1,
     "priced": 7,
-    "retry_cooldown": 32
+    "retry_cooldown": 33
   },
   "skipped": [
     "WARN kickoff-mismatch Guadalajara W|Necaxa W: pick legacy display says 04:07 SAST, captured rows say 02:07 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
@@ -41,6 +31,7 @@
     "Guadalajara|Necaxa (priced)",
     "Sporting JAX|Louisville City (retry cooldown (6h after failed attempt))",
     "Sogndal|Raufoss (retry cooldown (6h after failed attempt))",
+    "Vegalta Sendai|Imabari (retry cooldown (6h after failed attempt))",
     "V-Varen Nagasaki|Sanfrecce Hiroshima (retry cooldown (6h after failed attempt))",
     "Olimpia|2 de Mayo (retry cooldown (6h after failed attempt))",
     "Reading|Leyton Orient (retry cooldown (6h after failed attempt))",
@@ -74,11 +65,6 @@
     "Montedio Yamagata|Consadole Sapporo (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Vegalta Sendai vs Imabari (league not covered: J2-League)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: J2-League": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
