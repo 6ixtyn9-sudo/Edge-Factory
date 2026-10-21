@@ -1,12 +1,12 @@
 [
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 65.07409070498427,
     "away": "Louisville City",
     "bookmaker": "betexplorer_best",
     "bucket": "CAUTION",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_439097cb9bb700e9996c0b07",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -20647,13 +20647,13 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 64.93810952738185,
     "away": "Raufoss",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_439097cb9bb700e9996c0b07",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -22607,13 +22607,13 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 60.510204081632644,
     "away": "Leyton Orient",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_439097cb9bb700e9996c0b07",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -23472,13 +23472,13 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 57.22730739893211,
     "away": "DC United",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_439097cb9bb700e9996c0b07",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -65560,13 +65560,13 @@
     "w_score": 0.5751
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 50.61964596899936,
     "away": "Petrojet",
-    "bookmaker": "Pinnacle",
+    "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_0ad08cd1b2e75a2c9051189e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -66194,27 +66194,87 @@
     "match": "Ceramica Cleopatra vs Petrojet",
     "min_lead_minutes": 30,
     "n_way": 3,
-    "odds": 2.1,
-    "odds_captured_at": "2026-10-20T07:51:17+00:00",
-    "odds_league": "Egypt - Premier League",
+    "odds": 2.09,
+    "odds_captured_at": "2026-10-21T10:29:50.473885+00:00",
+    "odds_league": "Egypt: Premier League",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
-    "odds_source": "pinnapi_odds",
+    "odds_source": "betexplorer_odds",
     "odds_tier": "low",
     "pick": "home",
     "picked_for": "2026-10-21",
     "price_board": [
       {
         "away": "Petrojet",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-21T10:29:50.473885+00:00",
+        "chosen": true,
+        "home": "Ceramica Cleopatra",
+        "kickoff": "18:00",
+        "league": "Egypt: Premier League",
+        "line": null,
+        "market": "1x2",
+        "match_method": "exact",
+        "named_bookmaker": true,
+        "odds": 2.09,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "home",
+        "selection": "home",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Petrojet",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-21T10:29:50.473885+00:00",
+        "home": "Ceramica Cleopatra",
+        "kickoff": "18:00",
+        "league": "Egypt: Premier League",
+        "line": null,
+        "market": "1x2",
+        "named_bookmaker": true,
+        "odds": 3.0,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "draw",
+        "selection": "draw",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Petrojet",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-21T10:29:50.473885+00:00",
+        "home": "Ceramica Cleopatra",
+        "kickoff": "18:00",
+        "league": "Egypt: Premier League",
+        "line": null,
+        "market": "1x2",
+        "named_bookmaker": true,
+        "odds": 3.5,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "away",
+        "selection": "away",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Petrojet",
         "bookmaker": "Pinnacle",
         "captured_at": "2026-10-20T07:51:17+00:00",
-        "chosen": true,
         "home": "Ceramica Cleopatra",
         "kickoff": "2026-10-21T17:00:00Z",
         "league": "Egypt - Premier League",
         "line": null,
         "market": "1x2",
-        "match_method": "exact",
         "named_bookmaker": true,
         "odds": 2.1,
         "odds_kind": "bookmaker",
@@ -66329,17 +66389,19 @@
     ],
     "price_corroborated": true,
     "price_corroborating_families": [
+      "pinnacle_book",
       "scoutingstats_average"
     ],
     "price_corroboration_sufficient": true,
     "price_corroborators": [
+      "pinnapi_odds",
       "scoutingstats_odds"
     ],
-    "price_disclosure": "Pinnacle named-book price (Pinnacle)",
+    "price_disclosure": "BetExplorer named-book price (betexplorer_best)",
     "price_donor_role": "named_bookmaker",
     "price_evidence": "NAMED_BOOKMAKER_PRICE",
-    "price_independence_family": "pinnacle_book",
-    "price_named_book_corroborated": false,
+    "price_independence_family": "betexplorer_book",
+    "price_named_book_corroborated": true,
     "price_odds_kind": "bookmaker",
     "price_push_eligible": true,
     "probability_available": true,
@@ -66382,13 +66444,13 @@
     "w_score": 0.5654
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 47.5524559572382,
     "away": "Lens",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_0ad08cd1b2e75a2c9051189e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -67204,13 +67266,13 @@
     "w_score": 0.5654
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 42.720860540676945,
     "away": "Arsenal",
     "bookmaker": "1xBet",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_0ad08cd1b2e75a2c9051189e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -68025,13 +68087,13 @@
     "w_score": 0.5654
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 58.62441314553991,
     "away": "Feyenoord",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_d94d447efe0742440e953722",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -76112,13 +76174,13 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 42.69884794820528,
     "away": "Atl\u00e9tico Mineiro",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_d94d447efe0742440e953722",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -82051,13 +82113,13 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 72.72727272727273,
     "away": "Olympic El Qanah",
     "bookmaker": null,
     "bucket": "WATCHLIST_SUSPECT_PRICE",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_439097cb9bb700e9996c0b07",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -83579,13 +83641,13 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 43.04734848484848,
     "away": "Athletic Club",
     "bookmaker": null,
     "bucket": "WATCHLIST_SUSPECT_PRICE",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_d94d447efe0742440e953722",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -84285,13 +84347,13 @@
     "w_score": 0.5634
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 62.432383699963935,
     "away": "2 de Mayo",
     "bookmaker": "scoutingstats_odds",
     "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_439097cb9bb700e9996c0b07",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -85024,13 +85086,13 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 54.40754039497306,
     "away": "Sportivo Ameliano",
     "bookmaker": "scoutingstats_odds",
     "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_439097cb9bb700e9996c0b07",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -85763,13 +85825,13 @@
     "w_score": 0.6479
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 80.6187509982431,
     "away": "LASK Linz",
     "bookmaker": "Pinnacle",
     "bucket": "WATCHLIST_UNKNOWN_CTX",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_444d408c4ccd3a4bf4fb020c",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -95642,13 +95704,13 @@
     "w_score": 0.6399
   },
   {
-    "as_of": "2026-10-21T12:29:50+02:00",
+    "as_of": "2026-10-21T18:24:58+02:00",
     "avg_p": 75.17819468132146,
     "away": "Viking",
     "bookmaker": "betexplorer_best",
     "bucket": "WATCHLIST_UNKNOWN_CTX",
-    "build_git_sha": "faa790206e3e954ce18947341ad1d469f32f66d2",
-    "built_at_utc": "2026-10-21T10:43:33.936883+00:00",
+    "build_git_sha": "cc224d403d174ad91ae2ff70ac4b6adbc5990af5",
+    "built_at_utc": "2026-10-21T16:34:54.884615+00:00",
     "contract_id": "pfc_4a1f2bb2278d13c8189148d0",
     "contract_schema": "post_forebet_v1",
     "ctx": {
