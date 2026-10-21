@@ -136,3 +136,63 @@ def test_audit_detail_files_authoritative_vs_diagnostic():
     assert named["empty_odds_list"] == 0
     assert named["odds_not_list"] == 0
     assert named["non_finite_odds"] == 14
+
+
+def test_authoritative_eligibility_synthetic_branches(tmp_path, monkeypatch):
+    import json
+    from tools import audit_market_depth_replay as amdr
+
+    # Construct synthetic detail payload with aware ISO kickoffs to exercise all authoritative branches
+    synthetic_data = {
+        "date": "2026-10-21",
+        "captured_at": "2026-10-21T06:00:00Z",
+        "fixtures": {
+            # 1. Eligible: captured 06:00 < cutoff 07:00 < kickoff 12:00
+            "fix_eligible": {
+                "home": "Team A", "away": "Team B",
+                "kickoff": "2026-10-21T12:00:00Z",
+                "captured_at": "2026-10-21T06:00:00Z",
+                "markets": {}
+            },
+            # 2. Ineligible post-cutoff capture: captured 08:00 >= cutoff 07:00, kickoff 12:00
+            "fix_post_cutoff": {
+                "home": "Team C", "away": "Team D",
+                "kickoff": "2026-10-21T12:00:00Z",
+                "captured_at": "2026-10-21T08:00:00Z",
+                "markets": {}
+            },
+            # 3. Exactly at cutoff boundary: captured 07:00 == cutoff 07:00, kickoff 12:00
+            "fix_exact_cutoff": {
+                "home": "Team E", "away": "Team F",
+                "kickoff": "2026-10-21T12:00:00Z",
+                "captured_at": "2026-10-21T07:00:00Z",
+                "markets": {}
+            },
+            # 4. Ineligible already started: kickoff 06:00 <= cutoff 07:00, captured 05:00
+            "fix_already_started": {
+                "home": "Team G", "away": "Team H",
+                "kickoff": "2026-10-21T06:00:00Z",
+                "captured_at": "2026-10-21T05:00:00Z",
+                "markets": {}
+            },
+            # 5. Ineligible post kickoff capture: captured 13:00 >= kickoff 12:00
+            "fix_post_kickoff": {
+                "home": "Team I", "away": "Team J",
+                "kickoff": "2026-10-21T12:00:00Z",
+                "captured_at": "2026-10-21T13:00:00Z",
+                "markets": {}
+            }
+        }
+    }
+
+    mock_file = tmp_path / "betexplorer_match_detail_2026-10-21.json"
+    mock_file.write_text(json.dumps(synthetic_data))
+    monkeypatch.setattr(amdr, "LOCALDATA", tmp_path)
+
+    rep = amdr.audit_detail_files()
+    auth = rep["authoritative_eligibility"]
+    assert auth["eligible_pre_match_decision"] == 1
+    assert auth["ineligible_post_cutoff_capture"] == 2  # fix_post_cutoff (08:00) and fix_exact_cutoff (07:00)
+    assert auth["ineligible_already_started"] == 1      # fix_already_started
+    assert auth["ineligible_post_kickoff_capture"] == 1 # fix_post_kickoff
+    assert auth["unverified_kickoff_timezone"] == 0
