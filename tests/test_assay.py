@@ -1,6 +1,8 @@
 """The math must never silently break. Run: pytest"""
-from edgefactory.assay import (wilson_lb, grade,
-                               decay_verdict, should_bench, roi,
+import pytest
+
+from edgefactory.assay import (BENCH_MIN_PRICED_N, bench_decision, wilson_lb,
+                               grade, decay_verdict, should_bench, roi,
                                context_verdict_league, context_verdict_team,
                                context_verdict_odds_band, context_verdict_niche,
                                weighted_consensus_score)
@@ -47,8 +49,79 @@ def test_should_bench():
     rep_healthy = decay_verdict(80, 100, 80, 100)
     assert not should_bench(rep_healthy)
 
-    # HEALTHY but ROI < -0.05 -> True
-    assert should_bench(rep_healthy, recent_roi=-0.06)
+    # HEALTHY but negative ROI on a real priced sample -> True
+    assert should_bench(rep_healthy, recent_roi=-0.06, n_priced=100)
+
+
+def test_thin_priced_sample_cannot_bench_an_edge():
+    """Regression: the monitor benched a certified contract on 9 priced legs.
+
+    (pfc_5954379f, 2026-10-21: recent n=9, ROI -5.3% -> BENCHED while the
+    baseline was 443 legs at 70.0%.) A bench removes an edge from selection,
+    so it must not fire on an ROI whose denominator cannot support it.
+    """
+    watch = decay_verdict(310, 443, 6, 9, min_recent=30, recent_roi=-0.053)
+    assert watch.verdict == "WATCH"
+    assert not should_bench(watch, -0.053, n_priced=9)
+    assert not should_bench(watch, -0.020, n_priced=3)
+    assert not should_bench(watch, -0.001, n_priced=29)
+
+
+def test_bench_fires_at_the_priced_floor_and_only_on_a_loss():
+    watch = decay_verdict(310, 443, 6, 9)          # WATCH: ROI cannot rescue
+    assert should_bench(watch, -0.001, n_priced=30)
+    assert not should_bench(watch, -0.001, n_priced=29)
+    # A genuine zero (or a gain) is not a loss.
+    assert not should_bench(watch, 0.0, n_priced=120)
+    assert not should_bench(watch, 0.04, n_priced=120)
+
+
+def test_roi_bench_refuses_to_run_without_its_priced_denominator():
+    """An ROI without n_priced is unverifiable — fail loudly, never guess."""
+    watch = decay_verdict(310, 443, 6, 9)
+    with pytest.raises(ValueError):
+        should_bench(watch, -0.20)
+    with pytest.raises(ValueError):
+        should_bench(watch, -0.20, n_priced=0)
+
+
+def test_non_finite_roi_is_unreadable_not_profitable():
+    watch = decay_verdict(310, 443, 6, 9)
+    assert not should_bench(watch, float("nan"), n_priced=100)
+    assert bench_decision(watch, float("-inf"), n_priced=100) == (
+        False, "recent_roi_not_finite")
+    # A NaN ROI must never certify health either: comparisons against NaN are
+    # all False, so it would otherwise slip past every ROI gate.
+    assert decay_verdict(80, 100, 80, 100).verdict == "HEALTHY"
+    assert decay_verdict(80, 100, 80, 100, recent_roi=float("nan")).verdict == "WATCH"
+    assert decay_verdict(80, 100, 80, 100, recent_roi=float("inf")).verdict == "WATCH"
+
+
+def test_bench_reason_names_the_evidence_it_fired_on():
+    dead = decay_verdict(80, 100, 20, 100)
+    assert bench_decision(dead) == (True, "verdict_dead")
+    healthy = decay_verdict(80, 100, 80, 100)
+    assert bench_decision(healthy) == (False, "none")
+    assert bench_decision(healthy, -0.06, n_priced=100) == (True, "recent_roi")
+    assert bench_decision(healthy, -0.06, n_priced=29) == (
+        False, "recent_roi_n_below_floor")
+    assert bench_decision(healthy, 0.01, n_priced=100) == (
+        False, "recent_roi_non_negative")
+
+
+def test_roi_evidence_can_only_worsen_a_verdict():
+    # 20/100 recent vs 80/100 baseline is structurally DEAD by Wilson UB; a
+    # negative ROI must not relabel it as the milder DECAYING.
+    assert decay_verdict(80, 100, 20, 100, recent_roi=-0.20).verdict == "DEAD"
+    # A healthy call can be pulled down by ROI, never up.
+    assert decay_verdict(80, 100, 80, 100, recent_roi=-0.01).verdict == "WATCH"
+    assert decay_verdict(80, 100, 80, 100, recent_roi=0.05).verdict == "HEALTHY"
+
+
+def test_bench_floor_matches_the_live_decay_gate():
+    """assay mirrors config; decay_monitor passes GATES.min_recent_n."""
+    from edgefactory.config import GATES
+    assert BENCH_MIN_PRICED_N == GATES.min_recent_n
 
 
 def test_context_verdicts():
