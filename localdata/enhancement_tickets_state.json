@@ -369,63 +369,179 @@
         {
           "legs": [
             {
-              "match": "FC Bayern M\u00fcnchen vs Arsenal",
+              "match": "Fagiano Okayama vs Mito Hollyhock",
               "pick": "over",
-              "prob": 0.5738,
-              "odds": 1.66,
+              "prob": 0.7977,
+              "odds": 1.4,
               "result": null,
               "cohort_evidence": {
-                "rate": 0.5738,
-                "n": 1239,
-                "contract_id": "pfc_0ad08cd1b2e75a2c9051189e",
+                "rate": 0.7977,
+                "n": 3001,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
                 "as_of_exclusive": "2026-10-21",
-                "market": "match_over_25"
+                "market": "match_over_15"
               },
-              "market": "match_over_25",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.738617057951945,
+              "market": "match_over_15",
+              "label": "Match Over 1.5 Goals",
+              "floor": 1.6361933303197196,
               "floor_basis": "market",
-              "league": "Champions League",
-              "price_book": "1xBet",
+              "league": "J1 League",
+              "price_book": "betfair-ex",
               "shadow": true,
               "fixture_key": [
                 "2026-10-21",
-                "FC Bayern M\u00fcnchen",
-                "Arsenal"
+                "Fagiano Okayama",
+                "Mito Hollyhock"
               ]
             },
             {
-              "match": "Como vs Manchester United",
-              "pick": "over",
-              "prob": 0.5611,
-              "odds": 1.63,
+              "match": "V-Varen Nagasaki vs Sanfrecce Hiroshima",
+              "pick": "away",
+              "prob": 0.6607,
+              "odds": 1.546,
               "result": null,
               "cohort_evidence": {
-                "rate": 0.5611,
-                "n": 2005,
-                "contract_id": "pfc_d94d447efe0742440e953722",
+                "rate": 0.6607,
+                "n": 1058,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
                 "as_of_exclusive": "2026-10-21",
-                "market": "match_over_25"
+                "market": "away_under_25"
               },
-              "market": "match_over_25",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.738617057951945,
-              "floor_basis": "market",
-              "league": "Champions League",
-              "price_book": "1xBet",
-              "shadow": true,
+              "market": "away_under_25",
+              "label": "Away Team Under 2.5 Goals",
+              "floor": null,
+              "floor_basis": "none",
+              "league": "J1 League",
+              "price_book": "bodog.eu",
+              "shadow": false,
               "fixture_key": [
                 "2026-10-21",
-                "Como",
-                "Manchester United"
+                "V-Varen Nagasaki",
+                "Sanfrecce Hiroshima"
               ]
             }
           ],
-          "odds": 2.71,
-          "stake_pct": 10.7749
+          "odds": 2.16,
+          "stake_pct": 7.1833
+        },
+        {
+          "legs": [
+            {
+              "match": "Roasso Kumamoto vs Gainare Tottori",
+              "pick": "over",
+              "prob": 0.7977,
+              "odds": 1.316,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.7977,
+                "n": 3001,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-21",
+                "market": "match_over_15"
+              },
+              "market": "match_over_15",
+              "label": "Match Over 1.5 Goals",
+              "floor": 1.6361933303197196,
+              "floor_basis": "market",
+              "league": "J3-League",
+              "price_book": "polymarket",
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-21",
+                "Roasso Kumamoto",
+                "Gainare Tottori"
+              ]
+            },
+            {
+              "match": "Ventforet Kofu vs Yokohama",
+              "pick": "away",
+              "prob": 0.7022,
+              "odds": 1.37,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.7022,
+                "n": 601,
+                "contract_id": "pfc_d94d447efe0742440e953722",
+                "as_of_exclusive": "2026-10-21",
+                "market": "away_under_25"
+              },
+              "market": "away_under_25",
+              "label": "Away Team Under 2.5 Goals",
+              "floor": null,
+              "floor_basis": "none",
+              "league": "J2-League",
+              "price_book": "polymarket",
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-21",
+                "Ventforet Kofu",
+                "Yokohama"
+              ]
+            }
+          ],
+          "odds": 1.8,
+          "stake_pct": 7.1833
+        },
+        {
+          "legs": [
+            {
+              "match": "Kyoto Sanga vs Kashima Antlers",
+              "pick": "home",
+              "prob": 0.7404,
+              "odds": 1.429,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.7404,
+                "n": 601,
+                "contract_id": "pfc_d94d447efe0742440e953722",
+                "as_of_exclusive": "2026-10-21",
+                "market": "home_under_15"
+              },
+              "market": "home_under_15",
+              "label": "Home Team Under 1.5 Goals",
+              "floor": null,
+              "floor_basis": "none",
+              "league": "J1 League",
+              "price_book": "polymarket",
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-21",
+                "Kyoto Sanga",
+                "Kashima Antlers"
+              ]
+            },
+            {
+              "match": "FC Tokyo vs Kashiwa Reysol",
+              "pick": "away",
+              "prob": 0.708,
+              "odds": 1.47,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.708,
+                "n": 1209,
+                "contract_id": "pfc_4a1f2bb2278d13c8189148d0",
+                "as_of_exclusive": "2026-10-21",
+                "market": "away_under_15"
+              },
+              "market": "away_under_15",
+              "label": "Away Team Under 1.5 Goals",
+              "floor": 1.5034,
+              "floor_basis": "pick_evidence",
+              "league": "J1 League",
+              "price_book": "atg.se",
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-21",
+                "FC Tokyo",
+                "Kashiwa Reysol"
+              ]
+            }
+          ],
+          "odds": 2.1,
+          "stake_pct": 7.1833
         }
       ],
-      "staked_pct": 10.7749
+      "staked_pct": 21.5499
     }
   ],
   "frozen_by_date": {
@@ -465,7 +581,7 @@
       "lock_source": "recovered_settled_history"
     },
     "2026-10-21": {
-      "frozen_at": "2026-10-21T13:18:06+02:00",
+      "frozen_at": "2026-10-21T10:58:00+02:00",
       "final": true,
       "lock_source": "state"
     }
