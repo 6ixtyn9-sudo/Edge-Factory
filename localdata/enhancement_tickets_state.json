@@ -365,30 +365,72 @@
   "open_slips": [
     {
       "date": "2026-10-21",
-      "staked_pct": 14.3125,
       "accas": [
         {
           "legs": [
             {
               "match": "FC Bayern M\u00fcnchen vs Arsenal",
-              "market": "match_over_25",
               "pick": "over",
+              "prob": 0.5738,
+              "odds": 1.66,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.5738,
+                "n": 1239,
+                "contract_id": "pfc_0ad08cd1b2e75a2c9051189e",
+                "as_of_exclusive": "2026-10-21",
+                "market": "match_over_25"
+              },
+              "market": "match_over_25",
               "label": "Match Over 2.5 Goals",
-              "odds": 1.66
+              "floor": 1.740165297344956,
+              "floor_basis": "market",
+              "league": "Champions League",
+              "price_book": "1xBet",
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-21",
+                "FC Bayern M\u00fcnchen",
+                "Arsenal"
+              ]
             },
             {
               "match": "Como vs Manchester United",
-              "market": "match_over_25",
               "pick": "over",
+              "prob": 0.5611,
+              "odds": 1.63,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.5611,
+                "n": 2005,
+                "contract_id": "pfc_d94d447efe0742440e953722",
+                "as_of_exclusive": "2026-10-21",
+                "market": "match_over_25"
+              },
+              "market": "match_over_25",
               "label": "Match Over 2.5 Goals",
-              "odds": 1.63
+              "floor": 1.740165297344956,
+              "floor_basis": "market",
+              "league": "Champions League",
+              "price_book": "1xBet",
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-21",
+                "Como",
+                "Manchester United"
+              ]
             }
           ],
           "odds": 2.71,
-          "stake_pct": 14.3125
+          "stake_pct": 14.3125,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
-      "recovery_source": "published card and performance snapshot; original stake retained"
+      "staked_pct": 14.3125
     }
   ],
   "frozen_by_date": {
