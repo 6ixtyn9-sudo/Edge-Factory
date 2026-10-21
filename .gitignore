@@ -138,8 +138,9 @@ dist/
 !localdata/auto_tickets_20*.txt
 !localdata/auto_tickets_20*.json
 # Enhancement lane slips (renamed from enhancement_tickets_* so they sit beside
-# the main autobets slips). The lane's state file stays gitignored: it is runtime
-# state, persisted through the Actions cache.
+# the main autobets slips). Financial state is durable Git evidence, just like
+# the main lane; a cold cache must never erase bank/history.
+!localdata/enhancement_tickets_state.json
 !localdata/autobets_enh_tickets_20*.txt
 # LEGACY freeze markers (pre OP-01 T2). The lock now lives write-once inside
 # auto_tickets_state.json (`frozen_by_date`), which is already committed; no

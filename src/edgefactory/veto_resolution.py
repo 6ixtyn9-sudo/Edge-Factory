@@ -208,6 +208,8 @@ def load_registry(root: Path) -> dict:
     """
     try:
         data = json.loads((Path(root) / "localdata" / "purity_registry.json").read_text())
+        if isinstance(data, dict) and data.get("roi_population_status") == "unverified_legacy_population":
+            return {}
         return data.get("contexts", {}) if isinstance(data, dict) else {}
     except (OSError, json.JSONDecodeError):
         return {}

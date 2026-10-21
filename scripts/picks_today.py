@@ -739,6 +739,18 @@ def load_enhancement_calibration(audit_path: Path = AUDIT_ROLLING_PATH) -> dict[
     return out
 
 
+def stamp_pick_evidence(picks, *, git_sha, built_at):
+    """Validate/stamp new output only; never backfill retained archive rows."""
+    from edgefactory.enh_registry import enhancement_cohort_evidence
+    for pick in picks:
+        pick["build_git_sha"] = git_sha
+        pick["built_at_utc"] = built_at
+        if not pick.get("recommended_enhancement"):
+            pick["enhancement_probability"] = None
+        elif enhancement_cohort_evidence(pick) is None:
+            raise ValueError("selected enhancement has no valid measured cohort identity")
+
+
 def load_rolling_audit_hit_rates() -> dict[str, float]:
     try:
         if AUDIT_ROLLING_PATH.exists():
@@ -747,7 +759,9 @@ def load_rolling_audit_hit_rates() -> dict[str, float]:
             out = {}
             for enh, stats in by_enh.items():
                 if stats.get("recommended", 0) >= 5:
-                    out[enh] = float(stats.get("hit_rate", 1.0))
+                    rate = finite_probability(stats.get("hit_rate"))
+                    if rate is not None:
+                        out[enh] = rate
             return out
     except Exception:
         pass
@@ -1628,6 +1642,10 @@ def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
 
 
 def lookup_context(purity: dict, pick: dict) -> dict:
+    if (purity or {}).get("roi_population_status") == "unverified_legacy_population":
+        # Never apply old, population-biased VETO/BOOST decisions after the
+        # correction. The original registry stays intact for audit/reproduction.
+        purity = {}
     exact_contract = pick.get("contract_schema") == "post_forebet_v1"
     if exact_contract:
         # Team keys in the legacy pooled map have no rule dimension. Keep
@@ -1738,6 +1756,7 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     comp_v, comp_meta = _best_ctx([comp_exact, comp_fallback])
 
     return {
+        "purity_evidence_status": ("available" if ctx else "unavailable_exact_contract_context" if exact_contract else "unavailable_context"),
         "league": league_v,
         "team_h": team_h_v,
         "team_a": team_a_v,
@@ -7460,6 +7479,10 @@ def main():
         # bucket. Append-only (Addendum 27.18): earlier frozen rows are
         # merged back in via merge_day_archive_rows — a post-kickoff rerun
         # that finds an empty/partial slate must never erase audited history.
+        import subprocess
+        build_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        stamp_pick_evidence(collapsed_day_picks, git_sha=build_sha,
+                            built_at=datetime.now(timezone.utc).isoformat())
         _day_archive = ROOT / "localdata" / f"picks_{day}.json"
         try:
             _day_archive.parent.mkdir(parents=True, exist_ok=True)
@@ -7625,6 +7648,7 @@ def main():
 
     _json_path = ROOT / "localdata" / "picks_today.json"
     _json_path.parent.mkdir(parents=True, exist_ok=True)
+    # Rows retained from historical archives keep their original provenance.
     _json_path.write_text(json.dumps(final_picks, indent=2, sort_keys=True))
 
 

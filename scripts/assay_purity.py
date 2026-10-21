@@ -556,15 +556,19 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
     if not {"pick", "outcome"}.issubset(cols):
         return {}, {}, {}, {}, {}
 
-    if edge.get("contract_schema") == "post_forebet_v1":
-        # Purity is a priced-return assay, not a loss count for unpriced tips.
-        where = f"({where}) AND pick_odds IS NOT NULL"
 
     has_league = "league" in cols
     has_home = "home" in cols
     has_away = "away" in cols
     has_odds = "pick_odds" in cols
     has_date = "date" in cols
+
+    # Unknown/void outcomes must not become losses. Missing prices contribute
+    # neither a return nor a priced observation, across every context family.
+    where = f"({where}) AND pick IS NOT NULL AND outcome IS NOT NULL AND outcome NOT IN ('void','unknown')"
+    priced = "pick_odds > 1 AND isfinite(pick_odds)" if has_odds else "FALSE"
+    pnl_expr = (f"CASE WHEN {priced} THEN CASE WHEN pick = outcome THEN pick_odds-1 ELSE -1 END ELSE 0 END"
+                if has_odds else "0")
 
     # recent window cutoff
     recent_cutoff = (date.today() - timedelta(days=window_days)).isoformat() if has_date else "1900-01-01"
@@ -580,8 +584,8 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
         sql = f"""
             SELECT {league_sql_col} AS league, pick AS sel,
                    COUNT(*) AS n,
-                   SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) AS pnl,
-                   SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) AS n_priced
+                   SUM({pnl_expr}) AS pnl,
+                   SUM(CASE WHEN {priced} THEN 1 ELSE 0 END) AS n_priced
             FROM {view} WHERE ({where})
             GROUP BY 1,2
         """
@@ -598,19 +602,19 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
                     try:
                         r = con.execute(f"""
                             SELECT COUNT(*) n,
-                                   SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) pnl,
-                                   SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) n_priced
+                                   SUM({pnl_expr}) pnl,
+                                   SUM(CASE WHEN {priced} THEN 1 ELSE 0 END) n_priced
                             FROM {view} WHERE ({where}) AND date >= ?
                               AND COALESCE(league,'UNKNOWN') = ? AND pick = ?
                         """, [recent_cutoff, raw_league, sel]).fetchone()
                         rn, rpn, rn_priced = int(r[0] or 0), r[1] or 0, int(r[2] or 0)
-                        if rn >= 30 and rn_priced:
+                        if rn_priced >= 30:
                             recent_roi = float(rpn) / rn_priced
                     except Exception:
                         pass
-                verdict = context_verdict_league(n, roi, recent_roi)
+                verdict = context_verdict_league(n_priced, roi, recent_roi)
                 key = f"{sport}|{league_key_name}|{market}|{rule}|{sel}"
-                league_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None,
+                league_ctx[key] = {"n": int(n_priced), "n_priced": int(n_priced), "n_settled": n, "roi": round(roi, 4) if roi is not None else None,
                                    "recent_roi": round(recent_roi, 4) if recent_roi is not None else None,
                                    "verdict": verdict, "raw": raw_league}
         except Exception:
@@ -623,34 +627,34 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
         try:
             sql = f"""
                 SELECT home AS team, {league_sql} AS league, COUNT(*) n,
-                       SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) pnl,
-                       SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) n_priced
+                       SUM({pnl_expr}) pnl,
+                       SUM(CASE WHEN {priced} THEN 1 ELSE 0 END) n_priced
                 FROM {view} WHERE ({where})
                 GROUP BY home, {league_sql if has_league else '1'}
             """
             for team, league, n, pnl, n_priced in con.execute(sql).fetchall():
                 n = int(n or 0)
                 roi = float(pnl) / n_priced if n_priced else None
-                verdict = context_verdict_team(n, roi)
+                verdict = context_verdict_team(n_priced, roi)
                 key = f"{sport}|{canonical_team(team)}|{canonical_league(league)}|{market}|home"
-                team_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
+                team_ctx[key] = {"n": int(n_priced), "n_priced": int(n_priced), "n_settled": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
         except Exception:
             pass
         # away teams
         try:
             sql = f"""
                 SELECT away AS team, {league_sql} AS league, COUNT(*) n,
-                       SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) pnl,
-                       SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) n_priced
+                       SUM({pnl_expr}) pnl,
+                       SUM(CASE WHEN {priced} THEN 1 ELSE 0 END) n_priced
                 FROM {view} WHERE ({where})
                 GROUP BY away, {league_sql if has_league else '1'}
             """
             for team, league, n, pnl, n_priced in con.execute(sql).fetchall():
                 n = int(n or 0)
                 roi = float(pnl) / n_priced if n_priced else None
-                verdict = context_verdict_team(n, roi)
+                verdict = context_verdict_team(n_priced, roi)
                 key = f"{sport}|{canonical_team(team)}|{canonical_league(league)}|{market}|away"
-                team_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
+                team_ctx[key] = {"n": int(n_priced), "n_priced": int(n_priced), "n_settled": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
         except Exception:
             pass
 
@@ -662,34 +666,34 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
         try:
             sql = f"""
                 SELECT home AS team, COUNT(*) n,
-                       SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) pnl,
-                       SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) n_priced
+                       SUM({pnl_expr}) pnl,
+                       SUM(CASE WHEN {priced} THEN 1 ELSE 0 END) n_priced
                 FROM {view} WHERE ({where})
                 GROUP BY home
             """
             for team, n, pnl, n_priced in con.execute(sql).fetchall():
                 n = int(n or 0)
                 roi = float(pnl) / n_priced if n_priced else None
-                verdict = context_verdict_team(n, roi)
+                verdict = context_verdict_team(n_priced, roi)
                 key = f"{sport}|{canonical_team(team)}|*|{market}|home"
-                team_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None,
+                team_ctx[key] = {"n": int(n_priced), "n_priced": int(n_priced), "n_settled": n, "roi": round(roi, 4) if roi is not None else None,
                                  "verdict": verdict, "scope": "team_any_league"}
         except Exception:
             pass
         try:
             sql = f"""
                 SELECT away AS team, COUNT(*) n,
-                       SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) pnl,
-                       SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) n_priced
+                       SUM({pnl_expr}) pnl,
+                       SUM(CASE WHEN {priced} THEN 1 ELSE 0 END) n_priced
                 FROM {view} WHERE ({where})
                 GROUP BY away
             """
             for team, n, pnl, n_priced in con.execute(sql).fetchall():
                 n = int(n or 0)
                 roi = float(pnl) / n_priced if n_priced else None
-                verdict = context_verdict_team(n, roi)
+                verdict = context_verdict_team(n_priced, roi)
                 key = f"{sport}|{canonical_team(team)}|*|{market}|away"
-                team_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None,
+                team_ctx[key] = {"n": int(n_priced), "n_priced": int(n_priced), "n_settled": n, "roi": round(roi, 4) if roi is not None else None,
                                  "verdict": verdict, "scope": "team_any_league"}
         except Exception:
             pass
@@ -699,8 +703,8 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
         try:
             rows = con.execute(f"""
                 SELECT pick_odds,
-                       CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END AS pnl
-                FROM {view} WHERE ({where}) AND pick_odds IS NOT NULL
+                       {pnl_expr} AS pnl
+                FROM {view} WHERE ({where}) AND ({priced})
             """).fetchall()
             buckets: dict[str, list[float]] = {}
             for odds, pnl in rows:
@@ -714,7 +718,7 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
                 roi = sum(pnls) / n if n else None
                 verdict = context_verdict_odds_band(n, roi)
                 key = f"{sport}|{market}|{rule}|{band}"
-                odds_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
+                odds_ctx[key] = {"n": n, "n_priced": n, "n_settled": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
         except Exception:
             pass
 
@@ -724,17 +728,17 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
             sql = f"""
                 SELECT classify_competition(COALESCE(league, 'UNKNOWN')) AS comp_type,
                        COUNT(*) AS n,
-                       SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) AS pnl,
-                       SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) AS n_priced
+                       SUM({pnl_expr}) AS pnl,
+                       SUM(CASE WHEN {priced} THEN 1 ELSE 0 END) AS n_priced
                 FROM {view} WHERE ({where})
                 GROUP BY 1
             """
             for comp_type, n, pnl, n_priced in con.execute(sql).fetchall():
                 n = int(n or 0)
                 roi = float(pnl) / n_priced if n_priced else None
-                verdict = context_verdict_league(n, roi)
+                verdict = context_verdict_league(n_priced, roi)
                 key = f"{sport}|{market}|{rule}|{comp_type}"
-                comp_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
+                comp_ctx[key] = {"n": int(n_priced), "n_priced": int(n_priced), "n_settled": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
         except Exception:
             pass
 
@@ -752,10 +756,10 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
                        END AS side_role,
                        pick_odds,
                        CASE WHEN pick = outcome THEN 1 ELSE 0 END AS won,
-                       CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END AS pnl,
+                       {pnl_expr} AS pnl,
                        date
                 FROM {view}
-                WHERE ({where}) AND pick_odds IS NOT NULL
+                WHERE ({where}) AND ({priced})
                   AND lower(pick) IN ('home','away')
             """).fetchall()
             buckets: dict[tuple[str, str, str], list[tuple[float, int, str]]] = {}
@@ -790,7 +794,7 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
                 )
                 key = f"{sport}|{league_key_name}|{market}|{rule}|{band}|{side_role}"
                 niche_ctx[key] = {
-                    "n": n,
+                    "n": n, "n_priced": n, "n_settled": n,
                     "roi": round(roi, 4),
                     "recent_roi": round(recent_roi, 4) if recent_roi is not None else None,
                     "hit_rate": round(hit_rate, 4),
@@ -871,6 +875,7 @@ def main():
         })
 
     contract_contexts: dict = {}
+    contract_coverage: dict = {}
     league_all: dict = {}
     team_all: dict = {}
     odds_all: dict = {}
@@ -887,10 +892,15 @@ def main():
             try:
                 con.execute(f"SELECT 1 FROM {view} LIMIT 0")
             except Exception:
+                if e.get("contract_schema") == "post_forebet_v1":
+                    contract_coverage[rule] = {"status": "unavailable", "reason": "source view unavailable"}
                 print(f"{rule:45s}  SKIP – view {view} unavailable")
                 continue
         l_ctx, t_ctx, o_ctx, c_ctx, n_ctx = assay_edge(con, e, args.window)
         if e.get("contract_schema") == "post_forebet_v1":
+            contract_coverage[rule] = {"status": "available" if any(
+                int(r.get("n") or 0) > 0 for g in (l_ctx, t_ctx, o_ctx, c_ctx, n_ctx) for r in g.values()) else "unavailable",
+                "reason": "priced-only exact-contract assay"}
             contract_contexts[rule] = dict(league=l_ctx, team=t_ctx, odds_band=o_ctx,
                                            competition_type=c_ctx, niche=n_ctx)
         league_all.update(l_ctx)
@@ -913,7 +923,11 @@ def main():
     registry = {
         "generated_at": datetime.now(timezone.utc).isoformat() + "Z",
         "window_days": args.window,
+        "roi_population_version": 1,
+        "roi_population_status": "priced_only",
+        "verdict_n_basis": "valid_priced_settled_legs",
         "contract_contexts": contract_contexts,
+        "contract_context_coverage": contract_coverage,
         "contexts": {
             "league": league_all,
             "team": team_all,

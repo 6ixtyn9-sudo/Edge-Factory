@@ -1018,7 +1018,7 @@ def remine_current_sources(con, *, start, split, as_of):
     if not POST_FOREBET_START <= start < split < as_of:
         raise ValueError("require 2026-06-13 <= start < split < as_of")
     coverage, observations, ambiguous, resolved, scores = collect_observations(
-        con, start=start, as_of=as_of)
+        con, start=start, as_of=as_of, include_snapshot=True)
     candidates = defaultdict(list)
     recipes = {}
     for (key, market), all_votes in observations.items():
@@ -1093,6 +1093,9 @@ def remine_current_sources(con, *, start, split, as_of):
             "mining_era": "post_forebet", "start": start, "split": split, "as_of_exclusive": as_of,
             "gates": vars(GATES), "excluded_voters": ["forebet"], "excluded_result_donors": ["forebet"],
             "sources": coverage, "markets": market_coverage, "edges": results,
+            "input_snapshot": {"start": start, "as_of_exclusive": as_of,
+                               "sources": coverage,
+                               "hash_basis": "sorted_query_rows_in_exclusive_mining_window"},
             "ambiguous_source_market_observations": len(ambiguous),
             "conflicting_result_periods": sum(len(v) > 1 for p in scores.values() for v in p.values()),
             "settled_fixture_markets": len({(key, market) for key, market in observations
@@ -1168,10 +1171,23 @@ def activate_post_forebet_contracts(con, report):
     incumbents = {e.get("contract_id"): e for e in current["edges"]
                   if e.get("contract_schema") == SCHEMA}
     merged = []
+    revalidations = {}
     for edge in accepted:
         incumbent = incumbents.get(edge["contract_id"])
+        snapshot = report.get("input_snapshot")
+        if snapshot:
+            import hashlib
+            identity = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode()).hexdigest()
+            edge["input_snapshot_id"] = identity
+            edge["input_verification_status"] = "reproduced_at_activation"
         if incumbent and incumbent.get("status") in ("certified", "benched"):
             validate_contract(incumbent)
+            if snapshot:
+                # Today's rows reproduce today's check, not an incumbent's
+                # preserved historical training baseline or activation clock.
+                revalidations[edge["contract_id"]] = {
+                    "input_snapshot_id": identity, "train": edge["train"], "valid": edge["valid"],
+                    "mining_window": edge["mining_window"], "status": "reproduced_at_revalidation"}
             edge = deepcopy(incumbent)
         merged.append(edge)
     included = {e["contract_id"] for e in merged}
@@ -1194,6 +1210,13 @@ def activate_post_forebet_contracts(con, report):
     payload.update(operating_contract=SCHEMA, edges=merged,
                    post_forebet_validation={k: report[k] for k in
                        ("start", "split", "as_of_exclusive", "gates", "limitations")})
+    if revalidations:
+        payload.setdefault("contract_revalidations", {}).update(revalidations)
+    if report.get("input_snapshot"):
+        import hashlib
+        snapshot = report["input_snapshot"]
+        identity = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode()).hexdigest()
+        payload.setdefault("input_snapshots", {})[identity] = snapshot
     safe, _ = preserve_live_ml_payload(payload, current)
     _atomic_registry_write(OUT, safe)
     operational = {e.get("contract_id"): e for e in safe["edges"] if e.get("contract_schema") == SCHEMA}

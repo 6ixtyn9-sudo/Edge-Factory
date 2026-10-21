@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "reason": "Restore six settled bet-days lost when cache-only ENH state restarted at 100",
+  "source_commit_before_reset": "ca77539c4d223302496c8b342d0ded4f12cf4e6a",
+  "source_commit_after_reset": "bd9277036db86d3f43cf2a46f017742062a1c813",
+  "source_path": "localdata/autobets_enh_tickets_performance.json",
+  "before_reset_sha256": "89849c7967cb06e9ce8ee7e1639dd95ea7d2f901794f0946dbdcb457b9f19cb7",
+  "after_reset_sha256": "6112274522ae81786c03ae7076444ecdf39752df908af11aa1ea5a9502de4282",
+  "prior_bank_pct": 71.69957599999998,
+  "recorded_later_net_pct": 14.5,
+  "recovered_bank_pct": 86.19957599999998,
+  "rounding_residual_vs_base_plus_ledger": -0.0001240000000279906,
+  "open_stake_pct_unchanged": 14.3125,
+  "new_settlements_executed": 0,
+  "resized_stakes": 0,
+  "frozen_timestamps": "not recorded in published snapshots; explicitly unknown"
+}
