@@ -4828,6 +4828,7 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
     """
     from edgefactory.enh_registry import ceiling_for, floor_for, floor_for_slice, enhancement_cohort_evidence
     from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS as TEAM_UNDERS
+    from edgefactory.enh_pricing import BETEXPLORER_SOURCE, betexplorer_price_rejection
     try:
         from edgefactory.enh_pricing import MARKET_PRICE_MAP
     except Exception:
@@ -4872,6 +4873,11 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
               and (not isinstance(pick.get("enhancement_price_book"), str)
                    or not pick["enhancement_price_book"].strip())):
             verdict = "price_bookmaker_missing"
+        elif (execution_safe
+              and psrc.spec(pick.get("enhancement_price_source")).family == psrc.spec(BETEXPLORER_SOURCE).family
+              and (be_rejection := betexplorer_price_rejection(
+                  pick, execution_at=datetime.now(TZ))) is not None):
+            verdict = be_rejection
         else:
             # Operator, 2026-10-14: no price floor and no price ceiling. The only
             # price gate is MIN_LEG_ODDS; any
@@ -4895,6 +4901,9 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
             "price": price,
             "price_book": pick.get("enhancement_price_book"),
             "price_source": pick.get("enhancement_price_source"),
+            "price_at": pick.get("enhancement_price_at"),
+            "price_kickoff": pick.get("enhancement_price_kickoff"),
+            "price_provenance": pick.get("enhancement_price_provenance"),
             "bucket": str(pick.get("bucket") or ""),
             "rule": str(pick.get("rule") or pick.get("display_rule") or ""),
             "league": str(pick.get("league") or ""),
@@ -5032,6 +5041,10 @@ def enhancement_pool(legs: list[dict]) -> list[dict]:
             "floor_basis": leg.get("floor_basis"),
             "league": leg.get("league"),
             "price_book": leg.get("price_book"),
+            "price_source": leg.get("price_source"),
+            "price_at": leg.get("price_at"),
+            "price_kickoff": leg.get("price_kickoff"),
+            "price_provenance": leg.get("price_provenance"),
             "shadow": bool(leg.get("shadow")),
         })
     return pool
@@ -5057,7 +5070,8 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
             if not meta:
                 continue
             for key in ("cohort_evidence", "market", "label", "floor", "floor_basis", "league",
-                        "price_book", "shadow"):
+                        "price_book", "price_source", "price_at", "price_kickoff",
+                        "price_provenance", "shadow"):
                 leg[key] = meta.get(key)
 
 

@@ -1,5 +1,42 @@
 Edge Factory — Handover
 
+2026-10-21 addendum — Phase 3 secondary quotes in the existing live ENH path
+
+Implementation follow-up to merged PR125 / main 33320f1. Work is on the fixed
+session branch arena/29dcea58-edge-factory; no main switch or financial migration.
+
+- Shared the audit's schedule loader/resolver with enh_pricing; no duplicate
+  reader/miner. BE requires real raw page datetime, independent pre-cutoff schedule
+  proof, actual pre-09:00-SAST capture, correct fixture/kickoff/as-of, complete named
+  quote rows and the existing BE freshness policy. Bookmaker-created is NOT capture.
+- TheOddsAPI producer now preserves event ID/raw commence time and clock/participant
+  origins. Only an aware provider clock is tagged provider_commence_time. Legacy
+  archives are never retro-tagged; source-clock tags alone cannot bless pick-derived
+  participants as independent evidence.
+- Real run-as-of is now stamped before candidate price probes. The selected quote's
+  raw row/hash and ledger/schedule receipts survive ticket planning. The actual
+  execution_safe=True gate rechecks BE receipts and current execution freshness,
+  including persisted/legacy rows and both registered BE source names.
+- O/U, BTTS and side-correct DC use the existing live competition. AH/DNB remain
+  evidence-only: they have no validated enhancement probability/settlement contract.
+  Main and ENH remain enabled. Cohort n>=100, MIN_LEG_ODDS=1.30, stake/freeze/bank
+  policies and workflows are unchanged; no new scraper surface or capture budget.
+- Historical audit reproduced EXACT JSON parity against 33320f1: 116 unverified,
+  zero capture-valid, diagnostics 57/9/45/5, 5203 structurally valid and 14 nonfinite
+  quotes. No missing raw timestamps were invented. See the operative Phase-3 section
+  of docs/operator/BETEXPLORER-LICENSING.md for receipt and deployment details.
+- Tests exercise the real BE writer, TheOddsAPI producer + gzip writer, shared
+  corroboration, price attachment, live guard and recipe carry with explicitly
+  SYNTHETIC clocks/cohorts. This is code validation, NOT real live coverage or ROI.
+  No fresh provider scrape or production dispatch was possible/run in this sandbox;
+  no ticket command, financial write, merge or independent second-agent sign-off.
+  Full suite: 3770 passed, 1 skipped in 164.79s. All 851 recursive localdata
+  SHA256s match the pre-change baseline (no additions/deletions after removing the
+  empty test-created usage lock). git diff --check passes.
+  Merge/review and a genuine FUTURE bounded capture are still needed for deployment
+  and any new admission claim. Never backfill the historical 116.
+
+
 Date: 2026-10-03
 
 2026-10-06 addendum — ticket (o): a zero-row price board now names which zero it was
