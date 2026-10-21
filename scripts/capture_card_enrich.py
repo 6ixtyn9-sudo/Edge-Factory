@@ -91,6 +91,10 @@ def margin(row: dict, *, registry: dict | None = None) -> float | None:
         except (AttributeError, KeyError, TypeError, ValueError):
             return None
     else:
+        # Retained archive rows do not reactivate the retired electorate or
+        # consume context quota once the operational registry has migrated.
+        if isinstance(registry, dict) and registry.get("operating_contract") == "post_forebet_v1":
+            return None
         match = _MATCH_RULE.match(rule.strip())
         if not match:
             return None
