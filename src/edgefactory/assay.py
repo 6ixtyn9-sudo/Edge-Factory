@@ -49,6 +49,14 @@ def grade(wins: int, n: int, min_n: int = 30) -> str:
 
 # ---- decay -------------------------------------------------------------
 
+_VERDICT_SEVERITY = {"HEALTHY": 0, "WATCH": 1, "DECAYING": 2, "DEAD": 3}
+
+
+def _more_severe(a: str, b: str) -> str:
+    """Verdicts rank by severity: new evidence may only escalate the call."""
+    return a if _VERDICT_SEVERITY[a] >= _VERDICT_SEVERITY[b] else b
+
+
 @dataclass
 class DecayReport:
     verdict: str          # HEALTHY | WATCH | DECAYING | DEAD
@@ -74,6 +82,10 @@ def decay_verdict(
     """
     b_lb = wilson_lb(baseline_wins, baseline_n)
     r_lb, r_ub = wilson_bounds(recent_wins, recent_n)
+    # An ROI that is NaN/inf is unreadable, never "fine": comparisons against
+    # it are all False, which would otherwise let it slip past every ROI gate.
+    roi_usable = recent_roi is None or math.isfinite(recent_roi)
+    recent_roi = recent_roi if roi_usable else None
 
     if recent_n < min_recent:
         # Insufficient n → never return HEALTHY, but still allow DEAD and
@@ -106,24 +118,105 @@ def decay_verdict(
     # Red-Team ROI-Aware Decay Enforcement:
     # An edge cannot be healthy if it has a negative ROI over a meaningful sample.
     if recent_roi is not None and recent_n >= min_recent:
+        # ROI evidence may only WORSEN the verdict. Overwriting outright let a
+        # negative ROI relabel a structural DEAD as the milder DECAYING.
         if recent_roi < -0.03:
-            v = "DECAYING"
+            v = _more_severe(v, "DECAYING")
         elif recent_roi < 0.0:
-            if v == "HEALTHY":
-                v = "WATCH"
+            v = _more_severe(v, "WATCH")
+
+    # Unmeasured is not healthy. Same rule as recent_n == 0 above.
+    if not roi_usable and v == "HEALTHY":
+        v = "WATCH"
 
     return DecayReport(v, b_lb, r_lb, r_ub, recent_n)
 
-def should_bench(report: DecayReport, recent_roi: float | None = None) -> bool:
-    """Bench an edge if recent ROI is negative or decay is structurally confirmed.
+# ---- bench decisions ---------------------------------------------------
+# A bench flips a certified edge to status="benched", which removes it from
+# selection entirely (picks_today reads only status=="certified"). It is a
+# money decision, so it may only fire on evidence that can carry the claim:
+# the ROI leg of the rule needs BOTH a negative ROI and the priced sample
+# that makes that ROI an estimate rather than noise. An ROI computed over 3
+# or 9 priced legs is not evidence about an edge, and benching on it churns
+# a certified contract on a handful of matches.
+#
+# These mirror GATES.min_recent_n (30). scripts/decay_monitor.py passes the
+# live gate explicitly so config stays the single source of truth at runtime.
+BENCH_MIN_PRICED_N = 30
+BENCH_ROI_THRESHOLD = 0.0     # negative ROI benches (stricter than the
+                              # historical "-5%" wording in some docs; that
+                              # wording was never implemented)
 
-    Any non-null negative recent ROI is an immediate circuit-breaker.
+
+def bench_decision(
+    report: DecayReport,
+    recent_roi: float | None = None,
+    *,
+    n_priced: int | None = None,
+    min_priced_n: int = BENCH_MIN_PRICED_N,
+    min_roi: float = BENCH_ROI_THRESHOLD,
+) -> tuple[bool, str]:
+    """The single bench rule, returned with the evidence it fired on.
+
+    Returns ``(bench, reason)``:
+      verdict_dead / verdict_decaying   structural decay, sample already
+                                        gated by decay_verdict (min_decay_n)
+      recent_roi                        ROI below ``min_roi`` on at least
+                                        ``min_priced_n`` priced legs
+      recent_roi_n_below_floor          ROI is negative but the priced sample
+                                        is too thin to bench on
+      recent_roi_non_negative           ROI measured, nothing to bench
+      recent_roi_not_finite             ROI is NaN/inf: unreadable, not zero
+      none                              no recent ROI was measured
+
+    ``n_priced`` is the denominator of ``recent_roi``, not the settled count.
+    Passing an ROI without it is a programming error: an ROI whose priced
+    denominator is unknown cannot be tested, and guessing one is exactly the
+    defect this signature exists to prevent.
     """
-    if recent_roi is not None and recent_roi < 0:
-        return True
-    if report.verdict in ("DEAD", "DECAYING"):
-        return True
-    return False
+    if report.verdict == "DEAD":
+        return True, "verdict_dead"
+    if report.verdict == "DECAYING":
+        return True, "verdict_decaying"
+    if recent_roi is None:
+        return False, "none"
+    if n_priced is None:
+        raise ValueError(
+            "recent_roi requires n_priced: an ROI without its priced "
+            "denominator is not evidence"
+        )
+    if n_priced <= 0:
+        raise ValueError(
+            f"n_priced={n_priced} contradicts a measured recent_roi"
+        )
+    if not math.isfinite(recent_roi):
+        # NaN/inf compare False against every threshold; never let an
+        # unreadable number pass as "not bad enough".
+        return False, "recent_roi_not_finite"
+    if n_priced < min_priced_n:
+        return False, "recent_roi_n_below_floor"
+    if recent_roi < min_roi:
+        return True, "recent_roi"
+    return False, "recent_roi_non_negative"
+
+
+def should_bench(
+    report: DecayReport,
+    recent_roi: float | None = None,
+    *,
+    n_priced: int | None = None,
+    min_priced_n: int = BENCH_MIN_PRICED_N,
+    min_roi: float = BENCH_ROI_THRESHOLD,
+) -> bool:
+    """Bench an edge if recent ROI is negative over a supportable priced
+    sample, or if decay is structurally confirmed (DEAD / DECAYING).
+
+    See ``bench_decision`` for the evidence rules; this is the boolean view.
+    """
+    return bench_decision(
+        report, recent_roi, n_priced=n_priced,
+        min_priced_n=min_priced_n, min_roi=min_roi,
+    )[0]
 
 # ---- context verdict -------------------------------------------------------
 # Two independent layers:
