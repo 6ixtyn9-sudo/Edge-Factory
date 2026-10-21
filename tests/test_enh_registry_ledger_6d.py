@@ -83,7 +83,9 @@ def test_many_unpriced_outcomes_leave_certification_byte_identical(tmp_path):
 def test_a_trimmed_window_cannot_hide_a_key_the_archives_will_present():
     """Trim-safety over the committed archives, measured — not assumed.
 
-    ``processed`` keeps the newest MAX_PROCESSED_KEYS keys. A key still inside
+    ``processed`` is retained in full since 2026-10-21 (no trimming), so this
+    bound is currently vacuous — it is kept as the guard trimming would need.
+    Historically it kept the newest MAX_PROCESSED_KEYS keys. A key still inside
     an audit rescan window must never have been trimmed, or a priced outcome
     would be recorded twice. So: per market, the keys any window the audits
     actually use can present must be fewer than the cap. The whole-archive

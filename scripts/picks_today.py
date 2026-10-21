@@ -739,16 +739,41 @@ def load_enhancement_calibration(audit_path: Path = AUDIT_ROLLING_PATH) -> dict[
     return out
 
 
+_ENH_PUBLISHED_FIELDS = (
+    "recommended_enhancement", "enhancement_label", "enhancement_probability",
+    "enhancement_stated_probability", "enhancement_cohort_rate",
+    "enhancement_cohort_n", "enhancement_cohort_contract_id",
+    "enhancement_cohort_as_of_exclusive", "enhancement_priced",
+    "enhancement_price", "enhancement_edge_sample",
+)
+
+
 def stamp_pick_evidence(picks, *, git_sha, built_at):
-    """Validate/stamp new output only; never backfill retained archive rows."""
+    """Validate/stamp new output only; never backfill retained archive rows.
+
+    A selected enhancement that cannot prove its measured cohort identity is
+    WITHHELD from that row (fields nulled, reason recorded) instead of being
+    published. It must not abort the slate: one unprovable row is a row-level
+    evidence gap, not a reason to lose every other pick of the day. Returns the
+    quarantined (match, market, reason) tuples so the caller can report them.
+    """
     from edgefactory.enh_registry import enhancement_cohort_evidence
+    quarantined: list[tuple[str, str, str]] = []
     for pick in picks:
         pick["build_git_sha"] = git_sha
         pick["built_at_utc"] = built_at
         if not pick.get("recommended_enhancement"):
             pick["enhancement_probability"] = None
-        elif enhancement_cohort_evidence(pick) is None:
-            raise ValueError("selected enhancement has no valid measured cohort identity")
+            continue
+        if enhancement_cohort_evidence(pick) is None:
+            match = str(pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}")
+            market = str(pick.get("recommended_enhancement"))
+            for field in _ENH_PUBLISHED_FIELDS:
+                pick[field] = None
+            pick["enhancement_quarantined"] = (
+                "selected enhancement has no valid measured cohort identity")
+            quarantined.append((match, market, "no_valid_cohort_identity"))
+    return quarantined
 
 
 def load_rolling_audit_hit_rates() -> dict[str, float]:
@@ -1642,10 +1667,15 @@ def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
 
 
 def lookup_context(purity: dict, pick: dict) -> dict:
+    held = False
     if (purity or {}).get("roi_population_status") == "unverified_legacy_population":
-        # Never apply old, population-biased VETO/BOOST decisions after the
-        # correction. The original registry stays intact for audit/reproduction.
-        purity = {}
+        # Never apply old, population-biased PROMOTIONS after the correction.
+        # VETO/CAUTION (the fail-closed half) are retained: releasing them would
+        # turn 27 recorded vetoes on one live slate into ticket-eligible CAUTION
+        # legs. The original registry stays intact for audit/reproduction.
+        from edgefactory.veto_resolution import hold_to_negative_only
+        purity = hold_to_negative_only(purity)
+        held = True
     exact_contract = pick.get("contract_schema") == "post_forebet_v1"
     if exact_contract:
         # Team keys in the legacy pooled map have no rule dimension. Keep
@@ -1756,7 +1786,10 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     comp_v, comp_meta = _best_ctx([comp_exact, comp_fallback])
 
     return {
-        "purity_evidence_status": ("available" if ctx else "unavailable_exact_contract_context" if exact_contract else "unavailable_context"),
+        "purity_evidence_status": ("hold_negative_only" if held else
+                                   "available" if ctx else
+                                   "unavailable_exact_contract_context" if exact_contract
+                                   else "unavailable_context"),
         "league": league_v,
         "team_h": team_h_v,
         "team_a": team_a_v,
@@ -6741,6 +6774,10 @@ def main():
     if purity_missing:
         print("purity_registry.json missing – all contexts will be UNKNOWN → WATCHLIST",
               file=sys.stderr)
+    elif (purity or {}).get("roi_population_status") == "unverified_legacy_population":
+        print("purity_registry.json HELD (roi_population_status=unverified_legacy_population): "
+              "VETO/CAUTION retained, ALLOW/BOOST suppressed. No promotion from unverified "
+              "purity evidence until a priced-only re-assay is committed.", file=sys.stderr)
 
     all_picks: list = []
     context_floor_drops: Counter = Counter()
@@ -7480,9 +7517,17 @@ def main():
         # merged back in via merge_day_archive_rows — a post-kickoff rerun
         # that finds an empty/partial slate must never erase audited history.
         import subprocess
-        build_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
-        stamp_pick_evidence(collapsed_day_picks, git_sha=build_sha,
-                            built_at=datetime.now(timezone.utc).isoformat())
+        try:
+            build_sha = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        except Exception:  # noqa: BLE001 - provenance is not a prerequisite to run
+            build_sha = "unavailable"
+        _enh_quarantined = stamp_pick_evidence(
+            collapsed_day_picks, git_sha=build_sha,
+            built_at=datetime.now(timezone.utc).isoformat())
+        for _match, _market, _why in _enh_quarantined:
+            print(f"enhancement withheld {day}: {_match} [{_market}] — {_why}",
+                  file=sys.stderr)
         _day_archive = ROOT / "localdata" / f"picks_{day}.json"
         try:
             _day_archive.parent.mkdir(parents=True, exist_ok=True)
