@@ -1671,3 +1671,49 @@ def test_settled_ledger_probability_never_imputes_zero(tmp_path, monkeypatch, av
     audit_mod.write_markdown(path, report)
     text = path.read_text()
     assert f"Expected prob: {'unavailable' if expected is None else '0.0%'}" in text
+
+
+def test_rule_table_names_a_contract_and_flags_a_tiny_sample(tmp_path):
+    """A post-Forebet pick stamps the CONTRACT ID as its edge_rule, so the rule
+    table would print an opaque hash beside real rule names. It must resolve to
+    the rule the contract implements, carry its live status, and mark a sample
+    too small to mean anything — 3 rows of 3/3 must not read like an edge."""
+    import importlib.util, json as _json
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    spec = importlib.util.spec_from_file_location("_arp_rule_labels", root / "scripts" / "audit_recent_picks.py")
+    mod = importlib.util.module_from_spec(spec)
+    import sys as _sys
+    _sys.modules["_arp_rule_labels"] = mod
+    spec.loader.exec_module(mod)
+
+    reg = tmp_path / "edges_consensus.json"
+    reg.write_text(_json.dumps({"edges": [{
+        "contract_id": "pfc_0f100c9da356ed1c05d9c642",
+        "research_rule": "1x2 single[scoutingstats] avg_p>=60",
+        "status": "benched", "activated_as_of": "2026-10-20",
+        "valid": {"n": 566}}]}))
+    report = {
+        "start": "2026-09-22", "end": "2026-10-21",
+        "overall": {}, "by_rule": {
+            "pfc_0f100c9da356ed1c05d9c642": {
+                "settled_picks": 3, "wins": 3, "priced_picks": 3,
+                "hit_rate": 1.0, "roi": 0.463067},
+            "ml-meta avg_p>=55": {
+                "settled_picks": 189, "wins": 139, "priced_picks": 162,
+                "hit_rate": 0.73545, "roi": 0.164667},
+        },
+    }
+    out = tmp_path / "audit.md"
+    mod.write_markdown(out, report, registry_path=reg)
+    text = out.read_text()
+    row = [l for l in text.splitlines() if l.startswith("- `pfc_")][0]
+    assert "1x2 single[scoutingstats] avg_p>=60" in row      # not just the hash
+    assert "benched" in row and "n=566" in row               # live status + certified size
+    assert "PROVISIONAL" in row                              # 3 rows is not evidence
+    # a real sample is not labelled provisional
+    big = [l for l in text.splitlines() if l.startswith("- `ml-meta avg_p>=55`")][0]
+    assert "PROVISIONAL" not in big
+    assert "139/189 settled" in big and "162 priced" in big   # both denominators named
+    # the population warning is present
+    assert "PICK ROWS, not bets" in text
