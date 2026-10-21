@@ -11836,3 +11836,38 @@ INTEGRITY-SECOND-AGENT-REVIEW-2026-10-21.md. Do not mistake this for approval.
 No production workflow dispatch or financial execution. Last checked Worker
 success was base56f990fd; scheduled Python39541618593 used olderbd927703, not
 these remediation changes. Operational verification remains outstanding.
+
+### 21 October 2026 — live execution integrity, both lanes remain enabled
+
+Operator requested an implementation, not shadow work, and explicitly answered
+"pause nothing". No pause flag, stake change, new draw/goal/EV heuristic, odds-floor
+change or frozen-card override was added. Current main snapshot4c0d749 was brought
+onto arena/01665d53-edge-factory without switching branches or discarding history;
+all following financial invariants are against that current-main baseline.
+
+The real cmd_enhancement now passes execution_safe=True. Enhancement prices must
+satisfy the existing main-lane execution-source policy; unknown, disabled, vote-only
+or audit-only sources cannot enter the live ticket pool. Explicit price-rejection
+metadata / enhancement_priced=False and unnamed named-book prices are rejected.
+Parent1X2 price permissions are not misapplied to a separately quoted enhancement.
+Historical descriptive/replay callers retain their default path. Both paths use
+one source-policy helper and the existing price_sources registry. Producer names
+oddspapi/scoutingstats resolve to their existing adapter specs: same permissions
+and independence families, no second donor or fabricated corroboration.
+Main admission additionally rejects NaN/infinite decimal odds before ranking or
+staking. Valid candidates still compete; the saved board's15 enhancements remain
+15fire under the new checks. This closes integrity gaps, NOT a proven ROI edge or
+a claim that today's legitimate losing legs would have been removed.
+
+Fresh dependency installation selected DuckDB2.0, whose relation.fetchone removal
+broke existing mining/decay APIs (22failures/28errors). requirements now constrains
+DuckDB<2; validated with1.5.6. No mining/ML policy was changed to hide those failures.
+Focused ticket/source/replay suite208passed; compatibility-focused suite172passed.
+Final frozen-source full suite:3648passed,0failed,0skipped144.51s. Immutable parity
+baseline9e52ed25 fetched. Final before/after recursive localdata hash audit0changes.
+The first full test pass created only an empty untracked runtime usage.lock; every
+pre-existing artifact stayed identical. Main/ENH states, frozen slips, settlement
+results, registries and workflows diff0 against current main. No live ticket CLI,
+settlement, recut, capture, notification or workflow dispatch was executed.
+Implementation is in the production caller, not a shadow switch. Merge/deployment
+status must be reported separately; local tests do not imply it is running live.
