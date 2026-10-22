@@ -869,7 +869,7 @@ def _enh_log_mark_selected(enh_log: list, best_market: str | None) -> None:
 def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = None,
                                 *, cohort_cache=None) -> dict:
     """Query the local database to find deep league & team context and determine
-    the single highest probable enhancement.
+    a descriptive exact-parent shortlist of priced enhancements.
 
     With prices_index, rank eligible candidates by realized all-outcome cohort
     rate from the exact validated parent contract, then price. Edge is
@@ -899,7 +899,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         return out
         
     # No league/team priors, Poisson defaults or missing-data imputation.
-    # Only the exact observed parent cohort may supply a probability.
+    # Only the exact observed parent cohort may supply descriptive frequency.
     cohort = None
     _cohort_sel = str(pick.get("pick") or "").lower()
     _cohort_avg_p = pick.get("avg_p")
@@ -1035,12 +1035,12 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                else LINE_THRESHOLDS.get(market, 0.80))
         if prob_adjusted < thr:
             _push_enh_log(enh_log, _enh_log_entry(market, label, "excluded", "below_line_threshold",
-                                          probability=prob_adjusted, raw_probability=None,
+                                          probability=None, raw_probability=None,
                                           cohort_rate=cohort_rate, engine=engine))
         if prob_adjusted >= thr:
             candidates.append({
                 "market": market,
-                "probability": prob_adjusted,
+                "probability": None,
                 "raw_probability": None,
                 # Realized cohort rate the card ranks on; None when no cohort.
                 "cohort_rate": (round(cohort_rate, 4) if cohort_rate is not None else None),
@@ -1116,14 +1116,14 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                     _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "below_min_leg_odds",
                                                   price=price, **_log_kw))
                     continue
-                prob = float(c["probability"])
+                prob = float(c["cohort_rate"])
                 if prob < MIN_PROB or prob > MAX_PROB:
                     _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "prob_outside_band",
                                                   price=price, **_log_kw))
                     continue
                 from edgefactory.enh_registry import enhancement_cohort_evidence
-                evidence_probe = dict(pick, recommended_enhancement=market,
-                                      enhancement_probability=round(prob, 4),
+                evidence_probe = dict(probe, recommended_enhancement=market,
+                                      enhancement_probability=None,
                                       enhancement_cohort_rate=c["cohort_rate"],
                                       enhancement_cohort_n=c["cohort_n"],
                                       enhancement_cohort_contract_id=c["cohort_contract_id"],
@@ -1134,23 +1134,28 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                                                         "invalid_cohort_provenance", price=price, **_log_kw))
                     continue
                 c = dict(c)
-                c["enhancement_price"] = round(price, 3)
-                c["enhancement_price_source"] = probe.get("enhancement_price_source")
-                c["enhancement_price_book"] = probe.get("enhancement_price_book")
-                # Informational only: never used to choose.
-                c["enhancement_edge_sample"] = round(prob * price - 1.0, 4)
+                for key in ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
+                            "enhancement_price_at", "enhancement_price_kickoff",
+                            "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection"):
+                    c[key] = probe.get(key)
+                # Retain every authentic priced alternative, even on NO BET
+                # days, so the existing audit can score it prospectively.
+                # This is a descriptive candidate shortlist, NOT permission
+                # to stake. The live board/slip resolves the original quote's
+                # priced evidence and competes complete tickets over all notes.
                 eligible.append(c)
                 _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "eligible", None,
                                               price=price, **_log_kw))
 
-        eligible.sort(key=lambda x: (x["probability"], x["enhancement_price"]), reverse=True)
+        eligible.sort(key=lambda x: (x["cohort_rate"], x["enhancement_price"]), reverse=True)
         out["event_notes"] = eligible
         _enh_log_mark_selected(enh_log, eligible[0]["market"] if eligible else None)
         if eligible:
             best = eligible[0]
             out.update({
                 "recommended_enhancement": best["market"],
-                "enhancement_probability": round(best["probability"], 4),
+                # Group frequency is not an individual fixture forecast.
+                "enhancement_probability": None,
                 "enhancement_stated_probability": None,
                 "enhancement_cohort_rate": best.get("cohort_rate"),
                 "enhancement_cohort_n": best.get("cohort_n"),
@@ -6403,9 +6408,9 @@ def _enh_floor_table(day: str) -> dict:
 
 
 def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
-    """The same exact-cohort evidence + minimum-price verdict as the slip.
+    """Use the actual slip admission verdict, including quote/source evidence.
 
-    No EV veto, derived price-floor or ceiling. All supported cohort-backed
+    No global-rate EV, derived price-floor or ceiling. All supported priced
     markets compete. A model/calibrated/legacy/mismatched rate is NO BET, not
     "realized". Unpriced rows have no actionable enhancement line.
     """
@@ -6415,8 +6420,7 @@ def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
     # RT-6: archived/legacy picks can carry None or string probabilities —
     # a formatting crash here would kill the whole render.
-    rec_prob = finite_probability(p.get("enhancement_probability"))
-    rec_prob_text = f"{rec_prob:.0%}" if rec_prob is not None else "unavailable"
+    rec_prob_text = "fixture probability unavailable"
     rec_price = p.get("enhancement_price")
     if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
             and math.isfinite(rec_price) and rec_price > 1.0):
@@ -6428,17 +6432,17 @@ def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     # Operator 2026-10-14: no floor and no ceiling. The board gate is the slip's
     # gate: the shared MIN_LEG_ODDS minimum and valid realized cohort evidence.
     try:
-        from auto_tickets import MIN_LEG_ODDS
+        from auto_tickets import MIN_LEG_ODDS, enhancement_legs
     except ModuleNotFoundError:  # imported as scripts.picks_today in isolated tests
-        from scripts.auto_tickets import MIN_LEG_ODDS
-    from edgefactory.enh_registry import enhancement_cohort_evidence
+        from scripts.auto_tickets import MIN_LEG_ODDS, enhancement_legs
     below_min = rec_price < MIN_LEG_ODDS
-    evidence = enhancement_cohort_evidence(p)
-    if not below_min and evidence is not None:
+    admitted = any(l.get("market") == rec_market and l.get("verdict") == "fire"
+                   for l in enhancement_legs([p], registry_root=LOCALDATA.parent, execution_safe=True))
+    if not below_min and admitted:
         return (f"     🔬 {rec_label} {rec_prob_text} @ {rec_price:.2f}{book}"
                 f"{edge_txt}{src} — minimum {MIN_LEG_ODDS:.2f}")
     why = (f"below minimum {MIN_LEG_ODDS:.2f}" if below_min
-           else "no valid realized contract-cohort evidence")
+           else "no supported quote-conditioned payout evidence")
     return (f"     🚫 {rec_label} {rec_prob_text} @ {rec_price:.2f}{book}"
             f" — no bet: {why}{src}")
 
