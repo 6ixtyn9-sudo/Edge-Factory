@@ -732,8 +732,9 @@ def _alias_index(*offers):
          "2026-10-21T22:23:00Z", "theoddsapi", "2026-10-22T00:30:00Z"), *offers
     ]:
         key = norm_team(home), norm_team(away)
-        _put(index, *key, *slot, price, book, at, source, kickoff=kickoff)
-        index["names"][key] = home, away
+        _put(index, *key, *slot, price, book, at, source, kickoff=kickoff,
+             fixture_names=(home, away))
+        index["names"].setdefault(key, (home, away))
     return index
 
 
@@ -855,3 +856,132 @@ def test_alias_scan_refuses_conflicting_equivalent_fixture_clocks():
     row = attach_enhancement_price(_alias_pick(), index)
     assert not row["enhancement_priced"]
     assert row["enhancement_price_rejection"] == "ambiguous_equivalent_fixture"
+
+
+@pytest.mark.parametrize('side,feed_side', [('home', 'x2'), ('away', '1x')])
+def test_alias_swapped_double_chance_prices_the_selected_team(side, feed_side):
+    index = _alias_index(_alias_offer(home='Fluminense FC RJ', away='SE Palmeiras SP',
+                                     slot=('dc', feed_side)))
+    row = attach_enhancement_price(
+        _alias_pick(recommended_enhancement='double_chance', pick=side), index)
+    assert row['enhancement_price'] == 1.6
+
+
+@pytest.mark.parametrize('side,wrong_feed_side', [('home', '1x'), ('away', 'x2')])
+def test_alias_swapped_double_chance_never_prices_the_opponent(side, wrong_feed_side):
+    index = _alias_index(_alias_offer(home='Fluminense FC RJ', away='SE Palmeiras SP',
+                                     slot=('dc', wrong_feed_side)))
+    row = attach_enhancement_price(
+        _alias_pick(recommended_enhancement='double_chance', pick=side), index)
+    assert not row['enhancement_priced']
+
+
+@pytest.mark.parametrize('as_of', [None, '', 'not-a-date', '2026-10-21T22:33:18',
+                                  '2026-10-22T00:30:00Z', '2026-10-22T01:00:00Z'])
+def test_new_alias_admission_requires_a_pre_kickoff_decision(as_of):
+    row = attach_enhancement_price(_alias_pick(as_of=as_of), _alias_index(_alias_offer()))
+    assert not row['enhancement_priced']
+    assert row['enhancement_price_rejection'] == 'no_matching_kickoff_and_capture_witness'
+
+
+@pytest.mark.parametrize('women_first', [False, True])
+def test_alias_production_loader_binds_squad_identity_to_each_quote(tmp_path, women_first):
+    # norm_team strips Women and truncates age markers. One pair bucket can
+    # hold different squads: its first names entry cannot vouch for every row.
+    common = dict(date='2026-10-22', kickoff='2026-10-22T00:30:00Z',
+                  captured_at='2026-10-21T22:25:17Z')
+    senior = _row(**common, home='SE Palmeiras SP', away='Fluminense FC RJ',
+                  market='tt_home_1.5', selection='over', odds=1.6)
+    women = dict(senior, home='SE Palmeiras SP Women', away='Fluminense FC RJ Women',
+                 odds=2.0, captured_at='2026-10-21T22:26:00Z')
+    exact = _row(**common, home='Palmeiras-SP', away='Fluminense-RJ')
+    _write_month(tmp_path, [exact, *([women, senior] if women_first else [senior, women])],
+                 month='2026-10')
+    row = attach_enhancement_price(_alias_pick(), load_prices_index(tmp_path, '2026-10-22'))
+    assert row['enhancement_price'] == 1.6
+    assert row['enhancement_consensus_price'] == 1.6
+
+
+def test_alias_fallback_refuses_quotes_without_row_identity():
+    index = _alias_index(_alias_offer())
+    for slots in index['fixture_quotes'].values():
+        for slot, quotes in slots.items():
+            slots[slot] = [q[:5] for q in quotes]
+    assert not attach_enhancement_price(_alias_pick(), index)['enhancement_priced']
+
+
+def test_alias_fallback_refuses_ambiguous_orientation_even_with_permissive_matcher():
+    row = attach_enhancement_price(_alias_pick(), _alias_index(_alias_offer()),
+                                   match_fn=lambda a, b: True)
+    assert not row['enhancement_priced']
+
+
+@pytest.mark.parametrize('field,value', [
+    ('schema_version', '2'), ('captured_at', '2026-10-21T17:00:00Z'),
+    ('captured_at', '2026-10-22T00:31:00Z'), ('source', 'unrecognized'),
+])
+def test_alias_lookup_cannot_restore_loader_rejected_odds(tmp_path, monkeypatch, field, value):
+    monkeypatch.setenv('EDGE_FACTORY_ODDSPAPI_PRICES', '1')
+    common = dict(date='2026-10-22', kickoff='2026-10-22T00:30:00Z',
+                  captured_at='2026-10-21T22:25:17Z')
+    _write_month(tmp_path, [_row(**common, home='Palmeiras-SP', away='Fluminense-RJ')],
+                 month='2026-10')
+    alias = _row(**common, home='SE Palmeiras SP', away='Fluminense FC RJ',
+                 source='oddspapi', schema_version='3', market='tt_home_1.5',
+                 selection='over', odds=1.6)
+    alias[field] = value
+    with gzip.open(tmp_path / 'localdata/oddspapi_odds_2026-10.csv.gz', 'wt', newline='') as fh:
+        writer = csv.DictWriter(fh, fieldnames=list(alias))
+        writer.writeheader()
+        writer.writerow(alias)
+    assert not attach_enhancement_price(
+        _alias_pick(), load_prices_index(tmp_path, '2026-10-22'))['enhancement_priced']
+
+
+def test_alias_loader_source_flag_is_still_required(tmp_path, monkeypatch):
+    common = dict(date='2026-10-22', kickoff='2026-10-22T00:30:00Z',
+                  captured_at='2026-10-21T22:25:17Z')
+    _write_month(tmp_path, [_row(**common, home='Palmeiras-SP', away='Fluminense-RJ')],
+                 month='2026-10')
+    alias = _row(**common, home='SE Palmeiras SP', away='Fluminense FC RJ',
+                 source='oddspapi', schema_version='3', market='tt_home_1.5',
+                 selection='over', odds=1.6)
+    with gzip.open(tmp_path / 'localdata/oddspapi_odds_2026-10.csv.gz', 'wt', newline='') as fh:
+        writer = csv.DictWriter(fh, fieldnames=list(alias))
+        writer.writeheader()
+        writer.writerow(alias)
+    monkeypatch.delenv('EDGE_FACTORY_ODDSPAPI_PRICES', raising=False)
+    assert not attach_enhancement_price(
+        _alias_pick(), load_prices_index(tmp_path, '2026-10-22'))['enhancement_priced']
+    monkeypatch.setenv('EDGE_FACTORY_ODDSPAPI_PRICES', '1')
+    assert attach_enhancement_price(
+        _alias_pick(), load_prices_index(tmp_path, '2026-10-22'))['enhancement_price'] == 1.6
+
+
+def test_new_alias_clock_boundary_and_offset_equivalence():
+    # Exactly 15 minutes is still accepted: no new exact-second rule.
+    index = _alias_index(_alias_offer(kickoff='2026-10-22T00:45:00Z'))
+    row = attach_enhancement_price(_alias_pick(as_of='2026-10-22T00:33:18+02:00'), index)
+    assert row['enhancement_price'] == 1.6
+    assert not attach_enhancement_price(_alias_pick(), _alias_index(
+        _alias_offer(kickoff='2026-10-22T00:45:01Z')))['enhancement_priced']
+
+
+def test_redteam_hardening_does_not_change_existing_exact_slot_clock_policy():
+    # Scope boundary: inherited exact-slot behavior is not silently redesigned
+    # by making the NEW alias admission path require an aware decision stamp.
+    index = _alias_index(_alias_offer(home='Palmeiras-SP', away='Fluminense-RJ'))
+    assert attach_enhancement_price(_alias_pick(as_of=None), index)['enhancement_price'] == 1.6
+
+
+@pytest.mark.parametrize('selected,other', [
+    ('Universidad de Chile', 'Universidad Catolica'),
+    ('Manchester City', 'Manchester United'),
+    ('Lokomotiv Moscow', 'Lokomotiv Plovdiv'),
+])
+def test_new_alias_admission_cannot_use_shared_nine_character_club_prefix(selected, other):
+    index = _alias_index(
+        _alias_offer(home=selected, away='Rangers', slot=('ou_2.5', 'over')),
+        _alias_offer(home=other, away='CD Rangers Talca'))
+    row = attach_enhancement_price(_alias_pick(home=selected, away='Rangers'), index)
+    assert not row['enhancement_priced']
