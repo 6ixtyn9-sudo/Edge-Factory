@@ -375,3 +375,58 @@ not that today's slate ought to pass the remaining ticket checks.
 No production workflow dispatched, no independent-agent sign-off, and no
 runner-witnessed deployment of this new admission correction yet. The earlier
 successful run validates the prior restore/render fixes, not this change.
+
+## Accumulator veto removal — operator instruction, 22 October
+
+**Supersedes the remaining hard joint-payout veto in the preceding section.**
+The operator explicitly requested action after the cold-start correction still
+left all real complete tickets blocked. The Fréchet expression
+`max(0, LB1 + LB2 - 1) * combined_odds > 1` is removed from live/replay selection,
+not replaced with a fabricated independence product or joint probability.
+Unknown dependence is no longer treated as measured worst-case dependence.
+This restores accumulator operation, **not a claim of positive joint EV**.
+
+Existing machinery and retained boundaries:
+
+- Individual cohort-backed leg payout admission, n >= 100, source/book/quote
+  receipts and timing checks are unchanged. No new market threshold or model.
+- Within each executable bookmaker/source group, the shared ranked order,
+  `dedup_fixture_legs` and `pair_legs` recipe build complete two-leg tickets.
+  The configured barbell/consecutive setting is honoured. Complete candidates
+  compete in the existing leg-ranked order, not an invented joint-return score.
+  Selection repeats on unused fixtures; alternatives in other book/source
+  groups remain available until a ticket is selected. Source-specific quote
+  alternatives are no longer prematurely collapsed in initial deduplication.
+- Same-fixture exposure within/across tickets, mixed-book/source tickets,
+  missing cohort provenance and singles remain disallowed. A valid source pair
+  can replace a higher-ranked alternative that has no compatible partner.
+- `plan_day`, `_stake_weights`, `enhancement_legs`, `apply_enhancement_timing`
+  and `upsert_slip` are AST-identical to the pre-change versions. No staking,
+  financial lifecycle, placed-ticket or settled-history change.
+- Fresh NO BET explanations no longer imply rejection by a joint-payout model.
+
+Actual captured-slate comparison uses the **same** 38-row Git blob
+`3fd9e9d8a556d4b4d9ed9b13588f011f13e1c757` and SHA256
+`e0c70933020b63675a409cbc63f1e1fb9a6dfdeb869a5c992b12f98901fe1723`:
+individual verdicts stay **6 eligible / 17 insufficient leg payout / 53 invalid
+quote contexts**. Complete tickets change **0 -> 1**: Pafos–Riga O2.5 @1.81
+and Lech Poznań–Sunderland O2.5 @1.88, LeoVegas (SE)/theoddsapi, combined
+**3.4028**, displayed **3.40**. No operational rebuild/placement or present-time
+quote/result validation was performed; this is a captured-slate comparison.
+
+Validation: **3,851 passed, 1 skipped in 182.49 seconds**. Regressions cover
+real captured rate/count/price inputs admitting that pair; shared barbell and
+consecutive pairing parity; unchanged stake percentages; same-fixture,
+book/source compatibility and source-alternative rescue; plus existing lifecycle,
+freeze, settlement, provenance and insufficient individual-payout checks.
+The early-loss lifecycle test now pins scores to the restored barbell pairing
+rather than the removed joint-veto selector's consecutive pair order.
+
+The existing `replay_harness.py --enhancements` completed, but its current-policy
+historical reconstruction still yields **0 accas on 0 days** because usable
+archived predecision evidence is missing. Legacy floor comparisons are explicitly
+counterfactual. **No historical ROI improvement or validation of the near-miss
+hypothesis is claimed**; no hindsight line substitutions were promoted.
+All remaining operational files are byte-identical (empty test lock removed).
+No new registry, pipeline, workflow dispatch or independent-agent sign-off.
+This correction still requires merge and a new production run to be witnessed.
