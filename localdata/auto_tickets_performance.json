@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-22T21:25:16",
+  "generated_at": "2026-10-23T00:55:04",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 163.23817900000014,
-  "multiple": 1.6323817900000015,
+  "bank_pct": 179.35797100000013,
+  "multiple": 1.7935797100000013,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 53,
+  "bet_days": 54,
   "accas": {
-    "wins": 63,
+    "wins": 64,
     "losses": 46
   },
   "open_slips": [
     {
       "date": "2026-10-22",
-      "staked_pct": 40.8095
+      "staked_pct": 20.4047
     }
   ],
   "events": [
@@ -1104,6 +1104,35 @@
       ],
       "bank_pct": 163.2382,
       "close_pct": 163.2381
+    },
+    {
+      "date": "2026-10-22",
+      "staked_pct": 20.4048,
+      "returned_pct": 36.5246,
+      "accas": [
+        {
+          "odds": 1.79,
+          "won": true,
+          "stake_pct": 20.4048,
+          "returned_pct": 36.5246,
+          "legs": [
+            {
+              "match": "Omonia Nicosia vs Benfica",
+              "pick": "AWAY",
+              "odds": 1.3484,
+              "result": "win"
+            },
+            {
+              "match": "Ferencv\u00e1rosi vs Torreense",
+              "pick": "HOME",
+              "odds": 1.33,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 179.358,
+      "close_pct": 179.3579
     }
   ]
 }
