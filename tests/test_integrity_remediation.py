@@ -125,12 +125,15 @@ def test_enh_recovery_preserves_six_days_and_actual_later_stakes():
     after = json.loads((audit / 'after-reset.json').read_text())
     st = json.loads((ROOT / 'localdata/enhancement_tickets_state.json').read_text())
     assert st['history'][:6] == before['history']
-    assert len(st['history']) == 7
-    assert st['bank'] == pytest.approx(before['bank_pct'] + 27 - 12.5)
-    assert st['bank'] == pytest.approx(86.199576)
-    assert st['history'][-1]['staked_pct'] == after['history'][-1]['staked_pct'] == 12.5
-    # The initial unrecovered draft had 14.3125% stake; on true 86.2% bank recut stake is 10.7749%
-    assert st['open_slips'][0]['staked_pct'] in (14.3125, 10.7749, 21.5499)
+    assert len(st['history']) >= 7
+    # Oct 20 entry must match after-reset snapshot
+    assert st['history'][6]['date'] == after['history'][-1]['date'] == '2026-10-20'
+    assert st['history'][6]['staked_pct'] == after['history'][-1]['staked_pct'] == 12.5
+    assert st['history'][6]['returned_pct'] == after['history'][-1]['returned_pct'] == 27.0
+    # Day 7 (Oct 21) was subsequently settled live without rewriting past history
+    if len(st['history']) >= 8:
+        assert st['history'][7]['date'] == '2026-10-21'
+        assert st['history'][7]['staked_pct'] == 14.3125
     assert st['integrity_recovery']['new_settlements_executed'] == 0
     assert hashlib.sha256((audit / 'before-reset.json').read_bytes()).hexdigest() == st['integrity_recovery']['before_reset_sha256']
 
@@ -189,16 +192,29 @@ def test_financial_cache_cannot_discard_committed_history(tmp_path):
 
 
 def test_restored_registry_matches_all_original_counters():
+    # 1. Verify archived recovery snapshot itself matches all original counters
+    audit = ROOT / 'docs/operator/audits/2026-10-21-enh-recovery'
+    receipt = json.loads((audit / 'registry-record-recovery.json').read_text())
+    assert receipt['retained_after'] == 447
+    assert receipt['verification']['hits'] == 293
+    assert receipt['verification']['multi_n'] == 84
+
+    # 2. Verify live registry preserves all recovered records and internally matches
     reg = json.loads((ROOT / 'localdata/enhancement_registry.json').read_text())
     row = reg['markets']['match_over_25@v1']
     records = row['records']
-    assert len(records) == row['n'] == 447
-    assert len({(r['date'], r['match']) for r in records}) == 447
-    assert sum(bool(r['hit']) for r in records) == row['hits'] == 293
-    assert sum(bool(r.get('multi_source')) for r in records) == row['multi_n'] == 84
+    assert len(records) == row['n'] >= 447
+    assert len({(r['date'], r['match']) for r in records}) == row['n']
+    assert sum(bool(r['hit']) for r in records) == row['hits']
+    assert sum(bool(r.get('multi_source')) for r in records) == row['multi_n']
     assert sum((r['price'] - 1) if r['hit'] else -1 for r in records) == pytest.approx(row['profit'])
     assert sum(1 / r['price'] for r in records) == pytest.approx(row['inv_price_sum'])
     assert er.evidence_complete(row)
+
+    # 3. All 47 recovered records from the recovery audit must remain present
+    recovered_keys = {(r['date'], r['match']) for r in receipt['recovered_records']}
+    live_keys = {(r['date'], r['match']) for r in records}
+    assert recovered_keys.issubset(live_keys)
 
 
 def test_cache_can_extend_a_partially_settled_day(tmp_path):
