@@ -71,11 +71,11 @@
       "wins": 54
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.728261,
+      "hit_rate": 0.728997,
       "priced_picks": 327,
       "roi": 0.063304,
-      "settled_picks": 368,
-      "wins": 268
+      "settled_picks": 369,
+      "wins": 269
     },
     "WATCHLIST_NO_ODDS": {
       "hit_rate": 0.652174,
@@ -112,11 +112,11 @@
   },
   "by_odds_match_method": {
     "alias_fuzzy": {
-      "hit_rate": 0.648649,
+      "hit_rate": 0.657895,
       "priced_picks": 24,
       "roi": -0.039167,
-      "settled_picks": 37,
-      "wins": 24
+      "settled_picks": 38,
+      "wins": 25
     },
     "betexplorer": {
       "hit_rate": 0.710843,
@@ -149,11 +149,11 @@
   },
   "by_odds_source": {
     "UNKNOWN": {
-      "hit_rate": 0.666667,
+      "hit_rate": 0.669421,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 120,
-      "wins": 80
+      "settled_picks": 121,
+      "wins": 81
     },
     "betexplorer_odds": {
       "hit_rate": 0.755682,
@@ -270,11 +270,11 @@
       "wins": 39
     },
     "SUSPECT_ALIAS_FUZZY": {
-      "hit_rate": 0.648649,
+      "hit_rate": 0.657895,
       "priced_picks": 24,
       "roi": -0.039167,
-      "settled_picks": 37,
-      "wins": 24
+      "settled_picks": 38,
+      "wins": 25
     },
     "UNMATCHED": {
       "hit_rate": 0.663551,
@@ -295,13 +295,13 @@
       "wins": 348
     },
     "alias_fuzzy": {
-      "avg_suspect_price": 1.627911,
-      "hit_rate": 0.648649,
+      "avg_suspect_price": 1.629789,
+      "hit_rate": 0.657895,
       "priced_picks": 24,
       "roi": -0.039167,
-      "settled_picks": 37,
-      "suspect_price_captures": 37,
-      "wins": 24
+      "settled_picks": 38,
+      "suspect_price_captures": 38,
+      "wins": 25
     },
     "scoutingstats_sole_source": {
       "avg_suspect_price": null,
@@ -431,11 +431,11 @@
       "wins": 0
     },
     "pfc_439097cb9bb700e9996c0b07": {
-      "hit_rate": 0.631579,
+      "hit_rate": 0.65,
       "priced_picks": 16,
       "roi": 0.015131,
-      "settled_picks": 19,
-      "wins": 12
+      "settled_picks": 20,
+      "wins": 13
     },
     "pfc_4a1f2bb2278d13c8189148d0": {
       "hit_rate": 0.5,
@@ -1298,13 +1298,13 @@
   "late_additions_on_rewritten_ledgers": 145,
   "morning_baseline_rows": 563,
   "overall": {
-    "hit_rate": 0.693215,
+    "hit_rate": 0.693667,
     "priced_picks": 558,
     "roi": 0.041419,
-    "settled_picks": 678,
-    "wins": 470
+    "settled_picks": 679,
+    "wins": 471
   },
-  "pending_result_picks": 15,
+  "pending_result_picks": 14,
   "population_definitions": {
     "enhancement_hit_rate": "hits / settled recommended enhancements",
     "enhancement_priced_roi": "priced enhancement P&L / priced_n",
@@ -1502,12 +1502,12 @@
   "same_day_cutoff": "2026-10-22",
   "same_day_excluded": 38,
   "secondary_stats": {
-    "btts_total": 678,
-    "btts_wins": 354,
-    "over25_total": 678,
-    "over25_wins": 406,
-    "team_o15_total": 674,
-    "team_o15_wins": 444
+    "btts_total": 679,
+    "btts_wins": 355,
+    "over25_total": 679,
+    "over25_wins": 407,
+    "team_o15_total": 675,
+    "team_o15_wins": 445
   },
   "settled_ledger": [
     {
@@ -39600,6 +39600,35 @@
       "won": true
     },
     {
+      "avg_p": 57.22730739893211,
+      "date": "2026-10-21",
+      "gs": 1,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Cincinnati vs DC United",
+      "notes_audit": [],
+      "odds": null,
+      "odds_match_method": "alias_fuzzy",
+      "odds_source": "UNKNOWN",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": null,
+        "away_o15_hit": null,
+        "btts_expected": null,
+        "btts_hit": null,
+        "home_o15_expected": null,
+        "home_o15_hit": null,
+        "over25_expected": null,
+        "over25_hit": null,
+        "top_scores": []
+      },
+      "price_evidence": "SUSPECT_ALIAS_FUZZY",
+      "price_quarantine_reason": "alias_fuzzy",
+      "selection": "home",
+      "suspect_price": 1.6993,
+      "won": true
+    },
+    {
       "avg_p": 53.33208885570282,
       "date": "2026-10-21",
       "gs": 0,
@@ -41150,24 +41179,6 @@
       "rule": "pfc_439097cb9bb700e9996c0b07"
     },
     {
-      "away": "DC United",
-      "away_key_candidates": [
-        "dcunited"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-10-21",
-      "home": "Cincinnati",
-      "home_key_candidates": [
-        "cincinnat"
-      ],
-      "league": "Major League Soccer",
-      "match": "Cincinnati vs DC United",
-      "odds": null,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_439097cb9bb700e9996c0b07"
-    },
-    {
       "away": "2 de Mayo",
       "away_key_candidates": [
         "demayo"
@@ -41205,7 +41216,7 @@
       "rule": "pfc_444d408c4ccd3a4bf4fb020c"
     }
   ],
-  "unmatched_result_picks": 15,
+  "unmatched_result_picks": 14,
   "unsafe_regular_ledger_dates": [
     "2026-09-23",
     "2026-09-24",
@@ -41593,8 +41604,8 @@
         "implied_hit_rate": null,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 3,
-        "wins": 3,
+        "settled_picks": 4,
+        "wins": 4,
         "z_vs_implied": null
       },
       "SKIPPED_VETO|unpriced|UNMATCHED": {
@@ -41874,8 +41885,8 @@
         "implied_hit_rate": null,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 3,
-        "wins": 3,
+        "settled_picks": 4,
+        "wins": 4,
         "z_vs_implied": null
       },
       "unpriced|UNMATCHED": {
@@ -41918,11 +41929,11 @@
         "wins": 1
       },
       "unpriced": {
-        "hit_rate": 0.707317,
+        "hit_rate": 0.714286,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 41,
-        "wins": 29
+        "settled_picks": 42,
+        "wins": 30
       }
     },
     "by_price_evidence": {
@@ -41962,11 +41973,11 @@
         "wins": 19
       },
       "SUSPECT_ALIAS_FUZZY": {
-        "hit_rate": 0.705882,
+        "hit_rate": 0.722222,
         "priced_picks": 14,
         "roi": -0.018571,
-        "settled_picks": 17,
-        "wins": 12
+        "settled_picks": 18,
+        "wins": 13
       },
       "UNMATCHED": {
         "hit_rate": 0.684211,
@@ -41985,11 +41996,11 @@
         "wins": 39
       },
       "context VETO in ['league', 'niche']": {
-        "hit_rate": 0.6,
+        "hit_rate": 0.666667,
         "priced_picks": 4,
         "roi": -0.32525,
-        "settled_picks": 5,
-        "wins": 3
+        "settled_picks": 6,
+        "wins": 4
       },
       "context VETO in ['league', 'odds_band', 'niche']": {
         "hit_rate": 0.0,
@@ -42343,11 +42354,11 @@
     },
     "focus_bucket": "SKIPPED_VETO",
     "overall": {
-      "hit_rate": 0.728261,
+      "hit_rate": 0.728997,
       "priced_picks": 327,
       "roi": 0.063304,
-      "settled_picks": 368,
-      "wins": 268
+      "settled_picks": 369,
+      "wins": 269
     },
     "soft_evidence_labels": [
       "SCOUTINGSTATS_SOLE",
@@ -42356,11 +42367,11 @@
       "UNMATCHED"
     ],
     "soft_evidence_only": {
-      "hit_rate": 0.69697,
+      "hit_rate": 0.699248,
       "priced_picks": 91,
       "roi": 0.000549,
-      "settled_picks": 132,
-      "wins": 92
+      "settled_picks": 133,
+      "wins": 93
     },
     "trusted_evidence_only": {
       "hit_rate": 0.745763,

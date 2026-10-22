@@ -400,85 +400,14 @@
         {
           "legs": [
             {
-              "match": "Pachuca vs Cruz Azul",
-              "pick": "under",
-              "prob": 0.8337,
-              "odds": 2.13,
-              "result": null,
-              "cohort_evidence": {
-                "rate": 0.8337,
-                "n": 403,
-                "contract_id": "pfc_4a1f2bb2278d13c8189148d0",
-                "as_of_exclusive": "2026-10-22",
-                "market": "match_under_45"
-              },
-              "market": "match_under_45",
-              "label": "Match Under 4.5 Goals",
-              "floor": null,
-              "floor_basis": "inherited",
-              "league": "Liga MX",
-              "price_book": "hth",
-              "price_source": "oddspapi",
-              "price_at": "2026-10-21T22:24:37.340582+00:00",
-              "price_kickoff": "2026-10-22T03:10:00.000Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-22",
-                "Pachuca",
-                "Cruz Azul"
-              ]
-            },
-            {
-              "match": "Pafos FC vs Riga",
-              "pick": "over",
-              "prob": 0.5912,
-              "odds": 1.81,
-              "result": null,
-              "cohort_evidence": {
-                "rate": 0.5912,
-                "n": 3021,
-                "contract_id": "pfc_439097cb9bb700e9996c0b07",
-                "as_of_exclusive": "2026-10-22",
-                "market": "match_over_25"
-              },
-              "market": "match_over_25",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7379988092688428,
-              "floor_basis": "market",
-              "league": "Europa Conference League",
-              "price_book": "LeoVegas (SE)",
-              "price_source": "theoddsapi",
-              "price_at": "2026-10-21T22:23:59.106400+00:00",
-              "price_kickoff": "2026-10-22T16:45:00Z",
-              "price_provenance": null,
-              "shadow": true,
-              "fixture_key": [
-                "2026-10-22",
-                "Pafos FC",
-                "Riga"
-              ]
-            }
-          ],
-          "odds": 3.86,
-          "stake_pct": 9.2228,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
               "match": "Al Ahli vs Al Khaleej",
               "pick": "under",
-              "prob": 0.6289,
+              "prob": 0.6291,
               "odds": 1.65,
               "result": null,
               "cohort_evidence": {
-                "rate": 0.6289,
-                "n": 3021,
+                "rate": 0.6291,
+                "n": 3022,
                 "contract_id": "pfc_439097cb9bb700e9996c0b07",
                 "as_of_exclusive": "2026-10-22",
                 "market": "match_under_35"
@@ -584,14 +513,14 @@
               ]
             },
             {
-              "match": "Getafe vs Lugano",
+              "match": "Ferencv\u00e1rosi vs Torreense",
               "pick": "over",
-              "prob": 0.5912,
-              "odds": 2.16,
+              "prob": 0.5913,
+              "odds": 1.64,
               "result": null,
               "cohort_evidence": {
-                "rate": 0.5912,
-                "n": 3021,
+                "rate": 0.5913,
+                "n": 3022,
                 "contract_id": "pfc_439097cb9bb700e9996c0b07",
                 "as_of_exclusive": "2026-10-22",
                 "market": "match_over_25"
@@ -600,21 +529,21 @@
               "label": "Match Over 2.5 Goals",
               "floor": 1.7379988092688428,
               "floor_basis": "market",
-              "league": "Europa Conference League",
-              "price_book": "Matchbook",
+              "league": "Europa League",
+              "price_book": "1xBet",
               "price_source": "theoddsapi",
-              "price_at": "2026-10-21T22:23:59.771176+00:00",
+              "price_at": "2026-10-21T22:24:00.688046+00:00",
               "price_kickoff": "2026-10-22T16:45:00Z",
               "price_provenance": null,
-              "shadow": true,
+              "shadow": false,
               "fixture_key": [
                 "2026-10-22",
-                "Getafe",
-                "Lugano"
+                "Ferencv\u00e1rosi",
+                "Torreense"
               ]
             }
           ],
-          "odds": 3.56,
+          "odds": 2.71,
           "stake_pct": 9.2228,
           "results": [
             null,
@@ -655,14 +584,55 @@
               ]
             },
             {
+              "match": "Pafos FC vs Riga",
+              "pick": "over",
+              "prob": 0.5913,
+              "odds": 1.81,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.5913,
+                "n": 3022,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-22",
+                "market": "match_over_25"
+              },
+              "market": "match_over_25",
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7379988092688428,
+              "floor_basis": "market",
+              "league": "Europa Conference League",
+              "price_book": "LeoVegas (SE)",
+              "price_source": "theoddsapi",
+              "price_at": "2026-10-21T22:23:59.106400+00:00",
+              "price_kickoff": "2026-10-22T16:45:00Z",
+              "price_provenance": null,
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-22",
+                "Pafos FC",
+                "Riga"
+              ]
+            }
+          ],
+          "odds": 2.71,
+          "stake_pct": 9.2228,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
               "match": "Sporting Braga vs Gent",
               "pick": "over",
-              "prob": 0.5912,
+              "prob": 0.5913,
               "odds": 2.22,
               "result": null,
               "cohort_evidence": {
-                "rate": 0.5912,
-                "n": 3021,
+                "rate": 0.5913,
+                "n": 3022,
                 "contract_id": "pfc_439097cb9bb700e9996c0b07",
                 "as_of_exclusive": "2026-10-22",
                 "market": "match_over_25"
@@ -683,9 +653,39 @@
                 "Sporting Braga",
                 "Gent"
               ]
+            },
+            {
+              "match": "Getafe vs Lugano",
+              "pick": "over",
+              "prob": 0.5913,
+              "odds": 2.16,
+              "result": null,
+              "cohort_evidence": {
+                "rate": 0.5913,
+                "n": 3022,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-22",
+                "market": "match_over_25"
+              },
+              "market": "match_over_25",
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7379988092688428,
+              "floor_basis": "market",
+              "league": "Europa Conference League",
+              "price_book": "Matchbook",
+              "price_source": "theoddsapi",
+              "price_at": "2026-10-21T22:23:59.771176+00:00",
+              "price_kickoff": "2026-10-22T16:45:00Z",
+              "price_provenance": null,
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-22",
+                "Getafe",
+                "Lugano"
+              ]
             }
           ],
-          "odds": 3.33,
+          "odds": 4.8,
           "stake_pct": 9.2228,
           "results": [
             null,
