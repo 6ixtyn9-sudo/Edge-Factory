@@ -54,6 +54,7 @@ from edgefactory.util import (  # noqa: E402
     heal_ledger_labels,
     strip_retired_top_scores,
     format_pick_probability,
+    format_event_note,
     pick_probability_pct,
 )
 
@@ -611,10 +612,9 @@ def generate_daily_report(
                     lines.append(f"     {statistical_comment}")
                 notes = p.get("event_notes", [])
                 if notes:
-                    event_text = " | ".join(
-                        f"{note['label'].replace(' Goals', '')}: {note['probability']:.1%}"
-                        for note in notes
-                    )
+                    event_text = " | ".join(format_event_note(note) for note in notes)
+                    shadow_tag = " [SHADOW — paper]" if b == "SKIPPED_VETO" else ""
+                    lines.append(f"     🔥{shadow_tag} Possible Events: {event_text}")
 
         rendered_count = sum(len(buckets.get(b, [])) for b in bucket_order)
         if rendered_count != len(picks):

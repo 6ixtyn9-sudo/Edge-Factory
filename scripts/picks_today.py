@@ -29,7 +29,7 @@ from edgefactory.entities import (
 )
 from edgefactory.identity import source_team_key as _identity_source_team_key
 from edgefactory.util import (
-    finite_probability, pick_probability_pct, format_pick_probability,
+    finite_probability, pick_probability_pct, format_pick_probability, format_event_note,
     canonical_team_key,
     research_ledger_team_key,
     expand_team_token,
@@ -6518,10 +6518,7 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 print(f"     {statistical_comment}")
             notes = p.get("event_notes", [])
             if notes:
-                event_text = " | ".join(
-                    f"{note['label'].replace(' Goals', '')}: {note['probability']:.1%}"
-                    for note in notes
-                )
+                event_text = " | ".join(format_event_note(note) for note in notes)
                 # Vetoed core pick -> side-products are shadow research, never advice.
                 shadow_tag = " [SHADOW — paper]" if p.get("bucket") == "SKIPPED_VETO" else ""
                 print(f"     🔥{shadow_tag} Possible Events: {event_text}")
