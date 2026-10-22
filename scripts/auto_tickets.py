@@ -3370,9 +3370,9 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
             ca, cb = ea.get("price_context") or {}, eb.get("price_context") or {}
             if (k != 2 or _fixture_key(a) == _fixture_key(b) or not ca.get("book") or ca.get("book") != cb.get("book")
                     or ca.get("source") != cb.get("source")
-                    or not all(e.get("basis") == "exact_context_priced_sample" for e in (ea, eb))):
+                    or not all(e.get("basis") == "cohort_payout_bound" for e in (ea, eb))):
                 continue
-            lower = max(0.0, ea["price_lower_bound"] + eb["price_lower_bound"] - 1.0)
+            lower = max(0.0, ea["cohort_lower_bound"] + eb["cohort_lower_bound"] - 1.0)
             payout = a["odds"] * b["odds"]
             if lower * payout > 1.0:
                 supported.append((lower, lower * payout, a, b))
@@ -3502,7 +3502,11 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
         for l in a:
             prod *= l["odds"]
         acca = {"legs": [{**{k: l[k] for k in ("match", "pick", "prob", "odds")},
-                          "result": l.get("result")} for l in a],
+                          "result": l.get("result"),
+                          # Preserve the winning alternative's identity for
+                          # evidence carry; "over" alone is not a market.
+                          **({"market": l.get("market"), "price_book": l.get("price_book")}
+                             if overrides.get("enhancements", False) else {})} for l in a],
                 "odds": round(prod, 2),
                 "stake_pct": round(stake_pct * aw, 4) if aw < 1.0 else stake_pct}
         if aw < 1.0:
@@ -4860,8 +4864,9 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                      execution_safe: bool = False) -> list[dict]:
     """One selected-market leg with the shared realized-evidence verdict.
 
-    Live execution requires original quote-conditioned evidence as well as an
-    exact-parent all-outcome cohort (n >= 100). execution_safe=False retains
+    Live execution prices the exact-parent all-outcome cohort (n >= 100)
+    against an original executable quote. No exact-price history is required.
+    execution_safe=False retains
     descriptive historical counterfactuals, not current staking permission.
     Apply the shared
     MIN_LEG_ODDS minimum. No model fallback, EV veto, price floor or ceiling.
@@ -4947,12 +4952,12 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
             verdict = be_rejection
         else:
             # No arbitrary price ceiling or global-rate EV. The actual quote
-            # must pay for its supported, context-matched uncertainty bound.
+            # must pay for the existing parent cohort's uncertainty bound.
             if price < MIN_LEG_ODDS:
                 verdict = "below_min_odds"
             elif execution_safe and priced_evidence is None:
-                verdict = "no_priced_context_evidence"
-            elif execution_safe and priced_evidence["price_lower_bound"] * price <= 1:
+                verdict = "invalid_execution_quote_context"
+            elif execution_safe and priced_evidence["cohort_lower_bound"] * price <= 1:
                 verdict = "payout_not_supported"
             else:
                 verdict = "fire"
@@ -4966,7 +4971,7 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                 pick.get("date") or "", pick.get("home"), pick.get("away"), "HOME"),
             "market": market,
             "label": pick.get("enhancement_label") or str(market).replace("_", " ").upper(),
-            "probability": (priced_evidence["conditional_rate"] if priced_evidence else
+            "probability": (priced_evidence["rate"] if priced_evidence else
                             evidence["rate"] if evidence and not execution_safe else None),
             "cohort_evidence": priced_evidence or evidence,
             "price": price,
@@ -5128,8 +5133,8 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
     so without this the market, the floor and the book would be gone before
     the slip freezes — and the settle grades a leg BY ITS MARKET, so losing
     that field is losing the bet itself. ``(match, pick)`` identifies a
-    carded leg: the recipe has already dropped same-fixture duplicates, so
-    no two legs on the card share one. ``floor_basis`` and ``league`` ride
+    legacy carded leg. Live plans also retain market/book, because competing
+    alternatives on the same fixture can share a selection. ``floor_basis`` and ``league`` ride
     along with ``floor`` so the frozen card says which slice set the number
     and which slice it was (the derivation is evidence, and evidence that is
     dropped before the freeze cannot be audited afterwards).
@@ -5137,7 +5142,14 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
     by_key = {(str(l.get("match")), str(l.get("pick"))): l for l in pool}
     for acca in plan or []:
         for leg in acca.get("legs", []):
-            meta = by_key.get((str(leg.get("match")), str(leg.get("pick"))))
+            if leg.get("market"):
+                meta = next((l for l in pool if
+                             l.get("match") == leg.get("match")
+                             and l.get("pick") == leg.get("pick")
+                             and l.get("market") == leg.get("market")
+                             and l.get("price_book") == leg.get("price_book")), None)
+            else:  # Legacy descriptive plans did not carry market identity.
+                meta = by_key.get((str(leg.get("match")), str(leg.get("pick"))))
             if not meta:
                 continue
             for key in ("cohort_evidence", "market", "label", "floor", "floor_basis", "league",
@@ -5232,7 +5244,10 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
         # Eligibility = priced at or above the minimum, not a fixture duplicate.
         dropped = list((fixture_report or {}).get("dropped") or [])
         eligible = sum(1 for l in legs if l.get("verdict") == "fire") - len(dropped)
-        lines.append(f"NO BET — only {eligible} eligible leg(s), need {LEGS_PER_ACCA} for an acca")
+        if eligible < LEGS_PER_ACCA:
+            lines.append(f"NO BET — only {eligible} eligible leg(s), need {LEGS_PER_ACCA} for an acca")
+        else:
+            lines.append(f"NO BET — {eligible} eligible leg(s), but no supported complete acca")
         lines.append("(bank stays unbet; a lone leg is never a single)")
         lines.append("Quote/payout evidence: " + json.dumps(dict(Counter(
             l.get("verdict", "unknown") for l in legs)), sort_keys=True))
@@ -5436,8 +5451,8 @@ def cmd_enhancement(args, st, *, scores=None) -> int:
         if not legs:
             txt += "\nNo current exact-contract enhancement candidates; prior slate is not evidence."
     print(txt)
-    if plan or getattr(args, "rebuild_unplaced", False):
-        slip_txt.write_text(txt)
+    # Persist a fresh NO BET too: an earlier reason/card is not this build.
+    slip_txt.write_text(txt)
     if should_freeze and freeze_record:
         print(f"\nSTATUS: ✅ {freeze_footer(freeze_record)} enhancement slip; later runs "
               f"re-print unchanged (write-once lock in "

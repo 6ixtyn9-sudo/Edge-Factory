@@ -335,3 +335,34 @@ def test_retained_archives_no_longer_render_the_retired_placeholder():
     assert strip_retired_top_scores(numeric) == numeric
     assert 'Over 2.5: 60.0%' in numeric and 'Under 2.5: 40.0%' in numeric
     assert 'Avg Goals' not in numeric and 'BTTS:' not in numeric  # no invented fields
+
+
+def test_resolved_cohort_and_captured_quotes_can_start_without_priced_history(tmp_path, monkeypatch):
+    """Exercise real resolver -> price join -> notes -> live leg -> full acca.
+
+    Synthetic source observations/quotes, not claimed production performance.
+    No fabricated cohort notes or historical priced cells seed admission.
+    """
+    from edgefactory.enh_pricing import load_prices_index
+    from edgefactory.enh_registry import registry_path
+    from test_enh_pricing import _row, _write_month
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    history = [dict(r, hs=4 if i < 90 else 0, gs=0 if i < 90 else 1)
+               for i, r in enumerate(observations())]
+    con = connection(history)
+    parents = [dict(parent(recipe), home=h, away=a, league='Synthetic League',
+                    as_of='2026-10-20T06:00:00+00:00', kickoff_utc='2026-10-20T18:00:00Z')
+               for h, a in [('Alpha Town', 'Bravo United'), ('Gamma Town', 'Delta United')]]
+    _write_month(tmp_path, [_row(date=r['date'], home=r['home'], away=r['away'],
+        league=r['league'], kickoff=r['kickoff_utc'], captured_at='2026-10-20T05:00:00+00:00',
+        odds=1.8, bookmaker='BookA') for r in parents], month='2026-10')
+    index = load_prices_index(tmp_path, '2026-10-20')
+    rows = [dict(r, **pt.compute_dynamic_enhancement(con, r, index)) for r in parents]
+    assert all(r['enhancement_probability'] is None for r in rows)
+    assert all(r['enhancement_cohort_rate'] == .9 and r['enhancement_cohort_n'] == 100 for r in rows)
+    legs = at.enhancement_legs(rows, registry_root=tmp_path, execution_safe=True)
+    assert all(l['verdict'] == 'fire' for l in legs)
+    plan = at.plan_day(at.enhancement_pool(legs), 80.1656, enhancements=True)
+    assert len(plan) == 1 and len(plan[0]['legs']) == 2
+    assert not registry_path(tmp_path).exists()
