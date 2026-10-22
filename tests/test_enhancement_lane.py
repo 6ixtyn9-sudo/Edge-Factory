@@ -504,8 +504,8 @@ def test_run_two_settles_the_frozen_card_through_the_shared_lifecycle(tmp_path, 
     assert staked == pytest.approx(25.0)
     scores = _scores_for([
         ("Alpha FC", "Beta FC", 3, 0),       # over 2.5 in acca #1
-        ("Gamma FC", "Delta FC", 4, 1),      # over 2.5 in acca #1
-        ("Eta FC", "Theta FC", 1, 0)])     # acca #2 is decided by this loss
+        ("Eta FC", "Theta FC", 4, 1),       # barbell partner in acca #1
+        ("Gamma FC", "Delta FC", 1, 0)])    # acca #2 is decided by this loss
     # (Epsilon FC has no score yet — a settled LOSING leg decides the acca
     # anyway, bookmaker rules, which is the shared early-loss path.)
     lines = at.settle_open_slips(state, {}, archives=[], entries_by_date={},
@@ -1208,7 +1208,9 @@ def test_enhancement_legs_already_kicked_off_or_finished_are_withdrawn_from_the_
 
 def test_fresh_no_bet_replaces_stale_reason_without_changing_finances(_tmp_lane):
     from copy import deepcopy
-    _board(_tmp_lane, _distinct(2, price=2.0, prob=.59))
+    rows = _distinct(2, price=2.0, prob=.59)
+    rows[1]["enhancement_price_book"] = "Other Book"
+    _board(_tmp_lane, rows)
     artifact = _tmp_lane / f'autobets_enh_tickets_{DAY}.txt'
     artifact.write_text('NO BET — warehouse unavailable')
     st = at.fresh_state()
@@ -1217,7 +1219,7 @@ def test_fresh_no_bet_replaces_stale_reason_without_changing_finances(_tmp_lane)
     text = artifact.read_text()
     assert 'warehouse unavailable' not in text
     assert '2 eligible leg(s), but no supported complete acca' in text
-    assert 'No supported same-book acca payout; no independence assumption.' in text
+    assert 'No complete same-book/source acca on distinct fixtures; no joint probability estimated.' in text
     assert st == before
     assert not at.ENHANCEMENT_LANE.state_file.exists()
     # NO BET is not a freeze: a later valid cohort-backed card can replace it.
