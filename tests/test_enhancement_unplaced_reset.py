@@ -199,6 +199,7 @@ def test_rebuild_reprices_fresh_all_market_slate_and_persists_no_plan(setup, reb
     (local / 'edges_consensus.json').write_text(json.dumps({
         'operating_contract': 'post_forebet_v1',
         'edges': [{'contract_schema': 'post_forebet_v1', 'status': 'certified'}]}))
+    (local / "warehouse.duckdb").touch()  # build stub below owns its contents
     fresh = [{'market': x, 'date': DAY} for x in ('1x2', 'ou25', 'btts')]
     checks, calls = [], []
     monkeypatch.setattr(history, 'check', lambda root: checks.append(root))
@@ -244,3 +245,20 @@ def test_rebuild_needs_approved_today_and_never_unfreezes_newer_card(setup, rebu
     monkeypatch.setattr(at.subprocess, 'run', lambda *a, **k: pytest.fail('new frozen card preserved'))
     assert at.cmd_rebuild_unplaced_enhancement(rebuild_clock, st) == 0
     assert artifact.read_text() == 'NEW REPLACEMENT\nFROZEN AT 13:00 — FINAL'
+
+
+def test_missing_warehouse_is_explicit_no_bet_without_erasing_main_slate(setup, rebuild_clock, monkeypatch):
+    local, _, _, _ = setup
+    st = at.load_state(at.ENHANCEMENT_LANE)
+    (local / 'edges_consensus.json').write_text(json.dumps({
+        'operating_contract': 'post_forebet_v1',
+        'edges': [{'contract_schema': 'post_forebet_v1', 'status': 'certified'}]}))
+    board = local / 'picks_today.json'
+    board.write_text('[{"main":"keep"}]')
+    before = at.ENHANCEMENT_LANE.state_file.read_bytes()
+    monkeypatch.setattr(at.subprocess, 'run', lambda *a, **k: pytest.fail('must not erase shared slate'))
+    assert at.cmd_rebuild_unplaced_enhancement(rebuild_clock, st) == 0
+    assert 'NO BET' in (local / f'autobets_enh_tickets_{DAY}.txt').read_text()
+    assert 'warehouse unavailable' in (local / f'autobets_enh_tickets_{DAY}.txt').read_text()
+    assert board.read_text() == '[{"main":"keep"}]'
+    assert at.ENHANCEMENT_LANE.state_file.read_bytes() == before

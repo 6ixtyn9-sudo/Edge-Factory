@@ -1885,6 +1885,29 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                         if selected_goals >= 2:
                             sec_stats["team_o15_wins"] += 1
 
+                # Score the ORIGINAL priced competing notes, including NO BET
+                # days. Do not reprice after the outcome or turn legacy cohort
+                # rates into forecasts. The same registry/dedup owns the ledger.
+                from edgefactory.enh_registry import enhancement_price_context
+                for candidate in pick.get("event_notes") or []:
+                    if (not isinstance(candidate, dict)
+                            or pick.get("contract_schema") != "post_forebet_v1"
+                            or candidate.get("cohort_contract_id") != pick.get("contract_id")):
+                        continue
+                    context = enhancement_price_context(dict(pick, **{
+                        k: candidate.get(k) for k in
+                        ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
+                         "enhancement_price_at", "enhancement_price_kickoff")}))
+                    candidate_hit = check_enhancement_hit(candidate.get("market"), selection, hs, gs)
+                    if context is not None and candidate_hit is not None:
+                        priced_outcomes.append(dict(
+                            date=str(pick_date), match=pick.get("match") or f"{pick_home} vs {pick_away}",
+                            market=candidate["market"], price=context["price"], hit=bool(candidate_hit),
+                            source=context["source"], price_context=context,
+                            bucket=pick.get("bucket", ""), rule=pick.get("rule", ""),
+                            league=pick.get("league", ""), home=pick_home, away=pick_away,
+                            cohort_rate=candidate.get("cohort_rate")))
+
                 # 4. Recommended enhancement hit check
                 enh_type = pick.get("recommended_enhancement")
                 if enh_type:
@@ -2054,6 +2077,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                            bucket=oc.get("bucket", ""), rule=oc.get("rule", ""),
                            stated=oc.get("stated"),
                            cohort_rate=oc.get("cohort_rate"),
+                           price_context=oc.get("price_context"),
                            league=oc.get("league", ""), home=oc.get("home", ""),
                            away=oc.get("away", ""))
         registry_states = all_statuses(ROOT)
