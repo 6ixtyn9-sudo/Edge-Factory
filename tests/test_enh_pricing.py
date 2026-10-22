@@ -911,7 +911,10 @@ def test_alias_fallback_refuses_quotes_without_row_identity():
 
 
 def test_alias_fallback_refuses_ambiguous_orientation_even_with_permissive_matcher():
-    row = attach_enhancement_price(_alias_pick(), _alias_index(_alias_offer()),
+    index = _alias_index(
+        _alias_offer(home='United', away='United FC', slot=('ou_2.5', 'over')),
+        _alias_offer(home='Manchester United', away='Leeds United'))
+    row = attach_enhancement_price(_alias_pick(home='United', away='United FC'), index,
                                    match_fn=lambda a, b: True)
     assert not row['enhancement_priced']
 
@@ -985,3 +988,120 @@ def test_new_alias_admission_cannot_use_shared_nine_character_club_prefix(select
         _alias_offer(home=other, away='CD Rangers Talca'))
     row = attach_enhancement_price(_alias_pick(home=selected, away='Rangers'), index)
     assert not row['enhancement_priced']
+
+
+@pytest.mark.parametrize('suffix', ['Under-23', 'Under 23', 'Sub-21', 'U-21', 'Femenil', 'Frauen'])
+@pytest.mark.parametrize('exact', [False, True])
+@pytest.mark.parametrize('wrong_first', [False, True])
+def test_loader_excludes_untabled_squads_in_exact_and_alias_quotes(tmp_path, suffix, exact, wrong_first):
+    common = dict(date='2026-10-22', kickoff='2026-10-22T00:30:00Z',
+                  captured_at='2026-10-21T22:25:17Z')
+    home = 'Palmeiras' if exact else 'SE Palmeiras SP'
+    valid = _row(**common, home=home, away='Fluminense FC RJ',
+                 market='tt_home_1.5', selection='over', odds=1.6)
+    wrong = dict(valid, home=home+' '+suffix, away='Fluminense FC RJ '+suffix,
+                 odds=2.0, captured_at='2026-10-21T22:26:00Z')
+    anchor = _row(**common, home='Palmeiras-SP', away='Fluminense-RJ')
+    _write_month(tmp_path, [anchor, *([wrong, valid] if wrong_first else [valid, wrong])],
+                 month='2026-10')
+    row = attach_enhancement_price(_alias_pick(), load_prices_index(tmp_path, '2026-10-22'))
+    assert row['enhancement_price'] == 1.6
+    assert row['enhancement_consensus_price'] == 1.6
+
+
+@pytest.mark.parametrize('suffix', ['Women', 'Under-23', 'Femenil'])
+@pytest.mark.parametrize('witnessed', [False, True])
+def test_wrong_squad_only_exact_slot_is_unpriced(suffix, witnessed):
+    index = _alias_index(_alias_offer(home='Palmeiras '+suffix, away='Fluminense '+suffix))
+    updates = {} if witnessed else dict(kickoff_utc=None, contract_schema=None)
+    assert not attach_enhancement_price(_alias_pick(**updates), index)['enhancement_priced']
+
+
+@pytest.mark.parametrize('side,feed_side', [('home', 'x2'), ('away', '1x')])
+def test_legacy_swapped_double_chance_remaps_selected_side(side, feed_side):
+    from edgefactory.util import norm_team
+    index = _alias_index(_alias_offer(home='Fluminense-RJ', away='Palmeiras-SP',
+                                     slot=('dc', feed_side)))
+    key = norm_team('Palmeiras'), norm_team('Fluminense')
+    for field in ('pairs', 'names', 'fixture_quotes', 'spread'):
+        index[field].pop(key, None)
+    row = attach_enhancement_price(
+        _alias_pick(recommended_enhancement='double_chance', pick=side), index)
+    assert row['enhancement_price'] == 1.6
+
+
+def test_caller_matcher_can_narrow_but_cannot_bypass_strict_alias_identity():
+    from edgefactory.sources.theoddsapi import _team_names_match
+    index = _alias_index(_alias_offer(home='Manchester City', away='Rangers',
+                                     slot=('ou_2.5', 'over')),
+                         _alias_offer(home='Manchester United', away='CD Rangers Talca'))
+    row = attach_enhancement_price(_alias_pick(home='Manchester City', away='Rangers'),
+                                   index, match_fn=_team_names_match)
+    assert not row['enhancement_priced']
+    valid = _alias_index(_alias_offer())
+    assert attach_enhancement_price(_alias_pick(), valid, match_fn=lambda a,b: True)['enhancement_price'] == 1.6
+    assert not attach_enhancement_price(_alias_pick(), valid, match_fn=lambda a,b: False)['enhancement_priced']
+
+
+@pytest.mark.parametrize('side,wrong_slot', [('home', '1x'), ('away', 'x2')])
+@pytest.mark.parametrize('witnessed', [False, True])
+def test_legacy_swapped_double_chance_cannot_use_opponents_slot(side, wrong_slot, witnessed):
+    from edgefactory.util import norm_team
+    index = _alias_index(_alias_offer(home='Fluminense-RJ', away='Palmeiras-SP',
+                                     slot=('dc', wrong_slot)))
+    key = norm_team('Palmeiras'), norm_team('Fluminense')
+    for field in ('pairs', 'names', 'fixture_quotes', 'spread'):
+        index[field].pop(key, None)
+    updates = {} if witnessed else dict(kickoff_utc=None, contract_schema=None)
+    row = attach_enhancement_price(
+        _alias_pick(recommended_enhancement='double_chance', pick=side, **updates), index)
+    assert not row['enhancement_priced']
+
+
+@pytest.mark.parametrize('wrong_side', ['home', 'away'])
+def test_exact_quote_squad_veto_checks_each_side_without_alias_escape(wrong_side):
+    names = dict(home='Palmeiras', away='Fluminense')
+    names[wrong_side] += ' Women'
+    index = _alias_index(_alias_offer(), _alias_offer(**names, price=2.0))
+    # The existing exact slot was rejected; a valid alias must not bypass it.
+    assert not attach_enhancement_price(_alias_pick(), index)['enhancement_priced']
+
+
+@pytest.mark.parametrize('length', [5, 6])
+def test_historical_exact_quote_tuple_shapes_are_unchanged(length):
+    index = _alias_index(_alias_offer(home='Palmeiras', away='Fluminense'))
+    for slots in index['fixture_quotes'].values():
+        for slot, quotes in slots.items():
+            slots[slot] = [q[:length] for q in quotes]
+    assert attach_enhancement_price(_alias_pick(), index)['enhancement_price'] == 1.6
+
+
+def test_exact_age_side_can_use_equivalent_age_spelling_but_not_other_age():
+    for expected, priced in [('U21', True), ('U23', False)]:
+        index = _alias_index(_alias_offer(home='Palmeiras Under-21', away='Fluminense Sub-21'))
+        row = attach_enhancement_price(
+            _alias_pick(home='Palmeiras '+expected, away='Fluminense '+expected), index)
+        assert row['enhancement_priced'] is priced
+
+
+@pytest.mark.parametrize('raw', [None, (), 'Palmeiras', (None, None), ('Palmeiras', '')])
+def test_exact_quote_with_malformed_identity_evidence_is_unpriced(raw):
+    index = _alias_index(_alias_offer(home='Palmeiras', away='Fluminense'))
+    for slots in index['fixture_quotes'].values():
+        for slot, quotes in slots.items():
+            slots[slot] = [q[:6] + (raw,) for q in quotes]
+    assert not attach_enhancement_price(_alias_pick(), index)['enhancement_priced']
+
+
+@pytest.mark.parametrize('witnessed', [False, True])
+def test_primary_swapped_quote_squad_check_uses_pick_orientation(witnessed):
+    from edgefactory.util import norm_team
+    index = _alias_index(_alias_offer(home='Fluminense Women', away='Palmeiras U21',
+                                     slot=('tt_away_1.5', 'over')))
+    key = norm_team('Palmeiras'), norm_team('Fluminense')
+    for field in ('pairs', 'names', 'fixture_quotes', 'spread'):
+        index[field].pop(key, None)
+    updates = {} if witnessed else dict(kickoff_utc=None, contract_schema=None)
+    row = attach_enhancement_price(
+        _alias_pick(home='Palmeiras U21', away='Fluminense Women', **updates), index)
+    assert row['enhancement_price'] == 1.6

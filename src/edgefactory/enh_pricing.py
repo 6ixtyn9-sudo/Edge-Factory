@@ -755,13 +755,30 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
             mapping = ("tt_away_" + mapping[0][len("tt_home_"):], mapping[1])
         elif swapped and mapping[0].startswith("tt_away_"):
             mapping = ("tt_home_" + mapping[0][len("tt_away_"):], mapping[1])
+        elif swapped and mapping[0] == "dc":
+            mapping = ("dc", {"1x": "x2", "x2": "1x"}.get(mapping[1], mapping[1]))
         got = pairs.get(hit_key, {}).get(mapping)
         matched_quotes = None
+
+        def quote_squad_matches(quote, reverse):
+            # Identity-bearing quotes must not borrow the first display names
+            # of a truncated bucket. Leave historical 5/6-tuples unchanged.
+            if len(quote) <= 6:
+                return True
+            raw = quote[6]
+            if (not isinstance(raw, (tuple, list)) or len(raw) != 2
+                    or not all(isinstance(name, str) and name.strip() for name in raw)):
+                return False
+            qh, qa = reversed(raw) if reverse else raw
+            return (not squad_marker_mismatch(pick.get("home"), qh)
+                    and not squad_marker_mismatch(pick.get("away"), qa))
+
         if not pick.get("kickoff_utc") and pick.get("contract_schema") != "post_forebet_v1":
             # Legacy aggregate lookup may still serve OTHER sources, never BE.
             if "fixture_quotes" in index:
                 other = [q[:4] for q in index["fixture_quotes"].get(hit_key, {}).get(mapping, [])
-                         if normalize_source_family(q[3]) != "betexplorer"]
+                         if normalize_source_family(q[3]) != "betexplorer"
+                         and quote_squad_matches(q, swapped)]
                 got = max(other, key=lambda q: q[0]) if other else None
             elif got and normalize_source_family(got[3]) == "betexplorer":
                 got = None
@@ -779,9 +796,10 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
             decision = aware(pick.get("as_of"))
             # An exact pair from one provider must not hide a different
             # provider's equivalent spelling when ONLY the requested slot is
-            # missing. Existing slots (even rejected quotes) keep their old
-            # behavior; unclocked/legacy lookups never gain an alias fallback.
-            quote_slots = [(hit_key, mapping, False)]
+            # missing. Existing slot lookup/clock policy stays unchanged;
+            # identity-bearing quotes are squad-checked on every path.
+            # Unclocked/legacy lookups never gain an alias fallback.
+            quote_slots = [(hit_key, mapping, swapped)]
             alias_fallback = (exact_pair and mapping not in pairs.get(hit_key, {})
                               and mapping not in index["fixture_quotes"].get(hit_key, {}))
             if alias_fallback:
@@ -790,7 +808,10 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
                 if expected is None or decision is None or decision >= expected:
                     pick["enhancement_price_rejection"] = "no_matching_kickoff_and_capture_witness"
                     return pick
-                mfn = match_fn or _default_match_fn(allow_truncated=False)
+                mfn = _default_match_fn(allow_truncated=False)
+                if mfn and match_fn is not None:
+                    strict_mfn = mfn
+                    mfn = lambda a, b: strict_mfn(a, b) and match_fn(a, b)
                 if mfn:
                     for key, (raw_h, raw_a) in sorted(names.items()):
                         if key == hit_key:
@@ -814,6 +835,8 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
             witnessed_keys = {}
             for key, slot, reverse in quote_slots:
                 for quote in index["fixture_quotes"].get(key, {}).get(slot, []):
+                    if not quote_squad_matches(quote, reverse):
+                        continue
                     if alias_fallback and key != hit_key:
                         raw = quote[6] if len(quote) > 6 else None
                         if not isinstance(raw, (tuple, list)) or len(raw) != 2:
