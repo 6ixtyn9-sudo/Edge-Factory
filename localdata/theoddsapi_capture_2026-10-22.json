@@ -3,19 +3,28 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 38,
-  "captured_at": "2026-10-22T11:53:35+00:00",
+  "captured_at": "2026-10-22T13:26:39+00:00",
   "date": "2026-10-22",
   "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
   "quoted_fixtures": [],
+  "requested_markets": [
+    "h2h",
+    "totals",
+    "team_totals"
+  ],
+  "requested_scope": "6a09969a791b6e0d",
+  "requested_total_points": [
+    "2.5"
+  ],
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 2,
-    "priced": 23,
-    "retry_cooldown": 13
+    "priced": 22,
+    "retry_cooldown": 14
   },
   "skipped": [
     "Sporting JAX|Louisville City FC (retry cooldown (6h after failed attempt))",
@@ -37,7 +46,7 @@
     "Olympiacos F.C.|Sparta Praha (retry cooldown (6h after failed attempt))",
     "Juventus|Rennes (priced)",
     "Celje|Salzburg (priced)",
-    "Palmeiras|Fluminense (priced)",
+    "Palmeiras|Fluminense (retry cooldown (6h after failed attempt))",
     "Columbus Crew|St. Louis City (kickoff already passed)",
     "Inter Club d'Escaldes|Universitatea Craiova (priced)",
     "Pafos FC|Riga (priced)",
