@@ -614,3 +614,64 @@ def test_team_totals_parse_in_both_outcome_shapes():
     assert tt[("tt_home_1.5", "under", "Pinnacle")] == 1.95
     assert tt[("tt_away_2.5", "under", "Pinnacle")] == 1.80
     assert tt[("tt_home_2.5", "under", "Betsson")] == 1.85
+
+
+def test_defaults_request_alternate_ladders_and_account_for_each_market(monkeypatch):
+    import importlib
+    monkeypatch.delenv('ODDS_API_MARKETS', raising=False)
+    monkeypatch.delenv('ODDS_API_TOTAL_POINTS', raising=False)
+    importlib.reload(theoddsapi)
+    assert {'totals', 'alternate_totals', 'btts', 'team_totals', 'alternate_team_totals'} <= set(theoddsapi.MARKETS)
+    assert '0.5' in theoddsapi.TOTAL_POINTS
+    seen = {}
+    def get(path, params, **kwargs):
+        seen.update(params=params, cost=kwargs['cost'])
+        return {}, 'test'
+    monkeypatch.setattr(theoddsapi, '_get_json', get)
+    theoddsapi.fetch_event_odds('soccer_test', 'event')
+    assert set(seen['params']['markets'].split(',')) == set(theoddsapi.MARKETS)
+    assert seen['cost'] == len(theoddsapi.MARKETS) * len(theoddsapi.REGIONS)
+
+
+def test_alternate_team_totals_keep_both_sides_and_half_goal_lines():
+    payload = {'bookmakers': [{'title': 'Book', 'markets': [{
+        'key': 'alternate_team_totals', 'outcomes': [
+            {'name': direction, 'description': team, 'point': line, 'price': 1.6}
+            for team in ['Halmstads BK', 'IK Sirius']
+            for line in [.5, 1.5, 2.5, 3.5]
+            for direction in ['Over', 'Under']]}]}]}
+    rows = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], payload)
+    assert {(r['market'], r['selection']) for r in rows} == {
+        (f'tt_{side}_{line}', direction) for side in ['home', 'away']
+        for line in ['0.5', '1.5', '2.5', '3.5'] for direction in ['over', 'under']}
+    # An explicit operator line restriction is still honoured.
+    from unittest.mock import patch
+    with patch.object(theoddsapi, 'TOTAL_POINTS', ('1.5',)):
+        restricted = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], payload)
+    assert {r['market'] for r in restricted} == {'tt_home_1.5', 'tt_away_1.5'}
+
+
+def test_market_defaults_and_pending_workflow_changes_are_explicit():
+    from pathlib import Path
+    import re
+    import yaml
+    root = Path(__file__).resolve().parents[1]
+    workflow = yaml.safe_load((root / '.github/workflows/daily.yml').read_text())
+    env = next(job['env'] for job in workflow['jobs'].values() if 'ODDS_API_MARKETS' in job.get('env', {}))
+    defaults = {k: re.search(r"\|\| '([^']+)'", env[k]).group(1)
+                for k in ['ODDS_API_MARKETS', 'ODDS_API_TOTAL_POINTS']}
+    from scripts.audit_env_drift import PENDING_WORKFLOW_APPLY
+    desired = {'ODDS_API_MARKETS': ','.join(theoddsapi.MARKETS),
+               'ODDS_API_TOTAL_POINTS': ','.join(theoddsapi.TOTAL_POINTS)}
+    old = {'ODDS_API_MARKETS': 'h2h,totals,team_totals',
+           'ODDS_API_TOTAL_POINTS': '1.5,2.5,3.5,4.5'}
+    for name, deployed in defaults.items():
+        if deployed != desired[name]:
+            assert name in PENDING_WORKFLOW_APPLY
+            assert deployed == old[name]  # no silent new divergence approved
+        else:
+            assert name not in PENDING_WORKFLOW_APPLY
+    assert 'secrets.ODDS_API_MARKETS' in env['ODDS_API_MARKETS']  # explicit override stays explicit
+    example = dict(line.split('=', 1) for line in (root / '.env.example').read_text().splitlines()
+                   if line.startswith(('ODDS_API_MARKETS=', 'ODDS_API_TOTAL_POINTS=')))
+    assert example == desired

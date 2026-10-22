@@ -3332,7 +3332,8 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
         # only duplicate fixture/market quotes here, not every alternative.
         unique, fixture_dupes, seen = [], [], set()
         for leg in pool:
-            key = (_fixture_key(leg), leg.get("market"), leg.get("price_book"))
+            context = (leg.get("cohort_evidence") or {}).get("price_context") or {}
+            key = (_fixture_key(leg), leg.get("market"), leg.get("price_book"), context.get("source"))
             if key in seen:
                 fixture_dupes.append(leg)
             else:
@@ -3357,34 +3358,33 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
             pool = gated
 
     if enhancements:
-        # Compete complete two-leg tickets over the FULL pool, before cutting
-        # slots. Fréchet's lower bound avoids inventing independence. Each
-        # marginal uses the existing two-sided Wilson 95% lower endpoint;
-        # these are historical sampling bounds, not a fixture guarantee.
-        from itertools import combinations
-        if max_accas <= 0:
-            return []
-        supported = []
-        for a, b in combinations(pool, 2):
-            ea, eb = a.get("cohort_evidence") or {}, b.get("cohort_evidence") or {}
-            ca, cb = ea.get("price_context") or {}, eb.get("price_context") or {}
-            if (k != 2 or _fixture_key(a) == _fixture_key(b) or not ca.get("book") or ca.get("book") != cb.get("book")
-                    or ca.get("source") != cb.get("source")
-                    or not all(e.get("basis") == "cohort_payout_bound" for e in (ea, eb))):
-                continue
-            lower = max(0.0, ea["cohort_lower_bound"] + eb["cohort_lower_bound"] - 1.0)
-            payout = a["odds"] * b["odds"]
-            if lower * payout > 1.0:
-                supported.append((lower, lower * payout, a, b))
-        supported.sort(key=lambda v: (v[0], v[1]), reverse=True)
+        # Leg admission already checked the cohort payout and current quote.
+        # Unknown cross-fixture dependence is not a worst-case payout veto.
+        # Reuse the shared rank/dedup/pair recipe within executable book/source
+        # groups; keep alternatives until a complete card can be assembled.
         accas, used = [], set()
-        for _, _, a, b in supported:
-            keys = (_fixture_key(a), _fixture_key(b))
-            if not used.intersection(keys):
-                accas.append([a, b])
-                used.update(keys)
-                if len(accas) >= max_accas:
-                    break
+        positions = {id(leg): i for i, leg in enumerate(pool)}
+        while len(accas) < max_accas and k == 2:
+            groups = {}
+            for leg in pool:
+                evidence = leg.get("cohort_evidence") or {}
+                context = evidence.get("price_context") or {}
+                if (evidence.get("basis") != "cohort_payout_bound"
+                        or not context.get("book") or not context.get("source")
+                        or _fixture_key(leg) in used):
+                    continue
+                groups.setdefault((context["book"], context["source"]), []).append(leg)
+            candidates = []
+            for group in groups.values():
+                unique, _ = dedup_fixture_legs(group)
+                candidates.extend(pair_legs(unique[:(max_accas - len(accas)) * k], pairing, k))
+            if not candidates:
+                break
+            # Compare complete executable pairs in the existing ranked order,
+            # not by an invented joint probability or worst-case return.
+            chosen = min(candidates, key=lambda pair: tuple(sorted(positions[id(l)] for l in pair)))
+            accas.append(chosen)
+            used.update(_fixture_key(leg) for leg in chosen)
     else:
         accas = pair_legs(pool[:max_legs], pairing, k)
 
@@ -5252,7 +5252,7 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
         lines.append("Quote/payout evidence: " + json.dumps(dict(Counter(
             l.get("verdict", "unknown") for l in legs)), sort_keys=True))
         if eligible >= LEGS_PER_ACCA:
-            lines.append("No supported same-book acca payout; no independence assumption.")
+            lines.append("No complete same-book/source acca on distinct fixtures; no joint probability estimated.")
         lines.append("")
     # Deploy line, footer — identical to main slip.
     if plan:   # a no-bet card states no deployment

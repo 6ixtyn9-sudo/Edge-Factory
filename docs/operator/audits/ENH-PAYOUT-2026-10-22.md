@@ -375,3 +375,182 @@ not that today's slate ought to pass the remaining ticket checks.
 No production workflow dispatched, no independent-agent sign-off, and no
 runner-witnessed deployment of this new admission correction yet. The earlier
 successful run validates the prior restore/render fixes, not this change.
+
+## Accumulator veto removal — operator instruction, 22 October
+
+**Supersedes the remaining hard joint-payout veto in the preceding section.**
+The operator explicitly requested action after the cold-start correction still
+left all real complete tickets blocked. The Fréchet expression
+`max(0, LB1 + LB2 - 1) * combined_odds > 1` is removed from live/replay selection,
+not replaced with a fabricated independence product or joint probability.
+Unknown dependence is no longer treated as measured worst-case dependence.
+This restores accumulator operation, **not a claim of positive joint EV**.
+
+Existing machinery and retained boundaries:
+
+- Individual cohort-backed leg payout admission, n >= 100, source/book/quote
+  receipts and timing checks are unchanged. No new market threshold or model.
+- Within each executable bookmaker/source group, the shared ranked order,
+  `dedup_fixture_legs` and `pair_legs` recipe build complete two-leg tickets.
+  The configured barbell/consecutive setting is honoured. Complete candidates
+  compete in the existing leg-ranked order, not an invented joint-return score.
+  Selection repeats on unused fixtures; alternatives in other book/source
+  groups remain available until a ticket is selected. Source-specific quote
+  alternatives are no longer prematurely collapsed in initial deduplication.
+- Same-fixture exposure within/across tickets, mixed-book/source tickets,
+  missing cohort provenance and singles remain disallowed. A valid source pair
+  can replace a higher-ranked alternative that has no compatible partner.
+- `plan_day`, `_stake_weights`, `enhancement_legs`, `apply_enhancement_timing`
+  and `upsert_slip` are AST-identical to the pre-change versions. No staking,
+  financial lifecycle, placed-ticket or settled-history change.
+- Fresh NO BET explanations no longer imply rejection by a joint-payout model.
+
+Actual captured-slate comparison uses the **same** 38-row Git blob
+`3fd9e9d8a556d4b4d9ed9b13588f011f13e1c757` and SHA256
+`e0c70933020b63675a409cbc63f1e1fb9a6dfdeb869a5c992b12f98901fe1723`:
+individual verdicts stay **6 eligible / 17 insufficient leg payout / 53 invalid
+quote contexts**. Complete tickets change **0 -> 1**: Pafos–Riga O2.5 @1.81
+and Lech Poznań–Sunderland O2.5 @1.88, LeoVegas (SE)/theoddsapi, combined
+**3.4028**, displayed **3.40**. No operational rebuild/placement or present-time
+quote/result validation was performed; this is a captured-slate comparison.
+
+Validation: **3,851 passed, 1 skipped in 182.49 seconds**. Regressions cover
+real captured rate/count/price inputs admitting that pair; shared barbell and
+consecutive pairing parity; unchanged stake percentages; same-fixture,
+book/source compatibility and source-alternative rescue; plus existing lifecycle,
+freeze, settlement, provenance and insufficient individual-payout checks.
+The early-loss lifecycle test now pins scores to the restored barbell pairing
+rather than the removed joint-veto selector's consecutive pair order.
+
+The existing `replay_harness.py --enhancements` completed, but its current-policy
+historical reconstruction still yields **0 accas on 0 days** because usable
+archived predecision evidence is missing. Legacy floor comparisons are explicitly
+counterfactual. **No historical ROI improvement or validation of the near-miss
+hypothesis is claimed**; no hindsight line substitutions were promoted.
+All remaining operational files are byte-identical (empty test lock removed).
+No new registry, pipeline, workflow dispatch or independent-agent sign-off.
+This correction still requires merge and a new production run to be witnessed.
+
+## Full goal-market wiring, including BTTS — 22 October
+
+The operator challenged the repeated O2.5 recommendation and required match,
+home and away totals **and BTTS Yes/No**, not just a demonstration that the
+previously retained pair can pass. The captured O2.5 pair is **not established
+as the best card across adequately captured competing markets**.
+
+Confirmed defects and corrections in the existing machinery:
+
+1. Six generated, measured team markets had no `MARKET_PRICE_MAP` entry:
+   **home/away Under 0.5, Over 2.5 and Over 3.5**. Add the corresponding existing
+   `tt_home_*` / `tt_away_*` slots; no new market statistics or probabilities.
+2. TheOddsAPI parsed standard `team_totals` but ignored
+   `alternate_team_totals`. Both now use the same participant-aware parser.
+   The default retained point list now includes **0.5**, not only 1.5–4.5.
+3. The workflow's fallback request was only `h2h,totals,team_totals` and the env
+   example only `h2h,totals`. Neither asked for the alternate match ladder or
+   BTTS. Module and example are corrected; the workflow change is explicitly
+   pending manual apply because the GitHub App cannot push workflow edits.
+   The required request is
+   `h2h,totals,alternate_totals,btts,team_totals,alternate_team_totals,double_chance`
+   and point list `0.5,1.5,2.5,3.5,4.5`. Keeping 1.5 in a parser allowlist did
+   **not** make a standard-totals request fetch the alternate line.
+
+The old workflow narrowing was intentional credit rationing, not proof that
+alternate markets did not exist. This operator-requested expansion removes that
+code/workflow divergence once manually applied. The env audit records both
+settings as PENDING_WORKFLOW_APPLY, not ACCEPTED credit-rationing exceptions.
+
+**Budget tradeoff:** existing monthly limits, key rotation, attempts cooldown,
+first/close snapshot schedule and source admission policies are unchanged.
+The existing estimator counts each requested market: the broader default is
+**7 estimated credits per event at one region**, versus the old workflow's 3.
+It can therefore cover fewer fixtures inside the same cap. This is not a free
+coverage claim, a budget increase or authority to retry already-captured games.
+Explicit `ODDS_API_MARKETS` / `ODDS_API_TOTAL_POINTS` secrets/env overrides still
+win; a deliberately narrow existing override must be updated separately.
+Provider/plan support and actual returned coverage remain runner-unverified.
+No paid requests were made here.
+
+### Read-only real-data trace
+
+The existing `scripts/audit_enh_market_competition.py` now accepts:
+
+```bash
+EDGE_FACTORY_ENH_BOARD=1 EDGE_FACTORY_ODDSPAPI_PRICES=1 \
+python scripts/audit_enh_market_competition.py --wiring --day 2026-10-22 \
+  --picks PATH_TO_ORIGINAL_CAPTURED_SLATE --out PATH_OUTSIDE_LOCALDATA
+```
+
+It traces all **26 cohort-backed markets**: match O/U1.5–4.5, home/away
+O/U0.5–3.5 and BTTS Yes/No, with raw store counts, matched current-store quotes,
+recorded candidate reasons, retained notes and stored individual-leg verdicts.
+It reuses the existing price loader/join and live admission, records input
+hashes, leaves absent stores/evidence null, and never rebuilds evidence or writes
+operational state. A current-store price is not labelled betting permission.
+
+Against the same 38-row snapshot and raw stores, verified against main Git blobs
+`ecab0d5f229000b40d9e66f4ce6f61cb759ffeda` (TheOddsAPI) and
+`52d688a49091fee9a02e5ac6803cf5e901d8e0da` (OddsPapi):
+
+- TheOddsAPI's day rows are **1,035 1X2 + 328 O/U2.5**, with no other market.
+- OddsPapi has **98,653 rows across 28 fixtures**, including the broader team
+  ladder. This does not establish coverage of every fixture in the slate.
+- Match O1.5 has matched store quotes on **8/38** fixtures; **0/8** meet 1.30.
+  U1.5 has 8 above-minimum prices, but all 38 recorded cohort rates are below
+  the existing candidate band. These are captured-store findings, **not a claim
+  that no bookmaker offers qualifying 1.5 prices**.
+- Most team-total slots match quotes on **6/38** fixtures (home U3.5: 5/38).
+  For each usual team slot, 22 lookups lack a matching market/timing witness and
+  10 have no fixture quote in the index. "Unpriced" was not a measured defeat
+  by O2.5 in an adequately priced competition.
+- BTTS Yes and No each have **3 matched, above-minimum quotes** from BetExplorer
+  and **3 retained notes**. All six stored leg evaluations fail the individual
+  cohort-payout check, not a missing BTTS mapping. The remaining fixture BTTS
+  lookups lack usable quotes. BTTS statistics, quote availability and permission
+  remain separate facts; no forced BTTS switch was added.
+
+Fixtures sharing a parent contract/selection may share the cohort rates; those
+are not team-specific calibrated forecasts. Restricted pricing can then make
+one market repeatedly win. The fixes do not invent a new team model to disguise
+that limitation. Existing rate bands and individual payout checks are unchanged.
+
+Validation includes all **26 market paths** from an offline provider payload,
+through actual CSV serialization, price index, real settled-cohort resolver,
+candidate notes and complete same-book acca. It verifies that each market can
+win over the competing O2.5 input when its genuine synthetic evidence/ranking
+supports it, with null fixture forecasts. Tests also bind workflow/example
+request defaults to module defaults (or explicit pending manual deployment), retain explicit line restrictions and
+credit accounting, and check that the wiring audit makes no operational writes.
+Initial wiring targeted set: **192 passed in 10.37 seconds**. These synthetic tests prove
+wiring, not coverage, near-miss recovery or future profitability.
+
+Repository secret-name inspection was denied by the integration (HTTP 403).
+No secret was read or modified. Thus absence of a narrow deployed override is
+**not verified**; changing a fallback alone cannot override an existing secret.
+
+Pre-push wiring validation with the proposed aligned workflow:
+**3,888 passed, 1 skipped in 179.28 seconds**; **259 targeted tests passed**.
+The push was then rejected for missing `workflows` permission. The workflow
+file is restored unchanged, and the existing audit explicitly records the two
+pending manual settings. No claim of an applied workflow correction is made. All **863 operational files** remain byte-identical;
+only an empty test-created usage lock was removed. No staking, financial state,
+settled history, open position, registry or ticket was rewritten. No production
+capture, workflow dispatch, independent-agent sign-off or merge was performed.
+
+### Required manual workflow apply
+
+The GitHub App rejected the workflow-bearing push, so this PR carries the code
+and mappings but **does not modify `.github/workflows/daily.yml`**. Replace only
+these two env entries in that existing workflow (retaining indentation):
+
+```yaml
+ODDS_API_MARKETS: ${{ secrets.ODDS_API_MARKETS || 'h2h,totals,alternate_totals,btts,team_totals,alternate_team_totals,double_chance' }}
+ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '0.5,1.5,2.5,3.5,4.5' }}
+```
+
+Any explicitly configured narrower secrets must also be updated securely by the
+repository owner; their presence/value could not be inspected here. Do not post
+credentials. Once the workflow values agree, remove their two
+`PENDING_WORKFLOW_APPLY` entries; the existing stale-entry test enforces that
+cleanup. Parser/mapping fixes can be reviewed independently, but broader capture
+is **not deployed** merely by merging this code-only PR.
