@@ -174,6 +174,19 @@ def _financial_rows(state):
     return rows
 
 
+def _financial_fingerprint(state):
+    """Bind a supersession to the full ledger, bank, positions and freeze locks.
+
+    Descriptive floor tables and recovery receipts are not financial state.
+    Do not reduce tickets to totals: different legs at equal stakes still differ.
+    """
+    fields = ("base_pct", "bank", "cycle_base", "history", "events",
+              "open_slips", "frozen_by_date")
+    payload = json.dumps({k: state.get(k) for k in fields}, sort_keys=True,
+                         separators=(",", ":"), allow_nan=False).encode()
+    return hashlib.sha256(payload).hexdigest()
+
+
 def _retain_financial_state(repo):
     """Cache is never allowed to reset/truncate durable enhancement finance.
 
@@ -229,7 +242,21 @@ def _retain_financial_state(repo):
         # Preserve the full captured open-leg metadata if available; never resize.
         head["open_slips"] = cache.get("open_slips", [])
         return json.dumps(head, indent=2).encode()
-    raise EvidenceMergeError("divergent enhancement financial histories")
+    # A committed correction is not append-only (e.g. replacing a mistakenly
+    # settled draft with the actually placed ticket). Only an explicit HEAD
+    # receipt binding BOTH exact financial snapshots can supersede that cache.
+    # Cached receipts are never trusted, and unknown positions cannot match.
+    receipt = head.get("integrity_recovery", {}).get("cache_supersession", {})
+    head_sha, cache_sha = _financial_fingerprint(head), _financial_fingerprint(cache)
+    if (receipt.get("schema") == 1
+            and receipt.get("superseded_financial_sha256") == cache_sha
+            and receipt.get("retained_financial_sha256") == head_sha):
+        return blob
+    raise EvidenceMergeError(
+        "divergent enhancement financial histories "
+        f"(committed={head_sha}, cached={cache_sha}); "
+        "no matching committed supersession receipt"
+    )
 
 
 def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:

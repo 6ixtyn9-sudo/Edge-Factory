@@ -190,3 +190,50 @@ registry version at commit `f0544f5846bc99c7d65f0b34d824f0ccc39e7732` also retai
 the Betis losing outcome at 1.36. This is an additional content witness, not a
 claim that a commit timestamp proves publication time or independent score
 origin. No historical availability field was backdated.
+
+## Daily restore failure follow-up (run 39742606419)
+
+The daily run stopped before its main pipeline at `_retain_financial_state` with
+`divergent enhancement financial histories`. This is separate from the successful
+read-only cache audit above. The subsequent always-run Phase 5 explanation and
+artifact upload do not mean the daily pipeline succeeded or trained a model.
+
+The cache key was created on 22 October at 05:26:11Z. Its producing run's Git
+snapshot, `54acbcea0bbda022005886d398bf6b5775517798`, contains bank
+110.67395099999999 and an incorrect 21 October Bayern/Como settlement. Correction
+`ed5db57e2315f3fc81a9375b7c5594f8cbd5ea8e` restores the placed Japan-ticket
+settlement and bank **80.1656**. Commit
+`c623c0830c5f300a3667dc9b8ee695a09dc0b393` subsequently withdraws the
+operator-confirmed unplaced 22 October card. Neither history is an append-only
+extension of the other, so the original guard deliberately rejects it.
+
+The existing `integrity_recovery` metadata now contains an exact cache
+supersession receipt. The existing persistence helper may restore committed
+state only if **both** the superseded cache and retained HEAD financial hashes
+match that committed receipt. Each fingerprint binds base, bank, cycle base,
+full settled history, events, full open positions and freeze locks. Descriptive
+floor metadata is excluded. A cached receipt is never trusted. An unknown bank,
+leg, stake, settlement, position or lock still fails closed, retaining the cache
+for artifact inspection. Existing append-only ledger/bank checks are unchanged.
+
+Validation:
+
+- Historical replay in an isolated temporary Git repository: restoring the
+  producing run's committed snapshot recovered the exact current state bytes,
+  bank **80.1656**, **8** settled days and **no** open slips.
+- **49** targeted tests passed, including 15 new supersession cases covering
+  acceptance, unknown financial/position/lock changes, receipt provenance and
+  descriptive metadata.
+- Full suite: **3,814 passed in 181.15 seconds**. This is not a live-run success.
+- **863/864** original localdata files remained byte-identical. The only changed
+  file is ENH state, adding the receipt; its financial fingerprint, bank, history,
+  positions and locks are unchanged. The empty test-created usage lock was
+  removed. No ticket, prediction input, registry or staking code changed.
+
+The failed run's artifact could not be downloaded from external storage. Thus
+this repair is verified against the producing run's Git snapshot, **not against
+uninspected cache bytes**. A different actual fingerprint remains an error and
+is now included in its diagnostic. No cache deletion, workflow edit, production
+dispatch, new settlement or automatic merge was performed. Runner-side recovery
+is not yet witnessed; after merge it requires a **new main-branch run**, not a
+rerun pinned to the old failing checkout.
