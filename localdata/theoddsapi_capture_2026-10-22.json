@@ -1,29 +1,11 @@
 {
   "added": 0,
-  "attempted": 2,
-  "attempted_fixtures": [
-    {
-      "away": "America de Cali",
-      "date": "2026-10-22",
-      "home": "Barranquilla",
-      "kickoff": "22-10, 01:30",
-      "league": "Colombia Copa Colombia"
-    },
-    {
-      "away": "St. Louis City",
-      "date": "2026-10-22",
-      "home": "Columbus Crew",
-      "kickoff": "22-10, 01:00",
-      "league": "USA US Open Cup"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 38,
-  "captured_at": "2026-10-21T22:48:45+00:00",
+  "captured_at": "2026-10-22T01:45:17+00:00",
   "date": "2026-10-22",
-  "due_reasons": {
-    "close_at": 1,
-    "first_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -31,6 +13,7 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 2,
     "priced": 22,
     "retry_cooldown": 14
   },
@@ -49,11 +32,13 @@
     "Union Saint-Gilloise|Hapoel Be'er Sheva (priced)",
     "Al Ahli|Al Khaleej (priced)",
     "Lillestr\u00f8m|Real Sociedad (priced)",
+    "Barranquilla|America de Cali (kickoff already passed)",
     "Juventus|Rennes (retry cooldown (6h after failed attempt))",
     "Nordsj\u00e6lland|CSKA Sofia (priced)",
     "Olympiacos F.C.|Sparta Praha (retry cooldown (6h after failed attempt))",
     "Celje|Salzburg (priced)",
     "Palmeiras|Fluminense (priced)",
+    "Columbus Crew|St. Louis City (kickoff already passed)",
     "Inter Club d'Escaldes|Universitatea Craiova (priced)",
     "Pafos FC|Riga (priced)",
     "FC Midtjylland|Sint-Truiden (priced)",
@@ -73,13 +58,6 @@
     "Ajax|Atalanta (priced)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Barranquilla vs America de Cali (league not covered: Colombia Copa Colombia)",
-    "Columbus Crew vs St. Louis City (league not covered: USA US Open Cup)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Colombia Copa Colombia": 1,
-    "league not covered: USA US Open Cup": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }

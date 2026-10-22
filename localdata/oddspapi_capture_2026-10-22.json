@@ -1,93 +1,7 @@
 {
-  "added": 83443,
-  "attempted": 17,
-  "attempted_fixtures": [
-    {
-      "away": "America de Cali",
-      "fixture_id": "id1000133575371348",
-      "home": "Barranquilla FC"
-    },
-    {
-      "away": "CF Monterrey",
-      "fixture_id": "id1002746472055252",
-      "home": "Club Puebla"
-    },
-    {
-      "away": "CF America",
-      "fixture_id": "id1002746472055254",
-      "home": "Atlas FC"
-    },
-    {
-      "away": "CF Cruz Azul",
-      "fixture_id": "id1002746472055258",
-      "home": "CF Pachuca"
-    },
-    {
-      "away": "Saint Louis City SC",
-      "fixture_id": "id1000049574811784",
-      "home": "Columbus Crew"
-    },
-    {
-      "away": "Dragonas IDV",
-      "fixture_id": "id1002017874930594",
-      "home": "SE Palmeiras SP"
-    },
-    {
-      "away": "Universitario de Deportes",
-      "fixture_id": "id1002017874930596",
-      "home": "Belgrano de Cordoba"
-    },
-    {
-      "away": "Fluminense FC RJ",
-      "fixture_id": "id1000038474781110",
-      "home": "SE Palmeiras SP"
-    },
-    {
-      "away": "CA Nacional Potosi",
-      "fixture_id": "id1003903375478292",
-      "home": "Oriente Petrolero"
-    },
-    {
-      "away": "Deportivo Saprissa San Jose",
-      "fixture_id": "id1004024974846724",
-      "home": "CD Luis Angel Firpo Usulutan"
-    },
-    {
-      "away": "Panama City FC",
-      "fixture_id": "id1001949075804568",
-      "home": "Champions FC Academy"
-    },
-    {
-      "away": "CD Bocas FC",
-      "fixture_id": "id1001949075804570",
-      "home": "Veraguas United FC B"
-    },
-    {
-      "away": "Club Tijuana de Caliente",
-      "fixture_id": "id1002746472055256",
-      "home": "Deportivo Toluca FC"
-    },
-    {
-      "away": "Jaguares de Cordoba",
-      "fixture_id": "id1002707075641090",
-      "home": "Independiente Santa Fe"
-    },
-    {
-      "away": "AD Isidro Metapan",
-      "fixture_id": "id1002708875799450",
-      "home": "CD FAS Santa Ana"
-    },
-    {
-      "away": "CD Olimpia Tegucigalpa",
-      "fixture_id": "id1004024974841180",
-      "home": "CS Cartagines"
-    },
-    {
-      "away": "Pumas UNAM",
-      "fixture_id": "id1002746472055260",
-      "home": "Club Santos Laguna"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-10-22",
     "keys": 3,
@@ -96,233 +10,21 @@
     "remaining_today": 24,
     "spent_today": 38
   },
-  "captured_at": "2026-10-21T22:26:56+00:00",
+  "captured_at": "2026-10-22T01:29:17+00:00",
   "date": "2026-10-22",
   "errors": [],
   "fixtures": 163,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 661,
-  "markets": {
-    "1x2": 9059,
-    "ou_0.5": 2383,
-    "ou_0.75": 218,
-    "ou_1": 652,
-    "ou_1.25": 594,
-    "ou_1.5": 4167,
-    "ou_1.75": 1026,
-    "ou_10.5": 50,
-    "ou_11.5": 30,
-    "ou_12.5": 30,
-    "ou_13.5": 27,
-    "ou_14.5": 15,
-    "ou_2": 1450,
-    "ou_2.25": 1498,
-    "ou_2.5": 5434,
-    "ou_2.75": 2226,
-    "ou_3": 2461,
-    "ou_3.25": 1934,
-    "ou_3.5": 4903,
-    "ou_3.75": 1234,
-    "ou_4": 1230,
-    "ou_4.25": 812,
-    "ou_4.5": 4742,
-    "ou_4.75": 612,
-    "ou_5": 616,
-    "ou_5.25": 380,
-    "ou_5.5": 3349,
-    "ou_5.75": 186,
-    "ou_6": 222,
-    "ou_6.25": 124,
-    "ou_6.5": 1672,
-    "ou_6.75": 86,
-    "ou_7": 84,
-    "ou_7.25": 80,
-    "ou_7.5": 562,
-    "ou_7.75": 60,
-    "ou_8": 64,
-    "ou_8.25": 60,
-    "ou_8.5": 240,
-    "ou_9.5": 50,
-    "tt_away_0.5": 2909,
-    "tt_away_0.75": 128,
-    "tt_away_1": 256,
-    "tt_away_1.25": 184,
-    "tt_away_1.5": 3739,
-    "tt_away_1.75": 136,
-    "tt_away_2": 272,
-    "tt_away_2.25": 134,
-    "tt_away_2.5": 3529,
-    "tt_away_2.75": 24,
-    "tt_away_3": 82,
-    "tt_away_3.25": 8,
-    "tt_away_3.5": 1912,
-    "tt_away_3.75": 4,
-    "tt_away_4": 37,
-    "tt_away_4.5": 529,
-    "tt_away_5.5": 85,
-    "tt_away_6.5": 18,
-    "tt_away_7.5": 3,
-    "tt_home_0.5": 3048,
-    "tt_home_0.75": 112,
-    "tt_home_1": 286,
-    "tt_home_1.25": 146,
-    "tt_home_1.5": 3766,
-    "tt_home_1.75": 156,
-    "tt_home_2": 238,
-    "tt_home_2.25": 130,
-    "tt_home_2.5": 3710,
-    "tt_home_2.75": 66,
-    "tt_home_3": 113,
-    "tt_home_3.25": 26,
-    "tt_home_3.5": 2053,
-    "tt_home_3.75": 8,
-    "tt_home_4": 41,
-    "tt_home_4.5": 712,
-    "tt_home_5.5": 159,
-    "tt_home_6.5": 59,
-    "tt_home_7.5": 3
-  },
-  "markets_source": "fetch",
-  "matched": 17,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 27,
-    "market_id_unknown": 19824,
-    "market_inactive": 5301,
-    "market_unsupported_clean_sheet": 1652,
-    "market_unsupported_corners": 18176,
-    "market_unsupported_correct_score": 5366,
-    "market_unsupported_double_chance": 2898,
-    "market_unsupported_draw_no_bet": 2300,
-    "market_unsupported_handicap": 25953,
-    "market_unsupported_odd_even": 4777,
-    "market_unsupported_period": 87873,
-    "market_unsupported_win_to_nil": 3058,
-    "outcome_inactive": 7849,
-    "unresolved_btts": 4490
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 27,
-      "market_inactive": 5301,
-      "outcome_inactive": 7849
-    },
-    "loss_or_diagnosis": {
-      "market_id_unknown": 19824,
-      "market_unsupported_clean_sheet": 1652,
-      "market_unsupported_corners": 18176,
-      "market_unsupported_correct_score": 5366,
-      "market_unsupported_double_chance": 2898,
-      "market_unsupported_draw_no_bet": 2300,
-      "market_unsupported_handicap": 25953,
-      "market_unsupported_odd_even": 4777,
-      "market_unsupported_period": 87873,
-      "market_unsupported_win_to_nil": 3058,
-      "unresolved_btts": 4490
-    }
-  },
-  "pending_fixtures": 17,
-  "quoted_fixtures": [
-    {
-      "away": "America de Cali",
-      "fixture_id": "id1000133575371348",
-      "home": "Barranquilla FC"
-    },
-    {
-      "away": "CF Monterrey",
-      "fixture_id": "id1002746472055252",
-      "home": "Club Puebla"
-    },
-    {
-      "away": "CF America",
-      "fixture_id": "id1002746472055254",
-      "home": "Atlas FC"
-    },
-    {
-      "away": "CF Cruz Azul",
-      "fixture_id": "id1002746472055258",
-      "home": "CF Pachuca"
-    },
-    {
-      "away": "Saint Louis City SC",
-      "fixture_id": "id1000049574811784",
-      "home": "Columbus Crew"
-    },
-    {
-      "away": "Dragonas IDV",
-      "fixture_id": "id1002017874930594",
-      "home": "SE Palmeiras SP"
-    },
-    {
-      "away": "Universitario de Deportes",
-      "fixture_id": "id1002017874930596",
-      "home": "Belgrano de Cordoba"
-    },
-    {
-      "away": "Fluminense FC RJ",
-      "fixture_id": "id1000038474781110",
-      "home": "SE Palmeiras SP"
-    },
-    {
-      "away": "CA Nacional Potosi",
-      "fixture_id": "id1003903375478292",
-      "home": "Oriente Petrolero"
-    },
-    {
-      "away": "Deportivo Saprissa San Jose",
-      "fixture_id": "id1004024974846724",
-      "home": "CD Luis Angel Firpo Usulutan"
-    },
-    {
-      "away": "Panama City FC",
-      "fixture_id": "id1001949075804568",
-      "home": "Champions FC Academy"
-    },
-    {
-      "away": "CD Bocas FC",
-      "fixture_id": "id1001949075804570",
-      "home": "Veraguas United FC B"
-    },
-    {
-      "away": "Club Tijuana de Caliente",
-      "fixture_id": "id1002746472055256",
-      "home": "Deportivo Toluca FC"
-    },
-    {
-      "away": "Jaguares de Cordoba",
-      "fixture_id": "id1002707075641090",
-      "home": "Independiente Santa Fe"
-    },
-    {
-      "away": "AD Isidro Metapan",
-      "fixture_id": "id1002708875799450",
-      "home": "CD FAS Santa Ana"
-    },
-    {
-      "away": "CD Olimpia Tegucigalpa",
-      "fixture_id": "id1004024974841180",
-      "home": "CS Cartagines"
-    },
-    {
-      "away": "Pumas UNAM",
-      "fixture_id": "id1002746472055260",
-      "home": "Club Santos Laguna"
-    }
-  ],
-  "rows": 83443,
+  "markets": {},
+  "matched": 0,
+  "pending_fixtures": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 38,
+  "slate_candidate_fixtures": 28,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 4,
-  "slate_provider_overlap_fixtures": 12,
+  "slate_provider_overlap_fixtures": 9,
   "slate_unmatched_fixtures": [
-    {
-      "away": "Louisville City FC",
-      "home": "Sporting JAX",
-      "league": "United States: USL Championship",
-      "normalized_pair": "louisville city|sporting jax"
-    },
     {
       "away": "FC Twente",
       "home": "Lincoln Red Imps",
@@ -336,28 +38,10 @@
       "normalized_pair": "brighton|jablonec"
     },
     {
-      "away": "Tijuana",
-      "home": "Toluca",
-      "league": "Liga MX",
-      "normalized_pair": "tijuana|toluca"
-    },
-    {
       "away": "\u0110\u00f4ng \u00c1 Thanh Ho\u00e1",
       "home": "C\u00f4ng an H\u00e0 N\u1ed9i",
       "league": "V-League",
       "normalized_pair": "cong an ha noi|dong a thanh hoa"
-    },
-    {
-      "away": "Jaguares de C\u00f3rdoba",
-      "home": "Santa Fe",
-      "league": "Liga BetPlay",
-      "normalized_pair": "jaguares de cordoba|santa fe"
-    },
-    {
-      "away": "Hearts",
-      "home": "Trabzonspor",
-      "league": "Europa Conference League",
-      "normalized_pair": "hearts|trabzonspor"
     },
     {
       "away": "Torreense",
@@ -408,18 +92,6 @@
       "normalized_pair": "celje|salzburg"
     },
     {
-      "away": "Fluminense",
-      "home": "Palmeiras",
-      "league": "Copa Libertadores",
-      "normalized_pair": "fluminense|palmeiras"
-    },
-    {
-      "away": "St. Louis City",
-      "home": "Columbus Crew",
-      "league": "USA US Open Cup",
-      "normalized_pair": "columbus crew|st. louis city"
-    },
-    {
       "away": "Universitatea Craiova",
       "home": "Inter Club d'Escaldes",
       "league": "Europa Conference League",
@@ -456,12 +128,6 @@
       "normalized_pair": "gent|sporting braga"
     },
     {
-      "away": "Deportivo Cali",
-      "home": "Llaneros",
-      "league": "Colombia: Primera A",
-      "normalized_pair": "deportivo cali|llaneros"
-    },
-    {
       "away": "Crystal Palace",
       "home": "Be\u015fikta\u015f",
       "league": "Europa League",
@@ -474,5 +140,6 @@
       "normalized_pair": "ajax|atalanta"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "nothing_pending"
 }

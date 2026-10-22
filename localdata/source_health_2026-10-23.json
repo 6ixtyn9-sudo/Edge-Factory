@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 1,
@@ -30,7 +30,7 @@
         "selection_unmapped": 377
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-23' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -179,11 +179,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 16514
+        "out_of_window": 16774
       },
       "pa_matched": 0,
-      "pa_raw": 893,
-      "pa_scored": 16514,
+      "pa_raw": 904,
+      "pa_scored": 16774,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -233,47 +233,38 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 5,
+        "board_fixtures": 6,
         "board_league_count": 4,
         "board_leagues": {
-          "conmebol_-_copa_sudamericana": 128,
-          "usa_-_major_league_soccer": 57,
-          "usa_-_usl_championship": 10,
-          "usa_-_usl_league_one": 5
+          "colombia_-_cup": 23,
+          "colombian_cup": 66,
+          "usa_-_us_open_cup": 55,
+          "usa_-_usl_league_one": 56
         },
-        "board_non_prematch_rows": 170,
+        "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
         "board_team_count": 10,
         "board_team_names": {
-          "Atletico MG": 98,
-          "Atletico Mineiro": 30,
-          "Birmingham Legion FC": 10,
-          "Brooklyn FC": 10,
-          "DC Utd": 57,
-          "FC Cincinnati": 57,
-          "FC Naples": 5,
-          "Montevideo City Torque": 30,
-          "Sarasota Paradise": 5,
-          "Torque": 98
+          "America de Cali": 23,
+          "America de Cali S.A": 66,
+          "Barranquilla": 66,
+          "Barranquilla FC": 23,
+          "Columbus": 9,
+          "Columbus Crew": 46,
+          "New York Cosmos": 56,
+          "Spokane Velocity": 13,
+          "Spokane Velocity FC": 43,
+          "St Louis City SC": 55
         },
         "board_truncated": false,
-        "canonicalization_drop_reasons": {
-          "unknown_market:1st_half_asian_handicap_corners": 2,
-          "unknown_market:1st_half_moneyline": 3,
-          "unknown_market:1st_half_total_corners": 10,
-          "unknown_market:2nd_half_asian_handicap_corners": 2,
-          "unknown_market:2nd_half_moneyline": 3,
-          "unknown_market:2nd_half_total_corners": 10
-        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 143,
-          "player_prop": 27
+          "live_price": 200
         },
         "requested_limit": 1000
       },
@@ -282,7 +273,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "all_rows_unmappable",
+      "reason": "all_rows_live_or_stale",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
