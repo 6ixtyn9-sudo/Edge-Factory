@@ -318,3 +318,98 @@ def test_hold_helper_keeps_negatives_and_drops_promotions():
     # il1 (ALLOW) and x (BOOST) are promotions -> dropped; y (CAUTION) stays.
     assert verdicts == {'y': 'CAUTION'}
     assert is_held(reg) and not is_held({'roi_population_status': 'priced_only'})
+
+
+@pytest.fixture
+def financial_supersession(tmp_path):
+    """A correction plus withdrawal, not an append-only ledger extension."""
+    import copy
+    import subprocess
+    from scripts import phase5_persistence as persistence
+
+    def git(*args):
+        subprocess.run(['git', *args], cwd=tmp_path, check=True, capture_output=True)
+    git('init', '-q')
+    git('config', 'user.name', 'Test')
+    git('config', 'user.email', 'test@example.invalid')
+    head = {'base_pct': 100, 'cycle_base': 100, 'bank': 90, 'events': [],
+            'history': [{'date': '2026-10-21', 'staked_pct': 10, 'returned_pct': 0,
+                         'accas': [{'stake_pct': 10, 'returned_pct': 0, 'won': False}]}],
+            'open_slips': [], 'frozen_by_date': {}}
+    cache = copy.deepcopy(head)
+    cache['bank'] = 110
+    cache['history'][0]['returned_pct'] = 20
+    cache['history'][0]['accas'][0].update(returned_pct=20, won=True)
+    cache['open_slips'] = [{'date': '2026-10-22', 'accas': [
+        {'stake_pct': 5, 'odds': 2, 'legs': [{'match': 'Old draft', 'odds': 2}]}]}]
+    head['integrity_recovery'] = {'cache_supersession': {
+        'schema': 1,
+        'superseded_financial_sha256': persistence._financial_fingerprint(cache),
+        'retained_financial_sha256': persistence._financial_fingerprint(head)}}
+    path = tmp_path / persistence.ENH_STATE
+    path.parent.mkdir()
+
+    def install(committed, cached):
+        path.write_text(json.dumps(committed))
+        git('add', '.')
+        git('commit', '--allow-empty', '-qm', 'financial supersession fixture')
+        path.write_text(json.dumps(cached))
+
+    return tmp_path, persistence, path, head, cache, install
+
+
+def test_exact_committed_supersession_restores_corrected_finance(financial_supersession):
+    repo, persistence, path, head, cache, install = financial_supersession
+    install(head, cache)
+    persistence.restore_committed_localdata(repo)
+    assert json.loads(path.read_bytes()) == head
+    assert json.loads(path.read_bytes())['open_slips'] == []  # no draft resurrection
+
+
+@pytest.mark.parametrize('change', [
+    'cache_bank', 'cache_history', 'cache_stake', 'cache_leg', 'cache_new_position',
+    'cache_lock', 'head_bank', 'head_history', 'head_new_position', 'head_lock',
+    'missing_receipt', 'cached_receipt_only', 'wrong_schema',
+])
+def test_supersession_cannot_hide_unknown_finance(financial_supersession, change):
+    import copy
+    repo, persistence, path, head, cache, install = financial_supersession
+    if change == 'cache_bank':
+        cache['bank'] += 1
+    elif change == 'cache_history':
+        cache['history'][0]['accas'][0]['won'] = False
+    elif change == 'cache_stake':
+        cache['open_slips'][0]['accas'][0]['stake_pct'] += 1
+    elif change == 'cache_leg':
+        cache['open_slips'][0]['accas'][0]['legs'][0]['match'] = 'Unknown placed ticket'
+    elif change == 'cache_new_position':
+        cache['open_slips'].append(copy.deepcopy(cache['open_slips'][0]))
+    elif change == 'cache_lock':
+        cache['frozen_by_date']['2026-10-22'] = {'final': True}
+    elif change == 'head_bank':
+        head['bank'] += 1
+    elif change == 'head_history':
+        head['history'][0]['accas'][0]['won'] = True
+    elif change == 'head_new_position':
+        head['open_slips'] = copy.deepcopy(cache['open_slips'])
+    elif change == 'head_lock':
+        head['frozen_by_date']['2026-10-22'] = {'final': True}
+    elif change in ('missing_receipt', 'cached_receipt_only'):
+        receipt = head.pop('integrity_recovery')
+        if change == 'cached_receipt_only':
+            cache['integrity_recovery'] = receipt
+    elif change == 'wrong_schema':
+        head['integrity_recovery']['cache_supersession']['schema'] = 2
+    install(head, cache)
+    before = path.read_bytes()
+    with pytest.raises(persistence.EvidenceMergeError, match='divergent enhancement financial histories'):
+        persistence.restore_committed_localdata(repo)
+    assert path.read_bytes() == before  # preserve the conflicting cache for investigation
+
+
+def test_supersession_allows_only_nonfinancial_floor_metadata_changes(financial_supersession):
+    repo, persistence, path, head, cache, install = financial_supersession
+    head['enh_floor_table'] = {'as_of': '2026-10-22', 'floors': {}}
+    cache['enh_floor_table'] = {'as_of': '2026-10-21', 'floors': {}}
+    install(head, cache)
+    assert json.loads(persistence._retain_financial_state(repo)) == head
