@@ -1000,7 +1000,11 @@ def enhancement_cohort_evidence(pick: dict, *, priced: bool = False,
 
     A model estimate, global calibration, winner-only prose, another market's
     evidence, or an inherited Forebet cohort is not a realized contract rate.
-    No price-floor/EV rule is added here; broad market competition stays on.
+    With priced=True, attach the current executable quote and the existing
+    Wilson lower endpoint of the exact-parent cohort. This is a historical
+    cohort payout screen, not a quote-conditioned rate or fixture forecast.
+    ``root`` remains accepted for existing live/replay/audit callers; admission
+    no longer depends on accumulated priced registry records.
     """
     from edgefactory.consensus_contracts import SCHEMA
     try:
@@ -1039,50 +1043,22 @@ def enhancement_cohort_evidence(pick: dict, *, priced: bool = False,
                     'basis': 'descriptive_exact_parent'}
         if not priced:
             return evidence
-        # Exact, pre-specified context matching, NOT global calibration or a
-        # fixture model. No nearest-price bins, inferred quotes or team priors.
+        # Price the existing exact-parent all-outcome cohort, not a new cell
+        # per bookmaker/league/exact quote. Historical quote records remain
+        # useful for realized ROI auditing, but are not a bootstrap gate.
         context = enhancement_price_context(pick)
         if context is None:
             return None
-        entry = json.loads(registry_path(root or Path(__file__).resolve().parents[2]).read_text())['markets'].get(versioned(market), {})
-        if not evidence_complete(entry) or entry.get('status') == 'BENCHED':
+        # Persisted cohort rates are rounded to four decimals. Use the lowest
+        # integer hit count compatible with that rounding, NEVER round up the
+        # evidence or pretend this is an observed quote-conditioned frequency.
+        min_hits = max(0, math.ceil((rate - 0.00005) * n - 1e-9))
+        max_hits = min(n, math.floor((rate + 0.00005) * n + 1e-9))
+        if min_hits > max_hits:
             return None
-        records = []
-        seen = set()
-        for rec in entry.get('records', []):
-            old = rec.get('price_context') or {}
-            if (not rec.get('date') or rec['date'] >= pick['date']
-                    or type(rec.get('hit')) is not bool
-                    or rec.get('price') != context['price']
-                    or rec.get('source') != context['source']
-                    or any(old.get(k) != context[k] for k in
-                           ('contract_id', 'selection', 'league', 'book', 'source', 'price'))):
-                continue
-            # Validate the original quote's timing, not the audit run time.
-            try:
-                recorded = datetime.fromisoformat(rec["recorded_at"])
-                if recorded.tzinfo is None or recorded >= datetime.fromisoformat(context["decision_at"]):
-                    continue
-                captured, decision, kickoff = (datetime.fromisoformat(old[k]) for k in
-                                               ('captured_at', 'decision_at', 'kickoff'))
-                if (any(t.tzinfo is None for t in (captured, decision, kickoff))
-                        or not captured <= decision < kickoff
-                        or decision.date().isoformat() != rec['date']):
-                    continue
-            except (KeyError, TypeError, ValueError):
-                continue
-            key = (rec['date'], rec.get('home_key') or rec.get('home'),
-                   rec.get('away_key') or rec.get('away'))
-            if not all(key) or key in seen:
-                continue
-            seen.add(key)
-            records.append(rec)
-        if len(records) < MIN_PRICED_N:
-            return None
-        hits = sum(r['hit'] for r in records)
-        evidence.update(conditional_rate=hits / len(records), priced_n=len(records),
-                        price_lower_bound=wilson_lb(hits, len(records)),
-                        price_context=context, basis='exact_context_priced_sample')
+        evidence.update(cohort_min_hits=min_hits,
+                        cohort_lower_bound=wilson_lb(min_hits, n),
+                        price_context=context, basis='cohort_payout_bound')
         return evidence
     except (KeyError, TypeError, ValueError, OSError, AttributeError):
         return None
@@ -1093,7 +1069,8 @@ def enhancement_price_context(pick: dict) -> dict | None:
 
     Missing data stays missing. Exchange commission/acca support is not in the
     current capture contract, so an exchange quote cannot certify a net payout.
-    This is context-conditioned frequency, never a calibrated fixture forecast.
+    This validates the CURRENT quote only; it does not define a historical
+    sampling cell or certify a calibrated fixture forecast.
     """
     from edgefactory import price_sources as psrc
     try:

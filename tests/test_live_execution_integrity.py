@@ -65,7 +65,7 @@ def test_valid_source_alone_cannot_substitute_for_priced_evidence():
     row.update(recommended_market='avoid_raw_1x2', draw_risk_flag='EXTREME',
                statistical_profile={'avg_goals': 3.5}, enhancement_edge_sample=-.5,
                odds_source='not_a_registered_source', price_push_eligible=False)
-    assert verdict(row) == 'no_priced_context_evidence'
+    assert verdict(row) == 'invalid_execution_quote_context'
     pool = at.enhancement_pool(at.enhancement_legs([row], execution_safe=True))
     assert pool == []
     assert at.MIN_LEG_ODDS == 1.30

@@ -269,3 +269,109 @@ staking, financial state, registry, price or ticket changes. No production run
 was dispatched, and end-to-end runner completion remains unverified for this
 new rendering fix. Provider failures, sparse quote joins and alias warnings in
 the log are separate issues, not repaired or hidden by this display change.
+
+## Cold-start correction — operator instruction, 22 October
+
+**This section supersedes the exact-price-cell admission policy above.** Those
+sections remain a record of the earlier implementation/audit, not the current
+rule. Production run [39751440277](https://github.com/6ixtyn9-sudo/Edge-Factory/actions/runs/39751440277)
+completed successfully on `294c3949afad732882b97db03c24894348c96463`:
+financial restore and the null-probability rendering repair are runner-witnessed.
+Its ENH NO BET was an admission result, not a failed pipeline.
+
+The prior policy required 30 historical outcomes simultaneously matching the
+parent, selection, league, market, bookmaker, source and **exact decimal price**.
+Authentic quote capture on NO BET days could theoretically populate those cells,
+but no viable bootstrap time or real-world complete-card coverage was shown.
+Treating that as an ordinary data shortage was wrong: the admission change
+itself fragmented usable existing cohort history into effectively empty cells.
+
+### Corrected existing machinery
+
+- The same exact-parent, all-outcome, pre-date cohort with **n >= 100** supplies
+  historical market frequency. Active-contract generation and absence-of-model,
+  Forebet, inherited or winner-only fallback remain unchanged.
+- `enhancement_cohort_evidence(..., priced=True)` now attaches a validated
+  **current** quote and the existing Wilson lower endpoint of that cohort.
+  It does not read the priced registry for permission, require any placed bets,
+  or condition history on bookmaker, league or exact odds. Original priced
+  outcomes remain in the existing registry for realized ROI/audit purposes.
+- Rates already persist at four decimal places. The bound uses the **lowest
+  integer hit count compatible with that rounding** and the supplied n. An
+  impossible rate/count combination cannot authorize a payout. This lower
+  compatible count is labelled `cohort_min_hits`, not an observed priced count.
+- Evidence is labelled `cohort_payout_bound`, with `cohort_lower_bound`; there
+  is no `conditional_rate` or invented `priced_n`. Fixture forecast fields stay
+  null. Historical cohort rate still drives ranking, not claimed calibration.
+- An actual price must clear the existing minimum and satisfy
+  `cohort_lower_bound * odds > 1`. Full-pool competing two-leg tickets retain
+  the same-book/source, distinct-fixture and non-independence checks:
+  `max(0, LB1 + LB2 - 1) * odds1 * odds2 > 1`. No threshold was reduced to force
+  today's card. Existing cohort rate band, staking and accumulator format stay.
+- Current quote provenance still must establish named bookmaker/source and
+  `capture <= decision < kickoff`. Rejection receipts, exchange restrictions,
+  source policy, kickoff/result guards and financial integrity are not bypassed.
+  `invalid_execution_quote_context` replaces the misleading historical-cell
+  rejection for absent/invalid current quote context.
+- Live board and replay use the corrected shared resolver. Selected market/book
+  identity survives planning so an alternative with the same `over`/`under`
+  selection cannot overwrite the winning market's evidence during carry.
+- Fresh normal NO BET results now overwrite stale TXT reasons, without opening
+  a position or freezing the date. A later qualifying run may still build a card.
+  This fixes why the committed TXT continued saying “warehouse unavailable”
+  after the successful runner reported 76 historical-cell rejections.
+
+This is a **cohort-based payout policy**, not evidence that the cohort frequency
+is a calibrated conditional probability for today's fixture or quote. Applying
+it assumes the exact-parent cohort is relevant to the new fixture. Wilson
+sampling uncertainty does not cover drift, market-selection bias, calibration,
+or all uncertainty from transporting that cohort. The pair screen does not
+claim simultaneous 95% coverage or guaranteed positive future returns.
+
+### Actual captured-slate check, not just favourable unit fixtures
+
+Read-only GitHub `main:localdata/picks_today.json` snapshot:
+
+- Git blob `3fd9e9d8a556d4b4d9ed9b13588f011f13e1c757` (1,256,646 bytes).
+- SHA256 `e0c70933020b63675a409cbc63f1e1fb9a6dfdeb869a5c992b12f98901fe1723`.
+- **38 rows / 76 market evaluations**. Original resolver: **0 eligible**.
+- Corrected resolver: **6 eligible**, **17 payout-not-supported**,
+  **53 invalid current quote contexts**. Missing original capture/kickoff fields
+  were not reconstructed from results or filled from another quote.
+- **0 complete supported accas**. Only Pafos–Riga O2.5 @1.81 and
+  Lech Poznań–Sunderland O2.5 @1.88 form an eligible, distinct-fixture same-book
+  pair (LeoVegas SE / theoddsapi). Their cohort lower endpoints are
+  0.5736982610 and 0.5471583190. The retained pair lower screen is
+  **0.1208565800 × 3.4028 = 0.4112507705**, below 1. No independence product
+  was substituted to get a bet. Other eligible markets included match unders;
+  this was not an Over-only comparison.
+
+This checks the **captured** slate's admission, not executable prices now:
+current kickoff/result timing was not applied, nothing was placed/rebuilt, and
+no ROI improvement is claimed. It proves removal of the blanket history gate,
+not that today's slate ought to pass the remaining ticket checks.
+
+### Validation and deployment boundary
+
+- **238 targeted tests passed**, followed by **135 integration/cohort/lifecycle
+  tests passed** after adding the full-chain bootstrap regression.
+- Final full suite: **3,845 passed, 1 skipped in 176.40 seconds**.
+- A new integration test uses the real contract resolver, synthetic settled
+  source rows, real temporary quote CSV/price join, candidate generation, live
+  leg admission and complete acca selection with **no priced registry at all**.
+  Separate tests retain rejection of insufficient payouts, missing/bad quote
+  timestamps, model evidence, same-fixture pairs and unsupported dependence.
+- Removed the artificial all-win historical-price seeding helper from existing
+  lifecycle tests. Their explicitly synthetic cohort is now what supports their
+  cards; these tests are not production profitability/coverage evidence.
+- `_stake_weights` AST is identical. `plan_day` AST is identical outside the acca
+  metadata construction that retains selected market/book; all sizing arithmetic
+  is unchanged. Tests compare baseline and ENH stake percentages.
+- All **863 remaining operational files** are byte-identical. The only planned
+  operational deletion is the user-named
+  `localdata/autobets_enh_tickets_2026-10-22_reset.json`; no bank, settled
+  history, open position, price archive, registry or ticket is rewritten here.
+
+No production workflow dispatched, no independent-agent sign-off, and no
+runner-witnessed deployment of this new admission correction yet. The earlier
+successful run validates the prior restore/render fixes, not this change.
