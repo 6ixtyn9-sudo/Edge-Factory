@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-22T07:25:46",
+  "generated_at": "2026-10-22T05:28:53",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 110.67395099999999,
-  "multiple": 1.10673951,
+  "bank_pct": 80.1656,
+  "multiple": 0.8016559999999999,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
   "bet_days": 8,
   "accas": {
     "wins": 8,
-    "losses": 8
+    "losses": 10
   },
   "open_slips": [
     {
       "date": "2026-10-22",
-      "staked_pct": 27.6684
+      "staked_pct": 20.0415
     }
   ],
   "events": [],
@@ -379,34 +379,78 @@
     },
     {
       "date": "2026-10-21",
-      "staked_pct": 14.3125,
-      "returned_pct": 38.7869,
+      "staked_pct": 21.549894,
+      "returned_pct": 15.5159,
+      "bank_pct": 80.1656,
+      "close_pct": 80.1656,
       "accas": [
         {
-          "odds": 2.71,
+          "odds": 2.16,
+          "stake_pct": 7.183298,
+          "returned_pct": 15.5159,
           "won": true,
-          "stake_pct": 14.3125,
-          "returned_pct": 38.7869,
           "legs": [
             {
-              "match": "FC Bayern M\u00fcnchen vs Arsenal",
+              "match": "Fagiano Okayama vs Mito Hollyhock",
               "pick": "over",
-              "odds": 1.66,
+              "odds": 1.4,
               "result": "win",
-              "label": "Match Over 2.5 Goals"
+              "label": "Match Over 1.5 Goals"
             },
             {
-              "match": "Como vs Manchester United",
-              "pick": "over",
-              "odds": 1.63,
+              "match": "V-Varen Nagasaki vs Sanfrecce Hiroshima",
+              "pick": "under",
+              "odds": 1.55,
               "result": "win",
-              "label": "Match Over 2.5 Goals"
+              "label": "Away Team Under 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 1.8,
+          "stake_pct": 7.183298,
+          "returned_pct": 0.0,
+          "won": false,
+          "legs": [
+            {
+              "match": "Roasso Kumamoto vs Gainare Tottori",
+              "pick": "over",
+              "odds": 1.32,
+              "result": "win",
+              "label": "Match Over 1.5 Goals"
+            },
+            {
+              "match": "Ventforet Kofu vs Yokohama",
+              "pick": "under",
+              "odds": 1.37,
+              "result": "loss",
+              "label": "Away Team Under 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 2.1,
+          "stake_pct": 7.183298,
+          "returned_pct": 0.0,
+          "won": false,
+          "legs": [
+            {
+              "match": "Kyoto Sanga vs Kashima Antlers",
+              "pick": "under",
+              "odds": 1.43,
+              "result": "loss",
+              "label": "Home Team Under 1.5 Goals"
+            },
+            {
+              "match": "FC Tokyo vs Kashiwa Reysol",
+              "pick": "under",
+              "odds": 1.47,
+              "result": "win",
+              "label": "Away Team Under 1.5 Goals"
             }
           ]
         }
-      ],
-      "bank_pct": 110.674,
-      "close_pct": 110.674
+      ]
     }
   ]
 }
