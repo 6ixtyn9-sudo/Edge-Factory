@@ -630,16 +630,17 @@ def test_betexplorer_ledger_round_trips_through_the_capture_writer(tmp_path, mon
     assert pick["enhancement_price_at"] == f"{BE_DAY}T06:00:00+00:00"
     # Actual live gate and recipe carry: not merely audit eligibility.
     from scripts import auto_tickets as at
-    from enhancement_fixtures import with_evidence
+    from enhancement_fixtures import with_evidence, seed_price_records
     class DecisionClock(datetime):
         @classmethod
         def now(cls, tz=None):
             return datetime(2026, 10, 12, 6, 30, tzinfo=timezone.utc)
     monkeypatch.setattr(at, "datetime", DecisionClock)
-    pick = with_evidence(pick)
+    pick = with_evidence(dict(pick, league="Synthetic League", pick="home"))
     other = with_evidence(dict(pick, home="Other Home", away="Other Away", match="Other Match",
                                enhancement_price_source="oddspapi", enhancement_price_provenance=None))
-    legs = at.enhancement_legs([pick, other], execution_safe=True)
+    seed_price_records(tmp_path, [pick, other])
+    legs = at.enhancement_legs([pick, other], execution_safe=True, registry_root=tmp_path)
     assert all(leg["verdict"] == "fire" for leg in legs)
     pool = at.enhancement_pool(legs)
     plan = at.plan_day(pool, 100.)

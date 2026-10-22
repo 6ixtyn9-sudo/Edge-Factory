@@ -437,310 +437,7 @@
     }
   ],
   "events": [],
-  "open_slips": [
-    {
-      "date": "2026-10-22",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Al Ahli vs Al Khaleej",
-              "pick": "under",
-              "prob": 0.6291,
-              "odds": 1.65,
-              "result": null,
-              "cohort_evidence": {
-                "rate": 0.6291,
-                "n": 3022,
-                "contract_id": "pfc_439097cb9bb700e9996c0b07",
-                "as_of_exclusive": "2026-10-22",
-                "market": "match_under_35"
-              },
-              "market": "match_under_35",
-              "label": "Match Under 3.5 Goals",
-              "floor": 1.64,
-              "floor_basis": "inherited",
-              "league": "Pro League",
-              "price_book": "Stake.com",
-              "price_source": "betexplorer",
-              "price_at": "2026-10-22T01:29:52.950330+00:00",
-              "price_kickoff": "2026-10-22T18:00:00+00:00",
-              "price_provenance": {
-                "away": "Al Khaleej",
-                "bookmaker": "Stake.com",
-                "captured_at": "2026-10-22T01:29:52.950330+00:00",
-                "data_dt": [
-                  22,
-                  10,
-                  2026,
-                  19,
-                  0
-                ],
-                "decision_cutoff_utc": "2026-10-22T07:00:00+00:00",
-                "decision_day": "2026-10-22",
-                "home": "Al Ahli SC",
-                "kickoff_utc": "2026-10-22T18:00:00+00:00",
-                "kind": "betexplorer_pre_cutoff_v1",
-                "ledger_file": "betexplorer_match_detail_2026-10-22.json",
-                "ledger_sha256": "7ec210809c60c8a5584cce89047c686721e65e1445feb1a1fb0e7baca7931d31",
-                "market": "ou_3.5",
-                "price": 1.65,
-                "quote_evidence": {
-                  "column_index": 1,
-                  "columns": [
-                    "Over",
-                    "Under"
-                  ],
-                  "market_slug": "ou",
-                  "row": {
-                    "best": true,
-                    "bookmaker": "Stake.com",
-                    "bookmaker_id": "1089",
-                    "created": [
-                      "2026-10-21T19:11",
-                      "2026-10-21T19:11"
-                    ],
-                    "line": "3.50",
-                    "movement": [
-                      "down",
-                      "up"
-                    ],
-                    "odds": [
-                      2.15,
-                      1.65
-                    ],
-                    "pos": [
-                      "1",
-                      "2"
-                    ],
-                    "source": "all"
-                  },
-                  "row_index": 4,
-                  "row_sha256": "8460a6dabdc84753ae5cc9285014ef8498cad792e9c0119d669332afff20fc92"
-                },
-                "raw_kickoff": "19:00",
-                "resolution": {
-                  "interpretations": [
-                    "inferred_fixed_utc_plus_1"
-                  ],
-                  "kickoff_utc": "2026-10-22T18:00:00+00:00",
-                  "late_witness_records": 0,
-                  "provenance": "witness_corroborated_aware_iso",
-                  "reason": "independent_pre_cutoff_schedule_witness",
-                  "status": "corroborated",
-                  "witnesses": [
-                    {
-                      "away": "Al-Khaleej",
-                      "csv_data_row": 15468,
-                      "file": "theoddsapi_odds_2026-10.csv.gz",
-                      "file_sha256": "040e43969b107eead31a0ebf9d3e1a9bf72e61e8be9c12939580001356cebdda",
-                      "fixture_identity_origin": "provider_participants",
-                      "home": "Al-Ahli",
-                      "kickoff_origin": "provider_commence_time",
-                      "kickoff_utc": "2026-10-22T18:00:00+00:00",
-                      "league": "Pro League",
-                      "observed_at_utc": "2026-10-21T22:24:01.491259+00:00",
-                      "provider_commence_time": "2026-10-22T18:00:00Z",
-                      "provider_event_id": "faae81fd95e9a57be8492b9573a527e9",
-                      "row_sha256": "8aa6e6e2285c431a85fb25ec9b2c175180c8d16d596f58f8c6888a0343aab948",
-                      "source": "theoddsapi"
-                    }
-                  ]
-                },
-                "selection": "under"
-              },
-              "shadow": true,
-              "fixture_key": [
-                "2026-10-22",
-                "Al Ahli",
-                "Al Khaleej"
-              ]
-            },
-            {
-              "match": "Ferencv\u00e1rosi vs Torreense",
-              "pick": "over",
-              "prob": 0.5913,
-              "odds": 1.64,
-              "result": null,
-              "cohort_evidence": {
-                "rate": 0.5913,
-                "n": 3022,
-                "contract_id": "pfc_439097cb9bb700e9996c0b07",
-                "as_of_exclusive": "2026-10-22",
-                "market": "match_over_25"
-              },
-              "market": "match_over_25",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7379988092688428,
-              "floor_basis": "market",
-              "league": "Europa League",
-              "price_book": "1xBet",
-              "price_source": "theoddsapi",
-              "price_at": "2026-10-21T22:24:00.688046+00:00",
-              "price_kickoff": "2026-10-22T16:45:00Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-22",
-                "Ferencv\u00e1rosi",
-                "Torreense"
-              ]
-            }
-          ],
-          "odds": 2.71,
-          "stake_pct": 6.6805,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "FK Jablonec vs Brighton",
-              "pick": "over",
-              "prob": 0.6127,
-              "odds": 1.5,
-              "result": null,
-              "cohort_evidence": {
-                "rate": 0.6127,
-                "n": 142,
-                "contract_id": "pfc_5a9d3d3426ee7a4e63461d75",
-                "as_of_exclusive": "2026-10-22",
-                "market": "match_over_25"
-              },
-              "market": "match_over_25",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7379988092688428,
-              "floor_basis": "inherited",
-              "league": "International,Conference League",
-              "price_book": "William Hill",
-              "price_source": "theoddsapi",
-              "price_at": "2026-10-21T22:23:58.523861+00:00",
-              "price_kickoff": "2026-10-22T16:45:00Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-22",
-                "FK Jablonec",
-                "Brighton"
-              ]
-            },
-            {
-              "match": "Pafos FC vs Riga",
-              "pick": "over",
-              "prob": 0.5913,
-              "odds": 1.81,
-              "result": null,
-              "cohort_evidence": {
-                "rate": 0.5913,
-                "n": 3022,
-                "contract_id": "pfc_439097cb9bb700e9996c0b07",
-                "as_of_exclusive": "2026-10-22",
-                "market": "match_over_25"
-              },
-              "market": "match_over_25",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7379988092688428,
-              "floor_basis": "market",
-              "league": "Europa Conference League",
-              "price_book": "LeoVegas (SE)",
-              "price_source": "theoddsapi",
-              "price_at": "2026-10-21T22:23:59.106400+00:00",
-              "price_kickoff": "2026-10-22T16:45:00Z",
-              "price_provenance": null,
-              "shadow": true,
-              "fixture_key": [
-                "2026-10-22",
-                "Pafos FC",
-                "Riga"
-              ]
-            }
-          ],
-          "odds": 2.71,
-          "stake_pct": 6.6805,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Sporting Braga vs Gent",
-              "pick": "over",
-              "prob": 0.5913,
-              "odds": 2.22,
-              "result": null,
-              "cohort_evidence": {
-                "rate": 0.5913,
-                "n": 3022,
-                "contract_id": "pfc_439097cb9bb700e9996c0b07",
-                "as_of_exclusive": "2026-10-22",
-                "market": "match_over_25"
-              },
-              "market": "match_over_25",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7379988092688428,
-              "floor_basis": "market",
-              "league": "Europa Conference League",
-              "price_book": "Matchbook",
-              "price_source": "theoddsapi",
-              "price_at": "2026-10-21T22:23:59.897132+00:00",
-              "price_kickoff": "2026-10-22T19:00:00Z",
-              "price_provenance": null,
-              "shadow": true,
-              "fixture_key": [
-                "2026-10-22",
-                "Sporting Braga",
-                "Gent"
-              ]
-            },
-            {
-              "match": "Getafe vs Lugano",
-              "pick": "over",
-              "prob": 0.5913,
-              "odds": 2.16,
-              "result": null,
-              "cohort_evidence": {
-                "rate": 0.5913,
-                "n": 3022,
-                "contract_id": "pfc_439097cb9bb700e9996c0b07",
-                "as_of_exclusive": "2026-10-22",
-                "market": "match_over_25"
-              },
-              "market": "match_over_25",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7379988092688428,
-              "floor_basis": "market",
-              "league": "Europa Conference League",
-              "price_book": "Matchbook",
-              "price_source": "theoddsapi",
-              "price_at": "2026-10-21T22:23:59.771176+00:00",
-              "price_kickoff": "2026-10-22T16:45:00Z",
-              "price_provenance": null,
-              "shadow": true,
-              "fixture_key": [
-                "2026-10-22",
-                "Getafe",
-                "Lugano"
-              ]
-            }
-          ],
-          "odds": 4.8,
-          "stake_pct": 6.6805,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 20.0415
-    }
-  ],
+  "open_slips": [],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,
@@ -2059,6 +1756,319 @@
       "with_keys": 551,
       "league_pct": 98.04270462633453,
       "keys_pct": 98.04270462633453
+    }
+  },
+  "unplaced_enhancement_resets": {
+    "2026-10-22": {
+      "receipt_sha256": "6b56f80868b4467ce1be2bd2d42d19b0b607e247a29a60eaa71b39e611bb475e",
+      "approved_at": "2026-10-22T06:46:12.011698+00:00",
+      "confirmed_none_placed": true,
+      "removed_open_slips": [
+        {
+          "date": "2026-10-22",
+          "accas": [
+            {
+              "legs": [
+                {
+                  "match": "Al Ahli vs Al Khaleej",
+                  "pick": "under",
+                  "prob": 0.6291,
+                  "odds": 1.65,
+                  "result": null,
+                  "cohort_evidence": {
+                    "rate": 0.6291,
+                    "n": 3022,
+                    "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                    "as_of_exclusive": "2026-10-22",
+                    "market": "match_under_35"
+                  },
+                  "market": "match_under_35",
+                  "label": "Match Under 3.5 Goals",
+                  "floor": 1.64,
+                  "floor_basis": "inherited",
+                  "league": "Pro League",
+                  "price_book": "Stake.com",
+                  "price_source": "betexplorer",
+                  "price_at": "2026-10-22T01:29:52.950330+00:00",
+                  "price_kickoff": "2026-10-22T18:00:00+00:00",
+                  "price_provenance": {
+                    "away": "Al Khaleej",
+                    "bookmaker": "Stake.com",
+                    "captured_at": "2026-10-22T01:29:52.950330+00:00",
+                    "data_dt": [
+                      22,
+                      10,
+                      2026,
+                      19,
+                      0
+                    ],
+                    "decision_cutoff_utc": "2026-10-22T07:00:00+00:00",
+                    "decision_day": "2026-10-22",
+                    "home": "Al Ahli SC",
+                    "kickoff_utc": "2026-10-22T18:00:00+00:00",
+                    "kind": "betexplorer_pre_cutoff_v1",
+                    "ledger_file": "betexplorer_match_detail_2026-10-22.json",
+                    "ledger_sha256": "7ec210809c60c8a5584cce89047c686721e65e1445feb1a1fb0e7baca7931d31",
+                    "market": "ou_3.5",
+                    "price": 1.65,
+                    "quote_evidence": {
+                      "column_index": 1,
+                      "columns": [
+                        "Over",
+                        "Under"
+                      ],
+                      "market_slug": "ou",
+                      "row": {
+                        "best": true,
+                        "bookmaker": "Stake.com",
+                        "bookmaker_id": "1089",
+                        "created": [
+                          "2026-10-21T19:11",
+                          "2026-10-21T19:11"
+                        ],
+                        "line": "3.50",
+                        "movement": [
+                          "down",
+                          "up"
+                        ],
+                        "odds": [
+                          2.15,
+                          1.65
+                        ],
+                        "pos": [
+                          "1",
+                          "2"
+                        ],
+                        "source": "all"
+                      },
+                      "row_index": 4,
+                      "row_sha256": "8460a6dabdc84753ae5cc9285014ef8498cad792e9c0119d669332afff20fc92"
+                    },
+                    "raw_kickoff": "19:00",
+                    "resolution": {
+                      "interpretations": [
+                        "inferred_fixed_utc_plus_1"
+                      ],
+                      "kickoff_utc": "2026-10-22T18:00:00+00:00",
+                      "late_witness_records": 0,
+                      "provenance": "witness_corroborated_aware_iso",
+                      "reason": "independent_pre_cutoff_schedule_witness",
+                      "status": "corroborated",
+                      "witnesses": [
+                        {
+                          "away": "Al-Khaleej",
+                          "csv_data_row": 15468,
+                          "file": "theoddsapi_odds_2026-10.csv.gz",
+                          "file_sha256": "040e43969b107eead31a0ebf9d3e1a9bf72e61e8be9c12939580001356cebdda",
+                          "fixture_identity_origin": "provider_participants",
+                          "home": "Al-Ahli",
+                          "kickoff_origin": "provider_commence_time",
+                          "kickoff_utc": "2026-10-22T18:00:00+00:00",
+                          "league": "Pro League",
+                          "observed_at_utc": "2026-10-21T22:24:01.491259+00:00",
+                          "provider_commence_time": "2026-10-22T18:00:00Z",
+                          "provider_event_id": "faae81fd95e9a57be8492b9573a527e9",
+                          "row_sha256": "8aa6e6e2285c431a85fb25ec9b2c175180c8d16d596f58f8c6888a0343aab948",
+                          "source": "theoddsapi"
+                        }
+                      ]
+                    },
+                    "selection": "under"
+                  },
+                  "shadow": true,
+                  "fixture_key": [
+                    "2026-10-22",
+                    "Al Ahli",
+                    "Al Khaleej"
+                  ]
+                },
+                {
+                  "match": "Ferencv\u00e1rosi vs Torreense",
+                  "pick": "over",
+                  "prob": 0.5913,
+                  "odds": 1.64,
+                  "result": null,
+                  "cohort_evidence": {
+                    "rate": 0.5913,
+                    "n": 3022,
+                    "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                    "as_of_exclusive": "2026-10-22",
+                    "market": "match_over_25"
+                  },
+                  "market": "match_over_25",
+                  "label": "Match Over 2.5 Goals",
+                  "floor": 1.7379988092688428,
+                  "floor_basis": "market",
+                  "league": "Europa League",
+                  "price_book": "1xBet",
+                  "price_source": "theoddsapi",
+                  "price_at": "2026-10-21T22:24:00.688046+00:00",
+                  "price_kickoff": "2026-10-22T16:45:00Z",
+                  "price_provenance": null,
+                  "shadow": false,
+                  "fixture_key": [
+                    "2026-10-22",
+                    "Ferencv\u00e1rosi",
+                    "Torreense"
+                  ]
+                }
+              ],
+              "odds": 2.71,
+              "stake_pct": 6.6805,
+              "results": [
+                null,
+                null
+              ],
+              "won": null
+            },
+            {
+              "legs": [
+                {
+                  "match": "FK Jablonec vs Brighton",
+                  "pick": "over",
+                  "prob": 0.6127,
+                  "odds": 1.5,
+                  "result": null,
+                  "cohort_evidence": {
+                    "rate": 0.6127,
+                    "n": 142,
+                    "contract_id": "pfc_5a9d3d3426ee7a4e63461d75",
+                    "as_of_exclusive": "2026-10-22",
+                    "market": "match_over_25"
+                  },
+                  "market": "match_over_25",
+                  "label": "Match Over 2.5 Goals",
+                  "floor": 1.7379988092688428,
+                  "floor_basis": "inherited",
+                  "league": "International,Conference League",
+                  "price_book": "William Hill",
+                  "price_source": "theoddsapi",
+                  "price_at": "2026-10-21T22:23:58.523861+00:00",
+                  "price_kickoff": "2026-10-22T16:45:00Z",
+                  "price_provenance": null,
+                  "shadow": false,
+                  "fixture_key": [
+                    "2026-10-22",
+                    "FK Jablonec",
+                    "Brighton"
+                  ]
+                },
+                {
+                  "match": "Pafos FC vs Riga",
+                  "pick": "over",
+                  "prob": 0.5913,
+                  "odds": 1.81,
+                  "result": null,
+                  "cohort_evidence": {
+                    "rate": 0.5913,
+                    "n": 3022,
+                    "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                    "as_of_exclusive": "2026-10-22",
+                    "market": "match_over_25"
+                  },
+                  "market": "match_over_25",
+                  "label": "Match Over 2.5 Goals",
+                  "floor": 1.7379988092688428,
+                  "floor_basis": "market",
+                  "league": "Europa Conference League",
+                  "price_book": "LeoVegas (SE)",
+                  "price_source": "theoddsapi",
+                  "price_at": "2026-10-21T22:23:59.106400+00:00",
+                  "price_kickoff": "2026-10-22T16:45:00Z",
+                  "price_provenance": null,
+                  "shadow": true,
+                  "fixture_key": [
+                    "2026-10-22",
+                    "Pafos FC",
+                    "Riga"
+                  ]
+                }
+              ],
+              "odds": 2.71,
+              "stake_pct": 6.6805,
+              "results": [
+                null,
+                null
+              ],
+              "won": null
+            },
+            {
+              "legs": [
+                {
+                  "match": "Sporting Braga vs Gent",
+                  "pick": "over",
+                  "prob": 0.5913,
+                  "odds": 2.22,
+                  "result": null,
+                  "cohort_evidence": {
+                    "rate": 0.5913,
+                    "n": 3022,
+                    "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                    "as_of_exclusive": "2026-10-22",
+                    "market": "match_over_25"
+                  },
+                  "market": "match_over_25",
+                  "label": "Match Over 2.5 Goals",
+                  "floor": 1.7379988092688428,
+                  "floor_basis": "market",
+                  "league": "Europa Conference League",
+                  "price_book": "Matchbook",
+                  "price_source": "theoddsapi",
+                  "price_at": "2026-10-21T22:23:59.897132+00:00",
+                  "price_kickoff": "2026-10-22T19:00:00Z",
+                  "price_provenance": null,
+                  "shadow": true,
+                  "fixture_key": [
+                    "2026-10-22",
+                    "Sporting Braga",
+                    "Gent"
+                  ]
+                },
+                {
+                  "match": "Getafe vs Lugano",
+                  "pick": "over",
+                  "prob": 0.5913,
+                  "odds": 2.16,
+                  "result": null,
+                  "cohort_evidence": {
+                    "rate": 0.5913,
+                    "n": 3022,
+                    "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                    "as_of_exclusive": "2026-10-22",
+                    "market": "match_over_25"
+                  },
+                  "market": "match_over_25",
+                  "label": "Match Over 2.5 Goals",
+                  "floor": 1.7379988092688428,
+                  "floor_basis": "market",
+                  "league": "Europa Conference League",
+                  "price_book": "Matchbook",
+                  "price_source": "theoddsapi",
+                  "price_at": "2026-10-21T22:23:59.771176+00:00",
+                  "price_kickoff": "2026-10-22T16:45:00Z",
+                  "price_provenance": null,
+                  "shadow": true,
+                  "fixture_key": [
+                    "2026-10-22",
+                    "Getafe",
+                    "Lugano"
+                  ]
+                }
+              ],
+              "odds": 4.8,
+              "stake_pct": 6.6805,
+              "results": [
+                null,
+                null
+              ],
+              "won": null
+            }
+          ],
+          "staked_pct": 20.0415
+        }
+      ],
+      "previous_freeze": null,
+      "previous_supersession": null
     }
   }
 }

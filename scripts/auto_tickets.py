@@ -3306,7 +3306,7 @@ def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
 def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
                  max_accas=None, legs_per_acca=None, volume_pool=None,
                  volume_min=None, gate_mode=None, fallback=True,
-                 saturated_accas=None, min_accas=None, fixture_report=None):
+                 saturated_accas=None, min_accas=None, fixture_report=None, enhancements=False):
     """THE selection recipe — one code path for live and for the replay harness.
 
     Every knob defaults to the validated live value; the harness passes
@@ -3327,7 +3327,20 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
 
     pool = rank_legs([l for l in pool if l["odds"] >= floor], rank,
                      rank_caps=rank_caps)
-    pool, fixture_dupes = dedup_fixture_legs(pool)
+    if enhancements:
+        # Keep competing markets until complete tickets have competed. Drop
+        # only duplicate fixture/market quotes here, not every alternative.
+        unique, fixture_dupes, seen = [], [], set()
+        for leg in pool:
+            key = (_fixture_key(leg), leg.get("market"), leg.get("price_book"))
+            if key in seen:
+                fixture_dupes.append(leg)
+            else:
+                seen.add(key)
+                unique.append(leg)
+        pool = unique
+    else:
+        pool, fixture_dupes = dedup_fixture_legs(pool)
     if fixture_report is not None:
         fixture_report["dropped"] = [l["match"] for l in fixture_dupes]
     saturated = len(pool) >= volume_pool
@@ -3343,7 +3356,37 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
         if len(gated) >= max_legs or not fallback:
             pool = gated
 
-    accas = pair_legs(pool[:max_legs], pairing, k)
+    if enhancements:
+        # Compete complete two-leg tickets over the FULL pool, before cutting
+        # slots. Fréchet's lower bound avoids inventing independence. Each
+        # marginal uses the existing two-sided Wilson 95% lower endpoint;
+        # these are historical sampling bounds, not a fixture guarantee.
+        from itertools import combinations
+        if max_accas <= 0:
+            return []
+        supported = []
+        for a, b in combinations(pool, 2):
+            ea, eb = a.get("cohort_evidence") or {}, b.get("cohort_evidence") or {}
+            ca, cb = ea.get("price_context") or {}, eb.get("price_context") or {}
+            if (k != 2 or _fixture_key(a) == _fixture_key(b) or not ca.get("book") or ca.get("book") != cb.get("book")
+                    or ca.get("source") != cb.get("source")
+                    or not all(e.get("basis") == "exact_context_priced_sample" for e in (ea, eb))):
+                continue
+            lower = max(0.0, ea["price_lower_bound"] + eb["price_lower_bound"] - 1.0)
+            payout = a["odds"] * b["odds"]
+            if lower * payout > 1.0:
+                supported.append((lower, lower * payout, a, b))
+        supported.sort(key=lambda v: (v[0], v[1]), reverse=True)
+        accas, used = [], set()
+        for _, _, a, b in supported:
+            keys = (_fixture_key(a), _fixture_key(b))
+            if not used.intersection(keys):
+                accas.append([a, b])
+                used.update(keys)
+                if len(accas) >= max_accas:
+                    break
+    else:
+        accas = pair_legs(pool[:max_legs], pairing, k)
 
     if saturated and gate_mode == "acca":
         # Per-acca conviction gate: an acca rides only if EVERY leg clears the
@@ -4817,7 +4860,10 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                      execution_safe: bool = False) -> list[dict]:
     """One selected-market leg with the shared realized-evidence verdict.
 
-    Require an exact-parent all-outcome cohort (n >= 100), then the shared
+    Live execution requires original quote-conditioned evidence as well as an
+    exact-parent all-outcome cohort (n >= 100). execution_safe=False retains
+    descriptive historical counterfactuals, not current staking permission.
+    Apply the shared
     MIN_LEG_ODDS minimum. No model fallback, EV veto, price floor or ceiling.
     Floor/slice tables remain descriptive metadata only, never eligibility.
     The live builder passes execution_safe=True: the enhancement's own source
@@ -4834,8 +4880,27 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
     except Exception:
         MARKET_PRICE_MAP = {}
 
+    expanded = []
+    for parent in slate or []:
+        alternatives = [n for n in parent.get("event_notes", []) if isinstance(n, dict)
+                        and n.get("enhancement_price") is not None]
+        if not any(n.get("market") == parent.get("recommended_enhancement") for n in alternatives):
+            expanded.append(parent)
+        for note in alternatives:
+            candidate = dict(parent, recommended_enhancement=note.get("market"),
+                             enhancement_probability=None,
+                             enhancement_label=note.get("label"),
+                             enhancement_cohort_rate=note.get("cohort_rate"),
+                             enhancement_cohort_n=note.get("cohort_n"),
+                             enhancement_cohort_contract_id=note.get("cohort_contract_id"),
+                             enhancement_cohort_as_of_exclusive=note.get("cohort_as_of_exclusive"))
+            for key in ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
+                        "enhancement_price_at", "enhancement_price_kickoff",
+                        "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection"):
+                candidate[key] = note.get(key)
+            expanded.append(candidate)
     legs: list[dict] = []
-    for pick in slate or []:
+    for pick in expanded:
         market = pick.get("recommended_enhancement")
         if not market:
             continue
@@ -4854,6 +4919,8 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
         else:
             leg_floor, leg_basis = floor_for(market), "inherited"
         evidence = enhancement_cohort_evidence(pick)
+        priced_evidence = enhancement_cohort_evidence(
+            pick, priced=True, root=registry_root or LOCALDATA.parent) if evidence and execution_safe else None
         if evidence is None:
             verdict = "no_cohort_evidence"
         elif price is None:
@@ -4879,11 +4946,14 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                   pick, execution_at=datetime.now(TZ))) is not None):
             verdict = be_rejection
         else:
-            # Operator, 2026-10-14: no price floor and no price ceiling. The only
-            # price gate is MIN_LEG_ODDS; any
-            # price above it fires.
+            # No arbitrary price ceiling or global-rate EV. The actual quote
+            # must pay for its supported, context-matched uncertainty bound.
             if price < MIN_LEG_ODDS:
                 verdict = "below_min_odds"
+            elif execution_safe and priced_evidence is None:
+                verdict = "no_priced_context_evidence"
+            elif execution_safe and priced_evidence["price_lower_bound"] * price <= 1:
+                verdict = "payout_not_supported"
             else:
                 verdict = "fire"
         legs.append({
@@ -4896,8 +4966,9 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                 pick.get("date") or "", pick.get("home"), pick.get("away"), "HOME"),
             "market": market,
             "label": pick.get("enhancement_label") or str(market).replace("_", " ").upper(),
-            "probability": evidence["rate"] if evidence else None,
-            "cohort_evidence": evidence,
+            "probability": (priced_evidence["conditional_rate"] if priced_evidence else
+                            evidence["rate"] if evidence and not execution_safe else None),
+            "cohort_evidence": priced_evidence or evidence,
             "price": price,
             "price_book": pick.get("enhancement_price_book"),
             "price_source": pick.get("enhancement_price_source"),
@@ -5152,7 +5223,7 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                 evidence = l.get("cohort_evidence") or {}
                 rate = evidence.get("rate")
                 if type(rate) in (int, float) and math.isfinite(rate) and 0 <= rate <= 1:
-                    detail = f" @ {l['odds']:.2f} (realized {rate:.0%}, n={evidence['n']})"
+                    detail = f" @ {l['odds']:.2f} (parent cohort {rate:.0%}, n={evidence['n']}; not fixture probability)"
                 else:
                     detail = f" @ {l['odds']:.2f} (realized evidence unavailable)"
                 lines.append(f"   {str(l.get('match')):46s} {l.get('label')}{detail}")
@@ -5163,6 +5234,10 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
         eligible = sum(1 for l in legs if l.get("verdict") == "fire") - len(dropped)
         lines.append(f"NO BET — only {eligible} eligible leg(s), need {LEGS_PER_ACCA} for an acca")
         lines.append("(bank stays unbet; a lone leg is never a single)")
+        lines.append("Quote/payout evidence: " + json.dumps(dict(Counter(
+            l.get("verdict", "unknown") for l in legs)), sort_keys=True))
+        if eligible >= LEGS_PER_ACCA:
+            lines.append("No supported same-book acca payout; no independence assumption.")
         lines.append("")
     # Deploy line, footer — identical to main slip.
     if plan:   # a no-bet card states no deployment
@@ -5331,7 +5406,7 @@ def cmd_enhancement(args, st, *, scores=None) -> int:
     # it. The enhancement lane's own part is the pool (floor-cleared
     # enhancement legs) and nothing else.
     plan = plan_day(pool, bank_eff, stake_frac=ENHANCEMENT_LANE.stake_frac,
-                    max_accas=ENH_MAX_ACCAS, rank=ENHANCEMENT_RANK,
+                    max_accas=ENH_MAX_ACCAS, rank=ENHANCEMENT_RANK, enhancements=True,
                     fixture_report=fixture_report)
     _carry_lane_evidence(plan, pool)
     if frozen_here:          # --force on a frozen date: supersede, never rewrite
@@ -5399,6 +5474,8 @@ def cmd_rebuild_unplaced_enhancement(args, st):
                   if e.get("contract_schema") == "post_forebet_v1" and e.get("status") == "certified"]
         if registry.get("operating_contract") != "post_forebet_v1" or not active:
             reason = "zero active validated post-Forebet contracts; prior slate/inherited Forebet evidence forbidden"
+        elif not (LOCALDATA / "warehouse.duckdb").is_file():
+            reason = "exact-contract warehouse unavailable for fresh rebuild; prior slate is not executable evidence"
     if reason:
         text = f"{ENHANCEMENT_LANE.label} — {target}\nNO BET — {reason}\nNo stake committed; bank/history unchanged.\n"
         slip.write_text(text)

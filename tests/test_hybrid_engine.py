@@ -150,7 +150,7 @@ def test_compute_provenance_and_legacy_parity(monkeypatch):
     assert notes == [], "model priors must never authorize a realized-cohort bet"
     assert all(n["engine"] == "model" for n in notes)
     assert all(n["cohort_n"] is None for n in notes)
-    assert all(0.0 < n["probability"] <= 1.0 for n in notes)
+    assert all(0.0 < n["cohort_rate"] <= 1.0 for n in notes)
     json.dumps(notes)  # stays serializable
 
 
@@ -180,17 +180,18 @@ def test_compute_cohort_override_math(monkeypatch):
               "a_o05": 0.90, "a_o15": 0.55, "a_o25": 0.15, "a_o35": 0.03}
     hyb = run(cohort)
     assert hyb, "cohort run must emit candidates"
+    assert all(n["probability"] is None for n in hyb.values())
     assert all(n["engine"] == "hybrid_cohort" and n["cohort_n"] == n_c
                for n in hyb.values())
-    assert all(0.0 < n["probability"] <= 1.0 for n in hyb.values())
+    assert all(0.0 < n["cohort_rate"] <= 1.0 for n in hyb.values())
 
     # No raw/model priors remain; only actual realized cohort rates
     # are used to select/rank. No model-only baseline can place a bet.
     for market, note in hyb.items():
-        assert note['probability'] == pytest.approx(pt.cohort_realized_rate(cohort, market))
+        assert note['cohort_rate'] == pytest.approx(pt.cohort_realized_rate(cohort, market))
         assert note['raw_probability'] is None
     if 'btts_yes' in hyb and 'btts_no' in hyb:
-        assert hyb['btts_yes']['probability'] + hyb['btts_no']['probability'] == pytest.approx(1.0)
+        assert hyb['btts_yes']['cohort_rate'] + hyb['btts_no']['cohort_rate'] == pytest.approx(1.0)
 
     json.dumps(hyb)
 
@@ -240,7 +241,7 @@ def test_event_notes_are_ordered_by_realized_cohort_rate(monkeypatch):
 
 
 def test_with_a_cohort_every_candidate_is_its_realized_rate(monkeypatch):
-    """Cohort replaces stated: each candidate's probability is the cohort rate
+    """Descriptive cohort rates never become fixture probabilities: each candidate carries a rate
     for its market, raw_probability stays unavailable, and markets the
     cohort cannot speak to (double chance, exact scores) are not candidates."""
     con = _empty_warehouse()
@@ -248,7 +249,7 @@ def test_with_a_cohort_every_candidate_is_its_realized_rate(monkeypatch):
     notes = _compute(con, _pick(), _priced_index())["event_notes"]
     assert notes, "the cohort should leave at least one candidate"
     for n in notes:
-        assert n["probability"] == pytest.approx(
+        assert n["cohort_rate"] == pytest.approx(
             pt.cohort_realized_rate(COHORT, n["market"]))
         assert n["raw_probability"] is None  # no invented model diagnostics
         assert n["market"] not in {"double_chance"} and not n["market"].startswith("exact_")
@@ -320,7 +321,7 @@ def test_under_competes_at_shared_minimum_without_legacy_line_filter(monkeypatch
     index = _priced_index({market: 1.30, "match_over_15": 1.50}, default=1.10)
     out = _compute(_empty_warehouse(), _pick(), index)
     assert out["recommended_enhancement"] == market
-    assert out["enhancement_probability"] == pytest.approx(rate)
+    assert out["enhancement_cohort_rate"] == pytest.approx(rate)
     assert out["enhancement_price"] == 1.30
     assert out["event_notes"][0]["market"] == market
     log = next(e for e in out["enh_candidate_log"] if e["market"] == market)
@@ -382,7 +383,7 @@ def test_cohort_parity_default_on_with_explicit_legacy_rollback(monkeypatch):
     monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
     research = _compute(_empty_warehouse(), _pick(), index)
     assert research["recommended_enhancement"] == "match_under_45"
-    assert research["enhancement_probability"] == pytest.approx(0.90)
+    assert research["enhancement_cohort_rate"] == pytest.approx(0.90)
 
 
 def test_cohort_switch_does_not_relax_the_model_only_path(monkeypatch):
@@ -421,10 +422,10 @@ def test_default_selection_stress_coherent_rates_and_random_prices(monkeypatch):
             assert out["recommended_enhancement"] is None
             continue
         best_rate, best_price, _ = max(expected)
-        assert out["enhancement_probability"] == pytest.approx(best_rate, abs=.000051)
+        assert out["enhancement_cohort_rate"] == pytest.approx(best_rate, abs=.000051)
         assert out["enhancement_price"] == best_price
         assert out["enhancement_price"] >= 1.30
-        assert all(.25 <= n["probability"] <= .90 for n in out["event_notes"])
+        assert all(.25 <= n["cohort_rate"] <= .90 for n in out["event_notes"])
     con.close()
 
 
@@ -470,7 +471,7 @@ def test_default_eighty_percent_under25_at_one_point_four(monkeypatch):
     finally:
         con.close()
     assert out['recommended_enhancement'] == 'match_under_25'
-    assert out['enhancement_probability'] == pytest.approx(.80)
+    assert out['enhancement_cohort_rate'] == pytest.approx(.80)
     assert out['enhancement_price'] == 1.40
 
 
