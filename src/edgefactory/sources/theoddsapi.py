@@ -929,16 +929,20 @@ def _pick_kickoff_utc(pick: dict) -> datetime | None:
     return dt
 
 
-def _team_names_match(a: object, b: object) -> bool:
+def _team_names_match(a: object, b: object, *, allow_truncated: bool = True) -> bool:
     """Cross-feed team-name equivalence: exact/9-char keys, prefix containment,
-    or significant-token subset (affix drops like IK Sirius vs Sirius)."""
+    or significant-token subset (affix drops like IK Sirius vs Sirius).
+
+    New price-alias admission disables the 9-char-only shortcut: unrelated
+    clubs can share that prefix. Existing callers keep their current policy.
+    """
     a_full, b_full = _norm_full(a), _norm_full(b)
     if not a_full or not b_full:
         return False
     if a_full == b_full:
         return True
     a9, b9 = _norm_team(a), _norm_team(b)
-    if a9 and b9 and a9 == b9:
+    if allow_truncated and a9 and b9 and a9 == b9:
         return True
     shorter, longer = sorted((a_full, b_full), key=len)
     if len(shorter) >= 5 and longer.startswith(shorter):
