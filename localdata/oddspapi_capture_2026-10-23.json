@@ -1,0 +1,482 @@
+{
+  "added": 30667,
+  "attempted": 10,
+  "attempted_fixtures": [
+    {
+      "away": "The Strongest",
+      "fixture_id": "id1003903375478288",
+      "home": "Always Ready"
+    },
+    {
+      "away": "Central SC PE",
+      "fixture_id": "id1000038075123480",
+      "home": "Porto PE"
+    },
+    {
+      "away": "Cruzeiro EC MG",
+      "fixture_id": "id1002017874930610",
+      "home": "Club Olimpia"
+    },
+    {
+      "away": "Boliviar",
+      "fixture_id": "id1002017874930612",
+      "home": "Liga Deportiva Universitaria de Quito"
+    },
+    {
+      "away": "Estudiantes de La Plata",
+      "fixture_id": "id1000038474808586",
+      "home": "CR Flamengo RJ"
+    },
+    {
+      "away": "Aguilas de la Universidad de Panama",
+      "fixture_id": "id1001949075804574",
+      "home": "SD Atletico Nacional"
+    },
+    {
+      "away": "AD Pasto",
+      "fixture_id": "id1002707075371182",
+      "home": "Atletico Nacional"
+    },
+    {
+      "away": "Cruz Azul Hidalgo",
+      "fixture_id": "id1002738272661728",
+      "home": "Alebrijes de Oaxaca FC"
+    },
+    {
+      "away": "Liga Deportiva Alajuelense",
+      "fixture_id": "id1004024974841182",
+      "home": "FC Motagua Tegucigalpa"
+    },
+    {
+      "away": "Club Leon",
+      "fixture_id": "id1002895375180968",
+      "home": "Atlas FC"
+    }
+  ],
+  "budget": {
+    "day": "2026-10-23",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 210,
+    "remaining_today": 38,
+    "spent_today": 24
+  },
+  "captured_at": "2026-10-22T22:24:07+00:00",
+  "date": "2026-10-23",
+  "errors": [],
+  "fixtures": 421,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-10.json",
+  "market_census_distinct": 633,
+  "markets": {
+    "1x2": 3889,
+    "ou_0.5": 932,
+    "ou_0.75": 172,
+    "ou_1": 346,
+    "ou_1.25": 213,
+    "ou_1.5": 1661,
+    "ou_1.75": 450,
+    "ou_10.5": 26,
+    "ou_11.5": 6,
+    "ou_12.5": 6,
+    "ou_13.5": 6,
+    "ou_14.5": 6,
+    "ou_2": 605,
+    "ou_2.25": 692,
+    "ou_2.5": 2256,
+    "ou_2.75": 802,
+    "ou_3": 826,
+    "ou_3.25": 646,
+    "ou_3.5": 2092,
+    "ou_3.75": 376,
+    "ou_4": 359,
+    "ou_4.25": 263,
+    "ou_4.5": 1685,
+    "ou_4.75": 174,
+    "ou_5": 202,
+    "ou_5.25": 101,
+    "ou_5.5": 960,
+    "ou_5.75": 84,
+    "ou_6": 80,
+    "ou_6.25": 60,
+    "ou_6.5": 510,
+    "ou_6.75": 40,
+    "ou_7": 54,
+    "ou_7.25": 36,
+    "ou_7.5": 243,
+    "ou_7.75": 32,
+    "ou_8": 34,
+    "ou_8.25": 32,
+    "ou_8.5": 108,
+    "ou_9.5": 26,
+    "tt_away_0.5": 1186,
+    "tt_away_0.75": 22,
+    "tt_away_1": 100,
+    "tt_away_1.25": 62,
+    "tt_away_1.5": 1220,
+    "tt_away_1.75": 54,
+    "tt_away_2": 98,
+    "tt_away_2.25": 18,
+    "tt_away_2.5": 939,
+    "tt_away_2.75": 2,
+    "tt_away_3": 18,
+    "tt_away_3.5": 507,
+    "tt_away_4": 16,
+    "tt_away_4.5": 240,
+    "tt_away_5.5": 42,
+    "tt_away_6.5": 9,
+    "tt_away_7.5": 3,
+    "tt_home_0.5": 993,
+    "tt_home_0.75": 12,
+    "tt_home_1": 118,
+    "tt_home_1.25": 46,
+    "tt_home_1.5": 1486,
+    "tt_home_1.75": 44,
+    "tt_home_2": 94,
+    "tt_home_2.25": 20,
+    "tt_home_2.5": 1326,
+    "tt_home_2.75": 4,
+    "tt_home_3": 50,
+    "tt_home_3.25": 2,
+    "tt_home_3.5": 646,
+    "tt_home_3.75": 2,
+    "tt_home_4.5": 152,
+    "tt_home_5.5": 42,
+    "tt_home_6.5": 3
+  },
+  "markets_source": "fetch",
+  "matched": 10,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 12,
+    "market_id_unknown": 7934,
+    "market_inactive": 5548,
+    "market_unsupported_clean_sheet": 598,
+    "market_unsupported_corners": 5977,
+    "market_unsupported_correct_score": 2348,
+    "market_unsupported_double_chance": 1464,
+    "market_unsupported_draw_no_bet": 1111,
+    "market_unsupported_handicap": 10745,
+    "market_unsupported_odd_even": 2106,
+    "market_unsupported_period": 34626,
+    "market_unsupported_win_to_nil": 1079,
+    "outcome_inactive": 2450,
+    "unresolved_btts": 1818
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 12,
+      "market_inactive": 5548,
+      "outcome_inactive": 2450
+    },
+    "loss_or_diagnosis": {
+      "market_id_unknown": 7934,
+      "market_unsupported_clean_sheet": 598,
+      "market_unsupported_corners": 5977,
+      "market_unsupported_correct_score": 2348,
+      "market_unsupported_double_chance": 1464,
+      "market_unsupported_draw_no_bet": 1111,
+      "market_unsupported_handicap": 10745,
+      "market_unsupported_odd_even": 2106,
+      "market_unsupported_period": 34626,
+      "market_unsupported_win_to_nil": 1079,
+      "unresolved_btts": 1818
+    }
+  },
+  "pending_fixtures": 10,
+  "quoted_fixtures": [
+    {
+      "away": "The Strongest",
+      "fixture_id": "id1003903375478288",
+      "home": "Always Ready"
+    },
+    {
+      "away": "Central SC PE",
+      "fixture_id": "id1000038075123480",
+      "home": "Porto PE"
+    },
+    {
+      "away": "Cruzeiro EC MG",
+      "fixture_id": "id1002017874930610",
+      "home": "Club Olimpia"
+    },
+    {
+      "away": "Boliviar",
+      "fixture_id": "id1002017874930612",
+      "home": "Liga Deportiva Universitaria de Quito"
+    },
+    {
+      "away": "Estudiantes de La Plata",
+      "fixture_id": "id1000038474808586",
+      "home": "CR Flamengo RJ"
+    },
+    {
+      "away": "Aguilas de la Universidad de Panama",
+      "fixture_id": "id1001949075804574",
+      "home": "SD Atletico Nacional"
+    },
+    {
+      "away": "AD Pasto",
+      "fixture_id": "id1002707075371182",
+      "home": "Atletico Nacional"
+    },
+    {
+      "away": "Cruz Azul Hidalgo",
+      "fixture_id": "id1002738272661728",
+      "home": "Alebrijes de Oaxaca FC"
+    },
+    {
+      "away": "Liga Deportiva Alajuelense",
+      "fixture_id": "id1004024974841182",
+      "home": "FC Motagua Tegucigalpa"
+    },
+    {
+      "away": "Club Leon",
+      "fixture_id": "id1002895375180968",
+      "home": "Atlas FC"
+    }
+  ],
+  "rows": 30667,
+  "schema": 1,
+  "slate_candidate_fixtures": 65,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 1,
+  "slate_provider_overlap_fixtures": 26,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Estudiantes L.P.",
+      "home": "Flamengo",
+      "league": "International,Copa Libertadores Knockout Stage",
+      "normalized_pair": "estudiantes l.p.|flamengo"
+    },
+    {
+      "away": "Enugu Rangers",
+      "home": "MC Alger",
+      "league": "CAF Champions League",
+      "normalized_pair": "enugu rangers|mc alger"
+    },
+    {
+      "away": "Deportivo Pasto",
+      "home": "Atl\u00e9tico Nacional",
+      "league": "Liga BetPlay",
+      "normalized_pair": "atletico nacional|deportivo pasto"
+    },
+    {
+      "away": "Radnik Bijeljina",
+      "home": "Zrinjski",
+      "league": "Premier Liga",
+      "normalized_pair": "radnik bijeljina|zrinjski"
+    },
+    {
+      "away": "Obolon'-Brovar",
+      "home": "Polissya Zhytomyr",
+      "league": "Premier League",
+      "normalized_pair": "obolon'-brovar|polissya zhytomyr"
+    },
+    {
+      "away": "Borussia M'gladbach",
+      "home": "VfB Stuttgart",
+      "league": "Bundesliga",
+      "normalized_pair": "borussia m'gladbach|vfb stuttgart"
+    },
+    {
+      "away": "Al Rayyan",
+      "home": "Al Sailiya",
+      "league": "Stars League",
+      "normalized_pair": "al rayyan|al sailiya"
+    },
+    {
+      "away": "Penybont",
+      "home": "Holywell",
+      "league": "Premier League",
+      "normalized_pair": "holywell|penybont"
+    },
+    {
+      "away": "Al Nassr",
+      "home": "Al Faisaly",
+      "league": "Pro League",
+      "normalized_pair": "al faisaly|al nassr"
+    },
+    {
+      "away": "Sportist Svoge",
+      "home": "Chernomorets 1919 Burgas",
+      "league": "Bulgaria Second League",
+      "normalized_pair": "chernomorets 1919 burgas|sportist svoge"
+    },
+    {
+      "away": "Scotland Mabvuku",
+      "home": "Petro de Luanda",
+      "league": "CAF Champions League",
+      "normalized_pair": "petro de luanda|scotland mabvuku"
+    },
+    {
+      "away": "Remo",
+      "home": "Cruzeiro",
+      "league": "Serie A",
+      "normalized_pair": "cruzeiro|remo"
+    },
+    {
+      "away": "GIF Sundsvall",
+      "home": "Oddevold",
+      "league": "Superettan",
+      "normalized_pair": "gif sundsvall|oddevold"
+    },
+    {
+      "away": "Estudiantes",
+      "home": "Flamengo",
+      "league": "Copa Libertadores",
+      "normalized_pair": "estudiantes|flamengo"
+    },
+    {
+      "away": "Melgar",
+      "home": "UTC Cajamarca",
+      "league": "Primera Division",
+      "normalized_pair": "melgar|utc cajamarca"
+    },
+    {
+      "away": "Bac Ninh",
+      "home": "Th\u1ec3 C\u00f4ng-Viettel",
+      "league": "V-League",
+      "normalized_pair": "bac ninh|cong-viettel"
+    },
+    {
+      "away": "Rapid Wien II",
+      "home": "Amstetten",
+      "league": "2. Liga",
+      "normalized_pair": "amstetten|rapid wien"
+    },
+    {
+      "away": "St. P\u00f6lten",
+      "home": "Kapfenberger SV",
+      "league": "2. Liga",
+      "normalized_pair": "kapfenberger sv|st. polten"
+    },
+    {
+      "away": "St Patrick's",
+      "home": "Galway United",
+      "league": "Premier Division",
+      "normalized_pair": "galway united|st patrick's"
+    },
+    {
+      "away": "Shelbourne",
+      "home": "Bohemians",
+      "league": "Premier Division",
+      "normalized_pair": "bohemians|shelbourne"
+    },
+    {
+      "away": "Cardiff MU",
+      "home": "Colwyn Bay",
+      "league": "Premier League",
+      "normalized_pair": "cardiff mu|colwyn bay"
+    },
+    {
+      "away": "Laval",
+      "home": "Nancy",
+      "league": "Ligue 2",
+      "normalized_pair": "laval|nancy"
+    },
+    {
+      "away": "Sarmiento",
+      "home": "Gimnasia La Plata",
+      "league": "Liga Profesional de F\u00fatbol",
+      "normalized_pair": "gimnasia la plata|sarmiento"
+    },
+    {
+      "away": "Universidad Cat\u00f3lica",
+      "home": "Independiente del Valle",
+      "league": "Liga Pro",
+      "normalized_pair": "independiente del valle|universidad catolica"
+    },
+    {
+      "away": "Halmstad",
+      "home": "V\u00e4ster\u00e5s SK",
+      "league": "Allsvenskan",
+      "normalized_pair": "halmstad|vasteras"
+    },
+    {
+      "away": "Zag\u0142\u0119bie Lubin",
+      "home": "Motor Lublin",
+      "league": "Ekstraklasa",
+      "normalized_pair": "motor lublin|zaglebie lubin"
+    },
+    {
+      "away": "Mar\u00edtimo",
+      "home": "Vit\u00f3ria Guimar\u00e3es",
+      "league": "Liga Portugal",
+      "normalized_pair": "maritimo|vitoria guimaraes"
+    },
+    {
+      "away": "Real Zaragoza",
+      "home": "Europa",
+      "league": "Primera Division RFEF: Group 2",
+      "normalized_pair": "europa|real zaragoza"
+    },
+    {
+      "away": "Floridsdorfer AC",
+      "home": "First Vienna",
+      "league": "2. Liga",
+      "normalized_pair": "first vienna|floridsdorfer"
+    },
+    {
+      "away": "Vanspor FK",
+      "home": "Boluspor",
+      "league": "1. Lig",
+      "normalized_pair": "boluspor|vanspor"
+    },
+    {
+      "away": "Hammam-Sousse",
+      "home": "CA Bizertin",
+      "league": "Ligue 1",
+      "normalized_pair": "ca bizertin|hammam-sousse"
+    },
+    {
+      "away": "HB K\u00f8ge",
+      "home": "Hvidovre",
+      "league": "First Division",
+      "normalized_pair": "hb koge|hvidovre"
+    },
+    {
+      "away": "Qatar SC",
+      "home": "Al Shamal SC",
+      "league": "Stars League",
+      "normalized_pair": "al shamal|qatar"
+    },
+    {
+      "away": "Radnik Surdulica",
+      "home": "Radni\u010dki Kragujevac",
+      "league": "Super Liga",
+      "normalized_pair": "radnicki kragujevac|radnik surdulica"
+    },
+    {
+      "away": "Gubbio",
+      "home": "Pineto",
+      "league": "Serie C: Girone B",
+      "normalized_pair": "gubbio|pineto"
+    },
+    {
+      "away": "Helmond Sport",
+      "home": "Jong AZ",
+      "league": "Eerste Divisie",
+      "normalized_pair": "helmond sport|jong az"
+    },
+    {
+      "away": "Drogheda United",
+      "home": "Waterford United",
+      "league": "Premier Division",
+      "normalized_pair": "drogheda united|waterford united"
+    },
+    {
+      "away": "Athletic Club",
+      "home": "Oper\u00e1rio PR",
+      "league": "Serie B",
+      "normalized_pair": "athletic|operario pr"
+    },
+    {
+      "away": "FC Universitatea Cluj",
+      "home": "FC Corvinul Hunedoara",
+      "league": "Superliga",
+      "normalized_pair": "corvinul hunedoara|universitatea cluj"
+    }
+  ],
+  "source": "oddspapi_odds"
+}

@@ -1,0 +1,6280 @@
+{
+  "captured_at": "2026-10-22T22:29:34.639469+00:00",
+  "date": "2026-10-23",
+  "fixtures": {
+    "2026-10-23|alsailiya|alrayyan": {
+      "away": "Al Rayyan",
+      "best_1x2": {
+        "odd1": 8.0,
+        "odd2": 1.25,
+        "oddx": 5.8
+      },
+      "captured_at": "2026-10-22T22:29:03.048027+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        17,
+        45
+      ],
+      "event_id": "IL1mAfjo",
+      "home": "Al Sailiya",
+      "kickoff": "17:45",
+      "kickoff_date": "2026-10-23",
+      "league": "Qatar: QSL",
+      "market_failures": [],
+      "markets": {
+        "1x2": {
+          "average": [
+            8.0,
+            5.8,
+            1.25
+          ],
+          "average_by_line": {
+            "0": [
+              8.0,
+              5.8,
+              1.25
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T14:14",
+                "2026-10-22T17:49",
+                "2026-10-22T17:49"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "up",
+                "down"
+              ],
+              "odds": [
+                8.0,
+                5.8,
+                1.25
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ah": {
+          "average": [
+            2.05,
+            1.66
+          ],
+          "average_by_line": {
+            "1.50": [
+              2.05,
+              1.66
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0.50",
+            "1.50",
+            "2.50",
+            "ou"
+          ],
+          "named_rows": 4,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T17:46",
+                "2026-10-20T17:46"
+              ],
+              "line": "0.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                2.9,
+                1.33
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T23:09",
+                "2026-10-22T23:09"
+              ],
+              "line": "1.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.05,
+                1.66
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T17:46",
+                "2026-10-20T17:46"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.31,
+                2.95
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T17:46",
+                "2026-10-20T17:46"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.31,
+                2.95
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 4
+        },
+        "bts": {
+          "average": [
+            1.65,
+            2.02
+          ],
+          "average_by_line": {
+            "0": [
+              1.65,
+              2.02
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "Yes",
+            "No"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T23:09",
+                "2026-10-22T23:09"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.65,
+                2.02
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "dc": {
+          "average": [
+            2.85,
+            1.1,
+            1.07
+          ],
+          "average_by_line": {
+            "0": [
+              2.85,
+              1.1,
+              1.07
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1X",
+            "12",
+            "X2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T17:49",
+                "2026-10-22T14:14",
+                "2026-10-22T12:20"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "down",
+                "down"
+              ],
+              "odds": [
+                2.85,
+                1.1,
+                1.07
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ha": {
+          "average": [
+            5.6,
+            1.08
+          ],
+          "average_by_line": {
+            "0": [
+              5.6,
+              1.08
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T14:14",
+                "2026-10-22T14:14"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                5.6,
+                1.08
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ou": {
+          "average": [
+            1.83,
+            1.84
+          ],
+          "average_by_line": {
+            "3.50": [
+              1.83,
+              1.84
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "2.50",
+            "3.50",
+            "4.50",
+            "ou"
+          ],
+          "named_rows": 4,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T17:46",
+                "2026-10-20T17:46"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.42,
+                2.65
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T23:09",
+                "2026-10-22T23:09"
+              ],
+              "line": "3.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.83,
+                1.84
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T17:46",
+                "2026-10-20T17:46"
+              ],
+              "line": "4.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                3.3,
+                1.29
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T17:46",
+                "2026-10-20T17:46"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.42,
+                2.65
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 4
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/qatar/qsl/al-sailiya-al-rayyan/IL1mAfjo/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 109768,
+        "page_sha256": "b64a6230ea8c21b635dba920eff93798e7f63756bb5f975bf8c035825cea57df",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-10-23|dynamokyiv|kudrivka": {
+      "away": "Kudrivka",
+      "best_1x2": {
+        "odd1": 1.14,
+        "odd2": 12.0,
+        "oddx": 7.2
+      },
+      "captured_at": "2026-10-22T22:27:28.821483+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        11,
+        0
+      ],
+      "event_id": "S0xS7d8r",
+      "home": "Dyn. Kyiv",
+      "kickoff": "11:00",
+      "kickoff_date": "2026-10-23",
+      "league": "Ukraine: Premier League",
+      "market_failures": [],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.14,
+            7.2,
+            12.0
+          ],
+          "average_by_line": {
+            "0": [
+              1.14,
+              7.2,
+              12.0
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:01",
+                "2026-10-21T15:03",
+                "2026-10-22T22:01"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null,
+                null
+              ],
+              "odds": [
+                1.14,
+                7.2,
+                12.0
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ah": {
+          "average": [
+            2.1,
+            1.63
+          ],
+          "average_by_line": {
+            "-2.50": [
+              2.1,
+              1.63
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "-0.50",
+            "-1.50",
+            "-2.50"
+          ],
+          "named_rows": 3,
+          "rows": [
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T14:03",
+                "2026-10-20T14:03"
+              ],
+              "line": "-0.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.31,
+                3.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T13:12",
+                "2026-10-21T13:12"
+              ],
+              "line": "-1.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.54,
+                2.28
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:01",
+                "2026-10-22T22:01"
+              ],
+              "line": "-2.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                2.1,
+                1.63
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 3
+        },
+        "bts": {
+          "average": [
+            2.01,
+            1.69
+          ],
+          "average_by_line": {
+            "0": [
+              2.01,
+              1.69
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "Yes",
+            "No"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T14:58",
+                "2026-10-21T14:58"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.05,
+                1.68
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:01",
+                "2026-10-22T22:01"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.97,
+                1.69
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "dc": {
+          "average": [
+            1.03,
+            1.06,
+            3.5
+          ],
+          "average_by_line": {
+            "0": [
+              1.03,
+              1.06,
+              3.5
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1X",
+            "12",
+            "X2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T13:21",
+                "2026-10-21T13:40",
+                "2026-10-22T22:01"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.03,
+                1.06,
+                3.5
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ha": {
+          "average": [
+            1.03,
+            7.6
+          ],
+          "average_by_line": {
+            "0": [
+              1.03,
+              7.6
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T14:56",
+                "2026-10-22T22:01"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.03,
+                7.6
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ou": {
+          "average": null,
+          "average_by_line": {
+            "1.50": [
+              1.1,
+              6.5
+            ],
+            "2.50": [
+              1.35,
+              2.9
+            ],
+            "3.50": [
+              1.89,
+              1.79
+            ],
+            "4.50": [
+              3.0,
+              1.33
+            ],
+            "5.50": [
+              5.25,
+              1.13
+            ],
+            "6.50": [
+              9.75,
+              1.05
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "0.50",
+            "1.50",
+            "2.50",
+            "3.50",
+            "4.50",
+            "5.50",
+            "6.50",
+            "ou"
+          ],
+          "named_rows": 12,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T14:58",
+                "2026-10-21T14:58"
+              ],
+              "line": "0.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                26.0,
+                1.1
+              ],
+              "pos": [
+                "2",
+                "1"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T14:58",
+                "2026-10-21T14:58"
+              ],
+              "line": "1.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.1,
+                6.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T14:58",
+                "2026-10-21T14:58"
+              ],
+              "line": "2.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.35,
+                2.9
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-20T21:35",
+                "2026-10-20T13:40"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.46,
+                2.55
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T14:58",
+                "2026-10-21T14:58"
+              ],
+              "line": "3.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.9,
+                1.78
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T19:04",
+                "2026-10-21T19:04"
+              ],
+              "line": "3.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.87,
+                1.8
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T14:58",
+                "2026-10-21T14:58"
+              ],
+              "line": "4.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                3.0,
+                1.33
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-20T21:35",
+                "2026-10-20T21:35"
+              ],
+              "line": "4.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                3.5,
+                1.26
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T14:58",
+                "2026-10-21T14:58"
+              ],
+              "line": "5.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                5.25,
+                1.13
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T14:58",
+                "2026-10-21T14:58"
+              ],
+              "line": "6.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                9.75,
+                1.05
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T14:58",
+                "2026-10-21T14:58"
+              ],
+              "line": "ou",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.35,
+                2.9
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T21:35",
+                "2026-10-20T13:40"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.46,
+                2.55
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 12
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/ukraine/premier-league/dynamo-kyiv-kudrivka/S0xS7d8r/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 109888,
+        "page_sha256": "79e5bba7d392995c9965934ed28f0229086e7e7ff856ad2eabf11a7f0485cb1f",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-10-23|flamengo|estudianteslp": {
+      "away": "Estudiantes L.P.",
+      "best_1x2": {
+        "odd1": 1.5,
+        "odd2": 6.6,
+        "oddx": 3.95
+      },
+      "captured_at": "2026-10-22T22:26:18.299778+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        1,
+        30
+      ],
+      "event_id": "htsqZbSF",
+      "home": "Flamengo RJ",
+      "kickoff": "01:30",
+      "kickoff_date": "2026-10-23",
+      "league": "South America: Copa Libertadores",
+      "market_failures": [],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.5,
+            3.95,
+            6.6
+          ],
+          "average_by_line": {
+            "0": [
+              1.5,
+              3.95,
+              6.6
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down",
+                "down"
+              ],
+              "odds": [
+                1.5,
+                3.95,
+                6.6
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ah": {
+          "average": null,
+          "average_by_line": {
+            "-0.25": [
+              1.33,
+              3.15
+            ],
+            "-0.50": [
+              1.49,
+              2.5
+            ],
+            "-0.75": [
+              1.63,
+              2.19
+            ],
+            "-1.00": [
+              1.87,
+              1.87
+            ],
+            "-1.25": [
+              2.18,
+              1.64
+            ],
+            "-1.50": [
+              2.48,
+              1.5
+            ],
+            "-1.75": [
+              3.0,
+              1.36
+            ],
+            "-2.00": [
+              4.0,
+              1.22
+            ],
+            "0": [
+              1.16,
+              4.8
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0",
+            "-0.25",
+            "-0.50",
+            "-0.75",
+            "-1.00",
+            "-1.25",
+            "-1.50",
+            "-1.75",
+            "-2.00",
+            "-2.25"
+          ],
+          "named_rows": 10,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.16,
+                4.8
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "-0.25",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.33,
+                3.15
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "-0.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.49,
+                2.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "-0.75",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.63,
+                2.19
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "-1.00",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.87,
+                1.87
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "-1.25",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.18,
+                1.64
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "-1.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.48,
+                1.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "-1.75",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                3.0,
+                1.36
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "-2.00",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                4.0,
+                1.22
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:07",
+                "2026-10-22T22:07"
+              ],
+              "line": "-2.25",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                4.0,
+                1.22
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 10
+        },
+        "bts": {
+          "average": [
+            2.31,
+            1.55
+          ],
+          "average_by_line": {
+            "0": [
+              2.31,
+              1.55
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "Yes",
+            "No"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                2.31,
+                1.55
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "dc": {
+          "average": [
+            1.13,
+            1.25,
+            2.48
+          ],
+          "average_by_line": {
+            "0": [
+              1.13,
+              1.25,
+              2.48
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1X",
+            "12",
+            "X2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:21",
+                "2026-10-22T22:53"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.13,
+                1.25,
+                2.48
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ha": {
+          "average": [
+            1.17,
+            4.5
+          ],
+          "average_by_line": {
+            "0": [
+              1.17,
+              4.5
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:53",
+                "2026-10-22T22:53"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.17,
+                4.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ou": {
+          "average": null,
+          "average_by_line": {
+            "1.25": [
+              1.24,
+              3.85
+            ],
+            "1.50": [
+              1.38,
+              2.9
+            ],
+            "1.75": [
+              1.48,
+              2.55
+            ],
+            "2.00": [
+              1.63,
+              2.18
+            ],
+            "2.25": [
+              1.9,
+              1.84
+            ],
+            "2.50": [
+              2.16,
+              1.65
+            ],
+            "2.75": [
+              2.5,
+              1.49
+            ],
+            "3.00": [
+              3.2,
+              1.32
+            ],
+            "3.25": [
+              3.55,
+              1.27
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "1.25",
+            "1.50",
+            "1.75",
+            "2.00",
+            "2.25",
+            "2.50",
+            "2.75",
+            "3.00",
+            "3.25",
+            "3.50"
+          ],
+          "named_rows": 10,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:56",
+                "2026-10-22T21:56"
+              ],
+              "line": "1.25",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.24,
+                3.85
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:56",
+                "2026-10-22T21:56"
+              ],
+              "line": "1.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.38,
+                2.9
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:56",
+                "2026-10-22T21:56"
+              ],
+              "line": "1.75",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.48,
+                2.55
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T22:09",
+                "2026-10-22T21:56"
+              ],
+              "line": "2.00",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.63,
+                2.18
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:56",
+                "2026-10-22T21:56"
+              ],
+              "line": "2.25",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.9,
+                1.84
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:56",
+                "2026-10-22T21:56"
+              ],
+              "line": "2.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.16,
+                1.65
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:56",
+                "2026-10-22T22:18"
+              ],
+              "line": "2.75",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.5,
+                1.49
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:56",
+                "2026-10-22T21:56"
+              ],
+              "line": "3.00",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                3.2,
+                1.32
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:56",
+                "2026-10-22T21:56"
+              ],
+              "line": "3.25",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                3.55,
+                1.27
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T19:31",
+                "2026-10-22T19:31"
+              ],
+              "line": "3.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                3.45,
+                1.28
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 10
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/south-america/copa-libertadores/flamengo-rj-estudiantes-l-p/htsqZbSF/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110461,
+        "page_sha256": "9b3af484b2fff68eb4bcc4822d4bc3f401beac6208195cdd9f636636e0182a05",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-10-23|holywell|penybont": {
+      "away": "Penybont",
+      "best_1x2": {
+        "odd1": 9.2,
+        "odd2": 1.23,
+        "oddx": 5.8
+      },
+      "captured_at": "2026-10-22T22:29:34.638527+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        19,
+        45
+      ],
+      "event_id": "Gtsj1gBE",
+      "home": "Holywell",
+      "kickoff": "19:45",
+      "kickoff_date": "2026-10-23",
+      "league": "Wales: Cymru Premier",
+      "market_failures": [],
+      "markets": {
+        "1x2": {
+          "average": [
+            8.73,
+            5.78,
+            1.23
+          ],
+          "average_by_line": {
+            "0": [
+              8.73,
+              5.78,
+              1.23
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T21:07",
+                "2026-10-22T21:07",
+                "2026-10-22T21:07"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                null,
+                "up"
+              ],
+              "odds": [
+                8.25,
+                5.75,
+                1.23
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:06",
+                "2026-10-22T21:05",
+                "2026-10-22T21:06"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "up",
+                "down"
+              ],
+              "odds": [
+                9.2,
+                5.8,
+                1.22
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "ah": {
+          "average": [
+            2.1,
+            1.63
+          ],
+          "average_by_line": {
+            "1.50": [
+              2.1,
+              1.63
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0.50",
+            "1.50",
+            "2.50",
+            "ou"
+          ],
+          "named_rows": 4,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T02:30",
+                "2026-10-21T02:30"
+              ],
+              "line": "0.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                3.4,
+                1.24
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:06",
+                "2026-10-22T21:06"
+              ],
+              "line": "1.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.1,
+                1.63
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T02:30",
+                "2026-10-21T02:30"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.41,
+                2.55
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T02:30",
+                "2026-10-21T02:30"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.41,
+                2.55
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 4
+        },
+        "bts": {
+          "average": [
+            1.85,
+            1.81
+          ],
+          "average_by_line": {
+            "0": [
+              1.85,
+              1.81
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "Yes",
+            "No"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T21:07",
+                "2026-10-22T21:07"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.85,
+                1.83
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:06",
+                "2026-10-22T21:06"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.84,
+                1.79
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "dc": {
+          "average": [
+            3.38,
+            1.1,
+            1.06
+          ],
+          "average_by_line": {
+            "0": [
+              3.38,
+              1.1,
+              1.06
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "1X",
+            "12",
+            "X2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T21:07",
+                "2026-10-22T21:07",
+                "2026-10-22T21:07"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "down",
+                null
+              ],
+              "odds": [
+                3.75,
+                1.11,
+                1.06
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:06",
+                "2026-10-22T21:06",
+                "2026-10-22T21:06"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "down",
+                "down"
+              ],
+              "odds": [
+                3.0,
+                1.09,
+                1.05
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "ha": {
+          "average": [
+            6.73,
+            1.07
+          ],
+          "average_by_line": {
+            "0": [
+              6.73,
+              1.07
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T21:07",
+                "2026-10-22T21:07"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                7.25,
+                1.08
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:06",
+                "2026-10-22T21:06"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                "down"
+              ],
+              "odds": [
+                6.2,
+                1.06
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "ou": {
+          "average": null,
+          "average_by_line": {
+            "1.50": [
+              1.12,
+              5.5
+            ],
+            "2.50": [
+              1.41,
+              2.65
+            ],
+            "3.50": [
+              2.04,
+              1.68
+            ],
+            "4.50": [
+              3.4,
+              1.28
+            ],
+            "5.50": [
+              6.0,
+              1.11
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "1.50",
+            "2.50",
+            "3.50",
+            "4.50",
+            "5.50",
+            "ou"
+          ],
+          "named_rows": 10,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T11:59",
+                "2026-10-21T20:17"
+              ],
+              "line": "1.50",
+              "movement": [
+                "down",
+                null
+              ],
+              "odds": [
+                1.12,
+                5.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T21:07",
+                "2026-10-22T21:07"
+              ],
+              "line": "2.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.41,
+                2.65
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T02:30",
+                "2026-10-21T02:30"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.44,
+                2.6
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T05:00",
+                "2026-10-22T21:07"
+              ],
+              "line": "3.50",
+              "movement": [
+                null,
+                "up"
+              ],
+              "odds": [
+                2.05,
+                1.68
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T05:29",
+                "2026-10-21T02:30"
+              ],
+              "line": "3.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                2.03,
+                1.67
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T05:00",
+                "2026-10-22T21:07"
+              ],
+              "line": "4.50",
+              "movement": [
+                null,
+                "up"
+              ],
+              "odds": [
+                3.4,
+                1.28
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T02:30",
+                "2026-10-21T02:30"
+              ],
+              "line": "4.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                3.4,
+                1.28
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T05:00",
+                "2026-10-22T21:07"
+              ],
+              "line": "5.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                6.0,
+                1.11
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T21:07",
+                "2026-10-22T21:07"
+              ],
+              "line": "ou",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.41,
+                2.65
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T02:30",
+                "2026-10-21T02:30"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.44,
+                2.6
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 10
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/wales/cymru-premier/holywell-town-fc-penybont/Gtsj1gBE/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110248,
+        "page_sha256": "ac3192b8323b5b36c8c3e042e94b3dc4c8e94fc980fd7b899c320ee2a835512c",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-10-23|mamelodisundowns|wiliete": {
+      "away": "Wiliete",
+      "best_1x2": {
+        "odd1": 1.15,
+        "odd2": 15.0,
+        "oddx": 6.0
+      },
+      "captured_at": "2026-10-22T22:25:46.703492+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        19,
+        0
+      ],
+      "event_id": "vynap6l2",
+      "home": "Mamelodi Sundowns",
+      "kickoff": "19:00",
+      "kickoff_date": "2026-10-23",
+      "league": "Africa: CAF Champions League",
+      "market_failures": [
+        "bts",
+        "dc",
+        "ha"
+      ],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.15,
+            6.0,
+            15.0
+          ],
+          "average_by_line": {
+            "0": [
+              1.15,
+              6.0,
+              15.0
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T19:01",
+                "2026-10-22T19:01",
+                "2026-10-22T19:01"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null,
+                null
+              ],
+              "odds": [
+                1.15,
+                6.0,
+                15.0
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ah": {
+          "average": [
+            1.54,
+            2.22
+          ],
+          "average_by_line": {
+            "-1.50": [
+              1.54,
+              2.22
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "-1.50"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T19:01",
+                "2026-10-22T19:01"
+              ],
+              "line": "-1.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.54,
+                2.22
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ou": {
+          "average": [
+            1.65,
+            2.02
+          ],
+          "average_by_line": {
+            "2.50": [
+              1.65,
+              2.02
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "2.50",
+            "ou"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T19:01",
+                "2026-10-22T19:01"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.65,
+                2.02
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T19:01",
+                "2026-10-22T19:01"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.65,
+                2.02
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 2
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/africa/caf-champions-league/mamelodi-sundowns-wiliete/vynap6l2/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110362,
+        "page_sha256": "5fa17606d86029995bd2750b213146132142c09770bf07e1b1844f3fe97a0fd6",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-10-23|mcalger|enugurangers": {
+      "away": "Rangers Int'l",
+      "best_1x2": {
+        "odd1": 1.19,
+        "odd2": 15.0,
+        "oddx": 5.2
+      },
+      "captured_at": "2026-10-22T22:26:49.730825+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        20,
+        0
+      ],
+      "event_id": "QHuCFh4m",
+      "home": "MC Alger",
+      "kickoff": "20:00",
+      "kickoff_date": "2026-10-23",
+      "league": "Africa: CAF Champions League",
+      "market_failures": [
+        "bts",
+        "dc",
+        "ha"
+      ],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.19,
+            5.2,
+            15.0
+          ],
+          "average_by_line": {
+            "0": [
+              1.19,
+              5.2,
+              15.0
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T20:02",
+                "2026-10-22T20:02",
+                "2026-10-22T20:02"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null,
+                null
+              ],
+              "odds": [
+                1.19,
+                5.2,
+                15.0
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ah": {
+          "average": [
+            1.59,
+            2.12
+          ],
+          "average_by_line": {
+            "-1.50": [
+              1.59,
+              2.12
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "-1.50"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T20:02",
+                "2026-10-22T20:02"
+              ],
+              "line": "-1.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.59,
+                2.12
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ou": {
+          "average": [
+            1.65,
+            2.02
+          ],
+          "average_by_line": {
+            "2.50": [
+              1.65,
+              2.02
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "2.50",
+            "ou"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T20:02",
+                "2026-10-22T20:02"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.65,
+                2.02
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T20:02",
+                "2026-10-22T20:02"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.65,
+                2.02
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 2
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/africa/caf-champions-league/mc-alger-rangers-international/QHuCFh4m/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110142,
+        "page_sha256": "8f1cc9c66a09a1a28cc00909b66efa0c8d317491dc2a6bd8fc0502bfa902a465",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-10-23|polissyazhytomyr|obolonbrovar": {
+      "away": "Obolon",
+      "best_1x2": {
+        "odd1": 1.21,
+        "odd2": 12.5,
+        "oddx": 6.25
+      },
+      "captured_at": "2026-10-22T22:28:31.614176+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        11,
+        0
+      ],
+      "event_id": "jHK7KZil",
+      "home": "Polissya Zhytomyr",
+      "kickoff": "11:00",
+      "kickoff_date": "2026-10-23",
+      "league": "Ukraine: Premier League",
+      "market_failures": [],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.2,
+            6.13,
+            11.75
+          ],
+          "average_by_line": {
+            "0": [
+              1.2,
+              6.13,
+              11.75
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T09:54",
+                "2026-10-22T11:02",
+                "2026-10-22T15:03"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up",
+                "up"
+              ],
+              "odds": [
+                1.21,
+                6.25,
+                12.5
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T09:53",
+                "2026-10-22T21:13",
+                "2026-10-22T09:57"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up",
+                "up"
+              ],
+              "odds": [
+                1.19,
+                6.0,
+                11.0
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "ah": {
+          "average": [
+            1.67,
+            2.04
+          ],
+          "average_by_line": {
+            "-1.50": [
+              1.67,
+              2.04
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "-0.50",
+            "-1.50",
+            "-2.50"
+          ],
+          "named_rows": 3,
+          "rows": [
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T12:56",
+                "2026-10-20T12:56"
+              ],
+              "line": "-0.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.26,
+                3.3
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:13",
+                "2026-10-22T21:13"
+              ],
+              "line": "-1.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.67,
+                2.04
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T15:00",
+                "2026-10-20T15:00"
+              ],
+              "line": "-2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                2.9,
+                1.32
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 3
+        },
+        "bts": {
+          "average": [
+            2.52,
+            1.44
+          ],
+          "average_by_line": {
+            "0": [
+              2.52,
+              1.44
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "Yes",
+            "No"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T15:03",
+                "2026-10-22T15:03"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.55,
+                1.44
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:13",
+                "2026-10-22T14:51"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.48,
+                1.43
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "dc": {
+          "average": [
+            1.04,
+            1.1,
+            3.68
+          ],
+          "average_by_line": {
+            "0": [
+              1.04,
+              1.1,
+              3.68
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "1X",
+            "12",
+            "X2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T00:48",
+                "2026-10-22T09:53",
+                "2026-10-22T15:03"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.04,
+                1.11,
+                4.2
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T08:41",
+                "2026-10-22T09:53",
+                "2026-10-22T21:13"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "down",
+                "down"
+              ],
+              "odds": [
+                1.04,
+                1.09,
+                3.15
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "ha": {
+          "average": [
+            1.05,
+            8.5
+          ],
+          "average_by_line": {
+            "0": [
+              1.05,
+              8.5
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T15:03",
+                "2026-10-22T09:53"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                "up"
+              ],
+              "odds": [
+                1.05,
+                10.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T21:13",
+                "2026-10-22T09:57"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.05,
+                7.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "ou": {
+          "average": null,
+          "average_by_line": {
+            "0.50": [
+              1.03,
+              13.0
+            ],
+            "1.50": [
+              1.22,
+              3.9
+            ],
+            "2.50": [
+              1.7,
+              2.0
+            ],
+            "3.50": [
+              2.75,
+              1.38
+            ],
+            "4.50": [
+              5.0,
+              1.14
+            ],
+            "5.50": [
+              10.0,
+              1.05
+            ],
+            "6.50": [
+              19.5,
+              1.01
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "0.50",
+            "1.50",
+            "2.50",
+            "3.50",
+            "4.50",
+            "5.50",
+            "6.50",
+            "ou"
+          ],
+          "named_rows": 12,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T09:54",
+                "2026-10-22T09:54"
+              ],
+              "line": "0.50",
+              "movement": [
+                null,
+                "up"
+              ],
+              "odds": [
+                1.03,
+                13.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T15:03",
+                "2026-10-22T15:03"
+              ],
+              "line": "1.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.22,
+                3.9
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-20T15:00",
+                "2026-10-20T15:00"
+              ],
+              "line": "1.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.23,
+                3.75
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T15:03",
+                "2026-10-22T15:03"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.7,
+                2.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T11:19",
+                "2026-10-22T11:19"
+              ],
+              "line": "2.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.7,
+                1.99
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T15:03",
+                "2026-10-22T15:03"
+              ],
+              "line": "3.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.75,
+                1.38
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-20T15:00",
+                "2026-10-20T15:00"
+              ],
+              "line": "3.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                2.75,
+                1.39
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T15:03",
+                "2026-10-22T09:54"
+              ],
+              "line": "4.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                5.0,
+                1.14
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T09:54",
+                "2026-10-22T15:03"
+              ],
+              "line": "5.50",
+              "movement": [
+                "up",
+                null
+              ],
+              "odds": [
+                10.0,
+                1.05
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T15:03",
+                "2026-10-22T09:46"
+              ],
+              "line": "6.50",
+              "movement": [
+                "up",
+                null
+              ],
+              "odds": [
+                19.5,
+                1.01
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T15:03",
+                "2026-10-22T15:03"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.7,
+                2.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T11:19",
+                "2026-10-22T11:19"
+              ],
+              "line": "ou",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.7,
+                1.99
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 12
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/ukraine/premier-league/polissya-zhytomyr-obolon/jHK7KZil/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110197,
+        "page_sha256": "27950968b7b7d0598a43006444f822cf3d6373898ccc9fa150f2a949f463a8e3",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-10-23|shamrockrovers|sligorovers": {
+      "away": "Sligo Rovers",
+      "best_1x2": {
+        "odd1": 1.15,
+        "odd2": 17.0,
+        "oddx": 7.75
+      },
+      "captured_at": "2026-10-22T22:25:15.387576+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        20,
+        0
+      ],
+      "event_id": "xK4TJYo9",
+      "home": "Shamrock Rovers",
+      "kickoff": "20:00",
+      "kickoff_date": "2026-10-23",
+      "league": "Ireland: Premier Division",
+      "market_failures": [],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.14,
+            7.25,
+            14.67
+          ],
+          "average_by_line": {
+            "0": [
+              1.14,
+              7.25,
+              14.67
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com",
+            "bet365.us"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 3,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:32",
+                "2026-10-21T14:26",
+                "2026-10-21T14:32"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                null,
+                "up"
+              ],
+              "odds": [
+                1.13,
+                7.0,
+                17.0
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T08:55",
+                "2026-10-22T08:55",
+                "2026-10-22T08:55"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null,
+                null
+              ],
+              "odds": [
+                1.15,
+                7.75,
+                13.0
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T14:27",
+                "2026-10-21T14:27",
+                "2026-10-22T07:55"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up",
+                "up"
+              ],
+              "odds": [
+                1.13,
+                7.0,
+                14.0
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 3
+        },
+        "ah": {
+          "average": null,
+          "average_by_line": {
+            "-0.50": [
+              1.15,
+              5.5
+            ],
+            "-0.75": [
+              1.18,
+              4.8
+            ],
+            "-1.00": [
+              1.2,
+              4.4
+            ],
+            "-1.25": [
+              1.33,
+              3.3
+            ],
+            "-1.50": [
+              1.45,
+              2.68
+            ],
+            "-1.75": [
+              1.55,
+              2.38
+            ],
+            "-2.00": [
+              1.7,
+              2.1
+            ],
+            "-2.25": [
+              1.95,
+              1.85
+            ],
+            "-2.50": [
+              2.1,
+              1.66
+            ],
+            "-2.75": [
+              2.42,
+              1.53
+            ],
+            "-3.00": [
+              3.0,
+              1.38
+            ],
+            "-3.25": [
+              3.3,
+              1.33
+            ],
+            "-3.50": [
+              3.55,
+              1.27
+            ],
+            "-3.75": [
+              4.25,
+              1.21
+            ],
+            "-4.00": [
+              5.9,
+              1.13
+            ],
+            "-4.25": [
+              6.25,
+              1.12
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com",
+            "bet365.us"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "-0.50",
+            "-0.75",
+            "-1.00",
+            "-1.25",
+            "-1.50",
+            "-1.75",
+            "-2.00",
+            "-2.25",
+            "-2.50",
+            "-2.75"
+          ],
+          "named_rows": 13,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:32",
+                "2026-10-21T14:32"
+              ],
+              "line": "-0.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.15,
+                5.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T20:01",
+                "2026-10-22T20:01"
+              ],
+              "line": "-0.75",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.18,
+                4.8
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:32",
+                "2026-10-21T14:32"
+              ],
+              "line": "-1.00",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.2,
+                4.4
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:27",
+                "2026-10-21T14:27"
+              ],
+              "line": "-1.25",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.33,
+                3.3
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:27",
+                "2026-10-21T14:27"
+              ],
+              "line": "-1.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.45,
+                2.68
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-20T20:04",
+                "2026-10-20T20:04"
+              ],
+              "line": "-1.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.5,
+                2.31
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:26",
+                "2026-10-21T14:26"
+              ],
+              "line": "-1.75",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.55,
+                2.38
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:26",
+                "2026-10-21T14:26"
+              ],
+              "line": "-2.00",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.7,
+                2.1
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:26",
+                "2026-10-21T14:26"
+              ],
+              "line": "-2.25",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.95,
+                1.85
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:27",
+                "2026-10-21T14:27"
+              ],
+              "line": "-2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                2.15,
+                1.68
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T08:55",
+                "2026-10-22T19:31"
+              ],
+              "line": "-2.50",
+              "movement": [
+                null,
+                "up"
+              ],
+              "odds": [
+                2.1,
+                1.65
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T20:03",
+                "2026-10-22T20:03"
+              ],
+              "line": "-2.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                2.06,
+                1.66
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:27",
+                "2026-10-21T14:27"
+              ],
+              "line": "-2.75",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                2.42,
+                1.53
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 13
+        },
+        "bts": {
+          "average": [
+            2.1,
+            1.64
+          ],
+          "average_by_line": {
+            "0": [
+              2.1,
+              1.64
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com",
+            "bet365.us"
+          ],
+          "columns": [
+            "Yes",
+            "No"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 3,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T12:55",
+                "2026-10-22T12:55"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.1,
+                1.67
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T08:55",
+                "2026-10-22T08:55"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                2.15,
+                1.62
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T20:03",
+                "2026-10-22T20:03"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.05,
+                1.63
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 3
+        },
+        "dc": {
+          "average": [
+            1.03,
+            1.08,
+            4.93
+          ],
+          "average_by_line": {
+            "0": [
+              1.03,
+              1.08,
+              4.93
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com",
+            "bet365.us"
+          ],
+          "columns": [
+            "1X",
+            "12",
+            "X2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 3,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:32",
+                "2026-10-21T14:26",
+                "2026-10-21T14:32"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                null,
+                "up"
+              ],
+              "odds": [
+                1.02,
+                1.1,
+                6.0
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T08:55",
+                "2026-10-22T08:55",
+                "2026-10-22T08:55"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null,
+                null
+              ],
+              "odds": [
+                1.03,
+                1.08,
+                5.25
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T20:10",
+                "2026-10-21T20:10",
+                "2026-10-21T20:10"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.03,
+                1.06,
+                3.55
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 3
+        },
+        "ha": {
+          "average": [
+            1.03,
+            11.5
+          ],
+          "average_by_line": {
+            "0": [
+              1.03,
+              11.5
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com",
+            "bet365.us"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 3,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T14:32",
+                "2026-10-21T14:32"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.03,
+                15.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T08:55",
+                "2026-10-22T19:31"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                "up"
+              ],
+              "odds": [
+                1.04,
+                11.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-21T20:10",
+                "2026-10-22T07:55"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                "up"
+              ],
+              "odds": [
+                1.03,
+                8.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 3
+        },
+        "ou": {
+          "average": null,
+          "average_by_line": {
+            "0.50": [
+              1.01,
+              22.0
+            ],
+            "1.50": [
+              1.11,
+              6.38
+            ],
+            "2.25": [
+              1.27,
+              3.55
+            ],
+            "2.50": [
+              1.39,
+              2.84
+            ],
+            "2.75": [
+              1.48,
+              2.6
+            ],
+            "3.00": [
+              1.58,
+              2.35
+            ],
+            "3.25": [
+              1.78,
+              2.03
+            ],
+            "3.50": [
+              1.92,
+              1.77
+            ],
+            "4.25": [
+              2.85,
+              1.4
+            ],
+            "4.50": [
+              3.18,
+              1.32
+            ],
+            "4.75": [
+              3.8,
+              1.25
+            ],
+            "5.00": [
+              5.0,
+              1.17
+            ],
+            "5.25": [
+              5.5,
+              1.15
+            ],
+            "5.50": [
+              5.75,
+              1.13
+            ],
+            "6.50": [
+              10.75,
+              1.05
+            ],
+            "7.50": [
+              21.0,
+              1.01
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com",
+            "bet365.us"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "0.50",
+            "1.50",
+            "1.75",
+            "2.00",
+            "2.25",
+            "2.50",
+            "2.75",
+            "3.00",
+            "3.25",
+            "3.50"
+          ],
+          "named_rows": 16,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T17:18",
+                "2026-10-21T17:18"
+              ],
+              "line": "0.50",
+              "movement": [
+                null,
+                "down"
+              ],
+              "odds": [
+                1.01,
+                21.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T08:55",
+                "2026-10-21T17:18"
+              ],
+              "line": "0.50",
+              "movement": [
+                null,
+                "up"
+              ],
+              "odds": [
+                23.0,
+                1.11
+              ],
+              "pos": [
+                "2",
+                "1"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T17:18",
+                "2026-10-21T17:18"
+              ],
+              "line": "1.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.11,
+                6.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T08:55",
+                "2026-10-22T08:55"
+              ],
+              "line": "1.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.1,
+                6.25
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T13:34",
+                "2026-10-21T13:34"
+              ],
+              "line": "1.75",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.12,
+                6.25
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T13:34",
+                "2026-10-21T13:34"
+              ],
+              "line": "2.00",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.14,
+                5.75
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T17:18",
+                "2026-10-21T17:18"
+              ],
+              "line": "2.25",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.27,
+                3.55
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-21T17:19",
+                "2026-10-21T17:19"
+              ],
+              "line": "2.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.4,
+                2.88
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T08:55",
+                "2026-10-22T08:55"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.38,
+                2.8
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-20T20:04",
+                "2026-10-20T20:04"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.4,
+                2.75
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T08:01",
+                "2026-10-22T08:01"
+              ],
+              "line": "2.75",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.48,
+                2.6
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T20:01",
+                "2026-10-22T20:01"
+              ],
+              "line": "3.00",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.58,
+                2.35
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T20:01",
+                "2026-10-22T20:01"
+              ],
+              "line": "3.25",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.78,
+                2.03
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "bet365.us",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T23:24",
+                "2026-10-22T20:01"
+              ],
+              "line": "3.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.91,
+                1.8
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T19:31",
+                "2026-10-22T08:55"
+              ],
+              "line": "3.50",
+              "movement": [
+                "down",
+                null
+              ],
+              "odds": [
+                1.95,
+                1.73
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1105",
+              "created": [
+                "2026-10-22T20:03",
+                "2026-10-22T20:03"
+              ],
+              "line": "3.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.89,
+                1.78
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 16
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/ireland/premier-division/shamrock-rovers-sligo-rovers/xK4TJYo9/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110319,
+        "page_sha256": "54d9bf6ca4e1ac239484b7e5ce737847d22c2856fed70e72014f2ae7be45e029",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-10-23|thenewsaints|ammanford": {
+      "away": "Ammanford",
+      "best_1x2": {
+        "odd1": 1.02,
+        "odd2": 27.0,
+        "oddx": 12.0
+      },
+      "captured_at": "2026-10-22T22:24:43.797399+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        19,
+        45
+      ],
+      "event_id": "lfubaXuR",
+      "home": "TNS",
+      "kickoff": "19:45",
+      "kickoff_date": "2026-10-23",
+      "league": "Wales: Cymru Premier",
+      "market_failures": [],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.02,
+            12.0,
+            27.0
+          ],
+          "average_by_line": {
+            "0": [
+              1.02,
+              12.0,
+              27.0
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T12:19",
+                "2026-10-22T12:19",
+                null
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null,
+                null
+              ],
+              "odds": [
+                31.0,
+                101.0,
+                null
+              ],
+              "pos": [
+                "0",
+                "2",
+                null
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T17:49",
+                "2026-10-20T17:49",
+                "2026-10-20T17:49"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null,
+                null
+              ],
+              "odds": [
+                1.02,
+                12.0,
+                27.0
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "ah": {
+          "average": [
+            1.66,
+            2.05
+          ],
+          "average_by_line": {
+            "-4.50": [
+              1.66,
+              2.05
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "-3.50",
+            "-4.50",
+            "-5.50"
+          ],
+          "named_rows": 3,
+          "rows": [
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T19:50",
+                "2026-10-20T19:50"
+              ],
+              "line": "-3.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.47,
+                2.37
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-22T12:15",
+                "2026-10-22T12:15"
+              ],
+              "line": "-4.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.66,
+                2.05
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T19:50",
+                "2026-10-20T19:50"
+              ],
+              "line": "-5.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                2.95,
+                1.31
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 3
+        },
+        "bts": {
+          "average": null,
+          "average_by_line": null,
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "Yes",
+            "No"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 2,
+          "rows": [
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T13:08",
+                "2026-10-22T13:08"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                5.25,
+                1.14
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-10-20T19:50",
+                "2026-10-20T19:50"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                3.2,
+                1.27
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 2
+        },
+        "dc": {
+          "average": null,
+          "average_by_line": null,
+          "bookmakers": [
+            "BetMGM.us"
+          ],
+          "columns": [
+            "1X",
+            "12",
+            "X2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T12:19",
+                null,
+                null
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null,
+                null
+              ],
+              "odds": [
+                31.0,
+                null,
+                null
+              ],
+              "pos": [
+                "02",
+                null,
+                null
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ha": {
+          "average": null,
+          "average_by_line": null,
+          "bookmakers": [
+            "BetMGM.us"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T12:19",
+                null
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                101.0,
+                null
+              ],
+              "pos": [
+                "2",
+                null
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ou": {
+          "average": [
+            2.1,
+            1.63
+          ],
+          "average_by_line": {
+            "5.50": [
+              2.1,
+              1.63
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us",
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "2.50",
+            "3.50",
+            "4.50",
+            "5.50",
+            "6.50",
+            "7.50",
+            "ou"
+          ],
+          "named_rows": 10,
+          "rows": [
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T21:43",
+                "2026-10-22T03:28"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.11,
+                6.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T12:19",
+                "2026-10-22T12:19"
+              ],
+              "line": "3.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.26,
+                3.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-20T19:50",
+                "2026-10-20T19:50"
+              ],
+              "line": "3.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.3,
+                3.25
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T12:19",
+                "2026-10-22T12:19"
+              ],
+              "line": "4.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.57,
+                2.2
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T05:29",
+                "2026-10-21T05:29"
+              ],
+              "line": "4.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.64,
+                2.08
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T12:19",
+                "2026-10-22T12:19"
+              ],
+              "line": "5.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                2.1,
+                1.63
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T12:15",
+                "2026-10-22T12:15"
+              ],
+              "line": "5.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                2.1,
+                1.63
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T12:19",
+                "2026-10-22T12:19"
+              ],
+              "line": "6.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                3.1,
+                1.32
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T12:19",
+                "2026-10-21T22:03"
+              ],
+              "line": "7.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                4.75,
+                1.16
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": false,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-21T21:43",
+                "2026-10-22T03:28"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.11,
+                6.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 10
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/wales/cymru-premier/tns-ammanford-town/lfubaXuR/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 109897,
+        "page_sha256": "35457930b1f3fa45b4781fe7423bcd9a21ff90c94ae1ded76418e6b182381a24",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-10-23|zrinjski|radnikbijeljina": {
+      "away": "Radnik Bijeljina",
+      "best_1x2": {
+        "odd1": 1.21,
+        "odd2": 10.5,
+        "oddx": 5.5
+      },
+      "captured_at": "2026-10-22T22:28:00.431134+00:00",
+      "data_dt": [
+        23,
+        10,
+        2026,
+        19,
+        0
+      ],
+      "event_id": "K0MJzuhL",
+      "home": "Zrinjski",
+      "kickoff": "19:00",
+      "kickoff_date": "2026-10-23",
+      "league": "Bosnia and Herzegovina: WWIN Liga BiH",
+      "market_failures": [
+        "ah",
+        "ha"
+      ],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.21,
+            5.5,
+            10.5
+          ],
+          "average_by_line": {
+            "0": [
+              1.21,
+              5.5,
+              10.5
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T19:06",
+                "2026-10-22T19:07",
+                "2026-10-22T19:07"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.21,
+                5.5,
+                10.5
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "bts": {
+          "average": [
+            2.2,
+            1.58
+          ],
+          "average_by_line": {
+            "0": [
+              2.2,
+              1.58
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us"
+          ],
+          "columns": [
+            "Yes",
+            "No"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T19:04",
+                "2026-10-22T19:10"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                "down"
+              ],
+              "odds": [
+                2.2,
+                1.58
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "dc": {
+          "average": [
+            1.04,
+            1.12,
+            4.0
+          ],
+          "average_by_line": {
+            "0": [
+              1.04,
+              1.12,
+              4.0
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us"
+          ],
+          "columns": [
+            "1X",
+            "12",
+            "X2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T19:04",
+                "2026-10-22T19:17",
+                "2026-10-22T19:14"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.04,
+                1.12,
+                4.0
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ou": {
+          "average": null,
+          "average_by_line": {
+            "1.50": [
+              1.18,
+              4.4
+            ],
+            "2.50": [
+              1.57,
+              2.25
+            ],
+            "3.50": [
+              2.4,
+              1.5
+            ]
+          },
+          "bookmakers": [
+            "BetMGM.us"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "1.50",
+            "2.50",
+            "3.50",
+            "ou"
+          ],
+          "named_rows": 4,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T19:04",
+                "2026-10-22T19:17"
+              ],
+              "line": "1.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.18,
+                4.4
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T19:10",
+                "2026-10-22T19:10"
+              ],
+              "line": "2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.57,
+                2.25
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T19:10",
+                "2026-10-22T19:10"
+              ],
+              "line": "3.50",
+              "movement": [
+                "up",
+                null
+              ],
+              "odds": [
+                2.4,
+                1.5
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "BetMGM.us",
+              "bookmaker_id": "1103",
+              "created": [
+                "2026-10-22T19:10",
+                "2026-10-22T19:10"
+              ],
+              "line": "ou",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.57,
+                2.25
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 4
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/bosnia-and-herzegovina/wwin-liga-bih/zrinjski-radnik-bijeljina/K0MJzuhL/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110550,
+        "page_sha256": "9119eed8cf6a0a92dd51398c148fa7e8219e4daf5cd9a25fa9bf3e7fd0749d72",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    }
+  },
+  "schema": 2
+}

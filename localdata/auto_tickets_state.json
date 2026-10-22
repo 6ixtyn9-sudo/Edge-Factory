@@ -1,46 +1,11 @@
 {
   "base_pct": 100.0,
-  "bank": 163.23817900000014,
+  "bank": 179.35797100000013,
   "cycle_base": 203.9865280000001,
   "open_slips": [
     {
       "date": "2026-10-22",
       "accas": [
-        {
-          "legs": [
-            {
-              "match": "Omonia Nicosia vs Benfica",
-              "pick": "AWAY",
-              "prob": 0.7088727204006424,
-              "odds": 1.3484,
-              "result": null,
-              "fixture_key": [
-                "2026-10-22",
-                "Omonia Nicosia",
-                "Benfica"
-              ]
-            },
-            {
-              "match": "Ferencv\u00e1rosi vs Torreense",
-              "pick": "HOME",
-              "prob": 0.7107531975367124,
-              "odds": 1.33,
-              "result": null,
-              "fixture_key": [
-                "2026-10-22",
-                "Ferencv\u00e1rosi",
-                "Torreense"
-              ]
-            }
-          ],
-          "odds": 1.79,
-          "stake_pct": 20.4048,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
         {
           "legs": [
             {
@@ -72,12 +37,12 @@
           "stake_pct": 20.4047,
           "results": [
             null,
-            null
+            "win"
           ],
           "won": null
         }
       ],
-      "staked_pct": 40.8095
+      "staked_pct": 20.4047
     }
   ],
   "history": [
@@ -1157,6 +1122,35 @@
       ],
       "bank_pct": 163.2382,
       "close_pct": 163.2381
+    },
+    {
+      "date": "2026-10-22",
+      "staked_pct": 20.4048,
+      "returned_pct": 36.5246,
+      "accas": [
+        {
+          "odds": 1.79,
+          "won": true,
+          "stake_pct": 20.4048,
+          "returned_pct": 36.5246,
+          "legs": [
+            {
+              "match": "Omonia Nicosia vs Benfica",
+              "pick": "AWAY",
+              "odds": 1.3484,
+              "result": "win"
+            },
+            {
+              "match": "Ferencv\u00e1rosi vs Torreense",
+              "pick": "HOME",
+              "odds": 1.33,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 179.358,
+      "close_pct": 179.3579
     }
   ],
   "events": [

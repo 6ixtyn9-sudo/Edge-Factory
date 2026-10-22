@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-22T21:34:13",
+  "generated_at": "2026-10-23T01:05:58",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 80.1656,
-  "multiple": 0.8016559999999999,
+  "bank_pct": 70.14489999999999,
+  "multiple": 0.7014489999999999,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 8,
+  "bet_days": 9,
   "accas": {
     "wins": 8,
-    "losses": 10
+    "losses": 11
   },
   "open_slips": [
     {
-      "date": "2026-10-22",
-      "staked_pct": 10.0207
+      "date": "2026-10-23",
+      "staked_pct": 17.5362
     }
   ],
   "events": [],
@@ -451,6 +451,37 @@
           ]
         }
       ]
+    },
+    {
+      "date": "2026-10-22",
+      "staked_pct": 10.0207,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 3.4,
+          "won": false,
+          "stake_pct": 10.0207,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Pafos FC vs Riga",
+              "pick": "over",
+              "odds": 1.81,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Lech Pozna\u0144 vs Sunderland",
+              "pick": "over",
+              "odds": 1.88,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 70.1449,
+      "close_pct": 70.1449
     }
   ]
 }
