@@ -24,6 +24,10 @@ Manual / debug usage:
 
 --auto semantics (idempotent across 3h iterations):
   * first snapshot per fixture: once per day, skipped near/after kickoff
+  * a changed request/parser scope (markets, lines, regions or books) schedules
+    one upgrade snapshot even for previously priced fixtures. Legacy receipts
+    have unknown scope and get one upgrade; unavailable markets do not cause
+    repeated purchases after a successful scoped response.
   * close snapshot per fixture: once per day, only within ODDS_API_CLOSE_WINDOW_MIN
     (default 45) minutes before kickoff
   * an attempts ledger (localdata/theoddsapi_attempts_<date>.json) blocks
@@ -36,6 +40,7 @@ from __future__ import annotations
 import argparse
 import csv
 import gzip
+import hashlib
 import importlib
 import json
 import os
@@ -236,18 +241,50 @@ def _save_attempts(day: str, attempts: dict) -> None:
         print(f"theoddsapi: attempts ledger write failed: {exc}", file=sys.stderr)
 
 
-def _recent(iso_ts: str | None, hours: float) -> bool:
+def _recent(iso_ts: str | None, hours: float, now: datetime | None = None) -> bool:
     if not iso_ts:
         return False
     try:
         ts = datetime.fromisoformat(str(iso_ts).replace("Z", "+00:00"))
     except ValueError:
         return False
-    return (datetime.now(timezone.utc) - ts).total_seconds() < hours * 3600
+    return ((now or datetime.now(timezone.utc)) - ts).total_seconds() < hours * 3600
 
 
 def _fixture_key(f: dict) -> str:
     return f"{f.get('home')}|{f.get('away')}"
+
+
+def capture_scope(mod) -> str:
+    """Identity of the request/parser scope, not a claim of market availability."""
+    scope = {name: sorted(set(getattr(mod, name)))
+             for name in ("MARKETS", "REGIONS", "TOTAL_POINTS", "BOOKMAKERS")}
+    return hashlib.sha256(json.dumps(scope, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def record_attempts(due, updates, attempts, rows, match_fn, scope, now_iso):
+    """Only actual returned fixture rows establish success (including partial batches).
+
+    Missing provider markets do not cause repeated purchases: a successful
+    scoped request is recorded even when only some requested markets return.
+    Empty/aborted/budget-skipped fixtures retain the normal failure cooldown.
+    """
+    for f in due:
+        fk = _fixture_key(f)
+        snap = updates.get(fk)
+        if not snap:
+            continue
+        rec = attempts.setdefault(fk, {})
+        fail = "close_fail_at" if snap == "close_at" else "fail_at"
+        quoted = any(str(r.get("date"))[:10] == str(f.get("date"))[:10]
+                     and match_fn(f.get("home"), r.get("home"))
+                     and match_fn(f.get("away"), r.get("away")) for r in rows)
+        if quoted:
+            rec[snap] = now_iso
+            rec["capture_scope"] = scope
+            rec.pop(fail, None)
+        else:
+            rec[fail] = now_iso
 
 
 def _fixture_priced(f: dict, existing_rows: list[dict], match_fn) -> bool:
@@ -319,7 +356,7 @@ def _kickoff_mismatch_detail_counts(lines: list[str]) -> dict[str, int]:
 
 def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *,
               now: datetime | None = None, kickoff_fn=None, kickoff_source_fn=None,
-              match_fn=None) -> tuple[list[dict], dict, list[str]]:
+              match_fn=None, requested_scope: str | None = None) -> tuple[list[dict], dict, list[str]]:
     """Decide which fixtures need a snapshot this iteration.
 
     Returns (due_fixtures, updates, skip_lines). `updates` maps fixture key ->
@@ -407,23 +444,29 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
             skips.append(f"{fk} (kickoff already passed)")
             continue
 
-        if in_close_window and not rec.get("close_at") and not _recent(rec.get("close_fail_at"), ATTEMPT_RETRY_HOURS):
+        if in_close_window and not rec.get("close_at") and not _recent(rec.get("close_fail_at"), ATTEMPT_RETRY_HOURS, now):
             due.append(f)
             updates[fk] = "close_at"
             continue
 
-        if not has_rows and not rec.get("first_at") and not _recent(rec.get("fail_at"), ATTEMPT_RETRY_HOURS):
+        # Legacy rows/receipts cannot attest that today's configured market
+        # scope was requested. Upgrade once; never infer completeness from h2h.
+        scope_due = requested_scope is not None and rec.get("capture_scope") != requested_scope
+        if scope_due and _recent(rec.get("close_fail_at"), ATTEMPT_RETRY_HOURS, now):
+            skips.append(f"{fk} (retry cooldown ({ATTEMPT_RETRY_HOURS}h after failed attempt))")
+            continue
+        if (scope_due or (not has_rows and not rec.get("first_at") and not rec.get("scope_at"))) and not _recent(rec.get("fail_at"), ATTEMPT_RETRY_HOURS, now):
             if kickoff is not None and (kickoff - now).total_seconds() < START_GRACE_MIN * 60 and not in_close_window:
                 skips.append(f"{fk} (too close to kickoff for first capture)")
                 continue
             due.append(f)
-            updates[fk] = "first_at"
+            updates[fk] = "scope_at" if scope_due and (has_rows or rec.get("first_at")) else "first_at"
             continue
 
-        if has_rows or rec.get("first_at"):
-            reason = "priced, close window not open" if kickoff else "priced"
-        elif _recent(rec.get("fail_at"), ATTEMPT_RETRY_HOURS):
+        if _recent(rec.get("fail_at"), ATTEMPT_RETRY_HOURS, now):
             reason = f"retry cooldown ({ATTEMPT_RETRY_HOURS}h after failed attempt)"
+        elif has_rows or rec.get("first_at") or rec.get("scope_at"):
+            reason = "priced, close window not open" if kickoff else "priced"
         else:
             reason = "waiting"
         skips.append(f"{fk} ({reason})")
@@ -568,6 +611,9 @@ def main() -> int:
     fixtures = mod.shortlist(args.date)
     print(f"date={args.date} shortlist={len(fixtures)} fixture(s)")
     receipt_base = {
+        "requested_scope": capture_scope(mod),
+        "requested_markets": list(mod.MARKETS),
+        "requested_total_points": list(mod.TOTAL_POINTS),
         "candidate_fixtures": len(fixtures),
         "attempted": 0,
         "fixtures_with_rows": 0,
@@ -624,7 +670,8 @@ def main() -> int:
         attempts = _load_attempts(args.date)
         due, updates, skips = plan_auto(fixtures, existing, attempts,
                                         kickoff_source_fn=mod._pick_kickoff_with_source,
-                                        match_fn=mod._team_names_match)
+                                        match_fn=mod._team_names_match,
+                                        requested_scope=capture_scope(mod))
         skip_counts = _skip_reason_counts(skips)
         mismatch_detail_counts = _kickoff_mismatch_detail_counts(skips)
         due_counts = dict(Counter(updates.values()))
@@ -659,6 +706,9 @@ def main() -> int:
         rows, unmatched, matched = mod.fetch_fixtures(due, day=args.date)
     except Exception as exc:
         print(f"capture aborted: {exc}", file=sys.stderr)
+        record_attempts(due, updates, attempts, [], mod._team_names_match,
+                        capture_scope(mod), datetime.now(timezone.utc).isoformat())
+        _save_attempts(args.date, attempts)
         _write_receipt(args.date, {
             **receipt_base,
             "attempted": len(due),
@@ -674,21 +724,8 @@ def main() -> int:
 
     added = append_rows(args.date, rows, mod.COLUMNS) if rows else 0
     now_iso = datetime.now(timezone.utc).isoformat()
-    unmatched_keys = set()
-    for line in unmatched:
-        # "Home vs Away (reason)" -> fixture key. Fixture names contain no ' vs '.
-        unmatched_keys.add(line.split(" (")[0])
-    for f in due:
-        fk = _fixture_key(f)
-        snap_field = updates.get(fk)
-        if not snap_field:
-            continue
-        rec = attempts.setdefault(fk, {})
-        fail_field = "close_fail_at" if snap_field == "close_at" else "fail_at"
-        if f"{f.get('home')} vs {f.get('away')}" in unmatched_keys:
-            rec[fail_field] = now_iso
-        else:
-            rec[snap_field] = now_iso
+    record_attempts(due, updates, attempts, rows, mod._team_names_match,
+                    capture_scope(mod), now_iso)
     _save_attempts(args.date, attempts)
 
     status = mod.ledger_status()

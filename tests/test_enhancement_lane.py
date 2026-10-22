@@ -231,7 +231,7 @@ def test_the_card_is_two_leg_accas_barbelled_at_the_main_lanes_stake(tmp_path, _
     # per-leg evidence: stated %, the market's registry line, its floor, the book
     assert "(parent cohort 90%, n=200; not fixture probability)" in txt
     assert "[registry" not in txt and "floor 1.60" not in txt
-    assert "deploying 25% of free bank today = 25.0% of capital" in txt
+    assert "deploying 25.0% of free bank today = 25.0% of capital" in txt
 
 
 def test_a_lone_eligible_leg_is_a_no_bet_that_says_so(tmp_path, _tmp_lane):
@@ -316,7 +316,7 @@ def test_the_artifact_matches_autobets_conventions(tmp_path, _tmp_lane):
     assert "[NO BET]" not in txt and "1.20" not in txt
     assert "Nu FC" not in "\n".join(
         l for l in txt.splitlines() if l.startswith("[ACCA #"))
-    assert "deploying 25% of free bank today" in txt
+    assert "deploying 12.5% of free bank today" in txt
     assert "+100% per cycle (performance-based; you act on it)" in txt
     assert "All figures are percentages of capital." in txt
     assert lines[-1] == "FROZEN AT 09:00 - FINAL"
@@ -1226,3 +1226,16 @@ def test_fresh_no_bet_replaces_stale_reason_without_changing_finances(_tmp_lane)
     _board(_tmp_lane, _distinct(2))
     at.cmd_enhancement(_args(), st)
     assert '[ACCA #1]' in artifact.read_text()
+
+
+def test_deployment_footer_reports_actual_partial_plan_not_budget(tmp_path, _tmp_lane):
+    _registry(_tmp_lane)
+    _board(_tmp_lane, _distinct(2))
+    legs, plan = _legs_and_plan(_tmp_lane)
+    before = json.dumps(plan, sort_keys=True)
+    txt = at.render_enhancement_tickets(
+        at.fresh_state(), DAY, legs, plan, _now(),
+        should_freeze=False, freeze_record=None, bank_eff=100.0, root=tmp_path)
+    assert len(plan) == 1
+    assert "deploying 12.5% of free bank today = 12.5% of capital" in txt
+    assert json.dumps(plan, sort_keys=True) == before
