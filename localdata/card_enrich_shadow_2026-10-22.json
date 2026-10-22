@@ -1,17 +1,17 @@
 {
   "notes": [
-    "need_h2h=3",
-    "unresolved=3"
+    "need_h2h=0",
+    "unresolved=5"
   ],
   "outcome": {
-    "calls_charged": 3,
+    "calls_charged": 0,
     "decisions": {
       "budget_stop": 0,
       "capture_blocked": 0,
-      "captured": 3,
+      "captured": 0,
       "lane_blocked_local": 0,
-      "staleness_skip": 0,
-      "unresolved_id": 3
+      "staleness_skip": 1,
+      "unresolved_id": 5
     },
     "free_listing_recorded_today": true,
     "ledger_entries": 18,
@@ -44,33 +44,47 @@
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "boracbanjaluka|kups",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "viktoriaplzen|levskisofia",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
       }
     ],
-    "usable_snapshots": 3
+    "usable_snapshots": 0
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 36
+      "88739ee5": 30
     },
-    "allowed_calls": 3,
+    "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=3 (h2h=3 + listing=0) x 1 family-unit vs spendable=36 [pools=2 cap=90 reserve=20 spent=3 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=30 [pools=2 cap=90 reserve=20 spent=6 month=2026-10] -> approved",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1,
-      "88739ee5": 2
+      "88739ee5": 5
     },
-    "need_h2h": 3,
+    "need_h2h": 0,
     "need_listing": 0,
-    "need_total": 3,
+    "need_total": 0,
     "pool_labels": {
       "5b6ed40a": "50ca",
       "88739ee5": "4a0d"
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 36,
+    "spendable": 30,
     "verdict": "approved"
   },
   "provenance": {
@@ -81,634 +95,10 @@
   "role": "silent pre-kickoff H2H context capture for the dormant context vocabulary; NOT a price, NOT a vote, NOT a registered rule",
   "run_date": "2026-10-22",
   "schema": 1,
-  "snapshots": [
-    {
-      "captured_at": "2026-10-21T22:32:27+00:00",
-      "encounters": [
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Puebla",
-          "competition": "Liga MX",
-          "date": "2026-04-22",
-          "first_half": [
-            2,
-            1
-          ],
-          "fulltime": [
-            2,
-            1
-          ],
-          "home_team": "Monterrey",
-          "season": "2026 - Clausura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Monterrey",
-          "competition": "Liga MX",
-          "date": "2025-08-30",
-          "first_half": [
-            1,
-            2
-          ],
-          "fulltime": [
-            2,
-            4
-          ],
-          "home_team": "Puebla",
-          "season": "2025 - Apertura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Puebla",
-          "competition": "Liga MX",
-          "date": "2025-01-13",
-          "first_half": [
-            1,
-            0
-          ],
-          "fulltime": [
-            1,
-            1
-          ],
-          "home_team": "Monterrey",
-          "season": "2025 - Clausura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Monterrey",
-          "competition": "Liga MX",
-          "date": "2024-08-17",
-          "first_half": [
-            0,
-            1
-          ],
-          "fulltime": [
-            1,
-            2
-          ],
-          "home_team": "Puebla",
-          "season": "2024 - Apertura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Puebla",
-          "competition": "Liga MX",
-          "date": "2024-01-14",
-          "first_half": [
-            0,
-            0
-          ],
-          "fulltime": [
-            2,
-            0
-          ],
-          "home_team": "Monterrey",
-          "season": "2024 - Clausura"
-        }
-      ],
-      "encounters_dropped": {
-        "not_before_kickoff": 0,
-        "too_old": 5,
-        "undated": 0
-      },
-      "event_id": 425469,
-      "features": {
-        "form_gap": -6.0,
-        "h2h_avg_bookie_draw_chance": 0.257,
-        "h2h_avg_goals_per_match_recomputed": 3.2,
-        "h2h_away_at_away": 2,
-        "h2h_away_at_home": 2,
-        "h2h_away_form": 3.0,
-        "h2h_away_wins_recomputed": 4,
-        "h2h_bookie_away_win_prior": 0.568,
-        "h2h_bookie_draw_prior": 0.257,
-        "h2h_bookie_home_win_prior": 0.214,
-        "h2h_btts_share": 0.8,
-        "h2h_btts_share_recomputed": 0.8,
-        "h2h_clean_sheet_rate": 0.2,
-        "h2h_clean_sheet_rate_recomputed": 0.2,
-        "h2h_competition_diversity": 1,
-        "h2h_dominance": -5,
-        "h2h_draw_share": 0.2,
-        "h2h_draw_share_recomputed": 0.2,
-        "h2h_encounter_count": 5,
-        "h2h_first_half_away_win_share": 0.4,
-        "h2h_first_half_draw_share": 0.2,
-        "h2h_first_half_home_win_share": 0.4,
-        "h2h_first_half_lost_share": 0.4,
-        "h2h_first_half_share": 1.0,
-        "h2h_first_half_win_share": 0.8,
-        "h2h_home_at_away": 0,
-        "h2h_home_at_home": 0,
-        "h2h_home_form": -3.0,
-        "h2h_home_wins_recomputed": 0,
-        "h2h_host_minus_visitor": 0,
-        "h2h_over05_share": 1.0,
-        "h2h_over05_share_recomputed": 1.0,
-        "h2h_over15_share": 1.0,
-        "h2h_over15_share_recomputed": 1.0,
-        "h2h_over25_share": 0.6,
-        "h2h_over25_share_recomputed": 0.6,
-        "h2h_over35_share": 0.2,
-        "h2h_over35_share_recomputed": 0.2,
-        "h2h_provider_avg_goals": 2.5,
-        "h2h_provider_away_draw_chance": 0.257,
-        "h2h_provider_away_lose_chance": 0.214,
-        "h2h_provider_away_win_chance": 0.568,
-        "h2h_provider_btts": 7,
-        "h2h_provider_home_draw_chance": 0.257,
-        "h2h_provider_home_lose_chance": 0.568,
-        "h2h_provider_home_win_chance": 0.214,
-        "h2h_provider_num_encounters": 10,
-        "h2h_provider_over05": 10,
-        "h2h_provider_over15": 8,
-        "h2h_provider_over25": 4,
-        "h2h_provider_over35": 1,
-        "h2h_provider_total_goals": 25,
-        "h2h_recent_365d_share": 0.2,
-        "h2h_same_competition_share": 1.0,
-        "h2h_same_season_share": 0.2,
-        "h2h_season_diversity": 5,
-        "h2h_total_goals_recomputed": 16,
-        "rest_days": 183,
-        "venue_split": -2
-      },
-      "fixture_away": "Monterrey",
-      "fixture_away_key": "monterrey",
-      "fixture_home": "Puebla",
-      "fixture_home_key": "puebla",
-      "fixture_key": "puebla|monterrey",
-      "h2h_stats": {
-        "away_team": {
-          "avg_bookie_draw_chance": 0.257,
-          "avg_bookie_lose_chance": 0.214,
-          "avg_bookie_win_chance": 0.568,
-          "avg_goals_conceived": 0.9,
-          "avg_goals_scored": 1.6,
-          "clean_sheet": 2,
-          "draw": 3,
-          "first_half_draw": 3,
-          "first_half_lost": 2,
-          "first_half_win": 5,
-          "goals_conceived": 9,
-          "goals_scored": 16,
-          "lost": 1,
-          "team_name": "Monterrey",
-          "won": 6
-        },
-        "home_team": {
-          "avg_bookie_draw_chance": 0.257,
-          "avg_bookie_lose_chance": 0.568,
-          "avg_bookie_win_chance": 0.214,
-          "avg_goals_conceived": 1.6,
-          "avg_goals_scored": 0.9,
-          "clean_sheet": 1,
-          "draw": 3,
-          "first_half_draw": 3,
-          "first_half_lost": 5,
-          "first_half_win": 2,
-          "goals_conceived": 16,
-          "goals_scored": 9,
-          "lost": 6,
-          "team_name": "Puebla",
-          "won": 1
-        },
-        "overall": {
-          "avg_goals_per_match": 2.5,
-          "both_teams_scored": 7,
-          "num_encounters": 10,
-          "over_05": 10,
-          "over_15": 8,
-          "over_25": 4,
-          "over_35": 1,
-          "total_goals": 25
-        }
-      },
-      "identity_verified": true,
-      "kickoff_utc": "2026-10-22T01:00:00+00:00",
-      "reason": null,
-      "reconciliation_warnings": [],
-      "selection": {
-        "avg_p": 51.12561483163071,
-        "bucket": "SKIPPED_VETO",
-        "margin": 1.126,
-        "rule": "pfc_439097cb9bb700e9996c0b07"
-      },
-      "usable": true
-    },
-    {
-      "captured_at": "2026-10-21T22:32:27+00:00",
-      "encounters": [
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Pachuca",
-          "competition": "Liga MX",
-          "date": "2026-04-05",
-          "first_half": [
-            1,
-            1
-          ],
-          "fulltime": [
-            1,
-            2
-          ],
-          "home_team": "Cruz Azul",
-          "season": "2026 - Clausura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Cruz Azul",
-          "competition": "Liga MX",
-          "date": "2025-09-14",
-          "first_half": [
-            0,
-            0
-          ],
-          "fulltime": [
-            0,
-            1
-          ],
-          "home_team": "Pachuca",
-          "season": "2025 - Apertura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Pachuca",
-          "competition": "Liga MX",
-          "date": "2025-02-09",
-          "first_half": [
-            1,
-            0
-          ],
-          "fulltime": [
-            2,
-            1
-          ],
-          "home_team": "Cruz Azul",
-          "season": "2025 - Clausura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Cruz Azul",
-          "competition": "Liga MX",
-          "date": "2024-09-29",
-          "first_half": [
-            2,
-            1
-          ],
-          "fulltime": [
-            2,
-            4
-          ],
-          "home_team": "Pachuca",
-          "season": "2024 - Apertura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Pachuca",
-          "competition": "Liga MX",
-          "date": "2024-01-14",
-          "first_half": [
-            0,
-            0
-          ],
-          "fulltime": [
-            0,
-            1
-          ],
-          "home_team": "Cruz Azul",
-          "season": "2024 - Clausura"
-        }
-      ],
-      "encounters_dropped": {
-        "not_before_kickoff": 0,
-        "too_old": 5,
-        "undated": 0
-      },
-      "event_id": 425470,
-      "features": {
-        "form_gap": -3.0,
-        "h2h_avg_bookie_draw_chance": 0.29,
-        "h2h_avg_goals_per_match_recomputed": 2.8,
-        "h2h_away_at_away": 2,
-        "h2h_away_at_home": 1,
-        "h2h_away_form": 1.5,
-        "h2h_away_wins_recomputed": 3,
-        "h2h_bookie_away_win_prior": 0.368,
-        "h2h_bookie_draw_prior": 0.29,
-        "h2h_bookie_home_win_prior": 0.339,
-        "h2h_btts_share": 0.6,
-        "h2h_btts_share_recomputed": 0.6,
-        "h2h_clean_sheet_rate": 0.4,
-        "h2h_clean_sheet_rate_recomputed": 0.4,
-        "h2h_competition_diversity": 1,
-        "h2h_dominance": 1,
-        "h2h_draw_share": 0.0,
-        "h2h_draw_share_recomputed": 0.0,
-        "h2h_encounter_count": 5,
-        "h2h_first_half_away_win_share": 0.0,
-        "h2h_first_half_draw_share": 0.6,
-        "h2h_first_half_home_win_share": 0.4,
-        "h2h_first_half_lost_share": 0.0,
-        "h2h_first_half_share": 1.0,
-        "h2h_first_half_win_share": 0.4,
-        "h2h_home_at_away": 2,
-        "h2h_home_at_home": 0,
-        "h2h_home_form": -1.5,
-        "h2h_home_wins_recomputed": 2,
-        "h2h_host_minus_visitor": -3,
-        "h2h_over05_share": 1.0,
-        "h2h_over05_share_recomputed": 1.0,
-        "h2h_over15_share": 0.6,
-        "h2h_over15_share_recomputed": 0.6,
-        "h2h_over25_share": 0.6,
-        "h2h_over25_share_recomputed": 0.6,
-        "h2h_over35_share": 0.2,
-        "h2h_over35_share_recomputed": 0.2,
-        "h2h_provider_avg_goals": 2.3,
-        "h2h_provider_away_draw_chance": 0.29,
-        "h2h_provider_away_lose_chance": 0.339,
-        "h2h_provider_away_win_chance": 0.368,
-        "h2h_provider_btts": 5,
-        "h2h_provider_home_draw_chance": 0.29,
-        "h2h_provider_home_lose_chance": 0.368,
-        "h2h_provider_home_win_chance": 0.339,
-        "h2h_provider_num_encounters": 10,
-        "h2h_provider_over05": 10,
-        "h2h_provider_over15": 6,
-        "h2h_provider_over25": 4,
-        "h2h_provider_over35": 1,
-        "h2h_provider_total_goals": 23,
-        "h2h_recent_365d_share": 0.2,
-        "h2h_same_competition_share": 1.0,
-        "h2h_same_season_share": 0.2,
-        "h2h_season_diversity": 5,
-        "h2h_total_goals_recomputed": 14,
-        "rest_days": 200,
-        "venue_split": -1
-      },
-      "fixture_away": "Cruz Azul",
-      "fixture_away_key": "cruzazul",
-      "fixture_home": "Pachuca",
-      "fixture_home_key": "pachuca",
-      "fixture_key": "pachuca|cruzazul",
-      "h2h_stats": {
-        "away_team": {
-          "avg_bookie_draw_chance": 0.29,
-          "avg_bookie_lose_chance": 0.339,
-          "avg_bookie_win_chance": 0.368,
-          "avg_goals_conceived": 1.1,
-          "avg_goals_scored": 1.2,
-          "clean_sheet": 2,
-          "draw": 1,
-          "first_half_draw": 4,
-          "first_half_lost": 4,
-          "first_half_win": 2,
-          "goals_conceived": 11,
-          "goals_scored": 12,
-          "lost": 5,
-          "team_name": "Cruz Azul",
-          "won": 4
-        },
-        "home_team": {
-          "avg_bookie_draw_chance": 0.29,
-          "avg_bookie_lose_chance": 0.368,
-          "avg_bookie_win_chance": 0.339,
-          "avg_goals_conceived": 1.2,
-          "avg_goals_scored": 1.1,
-          "clean_sheet": 3,
-          "draw": 1,
-          "first_half_draw": 4,
-          "first_half_lost": 2,
-          "first_half_win": 4,
-          "goals_conceived": 12,
-          "goals_scored": 11,
-          "lost": 4,
-          "team_name": "Pachuca",
-          "won": 5
-        },
-        "overall": {
-          "avg_goals_per_match": 2.3,
-          "both_teams_scored": 5,
-          "num_encounters": 10,
-          "over_05": 10,
-          "over_15": 6,
-          "over_25": 4,
-          "over_35": 1,
-          "total_goals": 23
-        }
-      },
-      "identity_verified": true,
-      "kickoff_utc": "2026-10-22T03:00:00+00:00",
-      "reason": null,
-      "reconciliation_warnings": [],
-      "selection": {
-        "avg_p": 42.70108953102795,
-        "bucket": "CAUTION",
-        "margin": 2.701,
-        "rule": "pfc_4a1f2bb2278d13c8189148d0"
-      },
-      "usable": true
-    },
-    {
-      "captured_at": "2026-10-21T22:32:27+00:00",
-      "encounters": [
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Llaneros FC",
-          "competition": "Categoria Primera A",
-          "date": "2026-04-12",
-          "first_half": [
-            0,
-            0
-          ],
-          "fulltime": [
-            1,
-            1
-          ],
-          "home_team": "Deportivo Cali",
-          "season": "2026 - Apertura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Llaneros FC",
-          "competition": "Categoria Primera A",
-          "date": "2025-08-02",
-          "first_half": [
-            0,
-            1
-          ],
-          "fulltime": [
-            0,
-            3
-          ],
-          "home_team": "Deportivo Cali",
-          "season": "2025 - Clausura"
-        },
-        {
-          "as_of": "2026-10-21T22:32:27+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Deportivo Cali",
-          "competition": "Categoria Primera A",
-          "date": "2025-02-18",
-          "first_half": [
-            0,
-            1
-          ],
-          "fulltime": [
-            0,
-            1
-          ],
-          "home_team": "Llaneros FC",
-          "season": "2025 - Apertura"
-        }
-      ],
-      "encounters_dropped": {
-        "not_before_kickoff": 0,
-        "too_old": 0,
-        "undated": 0
-      },
-      "event_id": 425460,
-      "features": {
-        "form_gap": 0.0,
-        "h2h_avg_bookie_draw_chance": 0.303,
-        "h2h_avg_goals_per_match_recomputed": 2.0,
-        "h2h_away_at_away": 1,
-        "h2h_away_at_home": 0,
-        "h2h_away_form": 0.0,
-        "h2h_away_wins_recomputed": 1,
-        "h2h_bookie_away_win_prior": 0.429,
-        "h2h_bookie_draw_prior": 0.303,
-        "h2h_bookie_home_win_prior": 0.246,
-        "h2h_btts_share": 0.3333,
-        "h2h_btts_share_recomputed": 0.3333,
-        "h2h_clean_sheet_rate": 0.6667,
-        "h2h_clean_sheet_rate_recomputed": 0.6667,
-        "h2h_competition_diversity": 1,
-        "h2h_dominance": 0,
-        "h2h_draw_share": 0.3333,
-        "h2h_draw_share_recomputed": 0.3333,
-        "h2h_encounter_count": 3,
-        "h2h_first_half_away_win_share": 0.6667,
-        "h2h_first_half_draw_share": 0.3333,
-        "h2h_first_half_home_win_share": 0.0,
-        "h2h_first_half_lost_share": 0.6667,
-        "h2h_first_half_share": 1.0,
-        "h2h_first_half_win_share": 0.6667,
-        "h2h_home_at_away": 1,
-        "h2h_home_at_home": 0,
-        "h2h_home_form": 0.0,
-        "h2h_home_wins_recomputed": 1,
-        "h2h_host_minus_visitor": -2,
-        "h2h_over05_share": 1.0,
-        "h2h_over05_share_recomputed": 1.0,
-        "h2h_over15_share": 0.6667,
-        "h2h_over15_share_recomputed": 0.6667,
-        "h2h_over25_share": 0.3333,
-        "h2h_over25_share_recomputed": 0.3333,
-        "h2h_over35_share": 0.0,
-        "h2h_over35_share_recomputed": 0.0,
-        "h2h_provider_avg_goals": 2.0,
-        "h2h_provider_away_draw_chance": 0.303,
-        "h2h_provider_away_lose_chance": 0.246,
-        "h2h_provider_away_win_chance": 0.429,
-        "h2h_provider_btts": 1,
-        "h2h_provider_home_draw_chance": 0.303,
-        "h2h_provider_home_lose_chance": 0.429,
-        "h2h_provider_home_win_chance": 0.246,
-        "h2h_provider_num_encounters": 3,
-        "h2h_provider_over05": 3,
-        "h2h_provider_over15": 2,
-        "h2h_provider_over25": 1,
-        "h2h_provider_over35": 0,
-        "h2h_provider_total_goals": 6,
-        "h2h_recent_365d_share": 0.3333,
-        "h2h_same_competition_share": 1.0,
-        "h2h_same_season_share": 0.3333,
-        "h2h_season_diversity": 3,
-        "h2h_total_goals_recomputed": 6,
-        "rest_days": 192,
-        "venue_split": 0
-      },
-      "fixture_away": "Deportivo Cali",
-      "fixture_away_key": "deportivocali",
-      "fixture_home": "Llaneros",
-      "fixture_home_key": "llaneros",
-      "fixture_key": "llaneros|deportivocali",
-      "h2h_stats": {
-        "away_team": {
-          "avg_bookie_draw_chance": 0.303,
-          "avg_bookie_lose_chance": 0.246,
-          "avg_bookie_win_chance": 0.429,
-          "avg_goals_conceived": 1.333,
-          "avg_goals_scored": 0.667,
-          "clean_sheet": 1,
-          "draw": 1,
-          "first_half_draw": 1,
-          "first_half_lost": 1,
-          "first_half_win": 1,
-          "goals_conceived": 4,
-          "goals_scored": 2,
-          "lost": 1,
-          "team_name": "Deportivo Cali",
-          "won": 1
-        },
-        "home_team": {
-          "avg_bookie_draw_chance": 0.303,
-          "avg_bookie_lose_chance": 0.429,
-          "avg_bookie_win_chance": 0.246,
-          "avg_goals_conceived": 0.667,
-          "avg_goals_scored": 1.333,
-          "clean_sheet": 1,
-          "draw": 1,
-          "first_half_draw": 1,
-          "first_half_lost": 1,
-          "first_half_win": 1,
-          "goals_conceived": 2,
-          "goals_scored": 4,
-          "lost": 1,
-          "team_name": "Llaneros FC",
-          "won": 1
-        },
-        "overall": {
-          "avg_goals_per_match": 2.0,
-          "both_teams_scored": 1,
-          "num_encounters": 3,
-          "over_05": 3,
-          "over_15": 2,
-          "over_25": 1,
-          "over_35": 0,
-          "total_goals": 6
-        }
-      },
-      "identity_verified": true,
-      "kickoff_utc": "2026-10-21T23:15:00+00:00",
-      "reason": null,
-      "reconciliation_warnings": [],
-      "selection": {
-        "avg_p": 48.0,
-        "bucket": "CAUTION",
-        "margin": 3.0,
-        "rule": "pfc_b011652ec3e473fbc0afbb6a"
-      },
-      "usable": true
-    }
-  ],
+  "snapshots": [],
   "source": "boggio_h2h",
   "stats": {
-    "snapshots": 3,
-    "usable": 3
+    "snapshots": 0,
+    "usable": 0
   }
 }

@@ -71,10 +71,10 @@
       "wins": 54
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.730245,
-      "priced_picks": 326,
-      "roi": 0.066565,
-      "settled_picks": 367,
+      "hit_rate": 0.728261,
+      "priced_picks": 327,
+      "roi": 0.063304,
+      "settled_picks": 368,
       "wins": 268
     },
     "WATCHLIST_NO_ODDS": {
@@ -126,10 +126,10 @@
       "wins": 59
     },
     "exact": {
-      "hit_rate": 0.710256,
-      "priced_picks": 390,
-      "roi": 0.066056,
-      "settled_picks": 390,
+      "hit_rate": 0.70844,
+      "priced_picks": 391,
+      "roi": 0.06333,
+      "settled_picks": 391,
       "wins": 277
     },
     "fallback": {
@@ -191,10 +191,10 @@
       "wins": 5
     },
     "pinnapi_odds": {
-      "hit_rate": 0.604396,
-      "priced_picks": 91,
-      "roi": 0.051362,
-      "settled_picks": 91,
+      "hit_rate": 0.597826,
+      "priced_picks": 92,
+      "roi": 0.039934,
+      "settled_picks": 92,
       "wins": 55
     },
     "scoutingstats_odds": {
@@ -249,10 +249,10 @@
       "wins": 4
     },
     "NAMED_BOOKMAKER_PRICE": {
-      "hit_rate": 0.708812,
-      "priced_picks": 261,
-      "roi": 0.07977,
-      "settled_picks": 261,
+      "hit_rate": 0.706107,
+      "priced_picks": 262,
+      "roi": 0.075648,
+      "settled_picks": 262,
       "wins": 185
     },
     "SCOUTINGSTATS_SOLE": {
@@ -287,10 +287,10 @@
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.700201,
-      "priced_picks": 391,
-      "roi": 0.05668,
-      "settled_picks": 497,
+      "hit_rate": 0.698795,
+      "priced_picks": 392,
+      "roi": 0.053984,
+      "settled_picks": 498,
       "suspect_price_captures": 0,
       "wins": 348
     },
@@ -480,10 +480,10 @@
       "wins": 1
     },
     "pfc_d94d447efe0742440e953722": {
-      "hit_rate": 0.416667,
-      "priced_picks": 11,
-      "roi": -0.098536,
-      "settled_picks": 12,
+      "hit_rate": 0.384615,
+      "priced_picks": 12,
+      "roi": -0.173658,
+      "settled_picks": 13,
       "wins": 5
     },
     "unanimous[betclan+statarea+vitibet] avg_p>=65": {
@@ -1298,13 +1298,13 @@
   "late_additions_on_rewritten_ledgers": 145,
   "morning_baseline_rows": 563,
   "overall": {
-    "hit_rate": 0.694239,
-    "priced_picks": 557,
-    "roi": 0.043289,
-    "settled_picks": 677,
+    "hit_rate": 0.693215,
+    "priced_picks": 558,
+    "roi": 0.041419,
+    "settled_picks": 678,
     "wins": 470
   },
-  "pending_result_picks": 16,
+  "pending_result_picks": 15,
   "population_definitions": {
     "enhancement_hit_rate": "hits / settled recommended enhancements",
     "enhancement_priced_roi": "priced enhancement P&L / priced_n",
@@ -1502,11 +1502,11 @@
   "same_day_cutoff": "2026-10-22",
   "same_day_excluded": 38,
   "secondary_stats": {
-    "btts_total": 677,
+    "btts_total": 678,
     "btts_wins": 354,
-    "over25_total": 677,
+    "over25_total": 678,
     "over25_wins": 406,
-    "team_o15_total": 673,
+    "team_o15_total": 674,
     "team_o15_wins": 444
   },
   "settled_ledger": [
@@ -40370,6 +40370,35 @@
       "won": false
     },
     {
+      "avg_p": 42.69884794820528,
+      "date": "2026-10-21",
+      "gs": 0,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Montevideo City Torque vs Atl\u00e9tico Mineiro",
+      "notes_audit": [],
+      "odds": 2.38,
+      "odds_match_method": "exact",
+      "odds_source": "pinnapi_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": null,
+        "away_o15_hit": null,
+        "btts_expected": null,
+        "btts_hit": null,
+        "home_o15_expected": null,
+        "home_o15_hit": null,
+        "over25_expected": null,
+        "over25_hit": null,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": false
+    },
+    {
       "avg_p": 41.405614167294644,
       "date": "2026-10-21",
       "gs": 1,
@@ -41139,24 +41168,6 @@
       "rule": "pfc_439097cb9bb700e9996c0b07"
     },
     {
-      "away": "Atl\u00e9tico Mineiro",
-      "away_key_candidates": [
-        "mineiro"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-10-21",
-      "home": "Montevideo City Torque",
-      "home_key_candidates": [
-        "montevide"
-      ],
-      "league": "Copa Sudamericana",
-      "match": "Montevideo City Torque vs Atl\u00e9tico Mineiro",
-      "odds": 2.38,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_d94d447efe0742440e953722"
-    },
-    {
       "away": "2 de Mayo",
       "away_key_candidates": [
         "demayo"
@@ -41194,7 +41205,7 @@
       "rule": "pfc_444d408c4ccd3a4bf4fb020c"
     }
   ],
-  "unmatched_result_picks": 16,
+  "unmatched_result_picks": 15,
   "unsafe_regular_ledger_dates": [
     "2026-09-23",
     "2026-09-24",
@@ -41220,7 +41231,8 @@
     "2026-10-17",
     "2026-10-18",
     "2026-10-19",
-    "2026-10-21"
+    "2026-10-21",
+    "2026-10-22"
   ],
   "verified_late_additions": 173,
   "veto_deep_dive": {
@@ -41478,13 +41490,13 @@
         "z_vs_implied": 0.373
       },
       "SKIPPED_VETO|2.00-3.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.608696,
-        "implied_hit_rate": 0.449411,
-        "priced_picks": 23,
-        "roi": 0.366087,
-        "settled_picks": 23,
+        "hit_rate": 0.583333,
+        "implied_hit_rate": 0.448192,
+        "priced_picks": 24,
+        "roi": 0.309167,
+        "settled_picks": 24,
         "wins": 14,
-        "z_vs_implied": 1.54
+        "z_vs_implied": 1.335
       },
       "SKIPPED_VETO|2.00-3.00|SOURCE_FALLBACK": {
         "hit_rate": 0.333333,
@@ -41759,13 +41771,13 @@
         "z_vs_implied": 0.373
       },
       "2.00-3.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.608696,
-        "implied_hit_rate": 0.449411,
-        "priced_picks": 23,
-        "roi": 0.366087,
-        "settled_picks": 23,
+        "hit_rate": 0.583333,
+        "implied_hit_rate": 0.448192,
+        "priced_picks": 24,
+        "roi": 0.309167,
+        "settled_picks": 24,
         "wins": 14,
-        "z_vs_implied": 1.54
+        "z_vs_implied": 1.335
       },
       "2.00-3.00|SOURCE_FALLBACK": {
         "hit_rate": 0.333333,
@@ -41885,10 +41897,10 @@
         "wins": 67
       },
       "2.00-3.00": {
-        "hit_rate": 0.571429,
-        "priced_picks": 28,
-        "roi": 0.276786,
-        "settled_picks": 28,
+        "hit_rate": 0.551724,
+        "priced_picks": 29,
+        "roi": 0.232759,
+        "settled_picks": 29,
         "wins": 16
       },
       "<1.50": {
@@ -41929,10 +41941,10 @@
         "wins": 3
       },
       "NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.75,
-        "priced_picks": 180,
-        "roi": 0.120391,
-        "settled_picks": 180,
+        "hit_rate": 0.745856,
+        "priced_picks": 181,
+        "roi": 0.114201,
+        "settled_picks": 181,
         "wins": 135
       },
       "SCOUTINGSTATS_SOLE": {
@@ -42050,10 +42062,10 @@
         "wins": 8
       },
       "context VETO in ['odds_band']": {
-        "hit_rate": 0.704225,
-        "priced_picks": 71,
-        "roi": 0.053827,
-        "settled_picks": 71,
+        "hit_rate": 0.694444,
+        "priced_picks": 72,
+        "roi": 0.03919,
+        "settled_picks": 72,
         "wins": 50
       },
       "context VETO in ['team_a', 'competition_type']": {
@@ -42331,10 +42343,10 @@
     },
     "focus_bucket": "SKIPPED_VETO",
     "overall": {
-      "hit_rate": 0.730245,
-      "priced_picks": 326,
-      "roi": 0.066565,
-      "settled_picks": 367,
+      "hit_rate": 0.728261,
+      "priced_picks": 327,
+      "roi": 0.063304,
+      "settled_picks": 368,
       "wins": 268
     },
     "soft_evidence_labels": [
@@ -42351,10 +42363,10 @@
       "wins": 92
     },
     "trusted_evidence_only": {
-      "hit_rate": 0.748936,
-      "priced_picks": 235,
-      "roi": 0.092129,
-      "settled_picks": 235,
+      "hit_rate": 0.745763,
+      "priced_picks": 236,
+      "roi": 0.087501,
+      "settled_picks": 236,
       "wins": 176
     }
   },
