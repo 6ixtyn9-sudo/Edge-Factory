@@ -304,3 +304,81 @@ def test_bootstrap_cannot_hide_unresolved_changed_cards_behind_unchanged_resolve
     out = audit.paired_bootstrap(a, b, changed_days=["changed"])
     assert out["status"] == "INCOMPLETE_CHANGED_CARDS"
     assert out["valid_replicates"] == 0 and out["roi_gap_95pct"] is None
+
+
+@pytest.fixture
+def recovery_inputs(tmp_path):
+    """Real original archive + quote + overlay; no inferred timestamps."""
+    import csv
+    import gzip
+    import json
+    import duckdb
+    from enhancement_fixtures import with_evidence
+    local = tmp_path / 'localdata'
+    local.mkdir()
+    row = with_evidence(dict(date='2026-10-18', home='Alpha Town', away='Beta Town',
+        match='Alpha Town vs Beta Town', pick='home', market='1x2', rule=IDENTITY,
+        league='Test League', as_of=DECISION.isoformat(), kickoff_utc=KICKOFF.isoformat(),
+        recommended_enhancement='match_under_35', enhancement_probability=.8,
+        enhancement_price=1.4, enhancement_price_book='Pinnacle', enhancement_price_source='oddspapi'))
+    # Original older notes did not retain capture time. Recover it from CSV.
+    (local / 'picks_2026-10-18.json').write_text(json.dumps([row]))
+    record = dict(date=row['date'], home=row['home'], away=row['away'], match=row['match'],
+                  rule=IDENTITY, price=1.4, source='oddspapi', hit=True)
+    (local / 'enhancement_registry.json').write_text(json.dumps({'markets': {
+        'match_under_35@v1': {'n': 1, 'records': [record]}}}))
+    (local / 'edges_consensus.json').write_text(json.dumps({'edges': [
+        {'contract_id': IDENTITY, 'status': 'certified'}]}))
+    (local / 'settled_results.json').write_text(json.dumps({'rows': [
+        dict(date=row['date'], home=row['home'], away=row['away'], hs=1, gs=0, src='statarea_settled')]}))
+    raw = dict(quote(), date=row['date'], home=row['home'], away=row['away'])
+    def write_quote(raw):
+        with gzip.open(local / 'oddspapi_odds_2026-10.csv.gz', 'wt') as f:
+            writer = csv.DictWriter(f, fieldnames=list(raw));writer.writeheader();writer.writerow(raw)
+    write_quote(raw)
+    db = tmp_path / 'warehouse.duckdb'
+    with duckdb.connect(str(db)) as con:
+        con.execute('CREATE TABLE statarea(date VARCHAR, home VARCHAR, away VARCHAR, hs INT, gs INT, result_source VARCHAR)')
+        con.execute("INSERT INTO statarea VALUES ('2026-10-18', 'Alpha Town', 'Beta Town', 1, 0, 'statarea')")
+    return tmp_path, db, raw, write_quote
+
+
+def test_recover_original_context_without_registry_mutation_or_backdating(recovery_inputs):
+    import hashlib
+    from scripts.audit_enh_market_competition import recover_evidence
+    root, db, _, _ = recovery_inputs
+    before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in (root / 'localdata').iterdir()}
+    report = recover_evidence(root, warehouse=db)
+    assert report['registry_stages']['exact_parent_context_linked'] == 1
+    assert report['registry_stages']['raw_donor_result_agrees'] == 1
+    link = report['post_forebet_records'][0]['links'][0]
+    assert link['context']['captured_at'] == '2026-10-18T13:59:00+00:00'
+    assert link['capture_witnesses'][0]['csv_line'] == 2
+    assert link['result_availability_before_decision'] is None
+    assert report['largest_raw_result_exact_cell'] == 1
+    assert report['inputs_sha256']
+    assert {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in before} == before
+
+
+@pytest.mark.parametrize('change', [
+    {'captured_at': '2026-10-18T14:01:00Z'}, {'kickoff': '2026-10-18T17:00:00Z'},
+    {'odds': '1.8'}, {'home': 'Beta Town', 'away': 'Alpha Town'},
+])
+def test_recovery_cannot_replace_original_quote_with_better_later_or_other_fixture(recovery_inputs, change):
+    from scripts.audit_enh_market_competition import recover_evidence
+    root, db, raw, write = recovery_inputs
+    write(dict(raw, **change))
+    assert not recover_evidence(root, warehouse=db)['registry_stages'].get('predecision_quote_join')
+
+
+def test_recovery_never_certifies_an_inherited_forebet_score(recovery_inputs):
+    import duckdb
+    from scripts.audit_enh_market_competition import recover_evidence
+    root, db, _, _ = recovery_inputs
+    with duckdb.connect(str(db)) as con:
+        con.execute("UPDATE statarea SET result_source = 'forebet'")
+    report = recover_evidence(root, warehouse=db)
+    assert report['registry_stages']['exact_parent_context_linked'] == 1
+    assert not report['registry_stages'].get('raw_donor_result_agrees')
+    assert report['largest_raw_result_exact_cell'] == 0
+    assert recover_evidence(root)['largest_raw_result_exact_cell'] is None
