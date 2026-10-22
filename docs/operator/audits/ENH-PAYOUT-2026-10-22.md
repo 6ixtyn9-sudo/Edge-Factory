@@ -237,3 +237,35 @@ is now included in its diagnostic. No cache deletion, workflow edit, production
 dispatch, new settlement or automatic merge was performed. Runner-side recovery
 is not yet witnessed; after merge it requires a **new main-branch run**, not a
 rerun pinned to the old failing checkout.
+
+## Runner restore verified; null event-note display failure (run 39746363896)
+
+The new main-branch run at `ec75c73939f9045f7fb279264f06016f32c29734`
+**passed financial restoration** (861 tracked files restored; Phase 5 ledgers
+unioned) and `history_completeness_verified`, then completed warehouse build,
+mining, decay and purity assay. This supersedes the earlier statement that the
+financial restore repair had not yet been witnessed on a runner. The overall
+run nevertheless **failed**, not succeeded:
+https://github.com/6ixtyn9-sudo/Edge-Factory/actions/runs/39746363896.
+
+`picks_today.print_buckets` still formatted `event_notes[].probability` using
+`:.1%`, although current notes intentionally store null there. Descriptive
+`cohort_rate` is separate and must not fill that missing fixture forecast. The
+daily TXT report contained the same assumption (caught and silently returning
+no report). Both now use a small shared formatter in the existing util module.
+For example: `Match Over 2.5: fixture probability unavailable; descriptive cohort
+rate 59.1% (n=3022)`. Finite legacy probabilities, including observed zero, are
+labelled **recorded probability**, not certified forecasts. Malformed/missing
+values have no numeric stand-ins. Cohort sample size is shown only when supplied
+as a positive integer. The TXT report now actually includes the event-note text
+it previously computed without appending; vetoed rows retain their shadow label.
+
+Validation: **82 targeted tests passed**; full suite **3,834 passed, 1 skipped in
+152.93 seconds**. There are 21 new cases, including both renderers with current
+null notes, missing fields, finite legacy zero, invalid values, shadow labelling
+and nonmutation of input evidence. All **864 operational files** remained
+byte-identical; the empty test-created usage lock was removed. No admission,
+staking, financial state, registry, price or ticket changes. No production run
+was dispatched, and end-to-end runner completion remains unverified for this
+new rendering fix. Provider failures, sparse quote joins and alias warnings in
+the log are separate issues, not repaired or hidden by this display change.

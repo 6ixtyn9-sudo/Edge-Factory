@@ -126,3 +126,56 @@ def test_missing_rolling_history_is_unknown_not_75(monkeypatch, tmp_path):
     con.execute("INSERT INTO consensus3 VALUES ('2026-10-20', 'home', 'away')")
     con.close()
     assert pt.get_rolling_hit_rate_last_14d('2026-10-21') == 0
+
+
+@pytest.mark.parametrize('value', [None, True, False, '0.7', float('nan'),
+                                   float('inf'), -.1, 1.1, 10**400])
+def test_event_note_unknown_probability_is_not_cohort_rate(value):
+    from edgefactory.util import format_event_note
+    note = {'label': 'Match Over 2.5 Goals', 'probability': value,
+            'cohort_rate': .591, 'cohort_n': 3022}
+    assert format_event_note(note) == (
+        'Match Over 2.5: fixture probability unavailable; '
+        'descriptive cohort rate 59.1% (n=3022)')
+
+
+@pytest.mark.parametrize('value', [None, True, '0.7', float('nan'), float('inf'), -1, 2])
+def test_event_note_invalid_cohort_rate_has_no_numeric_standin(value):
+    from edgefactory.util import format_event_note
+    assert format_event_note({'label': 'BTTS', 'cohort_rate': value}) == (
+        'BTTS: fixture probability unavailable')
+
+
+@pytest.mark.parametrize('value', [0, .7, 1])
+def test_event_note_legacy_numbers_are_labelled_recorded_not_calibrated(value):
+    from edgefactory.util import format_event_note
+    assert format_event_note({'label': 'BTTS', 'probability': value}) == (
+        f'BTTS: recorded probability {value:.1%}')
+
+
+@pytest.mark.parametrize('bucket', ['CAUTION', 'SKIPPED_VETO'])
+def test_current_null_event_notes_render_in_console_and_daily_report(
+        bucket, monkeypatch, tmp_path, capsys):
+    from copy import deepcopy
+    from scripts import daily
+    monkeypatch.setattr(pt, 'bzzoiro_status_line', lambda: None)
+    monkeypatch.setattr(pt, 'daily_status_block', lambda day: 'test source health')
+    monkeypatch.setattr(daily, 'REPORT_DIR', tmp_path)
+    pick = dict(date='2026-10-22', home='Alpha', away='Bravo', match='Alpha vs Bravo',
+                pick='home', avg_p=70, bucket=bucket, event_notes=[
+                    {'label': 'Match Over 2.5 Goals', 'probability': None,
+                     'raw_probability': None, 'cohort_rate': .591, 'cohort_n': 3022},
+                    {'label': 'BTTS'},
+                    {'label': 'Away Over 0.5 Goals', 'probability': 0}])
+    before = deepcopy(pick)
+    pt.print_buckets({bucket: [pick]}, title_date='2026-10-22')
+    console = capsys.readouterr().out
+    path = daily.generate_daily_report('2026-10-22', source_picks=[pick])
+    assert path is not None  # report must not quietly swallow the same exception
+    for text in (console, path.read_text()):
+        assert 'Match Over 2.5: fixture probability unavailable; descriptive cohort rate 59.1% (n=3022)' in text
+        assert 'BTTS: fixture probability unavailable' in text
+        assert 'Away Over 0.5: recorded probability 0.0%' in text
+        assert ('[SHADOW — paper]' in text) == (bucket == 'SKIPPED_VETO')
+        assert 'Match Over 2.5: 59.1%' not in text
+    assert pick == before  # display must not enrich/mutate admission evidence
