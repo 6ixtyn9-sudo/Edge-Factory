@@ -34,6 +34,21 @@ def format_pick_probability(pick, *, digits=0) -> str:
     return f"{probability:.{digits}f}%" if probability is not None else "unavailable"
 
 
+def format_event_note(note: dict) -> str:
+    """Render recorded evidence without treating cohort history as a forecast."""
+    label = str(note.get("label") or note.get("market") or "Event").replace(" Goals", "")
+    probability = finite_probability(note.get("probability"))
+    text = (f"recorded probability {probability:.1%}" if probability is not None
+            else "fixture probability unavailable")
+    rate = finite_probability(note.get("cohort_rate"))
+    if rate is not None:
+        text += f"; descriptive cohort rate {rate:.1%}"
+        n = note.get("cohort_n")
+        if isinstance(n, int) and not isinstance(n, bool) and n > 0:
+            text += f" (n={n})"
+    return f"{label}: {text}"
+
+
 # Historical miner/source join noise tokens. Keep byte-compatible in spirit with
 # the certified backtests.
 _NOISE = re.compile(
