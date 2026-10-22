@@ -43,25 +43,25 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 29,
+      "be_matched": 33,
       "be_raw": 39,
-      "be_usable": 36,
+      "be_usable": 39,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 10,
+      "join_matched_rows": 11,
       "join_miss_counts": {
         "fixture_key_miss": 12,
-        "no_pick_for_fixture": 14
+        "no_pick_for_fixture": 16
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-22' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -157,15 +157,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 257,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 49034,
-        "market_unsupported": 28821,
-        "no_pick_for_fixture": 5331
+        "fixture_key_miss": 65100,
+        "market_unsupported": 33553
       },
-      "op_matched": 3,
-      "op_raw": 83443,
-      "op_usable": 83443,
+      "op_matched": 0,
+      "op_raw": 98653,
+      "op_usable": 98653,
       "reason": null,
       "status": "cache_only"
     },
@@ -184,12 +183,12 @@
       "coherence_withheld_fixtures": 11,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 34,
+      "join_matched_rows": 33,
       "join_miss_counts": {
-        "fixture_key_miss": 16468,
-        "no_pick_for_fixture": 412
+        "fixture_key_miss": 16485,
+        "no_pick_for_fixture": 396
       },
-      "pa_matched": 66,
+      "pa_matched": 63,
       "pa_raw": 16914,
       "pa_scored": 16914,
       "reason": null,
