@@ -96,3 +96,47 @@ Completed results:
   and all historical-ticket hashes are unchanged.
 
 No production workflow dispatch, merge, or independent-agent sign-off occurred.
+
+## Evidence-recovery follow-up (22 October)
+
+The absence of the new registry fields was **not proof that the underlying
+archives and captures were absent**. The read-only recovery function in the
+existing `audit_enh_market_competition.py` now follows the authoritative
+morning/late-addition archive loader, exact predecision API quote rules, and
+exact-parent validation. Its report is
+`enh-evidence-recovery-2026-10-22.json` beside this note; input hashes and CSV-line
+witnesses make the joins inspectable.
+
+Local recovery found:
+
+- All **562** registry fixtures have an archived pick counterpart.
+- **75** have an archived matching price, named book and source.
+- **23** also have an exact, timely API capture; **16** agree with the retained
+  result overlay. These are progressively narrower counts, not new forecasts.
+- **6** records have a matching post-Forebet parent archive. Just **one** has a
+  linked quote, agreeing overlay and valid exact-parent context: Real Betis–
+  Feyenoord, Over 2.5 at Betsson 1.36, contract
+  `pfc_d94d447efe0742440e953722`. That contract is not currently active.
+- Across the prior post-Forebet candidate pool, **4** quote/parent links were
+  recovered. Local independent raw donor scores are unavailable for all four;
+  none can be promoted from overlay agreement alone. Historical result
+  availability has not been established or backdated.
+
+The existing warehouse builder reconstructed a **77 MB scratch warehouse** from
+tracked inputs in 126.3 seconds. Statarea, Zulubet and independent BetExplorer
+results are available; ScoutingStats, Vitibet and other untracked current-source
+inputs remain absent locally. Forebet/convenience donor tables were not used to
+certify recovered results. No warehouse binary or raw export is committed.
+
+The latest listed main-branch cache is `localdata-v2-39719907033` (166,070,142
+bytes). Its contents have **not** been recovered: external artifact download
+failed, pushing the existing export workflow's read-only annotation step was
+refused for lack of `workflows` permission, and dispatching even the unmodified
+exporter returned HTTP 403, `Resource not accessible by integration`. The
+annotation step remains a local, unpublished workflow edit. No daily/production
+workflow was dispatched. GitHub connection permissions must be updated before
+claiming a completed cache audit.
+
+All **864 operational files** matched their pre-recovery hashes. No bank,
+settled history, registry, picks, current NO BET, price capture, or prediction
+CSV was changed. No selection threshold or staking rule was relaxed.
