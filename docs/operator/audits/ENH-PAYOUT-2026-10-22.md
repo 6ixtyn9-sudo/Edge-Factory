@@ -554,3 +554,30 @@ credentials. Once the workflow values agree, remove their two
 `PENDING_WORKFLOW_APPLY` entries; the existing stale-entry test enforces that
 cleanup. Parser/mapping fixes can be reviewed independently, but broader capture
 is **not deployed** merely by merging this code-only PR.
+
+## Manual workflow applied; remove stale pending entries (run 39768911859)
+
+The new run checks out `20360c20911202312532766402d8338d92ee9184`, with
+expanded market and point workflow fallbacks matching the code defaults.
+Its separate **Regression tests (flag, never gate)** job reports **2 failed,
+3,886 passed, 1 skipped**. Both failures correctly detect that
+`ODDS_API_MARKETS` and `ODDS_API_TOTAL_POINTS` are still listed in
+`PENDING_WORKFLOW_APPLY` despite the manual step being complete.
+
+Remove only those two stale pending entries. Do not weaken the stale-entry or
+workflow/code agreement tests, move the entries into ACCEPTED, or change any
+market, price gate, budget, staking, freeze or financial history. The actual
+configured secret overrides remain uninspected; matching fallback expressions
+alone do not prove a secret is absent or aligned.
+
+Verification: **49 targeted tests passed**; `audit_env_drift.py --strict`
+reports **zero pending and zero unreviewed** divergences. At investigation time
+the production `run-autonomous-agent` job was independently in progress in
+`Execute Autonomous Smart Schedule`; this regression failure is not evidence
+that ENH generation or the production job failed. No cancellation, dispatch,
+financial-state rewrite or workflow edit was performed by this cleanup.
+
+Full cleanup regression: **3,888 passed, 1 skipped in 183.93 seconds**.
+All **863 operational files** remained byte-identical; the empty test lock was
+removed. Runner-side validation of the cleanup requires a new checkout after
+merge; rerunning the old failing job retains its old pending entries.
