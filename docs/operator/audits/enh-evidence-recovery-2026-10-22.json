@@ -402,5 +402,19 @@
     "workflow_update": "GitHub App lacks workflows permission",
     "existing_export_dispatch": "HTTP 403: Resource not accessible by integration",
     "production_workflow_dispatched": false
+  },
+  "validation": {
+    "pytest_passed": 3798,
+    "pytest_skipped": 1,
+    "seconds": 166.02,
+    "operational_files_unchanged": 864
+  },
+  "historical_registry_witness": {
+    "commit": "f0544f5846bc99c7d65f0b34d824f0ccc39e7732",
+    "committer_timestamp": "2026-10-21T23:07:29Z",
+    "file": "localdata/enhancement_registry.json",
+    "sha256": "89507f7ec9b40d1c88b5aaf9b1e23710d3e897fe4569a49bf32984ba379fb2d3",
+    "retains_betis_over25_at_1_36_losing_record": true,
+    "limits": "A prior commit contains the record. Commit timestamp alone is not independent proof of publication time or score origin; no availability field was backdated."
   }
 }
