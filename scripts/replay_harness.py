@@ -491,7 +491,7 @@ def enh_records(root=None):
                 continue
             if not math.isfinite(float(price)) or float(price) <= 1.0:
                 continue
-            rows.append({"market": market, "date": str(rec.get("date") or "")[:10],
+            rows.append({**rec, "market": market, "date": str(rec.get("date") or "")[:10],
                          "price": float(price), "hit": bool(rec.get("hit")),
                          "bucket": rec.get("bucket") or "", "rule": rec.get("rule") or "",
                          "source": rec.get("source") or "",
@@ -580,7 +580,7 @@ def enh_firing_days(records, floors, *, derived=False) -> set:
 
 
 def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
-                   stake_per_acca=None, weights=None, derived=False):
+                   stake_per_acca=None, weights=None, derived=False, supported=False, root=None):
     """{day: {"growth": factor, "log_growth": x, "bets": n, "hits": k}}.
 
     The lane's own card, modelled by the lane's own code: the day's
@@ -610,10 +610,36 @@ def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
             rank_prob = rec.get("cohort_rate")
             if not isinstance(rank_prob, (int, float)) or isinstance(rank_prob, bool):
                 rank_prob = 0.0
+            evidence = None
+            if supported:
+                from edgefactory.enh_registry import enhancement_cohort_evidence
+                context = rec.get("price_context") or {}
+                if not context:
+                    continue
+                # Registry records don't retain an exact-parent cohort recipe;
+                # only archived predecision picks may supply it. No invented n.
+                archive = (root or at.ROOT) / "localdata" / f"picks_{day}.json"
+                try:
+                    rows = json.loads(archive.read_text())
+                    row = next(r for r in rows if r.get("contract_id") == context.get("contract_id")
+                               and r.get("home") == rec.get("home") and r.get("away") == rec.get("away"))
+                    note = next(n for n in row.get("event_notes", []) if n.get("market") == rec["market"])
+                    row = dict(row, **{k: v for k, v in note.items() if k.startswith("enhancement_price")},
+                               recommended_enhancement=rec["market"], enhancement_probability=None, enhancement_cohort_rate=note["cohort_rate"],
+                               enhancement_cohort_n=note["cohort_n"],
+                               enhancement_cohort_contract_id=note["cohort_contract_id"],
+                               enhancement_cohort_as_of_exclusive=note["cohort_as_of_exclusive"])
+                    evidence = enhancement_cohort_evidence(row, priced=True, root=root or at.ROOT)
+                except (OSError, KeyError, StopIteration, TypeError, ValueError):
+                    pass
+                if evidence is None or evidence["price_lower_bound"] * rec["price"] <= 1:
+                    continue
+                rank_prob = evidence["conditional_rate"]
             pool.append({"match": rec.get("match") or f"{home} vs {away}",
                          "pick": rec["market"], "prob": float(rank_prob),
                          "odds": rec["price"], "hit": bool(rec["hit"]),
-                         "floor": rec.get("floor"),
+                         "floor": rec.get("floor"), "cohort_evidence": evidence,
+                         "market": rec["market"], "price_book": (rec.get("price_context") or {}).get("book"),
                          "row": {"date": day, "home": home, "away": away}})
         # The live lane ranks by hit rate (auto_tickets.ENHANCEMENT_RANK). The
         # replay must rank the same way, or it tests a rule that never ships.
@@ -621,7 +647,7 @@ def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
         # the replay sizes exactly as the lane does unless a variant moves it.
         plan = at.plan_day(pool, 100.0, stake_frac=stake, stake_mode=stake_mode,
                            stake_per_acca=stake_per_acca, weights=weights,
-                           max_accas=at.ENH_MAX_ACCAS, rank=at.ENHANCEMENT_RANK)
+                           max_accas=at.ENH_MAX_ACCAS, rank=at.ENHANCEMENT_RANK, enhancements=supported)
         if not plan:
             continue                                   # MIN_ACCAS: NO BET
         # plan_day copies the four card keys, so the leg's own settled hit is
@@ -676,6 +702,10 @@ def enh_arm(records, floors, *, stake_frac=None, stake_mode=None,
 def cmd_enhancements(args):
     """Report the settled enhancement history under floor AND staking variants."""
     records = enh_records()
+    supported_days = enh_day_growth(records, _root_floors(records), supported=True)
+    print(f"CURRENT supported policy: {sum(d['bets'] for d in supported_days.values())} accas "
+          f"on {len(supported_days)} days; missing predecision evidence is NO BET.")
+    print("Following floor variants are LEGACY counterfactuals, not current live eligibility.")
     if not records:
         print("no settled enhancement records found — nothing to replay")
         return 0

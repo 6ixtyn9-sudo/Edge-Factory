@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only red team of cohort parity, NOT a validated/as-traded backtest.
+"""Read-only LEGACY cohort-parity counterfactual, NOT current live admission.
 
 Use archived cohort rates, never refit on today's warehouse; use only strictly
 pre-decision, prematch, exact-identity captured prices. Retained daily/morning
@@ -606,7 +606,7 @@ def audit(root, since, until, *, snapshot_mode="final"):
                             "ROI/roi/stake/net fields describe the resolved subset only; total_planned_stake/net bounds include unknowns.",
                             "Haircuts are hypothetical decimal-price stresses, not claimed executable historical quotes.",
                             "No-op arms have zero improvement; unknown results prevent a paired ROI inference on changed cards.",
-                            "Counterfactual cards use current production recipe, reset 100/date, no freeze/rolling-bank/parent-veto lifecycle replay.",
+                            "Legacy cohort-only counterfactual: quote-conditioned live admission is not replayed here; reset 100/date, no freeze/rolling-bank/parent-veto lifecycle replay.",
                             "No bookmaker receipts. Small sample and policy chosen after observing history.",
                             "No parameter search, stake/bucket changes, synthetic prices, or betting-hold release."],
             "stored_lane": stored_performance(root), "coverage": dict(counts),

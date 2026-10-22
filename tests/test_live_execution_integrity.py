@@ -60,14 +60,14 @@ def test_named_source_must_have_an_actual_bookmaker_identity(book):
     assert verdict(row) == 'price_bookmaker_missing'
 
 
-def test_valid_leg_still_fires_no_pause_new_ev_or_goal_filter():
+def test_valid_source_alone_cannot_substitute_for_priced_evidence():
     row = enhanced()
     row.update(recommended_market='avoid_raw_1x2', draw_risk_flag='EXTREME',
                statistical_profile={'avg_goals': 3.5}, enhancement_edge_sample=-.5,
                odds_source='not_a_registered_source', price_push_eligible=False)
-    assert verdict(row) == 'fire'  # enhancement has its OWN eligible price
+    assert verdict(row) == 'no_priced_context_evidence'
     pool = at.enhancement_pool(at.enhancement_legs([row], execution_safe=True))
-    assert len(pool) == 1 and pool[0]['odds'] == 1.43
+    assert pool == []
     assert at.MIN_LEG_ODDS == 1.30
 
 

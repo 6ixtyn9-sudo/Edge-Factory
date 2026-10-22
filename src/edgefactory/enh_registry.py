@@ -32,7 +32,7 @@ import os
 import tempfile
 import time
 from contextlib import contextmanager
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 REGISTRY_FILENAME = "enhancement_registry.json"
@@ -781,7 +781,8 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                    bucket: str = "", rule: str = "", stated: float | None = None,
                    league: str = "", home: str = "", away: str = "",
                    home_key: str = "", away_key: str = "",
-                   cohort_rate: float | None = None) -> dict:
+                   cohort_rate: float | None = None,
+                   price_context: dict | None = None) -> dict:
     """Idempotently record one settled enhancement outcome.
 
     Dedupes on "date|match|<market>@v1" so repeated audit runs cannot double-count.
@@ -841,6 +842,9 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                     {"date": date_, "match": match, "price": price_f,
                      "hit": bool(hit), "source": source or "",
                      "multi_source": bool(multi_source),
+                     # Original predecision quote/context, never reconstructed.
+                     "price_context": dict(price_context or {}),
+                     "recorded_at": datetime.now(timezone.utc).isoformat(),
                      # Slice provenance (2026-10-12). "" / None means
                      # unattributed, never a guess.
                      "bucket": str(bucket or ""),
@@ -990,7 +994,8 @@ def all_statuses(root: Path | None = None) -> dict[str, str]:
 MIN_COHORT_N = 100
 
 
-def enhancement_cohort_evidence(pick: dict) -> dict | None:
+def enhancement_cohort_evidence(pick: dict, *, priced: bool = False,
+                                root: Path | None = None) -> dict | None:
     """Validate the selected market's REALIZED evidence at board/slip seams.
 
     A model estimate, global calibration, winner-only prose, another market's
@@ -1019,11 +1024,95 @@ def enhancement_cohort_evidence(pick: dict) -> dict | None:
                 or pick.get('enhancement_cohort_as_of_exclusive') != pick.get('date')):
             return None
         date.fromisoformat(pick['date'])
-        for value in (pick.get('enhancement_probability'), pick.get('enhancement_cohort_rate')):
+        for value in (pick.get('enhancement_cohort_rate'),):
             if (type(value) not in (int, float) or not math.isfinite(value)
                     or abs(value - rate) > 0.000051):
                 return None
-        return {'rate': rate, 'n': n, 'contract_id': identity,
-                'as_of_exclusive': pick['date'], 'market': market}
-    except (KeyError, TypeError, ValueError):
+        # Legacy archived fields must still agree with the descriptive rate;
+        # new rows leave the unsupported fixture forecast explicitly null.
+        value = pick.get('enhancement_probability')
+        if value is not None and (type(value) not in (int, float)
+                or not math.isfinite(value) or abs(value - rate) > 0.000051):
+            return None
+        evidence = {'rate': rate, 'n': n, 'contract_id': identity,
+                    'as_of_exclusive': pick['date'], 'market': market,
+                    'basis': 'descriptive_exact_parent'}
+        if not priced:
+            return evidence
+        # Exact, pre-specified context matching, NOT global calibration or a
+        # fixture model. No nearest-price bins, inferred quotes or team priors.
+        context = enhancement_price_context(pick)
+        if context is None:
+            return None
+        entry = json.loads(registry_path(root or Path(__file__).resolve().parents[2]).read_text())['markets'].get(versioned(market), {})
+        if not evidence_complete(entry) or entry.get('status') == 'BENCHED':
+            return None
+        records = []
+        seen = set()
+        for rec in entry.get('records', []):
+            old = rec.get('price_context') or {}
+            if (not rec.get('date') or rec['date'] >= pick['date']
+                    or type(rec.get('hit')) is not bool
+                    or rec.get('price') != context['price']
+                    or rec.get('source') != context['source']
+                    or any(old.get(k) != context[k] for k in
+                           ('contract_id', 'selection', 'league', 'book', 'source', 'price'))):
+                continue
+            # Validate the original quote's timing, not the audit run time.
+            try:
+                recorded = datetime.fromisoformat(rec["recorded_at"])
+                if recorded.tzinfo is None or recorded >= datetime.fromisoformat(context["decision_at"]):
+                    continue
+                captured, decision, kickoff = (datetime.fromisoformat(old[k]) for k in
+                                               ('captured_at', 'decision_at', 'kickoff'))
+                if (any(t.tzinfo is None for t in (captured, decision, kickoff))
+                        or not captured <= decision < kickoff
+                        or decision.date().isoformat() != rec['date']):
+                    continue
+            except (KeyError, TypeError, ValueError):
+                continue
+            key = (rec['date'], rec.get('home_key') or rec.get('home'),
+                   rec.get('away_key') or rec.get('away'))
+            if not all(key) or key in seen:
+                continue
+            seen.add(key)
+            records.append(rec)
+        if len(records) < MIN_PRICED_N:
+            return None
+        hits = sum(r['hit'] for r in records)
+        evidence.update(conditional_rate=hits / len(records), priced_n=len(records),
+                        price_lower_bound=wilson_lb(hits, len(records)),
+                        price_context=context, basis='exact_context_priced_sample')
+        return evidence
+    except (KeyError, TypeError, ValueError, OSError, AttributeError):
+        return None
+
+
+def enhancement_price_context(pick: dict) -> dict | None:
+    """Only original, executable predecision quotes may condition evidence.
+
+    Missing data stays missing. Exchange commission/acca support is not in the
+    current capture contract, so an exchange quote cannot certify a net payout.
+    This is context-conditioned frequency, never a calibrated fixture forecast.
+    """
+    from edgefactory import price_sources as psrc
+    try:
+        price = pick['enhancement_price']
+        book = pick['enhancement_price_book'].strip()
+        source = pick['enhancement_price_source']
+        captured, decision, kickoff = (datetime.fromisoformat(pick[k]) for k in
+                                      ('enhancement_price_at', 'as_of', 'enhancement_price_kickoff'))
+        if (type(price) not in (int, float) or not math.isfinite(price) or price <= 1
+                or not book or not psrc.spec(source).named_bookmaker
+                or any(exchange in book.casefold() for exchange in ('matchbook', 'betfair', 'smarkets', 'betdaq'))
+                or not pick.get('league') or not pick.get('pick')
+                or any(t.tzinfo is None for t in (captured, decision, kickoff))
+                or not captured <= decision < kickoff
+                or decision.date().isoformat() != pick['date']):
+            return None
+        return dict(contract_id=pick['contract_id'], selection=pick['pick'],
+                    league=pick['league'], book=book, source=source, price=price,
+                    captured_at=captured.isoformat(), decision_at=decision.isoformat(),
+                    kickoff=kickoff.isoformat())
+    except (KeyError, TypeError, ValueError, AttributeError):
         return None
