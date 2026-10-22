@@ -99,10 +99,10 @@ def leg(name, lower=.8, odds=1.8, book='Pinnacle', market='match_over_25'):
                                      price_context=dict(book=book, source='theoddsapi')))
 
 
-def test_complete_acca_does_not_multiply_marginals():
+def test_unknown_dependence_does_not_veto_individually_admitted_legs():
     pool = [leg('A', lower=.6), leg('B', lower=.6)]
-    assert at.select_accas(pool, enhancements=True) == []
-    assert at.select_accas(pool)  # Main's selection recipe is unchanged.
+    assert at.select_accas(pool, enhancements=True) == at.select_accas(pool)
+    assert all('joint_probability' not in l for pair in at.select_accas(pool, enhancements=True) for l in pair)
 
 
 def test_full_pool_can_replace_unfundable_top_pair_and_compete_alternate_markets():
@@ -149,3 +149,55 @@ def test_selected_market_evidence_cannot_be_overwritten_by_another_over():
     selected = next(l for l in plan[0]['legs'] if l['match'] == chosen['match'])
     assert selected['market'] == 'match_over_25'
     assert selected['cohort_evidence']['cohort_lower_bound'] == .8
+
+
+@pytest.mark.parametrize('pairing', ['barbell', 'consecutive'])
+def test_single_book_uses_shared_pairing_and_rank(pairing):
+    pool = [dict(leg(str(i), lower=.6), prob=.8 - i * .01) for i in range(6)]
+    assert at.select_accas(pool, enhancements=True, pairing=pairing) == at.select_accas(pool, pairing=pairing)
+
+
+def test_quote_source_and_book_still_must_match():
+    a, b = leg('A'), leg('B')
+    b['cohort_evidence']['price_context']['source'] = 'oddspapi'
+    assert at.select_accas([a, b], enhancements=True) == []
+    b = leg('B', book='Other')
+    assert at.select_accas([a, b], enhancements=True) == []
+
+
+def test_alternative_book_can_supply_pair_without_duplicate_fixture_on_card():
+    pool = [leg('A', book='Other'), leg('A'), leg('B'), leg('C'), leg('D')]
+    accas = at.select_accas(pool, enhancements=True)
+    assert len(accas) == 2
+    keys = [at._fixture_key(l) for pair in accas for l in pair]
+    assert len(set(keys)) == len(keys)
+    assert all(l['price_book'] == 'Pinnacle' for pair in accas for l in pair)
+
+
+def test_real_captured_pafos_lech_pair_no_longer_requires_worst_case_return(tmp_path):
+    # Actual captured rates/counts/prices from audit blob 3fd9e9d8; not a claim
+    # that these historical quotes remain executable now.
+    rows = []
+    for home, away, n, rate, odds in [('Pafos FC', 'Riga', 3022, .5913, 1.81),
+                                     ('Lech Poznań', 'Sunderland', 1064, .5771, 1.88)]:
+        row = pick(rate, odds)
+        row.update(home=home, away=away, enhancement_probability=None,
+                   enhancement_price_book='LeoVegas (SE)', enhancement_cohort_n=n)
+        row['event_notes'][0]['cohort_n'] = n
+        rows.append(row)
+    legs = at.enhancement_legs(rows, registry_root=tmp_path, execution_safe=True)
+    assert all(l['verdict'] == 'fire' for l in legs)
+    pool = at.enhancement_pool(legs)
+    plan = at.plan_day(pool, 80.1656, enhancements=True)
+    at._carry_lane_evidence(plan, pool)
+    assert len(plan) == 1 and plan[0]['odds'] == 3.4
+    assert {l['match'] for l in plan[0]['legs']} == {'Pafos FC vs Riga', 'Lech Poznań vs Sunderland'}
+
+
+def test_alternative_source_survives_until_executable_pair_competes():
+    unavailable_partner = leg('A')
+    unavailable_partner['cohort_evidence']['price_context']['source'] = 'oddspapi'
+    valid_a, valid_b = leg('A'), leg('B')
+    selected = at.select_accas([unavailable_partner, valid_a, valid_b], enhancements=True)
+    assert len(selected) == 1
+    assert all(l['cohort_evidence']['price_context']['source'] == 'theoddsapi' for l in selected[0])

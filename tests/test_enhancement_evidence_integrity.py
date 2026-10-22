@@ -366,3 +366,74 @@ def test_resolved_cohort_and_captured_quotes_can_start_without_priced_history(tm
     plan = at.plan_day(at.enhancement_pool(legs), 80.1656, enhancements=True)
     assert len(plan) == 1 and len(plan[0]['legs']) == 2
     assert not registry_path(tmp_path).exists()
+
+
+@pytest.mark.parametrize('side,direction,line',
+    [(s, d, line) for s in ['home', 'away'] for d in ['over', 'under'] for line in [.5, 1.5, 2.5, 3.5]]
+    + [('match', d, line) for d in ['over', 'under'] for line in [1.5, 2.5, 3.5, 4.5]]
+    + [('btts', 'yes', None), ('btts', 'no', None)])
+def test_all_goal_markets_reach_real_cohort_pricing_and_complete_acca(tmp_path, monkeypatch, side, direction, line):
+    """Offline source payload -> CSV -> price index -> resolver -> live acca.
+
+    Includes a competing O2.5 quote above the minimum. Team evidence is computed
+    from synthetic settled scores, not injected cohort notes/probabilities.
+    """
+    import csv
+    import gzip
+    from datetime import datetime, timezone
+    from edgefactory.sources import theoddsapi
+    from edgefactory.enh_pricing import load_prices_index
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 10, 20, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(theoddsapi, 'datetime', Clock)
+    hit = None if side == 'btts' else int(line) + (1 if direction == 'over' else 0)
+    miss = None if side == 'btts' else int(line) + (0 if direction == 'over' else 1)
+    history = []
+    for i, r in enumerate(observations()):
+        if side == 'btts':
+            both_score = (i < 80) if direction == 'yes' else (i >= 80)
+            history.append(dict(r, hs=1, gs=int(both_score)))
+        else:
+            goals = hit if i < 80 else miss
+            history.append(dict(r, hs=goals if side in ['home', 'match'] else 0,
+                                gs=goals if side == 'away' else 0))
+    con = connection(history)
+    parents, quotes = [], []
+    for home, away in [('Alpha Town', 'Bravo United'), ('Gamma Town', 'Delta United')]:
+        row = dict(parent(recipe), home=home, away=away, league='Synthetic League',
+                   as_of='2026-10-20T06:00:00+00:00', kickoff_utc='2026-10-20T18:00:00Z')
+        parents.append(row)
+        event = dict(home_team=home, away_team=away, id=home, commence_time=row['kickoff_utc'])
+        outcome = {'name': direction.title(), 'price': 1.5}
+        if side != 'btts':
+            outcome['point'] = line
+            if side != 'match':
+                outcome['description'] = home if side == 'home' else away
+        key = 'btts' if side == 'btts' else 'alternate_totals' if side == 'match' else 'alternate_team_totals'
+        markets = [{'key': key, 'outcomes': [outcome]}]
+        if (side, direction, line) != ('match', 'over', 2.5):
+            markets.append({'key': 'totals', 'outcomes': [{'name': 'Over', 'point': 2.5, 'price': 1.31}]})
+        payload = {'bookmakers': [{'title': 'BookA', 'markets': markets}]}
+        quotes.extend(theoddsapi.rows_from_event_odds(row, event, payload))
+    path = tmp_path / 'localdata/theoddsapi_odds_2026-10.csv.gz'
+    path.parent.mkdir()
+    with gzip.open(path, 'wt') as handle:
+        writer = csv.DictWriter(handle, fieldnames=theoddsapi.COLUMNS)
+        writer.writeheader()
+        writer.writerows(quotes)
+    index = load_prices_index(tmp_path, '2026-10-20')
+    rows = [dict(r, **pt.compute_dynamic_enhancement(con, r, index)) for r in parents]
+    con.close()
+    expected = f'btts_{direction}' if side == 'btts' else f'{side}_{direction}_{str(line).replace(".", "")}'
+    assert all(r['recommended_enhancement'] == expected for r in rows)
+    assert all(r['enhancement_cohort_rate'] == .8 and r['enhancement_probability'] is None for r in rows)
+    legs = at.enhancement_legs(rows, registry_root=tmp_path, execution_safe=True)
+    plan = at.plan_day(at.enhancement_pool(legs), 80.1656, enhancements=True)
+    at._carry_lane_evidence(plan, at.enhancement_pool(legs))
+    assert len(plan) == 1
+    assert {l['market'] for l in plan[0]['legs']} == {expected}
+    assert all(l['price_source'] == 'theoddsapi' for l in plan[0]['legs'])
