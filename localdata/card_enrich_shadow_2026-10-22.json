@@ -14,7 +14,7 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 18,
+    "ledger_entries": 19,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -71,12 +71,12 @@
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 30
+      "88739ee5": 24
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=30 [pools=2 cap=90 reserve=20 spent=6 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=24 [pools=2 cap=90 reserve=20 spent=6 month=2026-10] -> approved",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1,
@@ -91,7 +91,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 30,
+    "spendable": 24,
     "verdict": "approved"
   },
   "provenance": {
