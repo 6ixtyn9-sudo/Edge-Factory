@@ -711,3 +711,147 @@ def test_previously_unmapped_team_lines_attach_their_own_quote(side, line, direc
     row = {'home': 'Home', 'away': 'Away', 'recommended_enhancement': market}
     index = {'pairs': {pair: {slot: (1.6, 'Book', '2026-10-22T05:00:00Z', 'theoddsapi')}}, 'names': {}}
     assert attach_enhancement_price(row, index)['enhancement_price'] == 1.6
+
+
+# Exact-key market holes must not mask another provider's witnessed spelling.
+def _alias_pick(**updates):
+    row = dict(home="Palmeiras", away="Fluminense", date="2026-10-22",
+               recommended_enhancement="home_over_15", contract_schema="post_forebet_v1",
+               kickoff_utc="2026-10-22T00:30:00Z", as_of="2026-10-21T22:33:18Z")
+    row.update(updates)
+    return row
+
+
+def _alias_index(*offers):
+    from edgefactory.enh_pricing import _put
+    from edgefactory.util import norm_team
+    index = {"pairs": {}, "names": {}, "spread": {}, "fixture_quotes": {}}
+    # The exact provider has a different market, not the requested team total.
+    for home, away, slot, price, book, at, source, kickoff in [
+        ("Palmeiras-SP", "Fluminense-RJ", ("ou_2.5", "over"), 2.37, "ExactBook",
+         "2026-10-21T22:23:00Z", "theoddsapi", "2026-10-22T00:30:00Z"), *offers
+    ]:
+        key = norm_team(home), norm_team(away)
+        _put(index, *key, *slot, price, book, at, source, kickoff=kickoff)
+        index["names"][key] = home, away
+    return index
+
+
+def _alias_offer(home="SE Palmeiras SP", away="Fluminense FC RJ", *,
+                 slot=("tt_home_1.5", "over"), price=1.6, book="OtherBook",
+                 at="2026-10-21T22:25:17Z", source="oddspapi",
+                 kickoff="2026-10-22T00:30:00Z"):
+    return home, away, slot, price, book, at, source, kickoff
+
+
+@pytest.mark.parametrize("market,slot", [
+    ("home_over_15", ("tt_home_1.5", "over")),
+    ("away_under_25", ("tt_away_2.5", "under")),
+    ("match_over_15", ("ou_1.5", "over")),
+    ("match_under_35", ("ou_3.5", "under")),
+    ("btts_yes", ("btts", "yes")), ("btts_no", ("btts", "no")),
+])
+def test_exact_pair_market_hole_uses_witnessed_alias(market, slot):
+    index = _alias_index(_alias_offer(slot=slot))
+    row = attach_enhancement_price(_alias_pick(recommended_enhancement=market), index)
+    assert row["enhancement_priced"]
+    assert row["enhancement_price"] == 1.6
+    assert row["enhancement_price_source"] == "oddspapi"
+    assert row["enhancement_price_book"] == "OtherBook"
+    assert row["enhancement_price_at"] == "2026-10-21T22:25:17Z"
+    assert row["enhancement_price_kickoff"] == "2026-10-22T00:30:00Z"
+    assert row["enhancement_price_rejection"] is None
+
+
+@pytest.mark.parametrize("updates", [
+    {"kickoff": "2026-10-22T01:00:00Z"},
+    {"kickoff": "2026-10-22T00:30:00"},
+    {"at": "2026-10-21T22:34:00Z"},
+    {"at": "2026-10-22T00:31:00Z"},
+    {"at": ""}, {"away": "Dragonas IDV"},
+    {"home": "SE Palmeiras SP Women"},
+    {"away": "Fluminense FC RJ U21"},
+    {"source": "betexplorer"},  # No admission receipt: must not bypass BE validation.
+])
+def test_alias_fallback_preserves_witness_identity_and_receipt_guards(updates):
+    row = attach_enhancement_price(_alias_pick(), _alias_index(_alias_offer(**updates)))
+    assert not row["enhancement_priced"]
+    assert row["enhancement_price"] is None
+    assert row["enhancement_price_provenance"] is None
+
+
+def test_exact_slot_hit_is_unchanged_even_with_better_alias():
+    index = _alias_index(_alias_offer(), _alias_offer(
+        home="Palmeiras-SP", away="Fluminense-RJ", price=1.4, source="theoddsapi"))
+    row = attach_enhancement_price(_alias_pick(), index)
+    assert row["enhancement_price"] == 1.4
+    assert row["enhancement_price_source"] == "theoddsapi"
+
+
+def test_exact_slot_rejection_does_not_fall_back_to_valid_alias():
+    index = _alias_index(_alias_offer(), _alias_offer(
+        home="Palmeiras-SP", away="Fluminense-RJ", at="2026-10-21T23:00:00Z"))
+    row = attach_enhancement_price(_alias_pick(), index)
+    assert not row["enhancement_priced"]
+    assert row["enhancement_price_rejection"] == "no_matching_kickoff_and_capture_witness"
+
+
+def test_alias_scan_remaps_swapped_team_totals():
+    index = _alias_index(_alias_offer(home="Fluminense FC RJ", away="SE Palmeiras SP",
+                                     slot=("tt_away_1.5", "over")))
+    assert attach_enhancement_price(_alias_pick(), index)["enhancement_price"] == 1.6
+    # The opposite feed-side team total cannot price our home selection.
+    wrong = _alias_index(_alias_offer(home="Fluminense FC RJ", away="SE Palmeiras SP"))
+    assert not attach_enhancement_price(_alias_pick(), wrong)["enhancement_priced"]
+
+
+def test_missing_btts_stays_missing_and_legacy_does_not_gain_aliases():
+    index = _alias_index(_alias_offer())
+    assert not attach_enhancement_price(
+        _alias_pick(recommended_enhancement="btts_yes"), index)["enhancement_priced"]
+    assert not attach_enhancement_price(
+        _alias_pick(kickoff_utc=None, contract_schema=None), index)["enhancement_priced"]
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_alias_scan_is_order_independent_and_retains_multi_source_evidence(reverse):
+    offers = [_alias_offer(), _alias_offer(home="Sociedade Esportiva Palmeiras",
+                                          price=1.7, source="theoddsapi", book="ThirdBook")]
+    index = _alias_index(*(reversed(offers) if reverse else offers))
+    row = attach_enhancement_price(_alias_pick(), index)
+    assert row["enhancement_price"] == 1.7
+    assert row["enhancement_multi_source"]
+    assert row["enhancement_consensus_price"] == 1.65
+
+
+def test_alias_scan_checks_later_candidates_after_invalid_first():
+    index = _alias_index(_alias_offer(kickoff="2026-10-22T02:30:00Z"),
+                         _alias_offer(home="Sociedade Esportiva Palmeiras", price=1.7))
+    assert attach_enhancement_price(_alias_pick(), index)["enhancement_price"] == 1.7
+
+
+def test_alias_scan_quarantines_cross_key_same_instant_contradictions():
+    index = _alias_index(_alias_offer(), _alias_offer(
+        home="Sociedade Esportiva Palmeiras", price=1.8))
+    row = attach_enhancement_price(_alias_pick(), index)
+    assert not row["enhancement_priced"]
+    assert row["enhancement_price_rejection"] == "no_matching_kickoff_and_capture_witness"
+
+
+def test_alias_scan_keeps_latest_offer_not_best_past_price():
+    index = _alias_index(_alias_offer(price=2.0), _alias_offer(
+        home="Sociedade Esportiva Palmeiras", price=1.5, at="2026-10-21T22:26:00Z"))
+    row = attach_enhancement_price(_alias_pick(), index)
+    assert row["enhancement_price"] == 1.5
+    assert row["enhancement_price_at"] == "2026-10-21T22:26:00Z"
+
+
+def test_alias_scan_refuses_conflicting_equivalent_fixture_clocks():
+    # Both pass the pick's +/-15 minute gate individually, but disagree with
+    # each other beyond that same tolerance: never choose by insertion order.
+    index = _alias_index(_alias_offer(kickoff="2026-10-22T00:16:00Z"),
+                         _alias_offer(home="Sociedade Esportiva Palmeiras",
+                                      kickoff="2026-10-22T00:44:00Z", book="ThirdBook"))
+    row = attach_enhancement_price(_alias_pick(), index)
+    assert not row["enhancement_priced"]
+    assert row["enhancement_price_rejection"] == "ambiguous_equivalent_fixture"
