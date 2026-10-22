@@ -56,6 +56,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .util import norm_team
+from .identity import squad_marker_mismatch
 from .kickoff_corroboration import (
     decision_cutoff_utc, parse_iso_utc, load_schedule_witnesses,
     resolve_schedule_witness, verify_fixture_identity, normalize_source_family,
@@ -725,7 +726,8 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
         names = index.get("names") or {}
         hit_key = (norm_team(pick.get("home")), norm_team(pick.get("away")))
         swapped = False
-        if hit_key not in pairs:
+        exact_pair = hit_key in pairs
+        if not exact_pair:
             hit_key = None
             mfn = match_fn or _default_match_fn()
             if mfn:
@@ -765,21 +767,62 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
                     return None
             expected = aware(pick.get("kickoff_utc"))
             decision = aware(pick.get("as_of"))
+            # An exact pair from one provider must not hide a different
+            # provider's equivalent spelling when ONLY the requested slot is
+            # missing. Existing slots (even rejected quotes) keep their old
+            # behavior; unclocked/legacy lookups never gain an alias fallback.
+            quote_slots = [(hit_key, mapping)]
+            if (exact_pair and mapping not in pairs.get(hit_key, {})
+                    and mapping not in index["fixture_quotes"].get(hit_key, {})):
+                mfn = match_fn or _default_match_fn()
+                if mfn:
+                    for key, (raw_h, raw_a) in sorted(names.items()):
+                        if key == hit_key:
+                            continue
+                        both = (not squad_marker_mismatch(pick.get("home"), raw_h)
+                                and not squad_marker_mismatch(pick.get("away"), raw_a)
+                                and mfn(pick.get("home"), raw_h)
+                                and mfn(pick.get("away"), raw_a))
+                        swap = (not squad_marker_mismatch(pick.get("home"), raw_a)
+                                and not squad_marker_mismatch(pick.get("away"), raw_h)
+                                and mfn(pick.get("home"), raw_a)
+                                and mfn(pick.get("away"), raw_h))
+                        if not (both or swap):
+                            continue
+                        slot = mapping
+                        if swap and not both:
+                            if slot[0].startswith("tt_home_"):
+                                slot = ("tt_away_" + slot[0][len("tt_home_"):], slot[1])
+                            elif slot[0].startswith("tt_away_"):
+                                slot = ("tt_home_" + slot[0][len("tt_away_"):], slot[1])
+                        if slot in index["fixture_quotes"].get(key, {}):
+                            quote_slots.append((key, slot))
             matched_quotes = []
-            for quote in index["fixture_quotes"].get(hit_key, {}).get(mapping, []):
-                ko, captured = aware(quote[4]), aware(quote[2])
-                if normalize_source_family(quote[3]) == "betexplorer":
-                    candidate = dict(pick, enhancement_price=round(quote[0], 3),
-                                     enhancement_price_book=quote[1], enhancement_price_at=quote[2],
-                                     enhancement_price_kickoff=quote[4],
-                                     enhancement_price_provenance=quote[5] if len(quote) > 5 else None)
-                    if betexplorer_price_rejection(candidate) is not None:
+            witnessed_keys = {}
+            for key, slot in quote_slots:
+                for quote in index["fixture_quotes"].get(key, {}).get(slot, []):
+                    ko, captured = aware(quote[4]), aware(quote[2])
+                    if normalize_source_family(quote[3]) == "betexplorer":
+                        candidate = dict(pick, enhancement_price=round(quote[0], 3),
+                                         enhancement_price_book=quote[1], enhancement_price_at=quote[2],
+                                         enhancement_price_kickoff=quote[4],
+                                         enhancement_price_provenance=quote[5] if len(quote) > 5 else None)
+                        if betexplorer_price_rejection(candidate) is not None:
+                            continue
+                    if expected is None or ko is None or abs((ko - expected).total_seconds()) > 15 * 60:
                         continue
-                if expected is None or ko is None or abs((ko - expected).total_seconds()) > 15 * 60:
-                    continue
-                if captured is None or captured > ko or (decision is not None and captured > decision):
-                    continue
-                matched_quotes.append(quote)
+                    if captured is None or captured > ko or (decision is not None and captured > decision):
+                        continue
+                    matched_quotes.append(quote)
+                    witnessed_keys.setdefault(key, []).append(ko)
+            # Multiple books/sources are normal. Distinct equivalent keys
+            # with conflicting fixture clocks are not: do not pick whichever
+            # spelling happened to enter the index first.
+            if len(witnessed_keys) > 1:
+                clocks = [ko for values in witnessed_keys.values() for ko in values]
+                if (max(clocks) - min(clocks)).total_seconds() > 15 * 60:
+                    pick["enhancement_price_rejection"] = "ambiguous_equivalent_fixture"
+                    return pick
             # Latest witnessed offer per bookmaker, not best-of-past quotes.
             # Contradictory prices at the same instant are quarantined.
             latest, ambiguous = {}, set()
