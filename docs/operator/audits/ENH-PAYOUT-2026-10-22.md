@@ -581,3 +581,50 @@ Full cleanup regression: **3,888 passed, 1 skipped in 183.93 seconds**.
 All **863 operational files** remained byte-identical; the empty test lock was
 removed. Runner-side validation of the cleanup requires a new checkout after
 merge; rerunning the old failing job retains its old pending entries.
+
+## Scope-aware capture repair after production completion
+
+Run `39768911859` completed production successfully and persisted a nonempty
+ENH slip frozen at **14:12 SAST**: Pafos–Riga O2.5 at 1.81 and Lech–Sunderland
+O2.5 at 1.88, LeoVegas (SE)/TheOddsAPI, stake 10.0207% of capital. This
+supersedes the earlier NO BET/unfrozen observation, not the historical fact
+that NO BET itself creates no lock. The saved quotes were captured around
+00:24 SAST. This result does not prove fresh, exhaustive market competition.
+
+The capture log shows 23 fixtures skipped as priced, 13 on retry cooldown and
+two already started. The existing planner treated any quote as sufficient
+regardless of the requested markets/retained point lines. OddsPapi separately
+reported its daily allowance exhausted; neither an allowance increase nor a
+cooldown bypass is authorized here.
+
+Repair the existing TheOddsAPI attempts ledger/planner, not a new pipeline:
+
+- Record a deterministic request/parser scope for markets, regions, retained
+  total points and bookmaker filters. Order changes alone are not new scope.
+- A previously priced fixture with old/unknown scope becomes due once for the
+  current scope, subject to existing kickoff guards and failure cooldowns.
+  The normal provider fetch retains its existing budget enforcement.
+- Only returned fixture/date-matching rows stamp success and scope. Empty,
+  aborted and unprocessed partial-batch fixtures get failure cooldowns, never
+  fabricated first/close success. Preserve prior successful records.
+- A scoped response need not contain every requested market. Record the
+  request as scoped success if it returns prices; do not repurchase forever
+  just because BTTS or team totals were unavailable. Request scope is not a
+  provider-availability or qualified-coverage claim.
+- Include requested markets/point lines and scope in the existing capture
+  receipt. Keep the final pricing pass's predecision timestamp cutoff.
+
+Correct only the ENH renderer's deployment percentage to sum of actual planned
+stakes divided by the available bank. A single shared-recipe acca is 12.5% of
+free bank, not the 25% daily allocation setting. Stake calculations, selection,
+financial records and saved/frozen ticket bytes are not changed. A saved frozen
+slip remains write-once and is not rewritten merely to correct its old footer.
+
+Targeted planner, production-entrypoint, parser, orchestration and ENH lane
+verification: **151 tests passed** (offline, mocked provider calls). Includes
+one-time scope upgrades, canonical scope identity, both failure cooldowns,
+kickoff protection, partial/empty/aborted fetches and actual deployment display.
+No workflow edit, provider request, dispatch, freeze reset or financial write.
+
+Final full regression: **3,898 passed, 1 skipped in 155.29 seconds**. All **863
+tracked operational files** verified byte-identical before/after tests.
