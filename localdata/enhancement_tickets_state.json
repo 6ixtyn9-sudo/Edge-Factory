@@ -437,7 +437,113 @@
     }
   ],
   "events": [],
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-10-22",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Pafos FC vs Riga",
+              "pick": "over",
+              "prob": 0.5913,
+              "odds": 1.81,
+              "result": null,
+              "market": "match_over_25",
+              "price_book": "LeoVegas (SE)",
+              "cohort_evidence": {
+                "rate": 0.5913,
+                "n": 3022,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-22",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1787,
+                "cohort_lower_bound": 0.5736982610010849,
+                "price_context": {
+                  "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                  "selection": "home",
+                  "league": "Europa Conference League",
+                  "book": "LeoVegas (SE)",
+                  "source": "theoddsapi",
+                  "price": 1.81,
+                  "captured_at": "2026-10-21T22:23:59.106400+00:00",
+                  "decision_at": "2026-10-22T13:38:34+02:00",
+                  "kickoff": "2026-10-22T16:45:00+00:00"
+                }
+              },
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7379988092688428,
+              "floor_basis": "market",
+              "league": "Europa Conference League",
+              "price_source": "theoddsapi",
+              "price_at": "2026-10-21T22:23:59.106400+00:00",
+              "price_kickoff": "2026-10-22T16:45:00Z",
+              "price_provenance": null,
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-22",
+                "Pafos FC",
+                "Riga"
+              ]
+            },
+            {
+              "match": "Lech Pozna\u0144 vs Sunderland",
+              "pick": "over",
+              "prob": 0.5771,
+              "odds": 1.88,
+              "result": null,
+              "market": "match_over_25",
+              "price_book": "LeoVegas (SE)",
+              "cohort_evidence": {
+                "rate": 0.5771,
+                "n": 1064,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-22",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 614,
+                "cohort_lower_bound": 0.5471583190083393,
+                "price_context": {
+                  "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                  "selection": "away",
+                  "league": "Europa League",
+                  "book": "LeoVegas (SE)",
+                  "source": "theoddsapi",
+                  "price": 1.88,
+                  "captured_at": "2026-10-21T22:24:01.164374+00:00",
+                  "decision_at": "2026-10-22T13:38:34+02:00",
+                  "kickoff": "2026-10-22T16:45:00+00:00"
+                }
+              },
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7379988092688428,
+              "floor_basis": "market",
+              "league": "Europa League",
+              "price_source": "theoddsapi",
+              "price_at": "2026-10-21T22:24:01.164374+00:00",
+              "price_kickoff": "2026-10-22T16:45:00Z",
+              "price_provenance": null,
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-22",
+                "Lech Pozna\u0144",
+                "Sunderland"
+              ]
+            }
+          ],
+          "odds": 3.4,
+          "stake_pct": 10.0207,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        }
+      ],
+      "staked_pct": 10.0207
+    }
+  ],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,
@@ -478,6 +584,11 @@
       "frozen_at": null,
       "final": true,
       "lock_source": "recovered_published_open_ticket; timestamp unavailable"
+    },
+    "2026-10-22": {
+      "frozen_at": "2026-10-22T14:12:02+02:00",
+      "final": true,
+      "lock_source": "state"
     }
   },
   "integrity_recovery": {

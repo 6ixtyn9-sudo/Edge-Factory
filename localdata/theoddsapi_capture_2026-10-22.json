@@ -1,141 +1,41 @@
 {
-  "added": 80,
-  "attempted": 14,
-  "attempted_fixtures": [
-    {
-      "away": "Louisville City FC",
-      "date": "2026-10-22",
-      "home": "Sporting JAX",
-      "kickoff": "2026-10-22T01:30:00+02:00",
-      "league": "United States: USL Championship"
-    },
-    {
-      "away": "Tijuana",
-      "date": "2026-10-22",
-      "home": "Toluca",
-      "kickoff": "2026-10-22T01:00:00Z",
-      "league": "Liga MX"
-    },
-    {
-      "away": "\u0110\u00f4ng \u00c1 Thanh Ho\u00e1",
-      "date": "2026-10-22",
-      "home": "C\u00f4ng an H\u00e0 N\u1ed9i",
-      "kickoff": "2026-10-22T12:15:00Z",
-      "league": "V-League"
-    },
-    {
-      "away": "Jaguares de C\u00f3rdoba",
-      "date": "2026-10-22",
-      "home": "Santa Fe",
-      "kickoff": "2026-10-22T01:20:00Z",
-      "league": "Liga BetPlay"
-    },
-    {
-      "away": "Al Sadd",
-      "date": "2026-10-22",
-      "home": "Al Shahaniya",
-      "kickoff": "2026-10-22T14:30:00Z",
-      "league": "Stars League"
-    },
-    {
-      "away": "Benfica",
-      "date": "2026-10-22",
-      "home": "Omonia Nicosia",
-      "kickoff": "2026-10-22T19:00:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "Sparta Praha",
-      "date": "2026-10-22",
-      "home": "Olympiacos F.C.",
-      "kickoff": "2026-10-22T19:00:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "Rennes",
-      "date": "2026-10-22",
-      "home": "Juventus",
-      "kickoff": "2026-10-22T16:45:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "KuPS",
-      "date": "2026-10-22",
-      "home": "Borac Banja Luka",
-      "kickoff": "2026-10-22T19:00:00Z",
-      "league": "Europa Conference League"
-    },
-    {
-      "away": "Monterrey",
-      "date": "2026-10-22",
-      "home": "Puebla",
-      "kickoff": "2026-10-22T01:00:00Z",
-      "league": "Liga MX"
-    },
-    {
-      "away": "Deportivo Cali",
-      "date": "2026-10-22",
-      "home": "Llaneros",
-      "kickoff": "2026-10-22T01:15:00+02:00",
-      "league": "Colombia: Primera A"
-    },
-    {
-      "away": "Am\u00e9rica",
-      "date": "2026-10-22",
-      "home": "Atlas",
-      "kickoff": "2026-10-22T01:00:00Z",
-      "league": "Liga MX"
-    },
-    {
-      "away": "Crystal Palace",
-      "date": "2026-10-22",
-      "home": "Be\u015fikta\u015f",
-      "kickoff": "2026-10-22T19:00:00Z",
-      "league": "Europa League"
-    },
-    {
-      "away": "Cruz Azul",
-      "date": "2026-10-22",
-      "home": "Pachuca",
-      "kickoff": "2026-10-22T03:00:00Z",
-      "league": "Liga MX"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 38,
-  "captured_at": "2026-10-22T10:40:27+00:00",
+  "captured_at": "2026-10-22T11:53:35+00:00",
   "date": "2026-10-22",
-  "due_reasons": {
-    "first_at": 14
-  },
+  "due_reasons": {},
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
-  "quoted_fixtures": [
-    {
-      "away": "Rennes",
-      "date": "2026-10-22",
-      "home": "Juventus",
-      "kickoff": "2026-10-22T16:45:00Z",
-      "league": "Europa League"
-    }
-  ],
-  "rows": 80,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 2,
-    "priced": 22
+    "priced": 23,
+    "retry_cooldown": 13
   },
   "skipped": [
+    "Sporting JAX|Louisville City FC (retry cooldown (6h after failed attempt))",
     "Lincoln Red Imps|FC Twente (priced)",
     "Jablonec|Brighton & Hove Albion (priced)",
     "FK Jablonec|Brighton (priced)",
+    "Toluca|Tijuana (retry cooldown (6h after failed attempt))",
+    "C\u00f4ng an H\u00e0 N\u1ed9i|\u0110\u00f4ng \u00c1 Thanh Ho\u00e1 (retry cooldown (6h after failed attempt))",
+    "Santa Fe|Jaguares de C\u00f3rdoba (retry cooldown (6h after failed attempt))",
     "Trabzonspor|Hearts (priced)",
     "Ferencv\u00e1rosi|Torreense (priced)",
+    "Al Shahaniya|Al Sadd (retry cooldown (6h after failed attempt))",
+    "Omonia Nicosia|Benfica (retry cooldown (6h after failed attempt))",
     "Union Saint-Gilloise|Hapoel Be'er Sheva (priced)",
     "Al Ahli|Al Khaleej (priced)",
     "Lillestr\u00f8m|Real Sociedad (priced)",
     "Barranquilla|America de Cali (kickoff already passed)",
     "Nordsj\u00e6lland|CSKA Sofia (priced)",
+    "Olympiacos F.C.|Sparta Praha (retry cooldown (6h after failed attempt))",
+    "Juventus|Rennes (priced)",
     "Celje|Salzburg (priced)",
     "Palmeiras|Fluminense (priced)",
     "Columbus Crew|St. Louis City (kickoff already passed)",
@@ -146,36 +46,18 @@
     "Kauno \u017dalgiris|Brann (priced)",
     "Lech Pozna\u0144|Sunderland (priced)",
     "Viktoria Plze\u0148|Levski Sofia (priced)",
+    "Borac Banja Luka|KuPS (retry cooldown (6h after failed attempt))",
     "Getafe|Lugano (priced)",
+    "Puebla|Monterrey (retry cooldown (6h after failed attempt))",
     "Sporting Braga|Gent (priced)",
+    "Llaneros|Deportivo Cali (retry cooldown (6h after failed attempt))",
+    "Atlas|Am\u00e9rica (retry cooldown (6h after failed attempt))",
+    "Be\u015fikta\u015f|Crystal Palace (retry cooldown (6h after failed attempt))",
     "Monaco|SC Freiburg (priced)",
+    "Pachuca|Cruz Azul (retry cooldown (6h after failed attempt))",
     "Ajax|Atalanta (priced)"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [
-    "Sporting JAX vs Louisville City FC (league not covered: United States: USL Championship)",
-    "Toluca vs Tijuana (league not covered: Liga MX)",
-    "C\u00f4ng an H\u00e0 N\u1ed9i vs \u0110\u00f4ng \u00c1 Thanh Ho\u00e1 (league not covered: V-League)",
-    "Santa Fe vs Jaguares de C\u00f3rdoba (league not covered: Liga BetPlay)",
-    "Al Shahaniya vs Al Sadd (league not covered: Stars League)",
-    "Puebla vs Monterrey (league not covered: Liga MX)",
-    "Llaneros vs Deportivo Cali (league not covered: Colombia: Primera A)",
-    "Atlas vs Am\u00e9rica (league not covered: Liga MX)",
-    "Pachuca vs Cruz Azul (league not covered: Liga MX)",
-    "Omonia Nicosia vs Benfica (no event in soccer_uefa_europa_league)",
-    "Olympiacos F.C. vs Sparta Praha (no event in soccer_uefa_europa_league)",
-    "Be\u015fikta\u015f vs Crystal Palace (no event in soccer_uefa_europa_league)",
-    "Borac Banja Luka vs KuPS (no event in soccer_uefa_europa_conference_league)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Colombia: Primera A": 1,
-    "league not covered: Liga BetPlay": 1,
-    "league not covered: Liga MX": 4,
-    "league not covered: Stars League": 1,
-    "league not covered: United States: USL Championship": 1,
-    "league not covered: V-League": 1,
-    "no event in soccer_uefa_europa_conference_league": 1,
-    "no event in soccer_uefa_europa_league": 3
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
