@@ -1,7 +1,7 @@
 """alternate_totals (the provider's key for alternate over/under lines).
 
-No network: the HTTP layer is replaced. Production requests are unchanged; the
-override is only used by the opt-in diagnostic.
+No network: the HTTP layer is replaced. Explicit request overrides and budget
+accounting remain intact when alternate ladders are included by default.
 """
 import sys
 import pathlib
@@ -73,10 +73,12 @@ def test_override_requests_only_alternate_totals_and_costs_one_per_region(monkey
     assert cost == 1
 
 
-def test_production_default_requests_no_alternate_or_fake_totals_key():
-    """Production requests stay on real, requested-today markets: neither the
-    fake key totals_alt nor alternate_totals is in the default request list.
-    (conftest clears ODDS_API_MARKETS, so this is the code default.)"""
+def test_production_default_requests_real_alternate_ladders_not_fake_key():
+    """Full ENH competition requests official alternate keys explicitly.
+    The legacy parser alias totals_alt must never be sent to the provider.
+    """
     assert "totals_alt" not in tha.MARKETS
-    assert "alternate_totals" not in tha.MARKETS
+    assert "alternate_totals" in tha.MARKETS
+    assert "alternate_team_totals" in tha.MARKETS
+    assert "btts" in tha.MARKETS
     assert "totals" in tha.MARKETS

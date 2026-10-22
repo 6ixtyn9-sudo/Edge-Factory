@@ -693,3 +693,21 @@ def test_betexplorer_prices_are_behind_the_enhancement_board_flag(tmp_path, monk
     assert unpriced["enhancement_price"] is None
     assert unpriced["enhancement_priced"] is False
     assert unpriced["enhancement_mapped"] is True
+
+
+def test_every_measured_cohort_market_has_a_price_mapping():
+    from scripts.picks_today import COHORT_DIRECT_KEYS, COHORT_COMPLEMENT_KEYS
+    for market in set(COHORT_DIRECT_KEYS) | set(COHORT_COMPLEMENT_KEYS):
+        assert MARKET_PRICE_MAP.get(market), market
+
+
+@pytest.mark.parametrize('side', ['home', 'away'])
+@pytest.mark.parametrize('line,direction', [(.5, 'under'), (2.5, 'over'), (3.5, 'over')])
+def test_previously_unmapped_team_lines_attach_their_own_quote(side, line, direction):
+    from edgefactory.enh_pricing import norm_team
+    market = f'{side}_{direction}_{str(line).replace(".", "")}'
+    slot = (f'tt_{side}_{line}', direction)
+    pair = (norm_team('Home'), norm_team('Away'))
+    row = {'home': 'Home', 'away': 'Away', 'recommended_enhancement': market}
+    index = {'pairs': {pair: {slot: (1.6, 'Book', '2026-10-22T05:00:00Z', 'theoddsapi')}}, 'names': {}}
+    assert attach_enhancement_price(row, index)['enhancement_price'] == 1.6

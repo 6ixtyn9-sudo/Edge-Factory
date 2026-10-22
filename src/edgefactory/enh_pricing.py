@@ -73,14 +73,20 @@ MARKET_PRICE_MAP: dict[str, tuple[str, str] | None] = {
     "match_under_35": ("ou_3.5", "under"),   # scoutingstats odd_u35
     "btts_yes": ("btts", "yes"),             # bzzoiro + scoutingstats odd_gg
     "btts_no": ("btts", "no"),               # bzzoiro + scoutingstats odd_ng
-    # theoddsapi totals_alt / team_totals / double_chance (captured by default
-    # since 2026-08-05; coverage measured walk-forward):
+    # Canonical alternate/standard totals slots. A mapping is not a claim of
+    # observed provider coverage; each fixture still needs its own quote:
     "match_over_45": ("ou_4.5", "over"),     # theoddsapi totals/totals_alt @4.5
     "match_under_45": ("ou_4.5", "under"),
     "home_over_05": ("tt_home_0.5", "over"),  # team_totals
     "away_over_05": ("tt_away_0.5", "over"),
+    "home_under_05": ("tt_home_0.5", "under"),
+    "away_under_05": ("tt_away_0.5", "under"),
     "home_over_15": ("tt_home_1.5", "over"),
     "away_over_15": ("tt_away_1.5", "over"),
+    "home_over_25": ("tt_home_2.5", "over"),
+    "away_over_25": ("tt_away_2.5", "over"),
+    "home_over_35": ("tt_home_3.5", "over"),
+    "away_over_35": ("tt_away_3.5", "over"),
     "home_under_15": ("tt_home_1.5", "under"),
     "away_under_15": ("tt_away_1.5", "under"),
     "home_under_25": ("tt_home_2.5", "under"),

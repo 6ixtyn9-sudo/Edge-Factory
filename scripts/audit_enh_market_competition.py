@@ -290,14 +290,87 @@ def recover_evidence(root=ROOT, *, warehouse=None):
                         'No record was promoted, backdated, assigned a new contract, or written to the registry.'])
 
 
+def wiring(root=ROOT, *, day, picks=None):
+    """Read-only market-by-market trace; quote coverage != bet permission.
+
+    Uses existing captured prices and archived evidence only. No network,
+    warehouse rebuild, counterfactual result donors, or operational writes.
+    """
+    from scripts import picks_today as pt, auto_tickets as at
+    from edgefactory.enh_pricing import MARKET_PRICE_MAP, load_prices_index, attach_enhancement_price
+    from edgefactory.sources import theoddsapi
+
+    root = Path(root)
+    path = Path(picks) if picks is not None else root / 'localdata/picks_today.json'
+    data = path.read_bytes()
+    rows = [r for r in json.loads(data) if r.get('date') == day]
+    inputs = {str(path): hashlib.sha256(data).hexdigest()}
+    raw = {}
+    for provider in ('theoddsapi', 'oddspapi'):
+        store = root / 'localdata' / f'{provider}_odds_{day[:7]}.csv.gz'
+        if not store.exists():
+            raw[provider] = None  # unavailable is not observed zero
+            continue
+        inputs[str(store)] = hashlib.sha256(store.read_bytes()).hexdigest()
+        with gzip.open(store, 'rt') as handle:
+            raw[provider] = dict(Counter(r['market'] for r in csv.DictReader(handle) if r.get('date') == day))
+    for name in (f'betexplorer_match_detail_{day}.json', f'sharpapi_odds_shadow_{day}.json',
+                 f'scoutingstats_{day[:7]}.csv.gz'):
+        store = root / 'localdata' / name
+        if store.exists():
+            inputs[str(store)] = hashlib.sha256(store.read_bytes()).hexdigest()
+    index = load_prices_index(root, day)
+    markets = sorted(set(pt.COHORT_DIRECT_KEYS) | set(pt.COHORT_COMPLEMENT_KEYS))
+    totals, details = {m: Counter() for m in markets}, []
+    for row in rows:
+        notes = {n.get('market'): n for n in row.get('event_notes', []) if isinstance(n, dict)}
+        logs = defaultdict(list)
+        for entry in row.get('enh_candidate_log', []):
+            logs[entry.get('market')].append(entry)
+        verdicts = {l['market']: l['verdict'] for l in at.enhancement_legs([row], execution_safe=True)}
+        for market in markets:
+            probe = dict(row, recommended_enhancement=market)
+            attach_enhancement_price(probe, index)
+            price = probe.get('enhancement_price')
+            summary = totals[market]
+            summary['evaluated'] += 1
+            summary['priced_now_from_store'] += price is not None
+            summary['price_at_least_minimum'] += price is not None and price >= at.MIN_LEG_ODDS
+            summary['retained_in_notes'] += market in notes
+            summary['individually_admitted'] += verdicts.get(market) == 'fire'
+            reason = (probe.get('enhancement_price_rejection') or
+                      ('captured_quote' if price is not None else 'no_quote_in_index'))
+            summary[reason] += 1
+            details.append(dict(fixture=[day, row.get('home'), row.get('away')], market=market,
+                mapping=MARKET_PRICE_MAP.get(market), recorded_candidate_log=logs.get(market, []),
+                recorded_cohort_rate=pt.cohort_realized_rate(row.get('statistical_profile'), market),
+                retained_in_notes=market in notes, recorded_leg_verdict=verdicts.get(market),
+                current_quote={k: probe.get(k) for k in ('enhancement_price', 'enhancement_price_book',
+                    'enhancement_price_source', 'enhancement_price_at', 'enhancement_price_kickoff',
+                    'enhancement_price_rejection')}, quote_lookup_reason=reason))
+    return dict(scope='captured market wiring, not current executable tickets or ROI', day=day,
+                fixtures=len(rows), source_markets=list(theoddsapi.MARKETS),
+                source_total_points=list(theoddsapi.TOTAL_POINTS),
+                estimated_credits_per_event=theoddsapi.cost_per_event(),
+                raw_rows_by_market=raw, market_trace={m: dict(c) for m, c in totals.items()},
+                unmapped_cohort_markets=[m for m in markets if not MARKET_PRICE_MAP.get(m)],
+                details=details, inputs_sha256=inputs, production_changed=False)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path)
+    parser.add_argument('--wiring', action='store_true', help='Trace every cohort-backed match/home/away market')
+    parser.add_argument('--day', help='Required with --wiring, YYYY-MM-DD')
+    parser.add_argument('--picks', type=Path, help='Original captured slate for --wiring')
     parser.add_argument('--source-report', type=Path, help='Schema 1 or 2 audit; all input hashes must match')
     args = parser.parse_args()
     if args.out and args.out.resolve().is_relative_to((ROOT / 'localdata').resolve()):
         parser.error('audit output must not overwrite operational localdata')
-    text = json.dumps(competition(source=args.source_report), indent=2, allow_nan=False) + '\n'
+    if args.wiring and not args.day:
+        parser.error('--wiring requires --day')
+    report = wiring(day=args.day, picks=args.picks) if args.wiring else competition(source=args.source_report)
+    text = json.dumps(report, indent=2, allow_nan=False) + '\n'
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(text)
