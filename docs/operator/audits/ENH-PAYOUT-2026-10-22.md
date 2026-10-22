@@ -128,14 +128,58 @@ results are available; ScoutingStats, Vitibet and other untracked current-source
 inputs remain absent locally. Forebet/convenience donor tables were not used to
 certify recovered results. No warehouse binary or raw export is committed.
 
-The latest listed main-branch cache is `localdata-v2-39719907033` (166,070,142
-bytes). Its contents have **not** been recovered: external artifact download
-failed, pushing the existing export workflow's read-only annotation step was
-refused for lack of `workflows` permission, and dispatching even the unmodified
-exporter returned HTTP 403, `Resource not accessible by integration`. The
-annotation step remains a local, unpublished workflow edit. No daily/production
-workflow was dispatched. GitHub connection permissions must be updated before
-claiming a completed cache audit.
+### Restored-cache verification completed (supersedes the local access blocker)
+
+The user installed and ran the supplied export workflow on `main`. Run
+[39741429582](https://github.com/6ixtyn9-sudo/Edge-Factory/actions/runs/39741429582)
+**succeeded**, restoring `localdata-v2-39719907033` (166,070,142 bytes). The workflow
+revision was `5c71cf0f3e1fd37d0fe17c51373fb3a0a2cb53e4`; its checkout pinned the
+audit code at `c9931ac4a1c2d8913911eef0fb02b16412235fd0`.
+
+The runner built an isolated **99 MB scratch warehouse in 171.2 seconds** and
+passed the restored-localdata hash assertion. Unlike the partial local checkout,
+the cache contained **11,855 ScoutingStats, 43,825 Vitibet and 19,787 BettingClosed
+rows**. These table counts are source availability, not counts of independently
+timed betting evidence. The prior claim that the cache audit remained blocked is
+superseded; no further permission change or workflow run is required for this
+audit.
+
+The cache-backed results were:
+
+- **562** archived fixtures, **75** original price/book/source matches,
+  **23** exact predecision quote joins, **16** agreeing result-overlay links and
+  **6** matching post-Forebet parent archives.
+- **One** registry record passed both the full exact-parent link and independent
+  raw-score agreement: the retired Betis contract above. Raw donor scores now
+  independently agree on **Betis 1–0 Feyenoord**. The contract remains inactive;
+  `result_availability_before_decision` remains unknown, not backdated.
+- The archived post-Forebet candidate pool yielded **4** quote-and-parent links;
+  **43** attempts lacked a matching valid predecision quote. The largest
+  raw-result-backed exact cell was **1**, with `raw_results_checked: true`.
+
+An exact cell here separates contract, parent selection, league, bookmaker,
+source, decimal price and enhancement market. This scoped sample is below the
+existing minimum of 30; **it does not prove that the warehouse lacks historical
+results or that every possible strategy has been mined**. Registry-link counts
+also require exact-name overlay agreement, which can undercount links when the
+overlay uses different aliases even if a raw result exists. This audit is not a
+new probability calibration or exhaustive remine.
+
+The compact actual result was retrieved from check-run **119699310901** via the
+GitHub annotations API and is preserved under `cache_verification` in the JSON
+report; top-level recovery values retain the earlier partial-local baseline.
+The checks API rendered escaped Unicode as invalid backslash-plus-letter
+sequences; the recorded normalization removes only those invalid prefixes to
+parse the actual JSON, preserving valid escapes and numeric values.
+Artifact **12409074644**, `warehouse-inputs-39741429582`, is 3,942,764 bytes with
+API-verified SHA256
+`79c86861148820b27974d5e42f291088a8acaaea0e7da496482419e53f3993fc`.
+Its ZIP has not been downloaded into this agent checkout; cache processing and
+verification occurred on the runner. Earlier App permission and external
+artifact-download failures remain historical facts, not a current audit blocker.
+
+No daily/production workflow, registry promotion, cache save or operational
+rebuild was performed by this audit. No staking, bank or ticket state was changed.
 
 All **864 operational files** matched their pre-recovery hashes. No bank,
 settled history, registry, picks, current NO BET, price capture, or prediction
