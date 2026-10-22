@@ -43,7 +43,7 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 12,
+      "be_matched": 0,
       "be_raw": 45,
       "be_usable": 45,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
@@ -52,10 +52,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 6,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 29,
-        "no_pick_for_fixture": 10
+        "out_of_window": 45
       },
       "reason": null,
       "status": "cache_only"
@@ -95,7 +94,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 6,
+        "out_of_window": 6,
         "selection_unsupported": 5
       },
       "reason": null,
@@ -159,8 +158,8 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 65100,
-        "market_unsupported": 33553
+        "market_unsupported": 33553,
+        "out_of_window": 65100
       },
       "op_matched": 0,
       "op_raw": 98653,
@@ -183,12 +182,11 @@
       "coherence_withheld_fixtures": 11,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 17,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 16695,
-        "no_pick_for_fixture": 202
+        "out_of_window": 16914
       },
-      "pa_matched": 24,
+      "pa_matched": 0,
       "pa_raw": 16914,
       "pa_scored": 16914,
       "reason": null,
@@ -286,7 +284,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 2
+        "out_of_window": 2
       },
       "reason": "cache_rows_pending_join",
       "sa_matched": 0,
@@ -333,12 +331,11 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 281,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 2151,
-        "no_pick_for_fixture": 298
+        "out_of_window": 2730
       },
-      "oa_matched": 18,
+      "oa_matched": 0,
       "oa_raw": 2730,
       "oa_usable": 2730,
       "reason": null,
