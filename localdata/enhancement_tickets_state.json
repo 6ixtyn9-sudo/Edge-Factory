@@ -495,7 +495,19 @@
     "open_stake_pct_unchanged": 14.3125,
     "new_settlements_executed": 0,
     "resized_stakes": 0,
-    "frozen_timestamps": "not recorded in published snapshots; explicitly unknown"
+    "frozen_timestamps": "not recorded in published snapshots; explicitly unknown",
+    "cache_supersession": {
+      "schema": 1,
+      "superseded_financial_sha256": "10c83381822826829d517e8b4ffab83bfb3ff4565a307efeebf59264acf666d3",
+      "retained_financial_sha256": "782e88ff0d142acef97fed61eb72b1b5c8452b82eeaa03ce46775c833c0b6450",
+      "cache_key": "localdata-v2-39719907033",
+      "superseded_state_commit": "54acbcea0bbda022005886d398bf6b5775517798",
+      "superseded_state_blob_sha256": "9ead3e06e3fd3e8fea386e54aae7f0856b590d463408c416cc92de0bf7c1bae6",
+      "settlement_correction_commit": "ed5db57e2315f3fc81a9375b7c5594f8cbd5ea8e",
+      "unplaced_withdrawal_commit": "c623c0830c5f300a3667dc9b8ee695a09dc0b393",
+      "reason": "The cached-run Git snapshot settled the wrong October 21 draft at bank 110.67395099999999. The committed correction restores the actually placed Japan ticket at bank 80.1656; the operator-confirmed unplaced October 22 card was subsequently withdrawn. Only these exact financial snapshots are covered; no new settlement or stake resize is authorized.",
+      "provenance_limit": "Superseded snapshot verified from the cache-producing run Git commit; failed-run artifact download is unavailable. A different actual cache fingerprint must still fail closed."
+    }
   },
   "enh_floor_table": {
     "as_of": "2026-10-22",
