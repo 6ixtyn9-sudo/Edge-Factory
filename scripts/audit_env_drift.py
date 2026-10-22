@@ -53,11 +53,6 @@ ACCEPTED = {
     "SHARPAPI_SPORT": "code default is empty on purpose: fail closed until configured",
     # Off by default in code, switched on for the scheduled run.
     "EDGE_FACTORY_ODDSPAPI_PRICES": "feature flag: off in code, enabled by the deployment",
-    # Deliberate credit rationing: each market costs one credit per event,
-    # so the six-market code default would triple spend against a 480/month
-    # cap. Documented in TICKETS-OPEN (n) because the companion knob
-    # ODDS_API_TOTAL_POINTS was NOT narrowed to match.
-    "ODDS_API_MARKETS": "deliberate credit rationing; see TICKETS-OPEN (n)",
 }
 
 # Divergences that are NOT accepted - they are known defects awaiting a
@@ -66,12 +61,8 @@ ACCEPTED = {
 # being paid. Delete the entry when the step is done; the audit will then
 # confirm the two sides agree.
 PENDING_WORKFLOW_APPLY: dict[str, str] = {
-    # Empty, and that is the point. The SharpAPI endpoint entry lived here
-    # until the corrected workflow was applied on 2026-10-06 (main commit
-    # eed2bfe6, byte-identical to the file proposed here). The stale-entry
-    # test then failed and demanded this removal, which is the mechanism
-    # working: a paid debt must disappear from the record rather than
-    # linger where it would pre-approve the next divergence.
+    "ODDS_API_MARKETS": "ENH alternate ladders and BTTS: manual workflow apply required; GitHub App lacks workflows permission; see ENH-PAYOUT-2026-10-22 audit",
+    "ODDS_API_TOTAL_POINTS": "ENH team 0.5 lines: manual workflow apply required; GitHub App lacks workflows permission; see ENH-PAYOUT-2026-10-22 audit",
 }
 
 

@@ -235,7 +235,10 @@ def test_event_notes_are_ordered_by_realized_cohort_rate(monkeypatch):
     con = _empty_warehouse()
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: COHORT)
     notes = _compute(con, _pick(), _priced_index())["event_notes"]
-    ranked = [pt.cohort_realized_rate(COHORT, n["market"]) for n in notes]
+    # Production ranks the persisted four-decimal rate; complements such as
+    # 1-.7 can differ from .3 by a floating-point epsilon before persistence.
+    ranked = [n["cohort_rate"] for n in notes]
+    assert ranked == pytest.approx([pt.cohort_realized_rate(COHORT, n["market"]) for n in notes])
     assert len(ranked) >= 2, "need at least two candidates to order"
     assert ranked == sorted(ranked, reverse=True)
 

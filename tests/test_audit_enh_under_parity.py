@@ -382,3 +382,30 @@ def test_recovery_never_certifies_an_inherited_forebet_score(recovery_inputs):
     assert not report['registry_stages'].get('raw_donor_result_agrees')
     assert report['largest_raw_result_exact_cell'] == 0
     assert recover_evidence(root)['largest_raw_result_exact_cell'] is None
+
+
+def test_wiring_traces_team_quotes_without_inventing_ticket_permission(tmp_path):
+    import hashlib
+    import json
+    from test_enh_pricing import _row, _write_month
+    from scripts.audit_enh_market_competition import wiring
+    day = '2026-10-22'
+    row = contract_pick(dict(date=day, home='Home', away='Away',
+        as_of=f'{day}T06:00:00Z', kickoff_utc=f'{day}T18:00:00Z'))
+    path = tmp_path / 'slate.json'
+    path.write_text(json.dumps([row]))
+    _write_month(tmp_path, [_row(date=day, home='Home', away='Away',
+        market='tt_home_0.5', selection='under', odds=1.6,
+        captured_at=f'{day}T05:00:00Z', kickoff=row['kickoff_utc'])], month='2026-10')
+    before = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in tmp_path.rglob('*') if p.is_file()}
+    report = wiring(tmp_path, day=day, picks=path)
+    assert report['unmapped_cohort_markets'] == []
+    assert report['market_trace']['home_under_05']['price_at_least_minimum'] == 1
+    assert report['market_trace']['home_under_05']['individually_admitted'] == 0
+    assert report['raw_rows_by_market']['oddspapi'] is None
+    assert report['raw_rows_by_market']['theoddsapi'] == {'tt_home_0.5': 1}
+    detail = next(d for d in report['details'] if d['market'] == 'home_under_05')
+    assert detail['recorded_cohort_rate'] is None
+    assert detail['recorded_leg_verdict'] is None
+    assert report['production_changed'] is False
+    assert {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in tmp_path.rglob('*') if p.is_file()} == before
