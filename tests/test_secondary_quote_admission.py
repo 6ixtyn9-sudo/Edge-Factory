@@ -12,7 +12,7 @@ from edgefactory.enh_pricing import (
 from edgefactory.kickoff_corroboration import load_schedule_witnesses
 from edgefactory.sources import theoddsapi as oa
 from scripts import auto_tickets as at, capture_theodds as capture_oa
-from enhancement_fixtures import with_evidence, seed_price_records
+from enhancement_fixtures import with_evidence
 from test_enh_pricing import (
     BE_DAY, FULL_BE_MARKETS, _be_fixture, _be_pick, _be_block, _be_row, _write_be_ledger,
 )
@@ -37,8 +37,6 @@ def priced(root):
 
 def live_verdict(pick):
     pick = dict(pick, league="Synthetic League", pick="home")
-    if betexplorer_price_rejection(pick) is None:
-        seed_price_records(at.LOCALDATA.parent, [with_evidence(pick)])
     return at.enhancement_legs([with_evidence(pick)], execution_safe=True)[0]['verdict']
 
 

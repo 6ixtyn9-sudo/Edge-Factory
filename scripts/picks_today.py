@@ -1142,7 +1142,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 # days, so the existing audit can score it prospectively.
                 # This is a descriptive candidate shortlist, NOT permission
                 # to stake. The live board/slip resolves the original quote's
-                # priced evidence and competes complete tickets over all notes.
+                # cohort payout bound and competes complete tickets over all notes.
                 eligible.append(c)
                 _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "eligible", None,
                                               price=price, **_log_kw))
@@ -6442,7 +6442,7 @@ def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
         return (f"     🔬 {rec_label} {rec_prob_text} @ {rec_price:.2f}{book}"
                 f"{edge_txt}{src} — minimum {MIN_LEG_ODDS:.2f}")
     why = (f"below minimum {MIN_LEG_ODDS:.2f}" if below_min
-           else "no supported quote-conditioned payout evidence")
+           else "no supported cohort payout or executable quote evidence")
     return (f"     🚫 {rec_label} {rec_prob_text} @ {rec_price:.2f}{book}"
             f" — no bet: {why}{src}")
 
