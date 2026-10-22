@@ -30,13 +30,13 @@ sys.path.insert(0, str(ROOT / "src"))
 import auto_tickets as at  # noqa: E402
 from edgefactory import enh_registry as reg  # noqa: E402
 
-from enhancement_fixtures import with_evidence, seed_price_records
+from enhancement_fixtures import with_evidence
 
 DAY = "2026-10-12"
 
 
 def _pick(home="Pyunik Yerevan", away="BKMA", market="match_over_25", *,
-          price=1.72, bucket="CERTIFIED_CLEAN", rule="r1", prob=0.46,
+          price=1.72, bucket="CERTIFIED_CLEAN", rule="r1", prob=0.90,
           label="Match Over 2.5 Goals", book="Stake.com"):
     # A real card row always carries a kickoff; the live guard withdraws legs
     # without one. Default to a kickoff still ahead of the pinned 08:00 SAST run.
@@ -93,7 +93,6 @@ def _tmp_lane(tmp_path, monkeypatch):
 
 def _board(localdata: Path, picks: list[dict]) -> None:
     (localdata / "picks_today.json").write_text(json.dumps(picks))
-    seed_price_records(localdata.parent, picks)
 
 
 def _registry(localdata: Path) -> None:
@@ -230,7 +229,7 @@ def test_the_card_is_two_leg_accas_barbelled_at_the_main_lanes_stake(tmp_path, _
     assert "[ENH #" not in txt
     assert txt.count("— stake 12.5% of capital (12.5% of free bank)") == 2
     # per-leg evidence: stated %, the market's registry line, its floor, the book
-    assert "(parent cohort 46%, n=200; not fixture probability)" in txt
+    assert "(parent cohort 90%, n=200; not fixture probability)" in txt
     assert "[registry" not in txt and "floor 1.60" not in txt
     assert "deploying 25% of free bank today = 25.0% of capital" in txt
 
@@ -684,7 +683,6 @@ def test_the_board_shows_a_bet_at_the_minimum_and_no_bet_below_it(_tmp_lane):
     import picks_today as pt
     from auto_tickets import MIN_LEG_ODDS
 
-    seed_price_records(_tmp_lane.parent, [_pick(price=MIN_LEG_ODDS)])
     fired = pt.enhancement_board_line(_pick(price=MIN_LEG_ODDS))   # exactly at the minimum
     assert fired.startswith("     🔬 ") and f"@ {MIN_LEG_ODDS:.2f}" in fired
 
@@ -695,15 +693,13 @@ def test_the_board_shows_a_bet_at_the_minimum_and_no_bet_below_it(_tmp_lane):
     assert "🔬" not in refused
 
     # A floorless market that is not a team under fires: no floor gate any more.
-    seed_price_records(_tmp_lane.parent, [_pick(market="match_over_45", price=3.75)])
     assert pt.enhancement_board_line(_pick(market="match_over_45", price=3.75)).startswith("     🔬 ")
     # A realized-contract-backed team under competes without a price floor.
-    seed_price_records(_tmp_lane.parent, [_pick(market="away_under_35", price=1.90)])
     assert pt.enhancement_board_line(_pick(market="away_under_35", price=1.90)).startswith("     🔬 ")
     # But a model-only row is refused by BOTH presentations, regardless of price.
     model = _pick(market="away_under_35", price=1.90)
     model.pop("event_notes")
-    assert "no bet: no supported quote-conditioned payout evidence" in pt.enhancement_board_line(model)
+    assert "no bet: no supported cohort payout or executable quote evidence" in pt.enhancement_board_line(model)
     assert at.enhancement_legs([model])[0]["verdict"] == "no_cohort_evidence"
 
     # Nothing to say when there is no price, or when the price is junk.
@@ -724,7 +720,6 @@ def test_the_board_and_the_slip_refuse_with_the_same_minimum(_tmp_lane):
     import picks_today as pt
     for price in (1.25, 1.29, 1.30, 1.59, 1.86, 3.50):
         pick = _pick(price=price)
-        seed_price_records(_tmp_lane.parent, [pick])
         leg = at.enhancement_legs([pick], execution_safe=True)[0]
         board_bet = pt.enhancement_board_line(pick).startswith("     🔬 ")
         assert board_bet == (leg["verdict"] == "fire") == (price >= at.MIN_LEG_ODDS), price
@@ -874,7 +869,6 @@ def test_a_derived_floor_no_longer_gates_a_leg(tmp_path, _tmp_lane, monkeypatch)
     floors = reg.derive_floors_for_day(_tmp_lane.parent, DAY)
     pick = _pick(price=1.50)
     assert at.enhancement_legs([pick], floors=floors)[0]["verdict"] == "fire"
-    seed_price_records(_tmp_lane.parent, [pick])
     assert pt.enhancement_board_line(pick, floors=floors).startswith("     🔬 ")
 
 
@@ -920,7 +914,6 @@ def test_a_team_slice_is_never_consulted_for_a_leg(tmp_path, _tmp_lane, monkeypa
                        if r["level"] == "league"][0]["floor"]
     pick = _pick(price=round(applied + 0.02, 2))
     assert at.enhancement_legs([pick], floors=floors)[0]["verdict"] == "fire"
-    seed_price_records(_tmp_lane.parent, [pick])
     assert pt.enhancement_board_line(pick, floors=floors).startswith("     🔬 ")
 
 
@@ -1211,3 +1204,23 @@ def test_enhancement_legs_already_kicked_off_or_finished_are_withdrawn_from_the_
     assert by_match["Marquense vs Mixco"]["verdict"] == "kickoff_guard"
     assert by_match["Alpha FC vs Beta FC"]["verdict"] == "result_known"
     assert by_match["Riga FC vs Kairat Almaty"]["verdict"] == "fire"
+
+
+def test_fresh_no_bet_replaces_stale_reason_without_changing_finances(_tmp_lane):
+    from copy import deepcopy
+    _board(_tmp_lane, _distinct(2, price=2.0, prob=.59))
+    artifact = _tmp_lane / f'autobets_enh_tickets_{DAY}.txt'
+    artifact.write_text('NO BET — warehouse unavailable')
+    st = at.fresh_state()
+    before = deepcopy(st)
+    at.cmd_enhancement(_args(), st)
+    text = artifact.read_text()
+    assert 'warehouse unavailable' not in text
+    assert '2 eligible leg(s), but no supported complete acca' in text
+    assert 'No supported same-book acca payout; no independence assumption.' in text
+    assert st == before
+    assert not at.ENHANCEMENT_LANE.state_file.exists()
+    # NO BET is not a freeze: a later valid cohort-backed card can replace it.
+    _board(_tmp_lane, _distinct(2))
+    at.cmd_enhancement(_args(), st)
+    assert '[ACCA #1]' in artifact.read_text()
