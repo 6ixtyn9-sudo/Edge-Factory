@@ -10,9 +10,19 @@ jobs:
   export:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
     steps:
-      - name: Checkout repository
+      - name: Checkout audited recovery code
         uses: actions/checkout@v4
+        with:
+          # Recovery helper from PR #131.
+          ref: c9931ac4a1c2d8913911eef0fb02b16412235fd0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
 
       - name: Record git-tracked warehouse files
         run: |
@@ -28,38 +38,121 @@ jobs:
           restore-keys: |
             localdata-v2-
 
+      - name: Audit recovered enhancement evidence (read-only)
+        env:
+          CACHE_KEY: ${{ steps.restore.outputs.cache-matched-key }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$CACHE_KEY" ]; then
+            echo "::error::No daily cache was restored; refusing to call checkout-only data recovered cache evidence."
+            exit 1
+          fi
+
+          python3 -m pip install --quiet -r requirements.txt
+
+          python3 - <<'PYTHON'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          from scripts import build_warehouse
+          from scripts.audit_enh_market_competition import recover_evidence
+
+          def hashes():
+              return {
+                  str(p): hashlib.sha256(p.read_bytes()).hexdigest()
+                  for p in Path("localdata").rglob("*")
+                  if p.is_file()
+              }
+
+          before = hashes()
+
+          build_warehouse.DB = (
+              Path(os.environ["RUNNER_TEMP"]) / "evidence-warehouse.duckdb"
+          )
+          build_warehouse.main()
+
+          report = recover_evidence(warehouse=build_warehouse.DB)
+
+          assert hashes() == before, "Read-only audit changed restored localdata"
+
+          report["cache_key"] = os.environ["CACHE_KEY"]
+
+          Path("export").mkdir(exist_ok=True)
+          Path("export/enhancement-evidence-recovery.json").write_text(
+              json.dumps(report, indent=2)
+          )
+
+          summary = {
+              k: v
+              for k, v in report.items()
+              if k not in ("inputs_sha256", "archive_receipt")
+          }
+
+          text = json.dumps(summary)
+          escaped = (
+              text.replace("%", "%25")
+                  .replace("\r", "%0D")
+                  .replace("\n", "%0A")
+          )
+
+          # Accessible through GitHub annotations, not just artifact downloads.
+          print("::notice title=Enhancement evidence recovery::" + escaped)
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as out:
+              out.write(
+                  "### Read-only enhancement evidence recovery\n"
+                  "```json\n"
+                  + json.dumps(summary, indent=2)
+                  + "\n```\n"
+              )
+          PYTHON
+
       - name: Collect untracked warehouse data files
         run: |
           set -euo pipefail
           mkdir -p export
+
           find localdata -type f -name '*.csv.gz' | sort > "$RUNNER_TEMP/all.txt"
-          grep -vxFf "$RUNNER_TEMP/tracked.txt" "$RUNNER_TEMP/all.txt" > "$RUNNER_TEMP/untracked.txt" || true
+
+          grep -vxFf "$RUNNER_TEMP/tracked.txt" "$RUNNER_TEMP/all.txt" \
+            > "$RUNNER_TEMP/untracked.txt" || true
+
           if [ ! -s "$RUNNER_TEMP/untracked.txt" ]; then
             echo "::error::No untracked *.csv.gz files found in the restored cache"
             exit 1
           fi
+
           MANIFEST=export/MANIFEST.txt
-          echo "cache_key_matched=${{ steps.restore.outputs.cache-matched-key }}" > "$MANIFEST"
+          echo "cache_key_matched=${{ steps.restore.outputs.cache-matched-key }}" \
+            > "$MANIFEST"
+
           while read -r f; do
             mkdir -p "export/$(dirname "$f")"
             cp "$f" "export/$f"
+
             size=$(stat -c %s "$f")
             hdr=$(zcat "$f" 2>/dev/null | head -n 1 | cut -c1-200 || true)
             last=$(zcat "$f" 2>/dev/null | tail -n 1 | cut -c1-200 || true)
+
             echo "$f bytes=$size" >> "$MANIFEST"
             echo "  header: $hdr" >> "$MANIFEST"
             echo "  last:   $last" >> "$MANIFEST"
           done < "$RUNNER_TEMP/untracked.txt"
+
           echo "total_bytes=$(du -sb export | cut -f1)" >> "$MANIFEST"
           cat "$MANIFEST"
 
-      - name: Upload warehouse inputs
+      - name: Upload warehouse inputs and audit report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: warehouse-inputs-${{ github.run_id }}
           path: export
           retention-days: 7
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Summary
         if: always()
@@ -67,6 +160,6 @@ jobs:
           {
             echo "### Warehouse inputs export"
             echo '```'
-            cat export/MANIFEST.txt 2>/dev/null || echo "no manifest written"
+            cat export/MANIFEST.txt 2>/dev/null || echo "No manifest written"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
