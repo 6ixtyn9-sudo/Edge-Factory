@@ -60,10 +60,9 @@ ACCEPTED = {
 # outstanding debt must not look alike in a config file, or the debt stops
 # being paid. Delete the entry when the step is done; the audit will then
 # confirm the two sides agree.
-PENDING_WORKFLOW_APPLY: dict[str, str] = {
-    "ODDS_API_MARKETS": "ENH alternate ladders and BTTS: manual workflow apply required; GitHub App lacks workflows permission; see ENH-PAYOUT-2026-10-22 audit",
-    "ODDS_API_TOTAL_POINTS": "ENH team 0.5 lines: manual workflow apply required; GitHub App lacks workflows permission; see ENH-PAYOUT-2026-10-22 audit",
-}
+# The ENH market/point workflow changes have been applied. Keep this empty
+# rather than pre-approving a future divergence on those settings.
+PENDING_WORKFLOW_APPLY: dict[str, str] = {}
 
 
 def workflow_env() -> dict[str, tuple[str | None, str]]:
