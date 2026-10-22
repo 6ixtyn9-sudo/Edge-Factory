@@ -5257,7 +5257,7 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
     # Deploy line, footer — identical to main slip.
     if plan:   # a no-bet card states no deployment
         day_staked = sum(a["stake_pct"] for a in plan)
-        lines.append(f"deploying {ENHANCEMENT_LANE.stake_frac:.0%} of free bank today "
+        lines.append(f"deploying {day_staked / bank_eff if bank_eff > 0 else 0:.1%} of free bank today "
                      f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
                      f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
     lines.append("All figures are percentages of capital. Round to your bookmaker's "
