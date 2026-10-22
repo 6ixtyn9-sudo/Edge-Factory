@@ -43,8 +43,8 @@ jobs:
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}
       ODDS_API_REGIONS: ${{ secrets.ODDS_API_REGIONS || 'eu' }}
-      ODDS_API_MARKETS: ${{ secrets.ODDS_API_MARKETS || 'h2h,totals,team_totals' }}
-      ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '1.5,2.5,3.5,4.5' }}
+      ODDS_API_MARKETS: ${{ secrets.ODDS_API_MARKETS || 'h2h,totals,alternate_totals,btts,team_totals,alternate_team_totals,double_chance' }}
+      ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '0.5,1.5,2.5,3.5,4.5' }}
       ODDS_API_MONTHLY_BUDGET: ${{ secrets.ODDS_API_MONTHLY_BUDGET || '480' }}
       ODDS_API_CLOSE_WINDOW_MIN: ${{ secrets.ODDS_API_CLOSE_WINDOW_MIN || '45' }}
       SHARPAPI_SPORT: ${{ secrets.SHARPAPI_SPORT || 'soccer' }}
@@ -144,21 +144,21 @@ jobs:
           outcome = os.environ.get('RECOVERY_OUTCOME', 'skipped')
           slip = root / f'autobets_enh_tickets_{date.today().isoformat()}.txt'
           if outcome != 'success' and not slip.exists():
-              slip.write_text('NO BET — recovery/validation incomplete; no replacement authorised.\nNo stake committed by this attempt.\n')
+              slip.write_text('NO BET — recovery/validation incomplete; no replacement authorised.\\nNo stake committed by this attempt.\\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
-              out.write(f'## Recovery and enhancement rebuild: {outcome}\n')
-              out.write('Current registry snapshot follows; research passes alone are not activation.\n')
+              out.write(f'## Recovery and enhancement rebuild: {outcome}\\n')
+              out.write('Current registry snapshot follows; research passes alone are not activation.\\n')
               try:
                   registry = json.loads((root / 'edges_consensus.json').read_text())
                   edges = [e for e in registry.get('edges', []) if e.get('contract_schema') == 'post_forebet_v1']
-                  out.write(f"Post-Forebet contracts: {len(edges)}; certified: {sum(e.get('status') == 'certified' for e in edges)}\n")
+                  out.write(f"Post-Forebet contracts: {len(edges)}; certified: {sum(e.get('status') == 'certified' for e in edges)}\\n")
                   for edge in edges:
                       evidence = {k: edge.get(k) for k in ('contract_id', 'research_rule', 'status', 'sources', 'strategy', 'threshold', 'activated_as_of', 'train', 'valid', 'decay')}
-                      out.write('```json\n' + json.dumps(evidence, indent=2) + '\n```\n')
+                      out.write('```json\\n' + json.dumps(evidence, indent=2) + '\\n```\\n')
               except (OSError, ValueError) as error:
-                  out.write(f'Registry unavailable: {type(error).__name__}\n')
+                  out.write(f'Registry unavailable: {type(error).__name__}\\n')
               if slip.exists():
-                  out.write('### Enhancement artifact (a newer frozen replacement is never overwritten)\n```text\n' + slip.read_text() + '\n```\n')
+                  out.write('### Enhancement artifact (a newer frozen replacement is never overwritten)\\n```text\\n' + slip.read_text() + '\\n```\\n')
           PY_EVIDENCE
 
       - name: Execute Autonomous Smart Schedule
