@@ -140,3 +140,9 @@ claiming a completed cache audit.
 All **864 operational files** matched their pre-recovery hashes. No bank,
 settled history, registry, picks, current NO BET, price capture, or prediction
 CSV was changed. No selection threshold or staking rule was relaxed.
+
+Recovery validation: **3,798 passed, 1 skipped in 166.02 seconds**. A prior
+registry version at commit `f0544f5846bc99c7d65f0b34d824f0ccc39e7732` also retains
+the Betis losing outcome at 1.36. This is an additional content witness, not a
+claim that a commit timestamp proves publication time or independent score
+origin. No historical availability field was backdated.
