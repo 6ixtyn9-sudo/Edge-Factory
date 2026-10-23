@@ -990,7 +990,7 @@ def test_new_alias_admission_cannot_use_shared_nine_character_club_prefix(select
     assert not row['enhancement_priced']
 
 
-@pytest.mark.parametrize('suffix', ['Under-23', 'Under 23', 'Sub-21', 'U-21', 'Femenil', 'Frauen'])
+@pytest.mark.parametrize('suffix', ['Under-23', 'Under 23', 'Sub-21', 'U-21', 'Femenil', 'Frauen', 'SRL', 'S.R.L.'])
 @pytest.mark.parametrize('exact', [False, True])
 @pytest.mark.parametrize('wrong_first', [False, True])
 def test_loader_excludes_untabled_squads_in_exact_and_alias_quotes(tmp_path, suffix, exact, wrong_first):
@@ -1009,7 +1009,7 @@ def test_loader_excludes_untabled_squads_in_exact_and_alias_quotes(tmp_path, suf
     assert row['enhancement_consensus_price'] == 1.6
 
 
-@pytest.mark.parametrize('suffix', ['Women', 'Under-23', 'Femenil'])
+@pytest.mark.parametrize('suffix', ['Women', 'Under-23', 'Femenil', 'SRL'])
 @pytest.mark.parametrize('witnessed', [False, True])
 def test_wrong_squad_only_exact_slot_is_unpriced(suffix, witnessed):
     index = _alias_index(_alias_offer(home='Palmeiras '+suffix, away='Fluminense '+suffix))
@@ -1105,3 +1105,34 @@ def test_primary_swapped_quote_squad_check_uses_pick_orientation(witnessed):
     row = attach_enhancement_price(
         _alias_pick(home='Palmeiras U21', away='Fluminense Women', **updates), index)
     assert row['enhancement_price'] == 1.6
+
+
+@pytest.mark.parametrize('home,away', [('Alanyaspor', 'Kocaelispor'), ('GO Ahead Eagles', 'SC Telstar')])
+@pytest.mark.parametrize('sim_side', ['home', 'away'])
+@pytest.mark.parametrize('with_real', [False, True])
+@pytest.mark.parametrize('witnessed', [False, True])
+def test_retained_oddspapi_srl_cannot_price_real_fixture(tmp_path, monkeypatch, home, away, sim_side, with_real, witnessed):
+    monkeypatch.setenv('EDGE_FACTORY_ODDSPAPI_PRICES', '1')
+    real = _row(source='oddspapi', schema_version='3', date='2026-10-22',
+                home=home, away=away, market='ou_2.5', selection='under', odds=1.6,
+                kickoff='2026-10-22T00:30:00Z', captured_at='2026-10-21T22:25:00Z')
+    simulated = dict(real, odds=2.0, captured_at='2026-10-21T22:26:00Z')
+    simulated[sim_side] += ' SRL'
+    rows = [real, simulated] if with_real else [simulated]
+    (tmp_path / 'localdata').mkdir()
+    with gzip.open(tmp_path / 'localdata/oddspapi_odds_2026-10.csv.gz', 'wt', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=list(real))
+        writer.writeheader()
+        writer.writerows(rows)
+    index = load_prices_index(tmp_path, '2026-10-22')
+    # Prove all schema-valid archived rows reached the quote index. Long
+    # names collide; shorter Telstar spellings exercise the pair-absent path.
+    # Admission, not an empty/misconfigured loader, must protect the pick.
+    assert sum(len(slots.get(('ou_2.5', 'under'), []))
+               for slots in index['fixture_quotes'].values()) == len(rows)
+    updates = {} if witnessed else dict(kickoff_utc=None, contract_schema=None)
+    result = attach_enhancement_price(_alias_pick(home=home, away=away,
+        recommended_enhancement='match_under_25', **updates), index)
+    assert result['enhancement_priced'] is with_real
+    assert result['enhancement_price'] == (1.6 if with_real else None)
+    assert result['enhancement_consensus_price'] == (1.6 if with_real and witnessed else None)

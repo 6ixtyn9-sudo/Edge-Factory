@@ -59,6 +59,7 @@ from edgefactory.sources.oddspapi_odds import (
 )
 from edgefactory.enh_pricing import ODDSPAPI_MAX_AGE_H as CAPTURE_WINDOW_H
 from edgefactory.util import fold_ascii
+from edgefactory.identity import squad_markers
 import urllib.error
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -735,6 +736,15 @@ def capture(day: str, max_fixtures: int = MAX_FIXTURES_CEILING,
             return stats
         fixtures = fixtures or []
         stats["fixtures"] = len(fixtures)
+        # Filter both newly fetched and cached boards before any market/odds
+        # request. A simulated event must not spend a real-football budget or
+        # count as real-slate overlap. Keep total and exclusion counts honest.
+        eligible = [fx for fx in fixtures if not any(
+            "simulation" in squad_markers(name) for name in (
+                fx.get("participant1Name") or fx.get("home"),
+                fx.get("participant2Name") or fx.get("away")))]
+        stats["excluded_srl_fixtures"] = len(fixtures) - len(eligible)
+        fixtures = eligible
         stats.update(_slate_overlap_diagnostic(fixtures, day))
         pending = _pending_fixtures(fixtures, state, now)
         stats["pending_fixtures"] = len(pending)
