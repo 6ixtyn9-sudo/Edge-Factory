@@ -44,7 +44,7 @@ def setup(tmp_path, monkeypatch):
     return local, path, receipt, state
 
 
-def test_reset_removes_only_unplaced_target_and_keeps_audit_and_bank(setup):
+def test_reset_removes_unplaced_details_and_keeps_only_marker_and_bank(setup):
     local, _, _, original = setup
     st = at.load_state(at.ENHANCEMENT_LANE)
     for field in ('bank', 'base_pct', 'cycle_base', 'history', 'events'):
@@ -53,8 +53,7 @@ def test_reset_removes_only_unplaced_target_and_keeps_audit_and_bank(setup):
     assert DAY not in st['frozen_by_date'] and DAY not in st['superseded_by_date']
     assert st['frozen_by_date']['2026-10-19'] == original['frozen_by_date']['2026-10-19']
     record = st['unplaced_enhancement_resets'][DAY]
-    assert record['removed_open_slips'] == original['open_slips'][:1]
-    assert record['previous_freeze'] == original['frozen_by_date'][DAY]
+    assert set(record) == {'receipt_sha256', 'approved_at', 'confirmed_none_placed'}
     assert not (local / f'autobets_enh_tickets_{DAY}.txt').exists()
     assert not (local / f'autobets_enh_tickets_{DAY}.frozen').exists()
     assert at.load_state(at.ENHANCEMENT_LANE) == st
