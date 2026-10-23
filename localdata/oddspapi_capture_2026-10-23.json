@@ -1,165 +1,287 @@
 {
-  "added": 4428,
-  "attempted": 5,
+  "added": 26350,
+  "attempted": 14,
   "attempted_fixtures": [
     {
-      "away": "Hakoach Amidar Ramat Gan",
-      "fixture_id": "id1000197475883114",
-      "home": "Beitar Ramat Gan"
+      "away": "FK Kudrivka",
+      "fixture_id": "id1000021872409744",
+      "home": "FC Dynamo Kyiv"
     },
     {
-      "away": "Cashmere Technical",
-      "fixture_id": "id1000059474873382",
-      "home": "Ferrymead Bays"
+      "away": "Perth Glory FC",
+      "fixture_id": "id1000013672897394",
+      "home": "Brisbane Roar FC"
     },
     {
-      "away": "Waterside Karori",
-      "fixture_id": "id1004504774931162",
-      "home": "Wellington United Diamonds"
+      "away": "Hangzhou Linping Wuyue",
+      "fixture_id": "id1001563674454994",
+      "home": "Shanghai Port B"
     },
     {
-      "away": "Kocaelispor Srl",
-      "fixture_id": "id1003222575727794",
-      "home": "Alanyaspor SRL"
+      "away": "Agrobiznes Volochisk",
+      "fixture_id": "id1000069172550282",
+      "home": "FC Chernigiv"
     },
     {
-      "away": "SC Telstar Srl",
-      "fixture_id": "id1003237775727770",
-      "home": "GO Ahead Eagles Srl"
+      "away": "Malaga CF Srl",
+      "fixture_id": "id1003221975727690",
+      "home": "Deportivo Alaves SRL"
+    },
+    {
+      "away": "AC Monza Srl",
+      "fixture_id": "id1003222175727666",
+      "home": "Torino FC SRL"
+    },
+    {
+      "away": "Baqa Al-Gharbiyye",
+      "fixture_id": "id1000197074401636",
+      "home": "Hapoel Migdal Haemeq"
+    },
+    {
+      "away": "Hapoel Umm AL Fahm",
+      "fixture_id": "id1000197074401650",
+      "home": "Maccabi Kiryat Ata-Bialik"
+    },
+    {
+      "away": "Persiba Balikpapan",
+      "fixture_id": "id1002056073929322",
+      "home": "Persipura Jayapura"
+    },
+    {
+      "away": "Sydney United 58 FC",
+      "fixture_id": "id1004850774827284",
+      "home": "South Melbourne FC"
+    },
+    {
+      "away": "APIA Leichhardt",
+      "fixture_id": "id1004850774827308",
+      "home": "Adelaide City FC"
+    },
+    {
+      "away": "Rahmatganj MFS",
+      "fixture_id": "id1002782175395112",
+      "home": "Fakirapool Young Men"
+    },
+    {
+      "away": "Abahani Limited Dhaka",
+      "fixture_id": "id1002782175395114",
+      "home": "Brothers Union"
+    },
+    {
+      "away": "Selangor FC II",
+      "fixture_id": "id1004312573714792",
+      "home": "AAK Puncak Alam FC"
     }
   ],
   "budget": {
     "day": "2026-10-23",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 220,
-    "remaining_today": 28,
-    "spent_today": 34
+    "month_spent": 248,
+    "remaining_today": 0,
+    "spent_today": 62
   },
-  "captured_at": "2026-10-23T01:16:27+00:00",
+  "budget_deferred": 17,
+  "captured_at": "2026-10-23T04:24:50+00:00",
   "date": "2026-10-23",
   "errors": [],
   "fixtures": 421,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 267,
+  "market_census_distinct": 647,
   "markets": {
-    "1x2": 855,
-    "ou_0.5": 57,
-    "ou_1": 34,
-    "ou_1.25": 9,
-    "ou_1.5": 139,
-    "ou_1.75": 23,
-    "ou_2": 87,
-    "ou_2.25": 56,
-    "ou_2.5": 482,
-    "ou_2.75": 94,
-    "ou_3": 116,
-    "ou_3.25": 160,
-    "ou_3.5": 440,
-    "ou_3.75": 135,
-    "ou_4": 93,
-    "ou_4.25": 79,
-    "ou_4.5": 357,
-    "ou_4.75": 22,
-    "ou_5": 68,
-    "ou_5.25": 17,
-    "ou_5.5": 102,
-    "ou_5.75": 18,
-    "ou_6": 18,
-    "ou_6.25": 8,
-    "ou_6.5": 10,
-    "ou_7.5": 2,
-    "tt_away_0.5": 77,
-    "tt_away_1": 18,
-    "tt_away_1.25": 2,
-    "tt_away_1.5": 118,
-    "tt_away_2": 16,
-    "tt_away_2.5": 154,
-    "tt_away_3": 2,
-    "tt_away_3.5": 60,
-    "tt_away_4.5": 44,
-    "tt_away_5.5": 2,
-    "tt_home_0.5": 68,
-    "tt_home_1": 2,
-    "tt_home_1.25": 2,
-    "tt_home_1.5": 204,
-    "tt_home_2": 16,
-    "tt_home_2.5": 105,
-    "tt_home_2.75": 16,
-    "tt_home_3.5": 27,
-    "tt_home_4.5": 14
+    "1x2": 3406,
+    "ou_0.5": 783,
+    "ou_0.75": 96,
+    "ou_1": 300,
+    "ou_1.25": 194,
+    "ou_1.5": 1373,
+    "ou_1.75": 287,
+    "ou_10.5": 6,
+    "ou_11.5": 6,
+    "ou_12.5": 6,
+    "ou_13.5": 3,
+    "ou_2": 463,
+    "ou_2.25": 462,
+    "ou_2.5": 1961,
+    "ou_2.75": 610,
+    "ou_3": 791,
+    "ou_3.25": 586,
+    "ou_3.5": 1866,
+    "ou_3.75": 410,
+    "ou_4": 462,
+    "ou_4.25": 274,
+    "ou_4.5": 1403,
+    "ou_4.75": 255,
+    "ou_5": 280,
+    "ou_5.25": 177,
+    "ou_5.5": 840,
+    "ou_5.75": 116,
+    "ou_6": 108,
+    "ou_6.25": 72,
+    "ou_6.5": 296,
+    "ou_6.75": 58,
+    "ou_7": 52,
+    "ou_7.25": 36,
+    "ou_7.5": 87,
+    "ou_7.75": 28,
+    "ou_8": 28,
+    "ou_8.25": 28,
+    "ou_8.5": 63,
+    "ou_9.5": 6,
+    "tt_away_0.5": 1054,
+    "tt_away_0.75": 34,
+    "tt_away_1": 82,
+    "tt_away_1.25": 36,
+    "tt_away_1.5": 1014,
+    "tt_away_1.75": 22,
+    "tt_away_2": 74,
+    "tt_away_2.25": 24,
+    "tt_away_2.5": 872,
+    "tt_away_2.75": 16,
+    "tt_away_3": 30,
+    "tt_away_3.25": 14,
+    "tt_away_3.5": 370,
+    "tt_away_3.75": 4,
+    "tt_away_4": 20,
+    "tt_away_4.25": 4,
+    "tt_away_4.5": 125,
+    "tt_away_4.75": 2,
+    "tt_away_5.5": 46,
+    "tt_away_6.5": 3,
+    "tt_home_0.5": 840,
+    "tt_home_0.75": 6,
+    "tt_home_1": 60,
+    "tt_home_1.25": 24,
+    "tt_home_1.5": 1064,
+    "tt_home_1.75": 28,
+    "tt_home_2": 60,
+    "tt_home_2.25": 34,
+    "tt_home_2.5": 1038,
+    "tt_home_2.75": 38,
+    "tt_home_3": 90,
+    "tt_home_3.25": 18,
+    "tt_home_3.5": 570,
+    "tt_home_3.75": 18,
+    "tt_home_4": 38,
+    "tt_home_4.25": 16,
+    "tt_home_4.5": 206,
+    "tt_home_5.5": 69,
+    "tt_home_6.5": 6,
+    "tt_home_7.5": 3
   },
   "markets_source": "cache",
-  "matched": 5,
+  "matched": 13,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "market_id_unknown": 1092,
-    "market_inactive": 1124,
-    "market_unsupported_clean_sheet": 46,
-    "market_unsupported_corners": 24,
-    "market_unsupported_correct_score": 362,
-    "market_unsupported_double_chance": 379,
-    "market_unsupported_draw_no_bet": 240,
-    "market_unsupported_handicap": 1350,
-    "market_unsupported_odd_even": 308,
-    "market_unsupported_period": 4290,
-    "market_unsupported_win_to_nil": 74,
-    "outcome_inactive": 165,
-    "unresolved_btts": 270
+    "alt_line_skipped": 17,
+    "market_id_unknown": 7749,
+    "market_inactive": 6782,
+    "market_unsupported_clean_sheet": 550,
+    "market_unsupported_corners": 3915,
+    "market_unsupported_correct_score": 2404,
+    "market_unsupported_double_chance": 1523,
+    "market_unsupported_draw_no_bet": 1095,
+    "market_unsupported_handicap": 9215,
+    "market_unsupported_odd_even": 2143,
+    "market_unsupported_period": 31672,
+    "market_unsupported_win_to_nil": 1046,
+    "outcome_inactive": 1175,
+    "unresolved_btts": 1620
   },
   "parse_skips_classified": {
     "expected": {
-      "market_inactive": 1124,
-      "outcome_inactive": 165
+      "alt_line_skipped": 17,
+      "market_inactive": 6782,
+      "outcome_inactive": 1175
     },
     "loss_or_diagnosis": {
-      "market_id_unknown": 1092,
-      "market_unsupported_clean_sheet": 46,
-      "market_unsupported_corners": 24,
-      "market_unsupported_correct_score": 362,
-      "market_unsupported_double_chance": 379,
-      "market_unsupported_draw_no_bet": 240,
-      "market_unsupported_handicap": 1350,
-      "market_unsupported_odd_even": 308,
-      "market_unsupported_period": 4290,
-      "market_unsupported_win_to_nil": 74,
-      "unresolved_btts": 270
+      "market_id_unknown": 7749,
+      "market_unsupported_clean_sheet": 550,
+      "market_unsupported_corners": 3915,
+      "market_unsupported_correct_score": 2404,
+      "market_unsupported_double_chance": 1523,
+      "market_unsupported_draw_no_bet": 1095,
+      "market_unsupported_handicap": 9215,
+      "market_unsupported_odd_even": 2143,
+      "market_unsupported_period": 31672,
+      "market_unsupported_win_to_nil": 1046,
+      "unresolved_btts": 1620
     }
   },
-  "pending_fixtures": 5,
+  "pending_fixtures": 31,
   "quoted_fixtures": [
     {
-      "away": "Hakoach Amidar Ramat Gan",
-      "fixture_id": "id1000197475883114",
-      "home": "Beitar Ramat Gan"
+      "away": "FK Kudrivka",
+      "fixture_id": "id1000021872409744",
+      "home": "FC Dynamo Kyiv"
     },
     {
-      "away": "Cashmere Technical",
-      "fixture_id": "id1000059474873382",
-      "home": "Ferrymead Bays"
+      "away": "Perth Glory FC",
+      "fixture_id": "id1000013672897394",
+      "home": "Brisbane Roar FC"
     },
     {
-      "away": "Waterside Karori",
-      "fixture_id": "id1004504774931162",
-      "home": "Wellington United Diamonds"
+      "away": "Hangzhou Linping Wuyue",
+      "fixture_id": "id1001563674454994",
+      "home": "Shanghai Port B"
     },
     {
-      "away": "Kocaelispor Srl",
-      "fixture_id": "id1003222575727794",
-      "home": "Alanyaspor SRL"
+      "away": "Agrobiznes Volochisk",
+      "fixture_id": "id1000069172550282",
+      "home": "FC Chernigiv"
     },
     {
-      "away": "SC Telstar Srl",
-      "fixture_id": "id1003237775727770",
-      "home": "GO Ahead Eagles Srl"
+      "away": "Malaga CF Srl",
+      "fixture_id": "id1003221975727690",
+      "home": "Deportivo Alaves SRL"
+    },
+    {
+      "away": "AC Monza Srl",
+      "fixture_id": "id1003222175727666",
+      "home": "Torino FC SRL"
+    },
+    {
+      "away": "Baqa Al-Gharbiyye",
+      "fixture_id": "id1000197074401636",
+      "home": "Hapoel Migdal Haemeq"
+    },
+    {
+      "away": "Hapoel Umm AL Fahm",
+      "fixture_id": "id1000197074401650",
+      "home": "Maccabi Kiryat Ata-Bialik"
+    },
+    {
+      "away": "Persiba Balikpapan",
+      "fixture_id": "id1002056073929322",
+      "home": "Persipura Jayapura"
+    },
+    {
+      "away": "Sydney United 58 FC",
+      "fixture_id": "id1004850774827284",
+      "home": "South Melbourne FC"
+    },
+    {
+      "away": "APIA Leichhardt",
+      "fixture_id": "id1004850774827308",
+      "home": "Adelaide City FC"
+    },
+    {
+      "away": "Rahmatganj MFS",
+      "fixture_id": "id1002782175395112",
+      "home": "Fakirapool Young Men"
+    },
+    {
+      "away": "Abahani Limited Dhaka",
+      "fixture_id": "id1002782175395114",
+      "home": "Brothers Union"
     }
   ],
-  "rows": 4428,
+  "rows": 26350,
   "schema": 1,
   "slate_candidate_fixtures": 60,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 0,
+  "slate_priority_fixtures": 2,
   "slate_provider_overlap_fixtures": 25,
   "slate_unmatched_fixtures": [
     {
@@ -373,5 +495,6 @@
       "normalized_pair": "corvinul hunedoara|universitatea cluj"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "budget"
 }
