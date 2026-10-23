@@ -1,17 +1,17 @@
 {
   "notes": [
-    "need_h2h=1",
-    "unresolved=5"
+    "need_h2h=0",
+    "unresolved=6"
   ],
   "outcome": {
-    "calls_charged": 1,
+    "calls_charged": 0,
     "decisions": {
       "budget_stop": 0,
       "capture_blocked": 0,
-      "captured": 1,
+      "captured": 0,
       "lane_blocked_local": 0,
       "staleness_skip": 0,
-      "unresolved_id": 5
+      "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
     "ledger_entries": 21,
@@ -58,33 +58,40 @@
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "almerecity|rodajckerkrade",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
       }
     ],
-    "usable_snapshots": 1
+    "usable_snapshots": 0
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 23
+      "88739ee5": 21
     },
-    "allowed_calls": 1,
+    "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=1 (h2h=1 + listing=0) x 1 family-unit vs spendable=23 [pools=2 cap=90 reserve=20 spent=6 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=21 [pools=2 cap=90 reserve=20 spent=7 month=2026-10] -> approved",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1,
-      "88739ee5": 5
+      "88739ee5": 6
     },
-    "need_h2h": 1,
+    "need_h2h": 0,
     "need_listing": 0,
-    "need_total": 1,
+    "need_total": 0,
     "pool_labels": {
       "5b6ed40a": "50ca",
       "88739ee5": "4a0d"
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 23,
+    "spendable": 21,
     "verdict": "approved"
   },
   "provenance": {
@@ -95,281 +102,10 @@
   "role": "silent pre-kickoff H2H context capture for the dormant context vocabulary; NOT a price, NOT a vote, NOT a registered rule",
   "run_date": "2026-10-23",
   "schema": 1,
-  "snapshots": [
-    {
-      "captured_at": "2026-10-22T22:29:34+00:00",
-      "encounters": [
-        {
-          "as_of": "2026-10-22T22:29:34+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Atletico Nacional",
-          "competition": "Categoria Primera A",
-          "date": "2026-03-30",
-          "first_half": [
-            1,
-            1
-          ],
-          "fulltime": [
-            1,
-            2
-          ],
-          "home_team": "Deportivo Pasto",
-          "season": "2026 - Apertura"
-        },
-        {
-          "as_of": "2026-10-22T22:29:34+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Atletico Nacional",
-          "competition": "Categoria Primera A",
-          "date": "2026-03-30",
-          "first_half": [
-            1,
-            1
-          ],
-          "fulltime": [
-            1,
-            2
-          ],
-          "home_team": "Deportivo Pasto",
-          "season": "2026 - Apertura"
-        },
-        {
-          "as_of": "2026-10-22T22:29:34+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Atletico Nacional",
-          "competition": "Categoria Primera A",
-          "date": "2025-10-18",
-          "first_half": [
-            0,
-            1
-          ],
-          "fulltime": [
-            2,
-            2
-          ],
-          "home_team": "Deportivo Pasto",
-          "season": "2025 - Clausura"
-        },
-        {
-          "as_of": "2026-10-22T22:29:34+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Deportivo Pasto",
-          "competition": "Categoria Primera A",
-          "date": "2025-04-30",
-          "first_half": [
-            1,
-            0
-          ],
-          "fulltime": [
-            3,
-            0
-          ],
-          "home_team": "Atletico Nacional",
-          "season": "2025 - Apertura"
-        },
-        {
-          "as_of": "2026-10-22T22:29:34+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Deportivo Pasto",
-          "competition": "Categoria Primera A",
-          "date": "2024-12-05",
-          "first_half": [
-            0,
-            0
-          ],
-          "fulltime": [
-            2,
-            1
-          ],
-          "home_team": "Atletico Nacional",
-          "season": "2024"
-        },
-        {
-          "as_of": "2026-10-22T22:29:34+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Atletico Nacional",
-          "competition": "Categoria Primera A",
-          "date": "2024-11-24",
-          "first_half": [
-            0,
-            1
-          ],
-          "fulltime": [
-            0,
-            1
-          ],
-          "home_team": "Deportivo Pasto",
-          "season": "2024"
-        },
-        {
-          "as_of": "2026-10-22T22:29:34+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Atletico Nacional",
-          "competition": "Categoria Primera A",
-          "date": "2024-10-06",
-          "first_half": [
-            0,
-            1
-          ],
-          "fulltime": [
-            1,
-            2
-          ],
-          "home_team": "Deportivo Pasto",
-          "season": "2024 - Clausura"
-        },
-        {
-          "as_of": "2026-10-22T22:29:34+00:00",
-          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
-          "away_team": "Deportivo Pasto",
-          "competition": "Categoria Primera A",
-          "date": "2024-03-24",
-          "first_half": [
-            1,
-            0
-          ],
-          "fulltime": [
-            1,
-            0
-          ],
-          "home_team": "Atletico Nacional",
-          "season": "2024 - Apertura"
-        }
-      ],
-      "encounters_dropped": {
-        "not_before_kickoff": 0,
-        "too_old": 2,
-        "undated": 0
-      },
-      "event_id": 425618,
-      "features": {
-        "form_gap": 4.0,
-        "h2h_avg_bookie_draw_chance": 0.284,
-        "h2h_avg_goals_per_match_recomputed": 2.625,
-        "h2h_away_at_away": 0,
-        "h2h_away_at_home": 0,
-        "h2h_away_form": -2.0,
-        "h2h_away_wins_recomputed": 0,
-        "h2h_bookie_away_win_prior": 0.212,
-        "h2h_bookie_draw_prior": 0.284,
-        "h2h_bookie_home_win_prior": 0.493,
-        "h2h_btts_share": 0.625,
-        "h2h_btts_share_recomputed": 0.625,
-        "h2h_clean_sheet_rate": 0.375,
-        "h2h_clean_sheet_rate_recomputed": 0.375,
-        "h2h_competition_diversity": 1,
-        "h2h_dominance": 9,
-        "h2h_draw_share": 0.125,
-        "h2h_draw_share_recomputed": 0.125,
-        "h2h_encounter_count": 8,
-        "h2h_first_half_away_win_share": 0.375,
-        "h2h_first_half_draw_share": 0.375,
-        "h2h_first_half_home_win_share": 0.25,
-        "h2h_first_half_lost_share": 0.375,
-        "h2h_first_half_share": 1.0,
-        "h2h_first_half_win_share": 0.625,
-        "h2h_home_at_away": 4,
-        "h2h_home_at_home": 3,
-        "h2h_home_form": 2.0,
-        "h2h_home_wins_recomputed": 7,
-        "h2h_host_minus_visitor": -1,
-        "h2h_over05_share": 1.0,
-        "h2h_over05_share_recomputed": 1.0,
-        "h2h_over15_share": 0.75,
-        "h2h_over15_share_recomputed": 0.75,
-        "h2h_over25_share": 0.75,
-        "h2h_over25_share_recomputed": 0.75,
-        "h2h_over35_share": 0.125,
-        "h2h_over35_share_recomputed": 0.125,
-        "h2h_provider_avg_goals": 2.8,
-        "h2h_provider_away_draw_chance": 0.284,
-        "h2h_provider_away_lose_chance": 0.493,
-        "h2h_provider_away_win_chance": 0.212,
-        "h2h_provider_btts": 6,
-        "h2h_provider_home_draw_chance": 0.284,
-        "h2h_provider_home_lose_chance": 0.212,
-        "h2h_provider_home_win_chance": 0.493,
-        "h2h_provider_num_encounters": 10,
-        "h2h_provider_over05": 10,
-        "h2h_provider_over15": 8,
-        "h2h_provider_over25": 7,
-        "h2h_provider_over35": 2,
-        "h2h_provider_total_goals": 28,
-        "h2h_recent_365d_share": 0.25,
-        "h2h_same_competition_share": 1.0,
-        "h2h_same_season_share": 0.25,
-        "h2h_season_diversity": 6,
-        "h2h_total_goals_recomputed": 21,
-        "rest_days": 207,
-        "venue_split": 3
-      },
-      "fixture_away": "Deportivo Pasto",
-      "fixture_away_key": "deportivopasto",
-      "fixture_home": "Atl\u00e9tico Nacional",
-      "fixture_home_key": "atleticonacional",
-      "fixture_key": "atleticonacional|deportivopasto",
-      "h2h_stats": {
-        "away_team": {
-          "avg_bookie_draw_chance": 0.284,
-          "avg_bookie_lose_chance": 0.493,
-          "avg_bookie_win_chance": 0.212,
-          "avg_goals_conceived": 2.0,
-          "avg_goals_scored": 0.8,
-          "clean_sheet": 0,
-          "draw": 1,
-          "first_half_draw": 4,
-          "first_half_lost": 6,
-          "first_half_win": 0,
-          "goals_conceived": 20,
-          "goals_scored": 8,
-          "lost": 9,
-          "team_name": "Deportivo Pasto",
-          "won": 0
-        },
-        "home_team": {
-          "avg_bookie_draw_chance": 0.284,
-          "avg_bookie_lose_chance": 0.212,
-          "avg_bookie_win_chance": 0.493,
-          "avg_goals_conceived": 0.8,
-          "avg_goals_scored": 2.0,
-          "clean_sheet": 4,
-          "draw": 1,
-          "first_half_draw": 4,
-          "first_half_lost": 0,
-          "first_half_win": 6,
-          "goals_conceived": 8,
-          "goals_scored": 20,
-          "lost": 0,
-          "team_name": "Atletico Nacional",
-          "won": 9
-        },
-        "overall": {
-          "avg_goals_per_match": 2.8,
-          "both_teams_scored": 6,
-          "num_encounters": 10,
-          "over_05": 10,
-          "over_15": 8,
-          "over_25": 7,
-          "over_35": 2,
-          "total_goals": 28
-        }
-      },
-      "identity_verified": true,
-      "kickoff_utc": "2026-10-23T01:00:00+00:00",
-      "reason": null,
-      "reconciliation_warnings": [],
-      "selection": {
-        "avg_p": 55.54912280701755,
-        "bucket": "SKIPPED_VETO",
-        "margin": 0.549,
-        "rule": "pfc_27e0f725859bc708f95c58a3"
-      },
-      "usable": true
-    }
-  ],
+  "snapshots": [],
   "source": "boggio_h2h",
   "stats": {
-    "snapshots": 1,
-    "usable": 1
+    "snapshots": 0,
+    "usable": 0
   }
 }

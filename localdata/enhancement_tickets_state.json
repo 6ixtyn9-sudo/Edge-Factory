@@ -475,105 +475,6 @@
         {
           "legs": [
             {
-              "match": "Flamengo vs Estudiantes",
-              "pick": "away",
-              "prob": 0.7614,
-              "odds": 6.5,
-              "result": null,
-              "market": "away_under_15",
-              "price_book": "bet365",
-              "cohort_evidence": {
-                "rate": 0.7614,
-                "n": 3038,
-                "contract_id": "pfc_439097cb9bb700e9996c0b07",
-                "as_of_exclusive": "2026-10-23",
-                "market": "away_under_15",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 2313,
-                "cohort_lower_bound": 0.7458747250454294,
-                "price_context": {
-                  "contract_id": "pfc_439097cb9bb700e9996c0b07",
-                  "selection": "home",
-                  "league": "Copa Libertadores",
-                  "book": "bet365",
-                  "source": "oddspapi",
-                  "price": 6.5,
-                  "captured_at": "2026-10-22T22:22:55.785609+00:00",
-                  "decision_at": "2026-10-23T00:29:46+02:00",
-                  "kickoff": "2026-10-23T00:30:00+00:00"
-                }
-              },
-              "label": "Away Team Under 1.5 Goals",
-              "floor": 1.4927,
-              "floor_basis": "pick_evidence",
-              "league": "Copa Libertadores",
-              "price_source": "oddspapi",
-              "price_at": "2026-10-22T22:22:55.785609+00:00",
-              "price_kickoff": "2026-10-23T00:30:00.000Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-23",
-                "Flamengo",
-                "Estudiantes"
-              ]
-            },
-            {
-              "match": "Always Ready vs The Strongest",
-              "pick": "away",
-              "prob": 0.4225,
-              "odds": 3.0,
-              "result": null,
-              "market": "away_under_05",
-              "price_book": "bet365",
-              "cohort_evidence": {
-                "rate": 0.4225,
-                "n": 1806,
-                "contract_id": "pfc_1607fec83282d02c5254c2bf",
-                "as_of_exclusive": "2026-10-23",
-                "market": "away_under_05",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 763,
-                "cohort_lower_bound": 0.3998875898321888,
-                "price_context": {
-                  "contract_id": "pfc_1607fec83282d02c5254c2bf",
-                  "selection": "home",
-                  "league": "Bolivia Copa de la Divisi\u00f3n Profesional",
-                  "book": "bet365",
-                  "source": "oddspapi",
-                  "price": 3.0,
-                  "captured_at": "2026-10-22T22:22:07.254194+00:00",
-                  "decision_at": "2026-10-23T00:29:46+02:00",
-                  "kickoff": "2026-10-23T00:00:00+00:00"
-                }
-              },
-              "label": "Away Team Under 0.5 Goals",
-              "floor": null,
-              "floor_basis": "inherited",
-              "league": "Bolivia Copa de la Divisi\u00f3n Profesional",
-              "price_source": "oddspapi",
-              "price_at": "2026-10-22T22:22:07.254194+00:00",
-              "price_kickoff": "2026-10-23T00:00:00.000Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-23",
-                "Always Ready",
-                "The Strongest"
-              ]
-            }
-          ],
-          "odds": 19.5,
-          "stake_pct": 8.7681,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
               "match": "Bolton Wanderers vs Middlesbrough",
               "pick": "under",
               "prob": 0.4209,
@@ -598,7 +499,7 @@
                   "source": "theoddsapi",
                   "price": 2.58,
                   "captured_at": "2026-10-22T22:22:01.495241+00:00",
-                  "decision_at": "2026-10-23T00:29:46+02:00",
+                  "decision_at": "2026-10-23T03:18:05+02:00",
                   "kickoff": "2026-10-23T19:00:00+00:00"
                 }
               },
@@ -642,7 +543,7 @@
                   "source": "theoddsapi",
                   "price": 2.76,
                   "captured_at": "2026-10-22T22:22:01.751835+00:00",
-                  "decision_at": "2026-10-23T00:29:46+02:00",
+                  "decision_at": "2026-10-23T03:18:05+02:00",
                   "kickoff": "2026-10-23T18:00:00+00:00"
                 }
               },
@@ -671,7 +572,7 @@
           "won": null
         }
       ],
-      "staked_pct": 17.5362
+      "staked_pct": 8.7681
     }
   ],
   "frozen_by_date": {

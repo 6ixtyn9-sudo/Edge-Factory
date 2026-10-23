@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 5,
@@ -30,7 +30,7 @@
         "selection_unmapped": 375
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-24' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -170,20 +170,20 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 6,
+      "coherence_excluded_rows": 12,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 6
+        "withheld_mixed_events_one_x_two": 12
       },
-      "coherence_withheld_fixtures": 1,
+      "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 20987
+        "out_of_window": 21467
       },
       "pa_matched": 0,
-      "pa_raw": 1155,
-      "pa_scored": 20987,
+      "pa_raw": 1183,
+      "pa_scored": 21467,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -259,9 +259,6 @@
           "unsupported_market:draw_no_bet": 2
         },
         "card_fixture_count": 0,
-        "card_fixtures_on_board": 0,
-        "card_fixtures_reversed": 0,
-        "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "player_prop": 161
@@ -272,16 +269,16 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 2
       },
-      "reason": null,
+      "reason": "cache_rows_pending_join",
       "sa_matched": 0,
-      "sa_raw": 1,
+      "sa_raw": 2,
       "sa_scored": 2,
-      "status": "ok"
+      "status": "cache_only"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
