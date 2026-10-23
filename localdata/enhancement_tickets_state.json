@@ -1184,8 +1184,13 @@
     "frozen_timestamps": "not recorded in published snapshots; explicitly unknown",
     "cache_supersession": {
       "schema": 1,
-      "superseded_financial_sha256": "f8a06efdba426f57a5e7c46cdca5104c6e84bb96d1dbd5a92ee2d2ccc09f3e05",
-      "retained_financial_sha256": "10277496612cc5a0e59c6de6868e7ceb05a2c57443fea97533a47199735ffe60"
+      "superseded_financial_sha256": "312474ab96fc062a59e78fb82eb695378c3dcf5844ccda3c18244c43885bd1a9",
+      "retained_financial_sha256": "10277496612cc5a0e59c6de6868e7ceb05a2c57443fea97533a47199735ffe60",
+      "source_commit": "8a252dc36783c4e70a9d769693ff327af27f2301",
+      "source_run_id": "39897962348",
+      "source_cache_key": "localdata-v2-39897962348",
+      "verification_basis": "Published Git financial snapshot; cache artifact download unavailable. Cache must match this exact financial hash.",
+      "reason": "Supersede obsolete October 23 draft only; identical bank and settled history, no other-date positions or locks changed."
     }
   },
   "enh_floor_table": {
