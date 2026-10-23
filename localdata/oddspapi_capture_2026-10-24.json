@@ -1,0 +1,444 @@
+{
+  "added": 5232,
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "FC Juarez",
+      "fixture_id": "id1002746472055262",
+      "home": "Club Necaxa"
+    }
+  ],
+  "budget": {
+    "day": "2026-10-24",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 254,
+    "remaining_today": 56,
+    "spent_today": 6
+  },
+  "budget_deferred": 30,
+  "captured_at": "2026-10-23T22:20:20+00:00",
+  "date": "2026-10-24",
+  "errors": [],
+  "excluded_srl_fixtures": 39,
+  "fixtures": 1355,
+  "future_slate_fixtures": 79,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-10.json",
+  "market_census_distinct": 524,
+  "markets": {
+    "1x2": 384,
+    "btts": 218,
+    "ou_0.5": 166,
+    "ou_0.75": 18,
+    "ou_1": 52,
+    "ou_1.25": 18,
+    "ou_1.5": 224,
+    "ou_1.75": 26,
+    "ou_10.5": 6,
+    "ou_11.5": 6,
+    "ou_12.5": 6,
+    "ou_13.5": 6,
+    "ou_14.5": 3,
+    "ou_2": 60,
+    "ou_2.25": 82,
+    "ou_2.5": 272,
+    "ou_2.75": 140,
+    "ou_3": 150,
+    "ou_3.25": 132,
+    "ou_3.5": 268,
+    "ou_3.75": 56,
+    "ou_4": 58,
+    "ou_4.25": 56,
+    "ou_4.5": 404,
+    "ou_4.75": 58,
+    "ou_5": 24,
+    "ou_5.25": 16,
+    "ou_5.5": 228,
+    "ou_5.75": 8,
+    "ou_6": 4,
+    "ou_6.25": 4,
+    "ou_6.5": 126,
+    "ou_6.75": 4,
+    "ou_7": 4,
+    "ou_7.25": 4,
+    "ou_7.5": 23,
+    "ou_7.75": 4,
+    "ou_8": 4,
+    "ou_8.25": 4,
+    "ou_8.5": 14,
+    "ou_9.5": 6,
+    "tt_away_0.5": 214,
+    "tt_away_1.5": 234,
+    "tt_away_2": 2,
+    "tt_away_2.25": 2,
+    "tt_away_2.5": 294,
+    "tt_away_2.75": 2,
+    "tt_away_3.5": 121,
+    "tt_away_4.5": 12,
+    "tt_away_5.5": 5,
+    "tt_home_0.5": 198,
+    "tt_home_1.5": 254,
+    "tt_home_2.5": 252,
+    "tt_home_3.25": 2,
+    "tt_home_3.5": 207,
+    "tt_home_3.75": 2,
+    "tt_home_4": 2,
+    "tt_home_4.5": 73,
+    "tt_home_5.5": 10
+  },
+  "markets_source": "fetch",
+  "matched": 1,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "market_id_unknown": 1994,
+    "market_inactive": 2115,
+    "market_unsupported_clean_sheet": 184,
+    "market_unsupported_corners": 2375,
+    "market_unsupported_correct_score": 513,
+    "market_unsupported_double_chance": 218,
+    "market_unsupported_draw_no_bet": 196,
+    "market_unsupported_handicap": 2445,
+    "market_unsupported_odd_even": 437,
+    "market_unsupported_period": 9390,
+    "market_unsupported_win_to_nil": 324,
+    "outcome_inactive": 222
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "market_inactive": 2115,
+      "outcome_inactive": 222
+    },
+    "loss_or_diagnosis": {
+      "market_id_unknown": 1994,
+      "market_unsupported_clean_sheet": 184,
+      "market_unsupported_corners": 2375,
+      "market_unsupported_correct_score": 513,
+      "market_unsupported_double_chance": 218,
+      "market_unsupported_draw_no_bet": 196,
+      "market_unsupported_handicap": 2445,
+      "market_unsupported_odd_even": 437,
+      "market_unsupported_period": 9390,
+      "market_unsupported_win_to_nil": 324
+    }
+  },
+  "pending_fixtures": 31,
+  "quoted_fixtures": [
+    {
+      "away": "FC Juarez",
+      "fixture_id": "id1002746472055262",
+      "home": "Club Necaxa"
+    }
+  ],
+  "reserved_requests": 57,
+  "rows": 5232,
+  "schema": 1,
+  "slate_candidate_fixtures": 180,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 1,
+  "slate_provider_overlap_fixtures": 86,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "El Merriekh Bentiu",
+      "home": "Pyramids FC",
+      "league": "CAF Champions League",
+      "normalized_pair": "el merriekh bentiu|pyramids"
+    },
+    {
+      "away": "Panaitolikos",
+      "home": "AEK Athens",
+      "league": "Super League",
+      "normalized_pair": "aek athens|panaitolikos"
+    },
+    {
+      "away": "V\u00e5lerenga",
+      "home": "Bod\u00f8 / Glimt",
+      "league": "Eliteserien",
+      "normalized_pair": "bodo / glimt|valerenga"
+    },
+    {
+      "away": "\u00d6rgryte",
+      "home": "Djurg\u00e5rden",
+      "league": "Allsvenskan",
+      "normalized_pair": "djurgarden|orgryte"
+    },
+    {
+      "away": "Fortaleza",
+      "home": "Ponte Preta",
+      "league": "Serie B",
+      "normalized_pair": "fortaleza|ponte preta"
+    },
+    {
+      "away": "Deportivo La Coru\u00f1a",
+      "home": "Atl\u00e9tico Madrid",
+      "league": "La Liga",
+      "normalized_pair": "atletico madrid|deportivo la coruna"
+    },
+    {
+      "away": "Zhar - Ulytau",
+      "home": "Kyzyl",
+      "league": "Kazakhstan Premier League",
+      "normalized_pair": "kyzyl|zhar - ulytau"
+    },
+    {
+      "away": "Mlad\u00e1 Boleslav",
+      "home": "Slavia Praha",
+      "league": "Chance Liga",
+      "normalized_pair": "mlada boleslav|slavia praha"
+    },
+    {
+      "away": "Harju Jalgpallikool",
+      "home": "Levadia",
+      "league": "Meistriliiga",
+      "normalized_pair": "harju jalgpallikool|levadia"
+    },
+    {
+      "away": "Remo",
+      "home": "Cruzeiro",
+      "league": "Brazil: Serie A",
+      "normalized_pair": "cruzeiro|remo"
+    },
+    {
+      "away": "Ru\u017eomberok",
+      "home": "Dunajsk\u00e1 Streda",
+      "league": "Nik\u00e9 Liga",
+      "normalized_pair": "dunajska streda|ruzomberok"
+    },
+    {
+      "away": "Ravenna",
+      "home": "Vis Pesaro",
+      "league": "Serie C: Girone B",
+      "normalized_pair": "ravenna|vis pesaro"
+    },
+    {
+      "away": "Celta de Vigo II",
+      "home": "Girona",
+      "league": "La Liga 2",
+      "normalized_pair": "celta de vigo|girona"
+    },
+    {
+      "away": "Bansk\u00e1 Bystrica",
+      "home": "Slovan Bratislava",
+      "league": "Nik\u00e9 Liga",
+      "normalized_pair": "banska bystrica|slovan bratislava"
+    },
+    {
+      "away": "Hegelmann Litauen",
+      "home": "TransINVEST Vilnius",
+      "league": "A Lyga",
+      "normalized_pair": "hegelmann litauen|transinvest vilnius"
+    },
+    {
+      "away": "West Ham W",
+      "home": "Brighton W",
+      "league": "Women's Super League",
+      "normalized_pair": "brighton w|west ham w"
+    },
+    {
+      "away": "FC Vaduz",
+      "home": "Servette FC",
+      "league": "Super League",
+      "normalized_pair": "servette|vaduz"
+    },
+    {
+      "away": "Sassuolo",
+      "home": "Como",
+      "league": "Serie A",
+      "normalized_pair": "como|sassuolo"
+    },
+    {
+      "away": "Elversberg",
+      "home": "RB Leipzig",
+      "league": "Bundesliga",
+      "normalized_pair": "elversberg|rb leipzig"
+    },
+    {
+      "away": "Parma",
+      "home": "Lazio",
+      "league": "Serie A",
+      "normalized_pair": "lazio|parma"
+    },
+    {
+      "away": "Latina",
+      "home": "Spezia",
+      "league": "Serie C: Girone B",
+      "normalized_pair": "latina|spezia"
+    },
+    {
+      "away": "Javor",
+      "home": "Metalac GM",
+      "league": "Serbia: Prva Liga",
+      "normalized_pair": "javor|metalac gm"
+    },
+    {
+      "away": "St. Johnstone",
+      "home": "Rangers",
+      "league": "Scottish Premiership",
+      "normalized_pair": "rangers|st. johnstone"
+    },
+    {
+      "away": "San Telmo",
+      "home": "Deportivo Madryn",
+      "league": "Primera B Nacional",
+      "normalized_pair": "deportivo madryn|san telmo"
+    },
+    {
+      "away": "Llandudno",
+      "home": "Connah's Quay",
+      "league": "Premier League",
+      "normalized_pair": "connah's quay|llandudno"
+    },
+    {
+      "away": "Porto",
+      "home": "Gil Vicente",
+      "league": "Liga Portugal",
+      "normalized_pair": "gil vicente|porto"
+    },
+    {
+      "away": "Rak\u00f3w Cz\u0119stochowa",
+      "home": "Wis\u0142a Krak\u00f3w",
+      "league": "Ekstraklasa",
+      "normalized_pair": "rakow czestochowa|wisla krakow"
+    },
+    {
+      "away": "Trofense",
+      "home": "Paredes",
+      "league": "Liga 3",
+      "normalized_pair": "paredes|trofense"
+    },
+    {
+      "away": "Vojvodina",
+      "home": "Mladost Lu\u010dani",
+      "league": "Super Liga",
+      "normalized_pair": "mladost lucani|vojvodina"
+    },
+    {
+      "away": "Jong Sparta",
+      "home": "De Treffers",
+      "league": "Tweede Divisie",
+      "normalized_pair": "de treffers|jong sparta"
+    },
+    {
+      "away": "HSV Hoek",
+      "home": "Quick Boys",
+      "league": "Tweede Divisie",
+      "normalized_pair": "hsv hoek|quick boys"
+    },
+    {
+      "away": "New England",
+      "home": "Philadelphia Union",
+      "league": "Major League Soccer",
+      "normalized_pair": "new england|philadelphia union"
+    },
+    {
+      "away": "Bragantino",
+      "home": "Palmeiras",
+      "league": "Serie A",
+      "normalized_pair": "bragantino|palmeiras"
+    },
+    {
+      "away": "FC Schalke 04",
+      "home": "1. FC K\u00f6ln",
+      "league": "Bundesliga",
+      "normalized_pair": "1. koln|schalke 04"
+    },
+    {
+      "away": "United Nordic",
+      "home": "\u00d6stersunds FK",
+      "league": "Superettan",
+      "normalized_pair": "ostersunds|united nordic"
+    },
+    {
+      "away": "Chaco For Ever",
+      "home": "Club Ferro Carril Oeste",
+      "league": "Primera B Nacional",
+      "normalized_pair": "chaco for ever|ferro carril oeste"
+    },
+    {
+      "away": "Arsenal W",
+      "home": "Tottenham W",
+      "league": "Women's Super League",
+      "normalized_pair": "arsenal w|tottenham w"
+    },
+    {
+      "away": "Chonburi FC",
+      "home": "Ratchaburi Mitrphol FC",
+      "league": "Thai Premier League",
+      "normalized_pair": "chonburi|ratchaburi mitrphol"
+    },
+    {
+      "away": "Aarhus Fremad",
+      "home": "Vejle Boldklub",
+      "league": "First Division",
+      "normalized_pair": "aarhus fremad|vejle boldklub"
+    },
+    {
+      "away": "Lusail City",
+      "home": "Al Duhail",
+      "league": "Stars League",
+      "normalized_pair": "al duhail|lusail city"
+    },
+    {
+      "away": "Zeljeznicar",
+      "home": "Sarajevo",
+      "league": "Premier Liga",
+      "normalized_pair": "sarajevo|zeljeznicar"
+    },
+    {
+      "away": "Fram",
+      "home": "V\u00edkingur Reykjav\u00edk",
+      "league": "Besta deild",
+      "normalized_pair": "fram|vikingur reykjavik"
+    },
+    {
+      "away": "Fredericia",
+      "home": "Esbjerg",
+      "league": "First Division",
+      "normalized_pair": "esbjerg|fredericia"
+    },
+    {
+      "away": "Mallorca",
+      "home": "Legan\u00e9s",
+      "league": "Segunda Divisi\u00f3n",
+      "normalized_pair": "leganes|mallorca"
+    },
+    {
+      "away": "Dunfermline Athletic",
+      "home": "Queen's Park",
+      "league": "Championship",
+      "normalized_pair": "dunfermline athletic|queen's park"
+    },
+    {
+      "away": "Dolomiti Bellunesi",
+      "home": "Treviso",
+      "league": "Serie C: Girone A",
+      "normalized_pair": "dolomiti bellunesi|treviso"
+    },
+    {
+      "away": "Horoya",
+      "home": "Al Merreikh",
+      "league": "CAF Champions League",
+      "normalized_pair": "al merreikh|horoya"
+    },
+    {
+      "away": "Walton & Hersham",
+      "home": "Horsham",
+      "league": "Enterprise National League South",
+      "normalized_pair": "horsham|walton & hersham"
+    },
+    {
+      "away": "Al-Ettifaq",
+      "home": "Al-Kholood",
+      "league": "Saudi Pro League",
+      "normalized_pair": "al-ettifaq|al-kholood"
+    },
+    {
+      "away": "Singha Chiangrai United",
+      "home": "BG Pathum United",
+      "league": "Thai Premier League",
+      "normalized_pair": "bg pathum united|singha chiangrai united"
+    }
+  ],
+  "source": "oddspapi_odds",
+  "status": "reserved"
+}
