@@ -102,3 +102,23 @@ def test_write_seam_refuses_rows_from_a_wrong_squad_page():
     assert _orientation_marker_clean_guard(ok_page, RAAL_PICK)
     buriram = {"home": "Buriram", "away": "Rayong FC"}
     assert _orientation_marker_clean_guard(buriram, {"home": "Buriram United", "away": "Rayong FC"})
+
+
+def test_age_spellings_preserve_exact_age_class_without_rekeying():
+    from edgefactory.identity import source_team_key
+    for age in (15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25):
+        for marker in (f'U{age}', f'U-{age}', f'U {age}', f'Under-{age}', f'Under {age}', f'Sub-{age}'):
+            assert squad_markers('Club '+marker) == frozenset({f'u{age}'})
+            assert not squad_marker_mismatch('Club '+marker, f'Club U{age}')
+    assert squad_marker_mismatch('Club Under-21', 'Club Sub-23')
+    assert squad_marker_mismatch('Club U-21', 'Club')
+    # Recognition does not rewrite the shared persisted identity-key function.
+    assert source_team_key('Example Under-23') == 'exampleunder23'
+
+
+def test_marker_words_without_age_are_not_generic_squad_classes():
+    for name in ('Under Armour FC', 'Sub Marine FC', 'U Club', 'Frauenfeld FC', 'Underwood United'):
+        assert not squad_markers(name)
+    for marker in ('Femenil', 'Frauen'):
+        assert squad_markers('Club '+marker) == frozenset({'women'})
+        assert not squad_marker_mismatch('Club '+marker, 'Club Women')
