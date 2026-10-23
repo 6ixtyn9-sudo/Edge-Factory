@@ -744,7 +744,7 @@ _ENH_PUBLISHED_FIELDS = (
     "enhancement_stated_probability", "enhancement_cohort_rate",
     "enhancement_cohort_n", "enhancement_cohort_contract_id",
     "enhancement_cohort_as_of_exclusive", "enhancement_priced",
-    "enhancement_price", "enhancement_edge_sample",
+    "enhancement_price", "enhancement_edge_sample", "enhancement_quote_alternatives",
 )
 
 
@@ -1112,7 +1112,15 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                     _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "unpriced", **_log_kw))
                     continue
                 price = float(probe["enhancement_price"])
-                if price < MIN_LEG_ODDS:
+                # A display-preferred quote is not the entire market. Retain
+                # the candidate if another validated book clears the SAME min;
+                # the live leg gate still applies it to each actual quote.
+                alternate_clears_min = any(
+                    isinstance(q, dict) and isinstance(q.get("enhancement_price"), (int, float))
+                    and not isinstance(q["enhancement_price"], bool)
+                    and math.isfinite(q["enhancement_price"]) and q["enhancement_price"] >= MIN_LEG_ODDS
+                    for q in probe.get("enhancement_quote_alternatives") or [])
+                if price < MIN_LEG_ODDS and not alternate_clears_min:
                     _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "excluded", "below_min_leg_odds",
                                                   price=price, **_log_kw))
                     continue
@@ -1136,7 +1144,8 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 c = dict(c)
                 for key in ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
                             "enhancement_price_at", "enhancement_price_kickoff",
-                            "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection"):
+                            "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection",
+                            "enhancement_quote_alternatives"):
                     c[key] = probe.get(key)
                 # Retain every authentic priced alternative, even on NO BET
                 # days, so the existing audit can score it prospectively.

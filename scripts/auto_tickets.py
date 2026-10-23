@@ -4901,9 +4901,23 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                              enhancement_cohort_as_of_exclusive=note.get("cohort_as_of_exclusive"))
             for key in ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
                         "enhancement_price_at", "enhancement_price_kickoff",
-                        "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection"):
+                        "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection",
+                        "enhancement_quote_alternatives"):
                 candidate[key] = note.get(key)
             expanded.append(candidate)
+    # A quote variant changes only pricing fields, never fixture/cohort identity.
+    # Each variant still traverses the SAME execution checks below.
+    if execution_safe:
+        variants = []
+        fields = ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
+                  "enhancement_price_at", "enhancement_price_kickoff", "enhancement_price_provenance",
+                  "enhancement_priced", "enhancement_price_rejection")
+        for candidate in expanded:
+            offers = candidate.get("enhancement_quote_alternatives")
+            for quote in offers if isinstance(offers, list) else ():
+                if isinstance(quote, dict) and quote.get("enhancement_price_source") == BETEXPLORER_SOURCE:
+                    variants.append(dict(candidate, **{k: quote.get(k) for k in fields}))
+        expanded.extend(variants)
     legs: list[dict] = []
     for pick in expanded:
         market = pick.get("recommended_enhancement")

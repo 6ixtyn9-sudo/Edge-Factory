@@ -27,7 +27,8 @@ import io
 import json
 import math
 import re
-from datetime import date, datetime, time, timezone
+import zlib
+from datetime import date, datetime, time, timezone, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -299,71 +300,101 @@ def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[d
     """
     wanted = {(source_team_key(f.get("home")), source_team_key(f.get("away")))
               for f in fixtures}
+    # Capture writers partition by fixture decision day. Only months intersecting
+    # the page's +/-1 calendar-day identity window can contain relevant rows.
+    # Unknown page dates keep the conservative all-files behaviour.
+    months = set()
+    for fixture in fixtures:
+        try:
+            raw = fixture.get("data_dt")
+            when = (date(raw[2], raw[1], raw[0]) if isinstance(raw, (list, tuple)) and len(raw) == 5
+                    else date.fromisoformat(str(fixture.get("date"))))
+            months.update((when + timedelta(days=d)).strftime("%Y-%m") for d in (-1, 0, 1))
+        except (TypeError, ValueError, OverflowError):
+            months.clear()
+            break
     by_pair: dict[tuple, list[dict]] = {}
     receipts = []
     team_keys: dict[str, str] = {}
     for provider in ("oddspapi", "theoddsapi"):
         for path in sorted(localdata.glob(f"{provider}_odds_*.csv.gz")):
+            month = re.fullmatch(rf"{provider}_odds_(\d{{4}}-\d{{2}})\.csv\.gz", path.name)
+            canonical_month = month[1] if month else None
+            try:
+                if canonical_month:
+                    date.fromisoformat(canonical_month + "-01")
+            except ValueError:
+                canonical_month = None
+            if months and canonical_month and canonical_month not in months:
+                continue
             # Bind the digest and parser to the SAME bytes, even if a capture
             # atomically replaces this archive while the audit is running.
-            archive_bytes = path.read_bytes()
-            receipt = {"file": path.name, "sha256": hashlib.sha256(archive_bytes).hexdigest(),
-                       "source_family": provider, "rows_scanned": 0,
-                       "matched_identity_rows": 0, "witness_records": 0,
-                       "rejections": {}}
+            receipt = {"file": path.name, "source_family": provider, "rejections": {}}
+            try:
+                archive_bytes = path.read_bytes()
+                receipt = {"file": path.name, "sha256": hashlib.sha256(archive_bytes).hexdigest(),
+                           "source_family": provider, "rows_scanned": 0,
+                           "matched_identity_rows": 0, "witness_records": 0,
+                           "rejections": {}}
+                seen = set()
+                file_witnesses = {}
+                with gzip.open(io.BytesIO(archive_bytes), "rt", newline="") as handle:
+                    for ordinal, row in enumerate(csv.DictReader(handle), 1):
+                        receipt["rows_scanned"] += 1
+                        home, away = row.get("home", ""), row.get("away", "")
+                        for name in (home, away):
+                            if name not in team_keys:
+                                team_keys[name] = source_team_key(name)
+                        pair = (team_keys[home], team_keys[away])
+                        if not all(pair) or pair not in wanted:
+                            continue
+                        receipt["matched_identity_rows"] += 1
+                        reason = None
+                        if normalize_source_family(row.get("source")) != provider:
+                            reason = "archive_source_mismatch"
+                        elif row.get("source_type") != "odds" or row.get("sport") != "soccer":
+                            reason = "unsupported_record_contract"
+                        elif provider == "theoddsapi" and row.get("kickoff_origin") != "provider_commence_time":
+                            reason = "provider_kickoff_origin_unproven"
+                        if provider == "theoddsapi" and reason is None:
+                            # A provider clock with pick-derived participants is not
+                            # an independently identified event. Retain both origins.
+                            if (row.get("fixture_identity_origin") != "provider_participants"
+                                    or not str(row.get("provider_event_id") or "").strip()
+                                    or parse_iso_utc(row.get("provider_commence_time")) != parse_iso_utc(row.get("kickoff"))):
+                                reason = "provider_event_identity_or_clock_unproven"
+                        kickoff = parse_iso_utc(row.get("kickoff"))
+                        observed = parse_iso_utc(row.get("captured_at"))
+                        if reason is None and (kickoff is None or observed is None):
+                            reason = "invalid_witness_timestamp"
+                        if reason:
+                            counts = receipt["rejections"]
+                            counts[reason] = counts.get(reason, 0) + 1
+                            continue
+                        key = (home, away, kickoff, observed)
+                        if key in seen:
+                            continue  # outcomes/books repeat the same schedule observation
+                        seen.add(key)
+                        record = {"source": provider, "home": home, "away": away,
+                                  "league": row.get("league"),
+                                  "kickoff_utc": kickoff.isoformat(),
+                                  "observed_at_utc": observed.isoformat(),
+                                  "file": path.name, "file_sha256": receipt["sha256"],
+                                  "csv_data_row": ordinal,
+                                  "row_sha256": hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest(),
+                                  "kickoff_origin": ("provider_startTime" if provider == "oddspapi"
+                                                     else "provider_commence_time"),
+                                  "fixture_identity_origin": row.get("fixture_identity_origin"),
+                                  "provider_event_id": row.get("provider_event_id"),
+                                  "provider_commence_time": row.get("provider_commence_time")}
+                        file_witnesses.setdefault(pair, []).append(record)
+                        receipt["witness_records"] += 1
+                for pair, records in file_witnesses.items():
+                    by_pair.setdefault(pair, []).extend(records)
+            except (OSError, EOFError, ValueError, csv.Error, zlib.error):
+                receipt["error"] = "unreadable_schedule_archive"
+                receipt["witness_records"] = 0
             receipts.append(receipt)
-            seen = set()
-            with gzip.open(io.BytesIO(archive_bytes), "rt", newline="") as handle:
-                for ordinal, row in enumerate(csv.DictReader(handle), 1):
-                    receipt["rows_scanned"] += 1
-                    home, away = row.get("home", ""), row.get("away", "")
-                    for name in (home, away):
-                        if name not in team_keys:
-                            team_keys[name] = source_team_key(name)
-                    pair = (team_keys[home], team_keys[away])
-                    if not all(pair) or pair not in wanted:
-                        continue
-                    receipt["matched_identity_rows"] += 1
-                    reason = None
-                    if normalize_source_family(row.get("source")) != provider:
-                        reason = "archive_source_mismatch"
-                    elif row.get("source_type") != "odds" or row.get("sport") != "soccer":
-                        reason = "unsupported_record_contract"
-                    elif provider == "theoddsapi" and row.get("kickoff_origin") != "provider_commence_time":
-                        reason = "provider_kickoff_origin_unproven"
-                    if provider == "theoddsapi" and reason is None:
-                        # A provider clock with pick-derived participants is not
-                        # an independently identified event. Retain both origins.
-                        if (row.get("fixture_identity_origin") != "provider_participants"
-                                or not str(row.get("provider_event_id") or "").strip()
-                                or parse_iso_utc(row.get("provider_commence_time")) != parse_iso_utc(row.get("kickoff"))):
-                            reason = "provider_event_identity_or_clock_unproven"
-                    kickoff = parse_iso_utc(row.get("kickoff"))
-                    observed = parse_iso_utc(row.get("captured_at"))
-                    if reason is None and (kickoff is None or observed is None):
-                        reason = "invalid_witness_timestamp"
-                    if reason:
-                        counts = receipt["rejections"]
-                        counts[reason] = counts.get(reason, 0) + 1
-                        continue
-                    key = (home, away, kickoff, observed)
-                    if key in seen:
-                        continue  # outcomes/books repeat the same schedule observation
-                    seen.add(key)
-                    record = {"source": provider, "home": home, "away": away,
-                              "league": row.get("league"),
-                              "kickoff_utc": kickoff.isoformat(),
-                              "observed_at_utc": observed.isoformat(),
-                              "file": path.name, "file_sha256": receipt["sha256"],
-                              "csv_data_row": ordinal,
-                              "row_sha256": hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest(),
-                              "kickoff_origin": ("provider_startTime" if provider == "oddspapi"
-                                                 else "provider_commence_time"),
-                              "fixture_identity_origin": row.get("fixture_identity_origin"),
-                              "provider_event_id": row.get("provider_event_id"),
-                              "provider_commence_time": row.get("provider_commence_time")}
-                    by_pair.setdefault(pair, []).append(record)
-                    receipt["witness_records"] += 1
     # Capture already retains the provider board, including fixtures whose odds
     # window has not opened or whose odds request was budget-deferred. Schedule
     # corroboration must not depend on buying another provider's odds first.

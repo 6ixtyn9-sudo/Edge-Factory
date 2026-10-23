@@ -469,6 +469,8 @@ def betexplorer_price_rejection(pick: dict, *, execution_at: datetime | None = N
                 or type(quote.get("column_index")) is not int or quote["column_index"] < 0
                 or hashlib.sha256(json.dumps(raw_row, sort_keys=True).encode()).hexdigest() != quote.get("row_sha256")):
             return "betexplorer_quote_row_invalid"
+        if "site_best" in receipt and receipt["site_best"] is not (raw_row.get("best") is True):
+            return "betexplorer_quote_row_binding_mismatch"
         cells = _be_block_cells(quote["market_slug"], {
             "columns": quote.get("columns"), "lines": [raw_row.get("line")], "rows": [raw_row]})
         col = quote["column_index"]
@@ -571,48 +573,102 @@ def _accumulate_betexplorer(path: Path, *, day: str, out: dict[str, Any]) -> Non
             candidates.append(entry)
         if not candidates:
             return
-        witnesses, _ = load_schedule_witnesses(candidates, localdata=path.parent)
-        ledger_hash = hashlib.sha256(ledger_bytes).hexdigest()
-        for entry in candidates:
-            resolved = resolve_schedule_witness(entry, cutoff, witnesses)
-            ko = parse_iso_utc(resolved["kickoff_utc"])
-            cap = parse_iso_utc(entry.get("captured_at"))
-            if resolved["status"] != "corroborated" or ko is None:
-                reject(resolved["reason"])
-                continue
-            if cap >= ko or cutoff >= ko:
-                reject("already_started_or_post_kickoff_capture")
-                continue
-            home, away = entry.get("home"), entry.get("away")
-            if not home or not away:
-                continue
-            flagged, highest = {}, {}
-            markets = entry.get("markets")
-            for slug, block in (markets or {}).items() if isinstance(markets, dict) else ():
-                if str(slug) not in _BE_SLUGS:
-                    continue
-                for market, selection, price, book, best, quote_evidence in _be_block_cells(str(slug), block):
-                    slot = (market, selection)
-                    if slot not in highest or price > highest[slot][0]:
-                        highest[slot] = (price, book, quote_evidence)
-                    if best and (slot not in flagged or price > flagged[slot][0]):
-                        flagged[slot] = (price, book, quote_evidence)
-            nh, na = norm_team(home), norm_team(away)
-            for market, selection in highest:
-                price, book, quote_evidence = flagged.get((market, selection)) or highest[(market, selection)]
-                receipt = {"kind": "betexplorer_pre_cutoff_v1", "decision_day": day,
-                           "home": home, "away": away, "kickoff_utc": ko.isoformat(),
-                           "captured_at": cap.isoformat(), "decision_cutoff_utc": cutoff.isoformat(),
-                           "data_dt": entry["data_dt"], "raw_kickoff": entry.get("kickoff"), "ledger_file": path.name,
-                           "ledger_sha256": ledger_hash, "resolution": resolved, "quote_evidence": quote_evidence,
-                           "market": market, "selection": selection, "price": price, "bookmaker": book}
-                _put(out, nh, na, market, selection, price, book, cap.isoformat(),
-                     BETEXPLORER_SOURCE, kickoff=ko.isoformat(), admission=receipt, fixture_names=(home, away))
-                diagnostics["admitted_cells"] += 1
-            if highest:
-                out["names"].setdefault((nh, na), (home, away))
-    except Exception:
+        witnesses, inputs = load_schedule_witnesses(candidates, localdata=path.parent)
+        context = {"candidates": candidates, "witnesses": witnesses,
+                   "inputs": inputs, "ledger_file": path.name,
+                   "ledger_sha256": hashlib.sha256(ledger_bytes).hexdigest(), "day": day}
+        out["betexplorer_context"] = context
+        _admit_betexplorer(context, out=out, knowledge_cutoff=cutoff)
+    except (OSError, ValueError, TypeError):
         return
+
+
+def _admit_betexplorer(context: dict, *, out: dict, knowledge_cutoff: datetime) -> None:
+    """Materialize the already-read quotes using only schedules known as-of."""
+    day = context["day"]
+    cutoff = decision_cutoff_utc(day)
+    candidates, witnesses = context["candidates"], context["witnesses"]
+    diagnostics = out.setdefault("betexplorer_admission", {"rejections": {}, "admitted_cells": 0})
+    def reject(reason):
+        counts = diagnostics["rejections"]
+        counts[reason] = counts.get(reason, 0) + 1
+    if any(r.get("error") for r in context["inputs"]):
+        reject("schedule_archive_unavailable")
+        return  # A relevant unreadable input might hide a real conflict.
+    for entry in candidates:
+        resolved = resolve_schedule_witness(entry, knowledge_cutoff, witnesses)
+        ko = parse_iso_utc(resolved["kickoff_utc"])
+        cap = parse_iso_utc(entry.get("captured_at"))
+        if resolved["status"] != "corroborated" or ko is None:
+            reject(resolved["reason"])
+            continue
+        if cap >= ko or cutoff >= ko:
+            reject("already_started_or_post_kickoff_capture")
+            continue
+        home, away = entry.get("home"), entry.get("away")
+        if not home or not away:
+            continue
+        flagged, highest, cells = {}, {}, []
+        markets = entry.get("markets")
+        for slug, block in (markets or {}).items() if isinstance(markets, dict) else ():
+            if str(slug) not in _BE_SLUGS:
+                continue
+            for market, selection, price, book, best, quote_evidence in _be_block_cells(str(slug), block):
+                cells.append((market, selection, price, book, best, quote_evidence))
+                slot = (market, selection)
+                if slot not in highest or price > highest[slot][0]:
+                    highest[slot] = (price, book, quote_evidence)
+                if best and (slot not in flagged or price > flagged[slot][0]):
+                    flagged[slot] = (price, book, quote_evidence)
+        nh, na = norm_team(home), norm_team(away)
+        previous = dict(out["pairs"].get((nh, na), {}))
+        for market, selection, price, book, best, quote_evidence in cells:
+            receipt = {"kind": "betexplorer_pre_cutoff_v1", "decision_day": day,
+                       "home": home, "away": away, "kickoff_utc": ko.isoformat(),
+                       "captured_at": cap.isoformat(), "decision_cutoff_utc": cutoff.isoformat(),
+                       "data_dt": entry["data_dt"], "raw_kickoff": entry.get("kickoff"), "ledger_file": context["ledger_file"],
+                       "ledger_sha256": context["ledger_sha256"], "site_best": best, "resolution": resolved, "quote_evidence": quote_evidence,
+                       "market": market, "selection": selection, "price": price, "bookmaker": book}
+            _put(out, nh, na, market, selection, price, book, cap.isoformat(),
+                 BETEXPLORER_SOURCE, kickoff=ko.isoformat(), admission=receipt, fixture_names=(home, away))
+            diagnostics["admitted_cells"] += 1
+        # Keep the established display preference; retain the other books
+        # for executable complete-ticket competition, not best-of-past.
+        for slot, offer in highest.items():
+            price, book, _ = flagged.get(slot, offer)
+            primary = (price, book, cap.isoformat(), BETEXPLORER_SOURCE)
+            old = previous.get(slot)
+            out["pairs"][(nh, na)][slot] = old if old and old[0] > price else primary
+        if highest:
+            out["names"].setdefault((nh, na), (home, away))
+
+
+def _betexplorer_asof_index(index: dict, decision: datetime | None) -> dict:
+    """Decision-bound view of one source; no rereads, new capture or lost donors."""
+    context = index.get("betexplorer_context")
+    if not context or decision is None or "fixture_quotes" not in index:
+        return index
+    bound = min(decision_cutoff_utc(context["day"]), decision)
+    cache = index.setdefault("betexplorer_asof_views", {})
+    if bound in cache:
+        return cache[bound]
+    view = dict(index)
+    for field in ("pairs", "fixture_quotes", "spread", "quotes", "names"):
+        view[field] = dict(index.get(field, {}))
+    keys = {(norm_team(f.get("home")), norm_team(f.get("away"))) for f in context["candidates"]}
+    for key in keys:
+        retained = [(slot, q) for slot, values in index["fixture_quotes"].get(key, {}).items()
+                    for q in values if normalize_source_family(q[3]) != "betexplorer"]
+        for field in ("pairs", "fixture_quotes", "spread", "quotes"):
+            view[field].pop(key, None)
+        for (market, selection), quote in retained:
+            _put(view, *key, market, selection, *quote[:4], kickoff=quote[4],
+                 admission=quote[5] if len(quote) > 5 else None,
+                 fixture_names=quote[6] if len(quote) > 6 else None)
+    view["betexplorer_admission"] = {"rejections": {}, "admitted_cells": 0}
+    _admit_betexplorer(context, out=view, knowledge_cutoff=bound)
+    cache[bound] = view
+    return view
 
 
 def _accumulate_sharpapi(path: Path, *, day: str, out: dict[str, Any]) -> None:
@@ -721,6 +777,7 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
     Pair-constrained: both teams must match a captured fixture (either orientation)
     before any price is attached. Never raises.
     """
+    pick.pop("enhancement_quote_alternatives", None)
     pick["enhancement_price"] = None
     pick["enhancement_price_book"] = None
     pick["enhancement_price_at"] = None
@@ -749,6 +806,7 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
     if not market or not mapping or not index:
         return pick
     try:
+        index = _betexplorer_asof_index(index, parse_iso_utc(pick.get("as_of")))
         pairs = index.get("pairs") or {}
         names = index.get("names") or {}
         hit_key = (norm_team(pick.get("home")), norm_team(pick.get("away")))
@@ -906,7 +964,17 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
             if not matched_quotes:
                 pick["enhancement_price_rejection"] = "no_matching_kickoff_and_capture_witness"
                 return pick
-            selected = max(matched_quotes, key=lambda q: q[0])
+            be_quotes = [q for q in matched_quotes if normalize_source_family(q[3]) == "betexplorer"]
+            preferred = [q for q in be_quotes if len(q) > 5 and q[5].get("site_best")]
+            choices = [q for q in matched_quotes if normalize_source_family(q[3]) != "betexplorer"]
+            selected = max(choices + (preferred or be_quotes), key=lambda q: q[0])
+            alternatives = [{"enhancement_price": round(q[0], 3), "enhancement_price_book": q[1],
+                             "enhancement_price_at": q[2], "enhancement_price_source": q[3],
+                             "enhancement_price_kickoff": q[4], "enhancement_price_provenance": q[5],
+                             "enhancement_priced": True, "enhancement_price_rejection": None}
+                            for q in be_quotes if q is not selected]
+            if alternatives:
+                pick["enhancement_quote_alternatives"] = alternatives
             got = selected[:4]
             pick["enhancement_price_kickoff"] = selected[4]
             if normalize_source_family(selected[3]) == "betexplorer":
