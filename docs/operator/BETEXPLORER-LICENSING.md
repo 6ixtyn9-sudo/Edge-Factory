@@ -212,6 +212,78 @@ profitability. The read-only audit's `live_quote_activation=False` remains corre
 that tool never activates anything, even though the production reader can admit
 verified quotes after deployment.
 
+## 2026-10-23 — use the retained fixture board for schedule corroboration
+
+Authorized by the operator's “proceed with the patch” after requesting use of
+existing BetExplorer odds rather than more provider machinery.
+
+The Oct 23 ledger contains 13 fixtures, including 16 retained BTTS bookmaker rows
+and 97 O/U rows. The existing reader rejected all 13 fixtures with
+`no_independent_pre_cutoff_witness`: it searched only provider **odds archives**
+for the independent kickoff. An uncaptured/budget-deferred odds fixture could
+therefore prevent a separately captured BetExplorer quote from being used.
+
+The same `load_schedule_witnesses` engine now also reads the existing
+`localdata/oddspapi_fixture_state.json` board cache. It uses the provider's own
+participants, fixture ID and aware `startTime`, with the board's `fetched_at`.
+No new fetch, paid odds request, file format, registry, source switch or workflow.
+BetExplorer remains the quote source; OddsPapi supplies schedule evidence only.
+
+The existing receipt and execution door bind the board file hash, JSON location,
+raw fixture hash, event ID, participants, kickoff and board observation time.
+Missing/naive/late observations, squad or identity mismatches and conflicting
+board/CSV schedules remain ineligible. Existing pre-cutoff/as-of/pre-kickoff,
+quote freshness, bookmaker/row semantics and cohort-payout checks remain intact.
+No staking, ticket, settlement, financial-history or capture-policy edits.
+
+Offline validation:
+
+- Final new regression file against isolated baseline `36c804af`: **19 failed,
+  23 passed**. Candidate: **42 passed**. Synthetic examples cover both BTTS
+  sides and totals, tampered receipts, corrupt caches, timing, identity/SRL and
+  schedule conflicts; O/U and BTTS-No examples reach the actual two-leg recipe
+  and evidence carry with no other provider's odds file.
+- Focused seven-file suite: **329 passed**.
+- Full suite: **4,074 passed, 1 skipped** in 187.24 seconds. Skip: immutable
+  historical baseline unavailable in this shallow checkout.
+- Read-only baseline/candidate Oct 22–23 comparison: **3,045 fixture/market
+  cells, 381 priced in both, zero changed enhancement outputs**. Socket
+  connections forbidden. **952** tracked data/script/workflow files unchanged.
+
+Important limit: this checkout does **not** contain the runtime board cache.
+The archived Oct 23 ledger therefore still has zero admitted BetExplorer cells
+in that comparison. No schedule evidence was fabricated or backfilled. The
+positive tests prove the wiring with explicitly synthetic independent board
+records, not a measured live coverage gain. A normal deployed run must show
+which captured BetExplorer fixtures have valid board witnesses; fixtures still
+missing those witnesses remain rejected. Nothing was dispatched or merged.
+
+### Full-market validation follow-up — 2026-10-23
+
+Operator clarification: “not just btts, i want the other markets as well”.
+The board-witness fix is shared by every supported BetExplorer enhancement
+market, not a BTTS-only branch. Its regression matrix now explicitly covers:
+
+- Match Over **and** Under 1.5, 2.5, 3.5 and 4.5.
+- BTTS Yes **and** No.
+- Double chance 1X for home selections and X2 for away selections, checking the
+  bound market/selection receipt rather than simply accepting a price.
+- All eleven market types above through quote attachment, live leg admission,
+  complete same-book two-fixture pairing and evidence carry, using explicitly
+  synthetic quotes/cohorts. This establishes wiring, not real-world availability
+  or a guarantee that every market passes the existing evidence checks today.
+
+Home/away team totals are still read from the other already-supported sources;
+the captured BetExplorer tabs do not establish team-total semantics. Every one
+of the eighteen mapped team-total selections is tested to stay unpriced with
+only match totals present. No match-total, AH or DNB cell is relabelled as a team
+total. The 1X2 tab remains part of parent pricing; AH/DNB remain retained evidence,
+not invented ENH contracts. This follow-up changes tests/documentation only.
+
+Expanded targeted suite: **364 passed** (77 in the board-admission file).
+Full suite: **4,109 passed, 1 skipped** in 171.15 seconds (same unavailable
+historical-baseline skip described above).
+
 ## Livesport replies
 
 None recorded. Checked 2026-10-10 by the continuation session: no reply had been
