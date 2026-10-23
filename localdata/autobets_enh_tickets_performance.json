@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-23T21:44:50",
+  "generated_at": "2026-10-24T00:47:08",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 70.14489999999999,
-  "multiple": 0.7014489999999999,
+  "bank_pct": 52.6087,
+  "multiple": 0.526087,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 9,
+  "bet_days": 10,
   "accas": {
     "wins": 8,
-    "losses": 11
+    "losses": 14
   },
   "open_slips": [
     {
-      "date": "2026-10-23",
-      "staked_pct": 17.5362
+      "date": "2026-10-24",
+      "staked_pct": 13.1522
     }
   ],
   "events": [],
@@ -482,6 +482,81 @@
       ],
       "bank_pct": 70.1449,
       "close_pct": 70.1449
+    },
+    {
+      "date": "2026-10-23",
+      "staked_pct": 17.5362,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.76,
+          "won": false,
+          "stake_pct": 5.8454,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Motor Lublin vs Zag\u0142\u0119bie Lubin",
+              "pick": "over",
+              "odds": 1.77,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "IK Oddevold vs GIF Sundsvall",
+              "pick": "over",
+              "odds": 1.56,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 3.28,
+          "won": false,
+          "stake_pct": 5.8454,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Al Sailiya vs Al Rayyan",
+              "pick": "under",
+              "odds": 1.84,
+              "result": "loss",
+              "label": "Match Under 3.5 Goals"
+            },
+            {
+              "match": "Shamrock Rovers vs Sligo Rovers",
+              "pick": "under",
+              "odds": 1.78,
+              "result": "conflict",
+              "label": "Match Under 3.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 2.66,
+          "won": false,
+          "stake_pct": 5.8454,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Al Faisaly vs Al Nassr",
+              "pick": "under",
+              "odds": 1.74,
+              "result": "loss",
+              "label": "Match Under 3.5 Goals"
+            },
+            {
+              "match": "Inter Kashi vs East Bengal",
+              "pick": "under",
+              "odds": 1.53,
+              "result": "loss",
+              "label": "Match Under 3.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 52.6087,
+      "close_pct": 52.6087
     }
   ]
 }

@@ -1,0 +1,324 @@
+{
+  "notes": [
+    "need_h2h=1",
+    "unresolved=5"
+  ],
+  "outcome": {
+    "calls_charged": 1,
+    "decisions": {
+      "budget_stop": 0,
+      "capture_blocked": 0,
+      "captured": 1,
+      "lane_blocked_local": 0,
+      "staleness_skip": 0,
+      "unresolved_id": 5
+    },
+    "free_listing_recorded_today": true,
+    "ledger_entries": 24,
+    "listing": {
+      "charged": false,
+      "outcome": "not_planned",
+      "reason": "free_listing_present_zero_matches",
+      "resolved_pairs": 0
+    },
+    "retained_pairs": 23,
+    "shadow_file_present": true,
+    "unresolved": [
+      {
+        "fixture": "savoia|cosenza",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "shenzhenpengcity|shanghaishenhua",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "harrogatetown|suttonunited",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "afcwimbledon|wycombewanderers",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "wuhanthreetowns|shandongtaishan",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      }
+    ],
+    "usable_snapshots": 1
+  },
+  "preflight": {
+    "allowance_by_key": {
+      "88739ee5": 14
+    },
+    "allowed_calls": 1,
+    "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
+    "budget_monthly": 90,
+    "math": "calls=1 (h2h=1 + listing=0) x 1 family-unit vs spendable=14 [pools=2 cap=90 reserve=20 spent=7 month=2026-10] -> approved",
+    "month": "2026-10",
+    "month_spend_by_key": {
+      "5b6ed40a": 1,
+      "88739ee5": 6
+    },
+    "need_h2h": 1,
+    "need_listing": 0,
+    "need_total": 1,
+    "pool_labels": {
+      "5b6ed40a": "50ca",
+      "88739ee5": "4a0d"
+    },
+    "reserve_per_key": 20,
+    "ring_keys": 2,
+    "spendable": 14,
+    "verdict": "approved"
+  },
+  "provenance": {
+    "api": "https://football-prediction-api.p.rapidapi.com/api/v2/head-to-head/:id",
+    "cadence": "weekly at most (6x7=180/month does not fit a 100/key/month family; ~24-30 does)",
+    "point_in_time": "as_of is the capture instant; provider publishes no per-row history timestamp"
+  },
+  "role": "silent pre-kickoff H2H context capture for the dormant context vocabulary; NOT a price, NOT a vote, NOT a registered rule",
+  "run_date": "2026-10-24",
+  "schema": 1,
+  "snapshots": [
+    {
+      "captured_at": "2026-10-23T22:21:03+00:00",
+      "encounters": [
+        {
+          "as_of": "2026-10-23T22:21:03+00:00",
+          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
+          "away_team": "Gwangju FC",
+          "competition": "K League 1",
+          "date": "2026-08-08",
+          "first_half": [
+            0,
+            0
+          ],
+          "fulltime": [
+            0,
+            0
+          ],
+          "home_team": "Bucheon FC 1995",
+          "season": "2026"
+        },
+        {
+          "as_of": "2026-10-23T22:21:03+00:00",
+          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
+          "away_team": "Bucheon FC 1995",
+          "competition": "K League 1",
+          "date": "2026-04-11",
+          "first_half": [
+            0,
+            0
+          ],
+          "fulltime": [
+            0,
+            1
+          ],
+          "home_team": "Gwangju FC",
+          "season": "2026"
+        },
+        {
+          "as_of": "2026-10-23T22:21:03+00:00",
+          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
+          "away_team": "Gwangju FC",
+          "competition": "Korean FA Cup",
+          "date": "2025-08-27",
+          "first_half": [
+            1,
+            0
+          ],
+          "fulltime": [
+            1,
+            2
+          ],
+          "home_team": "Bucheon FC 1995",
+          "season": "2025"
+        },
+        {
+          "as_of": "2026-10-23T22:21:03+00:00",
+          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
+          "away_team": "Bucheon FC 1995",
+          "competition": "Korean FA Cup",
+          "date": "2025-08-20",
+          "first_half": [
+            2,
+            0
+          ],
+          "fulltime": [
+            2,
+            0
+          ],
+          "home_team": "Gwangju FC",
+          "season": "2025"
+        },
+        {
+          "as_of": "2026-10-23T22:21:03+00:00",
+          "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
+          "away_team": "Gwangju FC",
+          "competition": "Korean FA Cup",
+          "date": "2024-06-19",
+          "first_half": [
+            1,
+            3
+          ],
+          "fulltime": [
+            2,
+            3
+          ],
+          "home_team": "Bucheon FC 1995",
+          "season": "2024"
+        }
+      ],
+      "encounters_dropped": {
+        "not_before_kickoff": 0,
+        "too_old": 5,
+        "undated": 0
+      },
+      "event_id": 426081,
+      "features": {
+        "form_gap": -2.0,
+        "h2h_avg_bookie_draw_chance": 0.309,
+        "h2h_avg_goals_per_match_recomputed": 2.2,
+        "h2h_away_at_away": 2,
+        "h2h_away_at_home": 1,
+        "h2h_away_form": 1.0,
+        "h2h_away_wins_recomputed": 3,
+        "h2h_bookie_away_win_prior": 0.444,
+        "h2h_bookie_draw_prior": 0.309,
+        "h2h_bookie_home_win_prior": 0.284,
+        "h2h_btts_share": 0.4,
+        "h2h_btts_share_recomputed": 0.4,
+        "h2h_clean_sheet_rate": 0.6,
+        "h2h_clean_sheet_rate_recomputed": 0.6,
+        "h2h_competition_diversity": 2,
+        "h2h_dominance": -1,
+        "h2h_draw_share": 0.2,
+        "h2h_draw_share_recomputed": 0.2,
+        "h2h_encounter_count": 5,
+        "h2h_first_half_away_win_share": 0.2,
+        "h2h_first_half_draw_share": 0.4,
+        "h2h_first_half_home_win_share": 0.4,
+        "h2h_first_half_lost_share": 0.2,
+        "h2h_first_half_share": 1.0,
+        "h2h_first_half_win_share": 0.6,
+        "h2h_home_at_away": 1,
+        "h2h_home_at_home": 0,
+        "h2h_home_form": -1.0,
+        "h2h_home_wins_recomputed": 1,
+        "h2h_host_minus_visitor": -2,
+        "h2h_over05_share": 0.8,
+        "h2h_over05_share_recomputed": 0.8,
+        "h2h_over15_share": 0.6,
+        "h2h_over15_share_recomputed": 0.6,
+        "h2h_over25_share": 0.4,
+        "h2h_over25_share_recomputed": 0.4,
+        "h2h_over35_share": 0.2,
+        "h2h_over35_share_recomputed": 0.2,
+        "h2h_provider_avg_goals": 2.3,
+        "h2h_provider_away_draw_chance": 0.309,
+        "h2h_provider_away_lose_chance": 0.284,
+        "h2h_provider_away_win_chance": 0.444,
+        "h2h_provider_btts": 5,
+        "h2h_provider_home_draw_chance": 0.309,
+        "h2h_provider_home_lose_chance": 0.444,
+        "h2h_provider_home_win_chance": 0.284,
+        "h2h_provider_num_encounters": 10,
+        "h2h_provider_over05": 9,
+        "h2h_provider_over15": 7,
+        "h2h_provider_over25": 5,
+        "h2h_provider_over35": 1,
+        "h2h_provider_total_goals": 23,
+        "h2h_recent_365d_share": 0.4,
+        "h2h_same_competition_share": 0.6,
+        "h2h_same_season_share": 0.4,
+        "h2h_season_diversity": 3,
+        "h2h_total_goals_recomputed": 11,
+        "rest_days": 77,
+        "venue_split": -1
+      },
+      "fixture_away": "Gwangju FC",
+      "fixture_away_key": "gwangju",
+      "fixture_home": "Bucheon FC 1995",
+      "fixture_home_key": "bucheon1995",
+      "fixture_key": "bucheon1995|gwangju",
+      "h2h_stats": {
+        "away_team": {
+          "avg_bookie_draw_chance": 0.309,
+          "avg_bookie_lose_chance": 0.284,
+          "avg_bookie_win_chance": 0.444,
+          "avg_goals_conceived": 1.1,
+          "avg_goals_scored": 1.2,
+          "clean_sheet": 3,
+          "draw": 1,
+          "first_half_draw": 2,
+          "first_half_lost": 4,
+          "first_half_win": 4,
+          "goals_conceived": 11,
+          "goals_scored": 12,
+          "lost": 4,
+          "team_name": "Gwangju FC",
+          "won": 5
+        },
+        "home_team": {
+          "avg_bookie_draw_chance": 0.309,
+          "avg_bookie_lose_chance": 0.444,
+          "avg_bookie_win_chance": 0.284,
+          "avg_goals_conceived": 1.2,
+          "avg_goals_scored": 1.1,
+          "clean_sheet": 3,
+          "draw": 1,
+          "first_half_draw": 2,
+          "first_half_lost": 4,
+          "first_half_win": 4,
+          "goals_conceived": 12,
+          "goals_scored": 11,
+          "lost": 5,
+          "team_name": "Bucheon FC 1995",
+          "won": 4
+        },
+        "overall": {
+          "avg_goals_per_match": 2.3,
+          "both_teams_scored": 5,
+          "num_encounters": 10,
+          "over_05": 9,
+          "over_15": 7,
+          "over_25": 5,
+          "over_35": 1,
+          "total_goals": 23
+        }
+      },
+      "identity_verified": true,
+      "kickoff_utc": "2026-10-24T05:00:00+00:00",
+      "reason": null,
+      "reconciliation_warnings": [],
+      "selection": {
+        "avg_p": 55.47192982456141,
+        "bucket": "SKIPPED_VETO",
+        "margin": 0.472,
+        "rule": "pfc_27e0f725859bc708f95c58a3"
+      },
+      "usable": true
+    }
+  ],
+  "source": "boggio_h2h",
+  "stats": {
+    "snapshots": 1,
+    "usable": 1
+  }
+}
