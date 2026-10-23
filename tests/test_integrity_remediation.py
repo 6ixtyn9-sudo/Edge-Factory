@@ -413,3 +413,67 @@ def test_supersession_allows_only_nonfinancial_floor_metadata_changes(financial_
     cache['enh_floor_table'] = {'as_of': '2026-10-21', 'floors': {}}
     install(head, cache)
     assert json.loads(persistence._retain_financial_state(repo)) == head
+
+
+@pytest.mark.parametrize('change', [
+    'legs', 'selection', 'market', 'stake', 'freeze', 'cycle', 'events',
+])
+@pytest.mark.parametrize('ledger', ['equal', 'cache_newer', 'head_newer'])
+def test_equal_bank_cannot_hide_changed_positions(financial_supersession, change, ledger):
+    import copy
+    repo, persistence, path, head, _, install = financial_supersession
+    head.pop('integrity_recovery')
+    head['open_slips'] = [{'date': '2026-10-23', 'accas': [
+        {'stake_pct': 5, 'odds': 2, 'legs': [
+            {'match': 'Approved vs Other', 'odds': 2, 'pick': 'over', 'market': 'ou_2.5'}]}]}]
+    head['frozen_by_date'] = {'2026-10-23': {'frozen_at': '2026-10-23T12:11:37+02:00', 'final': True}}
+    cache = copy.deepcopy(head)
+    if ledger != 'equal':
+        newer = cache if ledger == 'cache_newer' else head
+        newer['history'].append({'date': '2026-10-22', 'staked_pct': 5,
+                                  'returned_pct': 5, 'accas': []})
+    acca = cache['open_slips'][0]['accas'][0]
+    if change == 'legs':
+        acca['legs'][0]['match'] = 'Withdrawn vs Other'
+    elif change == 'selection':
+        acca['legs'][0]['pick'] = 'under'
+    elif change == 'market':
+        acca['legs'][0]['market'] = 'ou_3.5'
+    elif change == 'stake':
+        acca['stake_pct'] += 1
+    elif change == 'freeze':
+        cache['frozen_by_date']['2026-10-23']['frozen_at'] = '2026-10-23T10:26:13+02:00'
+    elif change == 'cycle':
+        cache['cycle_base'] += 1
+    elif change == 'events':
+        cache['events'].append({'type': 'unknown'})
+    install(head, cache)
+    before = path.read_bytes()
+    with pytest.raises(persistence.EvidenceMergeError, match='different open positions'):
+        persistence.restore_committed_localdata(repo)
+    assert path.read_bytes() == before
+
+
+def test_exact_receipt_can_repair_positions_with_equal_settled_history(financial_supersession):
+    import copy
+    repo, persistence, path, head, _, install = financial_supersession
+    cache = copy.deepcopy(head)
+    cache.pop('integrity_recovery')
+    cache['open_slips'] = [{'date': '2026-10-23', 'accas': [
+        {'stake_pct': 5, 'odds': 2, 'legs': [{'match': 'Withdrawn', 'odds': 2}]}]}]
+    head['integrity_recovery']['cache_supersession'].update(
+        superseded_financial_sha256=persistence._financial_fingerprint(cache),
+        retained_financial_sha256=persistence._financial_fingerprint(head))
+    install(head, cache)
+    persistence.restore_committed_localdata(repo)
+    assert json.loads(path.read_bytes()) == head
+
+
+def test_equal_finance_preserves_committed_approval_marker(financial_supersession):
+    import copy
+    repo, persistence, path, head, _, install = financial_supersession
+    head.pop('integrity_recovery')
+    cache = copy.deepcopy(head)
+    head['unplaced_enhancement_resets'] = {'2026-10-23': {'confirmed_none_placed': True}}
+    install(head, cache)
+    assert json.loads(persistence._retain_financial_state(repo)) == head

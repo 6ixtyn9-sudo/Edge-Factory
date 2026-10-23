@@ -206,6 +206,26 @@ def _retain_financial_state(repo):
         bank = state.get("bank")
         if isinstance(bank, bool) or not isinstance(bank, (int, float)) or not math.isfinite(bank):
             raise EvidenceMergeError("non-finite enhancement bank")
+    # A committed correction is not append-only (e.g. replacing a mistakenly
+    # settled draft with the actually placed ticket). Only an explicit HEAD
+    # receipt binding BOTH exact financial snapshots can supersede that cache.
+    # Cached receipts are never trusted, and unknown positions cannot match.
+    receipt = head.get("integrity_recovery", {}).get("cache_supersession", {})
+    head_sha, cache_sha = _financial_fingerprint(head), _financial_fingerprint(cache)
+    if (receipt.get("schema") == 1
+            and receipt.get("superseded_financial_sha256") == cache_sha
+            and receipt.get("retained_financial_sha256") == head_sha):
+        return blob
+    # Equal settled totals do not prove equal bets. Check full position metadata,
+    # market/selection, freeze locks and cycle state BEFORE either extension path.
+    # Unknown differences must fail closed; only the exact committed receipt
+    # above can authorize replacing them. Cached receipts are never authoritative.
+    position_fields = ("base_pct", "cycle_base", "events", "open_slips", "frozen_by_date")
+    if any(cache.get(k) != head.get(k) for k in position_fields):
+        raise EvidenceMergeError(
+            "divergent enhancement financial histories: different open positions, "
+            "freeze locks or cycle state; no matching committed supersession receipt"
+        )
     def extends(new, old):
         for day, original in old.items():
             if day not in new:
@@ -229,28 +249,13 @@ def _retain_financial_state(repo):
                  - sum(r["returned_pct"] - r["staked_pct"] for r in hrows.values()))
         if not math.isfinite(delta) or abs(cache["bank"] - head["bank"] - delta) > .001:
             raise EvidenceMergeError("cached enhancement bank does not reconcile to committed history")
-        return path.read_bytes()
+        # Keep durable correction/approval metadata from HEAD even when the
+        # cache carries a valid newer settled ledger or stale descriptive floors.
+        retained = dict(head)
+        retained.update(bank=cache["bank"], history=cache.get("history", []))
+        return json.dumps(retained, indent=2).encode()
     if extends(hrows, crows):
-        # Known cold-cache reset / stale cache. Do not discard an unknown open
-        # position while restoring committed settled history.
-        def positions(st):
-            return sorted((sl["date"], a["stake_pct"], a["odds"],
-                           sorted((l["match"], l["odds"]) for l in a["legs"]))
-                          for sl in st.get("open_slips", []) for a in sl.get("accas", []))
-        if positions(cache) != positions(head):
-            raise EvidenceMergeError("stale cache has different open enhancement positions; manual recovery required")
-        # Preserve the full captured open-leg metadata if available; never resize.
-        head["open_slips"] = cache.get("open_slips", [])
-        return json.dumps(head, indent=2).encode()
-    # A committed correction is not append-only (e.g. replacing a mistakenly
-    # settled draft with the actually placed ticket). Only an explicit HEAD
-    # receipt binding BOTH exact financial snapshots can supersede that cache.
-    # Cached receipts are never trusted, and unknown positions cannot match.
-    receipt = head.get("integrity_recovery", {}).get("cache_supersession", {})
-    head_sha, cache_sha = _financial_fingerprint(head), _financial_fingerprint(cache)
-    if (receipt.get("schema") == 1
-            and receipt.get("superseded_financial_sha256") == cache_sha
-            and receipt.get("retained_financial_sha256") == head_sha):
+        # Position equality was verified above; committed history is newer.
         return blob
     raise EvidenceMergeError(
         "divergent enhancement financial histories "
