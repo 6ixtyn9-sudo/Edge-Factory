@@ -10,6 +10,8 @@ genuine defects with no distinction.
 from __future__ import annotations
 
 import json
+
+import pytest
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -287,3 +289,53 @@ def test_census_file_is_provider_data_only(tmp_path, monkeypatch):
     )
     text = (tmp_path / "oddspapi_market_census_2026-10.json").read_text()
     assert "apiKey" not in text and "http" not in text
+
+
+# Both fresh /fixtures responses and cached boards must lose SRL fixtures
+# before bounded odds calls. They must not displace a real fixture's budget.
+
+
+@pytest.mark.parametrize('cached', [False, True])
+@pytest.mark.parametrize('real_present', [False, True])
+def test_capture_excludes_srl_before_market_and_odds_requests(tmp_path, monkeypatch, cached, real_present):
+    monkeypatch.setattr(cap, 'OUT_DIR', tmp_path)
+    now = datetime(2026, 10, 3, 14, 0, tzinfo=timezone.utc)
+    fixtures = [
+        dict(fixtureId='sim-home', participant1Name='Alanyaspor SRL', participant2Name='Kocaelispor'),
+        dict(fixtureId='sim-away', participant1Name='GO Ahead Eagles', participant2Name='SC Telstar Srl'),
+        dict(fixtureId='sim-dotted', participant1Name='Alanyaspor S.R.L.', participant2Name='Kocaelispor'),
+    ]
+    if real_present:
+        fixtures.append(dict(fixtureId='real', participant1Name='Croatia', participant2Name='England'))
+    for fx in fixtures:
+        fx['startTime'] = '2026-10-03T19:00:00Z'
+    if cached:
+        state = dict(boards={'2026-10-03': dict(fetched_at=now.isoformat(), fixtures=fixtures)}, captured={})
+        monkeypatch.setattr(cap, '_load_state', lambda: state)
+    def fetch_board(day):
+        assert not cached, 'a fresh cached board must not trigger another board request'
+        return fixtures
+    calls = []
+    def fetch_odds(fid):
+        calls.append(fid)
+        assert fid == 'real', 'SRL must never spend an odds request'
+        return _odds_payload()
+    def markets():
+        assert real_present, 'SRL-only board must not spend a markets request'
+        return {}
+    monkeypatch.setattr(cap, 'api_keys', lambda: ('test-key',))
+    monkeypatch.setattr(cap, 'fetch_fixtures', fetch_board)
+    monkeypatch.setattr(cap, 'fetch_odds', fetch_odds)
+    monkeypatch.setattr(cap, 'load_market_type_map', markets)
+    monkeypatch.setattr(cap, '_read_markets_cache', lambda day: None)
+    monkeypatch.setattr(cap, '_append_rows', lambda rows, day: 0)
+    stats = cap.capture('2026-10-03', max_fixtures=1, now_utc=now)
+    assert stats['errors'] == []
+    assert stats['excluded_srl_fixtures'] == 3
+    assert stats['fixtures'] == len(fixtures)  # honest total board size
+    assert stats['pending_fixtures'] == int(real_present)
+    assert stats['attempted'] == int(real_present)
+    assert calls == (['real'] if real_present else [])
+    receipt = json.loads((tmp_path / 'oddspapi_capture_2026-10-03.json').read_text())
+    assert receipt['excluded_srl_fixtures'] == 3
+    assert all(fx['fixture_id'] == 'real' for fx in receipt['attempted_fixtures'])

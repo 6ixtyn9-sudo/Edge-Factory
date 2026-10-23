@@ -442,6 +442,8 @@ for _tokens, _cls in (
     # Only the unambiguous side-market words: a bare "card" or "special" can be
     # part of a real club name, and a false marker costs a price for no gain.
     (("bookings", "booking", "corners", "cards"), "non_match"),
+    # SRL (Simulated Reality League) prices are not the real club's fixture.
+    (("srl",), "simulation"),
     (("ii", "b", "res", "reserve", "reserves", "yth", "youth", "amateur", "amateurs"), "reserve"),
     (("w", "women", "womens", "woman", "ladies", "feminino", "feminina",
       "femenino", "femenina", "femenil", "frauen", "damer"), "women"),
@@ -463,6 +465,10 @@ def squad_markers(name: object) -> frozenset[str]:
     # Marker recognition only: persisted team-key spelling is not rewritten.
     for age in re.findall(r"\b(?:u|under|sub)\s*(\d{1,2})\b", words):
         out.add(f"u{int(age)}")
+    # Dotted/hyphenated SRL folds to separate words. Recognize explicit
+    # simulation labels only; do not change persisted identity-key spelling.
+    if re.search(r"\b(?:s r l|simulated reality league)\b", words):
+        out.add("simulation")
     return frozenset(out)
 
 
