@@ -444,7 +444,7 @@ for _tokens, _cls in (
     (("bookings", "booking", "corners", "cards"), "non_match"),
     (("ii", "b", "res", "reserve", "reserves", "yth", "youth", "amateur", "amateurs"), "reserve"),
     (("w", "women", "womens", "woman", "ladies", "feminino", "feminina",
-      "femenino", "femenina", "damer"), "women"),
+      "femenino", "femenina", "femenil", "frauen", "damer"), "women"),
 ):
     for _tok in _tokens:
         SQUAD_MARKER_CLASSES[_tok] = _cls or _tok
@@ -453,10 +453,16 @@ for _tokens, _cls in (
 def squad_markers(name: object) -> frozenset[str]:
     """The squad-marker classes a team name carries (empty for a senior side)."""
     out: set[str] = set()
-    for word in team_identity_words(name).split():
+    words = team_identity_words(name)
+    for word in words.split():
         cls = SQUAD_MARKER_CLASSES.get(word)
         if cls:
             out.add(cls)
+    # Punctuation folding separates U-21 / Under-23 / Sub-21. Preserve the
+    # actual age, not a generic 'under'/'sub' class that merges U21 with U23.
+    # Marker recognition only: persisted team-key spelling is not rewritten.
+    for age in re.findall(r"\b(?:u|under|sub)\s*(\d{1,2})\b", words):
+        out.add(f"u{int(age)}")
     return frozenset(out)
 
 
