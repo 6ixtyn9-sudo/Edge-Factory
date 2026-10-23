@@ -632,7 +632,7 @@ def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
                     evidence = enhancement_cohort_evidence(row, priced=True, root=root or at.ROOT)
                 except (OSError, KeyError, StopIteration, TypeError, ValueError):
                     pass
-                if evidence is None or evidence["cohort_lower_bound"] * rec["price"] <= 1:
+                if evidence is None or evidence["cohort_lower_bound"] * rec["price"] <= 0.8:
                     continue
                 rank_prob = evidence["rate"]
             pool.append({"match": rec.get("match") or f"{home} vs {away}",

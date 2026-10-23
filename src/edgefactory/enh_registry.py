@@ -991,7 +991,7 @@ def all_statuses(root: Path | None = None) -> dict[str, str]:
         return {}
 
 
-MIN_COHORT_N = 100
+MIN_COHORT_N = 30
 
 
 def enhancement_cohort_evidence(pick: dict, *, priced: bool = False,
@@ -1047,7 +1047,7 @@ def enhancement_cohort_evidence(pick: dict, *, priced: bool = False,
         # per bookmaker/league/exact quote. Historical quote records remain
         # useful for realized ROI auditing, but are not a bootstrap gate.
         context = enhancement_price_context(pick)
-        if context is None:
+        if context is None or not 0.60 <= rate <= 0.90:
             return None
         # Persisted cohort rates are rounded to four decimals. Use the lowest
         # integer hit count compatible with that rounding, NEVER round up the

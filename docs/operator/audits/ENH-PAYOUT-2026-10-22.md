@@ -628,3 +628,41 @@ No workflow edit, provider request, dispatch, freeze reset or financial write.
 
 Final full regression: **3,898 passed, 1 skipped in 155.29 seconds**. All **863
 tracked operational files** verified byte-identical before/after tests.
+
+## 23 October follow-up — unplaced-record removal and simulation feasibility
+
+The operator reversed retention of today's withdrawn, unplaced recommendation.
+Its old slips/freeze/supersession payload has been removed from today's reset
+marker. Only the receipt digest, approval time and unplaced confirmation remain
+for stale-cache invalidation. The existing reset path no longer copies withdrawn
+recommendations into new markers. Disposable repair scratch copies were deleted.
+Prior Git commits were not rewritten. Other dates, settled history, bank, staking
+and today's replacement card were not changed by this follow-up.
+
+An offline feasibility check inspected **129 dated picks archives** and reused
+`replay_harness.enh_day_growth(..., supported=True)`; no provider calls or workflow
+runs. Only **21/22 October** contain completed-date exact-contract cohort notes
+(116/78). The 21 October freeze timestamp is unavailable. On 22 October, **13 of
+38** contract rows were built by the recorded 14:12 SAST freeze; their **44** notes
+all fail executable quote-context validation, even with sample/rate eligibility
+relaxed in memory for this diagnostic. The other **25** rows were built later and
+cannot establish what was selectable at the original decision. No missing quote
+timestamps or decision clocks were invented. All operational files were hashed
+before/after this read-only check and were unchanged.
+
+The retained registry has **578 priced completed records, none with
+`price_context`**; supported replay therefore forms **zero admissible accas**.
+This is an evidence gap, **not** measured zero return, losses, or proof that the
+live lane cannot bet. The two completed note sets also have minimum cohort n of
+178/142: they cannot demonstrate coverage gained by reducing minimum n to 30.
+No threshold-profitability sweep or "optimal" setting is justified by these
+inputs. Current 60–90% / n>=30 / Wilson-lower-bound-times-odds >0.8 settings remain
+provisional and unchanged. The 0.8 screen does not prove positive expected value;
+cohort rates are not calibrated fixture or joint accumulator probabilities.
+
+A useful comparison needs authentic predecision candidate snapshots, their
+witnessed quotes and resolved outcomes across a substantially broader period,
+including rejected candidates. Reuse the existing selector/replay, fix two-leg
+pairing and staking, compare eligibility thresholds chronologically, and judge
+held-out growth, drawdown, betting frequency and sample size together. Do not
+select a winner from missing contexts, selected-only cohorts or later builds.

@@ -55,6 +55,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+from . import price_sources as psrc
 from .util import norm_team
 from .identity import squad_marker_mismatch
 from .kickoff_corroboration import (
@@ -970,9 +971,10 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
             selected = max(choices + (preferred or be_quotes), key=lambda q: q[0])
             alternatives = [{"enhancement_price": round(q[0], 3), "enhancement_price_book": q[1],
                              "enhancement_price_at": q[2], "enhancement_price_source": q[3],
-                             "enhancement_price_kickoff": q[4], "enhancement_price_provenance": q[5],
+                             "enhancement_price_kickoff": q[4], "enhancement_price_provenance": q[5] if len(q) > 5 else None,
                              "enhancement_priced": True, "enhancement_price_rejection": None}
-                            for q in be_quotes if q is not selected]
+                            for q in matched_quotes if q is not selected and psrc.spec(q[3]).named_bookmaker
+                            and isinstance(q[1], str) and q[1].strip()]
             if alternatives:
                 pick["enhancement_quote_alternatives"] = alternatives
             got = selected[:4]
