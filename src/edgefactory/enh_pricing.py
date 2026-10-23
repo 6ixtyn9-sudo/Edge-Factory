@@ -490,15 +490,32 @@ def betexplorer_price_rejection(pick: dict, *, execution_at: datetime | None = N
         for witness in witnesses:
             source = witness.get("source")
             observed = parse_iso_utc(witness.get("observed_at_utc"))
+            board_witness = source == "oddspapi" and witness.get("file") == "oddspapi_fixture_state.json"
             if (source not in ("oddspapi", "theoddsapi")
                     or observed is None or observed >= min(cutoff, decision, kickoff)
-                    or not str(witness.get("file") or "").startswith(f"{source}_odds_")
+                    or (not board_witness and not str(witness.get("file") or "").startswith(f"{source}_odds_"))
                     or not re.fullmatch(r"[0-9a-f]{64}", str(witness.get("file_sha256")))
                     or not re.fullmatch(r"[0-9a-f]{64}", str(witness.get("row_sha256")))
-                    or type(witness.get("csv_data_row")) is not int or witness["csv_data_row"] < 1
+                    or (not board_witness and (type(witness.get("csv_data_row")) is not int
+                                              or witness["csv_data_row"] < 1))
                     or witness.get("kickoff_origin") != ("provider_startTime" if source == "oddspapi"
                                                          else "provider_commence_time")):
                 return "betexplorer_schedule_witness_invalid"
+            if board_witness:
+                raw = witness.get("board_fixture")
+                pointer = str(witness.get("json_pointer") or "")
+                if (not isinstance(raw, dict)
+                        or not re.fullmatch(r"/boards/\d{4}-\d{2}-\d{2}/fixtures/(?:0|[1-9]\d*)", pointer)
+                        or parse_iso_utc(f"{pointer.split('/')[2]}T00:00:00Z") is None
+                        or witness.get("fixture_identity_origin") != "provider_participants"
+                        or not isinstance(raw.get("fixtureId"), str) or not raw["fixtureId"].strip()
+                        or raw["fixtureId"] != witness.get("provider_event_id")
+                        or (raw.get("participant1Name"), raw.get("participant2Name")) !=
+                           (witness.get("home"), witness.get("away"))
+                        or parse_iso_utc(raw.get("startTime")) != parse_iso_utc(witness.get("kickoff_utc"))
+                        or parse_iso_utc(witness.get("board_fetched_at")) != observed
+                        or hashlib.sha256(json.dumps(raw, sort_keys=True).encode()).hexdigest() != witness["row_sha256"]):
+                    return "betexplorer_schedule_witness_invalid"
             if source == "theoddsapi" and (witness.get("fixture_identity_origin") != "provider_participants"
                                            or not witness.get("provider_event_id")
                                            or parse_iso_utc(witness.get("provider_commence_time")) != parse_iso_utc(witness.get("kickoff_utc"))):
