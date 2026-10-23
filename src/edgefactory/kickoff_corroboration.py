@@ -293,7 +293,9 @@ def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[d
     OddsPapi kickoff is provider startTime (oddspapi_odds.parse_odds_response).
     Legacy TheOddsAPI rows may inherit pick kickoff: require an explicit
     provider_commence_time origin before treating those rows as witnesses.
-    Receipts identify the immutable archive bytes and original CSV row.
+    The already-fetched OddsPapi fixture board supplies the same provider
+    startTime without requiring an odds purchase for the fixture. Receipts bind
+    immutable input bytes and the original CSV row or board JSON location.
     """
     wanted = {(source_team_key(f.get("home")), source_team_key(f.get("away")))
               for f in fixtures}
@@ -362,6 +364,55 @@ def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[d
                               "provider_commence_time": row.get("provider_commence_time")}
                     by_pair.setdefault(pair, []).append(record)
                     receipt["witness_records"] += 1
+    # Capture already retains the provider board, including fixtures whose odds
+    # window has not opened or whose odds request was budget-deferred. Schedule
+    # corroboration must not depend on buying another provider's odds first.
+    path = localdata / "oddspapi_fixture_state.json"
+    if path.exists():
+        try:
+            board_bytes = path.read_bytes()
+            payload = json.loads(board_bytes)
+            receipt = {"file": path.name, "sha256": hashlib.sha256(board_bytes).hexdigest(),
+                       "source_family": "oddspapi", "rows_scanned": 0,
+                       "matched_identity_rows": 0, "witness_records": 0, "rejections": {}}
+            receipts.append(receipt)
+            boards = payload.get("boards") if isinstance(payload, dict) else None
+            for board_day, board in (boards or {}).items() if isinstance(boards, dict) else ():
+                if not isinstance(board, dict) or not isinstance(board.get("fixtures"), list):
+                    continue
+                try:
+                    if date.fromisoformat(board_day).isoformat() != board_day:
+                        continue
+                except (TypeError, ValueError):
+                    continue
+                observed = parse_iso_utc(board.get("fetched_at"))
+                if observed is None:
+                    continue
+                for ordinal, row in enumerate(board["fixtures"]):
+                    receipt["rows_scanned"] += 1
+                    if not isinstance(row, dict):
+                        continue
+                    home, away = row.get("participant1Name"), row.get("participant2Name")
+                    event_id = row.get("fixtureId")
+                    if (not all(isinstance(v, str) and v.strip() for v in (home, away, event_id))
+                            or (source_team_key(home), source_team_key(away)) not in wanted):
+                        continue
+                    receipt["matched_identity_rows"] += 1
+                    kickoff = parse_iso_utc(row.get("startTime"))
+                    if kickoff is None:
+                        continue
+                    record = {"source": "oddspapi", "home": home, "away": away,
+                              "kickoff_utc": kickoff.isoformat(), "observed_at_utc": observed.isoformat(),
+                              "file": path.name, "file_sha256": receipt["sha256"],
+                              "json_pointer": f"/boards/{board_day}/fixtures/{ordinal}",
+                              "board_fetched_at": board["fetched_at"], "board_fixture": row,
+                              "row_sha256": hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest(),
+                              "kickoff_origin": "provider_startTime", "provider_event_id": event_id,
+                              "fixture_identity_origin": "provider_participants"}
+                    by_pair.setdefault((source_team_key(home), source_team_key(away)), []).append(record)
+                    receipt["witness_records"] += 1
+        except (OSError, ValueError, TypeError):
+            pass  # A missing/corrupt cache cannot erase existing archive witnesses.
     return by_pair, receipts
 
 
