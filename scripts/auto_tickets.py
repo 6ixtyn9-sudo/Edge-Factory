@@ -2983,17 +2983,15 @@ def _apply_unplaced_enhancement_resets(st: dict, localdata: Path) -> bool:
         recut = localdata / f"autobets_enh_tickets_{target}_force_recut.txt"
         if recut.exists():
             raise ValueError(f"enhancement reset {target} refused: review the existing force-recut artifact")
-        removed = [x for x in st.get("open_slips", []) if str(x.get("date")) == target]
         if st:
-            # Preserve original entries inside an audit receipt, not the active
-            # settlement queue. Bank/history/events/cycle values are untouched.
+            # Unplaced recommendations are removed, not retained as old bets.
+            # Keep only the cache-invalidation marker; bank/history stay intact.
             st["open_slips"] = [x for x in st.get("open_slips", []) if str(x.get("date")) != target]
-            old_frozen = st.get(FROZEN_BOOK_KEY, {}).pop(target, None)
-            old_superseded = st.get(SUPERSEDED_BOOK_KEY, {}).pop(target, None)
+            st.get(FROZEN_BOOK_KEY, {}).pop(target, None)
+            st.get(SUPERSEDED_BOOK_KEY, {}).pop(target, None)
             st.setdefault("unplaced_enhancement_resets", {})[target] = {
                 "receipt_sha256": identity, "approved_at": receipt["approved_at"],
-                "confirmed_none_placed": True, "removed_open_slips": removed,
-                "previous_freeze": old_frozen, "previous_supersession": old_superseded,
+                "confirmed_none_placed": True,
             }
             changed = True
         # Both are old recommendation locks, never proof of a placed bet.
