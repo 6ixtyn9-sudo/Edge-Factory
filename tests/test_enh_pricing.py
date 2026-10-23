@@ -1136,3 +1136,34 @@ def test_retained_oddspapi_srl_cannot_price_real_fixture(tmp_path, monkeypatch, 
     assert result['enhancement_priced'] is with_real
     assert result['enhancement_price'] == (1.6 if with_real else None)
     assert result['enhancement_consensus_price'] == (1.6 if with_real and witnessed else None)
+
+
+@pytest.mark.parametrize('source', ['theoddsapi', 'oddspapi'])
+@pytest.mark.parametrize('market', [m for m, slot in MARKET_PRICE_MAP.items() if slot and slot[1]])
+def test_all_named_book_alternatives_survive_json_and_live_pairing(tmp_path, monkeypatch, source, market):
+    from enhancement_fixtures import with_evidence
+    from scripts import auto_tickets as at
+    from test_oddspapi_enh import _write_oddspapi_month
+    monkeypatch.setenv("EDGE_FACTORY_ODDSPAPI_PRICES", "1")
+    slot, selection = MARKET_PRICE_MAP[market]
+    rows = [_row(home=h, away=a, market=slot, selection=selection, odds=odds,
+                 bookmaker=book, source=source, captured_at='2026-08-03T12:00:00Z')
+            for h, a, winner in [('Alpha', 'Beta', 'Only A'), ('Gamma', 'Delta', 'Only B')]
+            for book, odds in [(winner, 2.), ('Common Book', 1.8)]]
+    (_write_oddspapi_month if source == 'oddspapi' else _write_month)(tmp_path, rows)
+    index = load_prices_index(tmp_path, '2026-08-03')
+    priced = [attach_enhancement_price(dict(home=h, away=a, league='Synthetic League',
+              date='2026-08-03', pick='home', as_of='2026-08-03T13:00:00Z',
+              kickoff_utc='2026-08-03T17:00:00Z', recommended_enhancement=market,
+              enhancement_probability=.8), index) for h, a in [('Alpha', 'Beta'), ('Gamma', 'Delta')]]
+    assert {r['enhancement_price_book'] for r in priced} == {'Only A', 'Only B'}
+    assert all([q['enhancement_price_book'] for q in r['enhancement_quote_alternatives']] == ['Common Book']
+               for r in priced)
+    restored = json.loads(json.dumps([with_evidence(r) for r in priced]))
+    legs = at.enhancement_legs(restored, execution_safe=True)
+    pool = at.enhancement_pool(legs)
+    plan = at.plan_day(pool, 100., enhancements=True)
+    at._carry_lane_evidence(plan, pool)
+    assert len(plan) == 1 and len(plan[0]['legs']) == 2
+    assert {l['price_book'] for l in plan[0]['legs']} == {'Common Book'}
+    assert all(l['cohort_evidence']['price_context']['source'] == source for l in plan[0]['legs'])

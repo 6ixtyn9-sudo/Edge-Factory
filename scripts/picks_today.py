@@ -508,7 +508,7 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
 # Notes are tagged engine="hybrid_cohort" | "model" (+ cohort_n) so the audit
 # can grade the engines separately (by-engine table). Display/context layer
 # only: registry, pricing and certification paths are untouched.
-HYBRID_MIN_N = 100        # thinner cohorts cannot authorize an enhancement bet
+HYBRID_MIN_N = 30        # thinner cohorts cannot authorize an enhancement bet
 # Operator-authorized 2026-10-19: let all cohort-backed markets compete under
 # the existing shared rate/price rules. Default ON; explicit 0 rolls back to
 # legacy market filters. This is an eligibility policy, not proven ROI uplift.
@@ -1016,7 +1016,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
 
     # One shared eligibility band for all cohort-backed markets, regardless
     # of goal direction. Model-only priors cannot enter the candidate pool.
-    MIN_PROB = 0.25
+    MIN_PROB = 0.60
     MAX_PROB = 0.90
     for market, label in raw_candidates:
         cohort_rate = cohort_realized_rate(cohort, market)

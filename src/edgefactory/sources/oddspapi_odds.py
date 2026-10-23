@@ -520,7 +520,7 @@ def _line_from_name(name: str) -> tuple[str | None, str | None]:
     return m.group(1).lower(), m.group(2)
 
 
-def _catalog_outcome_selection(entry: dict, outcome_key: str) -> str | None:
+def _catalog_outcome_selection(entry: dict, outcome_key: str, *, btts=False) -> str | None:
     """Resolve a selection from the catalog's documented outcome names."""
     outcomes = entry.get("outcomes") if isinstance(entry, dict) else None
     if not isinstance(outcomes, dict):
@@ -528,7 +528,7 @@ def _catalog_outcome_selection(entry: dict, outcome_key: str) -> str | None:
     name = str(outcomes.get(outcome_key) or "").strip().lower()
     if not name:
         return None
-    return _1X2_OUTCOME_NAME_SELECTION.get(name)
+    return ({"yes": "yes", "no": "no"} if btts else _1X2_OUTCOME_NAME_SELECTION).get(name)
 
 
 def rows_from_odds_response(
@@ -810,8 +810,8 @@ def _market_selection(mtype: str, name: object, home: object, away: object,
         return ("1x2", sel, None) if sel else (None, None, "unresolved")
     if mtype == "btts":
         from_name = _selection_from_name(name, home, away)
-        from_key = _catalog_outcome_selection(entry, outcome_key)
-        if from_name in {"yes", "no"} and from_key in {"yes", "no"} and from_name != from_key:
+        from_key = _catalog_outcome_selection(entry, outcome_key, btts=True)
+        if from_name is not None and from_key is not None and from_name != from_key:
             return None, None, "ambiguous"
         sel = from_name if from_name in {"yes", "no"} else (
             from_key if from_key in {"yes", "no"} else None)
