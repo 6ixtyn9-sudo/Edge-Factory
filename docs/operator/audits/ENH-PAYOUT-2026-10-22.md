@@ -690,3 +690,38 @@ for both the exact withdrawn snapshot and repaired snapshot, and refused an
 unknown selection without modifying its evidence. Performance reports rendered
 with `--lane enh --no-settle`; no selection, settlement, provider capture,
 workflow dispatch, cache deletion or bank reset performed by this repair.
+
+### 2026-10-23 older fallback cache: exact published-snapshot recovery
+
+Run `39983064456` checked out repair merge `60cec03`, restored
+`localdata-v2-39897962348`, and failed closed before the daily pipeline.
+The reports artifact (`12514785690`) download was attempted but unavailable
+in this environment; its cached financial snapshot was NOT inspected directly.
+
+The cache-producing run `39897962348` succeeded and published state in commit
+`8a252dc36783c4e70a9d769693ff327af27f2301`. That authenticated Git snapshot
+has exactly the same bank, base, cycle, events and settled history as the repair;
+only October 23 has an obsolete open draft and different lock/approval state.
+Other-date positions and locks match. There is no financial update to recover
+from that published snapshot. This is not a claim of lifetime history completeness.
+
+Update only the existing hash-bound supersession receipt to authorize that exact
+published financial fingerprint:
+`312474ab96fc062a59e78fb82eb695378c3dcf5844ccda3c18244c43885bd1a9`.
+The retained fingerprint stays
+`10277496612cc5a0e59c6de6868e7ceb05a2c57443fea97533a47199735ffe60`.
+No guard/code change, hash wildcard, cache-prefix exemption, withdrawn payload,
+new financial ledger or standalone reset receipt is added. This replaces the
+previous exact source authorization; it does not allow arbitrary earlier caches.
+
+Validation: 72 existing targeted tests passed (2.72s). Isolated temporary Git
+checks using the published source and current repair accepted the exact source,
+kept the repair idempotent, and refused seven bank/history/market/selection/stake/
+freeze/forged-cached-receipt variants without modifying their evidence. All
+operational finance and other recovery metadata remain unchanged. Full suite
+not rerun for this receipt/documentation-only change.
+
+Runtime recovery remains unconfirmed: the restored cache must have exactly the
+published financial fingerprint above. If its pre-push snapshot differs, the
+existing guard will still stop; obtain the artifact state rather than authorize
+an unseen difference. No cache deletion or workflow restart was performed.
