@@ -122,3 +122,14 @@ def test_marker_words_without_age_are_not_generic_squad_classes():
     for marker in ('Femenil', 'Frauen'):
         assert squad_markers('Club '+marker) == frozenset({'women'})
         assert not squad_marker_mismatch('Club '+marker, 'Club Women')
+
+
+def test_srl_marker_separates_simulations_without_rekeying_real_clubs():
+    from edgefactory.identity import source_team_key
+    for suffix in ('SRL', '(Srl)', 'S.R.L.', 'S-R-L', 'Simulated Reality League'):
+        assert squad_markers('Alanyaspor '+suffix) == frozenset({'simulation'})
+        assert squad_marker_mismatch('Alanyaspor', 'Alanyaspor '+suffix)
+        assert not squad_marker_mismatch('Alanyaspor SRL', 'Alanyaspor '+suffix)
+    for name in ('Alanyaspor', 'Kocaelispor', 'GO Ahead Eagles', 'SC Telstar', 'Srlanga FC'):
+        assert not squad_markers(name)
+    assert source_team_key('Alanyaspor SRL') == 'alanyasporsrl'
