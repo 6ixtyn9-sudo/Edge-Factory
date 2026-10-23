@@ -475,6 +475,560 @@
         {
           "legs": [
             {
+              "match": "Al Sailiya vs Al Rayyan",
+              "pick": "under",
+              "prob": 0.6415,
+              "odds": 1.84,
+              "result": null,
+              "market": "match_under_35",
+              "price_book": "Stake.com",
+              "cohort_evidence": {
+                "rate": 0.6415,
+                "n": 1074,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-23",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 689,
+                "cohort_lower_bound": 0.6123891414460708,
+                "price_context": {
+                  "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                  "selection": "away",
+                  "league": "Stars League",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.84,
+                  "captured_at": "2026-10-22T22:29:03.048027+00:00",
+                  "decision_at": "2026-10-23T09:41:04+02:00",
+                  "kickoff": "2026-10-23T16:45:00+00:00"
+                }
+              },
+              "label": "Match Under 3.5 Goals",
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "Stars League",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-22T22:29:03.048027+00:00",
+              "price_kickoff": "2026-10-23T16:45:00+00:00",
+              "price_provenance": {
+                "away": "Al Rayyan",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-10-22T22:29:03.048027+00:00",
+                "data_dt": [
+                  23,
+                  10,
+                  2026,
+                  17,
+                  45
+                ],
+                "decision_cutoff_utc": "2026-10-23T07:00:00+00:00",
+                "decision_day": "2026-10-23",
+                "home": "Al Sailiya",
+                "kickoff_utc": "2026-10-23T16:45:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-23.json",
+                "ledger_sha256": "172d177fccc01e33d7f8a423f5cbb74517c33adafc046a675c884dad483cbf6e",
+                "market": "ou_3.5",
+                "price": 1.84,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1089",
+                    "created": [
+                      "2026-10-22T23:09",
+                      "2026-10-22T23:09"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      1.83,
+                      1.84
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 1,
+                  "row_sha256": "4e5cc7efc11cb086601ae40af4742fb777b20bd74190ab150e614efd717085d0"
+                },
+                "raw_kickoff": "17:45",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-23T16:45:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Al Rayyan SC",
+                      "board_fetched_at": "2026-10-22T22:22:03+00:00",
+                      "board_fixture": {
+                        "fixtureId": "id1000082575596530",
+                        "participant1Name": "Al-Sailiya SC",
+                        "participant2Name": "Al Rayyan SC",
+                        "startTime": "2026-10-23T16:45:00.000Z"
+                      },
+                      "file": "oddspapi_fixture_state.json",
+                      "file_sha256": "2e593674faf15b5899b4a2c9d06474df3a08192c32a8da7e83a1bb4910f02ea1",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Al-Sailiya SC",
+                      "json_pointer": "/boards/2026-10-23/fixtures/229",
+                      "kickoff_origin": "provider_startTime",
+                      "kickoff_utc": "2026-10-23T16:45:00+00:00",
+                      "observed_at_utc": "2026-10-22T22:22:03+00:00",
+                      "provider_event_id": "id1000082575596530",
+                      "row_sha256": "b4001e21c9d15ad5cbbfe1ea8d1484b9f62bd5f88badd354788611500ce46b92",
+                      "source": "oddspapi"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-23",
+                "Al Sailiya",
+                "Al Rayyan"
+              ]
+            },
+            {
+              "match": "Orlando Pirates vs African Stars",
+              "pick": "over",
+              "prob": 0.5912,
+              "odds": 1.77,
+              "result": null,
+              "market": "match_over_25",
+              "price_book": "Stake.com",
+              "cohort_evidence": {
+                "rate": 0.5912,
+                "n": 3038,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-23",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1796,
+                "cohort_lower_bound": 0.5735923539637495,
+                "price_context": {
+                  "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                  "selection": "home",
+                  "league": "CAF Champions League",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.77,
+                  "captured_at": "2026-10-23T01:17:03.062806+00:00",
+                  "decision_at": "2026-10-23T09:41:04+02:00",
+                  "kickoff": "2026-10-23T18:00:00+00:00"
+                }
+              },
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7475060483108737,
+              "floor_basis": "market",
+              "league": "CAF Champions League",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-23T01:17:03.062806+00:00",
+              "price_kickoff": "2026-10-23T18:00:00+00:00",
+              "price_provenance": {
+                "away": "African Stars",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-10-23T01:17:03.062806+00:00",
+                "data_dt": [
+                  23,
+                  10,
+                  2026,
+                  19,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-10-23T07:00:00+00:00",
+                "decision_day": "2026-10-23",
+                "home": "Orlando Pirates",
+                "kickoff_utc": "2026-10-23T18:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-23.json",
+                "ledger_sha256": "172d177fccc01e33d7f8a423f5cbb74517c33adafc046a675c884dad483cbf6e",
+                "market": "ou_2.5",
+                "price": 1.77,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1089",
+                    "created": [
+                      "2026-10-22T19:02",
+                      "2026-10-22T19:02"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      null,
+                      null
+                    ],
+                    "odds": [
+                      1.77,
+                      1.87
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 0,
+                  "row_sha256": "5d2f41cc7d9b3f786dcad1af079134395d7e210b645f135808e2d4cdde14fc30"
+                },
+                "raw_kickoff": "19:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-23T18:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "African Stars",
+                      "board_fetched_at": "2026-10-22T22:22:03+00:00",
+                      "board_fixture": {
+                        "fixtureId": "id1000105474629506",
+                        "participant1Name": "Orlando Pirates FC",
+                        "participant2Name": "African Stars",
+                        "startTime": "2026-10-23T18:00:00.000Z"
+                      },
+                      "file": "oddspapi_fixture_state.json",
+                      "file_sha256": "2e593674faf15b5899b4a2c9d06474df3a08192c32a8da7e83a1bb4910f02ea1",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Orlando Pirates FC",
+                      "json_pointer": "/boards/2026-10-23/fixtures/327",
+                      "kickoff_origin": "provider_startTime",
+                      "kickoff_utc": "2026-10-23T18:00:00+00:00",
+                      "observed_at_utc": "2026-10-22T22:22:03+00:00",
+                      "provider_event_id": "id1000105474629506",
+                      "row_sha256": "d45e9f9cc1e105bf6828cdb5f1b2d1679ac389836828d4573b409133285fa389",
+                      "source": "oddspapi"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-23",
+                "Orlando Pirates",
+                "African Stars"
+              ]
+            }
+          ],
+          "odds": 3.26,
+          "stake_pct": 5.8454,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
+              "match": "Al Faisaly vs Al Nassr",
+              "pick": "under",
+              "prob": 0.6415,
+              "odds": 1.74,
+              "result": null,
+              "market": "match_under_35",
+              "price_book": "Stake.com",
+              "cohort_evidence": {
+                "rate": 0.6415,
+                "n": 1074,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-23",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 689,
+                "cohort_lower_bound": 0.6123891414460708,
+                "price_context": {
+                  "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                  "selection": "away",
+                  "league": "Pro League",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.74,
+                  "captured_at": "2026-10-23T01:17:34.285230+00:00",
+                  "decision_at": "2026-10-23T09:41:04+02:00",
+                  "kickoff": "2026-10-23T13:30:00+00:00"
+                }
+              },
+              "label": "Match Under 3.5 Goals",
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "Pro League",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-23T01:17:34.285230+00:00",
+              "price_kickoff": "2026-10-23T13:30:00+00:00",
+              "price_provenance": {
+                "away": "Al Nassr",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-10-23T01:17:34.285230+00:00",
+                "data_dt": [
+                  23,
+                  10,
+                  2026,
+                  14,
+                  30
+                ],
+                "decision_cutoff_utc": "2026-10-23T07:00:00+00:00",
+                "decision_day": "2026-10-23",
+                "home": "Al Faisaly",
+                "kickoff_utc": "2026-10-23T13:30:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-23.json",
+                "ledger_sha256": "172d177fccc01e33d7f8a423f5cbb74517c33adafc046a675c884dad483cbf6e",
+                "market": "ou_3.5",
+                "price": 1.74,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1089",
+                    "created": [
+                      "2026-10-22T20:55",
+                      "2026-10-22T20:55"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      2.01,
+                      1.74
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 4,
+                  "row_sha256": "ff4e3fc353e5eab9e244e53a2338ea6b84a5dabe7bdc6228d74ecfdf2a99f154"
+                },
+                "raw_kickoff": "14:30",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-23T13:30:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Al Nassr Club",
+                      "board_fetched_at": "2026-10-22T22:22:03+00:00",
+                      "board_fixture": {
+                        "fixtureId": "id1000095573215812",
+                        "participant1Name": "Al-Faisaly FC",
+                        "participant2Name": "Al Nassr Club",
+                        "startTime": "2026-10-23T13:30:00.000Z"
+                      },
+                      "file": "oddspapi_fixture_state.json",
+                      "file_sha256": "2e593674faf15b5899b4a2c9d06474df3a08192c32a8da7e83a1bb4910f02ea1",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Al-Faisaly FC",
+                      "json_pointer": "/boards/2026-10-23/fixtures/127",
+                      "kickoff_origin": "provider_startTime",
+                      "kickoff_utc": "2026-10-23T13:30:00+00:00",
+                      "observed_at_utc": "2026-10-22T22:22:03+00:00",
+                      "provider_event_id": "id1000095573215812",
+                      "row_sha256": "541bec02d00d58118512554fe839d3a8b4e92dd07acbaa829f98546717c0e0ce",
+                      "source": "oddspapi"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-23",
+                "Al Faisaly",
+                "Al Nassr"
+              ]
+            },
+            {
+              "match": "Shamrock Rovers vs Sligo Rovers",
+              "pick": "under",
+              "prob": 0.6294,
+              "odds": 1.78,
+              "result": null,
+              "market": "match_under_35",
+              "price_book": "Stake.com",
+              "cohort_evidence": {
+                "rate": 0.6294,
+                "n": 3038,
+                "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                "as_of_exclusive": "2026-10-23",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1912,
+                "cohort_lower_bound": 0.6120338044127789,
+                "price_context": {
+                  "contract_id": "pfc_439097cb9bb700e9996c0b07",
+                  "selection": "home",
+                  "league": "Premier Division",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.78,
+                  "captured_at": "2026-10-22T22:25:15.387576+00:00",
+                  "decision_at": "2026-10-23T09:41:04+02:00",
+                  "kickoff": "2026-10-23T19:00:00+00:00"
+                }
+              },
+              "label": "Match Under 3.5 Goals",
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "Premier Division",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-22T22:25:15.387576+00:00",
+              "price_kickoff": "2026-10-23T19:00:00+00:00",
+              "price_provenance": {
+                "away": "Sligo Rovers",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-10-22T22:25:15.387576+00:00",
+                "data_dt": [
+                  23,
+                  10,
+                  2026,
+                  20,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-10-23T07:00:00+00:00",
+                "decision_day": "2026-10-23",
+                "home": "Shamrock Rovers",
+                "kickoff_utc": "2026-10-23T19:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-23.json",
+                "ledger_sha256": "172d177fccc01e33d7f8a423f5cbb74517c33adafc046a675c884dad483cbf6e",
+                "market": "ou_3.5",
+                "price": 1.78,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": false,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-22T20:03",
+                      "2026-10-22T20:03"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      1.89,
+                      1.78
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 15,
+                  "row_sha256": "8292153d28020f337db72db341dd6c3b1260e524fdb63508cb78ab69addf9d7a"
+                },
+                "raw_kickoff": "20:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-23T19:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Sligo Rovers FC",
+                      "board_fetched_at": "2026-10-22T22:22:03+00:00",
+                      "board_fixture": {
+                        "fixtureId": "id1000019266854234",
+                        "participant1Name": "Shamrock Rovers",
+                        "participant2Name": "Sligo Rovers FC",
+                        "startTime": "2026-10-23T19:00:00.000Z"
+                      },
+                      "file": "oddspapi_fixture_state.json",
+                      "file_sha256": "2e593674faf15b5899b4a2c9d06474df3a08192c32a8da7e83a1bb4910f02ea1",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Shamrock Rovers",
+                      "json_pointer": "/boards/2026-10-23/fixtures/383",
+                      "kickoff_origin": "provider_startTime",
+                      "kickoff_utc": "2026-10-23T19:00:00+00:00",
+                      "observed_at_utc": "2026-10-22T22:22:03+00:00",
+                      "provider_event_id": "id1000019266854234",
+                      "row_sha256": "459692d7b1a4b128ddd2f14f32d38f99e257650bbed36322f0bd8a5e3ace7d19",
+                      "source": "oddspapi"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": false
+              },
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-23",
+                "Shamrock Rovers",
+                "Sligo Rovers"
+              ]
+            }
+          ],
+          "odds": 3.1,
+          "stake_pct": 5.8454,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
               "match": "Bolton Wanderers vs Middlesbrough",
               "pick": "under",
               "prob": 0.4209,
@@ -499,7 +1053,7 @@
                   "source": "theoddsapi",
                   "price": 2.58,
                   "captured_at": "2026-10-22T22:22:01.495241+00:00",
-                  "decision_at": "2026-10-23T06:24:51+02:00",
+                  "decision_at": "2026-10-23T09:41:04+02:00",
                   "kickoff": "2026-10-23T19:00:00+00:00"
                 }
               },
@@ -543,7 +1097,7 @@
                   "source": "theoddsapi",
                   "price": 2.76,
                   "captured_at": "2026-10-22T22:22:01.751835+00:00",
-                  "decision_at": "2026-10-23T06:24:51+02:00",
+                  "decision_at": "2026-10-23T09:41:04+02:00",
                   "kickoff": "2026-10-23T18:00:00+00:00"
                 }
               },
@@ -564,7 +1118,7 @@
             }
           ],
           "odds": 7.12,
-          "stake_pct": 8.7681,
+          "stake_pct": 5.8454,
           "results": [
             null,
             null
@@ -572,7 +1126,7 @@
           "won": null
         }
       ],
-      "staked_pct": 8.7681
+      "staked_pct": 17.5362
     }
   ],
   "frozen_by_date": {
@@ -618,6 +1172,11 @@
     },
     "2026-10-22": {
       "frozen_at": "2026-10-22T14:12:02+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-10-23": {
+      "frozen_at": "2026-10-23T10:26:13+02:00",
       "final": true,
       "lock_source": "state"
     }
