@@ -269,10 +269,10 @@ def test_without_a_cohort_the_stated_path_cannot_place_a_bet(monkeypatch):
 
 def test_selection_takes_the_highest_hit_rate_among_priced_at_the_minimum(monkeypatch):
     """Operator 2026-10-14: the highest realized hit rate wins, not the highest
-    edge. Over 2.5 at 57% and 1.80 must beat Over 3.5 at 35% and 3.03, even
+    edge. Over 2.5 at 67% and 1.80 must beat Over 3.5 at 60% and 3.03, even
     though Over 3.5 has the larger stated edge."""
     con = _empty_warehouse()
-    cohort = dict(COHORT, over25=0.57, over35=0.35)
+    cohort = dict(COHORT, over25=0.67, over35=0.60)
     monkeypatch.setattr(pt, "fetch_match_cohort", lambda *a, **k: cohort)
     prices = {"match_over_25": 1.80, "match_over_35": 3.03}
     # every other candidate priced under the minimum so the two overs compete
@@ -526,10 +526,10 @@ def test_full_market_contention_not_under25_in_isolation(monkeypatch, scenario, 
 
 
 @pytest.mark.parametrize('rate, eligible', [
-    (.2499, False), (.25, True), (.7499, True), (.75, True), (.80, True),
+    (.25, False), (.5999, False), (.60, True), (.7499, True), (.75, True), (.80, True),
     (.90, True), (.9001, False),
 ])
-def test_authorized_default_has_one_shared_cohort_band_not_a_new_75pct_floor(monkeypatch, rate, eligible):
+def test_authorized_default_has_one_shared_sixty_to_ninety_percent_band(monkeypatch, rate, eligible):
     monkeypatch.delenv(pt.ENH_COHORT_PARITY_ENV, raising=False)
     monkeypatch.setattr(pt, 'fetch_match_cohort', lambda *a, **k: _under25_boundary_cohort(rate))
     con = _empty_warehouse()

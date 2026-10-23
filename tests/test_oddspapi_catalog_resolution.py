@@ -18,6 +18,7 @@ shapes.
 from __future__ import annotations
 
 import json
+import pytest
 from pathlib import Path
 
 from edgefactory.sources.oddspapi_odds import (
@@ -268,3 +269,19 @@ def test_load_market_type_map_uses_the_documented_catalog_fields(monkeypatch):
     assert type_map["10262"] == "unsupported_period"
     assert entries["101"]["outcomes"] == {"101": "1", "102": "X", "103": "2"}
     assert entries["10194"]["handicap"] == 2.5
+
+
+@pytest.mark.parametrize('name,ambiguous', [(None, False), ('Yes', False), ('No', True), ('Croatia', True)])
+def test_catalog_only_btts_resolves_yes_no_and_refuses_conflicts(name, ambiguous):
+    payload = {'startTime': '2026-10-23T18:00:00Z', 'bookmakerOdds': {
+        'Pinnacle': {'markets': {'104': {'outcomes': {
+            key: {'players': {'0': dict(price=1.8, **({'name': name} if key == '104' and name else {}))}}
+            for key in ('104', '105')}}}}}}
+    stats = {}
+    rows = rows_from_odds_response(payload, CATALOG_TYPES, home='Croatia', away='England',
+                                  stats=stats, market_catalog=CATALOG_ENTRIES)
+    assert {(r['market'], r['selection']) for r in rows} == (
+        {('btts', 'no')} if ambiguous else {('btts', 'yes'), ('btts', 'no')})
+    assert stats.get('ambiguous_btts', 0) == int(ambiguous)
+    assert stats.get('unresolved_btts', 0) == 0
+    assert op._catalog_outcome_selection(CATALOG_ENTRIES['104'], '104') is None

@@ -927,12 +927,12 @@ def seed_slice_ledger(*, archives=None, settled=None, path=None,
     return rows, unresolved
 
 
-def ensure_slice_seeded(today_text):
+def ensure_slice_seeded(today_text, *, settled=None):
     """Seed only when the result-free ledger is absent/empty."""
     path = _slice_ledger_path()
     if read_slice_ledger(path):
         return read_slice_ledger(path), []
-    return seed_slice_ledger(today_text=today_text, path=path)
+    return seed_slice_ledger(today_text=today_text, path=path, settled=settled)
 
 
 def _slice_adverse(verdict):
@@ -2983,17 +2983,15 @@ def _apply_unplaced_enhancement_resets(st: dict, localdata: Path) -> bool:
         recut = localdata / f"autobets_enh_tickets_{target}_force_recut.txt"
         if recut.exists():
             raise ValueError(f"enhancement reset {target} refused: review the existing force-recut artifact")
-        removed = [x for x in st.get("open_slips", []) if str(x.get("date")) == target]
         if st:
-            # Preserve original entries inside an audit receipt, not the active
-            # settlement queue. Bank/history/events/cycle values are untouched.
+            # Unplaced recommendations are removed, not retained as old bets.
+            # Keep only the cache-invalidation marker; bank/history stay intact.
             st["open_slips"] = [x for x in st.get("open_slips", []) if str(x.get("date")) != target]
-            old_frozen = st.get(FROZEN_BOOK_KEY, {}).pop(target, None)
-            old_superseded = st.get(SUPERSEDED_BOOK_KEY, {}).pop(target, None)
+            st.get(FROZEN_BOOK_KEY, {}).pop(target, None)
+            st.get(SUPERSEDED_BOOK_KEY, {}).pop(target, None)
             st.setdefault("unplaced_enhancement_resets", {})[target] = {
                 "receipt_sha256": identity, "approved_at": receipt["approved_at"],
-                "confirmed_none_placed": True, "removed_open_slips": removed,
-                "previous_freeze": old_frozen, "previous_supersession": old_superseded,
+                "confirmed_none_placed": True,
             }
             changed = True
         # Both are old recommendation locks, never proof of a placed bet.
@@ -3505,7 +3503,8 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
                           "result": l.get("result"),
                           # Preserve the winning alternative's identity for
                           # evidence carry; "over" alone is not a market.
-                          **({"market": l.get("market"), "price_book": l.get("price_book")}
+                          **({"market": l.get("market"), "price_book": l.get("price_book"),
+                             "price_source": l.get("price_source")}
                              if overrides.get("enhancements", False) else {})} for l in a],
                 "odds": round(prod, 2),
                 "stake_pct": round(stake_pct * aw, 4) if aw < 1.0 else stake_pct}
@@ -4432,7 +4431,7 @@ def cmd_today(args, st, *, settled=None):
         # A frozen rerun must not move ladder streaks, but it still upserts
         # today's real evidence row from the frozen slip. No line in the slip
         # is rewritten; the parser consumes the frozen leg print verbatim.
-        ensure_slice_seeded(target)
+        ensure_slice_seeded(target, settled=settled)
         archive_index = _archive_index_for_slice(load_archived_picks())
         frozen_rows, _unresolved = parse_slip_slice_rows(
             slip_txt, archive_index, existing_rows=read_slice_ledger(),
@@ -4553,11 +4552,11 @@ def cmd_today(args, st, *, settled=None):
     # --- selection ladder + door P&L tripwires --------------------------
     # Door-level P&L remains the first policy call. Its bench filter and
     # stake weighting remain separate from the slice ladder's rank-only cap.
-    pnl_weights, pnl_verdicts = compute_bucket_pnl(target)
+    pnl_weights, pnl_verdicts = compute_bucket_pnl(target, settled=settled)
     # Seed/read the result-free slice before scoring. Settlement is always a
     # read-time join, so an unsettled row never becomes an automatic loss.
-    ensure_slice_seeded(target)
-    slice_policy, slice_verdicts = compute_bucket_slice(target)
+    ensure_slice_seeded(target, settled=settled)
+    slice_policy, slice_verdicts = compute_bucket_slice(target, settled=settled)
     base_pool = list(pool)  # shadow planning strips BOTH ladder and door policy
     door_pool = list(base_pool)
     benched_legs = [l for l in door_pool
@@ -4864,7 +4863,7 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                      execution_safe: bool = False) -> list[dict]:
     """One selected-market leg with the shared realized-evidence verdict.
 
-    Live execution prices the exact-parent all-outcome cohort (n >= 100)
+    Live execution prices the exact-parent all-outcome cohort (n >= 30)
     against an original executable quote. No exact-price history is required.
     execution_safe=False retains
     descriptive historical counterfactuals, not current staking permission.
@@ -4885,8 +4884,18 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
     except Exception:
         MARKET_PRICE_MAP = {}
 
-    expanded = []
+    # Supersede older builds of the SAME fixture/contract/selection only.
+    # Different contracts still compete; unknown build times prove no recency.
+    parents = {}
     for parent in slate or []:
+        stamp = _zoned_instant_utc(parent.get("built_at_utc"))
+        key = ((_fixture_key({"row": parent}), parent.get("contract_id"), str(parent.get("pick") or ""))
+               if stamp and isinstance(parent.get("contract_id"), str) else (id(parent),))
+        previous = parents.get(key)
+        if previous is None or (stamp is not None and stamp > _zoned_instant_utc(previous.get("built_at_utc"))):
+            parents[key] = parent
+    expanded = []
+    for parent in parents.values():
         alternatives = [n for n in parent.get("event_notes", []) if isinstance(n, dict)
                         and n.get("enhancement_price") is not None]
         if not any(n.get("market") == parent.get("recommended_enhancement") for n in alternatives):
@@ -4915,7 +4924,7 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
         for candidate in expanded:
             offers = candidate.get("enhancement_quote_alternatives")
             for quote in offers if isinstance(offers, list) else ():
-                if isinstance(quote, dict) and quote.get("enhancement_price_source") == BETEXPLORER_SOURCE:
+                if isinstance(quote, dict):
                     variants.append(dict(candidate, **{k: quote.get(k) for k in fields}))
         expanded.extend(variants)
     legs: list[dict] = []
@@ -4966,12 +4975,12 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
             verdict = be_rejection
         else:
             # No arbitrary price ceiling or global-rate EV. The actual quote
-            # must pay for the existing parent cohort's uncertainty bound.
+            # must clear the operator's relaxed 0.8 uncertainty-bound screen.
             if price < MIN_LEG_ODDS:
                 verdict = "below_min_odds"
             elif execution_safe and priced_evidence is None:
                 verdict = "invalid_execution_quote_context"
-            elif execution_safe and priced_evidence["cohort_lower_bound"] * price <= 1:
+            elif execution_safe and priced_evidence["cohort_lower_bound"] * price <= 0.8:
                 verdict = "payout_not_supported"
             else:
                 verdict = "fire"
@@ -5153,7 +5162,7 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
     and which slice it was (the derivation is evidence, and evidence that is
     dropped before the freeze cannot be audited afterwards).
     """
-    by_key = {(str(l.get("match")), str(l.get("pick"))): l for l in pool}
+    by_key = {(str(l.get("match")), str(l.get("pick")), l.get("odds")): l for l in pool}
     for acca in plan or []:
         for leg in acca.get("legs", []):
             if leg.get("market"):
@@ -5161,9 +5170,11 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
                              l.get("match") == leg.get("match")
                              and l.get("pick") == leg.get("pick")
                              and l.get("market") == leg.get("market")
-                             and l.get("price_book") == leg.get("price_book")), None)
+                             and l.get("price_book") == leg.get("price_book")
+                             and (not leg.get("price_source") or l.get("price_source") == leg["price_source"])
+                             and l.get("odds") == leg.get("odds")), None)
             else:  # Legacy descriptive plans did not carry market identity.
-                meta = by_key.get((str(leg.get("match")), str(leg.get("pick"))))
+                meta = by_key.get((str(leg.get("match")), str(leg.get("pick")), leg.get("odds")))
             if not meta:
                 continue
             for key in ("cohort_evidence", "market", "label", "floor", "floor_basis", "league",
@@ -5424,7 +5435,7 @@ def cmd_enhancement(args, st, *, scores=None) -> int:
         scores = load_settled_scores()
     withdrawn = apply_enhancement_timing(legs, now, target, scores)
     for reason, names in withdrawn.items():
-        print(f"enhancement leg withdrawn ({reason}): {', '.join(str(n) for n in names)}")
+        print(f"enhancement leg withdrawn ({reason}): {', '.join(dict.fromkeys(str(n) for n in names))}")
     pool = enhancement_pool(legs)
     bank_eff = effective_bank(st, exclude_date=target)
     should_freeze = (str(target) == now.strftime("%Y-%m-%d")

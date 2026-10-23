@@ -571,3 +571,12 @@ def test_report_records_which_engine_graded_it(sandbox):
     assert report["recent_min_n"] == GATES.min_recent_n
     assert report["recent_window_days"] == GATES.recent_window_days
     assert report["evidence_basis"].startswith("printed-slip only")
+
+
+def test_missing_slice_seed_reuses_supplied_result_snapshot(sandbox, monkeypatch):
+    snapshot = {('2026-09-23', 'home', 'away'): 'home'}
+    def seed(**kwargs):
+        assert kwargs['settled'] is snapshot
+        return [], []
+    monkeypatch.setattr(at, 'seed_slice_ledger', seed)
+    assert at.ensure_slice_seeded('2026-09-23', settled=snapshot) == ([], [])

@@ -1208,7 +1208,7 @@ def test_enhancement_legs_already_kicked_off_or_finished_are_withdrawn_from_the_
 
 def test_fresh_no_bet_replaces_stale_reason_without_changing_finances(_tmp_lane):
     from copy import deepcopy
-    rows = _distinct(2, price=2.0, prob=.59)
+    rows = _distinct(2, price=2.0, prob=.60)
     rows[1]["enhancement_price_book"] = "Other Book"
     _board(_tmp_lane, rows)
     artifact = _tmp_lane / f'autobets_enh_tickets_{DAY}.txt'

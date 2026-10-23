@@ -776,6 +776,17 @@ def capture(day: str, max_fixtures: int = MAX_FIXTURES_CEILING,
         # fixture_key_miss.
         pending, slate_n = _prioritise_slate_fixtures(pending, day)
         stats["slate_priority_fixtures"] = slate_n
+        # Reserve a share for uncaptured slate fixtures whose windows open
+        # later TODAY. Reuse the same board/slate matcher; never raise allowance.
+        future = [fx for fx in fixtures
+                  if (start := _parse_utc(fx.get("startTime"))) is not None
+                  and now < start - timedelta(hours=CAPTURE_WINDOW_H)
+                  and _spend_day(start) == _spend_day(now)
+                  and str(fx.get("fixtureId") or fx.get("id") or "") not in state.get("captured", {})]
+        _, future_n = _prioritise_slate_fixtures(future, day)
+        remaining = _budget_remaining(state, now, len(keys))
+        reserved = min(future_n, remaining * future_n // max(1, future_n + slate_n))
+        stats.update(future_slate_fixtures=future_n, reserved_requests=reserved)
         # Market-id census: every id actually present in the payloads, with
         # its classification and catalog label, persisted for the month. This
         # is the durable enumeration of market_id / type / label triples that
@@ -787,10 +798,9 @@ def capture(day: str, max_fixtures: int = MAX_FIXTURES_CEILING,
             fid = str(fx.get("fixtureId") or fx.get("id") or "")
             if not fid:
                 continue
-            if _budget_remaining(state, now, len(keys)) <= 0:
-                # Today's share is spent. The unpriced fixtures stay pending and
-                # the next run inside their window picks them up.
-                stats["status"] = "budget"
+            if _budget_remaining(state, now, len(keys)) <= reserved:
+                # Keep later-window slate allowance; reconsider on the next run.
+                stats["status"] = "reserved" if reserved else "budget"
                 stats["budget_deferred"] = len(candidates) - idx
                 break
             stats["attempted"] += 1
