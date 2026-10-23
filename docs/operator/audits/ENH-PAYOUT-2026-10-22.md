@@ -666,3 +666,27 @@ including rejected candidates. Reuse the existing selector/replay, fix two-leg
 pairing and staking, compare eligibility thresholds chronologically, and judge
 held-out growth, drawdown, betting frequency and sample size together. Do not
 select a winner from missing contexts, selected-only cohorts or later builds.
+
+### 2026-10-23 cache regression repair
+
+Run `39957621669` restored cache `localdata-v2-39915917068` and pushed
+`5ec19be`. Settled history and bank reconciled, but the first cache-extension
+branch did not compare open positions or freeze locks. It resurrected withdrawn
+positions while leaving the approved printed card unchanged.
+
+Repair restores only October 23 open positions, freeze and minimal approval
+marker from `ce3f4cc4f455e5df49136e6a00af2568836d531f`. Bank, settled history,
+stakes, other dates and the printed replacement card are unchanged. The deleted
+standalone reset receipt is not recreated; no withdrawn ticket payload is added.
+The existing hash-only cache-supersession mechanism binds the regressed financial
+snapshot to this exact repair. Unknown cached positions still fail closed.
+The guard now verifies full positions, locks and cycle state before either ledger
+extension path, and preserves committed approval metadata. Financial changes in
+older caches without an exact receipt require investigation, not automatic choice.
+
+Validation: 72 targeted tests passed; full suite 4260 passed, 1 skipped
+(184.60s). Actual-state isolated Git restore checks retained the approved state
+for both the exact withdrawn snapshot and repaired snapshot, and refused an
+unknown selection without modifying its evidence. Performance reports rendered
+with `--lane enh --no-settle`; no selection, settlement, provider capture,
+workflow dispatch, cache deletion or bank reset performed by this repair.
