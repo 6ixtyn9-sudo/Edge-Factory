@@ -1,7 +1,7 @@
 {
   "notes": [
     "need_h2h=0",
-    "unresolved=6"
+    "unresolved=5"
   ],
   "outcome": {
     "calls_charged": 0,
@@ -11,10 +11,10 @@
       "captured": 0,
       "lane_blocked_local": 0,
       "staleness_skip": 0,
-      "unresolved_id": 6
+      "unresolved_id": 5
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 22,
+    "ledger_entries": 23,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -32,35 +32,28 @@
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "waterfordunited|droghedaunited",
+        "fixture": "vitoriaguimaraes|maritimo",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "jongaz|helmondsport",
+        "fixture": "independientedelvalle|universidadcatolica",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "pineto|gubbio",
+        "fixture": "gimnasialaplata|sarmiento",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "almerecity|rodajckerkrade",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "derrycity|dundalk",
+        "fixture": "cruzeiro|remo",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -71,12 +64,12 @@
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 15
+      "88739ee5": 14
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=15 [pools=2 cap=90 reserve=20 spent=7 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=14 [pools=2 cap=90 reserve=20 spent=7 month=2026-10] -> approved",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1,
@@ -91,7 +84,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 15,
+    "spendable": 14,
     "verdict": "approved"
   },
   "provenance": {
