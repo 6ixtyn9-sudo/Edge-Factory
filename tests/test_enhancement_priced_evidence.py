@@ -33,11 +33,19 @@ def test_empty_registry_can_admit_complete_acca_without_any_placed_bets(tmp_path
     assert 'conditional_rate' not in evidence and 'priced_n' not in evidence
 
 
-@pytest.mark.parametrize('rate,price,expected', [(.59, 1.8, 'payout_not_supported'),
-    (.59, 2.0, 'fire'), (.9, 1.3, 'fire'), (.74, 1.3, 'payout_not_supported')])
-def test_actual_quote_must_pay_for_cohort_uncertainty(tmp_path, rate, price, expected):
+@pytest.mark.parametrize('rate,price,n,expected', [
+    (.59, 2.0, 200, 'invalid_execution_quote_context'),
+    (.42, 2.58, 200, 'invalid_execution_quote_context'),
+    (.91, 2.0, 200, 'invalid_execution_quote_context'),
+    (.60, 1.3, 200, 'payout_not_supported'),
+    (.60, 1.6, 200, 'fire'), (.9, 1.3, 200, 'fire'), (.74, 1.3, 200, 'fire'),
+    (.60, 2.0, 29, 'no_cohort_evidence'), (.60, 2.0, 30, 'fire'),
+    (.9, 1.29, 200, 'below_min_odds')])
+def test_actual_quote_must_pay_for_cohort_uncertainty(tmp_path, rate, price, n, expected):
     row = pick(rate, price)
     row['enhancement_probability'] = None
+    row['enhancement_cohort_n'] = n
+    row['event_notes'][0]['cohort_n'] = n
     assert at.enhancement_legs([row], registry_root=tmp_path, execution_safe=True)[0]['verdict'] == expected
 
 
@@ -63,8 +71,8 @@ def test_invalid_current_quote_is_not_repaired_by_cohort(tmp_path, key, value):
     assert at.enhancement_legs([row], registry_root=tmp_path, execution_safe=True)[0]['verdict'] != 'fire'
 
 
-@pytest.mark.parametrize('n,rate,min_hits', [(3022, .5913, 1787), (100000, .5913, 59125),
-                                           (200, 0., 0), (200, 1., 200)])
+@pytest.mark.parametrize('n,rate,min_hits', [(3022, .6916, 2090), (100000, .6913, 69125),
+                                           (200, .6, 120), (200, .9, 180)])
 def test_rounded_rate_uses_lowest_compatible_hit_count(n, rate, min_hits):
     row = pick(rate)
     row['enhancement_cohort_n'] = n
@@ -174,7 +182,7 @@ def test_alternative_book_can_supply_pair_without_duplicate_fixture_on_card():
     assert all(l['price_book'] == 'Pinnacle' for pair in accas for l in pair)
 
 
-def test_real_captured_pafos_lech_pair_no_longer_requires_worst_case_return(tmp_path):
+def test_real_captured_pafos_lech_pair_is_below_new_sixty_percent_floor(tmp_path):
     # Actual captured rates/counts/prices from audit blob 3fd9e9d8; not a claim
     # that these historical quotes remain executable now.
     rows = []
@@ -186,12 +194,10 @@ def test_real_captured_pafos_lech_pair_no_longer_requires_worst_case_return(tmp_
         row['event_notes'][0]['cohort_n'] = n
         rows.append(row)
     legs = at.enhancement_legs(rows, registry_root=tmp_path, execution_safe=True)
-    assert all(l['verdict'] == 'fire' for l in legs)
+    assert all(l['verdict'] == 'invalid_execution_quote_context' for l in legs)
     pool = at.enhancement_pool(legs)
     plan = at.plan_day(pool, 80.1656, enhancements=True)
-    at._carry_lane_evidence(plan, pool)
-    assert len(plan) == 1 and plan[0]['odds'] == 3.4
-    assert {l['match'] for l in plan[0]['legs']} == {'Pafos FC vs Riga', 'Lech Poznań vs Sunderland'}
+    assert pool == [] and plan == []
 
 
 def test_alternative_source_survives_until_executable_pair_competes():
@@ -201,3 +207,35 @@ def test_alternative_source_survives_until_executable_pair_competes():
     selected = at.select_accas([unavailable_partner, valid_a, valid_b], enhancements=True)
     assert len(selected) == 1
     assert all(l['cohort_evidence']['price_context']['source'] == 'theoddsapi' for l in selected[0])
+
+
+@pytest.mark.parametrize('same_contract', [True, False])
+def test_fresh_build_supersedes_only_same_fixture_and_contract(same_contract):
+    old = dict(pick(.9), built_at_utc='2026-10-22T05:50:00Z')
+    fresh = dict(pick(.7), built_at_utc='2026-10-22T06:00:00Z')
+    if not same_contract:
+        fresh['contract_id'] = 'pfc_' + 'b' * 24
+        fresh['enhancement_cohort_contract_id'] = fresh['contract_id']
+        fresh['event_notes'][0]['cohort_contract_id'] = fresh['contract_id']
+    for rows in ([old, fresh], [fresh, old]):
+        before = deepcopy(rows)
+        legs = at.enhancement_legs(rows, execution_safe=True)
+        assert sorted(l['probability'] for l in legs) == ([.7] if same_contract else [.7, .9])
+        assert rows == before
+    old.pop('built_at_utc')
+    assert len(at.enhancement_legs([old, fresh], execution_safe=True)) == 2
+
+
+@pytest.mark.parametrize('key,value', [('enhancement_price',1.29), ('enhancement_price_source','unknown'),
+    ('enhancement_price_book','Matchbook'), ('enhancement_price_at','2026-10-22T07:00:00Z'),
+    ('enhancement_price_kickoff','2026-10-22T04:00:00Z')])
+def test_non_be_alternatives_cannot_bypass_execution_checks(key, value):
+    a, b = pick(.8,2.), dict(pick(.8,1.8), home='Gamma', enhancement_price_book='Common')
+    fields = ('enhancement_price','enhancement_price_source','enhancement_price_book',
+              'enhancement_price_at','enhancement_price_kickoff','enhancement_priced')
+    offer = {k:a.get(k) for k in fields}
+    offer.update(enhancement_price=1.8, enhancement_price_book='Common', enhancement_priced=True)
+    a['enhancement_quote_alternatives'] = [offer]
+    assert at.select_accas(at.enhancement_pool(at.enhancement_legs([a,b],execution_safe=True)),enhancements=True)
+    offer[key] = value
+    assert at.select_accas(at.enhancement_pool(at.enhancement_legs([a,b],execution_safe=True)),enhancements=True) == []

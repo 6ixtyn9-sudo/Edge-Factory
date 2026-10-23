@@ -339,3 +339,44 @@ def test_capture_excludes_srl_before_market_and_odds_requests(tmp_path, monkeypa
     receipt = json.loads((tmp_path / 'oddspapi_capture_2026-10-03.json').read_text())
     assert receipt['excluded_srl_fixtures'] == 3
     assert all(fx['fixture_id'] == 'real' for fx in receipt['attempted_fixtures'])
+
+
+@pytest.mark.parametrize('later_is_slate', [False, True])
+def test_budget_reserves_for_later_slate_window_without_extra_calls(tmp_path, monkeypatch, later_is_slate):
+    from datetime import timedelta
+    day = '2026-10-03'
+    now = datetime(2026, 10, 3, 8, tzinfo=timezone.utc)
+    early = dict(fixtureId='early', participant1Name='Early Home', participant2Name='Early Away',
+                 startTime=f'{day}T12:00:00Z')
+    later = dict(fixtureId='later', participant1Name='Later Home', participant2Name='Later Away',
+                 startTime=f'{day}T20:00:00Z')
+    others = [dict(early, fixtureId=f'other{i}', participant1Name=f'Other {i}') for i in range(4)]
+    fixtures = [early, later, *others]
+    state = dict(boards={day: dict(fetched_at=now.isoformat(), fixtures=fixtures)}, captured={}, usage={})
+    monkeypatch.setattr(cap, 'OUT_DIR', tmp_path)
+    _write_slate(tmp_path, [dict(date=day, home=f['participant1Name'], away=f['participant2Name'])
+                          for f in ([early, later] if later_is_slate else [early])])
+    monkeypatch.setattr(cap, '_load_state', lambda: state)
+    monkeypatch.setattr(cap, 'api_keys', lambda: ('test-key',))
+    monkeypatch.setattr(cap, '_read_markets_cache', lambda day: [])
+    monkeypatch.setattr(cap, 'market_catalog', lambda: {})
+    monkeypatch.setattr(cap, 'market_catalog_entries', lambda: {})
+    monkeypatch.setattr(cap, '_append_rows', lambda *args: 0)
+    calls = []
+    monkeypatch.setattr(cap, 'request_count', lambda: len(calls))
+    monkeypatch.setattr(cap, '_budget_remaining', lambda state, now, keys: 3 - state.get('usage', {}).get(day, 0))
+    def odds(fid):
+        calls.append(fid)
+        return {}
+    monkeypatch.setattr(cap, 'fetch_odds', odds)
+    stats = cap.capture(day, now_utc=now)
+    assert stats['reserved_requests'] == int(later_is_slate)
+    assert len(calls) == (2 if later_is_slate else 3)
+    assert calls[0] == 'early' and 'later' not in calls
+    if later_is_slate:
+        # Once its window opens, the reserved call becomes spendable.
+        state['boards'][day]['fetched_at'] = (now + timedelta(hours=6)).isoformat()
+        stats = cap.capture(day, now_utc=now + timedelta(hours=6))
+        assert calls[-1] == 'later' and len(calls) == 3
+        assert stats['reserved_requests'] == 0
+    assert sum(state['usage'].values()) == len(calls) <= 3

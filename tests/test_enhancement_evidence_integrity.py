@@ -102,7 +102,7 @@ def evidence():
 
 @pytest.mark.parametrize('field,value', [('cohort_rate', None), ('cohort_rate', True),
     ('cohort_rate', float('nan')), ('cohort_rate', float('inf')), ('cohort_rate', -1),
-    ('cohort_n', 99), ('cohort_n', True), ('cohort_n', 100.5), ('engine', 'model'),
+    ('cohort_n', 29), ('cohort_n', True), ('cohort_n', 100.5), ('engine', 'model'),
     ('market', 'away_under_25'), ('cohort_contract_id', 'forebet-era'),
     ('cohort_as_of_exclusive', '2026-10-21')])
 def test_both_boundaries_reject_wrong_or_missing_evidence(field, value):
@@ -250,7 +250,7 @@ def test_exact_stats_visible_without_a_quote_and_include_losses(monkeypatch):
 def test_thin_sample_is_real_display_evidence_but_cannot_authorize_a_bet(monkeypatch):
     recipe = edge()
     monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
-    # Price everything above the floor: only the original n>=100 gate blocks it.
+    # Price everything above the floor: only the n>=30 gate blocks it.
     def price(row, _index):
         row.update(enhancement_price=1.8, enhancement_priced=True)
     monkeypatch.setattr(pt, 'attach_enhancement_price', price)
@@ -258,7 +258,7 @@ def test_thin_sample_is_real_display_evidence_but_cannot_authorize_a_bet(monkeyp
     assert out['statistical_profile']['n'] == 20
     assert 'n=20' in out['statistical_comment']
     assert out['recommended_enhancement'] is None and out['event_notes'] == []
-    assert pt.HYBRID_MIN_N == 100
+    assert pt.HYBRID_MIN_N == 30
 
 
 @pytest.mark.parametrize('missing', ['warehouse', 'contract', 'results'])
