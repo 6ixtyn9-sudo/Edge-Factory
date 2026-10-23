@@ -14,7 +14,7 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 21,
+    "ledger_entries": 22,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -25,28 +25,7 @@
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "olympiqueakbou|csconstantine",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "radnickikragujevac|radniksurdulica",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "hvidovre|hbkoge",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "motorlublin|zaglebielubin",
+        "fixture": "operariopr|athletic",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -65,18 +44,39 @@
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "pineto|gubbio",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "almerecity|rodajckerkrade",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "derrycity|dundalk",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
       }
     ],
     "usable_snapshots": 0
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 21
+      "88739ee5": 15
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=21 [pools=2 cap=90 reserve=20 spent=7 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=15 [pools=2 cap=90 reserve=20 spent=7 month=2026-10] -> approved",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1,
@@ -91,7 +91,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 21,
+    "spendable": 15,
     "verdict": "approved"
   },
   "provenance": {

@@ -4,8 +4,8 @@
 
 - total unique picks: 961
 - picks with at least two prices: 740
-- average raw odds delta: -0.00566
-- average implied-probability delta: 0.001148
+- average raw odds delta: -0.005448
+- average implied-probability delta: 0.00103
 - beat-later-price rate: 0.083784
 - beat-later-price sample: 740
 - unmatched picks: 145
@@ -31,7 +31,7 @@
 - `pfc_2bd498a3472b7bbd71982ece`: n=2, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
 - `pfc_35f7e50bf23db96c2d3dd59d`: n=1, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
 - `pfc_3bfaf30507905754f7faab2a`: n=1, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
-- `pfc_439097cb9bb700e9996c0b07`: n=104, two_prices=97, avg_raw=-0.000621, avg_ip=-0.001358, beat_rate=0.175258
+- `pfc_439097cb9bb700e9996c0b07`: n=104, two_prices=97, avg_raw=0.000996, avg_ip=-0.002259, beat_rate=0.175258
 - `pfc_444d408c4ccd3a4bf4fb020c`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_4a1f2bb2278d13c8189148d0`: n=7, two_prices=7, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `pfc_4cf3df8552488297d7ccf526`: n=4, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
@@ -59,7 +59,7 @@
 
 - `CAUTION`: n=98, two_prices=87, avg_raw=-0.005055, avg_ip=0.002341, beat_rate=0.126437
 - `CERTIFIED_CLEAN`: n=112, two_prices=109, avg_raw=-0.001735, avg_ip=-0.001321, beat_rate=0.055046
-- `SKIPPED_VETO`: n=533, two_prices=424, avg_raw=-0.006862, avg_ip=0.001306, beat_rate=0.082547
+- `SKIPPED_VETO`: n=533, two_prices=424, avg_raw=-0.006492, avg_ip=0.0011, beat_rate=0.082547
 - `WATCHLIST_NO_ODDS`: n=83, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
 - `WATCHLIST_SUSPECT_PRICE`: n=35, two_prices=27, avg_raw=-0.011111, avg_ip=0.003088, beat_rate=0.185185
 - `WATCHLIST_UNCORROBORATED_PRICE`: n=89, two_prices=82, avg_raw=-0.004268, avg_ip=0.001864, beat_rate=0.060976
