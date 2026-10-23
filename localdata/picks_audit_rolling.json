@@ -54,7 +54,7 @@
     "2026-10-22",
     "2026-10-23"
   ],
-  "archived_pick_rows": 785,
+  "archived_pick_rows": 793,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.636364,
@@ -605,9 +605,9 @@
         "hits": 5,
         "price_note": "",
         "price_source_class": "priced",
-        "priced_hits": 5,
-        "priced_n": 5,
-        "priced_roi": 2.034,
+        "priced_hits": 4,
+        "priced_n": 4,
+        "priced_roi": 2.4075,
         "recommended": 5,
         "registry_processed": 5,
         "settled": 5
@@ -642,8 +642,8 @@
         "price_note": "",
         "price_source_class": "priced",
         "priced_hits": 1,
-        "priced_n": 6,
-        "priced_roi": -0.541667,
+        "priced_n": 5,
+        "priced_roi": -0.45,
         "recommended": 8,
         "registry_processed": 8,
         "settled": 8
@@ -714,8 +714,8 @@
         "price_note": "",
         "price_source_class": "priced",
         "priced_hits": 17,
-        "priced_n": 19,
-        "priced_roi": 0.094421,
+        "priced_n": 18,
+        "priced_roi": 0.155222,
         "recommended": 25,
         "registry_processed": 72,
         "settled": 25
@@ -725,9 +725,9 @@
         "hits": 158,
         "price_note": "",
         "price_source_class": "priced",
-        "priced_hits": 113,
-        "priced_n": 188,
-        "priced_roi": -0.040691,
+        "priced_hits": 111,
+        "priced_n": 186,
+        "priced_roi": -0.048226,
         "recommended": 264,
         "registry_processed": 706,
         "settled": 264
@@ -1310,7 +1310,7 @@
   },
   "include_same_day": false,
   "late_additions_on_rewritten_ledgers": 138,
-  "morning_baseline_rows": 621,
+  "morning_baseline_rows": 629,
   "overall": {
     "hit_rate": 0.685265,
     "priced_picks": 574,
@@ -1514,7 +1514,7 @@
   ],
   "rescheduled_result_picks": 7,
   "same_day_cutoff": "2026-10-23",
-  "same_day_excluded": 67,
+  "same_day_excluded": 75,
   "secondary_stats": {
     "btts_total": 699,
     "btts_wins": 370,
@@ -41912,8 +41912,7 @@
     "2026-10-18",
     "2026-10-19",
     "2026-10-21",
-    "2026-10-22",
-    "2026-10-23"
+    "2026-10-22"
   ],
   "verified_late_additions": 166,
   "veto_deep_dive": {
