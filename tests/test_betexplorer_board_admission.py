@@ -8,11 +8,25 @@ import json
 
 import pytest
 
-from edgefactory.enh_pricing import attach_enhancement_price, betexplorer_price_rejection, load_prices_index
+from edgefactory.enh_pricing import MARKET_PRICE_MAP, attach_enhancement_price, betexplorer_price_rejection, load_prices_index
 from edgefactory.kickoff_corroboration import load_schedule_witnesses
 from scripts import auto_tickets as at
 from enhancement_fixtures import with_evidence
-from test_enh_pricing import BE_DAY, FULL_BE_MARKETS, _be_fixture, _be_pick, _write_be_ledger
+from test_enh_pricing import BE_DAY, FULL_BE_MARKETS, _be_block, _be_row, _be_fixture, _be_pick, _write_be_ledger
+
+
+# Synthetic prices isolate market wiring from payout differences. Every market
+# still needs its own retained comparison cells; no market is inferred from 1X2.
+ALL_BE_MARKETS = {
+    'ou': _be_block(['Over', 'Under'], ['1.50', '2.50', '3.50', '4.50'],
+        [_be_row('Common Book', line, [2.25, 2.25])
+         for line in ['1.50', '2.50', '3.50', '4.50']]),
+    'bts': _be_block(['Yes', 'No'], ['0'], [_be_row('Common Book', '0', [2.25, 2.25])]),
+    'dc': _be_block(['1X', '12', 'X2'], ['0'], [_be_row('Common Book', '0', [2.25, 2.25, 2.25])]),
+}
+MATCH_TOTALS = [f'match_{side}_{line}' for line in ['15', '25', '35', '45']
+                for side in ['over', 'under']]
+SUPPORTED_BE_MARKETS = MATCH_TOTALS + ['btts_yes', 'btts_no', 'double_chance']
 
 
 @pytest.fixture(autouse=True)
@@ -26,8 +40,8 @@ def isolated(monkeypatch, tmp_path):
     monkeypatch.setattr(at, 'datetime', Clock)
 
 
-def board_only(root, *, fixture_changes=None, board_changes=None):
-    fixture = _be_fixture(deepcopy(FULL_BE_MARKETS))
+def board_only(root, *, fixture_changes=None, board_changes=None, markets=None):
+    fixture = _be_fixture(deepcopy(FULL_BE_MARKETS if markets is None else markets))
     _write_be_ledger(root, {'event': fixture})
     # No odds from either witness provider. BE is the sole quote donor.
     (root / 'localdata/oddspapi_odds_2026-10.csv.gz').unlink()
@@ -41,20 +55,24 @@ def board_only(root, *, fixture_changes=None, board_changes=None):
     return path, fixture
 
 
-@pytest.mark.parametrize('market,price', [('btts_yes', 1.57), ('btts_no', 2.25),
-    ('match_over_25', 3.4), ('match_under_25', 1.3)])
-def test_board_alone_corroborates_betexplorer_quotes(tmp_path, market, price):
-    board_only(tmp_path)
+@pytest.mark.parametrize('market,side,selection',
+    [(m, 'home', MARKET_PRICE_MAP[m][1]) for m in MATCH_TOTALS + ['btts_yes', 'btts_no']]
+    + [('double_chance', 'home', '1x'), ('double_chance', 'away', 'x2')])
+def test_board_alone_corroborates_betexplorer_quotes(tmp_path, market, side, selection):
+    board_only(tmp_path, markets=ALL_BE_MARKETS)
     index = load_prices_index(tmp_path, BE_DAY)
-    row = attach_enhancement_price(_be_pick(market), index)
+    row = attach_enhancement_price(_be_pick(market, pick=side), index)
     assert row['enhancement_price_source'] == 'betexplorer'
-    assert row['enhancement_price'] == price
+    assert row['enhancement_price'] == 2.25
     assert betexplorer_price_rejection(row) is None
-    receipt = row['enhancement_price_provenance']['resolution']['witnesses'][0]
+    proof = row['enhancement_price_provenance']
+    assert proof['selection'] == selection
+    assert proof['market'] == (MARKET_PRICE_MAP[market][0])
+    receipt = proof['resolution']['witnesses'][0]
     assert receipt['file'] == 'oddspapi_fixture_state.json'
     assert receipt['provider_event_id'] == 'provider-event'
     assert receipt['json_pointer'] == f'/boards/{BE_DAY}/fixtures/0'
-    assert index['betexplorer_admission']['admitted_cells'] == 7
+    assert index['betexplorer_admission']['admitted_cells'] == 13
 
 
 @pytest.mark.parametrize('changes', [
@@ -121,10 +139,10 @@ def test_persisted_board_receipt_is_revalidated_at_live_door(tmp_path, field, va
     assert betexplorer_price_rejection(row) is not None
 
 
-@pytest.mark.parametrize('market', ['match_over_25', 'btts_no'])
+@pytest.mark.parametrize('market', SUPPORTED_BE_MARKETS)
 def test_board_quote_can_reach_existing_complete_ticket_recipe(tmp_path, market):
-    board_only(tmp_path)
-    row = attach_enhancement_price(_be_pick(market), load_prices_index(tmp_path, BE_DAY))
+    board_only(tmp_path, markets=ALL_BE_MARKETS)
+    row = attach_enhancement_price(_be_pick(market, pick='home'), load_prices_index(tmp_path, BE_DAY))
     # Distinct synthetic fixture, independently corroborated through the same board.
     path = tmp_path / 'localdata/betexplorer_match_detail_2026-10-12.json'
     data = json.loads(path.read_text())
@@ -138,7 +156,7 @@ def test_board_quote_can_reach_existing_complete_ticket_recipe(tmp_path, market)
                   participant1Name='Other Home', participant2Name='Other Away')
     data['boards'][BE_DAY]['fixtures'].append(second)
     path.write_text(json.dumps(data))
-    other = attach_enhancement_price(_be_pick(market, home='Other Home', away='Other Away',
+    other = attach_enhancement_price(_be_pick(market, pick='home', home='Other Home', away='Other Away',
         match='Other Home vs Other Away'), load_prices_index(tmp_path, BE_DAY))
     legs = at.enhancement_legs([with_evidence(dict(p, pick='home', league='Synthetic League')) for p in (row, other)], execution_safe=True)
     assert len(legs) == 2 and all(l['verdict'] == 'fire' for l in legs), [(l['match'], l['verdict']) for l in legs]
@@ -180,3 +198,12 @@ def test_witness_reader_binds_existing_board_bytes_and_location(tmp_path):
         witness_records=1, rejections={})]
     proof, = next(iter(witnesses.values()))
     assert proof['board_fixture'] == json.loads(path.read_text())['boards'][BE_DAY]['fixtures'][0]
+
+
+@pytest.mark.parametrize('market', [m for m, slot in MARKET_PRICE_MAP.items()
+    if slot and slot[0].startswith('tt_')])
+def test_match_totals_are_never_substituted_for_missing_team_totals(tmp_path, market):
+    board_only(tmp_path, markets=ALL_BE_MARKETS)
+    row = attach_enhancement_price(_be_pick(market, pick='home'), load_prices_index(tmp_path, BE_DAY))
+    assert not row['enhancement_priced']
+    assert row['enhancement_price'] is None

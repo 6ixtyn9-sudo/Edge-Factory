@@ -258,6 +258,32 @@ records, not a measured live coverage gain. A normal deployed run must show
 which captured BetExplorer fixtures have valid board witnesses; fixtures still
 missing those witnesses remain rejected. Nothing was dispatched or merged.
 
+### Full-market validation follow-up — 2026-10-23
+
+Operator clarification: “not just btts, i want the other markets as well”.
+The board-witness fix is shared by every supported BetExplorer enhancement
+market, not a BTTS-only branch. Its regression matrix now explicitly covers:
+
+- Match Over **and** Under 1.5, 2.5, 3.5 and 4.5.
+- BTTS Yes **and** No.
+- Double chance 1X for home selections and X2 for away selections, checking the
+  bound market/selection receipt rather than simply accepting a price.
+- All eleven market types above through quote attachment, live leg admission,
+  complete same-book two-fixture pairing and evidence carry, using explicitly
+  synthetic quotes/cohorts. This establishes wiring, not real-world availability
+  or a guarantee that every market passes the existing evidence checks today.
+
+Home/away team totals are still read from the other already-supported sources;
+the captured BetExplorer tabs do not establish team-total semantics. Every one
+of the eighteen mapped team-total selections is tested to stay unpriced with
+only match totals present. No match-total, AH or DNB cell is relabelled as a team
+total. The 1X2 tab remains part of parent pricing; AH/DNB remain retained evidence,
+not invented ENH contracts. This follow-up changes tests/documentation only.
+
+Expanded targeted suite: **364 passed** (77 in the board-admission file).
+Full suite: **4,109 passed, 1 skipped** in 171.15 seconds (same unavailable
+historical-baseline skip described above).
+
 ## Livesport replies
 
 None recorded. Checked 2026-10-10 by the continuation session: no reply had been
