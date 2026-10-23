@@ -1,265 +1,172 @@
 {
-  "added": 30667,
-  "attempted": 10,
+  "added": 4428,
+  "attempted": 5,
   "attempted_fixtures": [
     {
-      "away": "The Strongest",
-      "fixture_id": "id1003903375478288",
-      "home": "Always Ready"
+      "away": "Hakoach Amidar Ramat Gan",
+      "fixture_id": "id1000197475883114",
+      "home": "Beitar Ramat Gan"
     },
     {
-      "away": "Central SC PE",
-      "fixture_id": "id1000038075123480",
-      "home": "Porto PE"
+      "away": "Cashmere Technical",
+      "fixture_id": "id1000059474873382",
+      "home": "Ferrymead Bays"
     },
     {
-      "away": "Cruzeiro EC MG",
-      "fixture_id": "id1002017874930610",
-      "home": "Club Olimpia"
+      "away": "Waterside Karori",
+      "fixture_id": "id1004504774931162",
+      "home": "Wellington United Diamonds"
     },
     {
-      "away": "Boliviar",
-      "fixture_id": "id1002017874930612",
-      "home": "Liga Deportiva Universitaria de Quito"
+      "away": "Kocaelispor Srl",
+      "fixture_id": "id1003222575727794",
+      "home": "Alanyaspor SRL"
     },
     {
-      "away": "Estudiantes de La Plata",
-      "fixture_id": "id1000038474808586",
-      "home": "CR Flamengo RJ"
-    },
-    {
-      "away": "Aguilas de la Universidad de Panama",
-      "fixture_id": "id1001949075804574",
-      "home": "SD Atletico Nacional"
-    },
-    {
-      "away": "AD Pasto",
-      "fixture_id": "id1002707075371182",
-      "home": "Atletico Nacional"
-    },
-    {
-      "away": "Cruz Azul Hidalgo",
-      "fixture_id": "id1002738272661728",
-      "home": "Alebrijes de Oaxaca FC"
-    },
-    {
-      "away": "Liga Deportiva Alajuelense",
-      "fixture_id": "id1004024974841182",
-      "home": "FC Motagua Tegucigalpa"
-    },
-    {
-      "away": "Club Leon",
-      "fixture_id": "id1002895375180968",
-      "home": "Atlas FC"
+      "away": "SC Telstar Srl",
+      "fixture_id": "id1003237775727770",
+      "home": "GO Ahead Eagles Srl"
     }
   ],
   "budget": {
     "day": "2026-10-23",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 210,
-    "remaining_today": 38,
-    "spent_today": 24
+    "month_spent": 220,
+    "remaining_today": 28,
+    "spent_today": 34
   },
-  "captured_at": "2026-10-22T22:24:07+00:00",
+  "captured_at": "2026-10-23T01:16:27+00:00",
   "date": "2026-10-23",
   "errors": [],
   "fixtures": 421,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 633,
+  "market_census_distinct": 267,
   "markets": {
-    "1x2": 3889,
-    "ou_0.5": 932,
-    "ou_0.75": 172,
-    "ou_1": 346,
-    "ou_1.25": 213,
-    "ou_1.5": 1661,
-    "ou_1.75": 450,
-    "ou_10.5": 26,
-    "ou_11.5": 6,
-    "ou_12.5": 6,
-    "ou_13.5": 6,
-    "ou_14.5": 6,
-    "ou_2": 605,
-    "ou_2.25": 692,
-    "ou_2.5": 2256,
-    "ou_2.75": 802,
-    "ou_3": 826,
-    "ou_3.25": 646,
-    "ou_3.5": 2092,
-    "ou_3.75": 376,
-    "ou_4": 359,
-    "ou_4.25": 263,
-    "ou_4.5": 1685,
-    "ou_4.75": 174,
-    "ou_5": 202,
-    "ou_5.25": 101,
-    "ou_5.5": 960,
-    "ou_5.75": 84,
-    "ou_6": 80,
-    "ou_6.25": 60,
-    "ou_6.5": 510,
-    "ou_6.75": 40,
-    "ou_7": 54,
-    "ou_7.25": 36,
-    "ou_7.5": 243,
-    "ou_7.75": 32,
-    "ou_8": 34,
-    "ou_8.25": 32,
-    "ou_8.5": 108,
-    "ou_9.5": 26,
-    "tt_away_0.5": 1186,
-    "tt_away_0.75": 22,
-    "tt_away_1": 100,
-    "tt_away_1.25": 62,
-    "tt_away_1.5": 1220,
-    "tt_away_1.75": 54,
-    "tt_away_2": 98,
-    "tt_away_2.25": 18,
-    "tt_away_2.5": 939,
-    "tt_away_2.75": 2,
-    "tt_away_3": 18,
-    "tt_away_3.5": 507,
-    "tt_away_4": 16,
-    "tt_away_4.5": 240,
-    "tt_away_5.5": 42,
-    "tt_away_6.5": 9,
-    "tt_away_7.5": 3,
-    "tt_home_0.5": 993,
-    "tt_home_0.75": 12,
-    "tt_home_1": 118,
-    "tt_home_1.25": 46,
-    "tt_home_1.5": 1486,
-    "tt_home_1.75": 44,
-    "tt_home_2": 94,
-    "tt_home_2.25": 20,
-    "tt_home_2.5": 1326,
-    "tt_home_2.75": 4,
-    "tt_home_3": 50,
-    "tt_home_3.25": 2,
-    "tt_home_3.5": 646,
-    "tt_home_3.75": 2,
-    "tt_home_4.5": 152,
-    "tt_home_5.5": 42,
-    "tt_home_6.5": 3
+    "1x2": 855,
+    "ou_0.5": 57,
+    "ou_1": 34,
+    "ou_1.25": 9,
+    "ou_1.5": 139,
+    "ou_1.75": 23,
+    "ou_2": 87,
+    "ou_2.25": 56,
+    "ou_2.5": 482,
+    "ou_2.75": 94,
+    "ou_3": 116,
+    "ou_3.25": 160,
+    "ou_3.5": 440,
+    "ou_3.75": 135,
+    "ou_4": 93,
+    "ou_4.25": 79,
+    "ou_4.5": 357,
+    "ou_4.75": 22,
+    "ou_5": 68,
+    "ou_5.25": 17,
+    "ou_5.5": 102,
+    "ou_5.75": 18,
+    "ou_6": 18,
+    "ou_6.25": 8,
+    "ou_6.5": 10,
+    "ou_7.5": 2,
+    "tt_away_0.5": 77,
+    "tt_away_1": 18,
+    "tt_away_1.25": 2,
+    "tt_away_1.5": 118,
+    "tt_away_2": 16,
+    "tt_away_2.5": 154,
+    "tt_away_3": 2,
+    "tt_away_3.5": 60,
+    "tt_away_4.5": 44,
+    "tt_away_5.5": 2,
+    "tt_home_0.5": 68,
+    "tt_home_1": 2,
+    "tt_home_1.25": 2,
+    "tt_home_1.5": 204,
+    "tt_home_2": 16,
+    "tt_home_2.5": 105,
+    "tt_home_2.75": 16,
+    "tt_home_3.5": 27,
+    "tt_home_4.5": 14
   },
-  "markets_source": "fetch",
-  "matched": 10,
+  "markets_source": "cache",
+  "matched": 5,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "alt_line_skipped": 12,
-    "market_id_unknown": 7934,
-    "market_inactive": 5548,
-    "market_unsupported_clean_sheet": 598,
-    "market_unsupported_corners": 5977,
-    "market_unsupported_correct_score": 2348,
-    "market_unsupported_double_chance": 1464,
-    "market_unsupported_draw_no_bet": 1111,
-    "market_unsupported_handicap": 10745,
-    "market_unsupported_odd_even": 2106,
-    "market_unsupported_period": 34626,
-    "market_unsupported_win_to_nil": 1079,
-    "outcome_inactive": 2450,
-    "unresolved_btts": 1818
+    "market_id_unknown": 1092,
+    "market_inactive": 1124,
+    "market_unsupported_clean_sheet": 46,
+    "market_unsupported_corners": 24,
+    "market_unsupported_correct_score": 362,
+    "market_unsupported_double_chance": 379,
+    "market_unsupported_draw_no_bet": 240,
+    "market_unsupported_handicap": 1350,
+    "market_unsupported_odd_even": 308,
+    "market_unsupported_period": 4290,
+    "market_unsupported_win_to_nil": 74,
+    "outcome_inactive": 165,
+    "unresolved_btts": 270
   },
   "parse_skips_classified": {
     "expected": {
-      "alt_line_skipped": 12,
-      "market_inactive": 5548,
-      "outcome_inactive": 2450
+      "market_inactive": 1124,
+      "outcome_inactive": 165
     },
     "loss_or_diagnosis": {
-      "market_id_unknown": 7934,
-      "market_unsupported_clean_sheet": 598,
-      "market_unsupported_corners": 5977,
-      "market_unsupported_correct_score": 2348,
-      "market_unsupported_double_chance": 1464,
-      "market_unsupported_draw_no_bet": 1111,
-      "market_unsupported_handicap": 10745,
-      "market_unsupported_odd_even": 2106,
-      "market_unsupported_period": 34626,
-      "market_unsupported_win_to_nil": 1079,
-      "unresolved_btts": 1818
+      "market_id_unknown": 1092,
+      "market_unsupported_clean_sheet": 46,
+      "market_unsupported_corners": 24,
+      "market_unsupported_correct_score": 362,
+      "market_unsupported_double_chance": 379,
+      "market_unsupported_draw_no_bet": 240,
+      "market_unsupported_handicap": 1350,
+      "market_unsupported_odd_even": 308,
+      "market_unsupported_period": 4290,
+      "market_unsupported_win_to_nil": 74,
+      "unresolved_btts": 270
     }
   },
-  "pending_fixtures": 10,
+  "pending_fixtures": 5,
   "quoted_fixtures": [
     {
-      "away": "The Strongest",
-      "fixture_id": "id1003903375478288",
-      "home": "Always Ready"
+      "away": "Hakoach Amidar Ramat Gan",
+      "fixture_id": "id1000197475883114",
+      "home": "Beitar Ramat Gan"
     },
     {
-      "away": "Central SC PE",
-      "fixture_id": "id1000038075123480",
-      "home": "Porto PE"
+      "away": "Cashmere Technical",
+      "fixture_id": "id1000059474873382",
+      "home": "Ferrymead Bays"
     },
     {
-      "away": "Cruzeiro EC MG",
-      "fixture_id": "id1002017874930610",
-      "home": "Club Olimpia"
+      "away": "Waterside Karori",
+      "fixture_id": "id1004504774931162",
+      "home": "Wellington United Diamonds"
     },
     {
-      "away": "Boliviar",
-      "fixture_id": "id1002017874930612",
-      "home": "Liga Deportiva Universitaria de Quito"
+      "away": "Kocaelispor Srl",
+      "fixture_id": "id1003222575727794",
+      "home": "Alanyaspor SRL"
     },
     {
-      "away": "Estudiantes de La Plata",
-      "fixture_id": "id1000038474808586",
-      "home": "CR Flamengo RJ"
-    },
-    {
-      "away": "Aguilas de la Universidad de Panama",
-      "fixture_id": "id1001949075804574",
-      "home": "SD Atletico Nacional"
-    },
-    {
-      "away": "AD Pasto",
-      "fixture_id": "id1002707075371182",
-      "home": "Atletico Nacional"
-    },
-    {
-      "away": "Cruz Azul Hidalgo",
-      "fixture_id": "id1002738272661728",
-      "home": "Alebrijes de Oaxaca FC"
-    },
-    {
-      "away": "Liga Deportiva Alajuelense",
-      "fixture_id": "id1004024974841182",
-      "home": "FC Motagua Tegucigalpa"
-    },
-    {
-      "away": "Club Leon",
-      "fixture_id": "id1002895375180968",
-      "home": "Atlas FC"
+      "away": "SC Telstar Srl",
+      "fixture_id": "id1003237775727770",
+      "home": "GO Ahead Eagles Srl"
     }
   ],
-  "rows": 30667,
+  "rows": 4428,
   "schema": 1,
-  "slate_candidate_fixtures": 65,
+  "slate_candidate_fixtures": 60,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 1,
-  "slate_provider_overlap_fixtures": 26,
+  "slate_priority_fixtures": 0,
+  "slate_provider_overlap_fixtures": 25,
   "slate_unmatched_fixtures": [
-    {
-      "away": "Estudiantes L.P.",
-      "home": "Flamengo",
-      "league": "International,Copa Libertadores Knockout Stage",
-      "normalized_pair": "estudiantes l.p.|flamengo"
-    },
     {
       "away": "Enugu Rangers",
       "home": "MC Alger",
       "league": "CAF Champions League",
       "normalized_pair": "enugu rangers|mc alger"
-    },
-    {
-      "away": "Deportivo Pasto",
-      "home": "Atl\u00e9tico Nacional",
-      "league": "Liga BetPlay",
-      "normalized_pair": "atletico nacional|deportivo pasto"
     },
     {
       "away": "Radnik Bijeljina",
@@ -314,18 +221,6 @@
       "home": "Cruzeiro",
       "league": "Serie A",
       "normalized_pair": "cruzeiro|remo"
-    },
-    {
-      "away": "GIF Sundsvall",
-      "home": "Oddevold",
-      "league": "Superettan",
-      "normalized_pair": "gif sundsvall|oddevold"
-    },
-    {
-      "away": "Estudiantes",
-      "home": "Flamengo",
-      "league": "Copa Libertadores",
-      "normalized_pair": "estudiantes|flamengo"
     },
     {
       "away": "Melgar",

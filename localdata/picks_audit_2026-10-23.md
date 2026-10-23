@@ -7,7 +7,7 @@
 - immutable morning-baseline rows: 621
 - late-slate additions (regular-ledger rows not in the morning baseline): 166, of which on days whose regular ledger was rewritten: 138
 - regular-ledger-only legacy rows: 0
-- unsafe regular ledgers ignored: 25
+- unsafe regular ledgers ignored: 26
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 699
 - eligible prior picks: 718
@@ -176,7 +176,7 @@ Counts are frozen PICK ROWS, not bets: rows filed under SKIPPED_VETO / WATCHLIST
 - `pfc_4cf3df8552488297d7ccf526`: 1x2 single[zulubet] avg_p>=50 [contract · benched, activated 2026-10-20, certified valid n=1241] — PROVISIONAL (settled n=4 < 30) — hit_rate 0.5 (2/4 settled) · ROI 0.9 (2 priced)
 - `pfc_5208b9e15194a691590430ad`: 1x2 unanimous[statarea+zulubet] avg_p>=40 [contract · benched, activated 2026-10-20, certified valid n=278] — PROVISIONAL (settled n=1 < 30) — hit_rate 1.0 (1/1 settled) · ROI 0.44 (1 priced)
 - `pfc_5954379f3a12700edcfd8387`: 1x2 single[zulubet] avg_p>=65 [contract · benched, activated 2026-10-20, certified valid n=443] — PROVISIONAL (settled n=1 < 30) — hit_rate 1.0 (1/1 settled) · ROI unavailable (0 priced)
-- `pfc_5a9d3d3426ee7a4e63461d75`: 1x2 unanimous[statarea+zulubet] avg_p>=55 [contract · certified, activated 2026-10-21, certified valid n=222] — PROVISIONAL (settled n=2 < 30) — hit_rate 0.0 (0/2 settled) · ROI -1.0 (1 priced)
+- `pfc_5a9d3d3426ee7a4e63461d75`: 1x2 unanimous[statarea+zulubet] avg_p>=55 [contract · benched, activated 2026-10-21, certified valid n=222] — PROVISIONAL (settled n=2 < 30) — hit_rate 0.0 (0/2 settled) · ROI -1.0 (1 priced)
 - `pfc_b011652ec3e473fbc0afbb6a`: 1x2 unanimous[vitibet+zulubet] avg_p>=45 [contract · candidate, activated 2026-10-20, certified valid n=488] — PROVISIONAL (settled n=2 < 30) — hit_rate 1.0 (2/2 settled) · ROI 1.64 (2 priced)
 - `pfc_c8cbcf76ea758fd6de596ae1`: 1x2 single[zulubet] avg_p>=70 [contract · benched, activated 2026-10-20, certified valid n=242] — PROVISIONAL (settled n=1 < 30) — hit_rate 1.0 (1/1 settled) · ROI unavailable (0 priced)
 - `pfc_d94d447efe0742440e953722`: 1x2 unanimous[scoutingstats+statarea] avg_p>=40 [contract · benched, activated 2026-10-21, certified valid n=822] — PROVISIONAL (settled n=13 < 30) — hit_rate 0.384615 (5/13 settled) · ROI -0.173658 (12 priced)
