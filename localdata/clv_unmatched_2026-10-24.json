@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-10-24",
+    "kickoff": "2026-10-24T18:00:00+02:00",
+    "home": "VfB Oldenburg",
+    "away": "HSC Hannover",
+    "league": "Germany: Regionalliga - Nord",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "pfc_b011652ec3e473fbc0afbb6a",
+    "match_method": "fallback",
+    "home_key": "vfboldenburg",
+    "away_key": "hschannover",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Al Safa",
+        "away": "Al-Ain",
+        "league": "Division 2",
+        "kickoff": "2026-10-24T15:55:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.3,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alsafa",
+        "away_key": "alain",
+        "kickoff_delta_minutes": 5
+      },
+      {
+        "home": "Hapoel Jerusalem",
+        "away": "Hapoel Tel Aviv",
+        "league": "Ligat ha'Al",
+        "kickoff": "2026-10-24T15:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 6.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "hapoeljerusalem",
+        "away_key": "hapoeltelaviv",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Puszcza Niepo\u0142omice",
+        "away": "Lechia Gda\u0144sk",
+        "league": "1. Liga",
+        "kickoff": "2026-10-24T15:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.7,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "puszczaniepolomice",
+        "away_key": "lechiagdansk",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Ironi Kiryat Shmona",
+        "away": "Bnei Sakhnin",
+        "league": "Ligat ha'Al",
+        "kickoff": "2026-10-24T15:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "ironikiryatshmona",
+        "away_key": "bneisakhnin",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Barry Town United",
+        "away": "Haverfordwest County",
+        "league": "Premier League",
+        "kickoff": "2026-10-24T16:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.95,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "barrytownunited",
+        "away_key": "haverfordwestcounty",
+        "kickoff_delta_minutes": 15
+      }
+    ]
+  },
+  {
+    "date": "2026-10-24",
     "kickoff": "2026-10-24T01:00:00Z",
     "home": "Necaxa",
     "away": "Ju\u00e1rez",
@@ -320,87 +401,6 @@
         "home_key": "dcunited",
         "away_key": "cincinnati",
         "kickoff_delta_minutes": 30
-      }
-    ]
-  },
-  {
-    "date": "2026-10-24",
-    "kickoff": "2026-10-24T18:00:00+02:00",
-    "home": "VfB Oldenburg",
-    "away": "HSC Hannover",
-    "league": "Germany: Regionalliga - Nord",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "pfc_234f16641d9893e8ec2a01f0",
-    "match_method": "none",
-    "home_key": "vfboldenburg",
-    "away_key": "hschannover",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Al Safa",
-        "away": "Al-Ain",
-        "league": "Division 2",
-        "kickoff": "2026-10-24T15:55:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.3,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "alsafa",
-        "away_key": "alain",
-        "kickoff_delta_minutes": 5
-      },
-      {
-        "home": "Hapoel Jerusalem",
-        "away": "Hapoel Tel Aviv",
-        "league": "Ligat ha'Al",
-        "kickoff": "2026-10-24T15:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 6.0,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "hapoeljerusalem",
-        "away_key": "hapoeltelaviv",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Puszcza Niepo\u0142omice",
-        "away": "Lechia Gda\u0144sk",
-        "league": "1. Liga",
-        "kickoff": "2026-10-24T15:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.7,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "puszczaniepolomice",
-        "away_key": "lechiagdansk",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Ironi Kiryat Shmona",
-        "away": "Bnei Sakhnin",
-        "league": "Ligat ha'Al",
-        "kickoff": "2026-10-24T15:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.15,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "ironikiryatshmona",
-        "away_key": "bneisakhnin",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Barry Town United",
-        "away": "Haverfordwest County",
-        "league": "Premier League",
-        "kickoff": "2026-10-24T16:15:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.95,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "barrytownunited",
-        "away_key": "haverfordwestcounty",
-        "kickoff_delta_minutes": 15
       }
     ]
   },
