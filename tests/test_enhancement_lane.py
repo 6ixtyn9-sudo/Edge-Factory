@@ -1239,3 +1239,36 @@ def test_deployment_footer_reports_actual_partial_plan_not_budget(tmp_path, _tmp
     assert len(plan) == 1
     assert "deploying 12.5% of free bank today = 12.5% of capital" in txt
     assert json.dumps(plan, sort_keys=True) == before
+
+
+def test_live_enhancement_command_uses_three_slot_ml_capacity_repair(_tmp_lane, monkeypatch):
+    # Real command -> execution-safe admission -> pool -> selector -> staking
+    # -> evidence carry -> draft. Only ML inference is a controlled seam;
+    # this is not a production-model fit or production coverage claim.
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    monkeypatch.setattr(reg, 'enhancement_ml_probability',
+                        lambda row, market: {'A': .95, 'B': .94}.get(row['home']))
+    slots = [('A', 'X'), ('B', 'X'), ('A', 'Y'), ('C', 'Y'),
+             ('B', 'Z'), ('D', 'Z'), ('E', 'W'), ('F', 'W')]
+    rates = dict(A=.7, B=.7, C=.9, D=.89, E=.85, F=.84)
+    _board(_tmp_lane, [_pick(home=name, away='Opponent', book=book,
+                            prob=rates[name], price=2.) for name, book in slots])
+    saved = []
+    real_plan_day = at.plan_day
+
+    def spy(*args, **kwargs):
+        assert kwargs['max_accas'] == at.ENH_MAX_ACCAS == 3
+        assert kwargs['enhancements'] is True
+        plan = real_plan_day(*args, **kwargs)
+        saved.extend(plan)
+        return plan
+
+    monkeypatch.setattr(at, 'plan_day', spy)
+    assert at.cmd_enhancement(_args(), at.fresh_state(), scores={}) == 0
+    assert len(saved) == 3
+    assert len({l['match'] for a in saved for l in a['legs']}) == 6
+    assert all(l['cohort_evidence']['basis'] == 'cohort_payout_bound'
+               for a in saved for l in a['legs'])
+    assert sum(a['stake_pct'] for a in saved) == pytest.approx(25., abs=.001)
+    assert '[ACCA #3]' in (_tmp_lane / f'autobets_enh_tickets_{DAY}.txt').read_text()
+    assert not at.STATE_FILE.exists()
