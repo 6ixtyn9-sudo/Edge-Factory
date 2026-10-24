@@ -3,12 +3,14 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 193,
-  "captured_at": "2026-10-24T10:33:46+00:00",
+  "captured_at": "2026-10-24T13:36:38+00:00",
   "date": "2026-10-24",
   "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
-  "kickoff_mismatch_detail": {},
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
   "quoted_fixtures": [],
   "requested_markets": [
     "h2h",
@@ -23,8 +25,10 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
+    "kickoff_mismatch": 1,
     "priced": 30,
-    "retry_cooldown": 162
+    "priced_close_window_not_open": 1,
+    "retry_cooldown": 161
   },
   "skipped": [
     "Pyramids FC|El Merriekh Bentiu (retry cooldown (6h after failed attempt))",
@@ -32,7 +36,8 @@
     "AEK Athens|Panaitolikos (retry cooldown (6h after failed attempt))",
     "Bod\u00f8 / Glimt|V\u00e5lerenga (priced)",
     "Djurg\u00e5rden|\u00d6rgryte (priced)",
-    "Lazio|Parma (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Lazio|Parma: pick legacy display says 19:45 SAST, captured rows say 20:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Lazio|Parma (priced, close window not open)",
     "SK Rapid|Austria Lustenau (retry cooldown (6h after failed attempt))",
     "1. FC Heidenheim|Energie Cottbus (retry cooldown (6h after failed attempt))",
     "Chongqing Tonglianglong FC|Qingdao Hainiu (priced)",
