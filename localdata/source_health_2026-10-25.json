@@ -24,41 +24,46 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
+        "fixture_key_miss": 1,
         "market_unmapped": 4,
         "market_unsupported": 239,
-        "out_of_window": 37,
+        "no_pick_for_fixture": 5,
+        "out_of_window": 31,
         "selection_unmapped": 363
       },
       "reason": null,
       "status": "cache_only"
     },
     "betclan": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
+      "blocker": null,
+      "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
     "betexplorer": {
-      "be_matched": 0,
-      "be_raw": 0,
-      "be_usable": 0,
-      "blocker": "no pre-build BetExplorer rows",
+      "be_matched": 16,
+      "be_raw": 24,
+      "be_usable": 21,
+      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_matched_rows": 7,
+      "join_miss_counts": {
+        "fixture_key_miss": 2,
+        "no_pick_for_fixture": 12
+      },
       "reason": null,
-      "status": "absent"
+      "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
+      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-25' does not exist\"}",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -90,9 +95,10 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 1,
       "join_miss_counts": {
-        "out_of_window": 11,
+        "fixture_key_miss": 9,
+        "no_pick_for_fixture": 1,
         "selection_unsupported": 13
       },
       "reason": null,
@@ -148,19 +154,24 @@
       "status": null
     },
     "oddspapi_odds": {
-      "blocker": "no pre-build OddsPAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
-      "op_matched": 0,
-      "op_raw": 0,
-      "op_usable": 0,
-      "reason": "http_200_zero_rows_after_parse",
-      "status": "empty"
+      "join_matched_rows": 1367,
+      "join_miss_counts": {
+        "fixture_key_miss": 15620,
+        "invalid_price": 2,
+        "market_unsupported": 26212,
+        "no_pick_for_fixture": 32373
+      },
+      "op_matched": 9,
+      "op_raw": 75574,
+      "op_usable": 75574,
+      "reason": null,
+      "status": "cache_only"
     },
     "pinnapi_odds": {
       "auth_attempts": [],
@@ -177,11 +188,12 @@
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 79,
       "join_miss_counts": {
-        "out_of_window": 25920
+        "fixture_key_miss": 24548,
+        "no_pick_for_fixture": 1293
       },
-      "pa_matched": 0,
+      "pa_matched": 90,
       "pa_raw": 25920,
       "pa_scored": 25920,
       "reason": null,
@@ -221,46 +233,41 @@
       "status": null
     },
     "scoutingstats": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
-      "can_price": false,
-      "can_vote": false,
+      "blocker": null,
+      "can_fetch_today": true,
+      "can_price": true,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 6,
-        "board_league_count": 5,
+        "board_fixtures": 4,
+        "board_league_count": 3,
         "board_leagues": {
-          "argentina_-_primera_division": 63,
-          "austria_-_bundesliga": 23,
-          "hungary_-_nb_i": 20,
-          "italy_-_serie_b": 28,
-          "usa_-_major_league_soccer": 66
+          "brazil_-_serie_a": 91,
+          "el_salvador_-_primera_division": 86,
+          "usa_-_usl_league_one": 23
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 11,
+        "board_team_count": 8,
         "board_team_names": {
-          "Arezzo": 28,
-          "Austria Lustenau": 15,
-          "Banfield": 63,
-          "Benevento": 28,
-          "CF Montr\u00e9al": 66,
-          "Kisvarda FC": 20,
-          "Lanus": 63,
-          "Nashville SC": 66,
-          "Rapid Vienna": 23,
-          "SC Austria Lustenau": 8,
-          "Zalaegerszegi": 20
+          "AD Isidro Metapan": 48,
+          "Alianza FC (SLV)": 48,
+          "CD Aguila": 38,
+          "CD Fas": 38,
+          "Charlotte Independence": 23,
+          "Corinthians": 91,
+          "Portland Hearts of Pine": 23,
+          "Vasco Da Gama": 91
         },
         "board_truncated": false,
-        "card_fixture_count": 0,
+        "card_fixture_count": 88,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
@@ -275,7 +282,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "reason": "card_fixtures_unmatched_on_board",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
@@ -304,29 +311,32 @@
       "status": null
     },
     "statarea": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
+      "blocker": null,
+      "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
     "theoddsapi": {
-      "blocker": "no pre-build TheOddsAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
-      "oa_matched": 0,
-      "oa_raw": 0,
-      "oa_usable": 0,
+      "join_matched_rows": 144,
+      "join_miss_counts": {
+        "fixture_key_miss": 108,
+        "no_pick_for_fixture": 511
+      },
+      "oa_matched": 17,
+      "oa_raw": 763,
+      "oa_usable": 763,
       "reason": null,
-      "status": "empty"
+      "status": "cache_only"
     },
     "vitibet": {
       "blocker": null,
@@ -349,12 +359,12 @@
       "status": null
     },
     "zulubet": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
-      "can_price": false,
-      "can_vote": false,
+      "blocker": null,
+      "can_fetch_today": true,
+      "can_price": true,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     }
