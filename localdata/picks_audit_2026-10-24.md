@@ -2,39 +2,39 @@
 
 ## Overall
 
-- archived pick rows: 971
+- archived pick rows: 979
 - archived pick dates: 30
-- immutable morning-baseline rows: 807
+- immutable morning-baseline rows: 815
 - late-slate additions (regular-ledger rows not in the morning baseline): 166, of which on days whose regular ledger was rewritten: 138
 - regular-ledger-only legacy rows: 0
 - unsafe regular ledgers ignored: 25
 - empty regular ledgers (morning-baseline coverage only): 0
-- settled picks: 751
+- settled picks: 755
 - eligible prior picks: 776
-- pending/unmatched result picks: 21
+- pending/unmatched result picks: 16
 - rescheduled result picks (settled ±3d): 7
-- voided postponed/cancelled/abandoned events: 2
+- voided postponed/cancelled/abandoned events: 4
 - ambiguous event-disposition rows: 0
 - settled via shared overlay facts: 25
-- ambiguous result picks: 2
-- wins: 511
-- hit rate: +68.0% (wins/settled: 511/751)
-- priced picks: 606
-- ROI: +3.6% (P&L / 606 priced picks)
+- ambiguous result picks: 1
+- wins: 514
+- hit rate: +68.1% (wins/settled: 514/755)
+- priced picks: 610
+- ROI: +3.8% (P&L / 610 priced picks)
 
 ## Settlement policy
 
 - include same-day picks: False
 - same-day cutoff date: 2026-10-24
-- same-day rows excluded: 195
+- same-day rows excluded: 203
 
 Fixture-level secondary rates below score the fixture behind every settled pick; they are not enhancement-bet returns.
 ## Secondary Market Realized Rates
 
 Metrics scored against actual outcomes of the settled consensus picks in this window:
-- **Over 2.5 Goals**: occurred in 461 / 746 matches (61.8%)
-- **Both Teams to Score (BTTS)**: occurred in 400 / 746 matches (53.6%)
-- **Selected Team Over 1.5 Goals**: occurred in 495 / 742 matches (66.7%)
+- **Over 2.5 Goals**: occurred in 462 / 750 matches (61.6%)
+- **Both Teams to Score (BTTS)**: occurred in 401 / 750 matches (53.5%)
+- **Selected Team Over 1.5 Goals**: occurred in 497 / 746 matches (66.6%)
 
 ## Recommended Enhancements Audit
 
@@ -128,16 +128,16 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 Scored as probabilistic forecasts per settled pick (each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) — calibration, not a direction call; the retired exact-score field remains in machine history only).
 
-- **Avg Goals forecast**: n=690, MAE=1.569319 goals, bias=-0.247551 (realized − promised), promised avg 3.499725 vs realized 3.252174
+- **Avg Goals forecast**: n=694, MAE=1.570562 goals, bias=-0.253732 (realized − promised), promised avg 3.497248 vs realized 3.243516
 
 ### Per-metric calibration
 
 | metric | n | promised avg | realized | Δ | Brier |
 | --- | --- | --- | --- | --- | --- |
-| Away Over 1.5 | 690 | 31.8% | 34.5% | +2.7% | 0.197472 |
-| BTTS-Yes | 690 | 42.8% | 53.2% | +10.4% | 0.262994 |
-| Home Over 1.5 | 690 | 62.1% | 53.3% | -8.8% | 0.224384 |
-| Over 2.5 | 690 | 68.3% | 61.7% | -6.5% | 0.24242 |
+| Away Over 1.5 | 694 | 31.8% | 34.3% | +2.5% | 0.196663 |
+| BTTS-Yes | 694 | 42.9% | 53.0% | +10.1% | 0.263031 |
+| Home Over 1.5 | 694 | 62.1% | 53.3% | -8.8% | 0.22462 |
+| Over 2.5 | 694 | 68.2% | 61.5% | -6.7% | 0.242774 |
 
 ### Promised-vs-realized calibration (all 📊 metrics pooled)
 
@@ -145,11 +145,11 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 | --- | --- | --- | --- | --- |
 | 0.0-0.1 | 251 | 8.6% | 22.7% | +14.1% |
 | 0.1-0.2 | 335 | 10.5% | 17.6% | +7.1% |
-| 0.2-0.3 | 99 | 23.8% | 26.3% | +2.4% |
+| 0.2-0.3 | 103 | 23.8% | 25.2% | +1.4% |
 | 0.3-0.4 | 122 | 36.6% | 48.4% | +11.7% |
 | 0.4-0.5 | 468 | 41.9% | 53.4% | +11.5% |
-| 0.5-0.6 | 220 | 55.8% | 62.7% | +6.9% |
-| 0.6-0.7 | 472 | 66.2% | 59.3% | -6.9% |
+| 0.5-0.6 | 228 | 55.9% | 61.4% | +5.5% |
+| 0.6-0.7 | 476 | 66.1% | 59.2% | -6.9% |
 | 0.7-0.8 | 186 | 74.5% | 67.2% | -7.3% |
 | 0.8-0.9 | 545 | 84.8% | 65.5% | -19.3% |
 | 0.9-1.0 | 62 | 92.1% | 77.4% | -14.7% |
@@ -174,7 +174,7 @@ Counts are frozen PICK ROWS, not bets: rows filed under SKIPPED_VETO / WATCHLIST
 - `pfc_2bd498a3472b7bbd71982ece`: 1x2 unanimous[vitibet+zulubet] avg_p>=55 [contract · benched, activated 2026-10-20, certified valid n=358] — PROVISIONAL (settled n=2 < 30) — hit_rate 0.5 (1/2 settled) · ROI -1.0 (1 priced)
 - `pfc_35f7e50bf23db96c2d3dd59d`: 1x2 single[zulubet] avg_p>=60 [contract · benched, activated 2026-10-20, certified valid n=633] — PROVISIONAL (settled n=1 < 30) — hit_rate 1.0 (1/1 settled) · ROI unavailable (0 priced)
 - `pfc_3bfaf30507905754f7faab2a`: 1x2 unanimous[scoutingstats+vitibet] avg_p>=50 [contract · benched, activated 2026-10-20, certified valid n=645] — PROVISIONAL (settled n=1 < 30) — hit_rate 0.0 (0/1 settled) · ROI -1.0 (1 priced)
-- `pfc_439097cb9bb700e9996c0b07`: 1x2 single[scoutingstats] avg_p>=50 [contract · certified, activated 2026-10-20, certified valid n=1235] — hit_rate 0.663043 (61/92 settled) · ROI 0.024194 (69 priced)
+- `pfc_439097cb9bb700e9996c0b07`: 1x2 single[scoutingstats] avg_p>=50 [contract · benched, activated 2026-10-20, certified valid n=1235] — hit_rate 0.666667 (64/96 settled) · ROI 0.034899 (73 priced)
 - `pfc_4a1f2bb2278d13c8189148d0`: 1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=40 [contract · benched, activated 2026-10-20, certified valid n=426] — PROVISIONAL (settled n=7 < 30) — hit_rate 0.571429 (4/7 settled) · ROI 0.111429 (7 priced)
 - `pfc_4cf3df8552488297d7ccf526`: 1x2 single[zulubet] avg_p>=50 [contract · benched, activated 2026-10-20, certified valid n=1241] — PROVISIONAL (settled n=4 < 30) — hit_rate 0.5 (2/4 settled) · ROI 0.9 (2 priced)
 - `pfc_5208b9e15194a691590430ad`: 1x2 unanimous[statarea+zulubet] avg_p>=40 [contract · benched, activated 2026-10-20, certified valid n=278] — PROVISIONAL (settled n=1 < 30) — hit_rate 1.0 (1/1 settled) · ROI 0.44 (1 priced)
@@ -196,9 +196,9 @@ Counts are frozen PICK ROWS, not bets: rows filed under SKIPPED_VETO / WATCHLIST
 
 ## By bucket
 
-- `CAUTION`: settled=74, wins=49, hit_rate=0.662162 (settled n=74), ROI=0.104222 (priced n=74)
+- `CAUTION`: settled=76, wins=50, hit_rate=0.657895 (settled n=76), ROI=0.093158 (priced n=76)
 - `CERTIFIED_CLEAN`: settled=85, wins=51, hit_rate=0.6 (settled n=85), ROI=-0.036109 (priced n=85)
-- `SKIPPED_VETO`: settled=410, wins=293, hit_rate=0.714634 (settled n=410), ROI=0.044747 (priced n=363)
+- `SKIPPED_VETO`: settled=412, wins=295, hit_rate=0.716019 (settled n=412), ROI=0.04864 (priced n=365)
 - `WATCHLIST_NO_ODDS`: settled=72, wins=45, hit_rate=0.625 (settled n=72), ROI=None (priced n=0)
 - `WATCHLIST_SUSPECT_PRICE`: settled=36, wins=21, hit_rate=0.583333 (settled n=36), ROI=-0.068 (priced n=10)
 - `WATCHLIST_UNCORROBORATED_PRICE`: settled=69, wins=47, hit_rate=0.681159 (settled n=69), ROI=0.013478 (priced n=69)
@@ -212,7 +212,7 @@ Counts are frozen PICK ROWS, not bets: rows filed under SKIPPED_VETO / WATCHLIST
 - `bzzoiro_odds`: settled=4, wins=4, hit_rate=1.0 (settled n=4), ROI=0.4625 (priced n=4)
 - `forebet_best`: settled=37, wins=26, hit_rate=0.702703 (settled n=37), ROI=-0.002432 (priced n=37)
 - `oddspapi_odds`: settled=9, wins=5, hit_rate=0.555556 (settled n=9), ROI=-0.036111 (priced n=9)
-- `pinnapi_odds`: settled=134, wins=81, hit_rate=0.604478 (settled n=134), ROI=0.051404 (priced n=134)
+- `pinnapi_odds`: settled=138, wins=84, hit_rate=0.608696 (settled n=138), ROI=0.056278 (priced n=138)
 - `scoutingstats_odds`: settled=122, wins=84, hit_rate=0.688525 (settled n=122), ROI=0.008361 (priced n=122)
 - `sharpapi_odds`: settled=1, wins=1, hit_rate=1.0 (settled n=1), ROI=0.741 (priced n=1)
 - `theoddsapi`: settled=86, wins=61, hit_rate=0.709302 (settled n=86), ROI=0.101279 (priced n=86)
@@ -222,7 +222,7 @@ Counts are frozen PICK ROWS, not bets: rows filed under SKIPPED_VETO / WATCHLIST
 
 - `alias_fuzzy`: settled=58, wins=37, hit_rate=0.637931 (settled n=58), ROI=-0.039167 (priced n=24)
 - `betexplorer`: settled=63, wins=45, hit_rate=0.714286 (settled n=63), ROI=-0.018413 (priced n=63)
-- `exact`: settled=462, wins=321, hit_rate=0.694805 (settled n=462), ROI=0.055273 (priced n=462)
+- `exact`: settled=466, wins=324, hit_rate=0.695279 (settled n=466), ROI=0.056683 (priced n=466)
 - `fallback`: settled=57, wins=36, hit_rate=0.631579 (settled n=57), ROI=-0.02386 (priced n=57)
 - `none`: settled=111, wins=72, hit_rate=0.648649 (settled n=111), ROI=None (priced n=0)
 
@@ -235,7 +235,7 @@ Counts are frozen PICK ROWS, not bets: rows filed under SKIPPED_VETO / WATCHLIST
 | APPROVED_DONOR_PRICE (`APPROVED_DONOR_PRICE`) | 2 | 2 | 1.0 | 2 | 0.486 |
 | BetExplorer rescue (`BETEXPLORER_RESCUE`) | 63 | 45 | 0.714286 | 63 | -0.018413 |
 | Bzzoiro primary match (`BZZOIRO_PRIMARY`) | 4 | 4 | 1.0 | 4 | 0.4625 |
-| NAMED_BOOKMAKER_PRICE (`NAMED_BOOKMAKER_PRICE`) | 334 | 231 | 0.691617 | 334 | 0.064952 |
+| NAMED_BOOKMAKER_PRICE (`NAMED_BOOKMAKER_PRICE`) | 338 | 234 | 0.692308 | 338 | 0.066782 |
 | ScoutingStats sole fallback (`SCOUTINGSTATS_SOLE`) | 122 | 84 | 0.688525 | 122 | 0.008361 |
 | Source fallback (`SOURCE_FALLBACK`) | 57 | 36 | 0.631579 | 57 | -0.02386 |
 | Suspect alias_fuzzy candidate (`SUSPECT_ALIAS_FUZZY`) | 58 | 37 | 0.637931 | 24 | -0.039167 |
@@ -247,25 +247,25 @@ Counts are frozen PICK ROWS, not bets: rows filed under SKIPPED_VETO / WATCHLIST
 
 | cut | settled | wins | hit rate | priced | ROI |
 | --- | --- | --- | --- | --- | --- |
-| **overall (SKIPPED_VETO)** | 410 | 293 | 0.714634 | 363 | 0.044747 |
-| **trusted evidence only** | 271 | 196 | 0.723247 | 271 | 0.064218 |
+| **overall (SKIPPED_VETO)** | 412 | 295 | 0.716019 | 365 | 0.04864 |
+| **trusted evidence only** | 273 | 198 | 0.725275 | 273 | 0.069281 |
 | **soft evidence only** | 139 | 97 | 0.697842 | 92 | -0.012609 |
 | evidence: BETEXPLORER_RESCUE | 41 | 31 | 0.756098 | 41 | -0.003171 |
 | evidence: BZZOIRO_PRIMARY | 3 | 3 | 1.0 | 3 | 0.4 |
-| evidence: NAMED_BOOKMAKER_PRICE | 227 | 162 | 0.713656 | 227 | 0.071952 |
+| evidence: NAMED_BOOKMAKER_PRICE | 229 | 164 | 0.716157 | 229 | 0.07792 |
 | evidence: SCOUTINGSTATS_SOLE | 53 | 37 | 0.698113 | 53 | 0.001698 |
 | evidence: SOURCE_FALLBACK | 25 | 17 | 0.68 | 25 | -0.0396 |
 | evidence: SUSPECT_ALIAS_FUZZY | 22 | 16 | 0.727273 | 14 | -0.018571 |
 | evidence: UNMATCHED | 39 | 27 | 0.692308 | 0 | None |
 | odds band: <1.50 | 201 | 163 | 0.810945 | 201 | 0.026976 |
-| odds band: 1.50-2.00 | 122 | 77 | 0.631148 | 122 | 0.05517 |
+| odds band: 1.50-2.00 | 124 | 79 | 0.637097 | 124 | 0.066463 |
 | odds band: 2.00-3.00 | 36 | 18 | 0.5 | 36 | 0.113611 |
 | odds band: >=3.00 | 4 | 1 | 0.25 | 4 | 0.0 |
 | odds band: unpriced | 47 | 34 | 0.723404 | 0 | None |
 | veto reason: context VETO in ['competition_type'] | 47 | 39 | 0.829787 | 37 | 0.099557 |
-| veto reason: context VETO in ['league', 'niche'] | 9 | 6 | 0.666667 | 6 | -0.282483 |
+| veto reason: context VETO in ['league', 'niche'] | 10 | 7 | 0.7 | 7 | -0.150557 |
 | veto reason: context VETO in ['league', 'odds_band', 'niche'] | 4 | 0 | 0.0 | 4 | -1.0 |
-| veto reason: context VETO in ['league', 'odds_band'] | 14 | 6 | 0.428571 | 14 | -0.218936 |
+| veto reason: context VETO in ['league', 'odds_band'] | 15 | 7 | 0.466667 | 15 | -0.146367 |
 | veto reason: context VETO in ['league', 'team_a'] | 4 | 0 | 0.0 | 4 | -1.0 |
 | veto reason: context VETO in ['league', 'team_h', 'competition_type'] | 2 | 2 | 1.0 | 2 | 0.3881 |
 | veto reason: context VETO in ['league', 'team_h', 'niche'] | 6 | 4 | 0.666667 | 5 | 0.186 |
@@ -298,7 +298,7 @@ Counts are frozen PICK ROWS, not bets: rows filed under SKIPPED_VETO / WATCHLIST
 | veto reason: short-odds away favourite 1.28 | 1 | 1 | 1.0 | 1 | 0.28 |
 | contrast CAUTION: APPROVED_DONOR_PRICE | 1 | 1 | 1.0 | 1 | 0.452 |
 | contrast CAUTION: BETEXPLORER_RESCUE | 15 | 8 | 0.533333 | 15 | -0.146 |
-| contrast CAUTION: NAMED_BOOKMAKER_PRICE | 50 | 36 | 0.72 | 50 | 0.224208 |
+| contrast CAUTION: NAMED_BOOKMAKER_PRICE | 52 | 37 | 0.711538 | 52 | 0.203423 |
 | contrast CAUTION: SOURCE_FALLBACK | 8 | 4 | 0.5 | 8 | -0.22 |
 
 ## Suspect-price Quarantine Audit
@@ -307,7 +307,7 @@ Counts are frozen PICK ROWS, not bets: rows filed under SKIPPED_VETO / WATCHLIST
 
 | quarantine reason | settled | wins | hit rate | priced | ROI | suspect captures | avg suspect price |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| No price quarantine (`NONE`) | 551 | 378 | 0.686025 | 441 | 0.048132 | 0 | None |
+| No price quarantine (`NONE`) | 555 | 381 | 0.686486 | 445 | 0.049673 | 0 | None |
 | alias_fuzzy match (`alias_fuzzy`) | 58 | 37 | 0.637931 | 24 | -0.039167 | 58 | 1.608648 |
 | ScoutingStats sole source (`scoutingstats_sole_source`) | 122 | 84 | 0.688525 | 122 | 0.008361 | 0 | None |
 | source_fallback_not_execution_eligible (`source_fallback_not_execution_eligible`) | 19 | 11 | 0.578947 | 19 | 0.040526 | 0 | None |
@@ -330,6 +330,14 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
     - [🟢 HIT] **Away Team Under 0.5 Goals**: expected n/a (Actual: 0 away goals)
     - [🔴 MISS] **Home Team Under 1.5 Goals**: expected n/a (Actual: 3 home goals)
     - [🔴 MISS] **Match Over 4.5 Goals**: expected n/a (Actual: 3 goals)
+
+### 2026-10-23: Cruzeiro vs Remo (Actual Score: **1-0**)
+- **1X2 Pick**: Selected `HOME` @ 1.3676 -> 🟢 WON (Expected prob: 67.3%)
+  - [🔴 MISS] **Over 2.5 Goals**: expected 59.1% (Actual: 1 goals)
+  - [🔴 MISS] **BTTS-Yes**: expected 53.6% (Actual: BTTS-No)
+  - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 62.4% (Actual: 1 goals)
+  - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 76.1% (Actual: 0 goals)
+  - **🔥 Possible Events (graded)**: none recorded on the archived pick
 
 ### 2026-10-23: Caernarfon Town vs Briton Ferry (Actual Score: **3-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.3247 -> 🟢 WON (Expected prob: 66.4%)
@@ -395,6 +403,14 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **BTTS-Yes**: expected 52.4% (Actual: BTTS-No)
   - [🟢 HIT] **Home Team Under 1.5 Goals**: expected 77.8% (Actual: 0 goals)
   - [🔴 MISS] **Away Team Over 1.5 Goals**: expected 63.4% (Actual: 0 goals)
+  - **🔥 Possible Events (graded)**: none recorded on the archived pick
+
+### 2026-10-23: Independiente del Valle vs Universidad Católica (Actual Score: **0-0**)
+- **1X2 Pick**: Selected `HOME` @ 1.5882 -> 🔴 LOST (Expected prob: 56.5%)
+  - [🔴 MISS] **Over 2.5 Goals**: expected 59.1% (Actual: 0 goals)
+  - [🔴 MISS] **BTTS-Yes**: expected 53.6% (Actual: BTTS-No)
+  - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 62.4% (Actual: 0 goals)
+  - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 76.1% (Actual: 0 goals)
   - **🔥 Possible Events (graded)**: none recorded on the archived pick
 
 ### 2026-10-23: FC Volendam vs Jong FC Utrecht (Actual Score: **6-2**)
@@ -582,6 +598,14 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 76.1% (Actual: 1 goals)
   - **🔥 Possible Events (graded)**: none recorded on the archived pick
 
+### 2026-10-23: Gimnasia La Plata vs Sarmiento (Actual Score: **2-0**)
+- **1X2 Pick**: Selected `HOME` @ 1.641 -> 🟢 WON (Expected prob: 56.6%)
+  - [🔴 MISS] **Over 2.5 Goals**: expected 59.1% (Actual: 2 goals)
+  - [🔴 MISS] **BTTS-Yes**: expected 53.6% (Actual: BTTS-No)
+  - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 62.4% (Actual: 2 goals)
+  - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 76.1% (Actual: 0 goals)
+  - **🔥 Possible Events (graded)**: none recorded on the archived pick
+
 ### 2026-10-23: Bohemians vs Shelbourne (Actual Score: **0-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.5848 -> 🔴 LOST (Expected prob: 56.1%)
   - [🔴 MISS] **Over 2.5 Goals**: expected 59.1% (Actual: 1 goals)
@@ -611,6 +635,14 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Over 2.5 Goals**: expected 59.1% (Actual: 3 goals)
   - [🟢 HIT] **BTTS-Yes**: expected 53.6% (Actual: BTTS-Yes)
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 62.4% (Actual: 2 goals)
+  - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 76.1% (Actual: 1 goals)
+  - **🔥 Possible Events (graded)**: none recorded on the archived pick
+
+### 2026-10-23: Waterford United vs Drogheda United (Actual Score: **3-1**)
+- **1X2 Pick**: Selected `HOME` @ 1.8696 -> 🟢 WON (Expected prob: 50.7%)
+  - [🟢 HIT] **Over 2.5 Goals**: expected 59.1% (Actual: 4 goals)
+  - [🟢 HIT] **BTTS-Yes**: expected 53.6% (Actual: BTTS-Yes)
+  - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 62.4% (Actual: 3 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 76.1% (Actual: 1 goals)
   - **🔥 Possible Events (graded)**: none recorded on the archived pick
 
@@ -964,9 +996,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
 | disposition | voided picks |
 | --- | --- |
 | CANCELLED | 1 |
-| POSTPONED | 1 |
+| POSTPONED | 3 |
 - 2026-09-26 `POSTPONED` `SKIPPED_VETO` — Crawley Town vs Barnet (source_status:scoutingstats); excluded from win/loss/ROI
 - 2026-10-03 `CANCELLED` `CAUTION` — Sri Lanka vs Djibouti (source_status:scoutingstats); excluded from win/loss/ROI
+- 2026-10-23 `POSTPONED` `CAUTION` — Gateshead vs Tamworth (source_status:scoutingstats); excluded from win/loss/ROI
+- 2026-10-23 `POSTPONED` `SKIPPED_VETO` — Holywell vs Penybont (source_status:scoutingstats); excluded from win/loss/ROI
 
 ## Rescheduled Fixture Examples
 
@@ -995,14 +1029,8 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
 - 2026-10-21 `WATCHLIST_UNCORROBORATED_PRICE` `pfc_439097cb9bb700e9996c0b07` — Olimpia vs 2 de Mayo -> HOME @ 1.44 (pending_or_unmatched_result); keys=['olimpia']/['demayo']
 - 2026-10-21 `WATCHLIST_UNKNOWN_CTX` `pfc_444d408c4ccd3a4bf4fb020c` — Sporting CP vs LASK Linz -> HOME @ 1.2101 (pending_or_unmatched_result); keys=['cp', 'lisbon']/['lasklinz']
 - 2026-10-22 `SKIPPED_VETO` `pfc_234f16641d9893e8ec2a01f0` — Sporting JAX vs Louisville City FC -> AWAY @ 1.27 (pending_or_unmatched_result); keys=['jax']/['louisvill']
-- 2026-10-23 `CAUTION` `pfc_439097cb9bb700e9996c0b07` — Cruzeiro vs Remo -> HOME @ 1.3676 (pending_or_unmatched_result); keys=['cruzeiro', 'mgcruzeir']/['remo']
-- 2026-10-23 `CAUTION` `pfc_439097cb9bb700e9996c0b07` — Gateshead vs Tamworth -> AWAY @ 1.6803 (pending_or_unmatched_result); keys=['gateshead']/['tamworth']
-- 2026-10-23 `CAUTION` `pfc_439097cb9bb700e9996c0b07` — Independiente del Valle vs Universidad Católica -> HOME @ 1.5882 (pending_or_unmatched_result); keys=['independi']/['universid']
-- 2026-10-23 `SKIPPED_VETO` `pfc_439097cb9bb700e9996c0b07` — Holywell vs Penybont -> AWAY @ 1.23 (pending_or_unmatched_result); keys=['holywell']/['penybont']
-- 2026-10-23 `SKIPPED_VETO` `pfc_439097cb9bb700e9996c0b07` — Gimnasia La Plata vs Sarmiento -> HOME @ 1.641 (pending_or_unmatched_result); keys=['gimnasial']/['sarmiento']
 - 2026-10-23 `SKIPPED_VETO` `pfc_439097cb9bb700e9996c0b07` — Operário PR vs Athletic Club -> HOME @ None (pending_or_unmatched_result); keys=['operariop']/[]
 
 ## Ambiguous result examples
 
 - 2026-10-21 `SKIPPED_VETO` `pfc_439097cb9bb700e9996c0b07` — Guadalajara vs Necaxa (ambiguous_alias_result)
-- 2026-10-23 `SKIPPED_VETO` `pfc_439097cb9bb700e9996c0b07` — Waterford United vs Drogheda United (ambiguous_alias_result)

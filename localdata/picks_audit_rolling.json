@@ -19,27 +19,9 @@
       "pick": "home",
       "reason": "ambiguous_alias_result",
       "rule": "pfc_439097cb9bb700e9996c0b07"
-    },
-    {
-      "away": "Drogheda United",
-      "away_key_candidates": [
-        "droghedau"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-10-23",
-      "home": "Waterford United",
-      "home_key_candidates": [
-        "waterford"
-      ],
-      "league": "Premier Division",
-      "match": "Waterford United vs Drogheda United",
-      "odds": 1.8696,
-      "pick": "home",
-      "reason": "ambiguous_alias_result",
-      "rule": "pfc_439097cb9bb700e9996c0b07"
     }
   ],
-  "ambiguous_result_picks": 2,
+  "ambiguous_result_picks": 1,
   "archived_pick_dates": [
     "2026-09-25",
     "2026-09-26",
@@ -72,14 +54,14 @@
     "2026-10-23",
     "2026-10-24"
   ],
-  "archived_pick_rows": 971,
+  "archived_pick_rows": 979,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.662162,
-      "priced_picks": 74,
-      "roi": 0.104222,
-      "settled_picks": 74,
-      "wins": 49
+      "hit_rate": 0.657895,
+      "priced_picks": 76,
+      "roi": 0.093158,
+      "settled_picks": 76,
+      "wins": 50
     },
     "CERTIFIED_CLEAN": {
       "hit_rate": 0.6,
@@ -89,11 +71,11 @@
       "wins": 51
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.714634,
-      "priced_picks": 363,
-      "roi": 0.044747,
-      "settled_picks": 410,
-      "wins": 293
+      "hit_rate": 0.716019,
+      "priced_picks": 365,
+      "roi": 0.04864,
+      "settled_picks": 412,
+      "wins": 295
     },
     "WATCHLIST_NO_ODDS": {
       "hit_rate": 0.625,
@@ -126,7 +108,7 @@
   },
   "by_event_disposition": {
     "CANCELLED": 1,
-    "POSTPONED": 1
+    "POSTPONED": 3
   },
   "by_odds_match_method": {
     "alias_fuzzy": {
@@ -144,11 +126,11 @@
       "wins": 45
     },
     "exact": {
-      "hit_rate": 0.694805,
-      "priced_picks": 462,
-      "roi": 0.055273,
-      "settled_picks": 462,
-      "wins": 321
+      "hit_rate": 0.695279,
+      "priced_picks": 466,
+      "roi": 0.056683,
+      "settled_picks": 466,
+      "wins": 324
     },
     "fallback": {
       "hit_rate": 0.631579,
@@ -209,11 +191,11 @@
       "wins": 5
     },
     "pinnapi_odds": {
-      "hit_rate": 0.604478,
-      "priced_picks": 134,
-      "roi": 0.051404,
-      "settled_picks": 134,
-      "wins": 81
+      "hit_rate": 0.608696,
+      "priced_picks": 138,
+      "roi": 0.056278,
+      "settled_picks": 138,
+      "wins": 84
     },
     "scoutingstats_odds": {
       "hit_rate": 0.688525,
@@ -267,11 +249,11 @@
       "wins": 4
     },
     "NAMED_BOOKMAKER_PRICE": {
-      "hit_rate": 0.691617,
-      "priced_picks": 334,
-      "roi": 0.064952,
-      "settled_picks": 334,
-      "wins": 231
+      "hit_rate": 0.692308,
+      "priced_picks": 338,
+      "roi": 0.066782,
+      "settled_picks": 338,
+      "wins": 234
     },
     "SCOUTINGSTATS_SOLE": {
       "hit_rate": 0.688525,
@@ -305,12 +287,12 @@
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.686025,
-      "priced_picks": 441,
-      "roi": 0.048132,
-      "settled_picks": 551,
+      "hit_rate": 0.686486,
+      "priced_picks": 445,
+      "roi": 0.049673,
+      "settled_picks": 555,
       "suspect_price_captures": 0,
-      "wins": 378
+      "wins": 381
     },
     "alias_fuzzy": {
       "avg_suspect_price": 1.608648,
@@ -463,11 +445,11 @@
       "wins": 0
     },
     "pfc_439097cb9bb700e9996c0b07": {
-      "hit_rate": 0.663043,
-      "priced_picks": 69,
-      "roi": 0.024194,
-      "settled_picks": 92,
-      "wins": 61
+      "hit_rate": 0.666667,
+      "priced_picks": 73,
+      "roi": 0.034899,
+      "settled_picks": 96,
+      "wins": 64
     },
     "pfc_4a1f2bb2278d13c8189148d0": {
       "hit_rate": 0.571429,
@@ -1372,15 +1354,15 @@
   },
   "include_same_day": false,
   "late_additions_on_rewritten_ledgers": 138,
-  "morning_baseline_rows": 807,
+  "morning_baseline_rows": 815,
   "overall": {
-    "hit_rate": 0.680426,
-    "priced_picks": 606,
-    "roi": 0.036429,
-    "settled_picks": 751,
-    "wins": 511
+    "hit_rate": 0.680795,
+    "priced_picks": 610,
+    "roi": 0.03763,
+    "settled_picks": 755,
+    "wins": 514
   },
-  "pending_result_picks": 21,
+  "pending_result_picks": 16,
   "population_definitions": {
     "enhancement_hit_rate": "hits / settled recommended enhancements",
     "enhancement_priced_roi": "priced enhancement P&L / priced_n",
@@ -1576,14 +1558,14 @@
   ],
   "rescheduled_result_picks": 7,
   "same_day_cutoff": "2026-10-24",
-  "same_day_excluded": 195,
+  "same_day_excluded": 203,
   "secondary_stats": {
-    "btts_total": 746,
-    "btts_wins": 400,
-    "over25_total": 746,
-    "over25_wins": 461,
-    "team_o15_total": 742,
-    "team_o15_wins": 495
+    "btts_total": 750,
+    "btts_wins": 401,
+    "over25_total": 750,
+    "over25_wins": 462,
+    "team_o15_total": 746,
+    "team_o15_wins": 497
   },
   "settled_ledger": [
     {
@@ -40611,6 +40593,35 @@
       "won": true
     },
     {
+      "avg_p": 67.29156853509186,
+      "date": "2026-10-23",
+      "gs": 0,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Cruzeiro vs Remo",
+      "notes_audit": [],
+      "odds": 1.3676,
+      "odds_match_method": "exact",
+      "odds_source": "pinnapi_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.239,
+        "away_o15_hit": true,
+        "btts_expected": 0.536,
+        "btts_hit": false,
+        "home_o15_expected": 0.624,
+        "home_o15_hit": false,
+        "over25_expected": 0.591,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
       "avg_p": 66.44629596087665,
       "date": "2026-10-23",
       "gs": 1,
@@ -40892,6 +40903,35 @@
       "price_evidence": "NAMED_BOOKMAKER_PRICE",
       "price_quarantine_reason": "NONE",
       "selection": "away",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 56.497017151379566,
+      "date": "2026-10-23",
+      "gs": 0,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Independiente del Valle vs Universidad Cat\u00f3lica",
+      "notes_audit": [],
+      "odds": 1.5882,
+      "odds_match_method": "exact",
+      "odds_source": "pinnapi_odds",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.239,
+        "away_o15_hit": true,
+        "btts_expected": 0.536,
+        "btts_hit": false,
+        "home_o15_expected": 0.624,
+        "home_o15_hit": false,
+        "over25_expected": 0.591,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
       "suspect_price": null,
       "won": false
     },
@@ -41754,6 +41794,35 @@
       "won": false
     },
     {
+      "avg_p": 56.633327042838275,
+      "date": "2026-10-23",
+      "gs": 0,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Gimnasia La Plata vs Sarmiento",
+      "notes_audit": [],
+      "odds": 1.641,
+      "odds_match_method": "exact",
+      "odds_source": "pinnapi_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.239,
+        "away_o15_hit": true,
+        "btts_expected": 0.536,
+        "btts_hit": false,
+        "home_o15_expected": 0.624,
+        "home_o15_hit": true,
+        "over25_expected": 0.591,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
       "avg_p": 56.05649103747963,
       "date": "2026-10-23",
       "gs": 1,
@@ -41849,6 +41918,35 @@
       "match": "Derry City vs Dundalk",
       "notes_audit": [],
       "odds": 1.8,
+      "odds_match_method": "exact",
+      "odds_source": "pinnapi_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.239,
+        "away_o15_hit": true,
+        "btts_expected": 0.536,
+        "btts_hit": true,
+        "home_o15_expected": 0.624,
+        "home_o15_hit": true,
+        "over25_expected": 0.591,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 50.66569396315885,
+      "date": "2026-10-23",
+      "gs": 1,
+      "hs": 3,
+      "market": "1x2",
+      "match": "Waterford United vs Drogheda United",
+      "notes_audit": [],
+      "odds": 1.8696,
       "odds_match_method": "exact",
       "odds_source": "pinnapi_odds",
       "outcome": "home",
@@ -43305,44 +43403,44 @@
   "start": "2026-09-25",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.247551,
-      "mae": 1.569319,
-      "mean_actual": 3.252174,
-      "mean_promised": 3.499725,
-      "n": 690
+      "bias": -0.253732,
+      "mae": 1.570562,
+      "mean_actual": 3.243516,
+      "mean_promised": 3.497248,
+      "n": 694
     },
     "by_metric": {
       "away_o15": {
-        "brier": 0.197472,
-        "delta": 0.026883,
+        "brier": 0.196663,
+        "delta": 0.02535,
         "hits": 238,
-        "mean_promised": 0.318045,
-        "n": 690,
-        "realized": 0.344928
+        "mean_promised": 0.317589,
+        "n": 694,
+        "realized": 0.342939
       },
       "btts": {
-        "brier": 0.262994,
-        "delta": 0.103699,
-        "hits": 367,
-        "mean_promised": 0.428186,
-        "n": 690,
-        "realized": 0.531884
+        "brier": 0.263031,
+        "delta": 0.101452,
+        "hits": 368,
+        "mean_promised": 0.428807,
+        "n": 694,
+        "realized": 0.530259
       },
       "home_o15": {
-        "brier": 0.224384,
-        "delta": -0.087642,
-        "hits": 368,
-        "mean_promised": 0.620975,
-        "n": 690,
-        "realized": 0.533333
+        "brier": 0.22462,
+        "delta": -0.087852,
+        "hits": 370,
+        "mean_promised": 0.620993,
+        "n": 694,
+        "realized": 0.533141
       },
       "over25": {
-        "brier": 0.24242,
-        "delta": -0.06519,
-        "hits": 426,
-        "mean_promised": 0.682581,
-        "n": 690,
-        "realized": 0.617391
+        "brier": 0.242774,
+        "delta": -0.06678,
+        "hits": 427,
+        "mean_promised": 0.682053,
+        "n": 694,
+        "realized": 0.615274
       }
     },
     "definition": "each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) \u2014 calibration, not a direction call; the retired exact-score field remains in machine history only",
@@ -43366,13 +43464,13 @@
         "realized": 0.176119
       },
       {
-        "brier": 0.190679,
+        "brier": 0.185492,
         "bucket": "0.2-0.3",
-        "delta": 0.024283,
+        "delta": 0.014058,
         "hits": 26,
-        "mean_promised": 0.238343,
-        "n": 99,
-        "realized": 0.262626
+        "mean_promised": 0.238369,
+        "n": 103,
+        "realized": 0.252427
       },
       {
         "brier": 0.261448,
@@ -43393,22 +43491,22 @@
         "realized": 0.534188
       },
       {
-        "brier": 0.237524,
+        "brier": 0.239244,
         "bucket": "0.5-0.6",
-        "delta": 0.068886,
-        "hits": 138,
-        "mean_promised": 0.558386,
-        "n": 220,
-        "realized": 0.627273
+        "delta": 0.055469,
+        "hits": 140,
+        "mean_promised": 0.558566,
+        "n": 228,
+        "realized": 0.614035
       },
       {
-        "brier": 0.248426,
+        "brier": 0.248568,
         "bucket": "0.6-0.7",
-        "delta": -0.068534,
-        "hits": 280,
-        "mean_promised": 0.661754,
-        "n": 472,
-        "realized": 0.59322
+        "delta": -0.069,
+        "hits": 282,
+        "mean_promised": 0.661437,
+        "n": 476,
+        "realized": 0.592437
       },
       {
         "brier": 0.226665,
@@ -43713,97 +43811,6 @@
       "rule": "pfc_234f16641d9893e8ec2a01f0"
     },
     {
-      "away": "Remo",
-      "away_key_candidates": [
-        "remo"
-      ],
-      "bucket": "CAUTION",
-      "date": "2026-10-23",
-      "home": "Cruzeiro",
-      "home_key_candidates": [
-        "cruzeiro",
-        "mgcruzeir"
-      ],
-      "league": "Serie A",
-      "match": "Cruzeiro vs Remo",
-      "odds": 1.3676,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_439097cb9bb700e9996c0b07"
-    },
-    {
-      "away": "Tamworth",
-      "away_key_candidates": [
-        "tamworth"
-      ],
-      "bucket": "CAUTION",
-      "date": "2026-10-23",
-      "home": "Gateshead",
-      "home_key_candidates": [
-        "gateshead"
-      ],
-      "league": "Enterprise National League",
-      "match": "Gateshead vs Tamworth",
-      "odds": 1.6803,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_439097cb9bb700e9996c0b07"
-    },
-    {
-      "away": "Universidad Cat\u00f3lica",
-      "away_key_candidates": [
-        "universid"
-      ],
-      "bucket": "CAUTION",
-      "date": "2026-10-23",
-      "home": "Independiente del Valle",
-      "home_key_candidates": [
-        "independi"
-      ],
-      "league": "Liga Pro",
-      "match": "Independiente del Valle vs Universidad Cat\u00f3lica",
-      "odds": 1.5882,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_439097cb9bb700e9996c0b07"
-    },
-    {
-      "away": "Penybont",
-      "away_key_candidates": [
-        "penybont"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-10-23",
-      "home": "Holywell",
-      "home_key_candidates": [
-        "holywell"
-      ],
-      "league": "Premier League",
-      "match": "Holywell vs Penybont",
-      "odds": 1.23,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_439097cb9bb700e9996c0b07"
-    },
-    {
-      "away": "Sarmiento",
-      "away_key_candidates": [
-        "sarmiento"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-10-23",
-      "home": "Gimnasia La Plata",
-      "home_key_candidates": [
-        "gimnasial"
-      ],
-      "league": "Liga Profesional de F\u00fatbol",
-      "match": "Gimnasia La Plata vs Sarmiento",
-      "odds": 1.641,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_439097cb9bb700e9996c0b07"
-    },
-    {
       "away": "Athletic Club",
       "away_key_candidates": [],
       "bucket": "SKIPPED_VETO",
@@ -43820,7 +43827,7 @@
       "rule": "pfc_439097cb9bb700e9996c0b07"
     }
   ],
-  "unmatched_result_picks": 21,
+  "unmatched_result_picks": 16,
   "unsafe_regular_ledger_dates": [
     "2026-09-25",
     "2026-09-26",
@@ -43861,13 +43868,13 @@
         "z_vs_implied": -0.889
       },
       "CAUTION|1.50-2.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.72,
-        "implied_hit_rate": 0.602819,
-        "priced_picks": 25,
-        "roi": 0.207124,
-        "settled_picks": 25,
+        "hit_rate": 0.692308,
+        "implied_hit_rate": 0.603851,
+        "priced_picks": 26,
+        "roi": 0.160696,
+        "settled_picks": 26,
         "wins": 18,
-        "z_vs_implied": 1.2
+        "z_vs_implied": 0.924
       },
       "CAUTION|1.50-2.00|SOURCE_FALLBACK": {
         "hit_rate": 0.6,
@@ -43924,13 +43931,13 @@
         "z_vs_implied": -0.851
       },
       "CAUTION|<1.50|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.785714,
-        "implied_hit_rate": 0.725498,
-        "priced_picks": 14,
-        "roi": 0.075879,
-        "settled_picks": 14,
-        "wins": 11,
-        "z_vs_implied": 0.506
+        "hit_rate": 0.8,
+        "implied_hit_rate": 0.725878,
+        "priced_picks": 15,
+        "roi": 0.095327,
+        "settled_picks": 15,
+        "wins": 12,
+        "z_vs_implied": 0.645
       },
       "CAUTION|<1.50|SOURCE_FALLBACK": {
         "hit_rate": 0.5,
@@ -44068,13 +44075,13 @@
         "z_vs_implied": 0.825
       },
       "SKIPPED_VETO|1.50-2.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.636364,
-        "implied_hit_rate": 0.590122,
-        "priced_picks": 77,
-        "roi": 0.064816,
-        "settled_picks": 77,
-        "wins": 49,
-        "z_vs_implied": 0.828
+        "hit_rate": 0.64557,
+        "implied_hit_rate": 0.589667,
+        "priced_picks": 79,
+        "roi": 0.082296,
+        "settled_picks": 79,
+        "wins": 51,
+        "z_vs_implied": 1.014
       },
       "SKIPPED_VETO|1.50-2.00|SCOUTINGSTATS_SOLE": {
         "hit_rate": 0.684211,
@@ -44340,13 +44347,13 @@
         "z_vs_implied": 0.825
       },
       "1.50-2.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.636364,
-        "implied_hit_rate": 0.590122,
-        "priced_picks": 77,
-        "roi": 0.064816,
-        "settled_picks": 77,
-        "wins": 49,
-        "z_vs_implied": 0.828
+        "hit_rate": 0.64557,
+        "implied_hit_rate": 0.589667,
+        "priced_picks": 79,
+        "roi": 0.082296,
+        "settled_picks": 79,
+        "wins": 51,
+        "z_vs_implied": 1.014
       },
       "1.50-2.00|SCOUTINGSTATS_SOLE": {
         "hit_rate": 0.684211,
@@ -44495,11 +44502,11 @@
     },
     "by_odds_band": {
       "1.50-2.00": {
-        "hit_rate": 0.631148,
-        "priced_picks": 122,
-        "roi": 0.05517,
-        "settled_picks": 122,
-        "wins": 77
+        "hit_rate": 0.637097,
+        "priced_picks": 124,
+        "roi": 0.066463,
+        "settled_picks": 124,
+        "wins": 79
       },
       "2.00-3.00": {
         "hit_rate": 0.5,
@@ -44546,11 +44553,11 @@
         "wins": 3
       },
       "NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.713656,
-        "priced_picks": 227,
-        "roi": 0.071952,
-        "settled_picks": 227,
-        "wins": 162
+        "hit_rate": 0.716157,
+        "priced_picks": 229,
+        "roi": 0.07792,
+        "settled_picks": 229,
+        "wins": 164
       },
       "SCOUTINGSTATS_SOLE": {
         "hit_rate": 0.698113,
@@ -44590,11 +44597,11 @@
         "wins": 39
       },
       "context VETO in ['league', 'niche']": {
-        "hit_rate": 0.666667,
-        "priced_picks": 6,
-        "roi": -0.282483,
-        "settled_picks": 9,
-        "wins": 6
+        "hit_rate": 0.7,
+        "priced_picks": 7,
+        "roi": -0.150557,
+        "settled_picks": 10,
+        "wins": 7
       },
       "context VETO in ['league', 'odds_band', 'niche']": {
         "hit_rate": 0.0,
@@ -44604,11 +44611,11 @@
         "wins": 0
       },
       "context VETO in ['league', 'odds_band']": {
-        "hit_rate": 0.428571,
-        "priced_picks": 14,
-        "roi": -0.218936,
-        "settled_picks": 14,
-        "wins": 6
+        "hit_rate": 0.466667,
+        "priced_picks": 15,
+        "roi": -0.146367,
+        "settled_picks": 15,
+        "wins": 7
       },
       "context VETO in ['league', 'team_a']": {
         "hit_rate": 0.0,
@@ -44832,13 +44839,13 @@
         "z_vs_implied": -0.889
       },
       "1.50-2.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.72,
-        "implied_hit_rate": 0.602819,
-        "priced_picks": 25,
-        "roi": 0.207124,
-        "settled_picks": 25,
+        "hit_rate": 0.692308,
+        "implied_hit_rate": 0.603851,
+        "priced_picks": 26,
+        "roi": 0.160696,
+        "settled_picks": 26,
         "wins": 18,
-        "z_vs_implied": 1.2
+        "z_vs_implied": 0.924
       },
       "1.50-2.00|SOURCE_FALLBACK": {
         "hit_rate": 0.6,
@@ -44895,13 +44902,13 @@
         "z_vs_implied": -0.851
       },
       "<1.50|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.785714,
-        "implied_hit_rate": 0.725498,
-        "priced_picks": 14,
-        "roi": 0.075879,
-        "settled_picks": 14,
-        "wins": 11,
-        "z_vs_implied": 0.506
+        "hit_rate": 0.8,
+        "implied_hit_rate": 0.725878,
+        "priced_picks": 15,
+        "roi": 0.095327,
+        "settled_picks": 15,
+        "wins": 12,
+        "z_vs_implied": 0.645
       },
       "<1.50|SOURCE_FALLBACK": {
         "hit_rate": 0.5,
@@ -44939,11 +44946,11 @@
         "wins": 8
       },
       "NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.72,
-        "priced_picks": 50,
-        "roi": 0.224208,
-        "settled_picks": 50,
-        "wins": 36
+        "hit_rate": 0.711538,
+        "priced_picks": 52,
+        "roi": 0.203423,
+        "settled_picks": 52,
+        "wins": 37
       },
       "SOURCE_FALLBACK": {
         "hit_rate": 0.5,
@@ -44955,11 +44962,11 @@
     },
     "focus_bucket": "SKIPPED_VETO",
     "overall": {
-      "hit_rate": 0.714634,
-      "priced_picks": 363,
-      "roi": 0.044747,
-      "settled_picks": 410,
-      "wins": 293
+      "hit_rate": 0.716019,
+      "priced_picks": 365,
+      "roi": 0.04864,
+      "settled_picks": 412,
+      "wins": 295
     },
     "soft_evidence_labels": [
       "SCOUTINGSTATS_SOLE",
@@ -44975,11 +44982,11 @@
       "wins": 97
     },
     "trusted_evidence_only": {
-      "hit_rate": 0.723247,
-      "priced_picks": 271,
-      "roi": 0.064218,
-      "settled_picks": 271,
-      "wins": 196
+      "hit_rate": 0.725275,
+      "priced_picks": 273,
+      "roi": 0.069281,
+      "settled_picks": 273,
+      "wins": 198
     }
   },
   "voided_event_examples": [
@@ -45022,7 +45029,47 @@
       "pick": "home",
       "reason": "void_event",
       "rule": "2way-unanimous avg_p>=60"
+    },
+    {
+      "away": "Tamworth",
+      "away_key_candidates": [
+        "tamworth"
+      ],
+      "bucket": "CAUTION",
+      "date": "2026-10-23",
+      "disposition": "POSTPONED",
+      "home": "Gateshead",
+      "home_key_candidates": [
+        "gateshead"
+      ],
+      "league": "Enterprise National League",
+      "match": "Gateshead vs Tamworth",
+      "odds": 1.6803,
+      "origin": "source_status:scoutingstats",
+      "pick": "away",
+      "reason": "void_event",
+      "rule": "pfc_439097cb9bb700e9996c0b07"
+    },
+    {
+      "away": "Penybont",
+      "away_key_candidates": [
+        "penybont"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-10-23",
+      "disposition": "POSTPONED",
+      "home": "Holywell",
+      "home_key_candidates": [
+        "holywell"
+      ],
+      "league": "Premier League",
+      "match": "Holywell vs Penybont",
+      "odds": 1.23,
+      "origin": "source_status:scoutingstats",
+      "pick": "away",
+      "reason": "void_event",
+      "rule": "pfc_439097cb9bb700e9996c0b07"
     }
   ],
-  "voided_event_picks": 2
+  "voided_event_picks": 4
 }
