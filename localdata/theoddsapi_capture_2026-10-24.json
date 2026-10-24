@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 193,
-  "captured_at": "2026-10-24T07:38:18+00:00",
+  "captured_at": "2026-10-24T10:33:46+00:00",
   "date": "2026-10-24",
   "due_reasons": {},
   "errors": [],
@@ -22,8 +22,9 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
     "priced": 30,
-    "retry_cooldown": 163
+    "retry_cooldown": 162
   },
   "skipped": [
     "Pyramids FC|El Merriekh Bentiu (retry cooldown (6h after failed attempt))",
@@ -39,7 +40,7 @@
     "Atl\u00e9tico Madrid|Deportivo La Coru\u00f1a (retry cooldown (6h after failed attempt))",
     "VfB Oldenburg|HSC Hannover (retry cooldown (6h after failed attempt))",
     "Buriram United|Sisaket United (retry cooldown (6h after failed attempt))",
-    "Kyzyl|Zhar - Ulytau (retry cooldown (6h after failed attempt))",
+    "Kyzyl|Zhar - Ulytau (kickoff already passed)",
     "Slavia Praha|Mlad\u00e1 Boleslav (retry cooldown (6h after failed attempt))",
     "Levadia|Harju Jalgpallikool (retry cooldown (6h after failed attempt))",
     "Ross County|Airdrieonians (retry cooldown (6h after failed attempt))",
