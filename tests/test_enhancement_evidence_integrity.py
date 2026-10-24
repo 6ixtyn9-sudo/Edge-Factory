@@ -657,12 +657,64 @@ def test_enh_ml_multiclass_inference_matches_sklearn_not_binary_shortcut():
         assert score(p, market) == pytest.approx(expected)
 
 
-def test_enh_ml_failed_fit_falls_back_without_relabelling_cohort(monkeypatch):
+@pytest.mark.parametrize("fit_error", [ValueError, TypeError, AttributeError])
+def test_enh_ml_failed_fit_falls_back_without_relabelling_cohort(monkeypatch, fit_error):
     from sklearn.linear_model import LogisticRegression
     def fail(*args, **kwargs):
-        raise ValueError('synthetic fitting failure')
+        raise fit_error('synthetic fitting failure')
     monkeypatch.setattr(LogisticRegression, 'fit', fail)
     result = cc.enhancement_cohort(connection(ml_observations()), edge(),
                                    as_of='2026-10-20', selection='home', fit_ml=True)
     assert result['ml_status'] == 'fit_unavailable'
     assert 'ml_model' not in result and result['over25'] == .8 and result['n'] == 100
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    live = pt.fetch_match_cohort(connection(ml_observations()), 'home', 80., 1,
+                                 pick=parent(recipe))
+    assert live['n'] == 100 and live['ml_status'] == 'fit_unavailable'
+
+
+@pytest.mark.parametrize('fallback_ml', [None, float('nan'), float('inf'), True, -0.1, 1.1])
+def test_enh_ml_rank_groups_do_not_compare_model_scores_with_cohort_rates(monkeypatch, fallback_ml):
+    # Already-admitted pool: isolate selection, not the earlier quote gates.
+    def leg(name, cohort_rate, ml):
+        return dict(match=name, pick='over', prob=cohort_rate, odds=2.,
+            ml_rank_probability=ml, market='match_over_25', price_book='Book',
+            row=dict(date='2026-10-20', home=name, away='Opponent'),
+            cohort_evidence=dict(basis='cohort_payout_bound',
+                price_context=dict(book='Book', source='theoddsapi')))
+    pool = [leg('Fallback high', .9, fallback_ml), leg('Model low', .6, .0),
+            leg('Fallback next', .8, None), leg('Model high', .6, .55)]
+    before = deepcopy(pool)
+    knobs = dict(max_accas=2, min_accas=1, legs_per_acca=2, pairing='consecutive')
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    pairs = at.select_accas(pool, enhancements=True, **knobs)
+    assert [[l['match'] for l in pair] for pair in pairs] == [
+        ['Model high', 'Model low'], ['Fallback high', 'Fallback next']]
+    baseline = at.select_accas(pool, enhancements=False, **knobs)
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '0')
+    assert at.select_accas(pool, enhancements=True, **knobs) == baseline
+    # NaN is deliberately in one case; compare unchanged object identity/value
+    # fields rather than NaN == NaN across copies.
+    assert [(l['match'], l['prob'], l['odds']) for l in pool] == [
+        (l['match'], l['prob'], l['odds']) for l in before]
+
+
+def test_enh_ml_recommendation_uses_same_separate_rank_groups(monkeypatch):
+    from edgefactory import enh_registry
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    def price(pick, index):
+        pick.update(enhancement_price=2., enhancement_priced=True,
+                    enhancement_price_book='Book', enhancement_price_source='theoddsapi')
+    monkeypatch.setattr(pt, 'attach_enhancement_price', price)
+    # Controlled scorer output isolates rank policy, while cohort and candidate
+    # eligibility still traverse the production warehouse/contract machinery.
+    monkeypatch.setattr(enh_registry, 'enhancement_ml_probability',
+                        lambda pick, market: .55 if market == 'home_over_05' else None)
+    emitted = pt.compute_dynamic_enhancement(connection(ml_observations()), parent(recipe), {})
+    assert emitted['recommended_enhancement'] == 'home_over_05'
+    assert emitted['event_notes'][0]['ml_rank_probability'] == .55
+    assert len(emitted['event_notes']) > 1
+    assert all(n['ml_rank_probability'] is None for n in emitted['event_notes'][1:])
+    assert all(n['cohort_rate'] > .55 for n in emitted['event_notes'])

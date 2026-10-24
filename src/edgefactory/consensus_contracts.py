@@ -478,7 +478,8 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
                 payload['model_key'] = hashlib.sha256(json.dumps(
                     payload, sort_keys=True, allow_nan=False).encode()).hexdigest()
                 result.update(ml_model=payload, ml_status='fitted')
-            except (ImportError, ValueError, ArithmeticError, Warning):
+            except (ImportError, ValueError, TypeError, AttributeError, ArithmeticError, Warning):
+                # Optional learner/API failure must not erase measured evidence.
                 result['ml_status'] = 'fit_unavailable'
     if cache is not None:
         from copy import deepcopy

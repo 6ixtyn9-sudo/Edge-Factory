@@ -3327,9 +3327,12 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
                      rank_caps=rank_caps)
     if (enhancements and rank == "prob" and rank_caps is None
             and os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1'):
+        # Separate estimands: scored legs first, ordered only against other
+        # model scores; cohort-only legs retain their baseline order behind
+        # them. A zero ML score is still scored, not a missing prediction.
         pool = sorted(pool, key=lambda l: (
-            finite_probability(l.get('ml_rank_probability'))
-            if finite_probability(l.get('ml_rank_probability')) is not None else l['prob'],
+            (ml := finite_probability(l.get('ml_rank_probability'))) is not None,
+            ml if ml is not None else l['prob'],
             l['prob'], l['odds']), reverse=True)
     if enhancements:
         # Keep competing markets until complete tickets have competed. Drop

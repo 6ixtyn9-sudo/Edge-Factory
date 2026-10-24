@@ -1166,8 +1166,11 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         for candidate in eligible:
             candidate['ml_rank_probability'] = enhancement_ml_probability(ml_probe, candidate['market'])
             candidate['ml_model_key'] = ((cohort or {}).get('ml_model') or {}).get('model_key')
+        # Same separate rank groups as complete ENH pair selection: never
+        # numerically compare a model score against a measured cohort rate.
         eligible.sort(key=lambda x: (
-            x['ml_rank_probability'] if x.get('ml_rank_probability') is not None else x['cohort_rate'],
+            (ml := finite_probability(x.get('ml_rank_probability'))) is not None,
+            ml if ml is not None else x['cohort_rate'],
             x['cohort_rate'], x['enhancement_price']), reverse=True)
         out["event_notes"] = eligible
         _enh_log_mark_selected(enh_log, eligible[0]["market"] if eligible else None)

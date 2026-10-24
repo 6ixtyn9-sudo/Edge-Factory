@@ -11982,3 +11982,27 @@ Production warehouse is absent here: real-data fit, activation coverage, held-ou
 calibration and ROI improvement are NOT demonstrated. No workflow dispatch or
 cash-betting authorization. Changes require PR merge/new build to run live.
 Red-team handoff: docs/operator/audits/ENH-ML-ACTIVATION-RED-TEAM-PROMPT-2026-10-24.md.
+
+### 24 October 2026 — PR149 red-team dispositions
+
+Received operator-pasted Z.ai PASS WITH LIMITS review of 14e18d4. Its reported
+independent synthetic tests do not establish production activation or economics;
+its external scripts/JSON were not supplied here for byte verification. Earlier
+48-row/534-offer reconciliation remains closed; no census design loop reopened.
+P2-1 fixed using reviewer option (a): ML-scored candidates are ordered in one
+first-priority group, cohort-only candidates follow in baseline order. Applied
+consistently to recommendation and complete-pair selection; no numeric comparison
+between model scores and cohort frequencies. This explicitly favors model coverage,
+including valid zero scores; it is experimental policy, not demonstrated uplift.
+P2-3 fixed: optional fit/payload TypeError and AttributeError now produce
+fit_unavailable while retaining measured rates/N through the production fetch.
+P2-2 retained as a documented trust boundary: model self-hash is integrity only,
+not authenticity. No signing service/manifest or extra script was introduced.
+New regressions reproduce the old failures; cover mixed/invalid/zero scores,
+cohort-only ordering, recommendation/selector consistency, main/rollback parity
+and live-fetch retention after fit API failures. Full suite: 4330 passed, 1 skipped.
+Main admission, ENH cohort/quote/payout rules, two-leg constraints, 25% staking,
+frozen/settled records unchanged. No merge, dispatch or financial writes.
+Production warehouse fit/status census and same-day flag-off comparison remain
+unobserved here. Prior-day SQL filtering alone is not authenticated point-in-time
+feature or label-known-by evidence; test passes do not close that data limitation.

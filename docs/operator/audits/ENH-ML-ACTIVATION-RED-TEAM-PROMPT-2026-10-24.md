@@ -26,7 +26,7 @@ The operator explicitly authorized live ML ENH changes and requested existing ma
 - Date-exclusive results are **not** proof of original point-in-time feature capture or label-known-by chronology. Raw warehouse revisions, period ambiguity without status, and occurrence identity remain real weaknesses. Determine whether these make default-on live ranking unacceptable and provide the smallest supported remedy. Operator permission is not statistical validation.
 - N30 is the existing cohort floor, not proof a multi-class model generalizes. There is no demonstrated held-out calibration, baseline uplift, ticket ROI or drawdown improvement. A learner fit on observed score classes cannot allocate mass to unobserved score classes; investigate consequences.
 - Only parent confidence is a predictive feature. Determine whether it varies enough within operational contracts to produce useful inference. A `fitted` status need not imply a particular row was scored or an executable pair changed.
-- Fallback mixes conditional ML scores and unconditional cohort rates in the same ranking. Evaluate whether that creates an unjustified preference.
+- Follow-up to Z.ai's review of `14e18d4`: mixed-scale numeric fallback was removed using the review's option (a). Valid ML-scored candidates form the first rank group, ordered by ML score; cohort-only candidates follow in baseline order. This is an explicit experimental preference for model coverage, not calibration equivalence or proven superiority. A zero ML score is valid and remains in the scored group. Attack this preference and its complete-pair consequences; no new admission threshold was added.
 - Persisted model hashes provide integrity/reproducibility metadata, not cryptographic trust in input labels or training eligibility. Existing cohort fields are retained assertions too.
 - Existing rolling audits still evaluate their original cohort fields; do not describe those metrics as validation of ML rank probabilities.
 
@@ -48,7 +48,7 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q tests/test_enhancem
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q
 ```
 
-Arena's result at handoff: **4,320 passed, 1 skipped**, including 15 added ML regression cases. Tests are not production coverage or performance evidence. Add failing regressions to existing test files for any discovered defect; do not weaken expectations just to match the implementation.
+Original handoff at `14e18d4`: **4,320 passed, 1 skipped**, including 15 added ML regression cases. After Z.ai's review, rank-group separation and fit-error containment were added; the follow-up full suite is **4,330 passed, 1 skipped**. Tests are not production coverage or performance evidence. Add failing regressions to existing test files for any discovered defect; do not weaken expectations just to match the implementation.
 
 ## Return one compact engineering verdict
 
