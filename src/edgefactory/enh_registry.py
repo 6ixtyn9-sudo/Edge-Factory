@@ -1064,6 +1064,66 @@ def enhancement_cohort_evidence(pick: dict, *, priced: bool = False,
         return None
 
 
+def enhancement_ml_probability(pick: dict, market: str) -> float | None:
+    """Optional ML ordering only; NEVER substitutes for measured admission.
+
+    Recompute from the retained compact model and this parent's own confidence.
+    All market probabilities sum one common score distribution, not independent
+    binary classifiers or multiplied marginal probabilities for an accumulator.
+    """
+    if os.environ.get('EDGE_FACTORY_ENH_ML', '1') != '1':
+        return None
+    try:
+        import hashlib
+        profile = pick.get('statistical_profile') or {}
+        model = profile.get('ml_model') or {}
+        unsigned = {k: v for k, v in model.items() if k != 'model_key'}
+        if (model.get('schema') != 'enh_score_logit_v1'
+                or model.get('model_key') != hashlib.sha256(json.dumps(
+                    unsigned, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                or model['contract_id'] != pick['contract_id']
+                or profile['contract_id'] != pick['contract_id']
+                or model['selection'] != pick['pick']
+                or profile['selection'] != pick['pick']
+                or model['as_of_exclusive'] != pick['date']
+                or profile['as_of_exclusive'] != pick['date']
+                or not model['train_last_date'] < pick['date']
+                or type(model['n']) is not int or not MIN_COHORT_N <= model['n'] <= profile['n']):
+            return None
+        probability = pick.get('avg_p')
+        if (type(probability) not in (int, float) or not math.isfinite(probability)
+                or not 0 <= probability <= 100):
+            return None
+        x = probability / 100
+        if not model['feature_min'] <= x <= model['feature_max']:
+            return None  # no extrapolated or fabricated missing features
+        classes, coef, intercept = model['classes'], model['coef'], model['intercept']
+        if len(classes) < 2 or len(coef) != len(intercept):
+            return None
+        logits = [b + c[0] * x for b, c in zip(intercept, coef) if len(c) == 1]
+        if len(classes) == 2 and len(logits) == 1:
+            logits = [0., logits[0]]  # sklearn's binary logistic encoding
+        if len(logits) != len(classes) or not all(math.isfinite(v) for v in logits):
+            return None
+        weights = [math.exp(v - max(logits)) for v in logits]
+        hits, pairs = [], []
+        for label in classes:
+            values = label.split(':')
+            if len(values) != 2 or not all(v.isdigit() for v in values):
+                return None
+            pair = tuple(map(int, values))
+            pairs.append(pair)
+            hit = check_enhancement_hit(market, pick['pick'], *pair)
+            if hit is None:
+                return None
+            hits.append(hit)
+        if len(set(pairs)) != len(pairs):
+            return None
+        return sum(w for w, hit in zip(weights, hits) if hit) / sum(weights)
+    except (KeyError, TypeError, ValueError, AttributeError, ArithmeticError):
+        return None
+
+
 def enhancement_price_context(pick: dict) -> dict | None:
     """Only original, executable predecision quotes may condition evidence.
 

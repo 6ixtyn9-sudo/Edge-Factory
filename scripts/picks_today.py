@@ -555,7 +555,8 @@ def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=No
             return enhancement_cohort(con, edge, as_of=pick["date"],
                                       selection=selection,
                                       min_n=HYBRID_MIN_N if min_n is None else min_n,
-                                      cache=cache)
+                                      cache=cache,
+                                      fit_ml=os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1')
         except (KeyError, TypeError, ValueError):
             return None
     view_name = "consensus3" if n_way >= 3 else "consensus2"
@@ -885,7 +886,9 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         "enhancement_stated_probability": None,
         "enhancement_reason": None,
         "enhancement_label": None,
-        "event_notes": []
+        "event_notes": [],
+        "enhancement_ml_status": ("unavailable_cohort" if os.environ.get(
+            "EDGE_FACTORY_ENH_ML", "1") == "1" else "disabled"),
     }
     if pick.get("contract_schema") == "post_forebet_v1":
         out.update(statistical_profile=None, statistical_comment=None,
@@ -921,6 +924,8 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         out["statistical_comment"] = format_contract_profile(cohort)
         out["statistical_profile_status"] = (
             "available" if cohort is not None else "unavailable_exact_contract_cohort")
+    if cohort is not None:
+        out['enhancement_ml_status'] = cohort.get('ml_status', 'disabled')
     if cohort is not None and cohort["n"] < HYBRID_MIN_N:
         cohort = None
     
@@ -1156,7 +1161,17 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                 _push_enh_log(enh_log, _enh_log_entry(market, c.get("label"), "eligible", None,
                                               price=price, **_log_kw))
 
-        eligible.sort(key=lambda x: (x["cohort_rate"], x["enhancement_price"]), reverse=True)
+        from edgefactory.enh_registry import enhancement_ml_probability
+        ml_probe = dict(pick, statistical_profile=out.get('statistical_profile'))
+        for candidate in eligible:
+            candidate['ml_rank_probability'] = enhancement_ml_probability(ml_probe, candidate['market'])
+            candidate['ml_model_key'] = ((cohort or {}).get('ml_model') or {}).get('model_key')
+        # Same separate rank groups as complete ENH pair selection: never
+        # numerically compare a model score against a measured cohort rate.
+        eligible.sort(key=lambda x: (
+            (ml := finite_probability(x.get('ml_rank_probability'))) is not None,
+            ml if ml is not None else x['cohort_rate'],
+            x['cohort_rate'], x['enhancement_price']), reverse=True)
         out["event_notes"] = eligible
         _enh_log_mark_selected(enh_log, eligible[0]["market"] if eligible else None)
         if eligible:
@@ -6429,7 +6444,10 @@ def enhancement_board_line(p: dict, floors: dict | None = None) -> str | None:
     rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
     # RT-6: archived/legacy picks can carry None or string probabilities —
     # a formatting crash here would kill the whole render.
-    rec_prob_text = "fixture probability unavailable"
+    from edgefactory.enh_registry import enhancement_ml_probability
+    ml_probability = enhancement_ml_probability(p, rec_market)
+    rec_prob_text = (f"ML rank {ml_probability:.1%} (experimental)"
+                     if ml_probability is not None else "fixture probability unavailable")
     rec_price = p.get("enhancement_price")
     if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
             and math.isfinite(rec_price) and rec_price > 1.0):

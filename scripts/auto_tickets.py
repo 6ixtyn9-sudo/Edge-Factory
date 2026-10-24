@@ -3325,6 +3325,17 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
 
     pool = rank_legs([l for l in pool if l["odds"] >= floor], rank,
                      rank_caps=rank_caps)
+    ml_ranking = (enhancements and rank == "prob" and rank_caps is None
+                  and os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1'
+                  and any(finite_probability(l.get('ml_rank_probability')) is not None for l in pool))
+    if ml_ranking:
+        # Separate estimands: scored legs first, ordered only against other
+        # model scores; cohort-only legs retain their baseline order behind
+        # them. A zero ML score is still scored, not a missing prediction.
+        pool = sorted(pool, key=lambda l: (
+            (ml := finite_probability(l.get('ml_rank_probability'))) is not None,
+            ml if ml is not None else l['prob'],
+            l['prob'], l['odds']), reverse=True)
     if enhancements:
         # Keep competing markets until complete tickets have competed. Drop
         # only duplicate fixture/market quotes here, not every alternative.
@@ -3372,15 +3383,46 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
                         or _fixture_key(leg) in used):
                     continue
                 groups.setdefault((context["book"], context["source"]), []).append(leg)
-            candidates = []
+            candidates, ranked_groups = [], []
+            remaining = max_accas - len(accas)
             for group in groups.values():
                 unique, _ = dedup_fixture_legs(group)
-                candidates.extend(pair_legs(unique[:(max_accas - len(accas)) * k], pairing, k))
+                ranked_groups.append(unique)
+                candidates.extend(pair_legs(unique[:remaining * k], pairing, k))
             if not candidates:
                 break
             # Compare complete executable pairs in the existing ranked order,
             # not by an invented joint probability or worst-case return.
-            chosen = min(candidates, key=lambda pair: tuple(sorted(positions[id(l)] for l in pair)))
+            def pair_order(pair):
+                return tuple(sorted(positions[id(l)] for l in pair))
+
+            chosen = min(candidates, key=pair_order)
+            if remaining == 2 and ml_ranking:
+                # Preserve flag-off/no-score and non-ML recipes exactly.
+                # Live two-acca card: a greedy pair can strand every other
+                # book/source group even when four fixtures can be covered.
+                fixture_sets = [{_fixture_key(l) for l in group} for group in ranked_groups]
+
+                def leaves_pair(pair):
+                    taken = {_fixture_key(l) for l in pair}
+                    return any(len(fixtures - taken) >= 2 for fixtures in fixture_sets)
+
+                if not leaves_pair(chosen):
+                    viable = [pair for pair in candidates if leaves_pair(pair)]
+                    if not viable:
+                        # Recipe pairs may ALL share the same two fixtures.
+                        # Since the greedy pair leaves no follow-up, every
+                        # group has <=3 fixtures (a group of 4 always leaves
+                        # 2). Exhaust those groups' pairs, at most 3/group;
+                        # no unbounded card search or new probability gate.
+                        for group in ranked_groups:
+                            for i, left in enumerate(group[:3]):
+                                for right in group[i + 1:3]:
+                                    pair = [left, right]
+                                    if leaves_pair(pair):
+                                        viable.append(pair)
+                    if viable:
+                        chosen = min(viable, key=pair_order)
             accas.append(chosen)
             used.update(_fixture_key(leg) for leg in chosen)
     else:
@@ -4876,7 +4918,8 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
     permissions are not evidence about a separately quoted enhancement.
     Historical descriptive callers retain their explicit legacy default.
     """
-    from edgefactory.enh_registry import ceiling_for, floor_for, floor_for_slice, enhancement_cohort_evidence
+    from edgefactory.enh_registry import (ceiling_for, floor_for, floor_for_slice,
+                                          enhancement_cohort_evidence, enhancement_ml_probability)
     from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS as TEAM_UNDERS
     from edgefactory.enh_pricing import BETEXPLORER_SOURCE, betexplorer_price_rejection
     try:
@@ -4997,6 +5040,10 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
             "probability": (priced_evidence["rate"] if priced_evidence else
                             evidence["rate"] if evidence and not execution_safe else None),
             "cohort_evidence": priced_evidence or evidence,
+            "ml_rank_probability": (enhancement_ml_probability(pick, market)
+                                    if evidence is not None else None),
+            "ml_model_key": (((pick.get('statistical_profile') or {}).get('ml_model') or {})
+                             .get('model_key')),
             "price": price,
             "price_book": pick.get("enhancement_price_book"),
             "price_source": pick.get("enhancement_price_source"),
@@ -5131,6 +5178,8 @@ def enhancement_pool(legs: list[dict]) -> list[dict]:
             "match": leg.get("match"),
             "pick": _market_selection(leg.get("market")),
             "prob": float(prob),
+            "ml_rank_probability": leg.get("ml_rank_probability"),
+            "ml_model_key": leg.get("ml_model_key"),
             "odds": leg.get("price"),
             "row": leg.get("row") or {},
             "cohort_evidence": leg.get("cohort_evidence"),
@@ -5177,7 +5226,8 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
                 meta = by_key.get((str(leg.get("match")), str(leg.get("pick")), leg.get("odds")))
             if not meta:
                 continue
-            for key in ("cohort_evidence", "market", "label", "floor", "floor_basis", "league",
+            for key in ("cohort_evidence", "ml_rank_probability", "ml_model_key",
+                        "market", "label", "floor", "floor_basis", "league",
                         "price_book", "price_source", "price_at", "price_kickoff",
                         "price_provenance", "shadow"):
                 leg[key] = meta.get(key)
