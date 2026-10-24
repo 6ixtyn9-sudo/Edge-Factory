@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 4,
@@ -30,7 +30,7 @@
         "selection_unmapped": 363
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-25' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -158,36 +158,31 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 12,
+      "coherence_excluded_rows": 18,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 12
+        "withheld_mixed_events_one_x_two": 18
       },
-      "coherence_withheld_fixtures": 2,
+      "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 23941
+        "out_of_window": 25920
       },
       "pa_matched": 0,
-      "pa_raw": 1331,
-      "pa_scored": 23941,
+      "pa_raw": 25920,
+      "pa_scored": 25920,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -233,27 +228,18 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 5,
-        "board_league_count": 3,
+        "board_fixtures": 1,
+        "board_league_count": 1,
         "board_leagues": {
-          "argentina_-_primera_division": 121,
-          "ecuador_-_serie_a": 77,
-          "ireland_-_premier_league": 2
+          "australia_-_a-league": 200
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 9,
+        "board_team_count": 2,
         "board_team_names": {
-          "CA Platense": 111,
-          "CA Sarmiento": 6,
-          "Gimnasia La Plata": 10,
-          "Gimnasia Mendoza": 111,
-          "Independiente (Ecu)": 77,
-          "Sarmiento de Junin": 4,
-          "Shamrock Rovers": 2,
-          "Sligo Rovers": 2,
-          "Univ Catolica (Ecu)": 77
+          "Macarthur FC": 200,
+          "Newcastle Jets": 200
         },
         "board_truncated": false,
         "card_fixture_count": 0,
