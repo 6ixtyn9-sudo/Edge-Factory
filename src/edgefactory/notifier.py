@@ -575,27 +575,56 @@ def send_telegram_message(
     message_text: str,
     disable_preview: bool = True,
 ) -> dict[str, Any]:
-    """Send a plain-text message via the Telegram Bot API.
+    """Send all plain-text parts; success means every part was acknowledged.
 
-    Telegram's HTML parse mode would collide with our '*' markdown, so we send
-    plain text. The 4096-char body cap is handled upstream by the chunker.
+    Bound at the transport too: official/discovery messages do not all use
+    the shadow-card chunker. Preserve every character and split at newlines
+    when possible, with UTF-16 accounting for emoji. Never retry an already
+    accepted prefix here if a later part fails.
     """
+    parts, start, used, newline = [], 0, 0, None
+    for index, char in enumerate(message_text):
+        size = telegram_text_units(char)
+        if used + size > 3800:
+            end = newline + 1 if newline is not None else index
+            parts.append(message_text[start:end])
+            start = end
+            used = telegram_text_units(message_text[start:index])
+            newline = None
+        used += size
+        if char == "\n":
+            newline = index
+    parts.append(message_text[start:])
+
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {
-        "chat_id": str(chat_id),
-        "text": message_text,
-        "disable_web_page_preview": bool(disable_preview),
-    }
-    data = urllib.parse.urlencode(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=data, method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            body = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        err_body = exc.read().decode("utf-8", "replace")
-        raise RuntimeError(f"Telegram API error {exc.code}: {err_body[:300]}") from exc
-    if not body.get("ok"):
-        raise RuntimeError(f"Telegram API rejected message: {str(body)[:300]}")
+    accepted = []
+    for number, part in enumerate(parts, 1):
+        payload = {
+            "chat_id": str(chat_id),
+            "text": part,
+            "disable_web_page_preview": bool(disable_preview),
+        }
+        data = urllib.parse.urlencode(payload).encode("utf-8")
+        req = urllib.request.Request(url, data=data, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                body = json.loads(resp.read().decode("utf-8"))
+            if not body.get("ok"):
+                raise RuntimeError(f"Telegram API rejected message: {str(body)[:300]}")
+        except urllib.error.HTTPError as exc:
+            err_body = exc.read().decode("utf-8", "replace")
+            raise RuntimeError(
+                f"Telegram API error {exc.code} on part {number}/{len(parts)}; "
+                f"{len(accepted)} parts accepted: {err_body[:300]}"
+            ) from exc
+        except Exception as exc:
+            raise RuntimeError(
+                f"Telegram part {number}/{len(parts)} failed; "
+                f"{len(accepted)} parts accepted: {exc}"
+            ) from exc
+        accepted.append(body.get("result", {}))
+    if len(parts) > 1:
+        body["results"] = accepted
     return body
 
 

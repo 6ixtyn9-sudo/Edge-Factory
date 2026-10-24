@@ -162,6 +162,7 @@ def _tracked_localdata_paths(repo: Path) -> list[str]:
 
 
 ENH_STATE = "localdata/enhancement_tickets_state.json"
+MAIN_STATE = "localdata/auto_tickets_state.json"
 
 
 def _financial_rows(state):
@@ -187,17 +188,17 @@ def _financial_fingerprint(state):
     return hashlib.sha256(payload).hexdigest()
 
 
-def _retain_financial_state(repo):
-    """Cache is never allowed to reset/truncate durable enhancement finance.
+def _retain_financial_state(repo, relative=ENH_STATE):
+    """Cache is never allowed to reset/truncate durable ticket finance.
 
     A verified extension can survive checkout. Conflicts/new unmergeable stakes
     stop restoration for investigation instead of silently choosing a bank.
     """
-    blob = _head_blob(repo, ENH_STATE)
+    blob = _head_blob(repo, relative)
     if not blob:
         return None
     head = json.loads(blob)
-    path = repo / ENH_STATE
+    path = repo / relative
     if not path.exists():
         return blob
     cache = json.loads(path.read_bytes())
@@ -216,11 +217,92 @@ def _retain_financial_state(repo):
             and receipt.get("superseded_financial_sha256") == cache_sha
             and receipt.get("retained_financial_sha256") == head_sha):
         return blob
+    # Main has no ENH draft exception. Preserve only an exact settlement
+    # extension of already committed open bets, never a newly invented card.
+    if relative == MAIN_STATE and cache_sha != head_sha:
+        def settlement_extension(newer, older):
+            unchanged = ("base_pct", "cycle_base", "events", "frozen_by_date",
+                         "superseded_by_date")
+            pending = json.loads(json.dumps(older.get("open_slips") or []))
+            added = []
+            valid = all(newer.get(k) == older.get(k) for k in unchanged)
+            old_rows, new_rows = _financial_rows(older), _financial_rows(newer)
+            for day, old in old_rows.items():
+                new = new_rows.get(day, {})
+                before, after = old.get("accas") or [], new.get("accas") or []
+                if day not in new_rows or after[:len(before)] != before:
+                    valid = False
+            for day, row in new_rows.items():
+                old = old_rows.get(day, {"accas": [], "staked_pct": 0, "returned_pct": 0})
+                extra = (row.get("accas") or [])[len(old.get("accas") or []):]
+                if any(abs(row[k] - old[k] - sum(a["stake_pct" if k == "staked_pct" else k] for a in extra)) > .001
+                       for k in ("staked_pct", "returned_pct")):
+                    valid = False
+                added.extend((day, a) for a in extra)
+            for day, settled in added:
+                matches = [(slip, a) for slip in pending if slip.get("date") == day
+                           for a in slip.get("accas", [])
+                           if a.get("odds") == settled.get("odds")
+                           and round(a.get("stake_pct", 0), 4) == settled.get("stake_pct")
+                           and [{k: l.get(k) for k in ("match", "pick", "odds", "label")}
+                                for l in a.get("legs", [])]
+                           == [{k: l.get(k) for k in ("match", "pick", "odds", "label")}
+                               for l in settled.get("legs", [])]]
+                if len(matches) != 1 or type(settled.get("won")) is not bool:
+                    valid = False
+                    continue
+                slip, acca = matches[0]
+                results = [leg.get("result") for leg in settled.get("legs", [])]
+                decided = (bool(results) and all(r in ("win", "void") for r in results)
+                           if settled["won"] else "loss" in results)
+                if not decided:
+                    valid = False
+                expected = round(acca["stake_pct"] * acca["odds"] if settled["won"] else 0, 4)
+                if abs(expected - settled.get("returned_pct", float("inf"))) > .001:
+                    valid = False
+                slip["accas"].remove(acca)
+                slip["staked_pct"] = round(sum(a["stake_pct"] for a in slip["accas"]), 4)
+            pending = [s for s in pending if s.get("accas")]
+            delta = sum(a["returned_pct"] - a["stake_pct"] for _, a in added)
+            return (valid and bool(added) and pending == newer.get("open_slips", [])
+                    and math.isfinite(delta)
+                    and abs(newer["bank"] - older["bank"] - delta) <= .001)
+
+        if settlement_extension(cache, head):
+            retained = dict(head)
+            retained.update(bank=cache["bank"], history=cache["history"],
+                            open_slips=cache["open_slips"])
+            return json.dumps(retained, indent=2).encode()
+        if settlement_extension(head, cache):
+            return blob
+        raise EvidenceMergeError("divergent main financial histories; not an exact committed-ticket settlement extension")
     # Equal settled totals do not prove equal bets. Check full position metadata,
     # market/selection, freeze locks and cycle state BEFORE either extension path.
     # Unknown differences must fail closed; only the exact committed receipt
     # above can authorize replacing them. Cached receipts are never authoritative.
-    position_fields = ("base_pct", "cycle_base", "events", "open_slips", "frozen_by_date")
+    # Pre-freeze plans are replaceable recommendations, not settled money.
+    # Only discard cache draft differences when ALL other durable state is
+    # identical. Locks from either input protect that date, including legacy
+    # per-day markers; a missing lock must never unlock a committed ticket.
+    def locked_positions(state):
+        locks = set(head.get("frozen_by_date") or {}) | set(cache.get("frozen_by_date") or {})
+        locks |= {p.name.removeprefix("autobets_enh_tickets_").removesuffix(".frozen")
+                  for p in (repo / "localdata").glob("autobets_enh_tickets_*.frozen")}
+        positions = state.get("open_slips") or []
+        if any(not isinstance(p.get("date"), str) or not p["date"] for p in positions):
+            raise EvidenceMergeError("divergent enhancement financial histories: undated position")
+        return [p for p in positions if p["date"] in locks]
+
+    other_fields = ("base_pct", "bank", "cycle_base", "history", "events",
+                    "frozen_by_date", "superseded_by_date", "unplaced_enhancement_resets")
+    if (cache.get("open_slips") != head.get("open_slips")
+            and all(cache.get(k) == head.get(k) for k in other_fields)
+            and locked_positions(cache) == locked_positions(head)):
+        print("PHASE5_PERSISTENCE retained_committed_unfrozen_draft; bank/history/locks unchanged")
+        return blob
+
+    position_fields = ("base_pct", "cycle_base", "events", "open_slips", "frozen_by_date",
+                       "superseded_by_date")
     if any(cache.get(k) != head.get(k) for k in position_fields):
         raise EvidenceMergeError(
             "divergent enhancement financial histories: different open positions, "
@@ -267,7 +349,9 @@ def _retain_financial_state(repo):
 def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     """Restore ordinary tracked state without overwriting cached append-only evidence."""
     repo = Path(repo)
-    financial_blob = _retain_financial_state(repo)
+    # Validate BOTH lanes before checkout/clean mutates any restored evidence.
+    financial_blobs = {relative: _retain_financial_state(repo, relative)
+                       for relative in (ENH_STATE, MAIN_STATE)}
     try:
         merge_counts = merge_cached_phase5_evidence(repo)
     except (OSError, EvidenceMergeError) as exc:
@@ -289,8 +373,9 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
             )
         restored.append(relative)
 
-    if financial_blob is not None:
-        _atomic_write(repo / ENH_STATE, financial_blob)
+    for relative, financial_blob in financial_blobs.items():
+        if financial_blob is not None:
+            _atomic_write(repo / relative, financial_blob)
     clean = _run(
         repo,
         "clean", "-fd", "localdata/",
@@ -409,7 +494,11 @@ def persist_localdata(
 ) -> dict[str, Any]:
     """Commit, rebase with safe JSONL unions, and push without force."""
     repo = Path(repo)
-    staged = _run(repo, "add", "-A", "localdata/")
+    # Raw candidate ledgers can exceed GitHub's per-blob limit in one day.
+    # Keep working copies for the cache + dedicated 30-day artifact, including
+    # files tracked by older revisions. Do not delete or truncate evidence.
+    staged = _run(repo, "add", "-A", "--", "localdata/",
+                  ":(exclude)localdata/scored_candidate_shadow_*.jsonl")
     if staged.returncode != 0:
         reason = _decode_output(staged.stderr)
         _warn_not_persisted(f"git add failed: {reason}")
@@ -425,6 +514,7 @@ def persist_localdata(
         _warn_not_persisted(f"git commit failed: {reason}")
         return {"status": "not_persisted", "reason": reason}
 
+    push_error = "no push attempted"
     for attempt in range(1, max_push_attempts + 1):
         pull = _run(repo, "pull", "--rebase", "--autostash")
         if pull.returncode != 0:
@@ -444,11 +534,12 @@ def persist_localdata(
             return {"status": "pushed", "attempt": attempt}
         push_error = _decode_output(pushed.stderr) or _decode_output(pushed.stdout)
         lower = push_error.lower()
-        if not any(marker in lower for marker in ("non-fast-forward", "fetch first", "rejected")):
+        if not any(marker in lower for marker in ("non-fast-forward", "fetch first")):
             _warn_not_persisted(f"git push failed: {push_error}")
             return {"status": "not_persisted", "reason": push_error}
 
-    reason = f"push race persisted after {max_push_attempts} bounded synchronization attempts"
+    reason = (f"push race persisted after {max_push_attempts} bounded synchronization attempts: "
+              f"{push_error}")
     _warn_not_persisted(reason)
     return {"status": "not_persisted", "reason": reason}
 

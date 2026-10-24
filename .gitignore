@@ -172,7 +172,10 @@ dist/
 !localdata/phase5_activation/mutation_receipts.jsonl
 !localdata/phase5_reconciliation/
 !localdata/phase5_reconciliation/**
-!localdata/scored_candidate_shadow_*.jsonl
+# Raw scored-candidate evidence stays in cache and the dedicated 30-day
+# Actions artifact; a single daily file can exceed GitHub's 100 MiB limit.
+# Older tracked snapshots remain readable, but persistence excludes updates.
+localdata/scored_candidate_shadow_*.jsonl
 # Raw shadow capture ledgers are DELIBERATELY NOT COMMITTED. The 30-day
 # prune in scripts/clean_localdata.py bounds the RUNNER WORKING DIRECTORY
 # only — it does not bound Git history: committing daily shadow payloads

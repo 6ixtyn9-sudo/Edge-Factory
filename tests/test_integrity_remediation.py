@@ -477,3 +477,78 @@ def test_equal_finance_preserves_committed_approval_marker(financial_supersessio
     head['unplaced_enhancement_resets'] = {'2026-10-23': {'confirmed_none_placed': True}}
     install(head, cache)
     assert json.loads(persistence._retain_financial_state(repo)) == head
+
+
+def test_unfrozen_draft_refresh_uses_committed_plan_without_bank_changes(financial_supersession):
+    import copy
+    repo, persistence, path, head, _, install = financial_supersession
+    head.pop('integrity_recovery')
+    head['open_slips'] = [{'date': '2026-10-24', 'accas': [{'odds': 2.65, 'stake_pct': 4.3841}]}]
+    cache = copy.deepcopy(head)
+    cache['open_slips'][0]['accas'][0]['odds'] = 2.30
+    install(head, cache)
+    persistence.restore_committed_localdata(repo)
+    assert json.loads(path.read_text()) == head
+
+
+@pytest.mark.parametrize('change', ['bank', 'history', 'legacy_lock', 'cache_lock', 'events', 'cycle_base'])
+def test_draft_refresh_cannot_hide_financial_changes(financial_supersession, change):
+    import copy
+    repo, persistence, path, head, _, install = financial_supersession
+    head.pop('integrity_recovery')
+    head['open_slips'] = [{'date': '2026-10-24', 'accas': [{'odds': 2.65, 'stake_pct': 4.3841}]}]
+    cache = copy.deepcopy(head)
+    cache['open_slips'][0]['accas'][0]['odds'] = 2.30
+    if change == 'bank':
+        cache['bank'] += 1
+    elif change == 'history':
+        cache['history'][0]['returned_pct'] += 1
+    elif change == 'cache_lock':
+        cache['frozen_by_date']['2026-10-24'] = {'final': True}
+    elif change == 'legacy_lock':
+        (path.parent / 'autobets_enh_tickets_2026-10-24.frozen').write_text('locked')
+    elif change == 'events':
+        cache['events'].append({'type': 'unknown'})
+    else:
+        cache['cycle_base'] += 1
+    install(head, cache)
+    before = path.read_bytes()
+    with pytest.raises(persistence.EvidenceMergeError):
+        persistence.restore_committed_localdata(repo)
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize('direction', ['cache_newer', 'head_newer'])
+@pytest.mark.parametrize('change', [None, 'bank', 'stake', 'leg', 'odds', 'return', 'lock'])
+def test_main_cache_settlement_extension_preserves_only_committed_bets(tmp_path, direction, change):
+    import copy
+    import subprocess
+    from scripts import phase5_persistence as persistence
+    def git(*args):
+        subprocess.run(['git', *args], cwd=tmp_path, check=True, capture_output=True)
+    git('init', '-q'); git('config', 'user.name', 'Test'); git('config', 'user.email', 'test@example.invalid')
+    leg = {'match': 'A vs B', 'pick': 'home', 'odds': 2.23}
+    acca = {'odds': 2.23, 'stake_pct': 10, 'legs': [leg], 'won': None, 'results': [None]}
+    older = {'bank': 100, 'base_pct': 100, 'cycle_base': 100, 'events': [], 'history': [],
+             'open_slips': [{'date': '2026-10-23', 'staked_pct': 10, 'accas': [acca]}]}
+    settled = {'odds': 2.23, 'stake_pct': 10, 'returned_pct': 22.3, 'won': True,
+               'legs': [dict(leg, result='win')]}
+    newer = dict(copy.deepcopy(older), bank=112.3, open_slips=[], history=[{
+        'date': '2026-10-23', 'staked_pct': 10, 'returned_pct': 22.3, 'accas': [settled]}])
+    if change == 'bank': newer['bank'] += 1
+    if change == 'stake': settled['stake_pct'] += 1
+    if change == 'leg': settled['legs'][0]['pick'] = 'away'
+    if change == 'odds': settled['odds'] = 3
+    if change == 'return': settled['returned_pct'] = 25
+    if change == 'lock': newer['frozen_by_date'] = {'2026-10-23': {'final': True}}
+    head, cache = (older, newer) if direction == 'cache_newer' else (newer, older)
+    p = tmp_path / persistence.MAIN_STATE; p.parent.mkdir()
+    p.write_text(json.dumps(head)); git('add', '.'); git('commit', '-qm', 'main finance')
+    p.write_text(json.dumps(cache)); before = p.read_bytes()
+    if change:
+        with pytest.raises(persistence.EvidenceMergeError):
+            persistence.restore_committed_localdata(tmp_path)
+        assert p.read_bytes() == before
+    else:
+        persistence.restore_committed_localdata(tmp_path)
+        assert json.loads(p.read_bytes()) == newer

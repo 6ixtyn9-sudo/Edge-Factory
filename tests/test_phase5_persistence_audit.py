@@ -137,7 +137,7 @@ def test_cache_restore_unions_committed_rows_and_preserves_untracked_phase5_evid
 
     for evidence_path in (candidate_path, reconciliation_path, card_ledger, card_shadow):
         relative = evidence_path.relative_to(repo).as_posix()
-        assert _git(repo, "check-ignore", "--no-index", "-q", relative, check=False).returncode == 1
+        assert _git(repo, "check-ignore", "--no-index", "-q", relative, check=False).returncode == (0 if evidence_path == candidate_path else 1)
 
     stale_core = repo / "localdata" / "edges_consensus.json"
     stale_core.write_text('{"edges":[{"rule":"stale-cache"}]}\n', encoding="utf-8")
@@ -253,3 +253,63 @@ def test_rejected_git_push_fails_workflow_cli_and_preserves_local_evidence(tmp_p
     assert _git(bare, "rev-parse", "main").stdout == before
     assert (repo / LEDGER).read_bytes() == evidence
     assert b"Unpublished Home FC" in evidence  # retained for always-uploaded artifacts
+
+
+def test_raw_candidate_updates_stay_in_cache_not_git(tmp_path):
+    repo = tmp_path / 'runner'
+    repo.mkdir()
+    _seed_repo(repo)
+    relative = 'localdata/scored_candidate_shadow_2026-10-24.jsonl'
+    raw = repo / relative
+    raw.write_text('old tracked snapshot\n')
+    _git(repo, 'add', '-f', relative)
+    _git(repo, 'commit', '-qm', 'legacy raw snapshot')
+    raw.write_text('new raw evidence that may exceed GitHub blob limits\n')
+    new_raw = repo / 'localdata/scored_candidate_shadow_2026-10-25.jsonl'
+    new_raw.write_text('new day evidence\n')
+    assert _persistence_module().persist_localdata(repo)['status'] == 'no_changes'
+    assert _git(repo, 'show', f'HEAD:{relative}').stdout == 'old tracked snapshot\n'
+    assert raw.read_text().startswith('new raw evidence')
+    assert new_raw.read_text() == 'new day evidence\n'
+    assert _git(repo, 'diff', '--cached', '--name-only').stdout == ''
+
+
+def test_terminal_push_rejection_is_not_retried_and_keeps_detail(tmp_path, monkeypatch):
+    repo = tmp_path / 'runner'
+    repo.mkdir()
+    _seed_repo(repo)
+    _append_fixture(repo, 'Unpublished')
+    module = _persistence_module()
+    real_run = module._run
+    pushes = []
+    def run(repo, *args, **kwargs):
+        if args[0] == 'pull':
+            return subprocess.CompletedProcess(args, 0, b'', b'')
+        if args[0] == 'push':
+            pushes.append(args)
+            return subprocess.CompletedProcess(args, 1, b'', b'remote: GH001 file exceeds 100 MB\n! [remote rejected] main (pre-receive hook declined)')
+        return real_run(repo, *args, **kwargs)
+    monkeypatch.setattr(module, '_run', run)
+    result = module.persist_localdata(repo)
+    assert len(pushes) == 1
+    assert 'GH001' in result['reason']
+    assert 'push race' not in result['reason']
+
+
+def test_exhausted_push_race_keeps_last_rejection(tmp_path, monkeypatch):
+    repo = tmp_path / 'runner'
+    repo.mkdir()
+    _seed_repo(repo)
+    _append_fixture(repo, 'Unpublished')
+    module = _persistence_module()
+    real_run = module._run
+    def run(repo, *args, **kwargs):
+        if args[0] == 'pull':
+            return subprocess.CompletedProcess(args, 0, b'', b'')
+        if args[0] == 'push':
+            return subprocess.CompletedProcess(args, 1, b'', b'! [rejected] main (fetch first); diagnostic retained')
+        return real_run(repo, *args, **kwargs)
+    monkeypatch.setattr(module, '_run', run)
+    result = module.persist_localdata(repo, max_push_attempts=2)
+    assert '2 bounded' in result['reason']
+    assert 'diagnostic retained' in result['reason']
