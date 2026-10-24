@@ -12114,3 +12114,30 @@ Inline synthetic cross-head probes: 7200 selection AND staking comparisons
 legs 21.18ms. These are not production slate/fit or profitability evidence.
 Existing red-team prompt updated in place with live call-site checks and proof
 obligations. No merge/dispatch, production fit/census or economic claim.
+
+### 24 October 2026 — PR150 independent engineering review accepted
+
+Received operator-pasted Z.ai verdict on 490b938 (report dated 25 October):
+PASS WITH LIMITS, no P0/P1 defects, merge acceptable as an experimental follow-up.
+Reviewer retracts the prior max3-as-non-live classification, independently
+reproduces baseline 1/2/2 versus repaired 2/3/3 capacity cases, and accepts the
+bounded matching proof. Main/rollback/unscored preservation and live ENH=3
+wiring confirmed in the reported audit. No further code change indicated.
+Reviewer reports focused 17 + 1 cases, 50 ML cases, same-environment collection
+4333 -> 4351 (+18 pure additions), and full 4351 passed/0 skipped (199.35s).
+Arena's 4350 passed/1 skipped receipt has the same total 4351 collected items.
+The audit's initial dependency failures were resolved by respecting duckdb<2;
+no repository fix was required. External probe/JSON/collection artifacts were
+only described in pasted text, not supplied here for byte verification.
+
+Limits retained: capacity preservation applies to active ML, live gate-off,
+up-to-three-acca selection; rescue can depart from the pairing recipe. No
+initial-decision guarantee above cap 3 or after nondefault conviction gates;
+capacity is not globally optimal ranking, calibration or economic validation.
+ML-off/unscored greedy behavior intentionally remains exact. Main stays at two.
+Three accas share the capped 25% free-bank total (~8.3333% each); recovering slots
+can raise actual deployment from 12.5% to 25%, without changing staking policy.
+Production fit/status census, activation coverage, same-day flag-off comparison
+and economic evidence remain unobserved here. PR150 verified open/unmerged at
+490b938 before this documentation-only update. No merge/dispatch/production fit
+or financial writes; engineering acceptance is not deployment authorization.
