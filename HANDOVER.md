@@ -12041,3 +12041,29 @@ pair oracle (1,728 four-fixture/three-book populations for each of consecutive
 and barbell pairing). Focused: 9 passed; full: 4339 passed, 1 skipped (160.66s).
 No extra scripts, admission/staking/config changes, operational writes, merge,
 workflow dispatch or production-data fit. Re-review prompt updated in place.
+
+### 24 October 2026 — PR149 selector re-review accepted with limits
+
+Received operator-pasted Z.ai re-review of a8f320e (report dated 25 October).
+Verdict: PASS WITH LIMITS; counterexample independently confirmed and the prior
+order-invariance claim explicitly retracted. P2-1/P2-3 remain closed; bounded
+ML pair-capacity repair accepted. No further code change indicated by this review.
+Reviewer reports 9 focused / 33 ML tests passed, exactly +9 collected additions,
+and full 4333 passed, 0 skipped; Arena's preceding receipt is 4339 passed,
+1 skipped. Reviewer reports an environment collection offset; primary external
+probe files/verdict artifact were not supplied here for independent verification.
+
+Experiment residuals recorded: armed PAIRING is barbell, MAX_ACCAS=2, k=2,
+GATE_MODE=off. Strand rescue deliberately may choose a non-barbell/non-consecutive
+pair; it remains confined to active ML ranking and two slots remaining, admitted
+legs, executable book/source groups and distinct fixtures. No full-card matching
+guarantee for max_accas>2 or after gate_mode=acca. Exact rollback/unscored behavior
+retains the original cohort-only greedy underfill by design.
+Live STAKE_MODE is per_acca: each slot receives 12.5% of free bank, capped at 25%
+total. Recovering a second acca can increase actual deployment from 12.5% to 25%;
+unchanged staking policy/cap must NOT be described as unchanged deployed exposure.
+Production warehouse fit/status coverage, real-slate activation and same-day
+flag-off comparison, calibration and economic benefit remain unobserved here.
+PR149 verified open/unmerged at reviewed head before this documentation update.
+This entry records engineering acceptance, not merge/dispatch/cash authorization;
+no new scripts, code/config changes, production fit or financial writes.
