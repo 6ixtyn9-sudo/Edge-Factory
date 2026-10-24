@@ -12067,3 +12067,50 @@ flag-off comparison, calibration and economic benefit remain unobserved here.
 PR149 verified open/unmerged at reviewed head before this documentation update.
 This entry records engineering acceptance, not merge/dispatch/cash authorization;
 no new scripts, code/config changes, production fit or financial writes.
+
+### 24 October 2026 — live ENH three-acca capacity repair (PR149 follow-up)
+
+Operator asked to fix the missed live three-acca case and produce a Z.ai prompt.
+Correction to the preceding review: MAX_ACCAS=2 is Main's default, but the live
+cmd_enhancement explicitly passes ENH_MAX_ACCAS=3. Treating that as a non-live
+profile was wrong. The merged remaining==2 guard left ENH's first choice unsafe.
+Six admitted AX/BX/AY/CY/BZ/DZ quotes still yielded one ML acca with max_accas=3
+instead of two. Adding EF at W yielded two instead of three. Six regression
+cases (including hidden X={A,B,C},Y={A,B,D},W={E,F}; both pairings) failed on
+the merged baseline before the repair. This follow-up is on
+arena/5c4275c0-edge-factory, based on PR149 merge 9a4088a.
+
+Extended the existing selector's capacity protection to two OR three remaining
+slots, with active ML ordering only. Keep an original recipe pair if it cannot
+reduce achievable capacity; otherwise prefer a viable existing recipe pair,
+then a pair from an exact bounded capacity witness. Local completion helper:
+maximal greedy matching fast path; otherwise its <=4 endpoints cover every edge.
+Retain cover-cover edges plus <=2*limit outside neighbours per cover vertex,
+collapse duplicate fixture edges to their best complete executable quote pair,
+and search <=30 retained edges to depth <=3. An unused retained neighbour can
+replace any dropped matched neighbour without reducing matching size. No new
+script/dependency/service or unbounded quote-population-depth card search.
+Rescue may deliberately depart from barbell/consecutive; it does not optimize
+joint probability or total ML score. No first-decision guarantee above cap 3,
+or guarantee after a nondefault post-selection conviction gate.
+
+Exact ML-off/unscored recipes and Main preserved. Admission, quote/source rules,
+cohort gates, frozen history and shared 25% free-bank cap unchanged. Actual
+per_acca deployment may increase when an underfilled card is repaired; three
+accas share the capped 25%, not 12.5% each beyond the cap. No production writes.
+
+Validation: 18 new regression cases in EXISTING files (17 evidence-integrity,
+1 real cmd_enhancement integration with controlled ML inference but real
+execution-safe admission/pool/selector/staking/evidence/draft). Independent
+subset-DP oracle covers all 32,768 six-fixture simple graphs per pairing mode,
+plus 300 shuffled 8–14-fixture graphs per mode and high-degree source-separated
+positive/negative cases. Feasible recipes, partial pools, exact rollback/no-score,
+Main, fixture exclusivity, metadata and staking also checked. Full suite:
+4350 passed, 1 skipped in 219.82s; XML includes 50 enh_ml evidence tests.
+Earlier total-count receipts are not a same-environment baseline comparison.
+Inline synthetic cross-head probes: 7200 selection AND staking comparisons
+(Main/rollback/unscored) matched merge 9a4088a. Synthetic mean runtimes over
+10 repeats: 519 legs/173 hidden-alternative groups 57.4ms; 404 high-degree
+legs 21.18ms. These are not production slate/fit or profitability evidence.
+Existing red-team prompt updated in place with live call-site checks and proof
+obligations. No merge/dispatch, production fit/census or economic claim.
