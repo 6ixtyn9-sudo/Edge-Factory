@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-24T21:44:08",
+  "generated_at": "2026-10-25T01:24:34",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 52.6087,
-  "multiple": 0.526087,
+  "bank_pct": 39.45649999999999,
+  "multiple": 0.3945649999999999,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 10,
+  "bet_days": 11,
   "accas": {
     "wins": 8,
-    "losses": 14
+    "losses": 17
   },
   "open_slips": [
     {
-      "date": "2026-10-24",
-      "staked_pct": 13.1522
+      "date": "2026-10-25",
+      "staked_pct": 9.864
     }
   ],
   "events": [],
@@ -557,6 +557,81 @@
       ],
       "bank_pct": 52.6087,
       "close_pct": 52.6087
+    },
+    {
+      "date": "2026-10-24",
+      "staked_pct": 13.1522,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.99,
+          "won": false,
+          "stake_pct": 4.3841,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Aston Villa vs Manchester City",
+              "pick": "home",
+              "odds": 1.4,
+              "result": "win",
+              "label": "Home Team Over 0.5 Goals"
+            },
+            {
+              "match": "Bristol Rovers vs Swindon Town",
+              "pick": "away",
+              "odds": 1.42,
+              "result": "loss",
+              "label": "Away Team Over 0.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 2.35,
+          "won": false,
+          "stake_pct": 4.3841,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Melbourne Victory vs Melbourne City",
+              "pick": "away",
+              "odds": 1.533,
+              "result": "win",
+              "label": "Away Team Under 2.5 Goals"
+            },
+            {
+              "match": "BK H\u00e4cken vs Degerfors IF",
+              "pick": "away",
+              "odds": 1.533,
+              "result": "loss",
+              "label": "Away Team Over 0.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 2.73,
+          "won": false,
+          "stake_pct": 4.384,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Kalmar FF vs IF Brommapojkarna",
+              "pick": "over",
+              "odds": 1.75,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Wolverhampton vs Watford",
+              "pick": "over",
+              "odds": 1.56,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 39.4565,
+      "close_pct": 39.4565
     }
   ]
 }

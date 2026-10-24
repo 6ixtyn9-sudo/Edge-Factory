@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-24T21:34:43",
+  "generated_at": "2026-10-25T01:13:22",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 236.38672900000012,
-  "multiple": 2.3638672900000013,
+  "bank_pct": 286.9143220000001,
+  "multiple": 2.8691432200000007,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 55,
+  "bet_days": 56,
   "accas": {
-    "wins": 67,
+    "wins": 69,
     "losses": 46
   },
-  "open_slips": [
-    {
-      "date": "2026-10-24",
-      "staked_pct": 59.0966
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -1202,6 +1197,55 @@
       ],
       "bank_pct": 236.3867,
       "close_pct": 236.3866
+    },
+    {
+      "date": "2026-10-24",
+      "staked_pct": 59.0966,
+      "returned_pct": 109.6242,
+      "accas": [
+        {
+          "odds": 1.88,
+          "won": true,
+          "stake_pct": 29.5483,
+          "returned_pct": 55.5508,
+          "legs": [
+            {
+              "match": "Lazio vs Parma",
+              "pick": "HOME",
+              "odds": 1.4115,
+              "result": "win"
+            },
+            {
+              "match": "TransINVEST Vilnius vs Hegelmann Litauen",
+              "pick": "HOME",
+              "odds": 1.33,
+              "result": "win"
+            }
+          ]
+        },
+        {
+          "odds": 1.83,
+          "won": true,
+          "stake_pct": 29.5483,
+          "returned_pct": 54.0734,
+          "legs": [
+            {
+              "match": "Hamilton Academical vs East Fife",
+              "pick": "HOME",
+              "odds": 1.3012,
+              "result": "win"
+            },
+            {
+              "match": "Vis Pesaro vs Ravenna",
+              "pick": "AWAY",
+              "odds": 1.4065,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 286.9143,
+      "close_pct": 286.9142
     }
   ]
 }

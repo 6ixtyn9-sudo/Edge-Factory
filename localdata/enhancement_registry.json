@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-10-24",
+ "generated_at": "2026-10-25",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
-   "hits": 4,
-   "inv_price_sum": 3.8459683815588313,
+   "hits": 6,
+   "inv_price_sum": 5.295008804086677,
    "multi_n": 0,
-   "n": 7,
+   "n": 9,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -67,9 +67,11 @@
     "2026-10-23|Always Ready vs The Strongest|away_over_05@v1",
     "2026-10-23|Dynamo Kyiv vs Kudrivka|away_over_05@v1",
     "2026-10-23|Atl\u00e9tico Nacional vs Deportivo Pasto|away_over_05@v1",
-    "2026-10-23|Brisbane Roar vs Perth Glory|away_over_05@v1"
+    "2026-10-23|Brisbane Roar vs Perth Glory|away_over_05@v1",
+    "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|away_over_05@v1",
+    "2026-10-24|Melbourne Victory vs Melbourne City|away_over_05@v1"
    ],
-   "profit": -0.52,
+   "profit": 0.251,
    "records": [
     {
      "away": "Mixco",
@@ -259,6 +261,64 @@
      },
      "recorded_at": "2026-10-23T22:34:26.368480+00:00",
      "rule": "pfc_73b036a8ee8dd5a4dea48134",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Avispa Fukuoka",
+     "away_key": "avispafukuoka",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6263,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Tokyo Verdy",
+     "home_key": "tokyoverdy",
+     "league": "J1 League",
+     "match": "Tokyo Verdy vs Avispa Fukuoka",
+     "multi_source": false,
+     "price": 1.471,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-10-24T05:11:01.518817+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T06:00:00+00:00",
+      "league": "J1 League",
+      "price": 1.471,
+      "selection": "under",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.849892+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Melbourne City",
+     "away_key": "melbournecity",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7454,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Melbourne Victory",
+     "home_key": "melbournevictory",
+     "league": "A-League Men",
+     "match": "Melbourne Victory vs Melbourne City",
+     "multi_source": false,
+     "price": 1.3,
+     "price_context": {
+      "book": "admiralbet.ba",
+      "captured_at": "2026-10-24T05:11:14.359478+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T08:40:00+00:00",
+      "league": "A-League Men",
+      "price": 1.3,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.980522+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
      "source": "oddspapi",
      "stated": null
     }
@@ -537,10 +597,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 8,
-   "inv_price_sum": 3.059111303390787,
+   "hits": 10,
+   "inv_price_sum": 4.000477088365141,
    "multi_n": 0,
-   "n": 8,
+   "n": 10,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -549,9 +609,11 @@
     "2026-10-18|Toluca vs Atletico San Luis|away_under_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|away_under_15@v1",
     "2026-10-23|Always Ready vs The Strongest|away_under_15@v1",
-    "2026-10-23|Brisbane Roar vs Perth Glory|away_under_15@v1"
+    "2026-10-23|Brisbane Roar vs Perth Glory|away_under_15@v1",
+    "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|away_under_15@v1",
+    "2026-10-24|Necaxa vs Ju\u00e1rez|away_under_15@v1"
    ],
-   "profit": 18.39,
+   "profit": 21.07,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -724,6 +786,64 @@
      "rule": "pfc_73b036a8ee8dd5a4dea48134",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Avispa Fukuoka",
+     "away_key": "avispafukuoka",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7677,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Tokyo Verdy",
+     "home_key": "tokyoverdy",
+     "league": "J1 League",
+     "match": "Tokyo Verdy vs Avispa Fukuoka",
+     "multi_source": false,
+     "price": 1.63,
+     "price_context": {
+      "book": "1xbet",
+      "captured_at": "2026-10-24T05:11:01.518817+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T06:00:00+00:00",
+      "league": "J1 League",
+      "price": 1.63,
+      "selection": "under",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.832938+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7606,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Necaxa",
+     "home_key": "necaxa",
+     "league": "Liga MX",
+     "match": "Necaxa vs Ju\u00e1rez",
+     "multi_source": false,
+     "price": 3.05,
+     "price_context": {
+      "book": "betano",
+      "captured_at": "2026-10-23T22:20:13.703293+00:00",
+      "contract_id": "pfc_439097cb9bb700e9996c0b07",
+      "decision_at": "2026-10-24T00:21:14+02:00",
+      "kickoff": "2026-10-24T01:00:00+00:00",
+      "league": "Liga MX",
+      "price": 3.05,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.869202+00:00",
+     "rule": "pfc_439097cb9bb700e9996c0b07",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -732,10 +852,10 @@
    "status_since": "2026-10-16"
   },
   "away_under_25@v1": {
-   "hits": 3,
-   "inv_price_sum": 2.6126674402136176,
+   "hits": 5,
+   "inv_price_sum": 3.9361241006198044,
    "multi_n": 0,
-   "n": 5,
+   "n": 7,
    "processed": [
     "2026-10-04|Portugal vs Norway|away_under_25@v1",
     "2026-09-14|Inter vs Udinese|away_under_25@v1",
@@ -773,9 +893,11 @@
     "2026-09-18|Gent vs Standard Li\u00e8ge|away_under_25@v1",
     "2026-09-18|Airbus UK vs Flint Town Utd|away_under_25@v1",
     "2026-10-22|Barranquilla vs America de Cali|away_under_25@v1",
-    "2026-10-23|Brisbane Roar vs Perth Glory|away_under_25@v1"
+    "2026-10-23|Brisbane Roar vs Perth Glory|away_under_25@v1",
+    "2026-10-24|1. FC Heidenheim vs Energie Cottbus|away_under_25@v1",
+    "2026-10-24|Melbourne Victory vs Melbourne City|away_under_25@v1"
    ],
-   "profit": 1.15,
+   "profit": 2.173,
    "records": [
     {
      "away": "Norway",
@@ -869,6 +991,64 @@
      },
      "recorded_at": "2026-10-23T22:34:26.354917+00:00",
      "rule": "pfc_73b036a8ee8dd5a4dea48134",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Energie Cottbus",
+     "away_key": "energiecottbus",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.812,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "1. FC Heidenheim",
+     "home_key": "heidenheim",
+     "league": "2. Bundesliga",
+     "match": "1. FC Heidenheim vs Energie Cottbus",
+     "multi_source": false,
+     "price": 1.49,
+     "price_context": {
+      "book": "napoleonsports.be",
+      "captured_at": "2026-10-24T05:10:49.043209+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T11:00:00+00:00",
+      "league": "2. Bundesliga",
+      "price": 1.49,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.894204+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Melbourne City",
+     "away_key": "melbournecity",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.812,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Melbourne Victory",
+     "home_key": "melbournevictory",
+     "league": "A-League Men",
+     "match": "Melbourne Victory vs Melbourne City",
+     "multi_source": false,
+     "price": 1.533,
+     "price_context": {
+      "book": "888sport",
+      "captured_at": "2026-10-24T05:11:14.359478+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T08:40:00+00:00",
+      "league": "A-League Men",
+      "price": 1.533,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.968928+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
      "source": "oddspapi",
      "stated": null
     }
@@ -1857,10 +2037,10 @@
    "status_since": null
   },
   "home_over_05@v1": {
-   "hits": 2,
-   "inv_price_sum": 1.4879964597853745,
+   "hits": 3,
+   "inv_price_sum": 2.1177193816997324,
    "multi_n": 0,
-   "n": 2,
+   "n": 3,
    "processed": [
     "2026-08-06|FC Lugano vs NSI Runavik|home_over_05@v1",
     "2026-08-06|Twente vs Dunajska Streda|home_over_05@v1",
@@ -2048,9 +2228,10 @@
     "2026-10-06|Argentina vs Benin|home_over_05@v1",
     "2026-10-06|South Korea vs Uzbekistan|home_over_05@v1",
     "2026-10-06|Algeria vs Niger|home_over_05@v1",
-    "2026-10-21|Malacateco vs Comunicaciones|home_over_05@v1"
+    "2026-10-21|Malacateco vs Comunicaciones|home_over_05@v1",
+    "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|home_over_05@v1"
    ],
-   "profit": 0.69,
+   "profit": 1.278,
    "records": [
     {
      "away": "Austin FC",
@@ -2085,6 +2266,35 @@
      "rule": "pfc_234f16641d9893e8ec2a01f0",
      "source": "oddspapi",
      "stated": 0.8618
+    },
+    {
+     "away": "Avispa Fukuoka",
+     "away_key": "avispafukuoka",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7172,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Tokyo Verdy",
+     "home_key": "tokyoverdy",
+     "league": "J1 League",
+     "match": "Tokyo Verdy vs Avispa Fukuoka",
+     "multi_source": false,
+     "price": 1.588,
+     "price_context": {
+      "book": "caesars",
+      "captured_at": "2026-10-24T05:11:01.518817+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T06:00:00+00:00",
+      "league": "J1 League",
+      "price": 1.588,
+      "selection": "under",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.838676+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -2094,17 +2304,18 @@
   },
   "home_over_15@v1": {
    "hits": 3,
-   "inv_price_sum": 3.0379748750866296,
+   "inv_price_sum": 3.603266000015968,
    "multi_n": 0,
-   "n": 5,
+   "n": 6,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
     "2026-10-23|Always Ready vs The Strongest|home_over_15@v1",
     "2026-10-23|Atl\u00e9tico Nacional vs Deportivo Pasto|home_over_15@v1",
-    "2026-10-23|Brisbane Roar vs Perth Glory|home_over_15@v1"
+    "2026-10-23|Brisbane Roar vs Perth Glory|home_over_15@v1",
+    "2026-10-24|Necaxa vs Ju\u00e1rez|home_over_15@v1"
    ],
-   "profit": 0.05,
+   "profit": -0.95,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -2248,6 +2459,35 @@
      },
      "recorded_at": "2026-10-23T22:34:26.378787+00:00",
      "rule": "pfc_73b036a8ee8dd5a4dea48134",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6251,
+     "date": "2026-10-24",
+     "hit": false,
+     "home": "Necaxa",
+     "home_key": "necaxa",
+     "league": "Liga MX",
+     "match": "Necaxa vs Ju\u00e1rez",
+     "multi_source": false,
+     "price": 1.769,
+     "price_context": {
+      "book": "caesars",
+      "captured_at": "2026-10-23T22:20:13.703293+00:00",
+      "contract_id": "pfc_439097cb9bb700e9996c0b07",
+      "decision_at": "2026-10-24T00:21:14+02:00",
+      "kickoff": "2026-10-24T01:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.769,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.886295+00:00",
+     "rule": "pfc_439097cb9bb700e9996c0b07",
      "source": "oddspapi",
      "stated": null
     }
@@ -2452,9 +2692,9 @@
   },
   "home_under_15@v1": {
    "hits": 4,
-   "inv_price_sum": 3.4680805712407157,
+   "inv_price_sum": 4.0461152533216405,
    "multi_n": 0,
-   "n": 8,
+   "n": 9,
    "processed": [
     "2026-10-14|Mito Hollyhock vs FC Tokyo|home_under_15@v1",
     "2026-10-14|Slovan Bratislava vs VfB Stuttgart|home_under_15@v1",
@@ -2463,9 +2703,10 @@
     "2026-10-23|Always Ready vs The Strongest|home_under_15@v1",
     "2026-10-23|Dynamo Kyiv vs Kudrivka|home_under_15@v1",
     "2026-10-23|Atl\u00e9tico Nacional vs Deportivo Pasto|home_under_15@v1",
-    "2026-10-23|Brisbane Roar vs Perth Glory|home_under_15@v1"
+    "2026-10-23|Brisbane Roar vs Perth Glory|home_under_15@v1",
+    "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|home_under_15@v1"
    ],
-   "profit": 0.202,
+   "profit": -0.798,
    "records": [
     {
      "away": "FC Tokyo",
@@ -2674,6 +2915,35 @@
      "rule": "pfc_73b036a8ee8dd5a4dea48134",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Avispa Fukuoka",
+     "away_key": "avispafukuoka",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6364,
+     "date": "2026-10-24",
+     "hit": false,
+     "home": "Tokyo Verdy",
+     "home_key": "tokyoverdy",
+     "league": "J1 League",
+     "match": "Tokyo Verdy vs Avispa Fukuoka",
+     "multi_source": false,
+     "price": 1.73,
+     "price_context": {
+      "book": "netbet",
+      "captured_at": "2026-10-24T05:11:01.518817+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T06:00:00+00:00",
+      "league": "J1 League",
+      "price": 1.73,
+      "selection": "under",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.844298+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -2682,10 +2952,10 @@
    "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
-   "hits": 3,
-   "inv_price_sum": 3.9596557732766557,
+   "hits": 6,
+   "inv_price_sum": 5.859878905205605,
    "multi_n": 0,
-   "n": 7,
+   "n": 10,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -2733,9 +3003,12 @@
     "2026-10-23|Always Ready vs The Strongest|home_under_25@v1",
     "2026-10-23|Dynamo Kyiv vs Kudrivka|home_under_25@v1",
     "2026-10-23|Atl\u00e9tico Nacional vs Deportivo Pasto|home_under_25@v1",
-    "2026-10-23|Brisbane Roar vs Perth Glory|home_under_25@v1"
+    "2026-10-23|Brisbane Roar vs Perth Glory|home_under_25@v1",
+    "2026-10-24|Necaxa vs Ju\u00e1rez|home_under_25@v1",
+    "2026-10-24|1. FC Heidenheim vs Energie Cottbus|home_under_25@v1",
+    "2026-10-24|Melbourne Victory vs Melbourne City|home_under_25@v1"
    ],
-   "profit": -2.311,
+   "profit": -0.536,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -2925,6 +3198,93 @@
      },
      "recorded_at": "2026-10-23T22:34:26.361703+00:00",
      "rule": "pfc_73b036a8ee8dd5a4dea48134",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6466,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Necaxa",
+     "home_key": "necaxa",
+     "league": "Liga MX",
+     "match": "Necaxa vs Ju\u00e1rez",
+     "multi_source": false,
+     "price": 1.645,
+     "price_context": {
+      "book": "bodog.eu",
+      "captured_at": "2026-10-23T22:20:13.703293+00:00",
+      "contract_id": "pfc_439097cb9bb700e9996c0b07",
+      "decision_at": "2026-10-24T00:21:14+02:00",
+      "kickoff": "2026-10-24T01:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.645,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.874912+00:00",
+     "rule": "pfc_439097cb9bb700e9996c0b07",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Energie Cottbus",
+     "away_key": "energiecottbus",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7072,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "1. FC Heidenheim",
+     "home_key": "heidenheim",
+     "league": "2. Bundesliga",
+     "match": "1. FC Heidenheim vs Energie Cottbus",
+     "multi_source": false,
+     "price": 1.73,
+     "price_context": {
+      "book": "pokerstars",
+      "captured_at": "2026-10-24T05:10:49.043209+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T11:00:00+00:00",
+      "league": "2. Bundesliga",
+      "price": 1.73,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.905687+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Melbourne City",
+     "away_key": "melbournecity",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7072,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Melbourne Victory",
+     "home_key": "melbournevictory",
+     "league": "A-League Men",
+     "match": "Melbourne Victory vs Melbourne City",
+     "multi_source": false,
+     "price": 1.4,
+     "price_context": {
+      "book": "888sport",
+      "captured_at": "2026-10-24T05:11:14.359478+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T08:40:00+00:00",
+      "league": "A-League Men",
+      "price": 1.4,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.986321+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
      "source": "oddspapi",
      "stated": null
     }
@@ -3814,11 +4174,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 311,
+   "hits": 318,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 310.2451431122846,
-   "multi_n": 98,
-   "n": 476,
+   "inv_price_sum": 315.6788324144611,
+   "multi_n": 101,
+   "n": 485,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -4539,9 +4899,18 @@
     "2026-10-23|Motor Lublin vs Zag\u0142\u0119bie Lubin|match_over_25@v1",
     "2026-10-23|IF Elfsborg vs Malm\u00f6 FF|match_over_25@v1",
     "2026-10-23|Brisbane Roar vs Perth Glory|match_over_25@v1",
-    "2026-10-23|Widzew \u0141\u00f3d\u017a vs G\u00f3rnik Zabrze|match_over_25@v1"
+    "2026-10-23|Widzew \u0141\u00f3d\u017a vs G\u00f3rnik Zabrze|match_over_25@v1",
+    "2026-10-24|Bucheon FC 1995 vs Gwangju FC|match_over_25@v1",
+    "2026-10-24|HamKam vs Rosenborg BK|match_over_25@v1",
+    "2026-10-24|Wis\u0142a Krak\u00f3w vs Rak\u00f3w Cz\u0119stochowa|match_over_25@v1",
+    "2026-10-24|BK H\u00e4cken vs Degerfors IF|match_over_25@v1",
+    "2026-10-24|Kalmar FF vs IF Brommapojkarna|match_over_25@v1",
+    "2026-10-24|Wolverhampton vs Watford|match_over_25@v1",
+    "2026-10-24|Al-Kholood vs Al-Ettifaq|match_over_25@v1",
+    "2026-10-24|Neom SC vs Abha|match_over_25@v1",
+    "2026-10-24|Pogo\u0144 Szczecin vs Radomiak Radom|match_over_25@v1"
    ],
-   "profit": 2.737,
+   "profit": 5.417,
    "records": [
     {
      "away": "Spartak Varna",
@@ -11364,6 +11733,237 @@
      "rule": "pfc_73b036a8ee8dd5a4dea48134",
      "source": "theoddsapi",
      "stated": null
+    },
+    {
+     "away": "Gwangju FC",
+     "away_key": "gwangju",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6522,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Bucheon FC 1995",
+     "home_key": "bucheon1995",
+     "league": "K League 1",
+     "match": "Bucheon FC 1995 vs Gwangju FC",
+     "multi_source": true,
+     "price": 2.0,
+     "price_context": {},
+     "recorded_at": "2026-10-24T23:03:21.857809+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Rosenborg BK",
+     "away_key": "rosenborg",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6522,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "HamKam",
+     "home_key": "hamkam",
+     "league": "Eliteserien",
+     "match": "HamKam vs Rosenborg BK",
+     "multi_source": false,
+     "price": 1.55,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-10-23T22:19:59.297156+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T16:00:00+00:00",
+      "league": "Eliteserien",
+      "price": 1.55,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.913734+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Rak\u00f3w Cz\u0119stochowa",
+     "away_key": "rakowczestochowa",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6522,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Wis\u0142a Krak\u00f3w",
+     "home_key": "wislakrakow",
+     "league": "Ekstraklasa",
+     "match": "Wis\u0142a Krak\u00f3w vs Rak\u00f3w Cz\u0119stochowa",
+     "multi_source": false,
+     "price": 1.52,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-10-23T22:20:01.840438+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T18:15:00+00:00",
+      "league": "Ekstraklasa",
+      "price": 1.52,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.921918+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Degerfors IF",
+     "away_key": "degerfors",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6522,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "BK H\u00e4cken",
+     "home_key": "hacken",
+     "league": "Allsvenskan",
+     "match": "BK H\u00e4cken vs Degerfors IF",
+     "multi_source": false,
+     "price": 1.56,
+     "price_context": {
+      "book": "GTbets",
+      "captured_at": "2026-10-23T22:19:59.889412+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T13:00:00+00:00",
+      "league": "Allsvenskan",
+      "price": 1.56,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.930096+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "IF Brommapojkarna",
+     "away_key": "brommapojkarna",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6522,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Kalmar FF",
+     "home_key": "kalmar",
+     "league": "Allsvenskan",
+     "match": "Kalmar FF vs IF Brommapojkarna",
+     "multi_source": true,
+     "price": 1.76,
+     "price_context": {},
+     "recorded_at": "2026-10-24T23:03:21.938277+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Watford",
+     "away_key": "watford",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6522,
+     "date": "2026-10-24",
+     "hit": false,
+     "home": "Wolverhampton",
+     "home_key": "wolverhamptonwanderers",
+     "league": "Championship",
+     "match": "Wolverhampton vs Watford",
+     "multi_source": false,
+     "price": 1.62,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-10-24T05:10:44.450979+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T14:00:00+00:00",
+      "league": "Championship",
+      "price": 1.62,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.944122+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Al-Ettifaq",
+     "away_key": "alettifaq",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6522,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Al-Kholood",
+     "home_key": "alkholood",
+     "league": "Saudi Pro League",
+     "match": "Al-Kholood vs Al-Ettifaq",
+     "multi_source": false,
+     "price": 1.66,
+     "price_context": {
+      "book": "1xBet",
+      "captured_at": "2026-10-23T22:20:03.481504+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T15:05:00+00:00",
+      "league": "Saudi Pro League",
+      "price": 1.66,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.952468+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Abha",
+     "away_key": "abha",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6522,
+     "date": "2026-10-24",
+     "hit": false,
+     "home": "Neom SC",
+     "home_key": "neom",
+     "league": "Saudi Pro League",
+     "match": "Neom SC vs Abha",
+     "multi_source": false,
+     "price": 1.7,
+     "price_context": {
+      "book": "Unibet (NL)",
+      "captured_at": "2026-10-23T22:20:03.717053+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T14:00:00+00:00",
+      "league": "Saudi Pro League",
+      "price": 1.7,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.960787+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Radomiak Radom",
+     "away_key": "radomiakradom",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6522,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Pogo\u0144 Szczecin",
+     "home_key": "pogonszczecin",
+     "league": "Ekstraklasa",
+     "match": "Pogo\u0144 Szczecin vs Radomiak Radom",
+     "multi_source": true,
+     "price": 1.63,
+     "price_context": {},
+     "recorded_at": "2026-10-24T23:03:21.994561+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "theoddsapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -12434,18 +13034,20 @@
    "status_since": "2026-10-24"
   },
   "match_under_35@v1": {
-   "hits": 1,
-   "inv_price_sum": 2.697711601715482,
+   "hits": 2,
+   "inv_price_sum": 3.7492989033027837,
    "multi_n": 0,
-   "n": 5,
+   "n": 7,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
     "2026-10-23|Al Sailiya vs Al Rayyan|match_under_35@v1",
     "2026-10-23|Inter Kashi vs East Bengal|match_under_35@v1",
-    "2026-10-23|Brisbane Roar vs Perth Glory|match_under_35@v1"
+    "2026-10-23|Brisbane Roar vs Perth Glory|match_under_35@v1",
+    "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|match_under_35@v1",
+    "2026-10-24|Necaxa vs Ju\u00e1rez|match_under_35@v1"
    ],
-   "profit": -2.3,
+   "profit": -1.5,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -12591,6 +13193,64 @@
      "rule": "pfc_73b036a8ee8dd5a4dea48134",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Avispa Fukuoka",
+     "away_key": "avispafukuoka",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.8283,
+     "date": "2026-10-24",
+     "hit": false,
+     "home": "Tokyo Verdy",
+     "home_key": "tokyoverdy",
+     "league": "J1 League",
+     "match": "Tokyo Verdy vs Avispa Fukuoka",
+     "multi_source": false,
+     "price": 1.44,
+     "price_context": {
+      "book": "1xbet",
+      "captured_at": "2026-10-24T05:11:01.518817+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T06:00:00+00:00",
+      "league": "J1 League",
+      "price": 1.44,
+      "selection": "under",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.826829+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6274,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Necaxa",
+     "home_key": "necaxa",
+     "league": "Liga MX",
+     "match": "Necaxa vs Ju\u00e1rez",
+     "multi_source": false,
+     "price": 2.8,
+     "price_context": {
+      "book": "duelbits",
+      "captured_at": "2026-10-23T22:20:13.703293+00:00",
+      "contract_id": "pfc_439097cb9bb700e9996c0b07",
+      "decision_at": "2026-10-24T00:21:14+02:00",
+      "kickoff": "2026-10-24T01:00:00+00:00",
+      "league": "Liga MX",
+      "price": 2.8,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.880532+00:00",
+     "rule": "pfc_439097cb9bb700e9996c0b07",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -12598,10 +13258,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 5,
-   "inv_price_sum": 3.5169337821493833,
+   "hits": 8,
+   "inv_price_sum": 5.269649293426538,
    "multi_n": 0,
-   "n": 7,
+   "n": 10,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -12609,9 +13269,12 @@
     "2026-10-22|Puebla vs Monterrey|match_under_45@v1",
     "2026-10-23|Flamengo vs Estudiantes|match_under_45@v1",
     "2026-10-23|Dynamo Kyiv vs Kudrivka|match_under_45@v1",
-    "2026-10-23|Brisbane Roar vs Perth Glory|match_under_45@v1"
+    "2026-10-23|Brisbane Roar vs Perth Glory|match_under_45@v1",
+    "2026-10-24|Necaxa vs Ju\u00e1rez|match_under_45@v1",
+    "2026-10-24|1. FC Heidenheim vs Energie Cottbus|match_under_45@v1",
+    "2026-10-24|Melbourne Victory vs Melbourne City|match_under_45@v1"
    ],
-   "profit": 3.57,
+   "profit": 5.756,
    "records": [
     {
      "away": "Atlante",
@@ -12771,6 +13434,93 @@
      },
      "recorded_at": "2026-10-23T22:34:26.358276+00:00",
      "rule": "pfc_73b036a8ee8dd5a4dea48134",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7935,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Necaxa",
+     "home_key": "necaxa",
+     "league": "Liga MX",
+     "match": "Necaxa vs Ju\u00e1rez",
+     "multi_source": false,
+     "price": 1.98,
+     "price_context": {
+      "book": "coolbet",
+      "captured_at": "2026-10-23T22:20:13.703293+00:00",
+      "contract_id": "pfc_439097cb9bb700e9996c0b07",
+      "decision_at": "2026-10-24T00:21:14+02:00",
+      "kickoff": "2026-10-24T01:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.98,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.863552+00:00",
+     "rule": "pfc_439097cb9bb700e9996c0b07",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Energie Cottbus",
+     "away_key": "energiecottbus",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7621,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "1. FC Heidenheim",
+     "home_key": "heidenheim",
+     "league": "2. Bundesliga",
+     "match": "1. FC Heidenheim vs Energie Cottbus",
+     "multi_source": false,
+     "price": 1.6,
+     "price_context": {
+      "book": "mozzartbet",
+      "captured_at": "2026-10-24T05:10:49.043209+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T11:00:00+00:00",
+      "league": "2. Bundesliga",
+      "price": 1.6,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.900013+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Melbourne City",
+     "away_key": "melbournecity",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7621,
+     "date": "2026-10-24",
+     "hit": true,
+     "home": "Melbourne Victory",
+     "home_key": "melbournevictory",
+     "league": "A-League Men",
+     "match": "Melbourne Victory vs Melbourne City",
+     "multi_source": false,
+     "price": 1.606,
+     "price_context": {
+      "book": "espnbet",
+      "captured_at": "2026-10-24T05:11:14.359478+00:00",
+      "contract_id": "pfc_27e0f725859bc708f95c58a3",
+      "decision_at": "2026-10-24T07:14:11+02:00",
+      "kickoff": "2026-10-24T08:40:00+00:00",
+      "league": "A-League Men",
+      "price": 1.606,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-10-24T23:03:21.974683+00:00",
+     "rule": "pfc_27e0f725859bc708f95c58a3",
      "source": "oddspapi",
      "stated": null
     }
