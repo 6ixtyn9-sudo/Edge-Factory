@@ -1,208 +1,42 @@
 {
-  "added": 30396,
-  "attempted": 6,
-  "attempted_fixtures": [
-    {
-      "away": "HSC Hannover",
-      "fixture_id": "id1000004272674388",
-      "home": "VfB Oldenburg"
-    },
-    {
-      "away": "FC Luzern",
-      "fixture_id": "id1000021572177098",
-      "home": "FC Zurich"
-    },
-    {
-      "away": "Barnsley FC",
-      "fixture_id": "id1000002472341330",
-      "home": "Reading FC"
-    },
-    {
-      "away": "Rosenborg BK",
-      "fixture_id": "id1000002071463740",
-      "home": "HamKam"
-    },
-    {
-      "away": "Hamburger SV",
-      "fixture_id": "id1000003572513272",
-      "home": "SC Paderborn 07"
-    },
-    {
-      "away": "IF Brommapojkarna",
-      "fixture_id": "id1000004067126836",
-      "home": "Kalmar FF"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-10-24",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 308,
-    "remaining_today": 2,
-    "spent_today": 60
+    "month_spent": 310,
+    "remaining_today": 0,
+    "spent_today": 62
   },
-  "budget_deferred": 194,
-  "captured_at": "2026-10-24T10:20:42+00:00",
+  "budget_deferred": 200,
+  "captured_at": "2026-10-24T13:23:19+00:00",
   "date": "2026-10-24",
   "errors": [],
-  "excluded_srl_fixtures": 25,
-  "fixtures": 1372,
-  "future_slate_fixtures": 4,
+  "excluded_srl_fixtures": 0,
+  "fixtures": 922,
+  "future_slate_fixtures": 1,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 644,
-  "markets": {
-    "1x2": 2674,
-    "btts": 1411,
-    "ou_0.5": 713,
-    "ou_0.75": 71,
-    "ou_1": 198,
-    "ou_1.25": 250,
-    "ou_1.5": 1480,
-    "ou_1.75": 364,
-    "ou_2": 566,
-    "ou_2.25": 458,
-    "ou_2.5": 1607,
-    "ou_2.75": 592,
-    "ou_3": 876,
-    "ou_3.25": 690,
-    "ou_3.5": 1866,
-    "ou_3.75": 524,
-    "ou_4": 496,
-    "ou_4.25": 290,
-    "ou_4.5": 1741,
-    "ou_4.75": 242,
-    "ou_5": 286,
-    "ou_5.25": 256,
-    "ou_5.5": 1535,
-    "ou_5.75": 142,
-    "ou_6": 88,
-    "ou_6.25": 38,
-    "ou_6.5": 461,
-    "ou_6.75": 32,
-    "ou_7": 29,
-    "ou_7.25": 28,
-    "ou_7.5": 119,
-    "ou_7.75": 16,
-    "ou_8": 16,
-    "ou_8.25": 16,
-    "ou_8.5": 96,
-    "tt_away_0.5": 1125,
-    "tt_away_0.75": 44,
-    "tt_away_1": 76,
-    "tt_away_1.25": 36,
-    "tt_away_1.5": 1439,
-    "tt_away_1.75": 36,
-    "tt_away_2": 54,
-    "tt_away_2.25": 24,
-    "tt_away_2.5": 1134,
-    "tt_away_2.75": 6,
-    "tt_away_3": 29,
-    "tt_away_3.25": 4,
-    "tt_away_3.5": 666,
-    "tt_away_3.75": 2,
-    "tt_away_4": 2,
-    "tt_away_4.5": 120,
-    "tt_away_5": 1,
-    "tt_away_5.5": 30,
-    "tt_away_6.5": 3,
-    "tt_home_0.5": 1068,
-    "tt_home_0.75": 22,
-    "tt_home_1": 62,
-    "tt_home_1.25": 18,
-    "tt_home_1.5": 1425,
-    "tt_home_1.75": 42,
-    "tt_home_2": 64,
-    "tt_home_2.25": 36,
-    "tt_home_2.5": 1348,
-    "tt_home_2.75": 20,
-    "tt_home_3": 66,
-    "tt_home_3.25": 22,
-    "tt_home_3.5": 788,
-    "tt_home_3.75": 8,
-    "tt_home_4": 24,
-    "tt_home_4.5": 249,
-    "tt_home_5": 2,
-    "tt_home_5.5": 31,
-    "tt_home_6.5": 3
-  },
+  "market_census_distinct": 0,
+  "markets": {},
   "markets_source": "cache",
-  "matched": 6,
+  "matched": 0,
   "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 13,
-    "market_id_unknown": 9791,
-    "market_inactive": 8395,
-    "market_unsupported_clean_sheet": 845,
-    "market_unsupported_corners": 10876,
-    "market_unsupported_correct_score": 2513,
-    "market_unsupported_double_chance": 1174,
-    "market_unsupported_draw_no_bet": 1002,
-    "market_unsupported_handicap": 12360,
-    "market_unsupported_odd_even": 2253,
-    "market_unsupported_period": 45795,
-    "market_unsupported_win_to_nil": 1569,
-    "outcome_inactive": 2189
-  },
   "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 13,
-      "market_inactive": 8395,
-      "outcome_inactive": 2189
-    },
-    "loss_or_diagnosis": {
-      "market_id_unknown": 9791,
-      "market_unsupported_clean_sheet": 845,
-      "market_unsupported_corners": 10876,
-      "market_unsupported_correct_score": 2513,
-      "market_unsupported_double_chance": 1174,
-      "market_unsupported_draw_no_bet": 1002,
-      "market_unsupported_handicap": 12360,
-      "market_unsupported_odd_even": 2253,
-      "market_unsupported_period": 45795,
-      "market_unsupported_win_to_nil": 1569
-    }
+    "expected": {},
+    "loss_or_diagnosis": {}
   },
-  "pending_fixtures": 920,
-  "quoted_fixtures": [
-    {
-      "away": "HSC Hannover",
-      "fixture_id": "id1000004272674388",
-      "home": "VfB Oldenburg"
-    },
-    {
-      "away": "FC Luzern",
-      "fixture_id": "id1000021572177098",
-      "home": "FC Zurich"
-    },
-    {
-      "away": "Barnsley FC",
-      "fixture_id": "id1000002472341330",
-      "home": "Reading FC"
-    },
-    {
-      "away": "Rosenborg BK",
-      "fixture_id": "id1000002071463740",
-      "home": "HamKam"
-    },
-    {
-      "away": "Hamburger SV",
-      "fixture_id": "id1000003572513272",
-      "home": "SC Paderborn 07"
-    },
-    {
-      "away": "IF Brommapojkarna",
-      "fixture_id": "id1000004067126836",
-      "home": "Kalmar FF"
-    }
-  ],
-  "reserved_requests": 3,
-  "rows": 30396,
+  "pending_fixtures": 579,
+  "quoted_fixtures": [],
+  "reserved_requests": 0,
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 42,
+  "slate_candidate_fixtures": 28,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 13,
-  "slate_provider_overlap_fixtures": 25,
+  "slate_priority_fixtures": 7,
+  "slate_provider_overlap_fixtures": 17,
   "slate_unmatched_fixtures": [
     {
       "away": "Parma",
@@ -217,22 +51,10 @@
       "normalized_pair": "mlada boleslav|slavia praha"
     },
     {
-      "away": "Sassuolo",
-      "home": "Como",
-      "league": "Serie A",
-      "normalized_pair": "como|sassuolo"
-    },
-    {
       "away": "FC Vaduz",
       "home": "Servette FC",
       "league": "Super League",
       "normalized_pair": "servette|vaduz"
-    },
-    {
-      "away": "Javor",
-      "home": "Metalac GM",
-      "league": "Serbia: Prva Liga",
-      "normalized_pair": "javor|metalac gm"
     },
     {
       "away": "St. Johnstone",
@@ -251,12 +73,6 @@
       "home": "Club Le\u00f3n",
       "league": "Liga MX Apertura",
       "normalized_pair": "cd toluca|leon"
-    },
-    {
-      "away": "FC Schalke 04",
-      "home": "1. FC K\u00f6ln",
-      "league": "Bundesliga",
-      "normalized_pair": "1. koln|schalke 04"
     },
     {
       "away": "Mallorca",
@@ -287,26 +103,8 @@
       "home": "Pogo\u0144 Szczecin",
       "league": "Ekstraklasa",
       "normalized_pair": "pogon szczecin|radomiak radom"
-    },
-    {
-      "away": "Sampdoria",
-      "home": "S\u00fcdtirol",
-      "league": "Serie B",
-      "normalized_pair": "sampdoria|sudtirol"
-    },
-    {
-      "away": "Bologna",
-      "home": "Cagliari",
-      "league": "Serie A",
-      "normalized_pair": "bologna|cagliari"
-    },
-    {
-      "away": "Hessen Kassel",
-      "home": "Astoria Walldorf",
-      "league": "Germany: Regionalliga - SudWest",
-      "normalized_pair": "astoria walldorf|hessen kassel"
     }
   ],
   "source": "oddspapi_odds",
-  "status": "reserved"
+  "status": "budget"
 }
