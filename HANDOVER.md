@@ -11953,3 +11953,32 @@ Code is changed on arena/76daeb2a-edge-factory, not merged/deployed or dispatche
 Warehouse absent locally: no current-production pool delta or improved ROI claim.
 Unmarked legacy score periods remain unknown; this is a bounded status repair,
 not complete occurrence adjudication, a trained model or completed v2 census.
+
+### 24 October 2026 — operator-authorized experimental ENH ML ranking
+
+Operator requested ML ENH activation using existing machinery, plus an independent
+Z.ai red-team prompt. `EDGE_FACTORY_ENH_ML` defaults to 1; explicit 0 restores
+cohort-only ordering without disabling ENH. No new script, service or registry.
+Existing exact-contract cohort collection now optionally fits sklearn's existing
+regularized LogisticRegression to observed FT score-pair classes, using only the
+parent's selected-side confidence. This is NOT the main 1X2-correctness model,
+a Poisson/default prior, or an override of measured cohort admission.
+Fit is cached once per contract/selection/window within a build. It requires N30,
+variable observed confidence and multiple score classes; missing/nonconvergent
+fits leave cohort ranking intact. Training excludes same-day/future fixtures,
+score conflicts and the prior status/period quarantines. Historical receipt and
+label-known-by completeness is NOT certified by this date filter.
+Compact coefficients, class labels, training digest/window, model key and fit
+status travel in the existing statistical profile. Every market is scored from
+one common score distribution through existing market predicates. Binding and
+model-key checks reject another contract/day/side, missing/out-of-range confidence
+or modified parameters. All cohort/price/source/payout gates remain unchanged.
+ML changes eligible-market ordering and complete ENH pair competition only;
+main ordering, two-leg/same-fixture/book rules, 25% free-bank staking and frozen
+records remain unchanged. Rank score/model key survive existing evidence carry.
+No marginal probabilities are multiplied to claim joint acca success.
+Validation: full suite 4320 passed, 1 skipped; 15 new ML regression cases.
+Production warehouse is absent here: real-data fit, activation coverage, held-out
+calibration and ROI improvement are NOT demonstrated. No workflow dispatch or
+cash-betting authorization. Changes require PR merge/new build to run live.
+Red-team handoff: docs/operator/audits/ENH-ML-ACTIVATION-RED-TEAM-PROMPT-2026-10-24.md.

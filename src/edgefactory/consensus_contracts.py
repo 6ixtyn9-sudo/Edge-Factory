@@ -394,7 +394,7 @@ def recreate_contract_views(con, edges, *, as_of=None):
     return available
 
 
-def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None):
+def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fit_ml=False):
     """All outcomes of the exact parent recipe; never condition on its winning.
 
     No Forebet voter/result inheritance, substitute electorate, future fixtures
@@ -408,10 +408,11 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None):
     # or invocations; validation above still runs on every request.
     start = edge['mining_window']['start']
     snapshot_key = ('observations', con, start, as_of, 'enh_regulation')
-    cohort_key = ('cohort', con, identity, start, as_of, selection, min_n, 'enh_regulation')
+    cohort_key = ('cohort', con, identity, start, as_of, selection, min_n, 'enh_regulation', fit_ml)
     if cache is not None and cohort_key in cache:
         cached = cache[cohort_key]
-        return dict(cached) if cached is not None else None
+        from copy import deepcopy
+        return deepcopy(cached) if cached is not None else None
     if cache is not None and snapshot_key in cache:
         snapshot = cache[snapshot_key]
     else:
@@ -420,7 +421,7 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None):
         if cache is not None:
             cache[snapshot_key] = snapshot
     _, observations, ambiguous, resolved, _ = snapshot
-    pairs = []
+    pairs, training = [], []
     parent_hits = 0
     for row in contract_rows(observations, ambiguous, resolved, edge):
         if row['pick'] != selection:
@@ -428,6 +429,9 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None):
         pair = resolved.get(_remine_key(row), {}).get('ft')
         if pair is not None:
             pairs.append(pair)
+            probability = _number(row.get('avg_p'))
+            if probability is not None and 0 <= probability <= 100:
+                training.append((_remine_key(row), probability / 100, f'{pair[0]}:{pair[1]}'))
             parent_hits += row['pick'] == row['outcome']
     n = len(pairs)
     if not n or n < min_n:
@@ -447,6 +451,36 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None):
         for goals in (1, 2, 3, 4):
             result[f'{side}_o{goals - 1}5'] = rate(
                 lambda h, a: (h if side == 'h' else a) >= goals)
+    if fit_ml:
+        # The existing sklearn learner, but with an ENH score-pair target, not
+        # the unrelated main 1X2-correctness target. One fit per cached contract.
+        from edgefactory.enh_registry import MIN_COHORT_N
+        result['ml_status'] = 'insufficient_or_constant_training_data'
+        training.sort()
+        if (len(training) >= MIN_COHORT_N and len({r[1] for r in training}) > 1
+                and len({r[2] for r in training}) > 1):
+            try:
+                import warnings
+                from sklearn.exceptions import ConvergenceWarning
+                from sklearn.linear_model import LogisticRegression
+                with warnings.catch_warnings():
+                    warnings.simplefilter('error', ConvergenceWarning)
+                    model = LogisticRegression(C=1.0, max_iter=1000, random_state=42)
+                    model.fit([[r[1]] for r in training], [r[2] for r in training])
+                payload = dict(schema='enh_score_logit_v1', contract_id=identity,
+                    as_of_exclusive=as_of, selection=selection, n=len(training),
+                    train_last_date=max(r[0][0] for r in training),
+                    feature_min=min(r[1] for r in training),
+                    feature_max=max(r[1] for r in training),
+                    training_sha256=hashlib.sha256(json.dumps(training).encode()).hexdigest(),
+                    classes=model.classes_.tolist(), coef=model.coef_.tolist(),
+                    intercept=model.intercept_.tolist())
+                payload['model_key'] = hashlib.sha256(json.dumps(
+                    payload, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                result.update(ml_model=payload, ml_status='fitted')
+            except (ImportError, ValueError, ArithmeticError, Warning):
+                result['ml_status'] = 'fit_unavailable'
     if cache is not None:
-        cache[cohort_key] = dict(result)
+        from copy import deepcopy
+        cache[cohort_key] = deepcopy(result)
     return result
