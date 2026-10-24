@@ -1,303 +1,184 @@
 {
-  "added": 70931,
-  "attempted": 15,
+  "added": 20448,
+  "attempted": 3,
   "attempted_fixtures": [
     {
-      "away": "Energie Cottbus",
-      "fixture_id": "id1000004472513924",
-      "home": "1. FC Heidenheim"
+      "away": "Manchester City",
+      "fixture_id": "id1000001772221334",
+      "home": "Aston Villa"
     },
     {
-      "away": "Avispa Fukuoka",
-      "fixture_id": "id1000019672149820",
-      "home": "Tokyo Verdy"
+      "away": "Degerfors IF",
+      "fixture_id": "id1000004067126826",
+      "home": "BK Hacken"
     },
     {
-      "away": "Melbourne City FC",
-      "fixture_id": "id1000013672897400",
-      "home": "Melbourne Victory FC"
-    },
-    {
-      "away": "Auckland FC",
-      "fixture_id": "id1000013672897398",
-      "home": "Western Sydney Wanderers"
-    },
-    {
-      "away": "Kashiwa Reysol",
-      "fixture_id": "id1000019672149814",
-      "home": "Kashima Antlers"
-    },
-    {
-      "away": "Machida Zelvia",
-      "fixture_id": "id1000019672149830",
-      "home": "Vissel Kobe"
-    },
-    {
-      "away": "Perth Glory FC",
-      "fixture_id": "id1000189473928148",
-      "home": "Adelaide United FC"
-    },
-    {
-      "away": "Ryazan VDV",
-      "fixture_id": "id1001363569592674",
-      "home": "Zhfk Yenisey Krasnoyarsk"
-    },
-    {
-      "away": "Sutherland Sharks",
-      "fixture_id": "id1004850774827286",
-      "home": "Canberra Croatia FC"
-    },
-    {
-      "away": "Kyoto Sanga FC",
-      "fixture_id": "id1000019672149826",
-      "home": "Gamba Osaka"
-    },
-    {
-      "away": "Guangxi Hengchen FC",
-      "fixture_id": "id1000078269456742",
-      "home": "Dalian Kun City"
-    },
-    {
-      "away": "AC Taipei",
-      "fixture_id": "id1004263174796864",
-      "home": "New Taipei Hang Yuen"
-    },
-    {
-      "away": "PSIM Yogyakarta",
-      "fixture_id": "id1005390875689112",
-      "home": "Borneo FC Samarinda"
-    },
-    {
-      "away": "Beijing Guoan",
-      "fixture_id": "id1000064968995412",
-      "home": "Henan"
-    },
-    {
-      "away": "Shanghai Shenhua FC",
-      "fixture_id": "id1000064968995414",
-      "home": "Shenzhen Peng City"
+      "away": "Swindon Town",
+      "fixture_id": "id1000002572342284",
+      "home": "Bristol Rovers"
     }
   ],
   "budget": {
     "day": "2026-10-24",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 290,
-    "remaining_today": 20,
-    "spent_today": 42
+    "month_spent": 296,
+    "remaining_today": 14,
+    "spent_today": 48
   },
-  "budget_deferred": 185,
-  "captured_at": "2026-10-24T05:13:56+00:00",
+  "budget_deferred": 197,
+  "captured_at": "2026-10-24T07:23:37+00:00",
   "date": "2026-10-24",
   "errors": [],
   "excluded_srl_fixtures": 25,
   "fixtures": 1372,
-  "future_slate_fixtures": 20,
+  "future_slate_fixtures": 14,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 640,
+  "market_census_distinct": 667,
   "markets": {
-    "1x2": 6737,
-    "btts": 3603,
-    "ou_0.5": 1978,
-    "ou_0.75": 324,
-    "ou_1": 646,
-    "ou_1.25": 516,
-    "ou_1.5": 3685,
-    "ou_1.75": 740,
+    "1x2": 1586,
+    "btts": 868,
+    "ou_0.5": 408,
+    "ou_0.75": 30,
+    "ou_1": 144,
+    "ou_1.25": 130,
+    "ou_1.5": 941,
+    "ou_1.75": 190,
     "ou_10.5": 6,
     "ou_11.5": 6,
     "ou_12.5": 6,
     "ou_13.5": 3,
-    "ou_2": 1376,
-    "ou_2.25": 1288,
-    "ou_2.5": 4055,
-    "ou_2.75": 1516,
-    "ou_3": 1922,
-    "ou_3.25": 1488,
-    "ou_3.5": 4123,
-    "ou_3.75": 998,
-    "ou_4": 1374,
-    "ou_4.25": 930,
-    "ou_4.5": 3840,
-    "ou_4.75": 796,
-    "ou_5": 561,
-    "ou_5.25": 450,
-    "ou_5.5": 2420,
-    "ou_5.75": 230,
-    "ou_6": 226,
-    "ou_6.25": 106,
-    "ou_6.5": 907,
-    "ou_6.75": 68,
-    "ou_7": 66,
-    "ou_7.25": 66,
-    "ou_7.5": 285,
-    "ou_7.75": 48,
-    "ou_8": 48,
-    "ou_8.25": 48,
-    "ou_8.5": 153,
-    "ou_9.5": 6,
-    "tt_away_0.5": 2638,
-    "tt_away_0.75": 110,
-    "tt_away_1": 208,
-    "tt_away_1.25": 142,
-    "tt_away_1.5": 3442,
-    "tt_away_1.75": 142,
-    "tt_away_2": 218,
-    "tt_away_2.25": 76,
-    "tt_away_2.5": 2803,
-    "tt_away_2.75": 60,
-    "tt_away_3": 84,
-    "tt_away_3.25": 8,
-    "tt_away_3.5": 1315,
-    "tt_away_3.75": 4,
-    "tt_away_4": 11,
+    "ou_2": 268,
+    "ou_2.25": 192,
+    "ou_2.5": 1137,
+    "ou_2.75": 506,
+    "ou_3": 606,
+    "ou_3.25": 502,
+    "ou_3.5": 1183,
+    "ou_3.75": 348,
+    "ou_4": 432,
+    "ou_4.25": 298,
+    "ou_4.5": 1146,
+    "ou_4.75": 178,
+    "ou_5": 216,
+    "ou_5.25": 130,
+    "ou_5.5": 930,
+    "ou_5.75": 42,
+    "ou_6": 42,
+    "ou_6.25": 18,
+    "ou_6.5": 397,
+    "ou_6.75": 18,
+    "ou_7": 17,
+    "ou_7.25": 16,
+    "ou_7.5": 158,
+    "ou_7.75": 8,
+    "ou_8": 8,
+    "ou_8.25": 8,
+    "ou_8.5": 71,
+    "ou_9.5": 26,
+    "tt_away_0.5": 822,
+    "tt_away_0.75": 42,
+    "tt_away_1": 34,
+    "tt_away_1.25": 20,
+    "tt_away_1.5": 985,
+    "tt_away_1.75": 20,
+    "tt_away_2": 36,
+    "tt_away_2.25": 26,
+    "tt_away_2.5": 861,
+    "tt_away_2.75": 4,
+    "tt_away_3": 1,
+    "tt_away_3.25": 16,
+    "tt_away_3.5": 441,
+    "tt_away_3.75": 2,
+    "tt_away_4": 2,
     "tt_away_4.25": 2,
-    "tt_away_4.5": 429,
-    "tt_away_5.5": 45,
-    "tt_away_6.5": 3,
-    "tt_home_0.5": 2731,
-    "tt_home_0.75": 104,
-    "tt_home_1": 176,
-    "tt_home_1.25": 152,
-    "tt_home_1.5": 3496,
-    "tt_home_1.75": 122,
-    "tt_home_2": 172,
-    "tt_home_2.25": 92,
-    "tt_home_2.5": 2628,
-    "tt_home_2.75": 58,
-    "tt_home_3": 68,
-    "tt_home_3.25": 26,
-    "tt_home_3.5": 1280,
-    "tt_home_3.75": 6,
-    "tt_home_4": 37,
-    "tt_home_4.5": 346,
-    "tt_home_5": 16,
-    "tt_home_5.5": 34,
-    "tt_home_6.5": 3
+    "tt_away_4.5": 207,
+    "tt_away_4.75": 2,
+    "tt_away_5.5": 33,
+    "tt_away_6.5": 7,
+    "tt_home_0.5": 579,
+    "tt_home_0.75": 4,
+    "tt_home_1": 28,
+    "tt_home_1.25": 20,
+    "tt_home_1.5": 1038,
+    "tt_home_1.75": 26,
+    "tt_home_2": 34,
+    "tt_home_2.25": 28,
+    "tt_home_2.5": 974,
+    "tt_home_2.75": 38,
+    "tt_home_3": 30,
+    "tt_home_3.25": 4,
+    "tt_home_3.5": 556,
+    "tt_home_3.75": 4,
+    "tt_home_4": 6,
+    "tt_home_4.5": 210,
+    "tt_home_5": 1,
+    "tt_home_5.5": 79,
+    "tt_home_6.5": 7
   },
   "markets_source": "cache",
-  "matched": 15,
+  "matched": 3,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "alt_line_skipped": 40,
-    "market_id_unknown": 20059,
-    "market_inactive": 11665,
-    "market_unsupported_clean_sheet": 1808,
-    "market_unsupported_corners": 19947,
-    "market_unsupported_correct_score": 5403,
-    "market_unsupported_double_chance": 2535,
-    "market_unsupported_draw_no_bet": 2166,
-    "market_unsupported_handicap": 24279,
-    "market_unsupported_odd_even": 4799,
-    "market_unsupported_period": 88612,
-    "market_unsupported_win_to_nil": 3216,
-    "outcome_inactive": 3332
+    "alt_line_skipped": 13,
+    "market_id_unknown": 5652,
+    "market_inactive": 3994,
+    "market_unsupported_clean_sheet": 502,
+    "market_unsupported_corners": 7275,
+    "market_unsupported_correct_score": 1406,
+    "market_unsupported_double_chance": 629,
+    "market_unsupported_draw_no_bet": 547,
+    "market_unsupported_handicap": 7579,
+    "market_unsupported_odd_even": 1364,
+    "market_unsupported_period": 28079,
+    "market_unsupported_win_to_nil": 909,
+    "outcome_inactive": 1806
   },
   "parse_skips_classified": {
     "expected": {
-      "alt_line_skipped": 40,
-      "market_inactive": 11665,
-      "outcome_inactive": 3332
+      "alt_line_skipped": 13,
+      "market_inactive": 3994,
+      "outcome_inactive": 1806
     },
     "loss_or_diagnosis": {
-      "market_id_unknown": 20059,
-      "market_unsupported_clean_sheet": 1808,
-      "market_unsupported_corners": 19947,
-      "market_unsupported_correct_score": 5403,
-      "market_unsupported_double_chance": 2535,
-      "market_unsupported_draw_no_bet": 2166,
-      "market_unsupported_handicap": 24279,
-      "market_unsupported_odd_even": 4799,
-      "market_unsupported_period": 88612,
-      "market_unsupported_win_to_nil": 3216
+      "market_id_unknown": 5652,
+      "market_unsupported_clean_sheet": 502,
+      "market_unsupported_corners": 7275,
+      "market_unsupported_correct_score": 1406,
+      "market_unsupported_double_chance": 629,
+      "market_unsupported_draw_no_bet": 547,
+      "market_unsupported_handicap": 7579,
+      "market_unsupported_odd_even": 1364,
+      "market_unsupported_period": 28079,
+      "market_unsupported_win_to_nil": 909
     }
   },
-  "pending_fixtures": 278,
+  "pending_fixtures": 633,
   "quoted_fixtures": [
     {
-      "away": "Energie Cottbus",
-      "fixture_id": "id1000004472513924",
-      "home": "1. FC Heidenheim"
+      "away": "Manchester City",
+      "fixture_id": "id1000001772221334",
+      "home": "Aston Villa"
     },
     {
-      "away": "Avispa Fukuoka",
-      "fixture_id": "id1000019672149820",
-      "home": "Tokyo Verdy"
+      "away": "Degerfors IF",
+      "fixture_id": "id1000004067126826",
+      "home": "BK Hacken"
     },
     {
-      "away": "Melbourne City FC",
-      "fixture_id": "id1000013672897400",
-      "home": "Melbourne Victory FC"
-    },
-    {
-      "away": "Auckland FC",
-      "fixture_id": "id1000013672897398",
-      "home": "Western Sydney Wanderers"
-    },
-    {
-      "away": "Kashiwa Reysol",
-      "fixture_id": "id1000019672149814",
-      "home": "Kashima Antlers"
-    },
-    {
-      "away": "Machida Zelvia",
-      "fixture_id": "id1000019672149830",
-      "home": "Vissel Kobe"
-    },
-    {
-      "away": "Perth Glory FC",
-      "fixture_id": "id1000189473928148",
-      "home": "Adelaide United FC"
-    },
-    {
-      "away": "Ryazan VDV",
-      "fixture_id": "id1001363569592674",
-      "home": "Zhfk Yenisey Krasnoyarsk"
-    },
-    {
-      "away": "Sutherland Sharks",
-      "fixture_id": "id1004850774827286",
-      "home": "Canberra Croatia FC"
-    },
-    {
-      "away": "Kyoto Sanga FC",
-      "fixture_id": "id1000019672149826",
-      "home": "Gamba Osaka"
-    },
-    {
-      "away": "Guangxi Hengchen FC",
-      "fixture_id": "id1000078269456742",
-      "home": "Dalian Kun City"
-    },
-    {
-      "away": "AC Taipei",
-      "fixture_id": "id1004263174796864",
-      "home": "New Taipei Hang Yuen"
-    },
-    {
-      "away": "PSIM Yogyakarta",
-      "fixture_id": "id1005390875689112",
-      "home": "Borneo FC Samarinda"
-    },
-    {
-      "away": "Beijing Guoan",
-      "fixture_id": "id1000064968995412",
-      "home": "Henan"
-    },
-    {
-      "away": "Shanghai Shenhua FC",
-      "fixture_id": "id1000064968995414",
-      "home": "Shenzhen Peng City"
+      "away": "Swindon Town",
+      "fixture_id": "id1000002572342284",
+      "home": "Bristol Rovers"
     }
   ],
-  "reserved_requests": 20,
-  "rows": 70931,
+  "reserved_requests": 14,
+  "rows": 20448,
   "schema": 1,
-  "slate_candidate_fixtures": 46,
+  "slate_candidate_fixtures": 45,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 3,
-  "slate_provider_overlap_fixtures": 27,
+  "slate_priority_fixtures": 6,
+  "slate_provider_overlap_fixtures": 26,
   "slate_unmatched_fixtures": [
     {
       "away": "Parma",

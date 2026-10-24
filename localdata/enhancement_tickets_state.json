@@ -550,82 +550,137 @@
         {
           "legs": [
             {
-              "match": "Tokyo Verdy vs Avispa Fukuoka",
-              "pick": "under",
-              "prob": 0.8283,
-              "odds": 1.44,
+              "match": "Aston Villa vs Manchester City",
+              "pick": "home",
+              "prob": 0.8136,
+              "odds": 1.4,
               "result": null,
-              "market": "match_under_35",
-              "price_book": "1xbet",
+              "market": "home_over_05",
+              "price_book": "20bet",
               "price_source": "oddspapi",
               "cohort_evidence": {
-                "rate": 0.8283,
-                "n": 99,
-                "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                "as_of_exclusive": "2026-10-24",
-                "market": "match_under_35",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 82,
-                "cohort_lower_bound": 0.7421074301408758,
-                "price_context": {
-                  "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                  "selection": "under",
-                  "league": "J1 League",
-                  "book": "1xbet",
-                  "source": "oddspapi",
-                  "price": 1.44,
-                  "captured_at": "2026-10-24T05:11:01.518817+00:00",
-                  "decision_at": "2026-10-24T07:14:11+02:00",
-                  "kickoff": "2026-10-24T06:00:00+00:00"
-                }
-              },
-              "label": "Match Under 3.5 Goals",
-              "floor": 1.64,
-              "floor_basis": "inherited",
-              "league": "J1 League",
-              "price_at": "2026-10-24T05:11:01.518817+00:00",
-              "price_kickoff": "2026-10-24T06:00:00.000Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-24",
-                "Tokyo Verdy",
-                "Avispa Fukuoka"
-              ]
-            },
-            {
-              "match": "Melbourne Victory vs Melbourne City",
-              "pick": "under",
-              "prob": 0.7621,
-              "odds": 1.3,
-              "result": null,
-              "market": "match_under_45",
-              "price_book": "1xbet",
-              "price_source": "oddspapi",
-              "cohort_evidence": {
-                "rate": 0.7621,
+                "rate": 0.8136,
                 "n": 601,
                 "contract_id": "pfc_27e0f725859bc708f95c58a3",
                 "as_of_exclusive": "2026-10-24",
-                "market": "match_under_45",
+                "market": "home_over_05",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 458,
-                "cohort_lower_bound": 0.726422575171453,
+                "cohort_min_hits": 489,
+                "cohort_lower_bound": 0.7805555821223059,
+                "price_context": {
+                  "contract_id": "pfc_27e0f725859bc708f95c58a3",
+                  "selection": "over",
+                  "league": "Premier League",
+                  "book": "20bet",
+                  "source": "oddspapi",
+                  "price": 1.4,
+                  "captured_at": "2026-10-24T07:22:59.225208+00:00",
+                  "decision_at": "2026-10-24T09:23:38+02:00",
+                  "kickoff": "2026-10-24T11:30:00+00:00"
+                }
+              },
+              "label": "Home Team Over 0.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Premier League",
+              "price_at": "2026-10-24T07:22:59.225208+00:00",
+              "price_kickoff": "2026-10-24T11:30:00.000Z",
+              "price_provenance": null,
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-24",
+                "Aston Villa",
+                "Manchester City"
+              ]
+            },
+            {
+              "match": "Bristol Rovers vs Swindon Town",
+              "pick": "away",
+              "prob": 0.7454,
+              "odds": 1.42,
+              "result": null,
+              "market": "away_over_05",
+              "price_book": "20bet",
+              "price_source": "oddspapi",
+              "cohort_evidence": {
+                "rate": 0.7454,
+                "n": 601,
+                "contract_id": "pfc_27e0f725859bc708f95c58a3",
+                "as_of_exclusive": "2026-10-24",
+                "market": "away_over_05",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 448,
+                "cohort_lower_bound": 0.7091139528517696,
+                "price_context": {
+                  "contract_id": "pfc_27e0f725859bc708f95c58a3",
+                  "selection": "over",
+                  "league": "League Two",
+                  "book": "20bet",
+                  "source": "oddspapi",
+                  "price": 1.42,
+                  "captured_at": "2026-10-24T07:23:25.888488+00:00",
+                  "decision_at": "2026-10-24T09:23:38+02:00",
+                  "kickoff": "2026-10-24T11:30:00+00:00"
+                }
+              },
+              "label": "Away Team Over 0.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "League Two",
+              "price_at": "2026-10-24T07:23:25.888488+00:00",
+              "price_kickoff": "2026-10-24T11:30:00.000Z",
+              "price_provenance": null,
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-24",
+                "Bristol Rovers",
+                "Swindon Town"
+              ]
+            }
+          ],
+          "odds": 1.99,
+          "stake_pct": 4.3841,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
+              "match": "Melbourne Victory vs Melbourne City",
+              "pick": "away",
+              "prob": 0.812,
+              "odds": 1.533,
+              "result": null,
+              "market": "away_under_25",
+              "price_book": "888sport",
+              "price_source": "oddspapi",
+              "cohort_evidence": {
+                "rate": 0.812,
+                "n": 601,
+                "contract_id": "pfc_27e0f725859bc708f95c58a3",
+                "as_of_exclusive": "2026-10-24",
+                "market": "away_under_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 488,
+                "cohort_lower_bound": 0.7787968051087096,
                 "price_context": {
                   "contract_id": "pfc_27e0f725859bc708f95c58a3",
                   "selection": "over",
                   "league": "A-League Men",
-                  "book": "1xbet",
+                  "book": "888sport",
                   "source": "oddspapi",
-                  "price": 1.3,
+                  "price": 1.533,
                   "captured_at": "2026-10-24T05:11:14.359478+00:00",
-                  "decision_at": "2026-10-24T07:14:11+02:00",
+                  "decision_at": "2026-10-24T09:23:38+02:00",
                   "kickoff": "2026-10-24T08:40:00+00:00"
                 }
               },
-              "label": "Match Under 4.5 Goals",
+              "label": "Away Team Under 2.5 Goals",
               "floor": null,
-              "floor_basis": "inherited",
+              "floor_basis": "none",
               "league": "A-League Men",
               "price_at": "2026-10-24T05:11:14.359478+00:00",
               "price_kickoff": "2026-10-24T08:40:00.000Z",
@@ -636,9 +691,53 @@
                 "Melbourne Victory",
                 "Melbourne City"
               ]
+            },
+            {
+              "match": "BK H\u00e4cken vs Degerfors IF",
+              "pick": "away",
+              "prob": 0.7454,
+              "odds": 1.533,
+              "result": null,
+              "market": "away_over_05",
+              "price_book": "888sport",
+              "price_source": "oddspapi",
+              "cohort_evidence": {
+                "rate": 0.7454,
+                "n": 601,
+                "contract_id": "pfc_27e0f725859bc708f95c58a3",
+                "as_of_exclusive": "2026-10-24",
+                "market": "away_over_05",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 448,
+                "cohort_lower_bound": 0.7091139528517696,
+                "price_context": {
+                  "contract_id": "pfc_27e0f725859bc708f95c58a3",
+                  "selection": "over",
+                  "league": "Allsvenskan",
+                  "book": "888sport",
+                  "source": "oddspapi",
+                  "price": 1.533,
+                  "captured_at": "2026-10-24T07:23:12.471395+00:00",
+                  "decision_at": "2026-10-24T09:23:38+02:00",
+                  "kickoff": "2026-10-24T13:00:00+00:00"
+                }
+              },
+              "label": "Away Team Over 0.5 Goals",
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Allsvenskan",
+              "price_at": "2026-10-24T07:23:12.471395+00:00",
+              "price_kickoff": "2026-10-24T13:00:00.000Z",
+              "price_provenance": null,
+              "shadow": true,
+              "fixture_key": [
+                "2026-10-24",
+                "BK H\u00e4cken",
+                "Degerfors IF"
+              ]
             }
           ],
-          "odds": 1.87,
+          "odds": 2.35,
           "stake_pct": 4.3841,
           "results": [
             null,
@@ -674,7 +773,7 @@
                   "source": "theoddsapi",
                   "price": 1.75,
                   "captured_at": "2026-10-23T22:20:00.220958+00:00",
-                  "decision_at": "2026-10-24T07:14:11+02:00",
+                  "decision_at": "2026-10-24T09:23:38+02:00",
                   "kickoff": "2026-10-24T15:30:00+00:00"
                 }
               },
@@ -693,7 +792,7 @@
               ]
             },
             {
-              "match": "BK H\u00e4cken vs Degerfors IF",
+              "match": "Wolverhampton vs Watford",
               "pick": "over",
               "prob": 0.6522,
               "odds": 1.56,
@@ -713,130 +812,31 @@
                 "price_context": {
                   "contract_id": "pfc_27e0f725859bc708f95c58a3",
                   "selection": "over",
-                  "league": "Allsvenskan",
+                  "league": "Championship",
                   "book": "GTbets",
                   "source": "theoddsapi",
                   "price": 1.56,
-                  "captured_at": "2026-10-23T22:19:59.889412+00:00",
-                  "decision_at": "2026-10-24T07:14:11+02:00",
-                  "kickoff": "2026-10-24T13:00:00+00:00"
-                }
-              },
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7405948092364731,
-              "floor_basis": "inherited",
-              "league": "Allsvenskan",
-              "price_at": "2026-10-23T22:19:59.889412+00:00",
-              "price_kickoff": "2026-10-24T13:00:00Z",
-              "price_provenance": null,
-              "shadow": true,
-              "fixture_key": [
-                "2026-10-24",
-                "BK H\u00e4cken",
-                "Degerfors IF"
-              ]
-            }
-          ],
-          "odds": 2.73,
-          "stake_pct": 4.3841,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Neom SC vs Abha",
-              "pick": "over",
-              "prob": 0.6522,
-              "odds": 1.7,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Unibet (NL)",
-              "price_source": "theoddsapi",
-              "cohort_evidence": {
-                "rate": 0.6522,
-                "n": 601,
-                "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                "as_of_exclusive": "2026-10-24",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 392,
-                "cohort_lower_bound": 0.6133119953637131,
-                "price_context": {
-                  "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                  "selection": "over",
-                  "league": "Saudi Pro League",
-                  "book": "Unibet (NL)",
-                  "source": "theoddsapi",
-                  "price": 1.7,
-                  "captured_at": "2026-10-23T22:20:03.717053+00:00",
-                  "decision_at": "2026-10-24T07:14:11+02:00",
+                  "captured_at": "2026-10-24T05:10:44.450979+00:00",
+                  "decision_at": "2026-10-24T09:23:38+02:00",
                   "kickoff": "2026-10-24T14:00:00+00:00"
                 }
               },
               "label": "Match Over 2.5 Goals",
               "floor": 1.7405948092364731,
-              "floor_basis": "market",
-              "league": "Saudi Pro League",
-              "price_at": "2026-10-23T22:20:03.717053+00:00",
+              "floor_basis": "inherited",
+              "league": "Championship",
+              "price_at": "2026-10-24T05:10:44.450979+00:00",
               "price_kickoff": "2026-10-24T14:00:00Z",
               "price_provenance": null,
               "shadow": true,
               "fixture_key": [
                 "2026-10-24",
-                "Neom SC",
-                "Abha"
-              ]
-            },
-            {
-              "match": "Al-Kholood vs Al-Ettifaq",
-              "pick": "over",
-              "prob": 0.6522,
-              "odds": 1.66,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Unibet (NL)",
-              "price_source": "theoddsapi",
-              "cohort_evidence": {
-                "rate": 0.6522,
-                "n": 601,
-                "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                "as_of_exclusive": "2026-10-24",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 392,
-                "cohort_lower_bound": 0.6133119953637131,
-                "price_context": {
-                  "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                  "selection": "over",
-                  "league": "Saudi Pro League",
-                  "book": "Unibet (NL)",
-                  "source": "theoddsapi",
-                  "price": 1.66,
-                  "captured_at": "2026-10-23T22:20:03.481504+00:00",
-                  "decision_at": "2026-10-24T07:14:11+02:00",
-                  "kickoff": "2026-10-24T15:05:00+00:00"
-                }
-              },
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7405948092364731,
-              "floor_basis": "market",
-              "league": "Saudi Pro League",
-              "price_at": "2026-10-23T22:20:03.481504+00:00",
-              "price_kickoff": "2026-10-24T15:05:00Z",
-              "price_provenance": null,
-              "shadow": true,
-              "fixture_key": [
-                "2026-10-24",
-                "Al-Kholood",
-                "Al-Ettifaq"
+                "Wolverhampton",
+                "Watford"
               ]
             }
           ],
-          "odds": 2.82,
+          "odds": 2.73,
           "stake_pct": 4.384,
           "results": [
             null,
@@ -896,6 +896,11 @@
     },
     "2026-10-23": {
       "frozen_at": "2026-10-23T12:11:37+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-10-24": {
+      "frozen_at": "2026-10-24T09:56:15+02:00",
       "final": true,
       "lock_source": "state"
     }

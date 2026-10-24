@@ -62,7 +62,7 @@
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-24' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -158,15 +158,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 408,
+      "join_matched_rows": 870,
       "join_miss_counts": {
-        "fixture_key_miss": 40733,
-        "market_unsupported": 25173,
-        "no_pick_for_fixture": 9849
+        "fixture_key_miss": 43154,
+        "market_unsupported": 32402,
+        "no_pick_for_fixture": 20185
       },
-      "op_matched": 3,
-      "op_raw": 76163,
-      "op_usable": 76163,
+      "op_matched": 5,
+      "op_raw": 96611,
+      "op_usable": 96611,
       "reason": null,
       "status": "cache_only"
     },
@@ -185,12 +185,12 @@
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 42,
+      "join_matched_rows": 41,
       "join_miss_counts": {
-        "fixture_key_miss": 20725,
-        "no_pick_for_fixture": 700
+        "fixture_key_miss": 20742,
+        "no_pick_for_fixture": 684
       },
-      "pa_matched": 41,
+      "pa_matched": 40,
       "pa_raw": 21467,
       "pa_scored": 21467,
       "reason": null,
