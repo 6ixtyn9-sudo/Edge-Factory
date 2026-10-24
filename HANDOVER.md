@@ -11930,3 +11930,26 @@ All 851 operational SHA256s unchanged. Focused 66 passed in 4.49s; final broader
 retry sleeps explain 51.01s of broader runtime. Full suite and independent agent
 review not claimed; no capture/dispatch/recut/merge. Details and second-review
 prompt: docs/operator/audits/DATA-ENRICHMENT-PIPES-CASE-2026-10-21.md section5.
+
+### 24 October 2026 — live ENH cohort result-status repair
+
+Operator explicitly authorized live ENH behavior changes, superseding the prior
+research-only scope for this repair. Existing `enhancement_cohort` now requests
+status-screened results from the existing observation collector: postponed,
+cancelled, abandoned, and explicitly AET/PEN results without separated regulation
+scores cannot contribute to live ENH sample size or market rates. Conflicting
+score pairs were already rejected on this path; no first-match fix was needed.
+Boolean goals are not scores. Contradictory status evidence quarantines that
+fixture irrespective of donor order; no inferred FT score or cash void is made.
+Main/miner default collection is unchanged; ENH's build-scoped cache is separate.
+No new scripts/services/registries. All existing market predicates, N30,
+60–90% band, >0.8 payout screen and 25% free-bank staking remain unchanged.
+Regression exercises the production fetch and dynamic-enhancement emission:
+30 including one disputed result becomes 29 displayed observations, with no
+executable ENH candidate. Clean FT rates and cached/uncached parity are preserved.
+Validation: 4305 passed, 1 skipped; ten new regression cases in the existing
+ENH evidence-integrity test file. Operational records and frozen tickets untouched.
+Code is changed on arena/76daeb2a-edge-factory, not merged/deployed or dispatched.
+Warehouse absent locally: no current-production pool delta or improved ROI claim.
+Unmarked legacy score periods remain unknown; this is a bounded status repair,
+not complete occurrence adjudication, a trained model or completed v2 census.

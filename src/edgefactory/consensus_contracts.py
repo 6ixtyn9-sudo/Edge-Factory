@@ -13,6 +13,7 @@ from datetime import date
 
 from edgefactory.identity import source_team_key
 from edgefactory.market_registry import get_bettable_markets
+from edgefactory.settlement import terminal_event_disposition
 
 SCHEMA = "post_forebet_v1"
 POST_FOREBET_START = "2026-06-13"
@@ -137,7 +138,13 @@ def _remine_odds(rows, market, side):
     return min(prices) if prices else None
 
 
-def collect_observations(con, *, start, as_of, include_snapshot=False):
+def collect_observations(con, *, start, as_of, include_snapshot=False,
+                         regulation_only=False):
+    """Collect once; ENH can exclude disputed event status/score periods.
+
+    Default contract mining/main semantics are unchanged. Missing status on a
+    legacy score is not a verified period, but is not invented as a disposition.
+    """
     coverage, source_rows = {}, {}
     for source in (*REMINE_SOURCES, "betexplorer"):
         # Raw predictions must win over a pre-settled convenience view:
@@ -173,17 +180,32 @@ def collect_observations(con, *, start, as_of, include_snapshot=False):
     # categorical *_settled scores which may have been inherited from Forebet.
     donors = {"zulubet", "statarea", "vitibet", "scoutingstats", "prosoccer",
               "bettingclosed", "betexplorer"}
+    blocked = set()
     for source in donors:
         for row in source_rows.get(source, []):
             key = _remine_key(row)
             if key is None or str(row.get("result_source") or source) == "forebet":
                 continue
+            if regulation_only:
+                status = str(row.get("status") or "").strip().upper()
+                # A score-shaped value is not proof of a played regulation
+                # result. Keep contradictory status/period evidence out of
+                # live ENH rates, regardless of donor or row order. No cash
+                # void, guessed 90-minute score or alias override is inferred.
+                if (terminal_event_disposition(status) or status in {
+                        "AET", "PEN", "PENS", "PENALTIES", "AFTER EXTRA TIME",
+                        "AFTER EXTRA-TIME", "AFTER PENALTIES"}):
+                    blocked.add(key)
             for period, prefix in (("ft", ""), ("ht", "ht_")):
+                if regulation_only and any(isinstance(row.get(prefix + f), bool)
+                                           for f in ("hs", "gs")):
+                    continue
                 pair = _score_pair(row, prefix)
                 if pair is not None:
                     scores[key][period].add(pair)
     resolved = {key: {period: next(iter(values)) for period, values in periods.items()
-                      if len(values) == 1} for key, periods in scores.items()}
+                      if len(values) == 1} for key, periods in scores.items()
+                if key not in blocked}
     observations = defaultdict(dict)
     ambiguous = set()
     for source in REMINE_SOURCES:
@@ -385,15 +407,16 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None):
     # Caller-owned, read-phase-only cache. Never shared across warehouse builds
     # or invocations; validation above still runs on every request.
     start = edge['mining_window']['start']
-    snapshot_key = ('observations', con, start, as_of)
-    cohort_key = ('cohort', con, identity, start, as_of, selection, min_n)
+    snapshot_key = ('observations', con, start, as_of, 'enh_regulation')
+    cohort_key = ('cohort', con, identity, start, as_of, selection, min_n, 'enh_regulation')
     if cache is not None and cohort_key in cache:
         cached = cache[cohort_key]
         return dict(cached) if cached is not None else None
     if cache is not None and snapshot_key in cache:
         snapshot = cache[snapshot_key]
     else:
-        snapshot = collect_observations(con, start=start, as_of=as_of)
+        snapshot = collect_observations(con, start=start, as_of=as_of,
+                                        regulation_only=True)
         if cache is not None:
             cache[snapshot_key] = snapshot
     _, observations, ambiguous, resolved, _ = snapshot

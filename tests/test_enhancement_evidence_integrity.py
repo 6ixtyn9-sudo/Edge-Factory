@@ -437,3 +437,66 @@ def test_all_goal_markets_reach_real_cohort_pricing_and_complete_acca(tmp_path, 
     assert len(plan) == 1
     assert {l['market'] for l in plan[0]['legs']} == {expected}
     assert all(l['price_source'] == 'theoddsapi' for l in plan[0]['legs'])
+
+
+@pytest.mark.parametrize('status', [
+    'POSTPONED', 'Cancelled', 'ABANDONED', 'AET', 'PEN',
+    'After extra time', 'After penalties',
+])
+def test_live_enh_cohort_cannot_count_disposition_or_unseparated_period(status, monkeypatch):
+    rows = observations(30)
+    rows[0]['status'] = status
+    con = connection(rows)
+    recipe = edge()
+    # The shared collector's default/main contract population is unchanged.
+    _, obs, ambiguous, resolved, _ = cc.collect_observations(
+        con, start='2026-06-13', as_of='2026-10-20')
+    assert len(list(cc.contract_rows(obs, ambiguous, resolved, recipe))) == 30
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    # This is the production caller, not an audit-only resolver. With one
+    # disputed label removed, 29 cannot manufacture the existing N30 gate.
+    pick = parent(recipe)
+    assert pt.fetch_match_cohort(con, 'home', 80., 1, pick=pick) is None
+    emitted = pt.compute_dynamic_enhancement(con, dict(pick), {})
+    # The existing descriptive display may show n=29; it must not lend that
+    # thin sample to any executable-market candidate.
+    assert emitted['statistical_profile_status'] == 'available'
+    assert emitted['statistical_profile']['n'] == 29
+    assert emitted['event_notes'] == []
+    assert emitted['recommended_enhancement'] is None
+    assert {c['reason'] for c in emitted['enh_candidate_log']} == {'no_realized_cohort'}
+    clean = cc.enhancement_cohort(con, recipe, as_of=pick['date'],
+                                  selection='home', min_n=1)
+    assert clean['n'] == 29
+    assert clean['over25'] == pytest.approx(14 / 29)
+    assert clean['h_o25'] == pytest.approx(14 / 29)
+    assert clean['btts'] == 0
+
+
+def test_live_enh_status_conflict_is_not_resolved_by_donor_order():
+    rows = observations()
+    rows[0]['status'] = 'FT'
+    # Equal score values do not resolve the occurrence/status contradiction.
+    rows.append(dict(rows[0], status='POSTPONED'))
+    for ordered in (rows, list(reversed(rows))):
+        cohort = cc.enhancement_cohort(connection(ordered), edge(),
+                                       as_of='2026-10-20', selection='home', min_n=1)
+        assert cohort['n'] == 99
+        assert cohort['over25'] == pytest.approx(49 / 99)
+
+
+def test_live_enh_boolean_goals_are_not_a_valid_score():
+    # Keep a native BOOLEAN warehouse column, rather than coercing a mixed
+    # Python bool/int series to integer before the production reader sees it.
+    rows = [dict(r, hs=True) for r in observations()]
+    assert cc.enhancement_cohort(connection(rows), edge(),
+                                 as_of='2026-10-20', selection='home', min_n=1) is None
+
+
+def test_live_enh_clean_scores_keep_existing_rates_and_build_cache():
+    rows = [dict(r, status='FT') for r in observations()]
+    con = connection(rows)
+    kwargs = dict(as_of='2026-10-20', selection='home', min_n=30)
+    cohort = cc.enhancement_cohort(con, edge(), cache={}, **kwargs)
+    assert cohort == cc.enhancement_cohort(con, edge(), **kwargs)
+    assert cohort['n'] == 100 and cohort['over25'] == .5
