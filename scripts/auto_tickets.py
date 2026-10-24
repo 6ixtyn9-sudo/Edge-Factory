@@ -3373,6 +3373,75 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
         # groups; keep alternatives until a complete card can be assembled.
         accas, used = [], set()
         positions = {id(leg): i for i, leg in enumerate(pool)}
+        fixture_keys = {id(leg): _fixture_key(leg) for leg in pool}
+
+        def pair_order(pair):
+            return tuple(sorted(positions[id(l)] for l in pair))
+
+        def completion(groups, limit, blocked=frozenset()):
+            """Exact capacity witness up to three pairs, not a joint score.
+
+            A maximal greedy matching either fills the request immediately,
+            or its <=4 endpoints cover every edge. Keep all cover-cover edges
+            and at most 2*limit outside neighbours per cover vertex. Any
+            discarded matched neighbour can be replaced by a retained unused
+            one: a limit-pair matching uses at most 2*limit vertices. This
+            bounds the rescue graph to <=30 edges for limit=3, regardless of
+            the quote population. Search depth is at most three.
+            """
+            if limit <= 0:
+                return []
+            groups = [[l for l in group if fixture_keys[id(l)] not in blocked]
+                      for group in groups]
+            greedy, taken = [], set()
+            for group in groups:
+                free = [l for l in group if fixture_keys[id(l)] not in taken]
+                for pair in pair_legs(free, "consecutive", 2):
+                    greedy.append(pair)
+                    taken.update(fixture_keys[id(l)] for l in pair)
+                    if len(greedy) == limit:
+                        return greedy
+            if not greedy:
+                return []
+            # Greedy is maximal. Every group now has <=1 uncovered fixture;
+            # a failed limit=3 request also means each group has <=5 fixtures.
+            edges = {}
+            for group in groups:
+                for i, left in enumerate(group):
+                    for right in group[i + 1:]:
+                        pair = [left, right]
+                        key = frozenset(fixture_keys[id(l)] for l in pair)
+                        if key not in edges or pair_order(pair) < pair_order(edges[key]):
+                            edges[key] = pair
+            neighbours = {v: set() for v in taken}
+            kernel = []
+            for pair in sorted(edges.values(), key=pair_order):
+                a, b = (fixture_keys[id(l)] for l in pair)
+                if a in taken and b in taken:
+                    kernel.append((pair, frozenset((a, b))))
+                else:
+                    inside, outside = (a, b) if a in taken else (b, a)
+                    if len(neighbours[inside]) < 2 * limit:
+                        neighbours[inside].add(outside)
+                        kernel.append((pair, frozenset((a, b))))
+
+            def search(start, used, needed):
+                if not needed:
+                    return []
+                for i in range(start, len(kernel)):
+                    pair, fixtures = kernel[i]
+                    if fixtures.isdisjoint(used):
+                        tail = search(i + 1, used | fixtures, needed - 1)
+                        if tail is not None:
+                            return [pair] + tail
+                return None
+
+            for size in range(limit, len(greedy), -1):
+                found = search(0, frozenset(), size)
+                if found is not None:
+                    return found
+            return greedy
+
         while len(accas) < max_accas and k == 2:
             groups = {}
             for leg in pool:
@@ -3393,36 +3462,24 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
                 break
             # Compare complete executable pairs in the existing ranked order,
             # not by an invented joint probability or worst-case return.
-            def pair_order(pair):
-                return tuple(sorted(positions[id(l)] for l in pair))
-
             chosen = min(candidates, key=pair_order)
-            if remaining == 2 and ml_ranking:
-                # Preserve flag-off/no-score and non-ML recipes exactly.
-                # Live two-acca card: a greedy pair can strand every other
-                # book/source group even when four fixtures can be covered.
-                fixture_sets = [{_fixture_key(l) for l in group} for group in ranked_groups]
-
-                def leaves_pair(pair):
-                    taken = {_fixture_key(l) for l in pair}
-                    return any(len(fixtures - taken) >= 2 for fixtures in fixture_sets)
-
-                if not leaves_pair(chosen):
-                    viable = [pair for pair in candidates if leaves_pair(pair)]
-                    if not viable:
-                        # Recipe pairs may ALL share the same two fixtures.
-                        # Since the greedy pair leaves no follow-up, every
-                        # group has <=3 fixtures (a group of 4 always leaves
-                        # 2). Exhaust those groups' pairs, at most 3/group;
-                        # no unbounded card search or new probability gate.
-                        for group in ranked_groups:
-                            for i, left in enumerate(group[:3]):
-                                for right in group[i + 1:3]:
-                                    pair = [left, right]
-                                    if leaves_pair(pair):
-                                        viable.append(pair)
-                    if viable:
-                        chosen = min(viable, key=pair_order)
+            if ml_ranking and remaining in (2, 3):
+                # ENH builds up to THREE accas; MAX_ACCAS=2 is Main's default.
+                # Keep the original recipe choice whenever it cannot reduce
+                # achievable capacity. Exact flag-off/no-score recipes stay
+                # untouched. Rescue can depart from barbell/consecutive.
+                blocked = {fixture_keys[id(l)] for l in chosen}
+                follow = completion(ranked_groups, remaining - 1, blocked)
+                if len(follow) < remaining - 1:
+                    best = completion(ranked_groups, remaining)
+                    if len(best) > 1 + len(follow):
+                        for pair in sorted(candidates, key=pair_order):
+                            blocked = {fixture_keys[id(l)] for l in pair}
+                            if len(completion(ranked_groups, len(best) - 1, blocked)) == len(best) - 1:
+                                chosen = pair
+                                break
+                        else:
+                            chosen = min(best, key=pair_order)
             accas.append(chosen)
             used.update(_fixture_key(leg) for leg in chosen)
     else:
@@ -5491,10 +5548,9 @@ def cmd_enhancement(args, st, *, scores=None) -> int:
     should_freeze = (str(target) == now.strftime("%Y-%m-%d")
                      and now.hour >= FREEZE_HOUR and not args.force)
     fixture_report: dict = {}
-    # THE recipe and the shared staking arithmetic: the same two calls the
-    # main lane makes, so the pairing and the percentages cannot drift from
-    # it. The enhancement lane's own part is the pool (floor-cleared
-    # enhancement legs) and nothing else.
+    # Shared selector/staking, with the ENH-specific THREE-acca limit and
+    # executable book/source competition. Main keeps MAX_ACCAS=2; inspecting
+    # that default alone does not describe the live enhancement builder.
     plan = plan_day(pool, bank_eff, stake_frac=ENHANCEMENT_LANE.stake_frac,
                     max_accas=ENH_MAX_ACCAS, rank=ENHANCEMENT_RANK, enhancements=True,
                     fixture_report=fixture_report)
