@@ -14,7 +14,7 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 24,
+    "ledger_entries": 25,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -25,42 +25,42 @@
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "pogonszczecin|radomiakradom",
+        "fixture": "charlestonbattery|indyeleven",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "stmirren|dundee",
+        "fixture": "leon|toluca",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "scunthorpeunited|woking",
+        "fixture": "wislakrakow|rakowczestochowa",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "falkirk|kilmarnock",
+        "fixture": "orlandocity|newyorkcity",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "valencia|villarreal",
+        "fixture": "columbuscrew|toronto",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "neom|abha",
+        "fixture": "atlantaunited|chicagofire",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -71,12 +71,12 @@
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 12
+      "88739ee5": 6
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=12 [pools=2 cap=90 reserve=20 spent=8 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=6 [pools=2 cap=90 reserve=20 spent=8 month=2026-10] -> approved",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1,
@@ -91,7 +91,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 12,
+    "spendable": 6,
     "verdict": "approved"
   },
   "provenance": {
