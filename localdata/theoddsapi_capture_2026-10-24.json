@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 193,
-  "captured_at": "2026-10-24T16:24:54+00:00",
+  "captured_at": "2026-10-24T19:21:57+00:00",
   "date": "2026-10-24",
   "due_reasons": {},
   "errors": [],
@@ -24,10 +24,9 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
+    "kickoff_already_passed": 2,
     "kickoff_mismatch": 1,
     "priced": 30,
-    "priced_close_window_not_open": 1,
     "retry_cooldown": 161
   },
   "skipped": [
@@ -37,7 +36,7 @@
     "Bod\u00f8 / Glimt|V\u00e5lerenga (priced)",
     "Djurg\u00e5rden|\u00d6rgryte (priced)",
     "WARN kickoff-mismatch Lazio|Parma: pick legacy display says 19:45 SAST, captured rows say 20:45 SAST (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Lazio|Parma (priced, close window not open)",
+    "Lazio|Parma (kickoff already passed)",
     "SK Rapid|Austria Lustenau (retry cooldown (6h after failed attempt))",
     "1. FC Heidenheim|Energie Cottbus (retry cooldown (6h after failed attempt))",
     "Chongqing Tonglianglong FC|Qingdao Hainiu (priced)",

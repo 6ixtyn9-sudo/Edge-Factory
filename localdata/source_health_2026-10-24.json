@@ -24,10 +24,10 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 10,
+        "fixture_key_miss": 11,
         "market_unmapped": 5,
         "market_unsupported": 247,
-        "no_pick_for_fixture": 4,
+        "no_pick_for_fixture": 3,
         "out_of_window": 24,
         "selection_unmapped": 375
       },
@@ -184,12 +184,12 @@
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 8,
+      "join_matched_rows": 5,
       "join_miss_counts": {
-        "fixture_key_miss": 21309,
-        "no_pick_for_fixture": 150
+        "fixture_key_miss": 21368,
+        "no_pick_for_fixture": 94
       },
-      "pa_matched": 8,
+      "pa_matched": 5,
       "pa_raw": 21467,
       "pa_scored": 21467,
       "reason": null,
@@ -327,12 +327,11 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 26,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 1817,
-        "no_pick_for_fixture": 141
+        "fixture_key_miss": 1984
       },
-      "oa_matched": 2,
+      "oa_matched": 0,
       "oa_raw": 1984,
       "oa_usable": 1984,
       "reason": null,
