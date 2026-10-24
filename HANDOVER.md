@@ -12067,3 +12067,77 @@ flag-off comparison, calibration and economic benefit remain unobserved here.
 PR149 verified open/unmerged at reviewed head before this documentation update.
 This entry records engineering acceptance, not merge/dispatch/cash authorization;
 no new scripts, code/config changes, production fit or financial writes.
+
+### 24 October 2026 — live ENH three-acca capacity repair (PR149 follow-up)
+
+Operator asked to fix the missed live three-acca case and produce a Z.ai prompt.
+Correction to the preceding review: MAX_ACCAS=2 is Main's default, but the live
+cmd_enhancement explicitly passes ENH_MAX_ACCAS=3. Treating that as a non-live
+profile was wrong. The merged remaining==2 guard left ENH's first choice unsafe.
+Six admitted AX/BX/AY/CY/BZ/DZ quotes still yielded one ML acca with max_accas=3
+instead of two. Adding EF at W yielded two instead of three. Six regression
+cases (including hidden X={A,B,C},Y={A,B,D},W={E,F}; both pairings) failed on
+the merged baseline before the repair. This follow-up is on
+arena/5c4275c0-edge-factory, based on PR149 merge 9a4088a.
+
+Extended the existing selector's capacity protection to two OR three remaining
+slots, with active ML ordering only. Keep an original recipe pair if it cannot
+reduce achievable capacity; otherwise prefer a viable existing recipe pair,
+then a pair from an exact bounded capacity witness. Local completion helper:
+maximal greedy matching fast path; otherwise its <=4 endpoints cover every edge.
+Retain cover-cover edges plus <=2*limit outside neighbours per cover vertex,
+collapse duplicate fixture edges to their best complete executable quote pair,
+and search <=30 retained edges to depth <=3. An unused retained neighbour can
+replace any dropped matched neighbour without reducing matching size. No new
+script/dependency/service or unbounded quote-population-depth card search.
+Rescue may deliberately depart from barbell/consecutive; it does not optimize
+joint probability or total ML score. No first-decision guarantee above cap 3,
+or guarantee after a nondefault post-selection conviction gate.
+
+Exact ML-off/unscored recipes and Main preserved. Admission, quote/source rules,
+cohort gates, frozen history and shared 25% free-bank cap unchanged. Actual
+per_acca deployment may increase when an underfilled card is repaired; three
+accas share the capped 25%, not 12.5% each beyond the cap. No production writes.
+
+Validation: 18 new regression cases in EXISTING files (17 evidence-integrity,
+1 real cmd_enhancement integration with controlled ML inference but real
+execution-safe admission/pool/selector/staking/evidence/draft). Independent
+subset-DP oracle covers all 32,768 six-fixture simple graphs per pairing mode,
+plus 300 shuffled 8–14-fixture graphs per mode and high-degree source-separated
+positive/negative cases. Feasible recipes, partial pools, exact rollback/no-score,
+Main, fixture exclusivity, metadata and staking also checked. Full suite:
+4350 passed, 1 skipped in 219.82s; XML includes 50 enh_ml evidence tests.
+Earlier total-count receipts are not a same-environment baseline comparison.
+Inline synthetic cross-head probes: 7200 selection AND staking comparisons
+(Main/rollback/unscored) matched merge 9a4088a. Synthetic mean runtimes over
+10 repeats: 519 legs/173 hidden-alternative groups 57.4ms; 404 high-degree
+legs 21.18ms. These are not production slate/fit or profitability evidence.
+Existing red-team prompt updated in place with live call-site checks and proof
+obligations. No merge/dispatch, production fit/census or economic claim.
+
+### 24 October 2026 — PR150 independent engineering review accepted
+
+Received operator-pasted Z.ai verdict on 490b938 (report dated 25 October):
+PASS WITH LIMITS, no P0/P1 defects, merge acceptable as an experimental follow-up.
+Reviewer retracts the prior max3-as-non-live classification, independently
+reproduces baseline 1/2/2 versus repaired 2/3/3 capacity cases, and accepts the
+bounded matching proof. Main/rollback/unscored preservation and live ENH=3
+wiring confirmed in the reported audit. No further code change indicated.
+Reviewer reports focused 17 + 1 cases, 50 ML cases, same-environment collection
+4333 -> 4351 (+18 pure additions), and full 4351 passed/0 skipped (199.35s).
+Arena's 4350 passed/1 skipped receipt has the same total 4351 collected items.
+The audit's initial dependency failures were resolved by respecting duckdb<2;
+no repository fix was required. External probe/JSON/collection artifacts were
+only described in pasted text, not supplied here for byte verification.
+
+Limits retained: capacity preservation applies to active ML, live gate-off,
+up-to-three-acca selection; rescue can depart from the pairing recipe. No
+initial-decision guarantee above cap 3 or after nondefault conviction gates;
+capacity is not globally optimal ranking, calibration or economic validation.
+ML-off/unscored greedy behavior intentionally remains exact. Main stays at two.
+Three accas share the capped 25% free-bank total (~8.3333% each); recovering slots
+can raise actual deployment from 12.5% to 25%, without changing staking policy.
+Production fit/status census, activation coverage, same-day flag-off comparison
+and economic evidence remain unobserved here. PR150 verified open/unmerged at
+490b938 before this documentation-only update. No merge/dispatch/production fit
+or financial writes; engineering acceptance is not deployment authorization.

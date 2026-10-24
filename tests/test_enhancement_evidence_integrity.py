@@ -721,7 +721,7 @@ def test_enh_ml_recommendation_uses_same_separate_rank_groups(monkeypatch):
 
 
 def _overlapping_book_leg(name, book):
-    return dict(match=name, pick='over', prob={'A': .7, 'B': .7, 'C': .9, 'D': .89}[name],
+    return dict(match=name, pick='over', prob={'A': .7, 'B': .7, 'C': .9, 'D': .89, 'E': .85, 'F': .84}[name],
         odds=2., market='match_over_25', price_book=book,
         ml_rank_probability={'A': .95, 'B': .94}.get(name),
         row=dict(date='2026-10-24', home=name, away='Opponent'),
@@ -816,3 +816,162 @@ def test_enh_ml_two_acca_repair_preserves_exact_rollback_and_unscored_recipe(mon
     assert len(pairs) == expected
     if expected == 1:
         assert [[(l['match'], l['price_book']) for l in pair] for pair in pairs] == [[('A', 'X'), ('B', 'X')]]
+
+
+@pytest.mark.parametrize('pairing', ['consecutive', 'barbell'])
+@pytest.mark.parametrize('case,expected', [('two_available', 2), ('three_available', 3), ('hidden_three', 3)])
+def test_enh_ml_live_three_acca_limit_preserves_available_capacity(monkeypatch, pairing, case, expected):
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    slots = ([('A', 'X'), ('B', 'X'), ('C', 'X'), ('A', 'Y'), ('B', 'Y'), ('D', 'Y')]
+             if case == 'hidden_three' else
+             [('A', 'X'), ('B', 'X'), ('A', 'Y'), ('C', 'Y'), ('B', 'Z'), ('D', 'Z')])
+    if expected == 3:
+        slots += [('E', 'W'), ('F', 'W')]
+    pool = [_overlapping_book_leg(*slot) for slot in slots]
+    before = deepcopy(pool)
+    assert at.ENH_MAX_ACCAS == 3 and at.MAX_ACCAS == 2
+    knobs = dict(enhancements=True, max_accas=at.ENH_MAX_ACCAS,
+                 rank=at.ENHANCEMENT_RANK, pairing=pairing, gate_mode='off')
+    pairs = at.select_accas(pool, **knobs)
+    assert len(pairs) == expected
+    names = [l['match'] for pair in pairs for l in pair]
+    assert len(names) == len(set(names)) == expected * 2
+    for pair in pairs:
+        assert len({(l['cohort_evidence']['price_context']['book'],
+                     l['cohort_evidence']['price_context']['source']) for l in pair}) == 1
+    plan = at.plan_day(pool, 100., stake_frac=at.ENHANCEMENT_LANE.stake_frac, **knobs)
+    assert len(plan) == expected
+    assert sum(a['stake_pct'] for a in plan) == pytest.approx(25., abs=.001)
+    assert pool == before
+
+
+def _capacity_graph_pool(edges):
+    # One executable book per graph edge. Any simple fixture graph can be
+    # represented this way; the oracle need not assume clique-shaped books.
+    pool = []
+    for i, edge in enumerate(edges):
+        for name in edge:
+            leg = _overlapping_book_leg('A', f'Book{i}')
+            leg.update(match=name, prob=.7,
+                       ml_rank_probability={'A': .99, 'B': .98}.get(name, .8))
+            leg['row']['home'] = name
+            pool.append(leg)
+    return pool
+
+
+def _fixture_graph_capacity(n, edges):
+    neighbours = [0] * n
+    for a, b in edges:
+        neighbours[a] |= 1 << b
+        neighbours[b] |= 1 << a
+    memo = {0: 0}
+
+    def oracle(vertices):
+        # Independent vertex-subset DP: either leave the first fixture
+        # unmatched or pair it with each available neighbour. No greedy
+        # cover, edge kernel or production helper is used here.
+        if vertices not in memo:
+            first = vertices & -vertices
+            rest = vertices ^ first
+            best = oracle(rest)
+            options = neighbours[first.bit_length() - 1] & rest
+            while options and best < 3:
+                other = options & -options
+                best = max(best, 1 + oracle(rest ^ other))
+                options ^= other
+            memo[vertices] = min(3, best)
+        return memo[vertices]
+
+    return oracle((1 << n) - 1)
+
+
+@pytest.mark.parametrize('pairing', ['consecutive', 'barbell'])
+def test_enh_ml_three_acca_capacity_matches_all_six_fixture_graphs(monkeypatch, pairing):
+    from itertools import combinations
+
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    possible = list(combinations(range(6), 2))
+    for mask in range(1 << len(possible)):
+        edges = [edge for bit, edge in enumerate(possible) if mask & (1 << bit)]
+        pool = _capacity_graph_pool([(chr(65 + a), chr(65 + b)) for a, b in edges])
+        pairs = at.select_accas(pool, enhancements=True, max_accas=at.ENH_MAX_ACCAS,
+                               pairing=pairing, gate_mode='off')
+        assert len(pairs) == _fixture_graph_capacity(6, edges), (pairing, mask, edges)
+        names = [l['match'] for pair in pairs for l in pair]
+        assert len(names) == len(set(names))
+        assert all(len({l['price_book'] for l in pair}) == 1 for pair in pairs)
+
+
+@pytest.mark.parametrize('pairing', ['consecutive', 'barbell'])
+def test_enh_ml_three_acca_larger_shuffled_graphs_match_subset_oracle(monkeypatch, pairing):
+    from itertools import combinations
+    import random
+
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    rng = random.Random(149)
+    for _ in range(300):
+        n = rng.randrange(8, 15)
+        density = rng.choice([.05, .15, .5, .9])
+        edges = [edge for edge in combinations(range(n), 2) if rng.random() < density]
+        pool = _capacity_graph_pool([(chr(65 + a), chr(65 + b)) for a, b in edges])
+        rng.shuffle(pool)
+        pairs = at.select_accas(pool, enhancements=True, max_accas=at.ENH_MAX_ACCAS,
+                               pairing=pairing, gate_mode='off')
+        assert len(pairs) == _fixture_graph_capacity(n, edges), (pairing, n, edges)
+        names = [l['match'] for pair in pairs for l in pair]
+        assert len(names) == len(set(names))
+        assert all(len({l['price_book'] for l in pair}) == 1 for pair in pairs)
+
+
+@pytest.mark.parametrize('extra_edge,expected', [(False, 2), (True, 3)])
+def test_enh_ml_three_acca_high_degree_kernel_and_source_separation(monkeypatch, extra_edge, expected):
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    # Greedy starts A/B. All other edges touch A or B, except the optional
+    # independent C/F edge. Hundreds of external neighbours force the bounded
+    # kernel path; a certificate is A/L0, B/L1 (+C/F), and cover {A,B}
+    # proves the negative case cannot produce three.
+    edges = [('A', 'B')] + [(c, f'L{i}') for c in 'AB' for i in range(100)]
+    if extra_edge:
+        edges.append(('C', 'F'))
+    pool = _capacity_graph_pool(edges)
+    # Same book, different sources: never borrow a partner from another
+    # executable context. These are already-admitted synthetic contexts.
+    for leg in pool:
+        context = leg['cohort_evidence']['price_context']
+        context['source'] = leg['price_book']
+        context['book'] = leg['price_book'] = 'CommonBook'
+    pairs = at.select_accas(pool, enhancements=True, max_accas=at.ENH_MAX_ACCAS,
+                           pairing=at.PAIRING, gate_mode='off')
+    assert len(pairs) == expected
+    names = [l['match'] for pair in pairs for l in pair]
+    assert len(names) == len(set(names))
+    assert all(len({l['cohort_evidence']['price_context']['source'] for l in pair}) == 1
+               for pair in pairs)
+
+
+@pytest.mark.parametrize('flag,scored,expected', [('0', True, 2), ('1', False, 2), ('1', True, 3)])
+def test_enh_ml_three_acca_rollback_and_unscored_recipe_are_exact(monkeypatch, flag, scored, expected):
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', flag)
+    pool = _capacity_graph_pool([('A', 'B'), ('A', 'C'), ('B', 'D'), ('E', 'F')])
+    for leg in pool:
+        leg['prob'] = {'A': .9, 'B': .89}.get(leg['match'], .7)
+        if not scored:
+            leg.pop('ml_rank_probability')
+    pairs = at.select_accas(pool, enhancements=True, max_accas=at.ENH_MAX_ACCAS,
+                           pairing=at.PAIRING, gate_mode='off')
+    assert len(pairs) == expected
+    if expected == 2:
+        assert [[(l['match'], l['price_book']) for l in pair] for pair in pairs] == [
+            [('A', 'Book0'), ('B', 'Book0')], [('E', 'Book3'), ('F', 'Book3')]]
+
+
+@pytest.mark.parametrize('pairing', ['consecutive', 'barbell'])
+def test_enh_ml_three_acca_keeps_feasible_recipe_and_main_limit(monkeypatch, pairing):
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    pool = [_overlapping_book_leg(name, 'X') for name in 'ABCDEF']
+    pairs = at.select_accas(pool, enhancements=True, max_accas=at.ENH_MAX_ACCAS,
+                           pairing=pairing, gate_mode='off')
+    assert pairs == at.pair_legs(pool, pairing, 2)
+    main = at.select_accas(pool, pairing=pairing, gate_mode='off')
+    assert main == at.pair_legs(at.rank_legs(pool, 'prob')[:4], pairing, 2)
+    assert len(main) == at.MAX_ACCAS == 2
