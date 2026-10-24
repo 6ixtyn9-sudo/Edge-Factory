@@ -3325,8 +3325,10 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
 
     pool = rank_legs([l for l in pool if l["odds"] >= floor], rank,
                      rank_caps=rank_caps)
-    if (enhancements and rank == "prob" and rank_caps is None
-            and os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1'):
+    ml_ranking = (enhancements and rank == "prob" and rank_caps is None
+                  and os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1'
+                  and any(finite_probability(l.get('ml_rank_probability')) is not None for l in pool))
+    if ml_ranking:
         # Separate estimands: scored legs first, ordered only against other
         # model scores; cohort-only legs retain their baseline order behind
         # them. A zero ML score is still scored, not a missing prediction.
@@ -3381,15 +3383,46 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
                         or _fixture_key(leg) in used):
                     continue
                 groups.setdefault((context["book"], context["source"]), []).append(leg)
-            candidates = []
+            candidates, ranked_groups = [], []
+            remaining = max_accas - len(accas)
             for group in groups.values():
                 unique, _ = dedup_fixture_legs(group)
-                candidates.extend(pair_legs(unique[:(max_accas - len(accas)) * k], pairing, k))
+                ranked_groups.append(unique)
+                candidates.extend(pair_legs(unique[:remaining * k], pairing, k))
             if not candidates:
                 break
             # Compare complete executable pairs in the existing ranked order,
             # not by an invented joint probability or worst-case return.
-            chosen = min(candidates, key=lambda pair: tuple(sorted(positions[id(l)] for l in pair)))
+            def pair_order(pair):
+                return tuple(sorted(positions[id(l)] for l in pair))
+
+            chosen = min(candidates, key=pair_order)
+            if remaining == 2 and ml_ranking:
+                # Preserve flag-off/no-score and non-ML recipes exactly.
+                # Live two-acca card: a greedy pair can strand every other
+                # book/source group even when four fixtures can be covered.
+                fixture_sets = [{_fixture_key(l) for l in group} for group in ranked_groups]
+
+                def leaves_pair(pair):
+                    taken = {_fixture_key(l) for l in pair}
+                    return any(len(fixtures - taken) >= 2 for fixtures in fixture_sets)
+
+                if not leaves_pair(chosen):
+                    viable = [pair for pair in candidates if leaves_pair(pair)]
+                    if not viable:
+                        # Recipe pairs may ALL share the same two fixtures.
+                        # Since the greedy pair leaves no follow-up, every
+                        # group has <=3 fixtures (a group of 4 always leaves
+                        # 2). Exhaust those groups' pairs, at most 3/group;
+                        # no unbounded card search or new probability gate.
+                        for group in ranked_groups:
+                            for i, left in enumerate(group[:3]):
+                                for right in group[i + 1:3]:
+                                    pair = [left, right]
+                                    if leaves_pair(pair):
+                                        viable.append(pair)
+                    if viable:
+                        chosen = min(viable, key=pair_order)
             accas.append(chosen)
             used.update(_fixture_key(leg) for leg in chosen)
     else:

@@ -718,3 +718,101 @@ def test_enh_ml_recommendation_uses_same_separate_rank_groups(monkeypatch):
     assert len(emitted['event_notes']) > 1
     assert all(n['ml_rank_probability'] is None for n in emitted['event_notes'][1:])
     assert all(n['cohort_rate'] > .55 for n in emitted['event_notes'])
+
+
+def _overlapping_book_leg(name, book):
+    return dict(match=name, pick='over', prob={'A': .7, 'B': .7, 'C': .9, 'D': .89}[name],
+        odds=2., market='match_over_25', price_book=book,
+        ml_rank_probability={'A': .95, 'B': .94}.get(name),
+        row=dict(date='2026-10-24', home=name, away='Opponent'),
+        cohort_evidence=dict(basis='cohort_payout_bound',
+            price_context=dict(book=book, source='theoddsapi')))
+
+
+@pytest.mark.parametrize('overlap', ['three_books', 'hidden_alternatives'])
+def test_enh_ml_complete_pair_selection_does_not_strand_an_available_second_acca(monkeypatch, overlap):
+    # Already-admitted quotes. Each group's best pair is attractive but can
+    # consume fixtures needed by the other groups; a fixed distinct-fixture
+    # population alone does NOT prove greedy pair-count invariance.
+    slots = ([('A', 'X'), ('B', 'X'), ('A', 'Y'), ('C', 'Y'), ('B', 'Z'), ('D', 'Z')]
+             if overlap == 'three_books' else
+             [('A', 'X'), ('B', 'X'), ('C', 'X'), ('A', 'Y'), ('B', 'Y'), ('D', 'Y')])
+    pool = [_overlapping_book_leg(*slot) for slot in slots]
+    before = deepcopy(pool)
+    knobs = dict(enhancements=True, max_accas=2, min_accas=1,
+                 legs_per_acca=2, pairing='consecutive', gate_mode='off')
+    for flag in ('1', '0'):
+        monkeypatch.setenv('EDGE_FACTORY_ENH_ML', flag)
+        pairs = at.select_accas(pool, **knobs)
+        assert len(pairs) == 2
+        assert {l['match'] for pair in pairs for l in pair} == {'A', 'B', 'C', 'D'}
+        for pair in pairs:
+            assert len({l['price_book'] for l in pair}) == 1
+        # The existing shared staking function is still bounded at 25%.
+        plan = at.plan_day(pool, 100., **knobs)
+        assert len(plan) == 2
+        assert sum(a['stake_pct'] for a in plan) == pytest.approx(25.)
+    assert pool == before
+
+
+@pytest.mark.parametrize('pairing', ['consecutive', 'barbell'])
+def test_enh_ml_two_acca_capacity_matches_exhaustive_fixture_book_oracle(monkeypatch, pairing):
+    from itertools import combinations, product
+
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    # Exhaust all 4-fixture/3-book populations with either no quotes or at
+    # least 2 distinct fixtures per book. Singleton groups cannot form an
+    # edge. This independent oracle enumerates every executable pair, not
+    # the production recipe's pair list or its look-ahead implementation.
+    subsets = [()] + [g for n in range(2, 5) for g in combinations('ABCD', n)]
+    for groups in product(subsets, repeat=3):
+        edges = [frozenset(pair) for group in groups for pair in combinations(group, 2)]
+        expected = (2 if any(a.isdisjoint(b) for a, b in combinations(edges, 2))
+                    else int(bool(edges)))
+        pool = [_overlapping_book_leg(name, book)
+                for book, group in zip('XYZ', groups) for name in group]
+        pairs = at.select_accas(pool, enhancements=True, max_accas=2, min_accas=1,
+                               legs_per_acca=2, pairing=pairing, gate_mode='off')
+        assert len(pairs) == expected, (pairing, groups)
+        fixtures = [l['match'] for pair in pairs for l in pair]
+        assert len(fixtures) == len(set(fixtures))
+        assert all(len({l['price_book'] for l in pair}) == 1 for pair in pairs)
+
+
+@pytest.mark.parametrize('flag', ['1', '0'])
+def test_enh_ml_two_acca_lookahead_keeps_feasible_original_recipe(monkeypatch, flag):
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', flag)
+    pool = [_overlapping_book_leg(name, 'X') for name in 'ABCD']
+    for pairing in ('consecutive', 'barbell'):
+        ranked = sorted(pool, key=lambda l: (
+            l['ml_rank_probability'] is not None,
+            l['ml_rank_probability'] if l['ml_rank_probability'] is not None else l['prob'],
+            l['prob'], l['odds']), reverse=True) if flag == '1' else at.rank_legs(pool, 'prob')
+        # With a single executable book the original recipe already covers
+        # all four fixtures, and must not be replaced by arbitrary pairs.
+        expected = at.pair_legs(ranked, pairing, 2)
+        assert at.select_accas(pool, enhancements=True, max_accas=2, min_accas=1,
+            legs_per_acca=2, pairing=pairing, gate_mode='off') == expected
+        # Main remains the shared original recipe, independent of ML flag.
+        assert at.select_accas(pool, enhancements=False, max_accas=2, min_accas=1,
+            legs_per_acca=2, pairing=pairing, gate_mode='off') == at.pair_legs(
+                at.rank_legs(pool, 'prob'), pairing, 2)
+
+
+@pytest.mark.parametrize('flag,scored,expected', [('0', True, 1), ('1', False, 1), ('1', True, 2)])
+def test_enh_ml_two_acca_repair_preserves_exact_rollback_and_unscored_recipe(monkeypatch, flag, scored, expected):
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', flag)
+    pool = [_overlapping_book_leg(name, book)
+            for book, names in [('X', 'ABC'), ('Y', 'ABD')] for name in names]
+    # Make cohort order itself encounter the greedy trap. Rollback must
+    # preserve that exact old recipe, not silently fix unrelated baseline
+    # behavior. Missing ML scores must also retain the old fallback recipe.
+    for leg in pool:
+        leg['prob'] = {'A': .9, 'B': .89, 'C': .7, 'D': .7}[leg['match']]
+        if not scored:
+            leg.pop('ml_rank_probability')
+    pairs = at.select_accas(pool, enhancements=True, max_accas=2, min_accas=1,
+                           legs_per_acca=2, pairing='consecutive', gate_mode='off')
+    assert len(pairs) == expected
+    if expected == 1:
+        assert [[(l['match'], l['price_book']) for l in pair] for pair in pairs] == [[('A', 'X'), ('B', 'X')]]

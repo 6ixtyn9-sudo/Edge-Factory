@@ -12006,3 +12006,38 @@ frozen/settled records unchanged. No merge, dispatch or financial writes.
 Production warehouse fit/status census and same-day flag-off comparison remain
 unobserved here. Prior-day SQL filtering alone is not authenticated point-in-time
 feature or label-known-by evidence; test passes do not close that data limitation.
+
+### 24 October 2026 — PR149 ML pair-capacity counterexample and bounded repair
+
+Operator supplied a second Z.ai PASS WITH LIMITS re-review of c351606. Its
+P2-1/P2-3 closures stand; production activation/economics remain unproved.
+Independently disproved its blanket claim that ML ordering cannot reduce the
+acca count under live gate-off defaults. Six already-admitted fixture/book offers:
+AX, BX, AY, CY, BZ, DZ; cohort A/B=.70, C=.90, D=.89; ML A=.95, B=.94,
+C/D unscored. All odds 2.0, same source. Before this repair, ML selected only
+AX/BX, whereas flag-off selected CY/AY and DZ/BZ. Global used-fixture exclusions
+across book/source groups invalidate a simple distinct-fixture-count argument.
+This is present at c351606, not caused by its rank-group/fit-error fixes.
+
+Added a bounded capacity check inside the existing ENH two-leg selector, only
+with actual ML scores and ML ranking active and exactly two slots remaining.
+Keep the original greedy pair when it leaves any executable follow-up. Otherwise
+prefer an existing recipe pair that does; if all recipe pairs strand the card,
+consider the groups' alternative pairs. At that point every group has at most
+three fixtures: any group of four would always leave two after any chosen pair.
+Thus alternative enumeration is bounded to three pairs per book/source group,
+not a general/exponential card optimizer, new pipeline or invented payout gate.
+The existing rank order breaks ties; book/source and distinct-fixture checks
+remain in force. Exact flag-off, no-score fallback and Main recipes are unchanged,
+including pre-existing cohort-only greedy underfill. No general cardinality
+claim for larger cards or post-selection conviction-gated profiles is made.
+
+Two regression reproductions failed on c351606 before the fix, including a
+second case where all initial recipe pairs share A/B but AC + BD is feasible.
+Nine new tests in the existing evidence-integrity test file cover those cases,
+rollback/fallback/Main, unchanged feasible recipes, 25% total free-bank staking,
+input immutability and exhaustive capacity comparison against an independent
+pair oracle (1,728 four-fixture/three-book populations for each of consecutive
+and barbell pairing). Focused: 9 passed; full: 4339 passed, 1 skipped (160.66s).
+No extra scripts, admission/staking/config changes, operational writes, merge,
+workflow dispatch or production-data fit. Re-review prompt updated in place.
