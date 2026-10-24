@@ -33,7 +33,7 @@ def test_cleanup_precedes_run_and_state_commit_follows_run():
     restore_logic_at = helper.index("def restore_committed_localdata")
     clean_at = helper.index('"clean", "-fd", "localdata/"', restore_logic_at)
     persist_logic_at = helper.index("def persist_localdata")
-    add_at = helper.index('"add", "-A", "localdata/"', persist_logic_at)
+    add_at = helper.index('"add", "-A", "--", "localdata/"', persist_logic_at)
     assert restore_at < execute_at < state_commit_at < persist_call_at
     assert clean_at > restore_logic_at
     assert add_at > persist_logic_at

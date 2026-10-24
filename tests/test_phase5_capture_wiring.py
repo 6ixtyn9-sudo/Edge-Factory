@@ -31,7 +31,6 @@ def test_phase5_artifacts_are_allowlisted_for_existing_git_persistence():
         "localdata/phase5_activation/registry.jsonl",
         "localdata/phase5_activation/mutation_receipts.jsonl",
         "localdata/phase5_reconciliation/20261008T-incumbent-reconcile-01/audit.json",
-        "localdata/scored_candidate_shadow_2026-10-08.jsonl",
     ]
     for path in paths:
         result = subprocess.run(
@@ -40,6 +39,14 @@ def test_phase5_artifacts_are_allowlisted_for_existing_git_persistence():
             check=False,
         )
         assert result.returncode == 1, f"{path} is still ignored by Git"
+
+    # Candidate payloads are raw audit evidence, unlike the compact receipts:
+    # keep them in cache/artifacts rather than hitting GitHub's blob limit.
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "-q",
+         "localdata/scored_candidate_shadow_2026-10-08.jsonl"], cwd=ROOT,
+    )
+    assert result.returncode == 0
 
 
 def _load_script(module_name: str, relpath: str):

@@ -220,3 +220,32 @@ def test_send_telegram_message_raises_on_api_error(mock_urlopen):
     mock_urlopen.return_value = fake_resp
     with pytest.raises(RuntimeError, match="Telegram API rejected"):
         send_telegram_message("TOKEN", "12345", "hi")
+
+
+@patch('urllib.request.urlopen')
+@pytest.mark.parametrize('text', ['first\n' + '⚽🚀' * 6000, ('a line of picks\n' * 1100), 'x' * 10000])
+def test_telegram_transport_splits_all_text_losslessly(mock_urlopen, text):
+    from urllib.parse import parse_qs
+    from edgefactory.notifier import send_telegram_message, telegram_text_units
+    fake = MagicMock()
+    fake.__enter__.return_value = fake
+    fake.read.return_value = b'{"ok":true,"result":{"message_id":42}}'
+    mock_urlopen.return_value = fake
+    result = send_telegram_message('TOKEN', '123', text)
+    parts = [parse_qs(call.args[0].data.decode())['text'][0] for call in mock_urlopen.call_args_list]
+    assert len(parts) > 1
+    assert ''.join(parts) == text
+    assert all(telegram_text_units(part) <= 3800 for part in parts)
+    assert len(result['results']) == len(parts)
+
+
+@patch('urllib.request.urlopen')
+def test_telegram_partial_delivery_is_not_success(mock_urlopen):
+    from edgefactory.notifier import send_telegram_message
+    fake = MagicMock()
+    fake.__enter__.return_value = fake
+    fake.read.return_value = b'{"ok":true,"result":{"message_id":42}}'
+    mock_urlopen.side_effect = [fake, TimeoutError('test timeout')]
+    with pytest.raises(RuntimeError, match='part 2/3 failed; 1 parts accepted'):
+        send_telegram_message('TOKEN', '123', 'x' * 10000)
+    assert mock_urlopen.call_count == 2

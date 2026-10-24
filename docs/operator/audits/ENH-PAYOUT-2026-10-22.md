@@ -725,3 +725,53 @@ Runtime recovery remains unconfirmed: the restored cache must have exactly the
 published financial fingerprint above. If its pre-push snapshot differs, the
 existing guard will still stop; obtain the artifact state rather than authorize
 an unseen difference. No cache deletion or workflow restart was performed.
+
+### 2026-10-24 failed publication, draft restore and Telegram follow-up
+
+Runs `40047727066` and `40060576610` exposed a new chain: the first saved
+cache before failing Git publication; the second restored its changed draft
+and stopped at the financial guard. The original push stderr could not be
+retrieved (Actions log download EOF), so a blob-limit rejection is a likely
+cause, NOT a verified diagnosis. Committed raw scored-candidate daily ledgers
+are already approximately 93–95 MiB; another append can exceed GitHub's
+100 MiB blob limit.
+
+Bounded changes to existing machinery:
+
+- Persistence excludes raw `scored_candidate_shadow_*.jsonl` writes from staging,
+  including files tracked by older revisions. New raw files are ignored by Git.
+  Existing tracked snapshots are not removed, and working raw evidence is not
+  deleted, truncated or cleaned: it remains in the workflow cache and existing
+  dedicated 30-day artifact. This is not indefinite raw-evidence archival.
+- Only non-fast-forward/fetch-first push failures are retried. Permanent
+  rejections retain their actual stderr; exhausted races also report the last
+  rejection rather than replacing it with a generic message.
+- ENH draft-only differences use the committed plan only when bank, complete
+  history, base/cycle, events, freeze/supersession/reset metadata and all locked
+  positions agree. Locks in either state or legacy `.frozen` files protect the
+  date. Different frozen legs/stakes/locks still fail closed. No new hash receipt.
+- Restore validates both financial lanes before checkout/clean. A main cache
+  settlement survives only as an exact extension of committed open bets:
+  ordered existing records, same bet/stake/legs/odds, coherent outcome/return,
+  reconciled daily totals/bank, unchanged cycle/events/locks and exactly the
+  remaining open positions. The symmetric stale-cache case retains newer HEAD.
+  Unknown changes stop restoration without mutating the cached input. This is
+  ledger consistency validation, not independent verification of match results.
+- Telegram's existing transport bounds every message to 3,800 UTF-16 units,
+  splitting at newlines where possible without dropping characters. All parts
+  must be acknowledged for success; partial failure reports the accepted prefix
+  and does not retry it internally. Short-message return compatibility remains.
+
+Validation: full suite **4,288 passed, 1 skipped** (144.76s); `git diff --check`
+passed. Tests cover permanent/race rejection details, legacy-tracked and new raw
+file preservation without staging, frozen-position attacks, isolated main
+settlement extensions in both directions, and long ASCII/emoji/newline Telegram
+payloads including partial delivery failure. An isolated Git check also accepted
+a synthetic draft-only change against the published October 24 ENH snapshot;
+this did NOT inspect or replay the unavailable failed-run cache/artifact.
+
+No operational finance, picks, staking, frozen tickets or thresholds were edited.
+No workflow dispatch/restart, cache deletion, live message, merge, or manual bank
+settlement was performed. Production recovery remains to be confirmed after
+review/deployment; an unknown cached difference must still stop rather than be
+silently discarded or authorized from a console report.
