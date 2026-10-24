@@ -3325,6 +3325,12 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
 
     pool = rank_legs([l for l in pool if l["odds"] >= floor], rank,
                      rank_caps=rank_caps)
+    if (enhancements and rank == "prob" and rank_caps is None
+            and os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1'):
+        pool = sorted(pool, key=lambda l: (
+            finite_probability(l.get('ml_rank_probability'))
+            if finite_probability(l.get('ml_rank_probability')) is not None else l['prob'],
+            l['prob'], l['odds']), reverse=True)
     if enhancements:
         # Keep competing markets until complete tickets have competed. Drop
         # only duplicate fixture/market quotes here, not every alternative.
@@ -4876,7 +4882,8 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
     permissions are not evidence about a separately quoted enhancement.
     Historical descriptive callers retain their explicit legacy default.
     """
-    from edgefactory.enh_registry import ceiling_for, floor_for, floor_for_slice, enhancement_cohort_evidence
+    from edgefactory.enh_registry import (ceiling_for, floor_for, floor_for_slice,
+                                          enhancement_cohort_evidence, enhancement_ml_probability)
     from edgefactory.enh_team_floors import TEAM_UNDER_MARKETS as TEAM_UNDERS
     from edgefactory.enh_pricing import BETEXPLORER_SOURCE, betexplorer_price_rejection
     try:
@@ -4997,6 +5004,10 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
             "probability": (priced_evidence["rate"] if priced_evidence else
                             evidence["rate"] if evidence and not execution_safe else None),
             "cohort_evidence": priced_evidence or evidence,
+            "ml_rank_probability": (enhancement_ml_probability(pick, market)
+                                    if evidence is not None else None),
+            "ml_model_key": (((pick.get('statistical_profile') or {}).get('ml_model') or {})
+                             .get('model_key')),
             "price": price,
             "price_book": pick.get("enhancement_price_book"),
             "price_source": pick.get("enhancement_price_source"),
@@ -5131,6 +5142,8 @@ def enhancement_pool(legs: list[dict]) -> list[dict]:
             "match": leg.get("match"),
             "pick": _market_selection(leg.get("market")),
             "prob": float(prob),
+            "ml_rank_probability": leg.get("ml_rank_probability"),
+            "ml_model_key": leg.get("ml_model_key"),
             "odds": leg.get("price"),
             "row": leg.get("row") or {},
             "cohort_evidence": leg.get("cohort_evidence"),
@@ -5177,7 +5190,8 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
                 meta = by_key.get((str(leg.get("match")), str(leg.get("pick")), leg.get("odds")))
             if not meta:
                 continue
-            for key in ("cohort_evidence", "market", "label", "floor", "floor_basis", "league",
+            for key in ("cohort_evidence", "ml_rank_probability", "ml_model_key",
+                        "market", "label", "floor", "floor_basis", "league",
                         "price_book", "price_source", "price_at", "price_kickoff",
                         "price_provenance", "shadow"):
                 leg[key] = meta.get(key)
