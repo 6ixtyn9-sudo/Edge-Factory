@@ -59,3 +59,39 @@ Original handoff at `14e18d4`: **4,320 passed, 1 skipped**, including 15 added M
 5. A specific merge/deploy recommendation. Do not merge, dispatch, train against production or change cash records yourself without operator authorization.
 
 Please be willing to BLOCK default-on activation if the evidence or engineering warrants it. Do not relabel training fit as out-of-sample improvement, cohort probabilities as ML calibration, or a code flag as live deployment.
+
+## Narrow follow-up after the c351606 re-review: pair capacity
+
+The P2-1/P2-3 closures are accepted. However, the re-review's blanket claim that
+ML-first ordering cannot reduce the live gate-off acca count is false at c351606.
+Please review the latest PR head against c351606 specifically for the bounded
+repair in `select_accas`, not another census/model redesign.
+
+Counterexample: six already-admitted offers `(fixture, book, cohort, ML)`:
+`(A,X,.70,.95), (B,X,.70,.94), (A,Y,.70,.95), (C,Y,.90,None),
+(B,Z,.70,.94), (D,Z,.89,None)`. All odds 2.0, `match_over_25`, one common
+source, valid `cohort_payout_bound` contexts, distinct row home identities.
+Call `select_accas(... enhancements=True, max_accas=2, min_accas=1,
+legs_per_acca=2, pairing='consecutive', gate_mode='off')`.
+Old flag 1 produces one acca AX/BX; flag 0 produces two, CY/AY and DZ/BZ.
+Also test groups X={A,B,C}, Y={A,B,D}, where both initial pairs are A/B:
+simply choosing another initial recipe pair cannot repair this case.
+
+The repair preserves an already-feasible greedy choice, otherwise prefers a
+recipe pair that leaves a second executable pair. If none does, it checks
+alternative pairs within each group. Prove the bound: after a greedy pair
+strands all groups, no group can contain four distinct fixtures, so at most
+three pairs per group need consideration. This only runs with actual ML scores,
+ML ranking active and two slots remaining. Flag-off and unscored fallback retain
+the EXACT previous cohort-only recipe, including its own existing greedy traps.
+This is not a general maximum-cardinality guarantee for larger cards or after
+nondefault conviction gates. No new admission or staking policy was added.
+
+Run the new cases in the EXISTING test file (`-k 'strand or two_acca'`) and
+challenge the independent exhaustive oracle: 1,728 four-fixture/three-book
+populations per pairing mode, all executable edges versus production results.
+Check book AND source separation, fixture exclusivity, feasible recipe stability,
+Main/rollback/no-score parity, input immutability, and 25% total staking.
+Arena receipt at this repair: 9 focused passed; full 4,339 passed, 1 skipped.
+Report actual commands/results; do not imply production coverage, calibration
+or ROI. No new scripts, production fit, cash writes, merge or dispatch.
