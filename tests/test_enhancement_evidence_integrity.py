@@ -437,3 +437,382 @@ def test_all_goal_markets_reach_real_cohort_pricing_and_complete_acca(tmp_path, 
     assert len(plan) == 1
     assert {l['market'] for l in plan[0]['legs']} == {expected}
     assert all(l['price_source'] == 'theoddsapi' for l in plan[0]['legs'])
+
+
+@pytest.mark.parametrize('status', [
+    'POSTPONED', 'Cancelled', 'ABANDONED', 'AET', 'PEN',
+    'After extra time', 'After penalties',
+])
+def test_live_enh_cohort_cannot_count_disposition_or_unseparated_period(status, monkeypatch):
+    rows = observations(30)
+    rows[0]['status'] = status
+    con = connection(rows)
+    recipe = edge()
+    # The shared collector's default/main contract population is unchanged.
+    _, obs, ambiguous, resolved, _ = cc.collect_observations(
+        con, start='2026-06-13', as_of='2026-10-20')
+    assert len(list(cc.contract_rows(obs, ambiguous, resolved, recipe))) == 30
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    # This is the production caller, not an audit-only resolver. With one
+    # disputed label removed, 29 cannot manufacture the existing N30 gate.
+    pick = parent(recipe)
+    assert pt.fetch_match_cohort(con, 'home', 80., 1, pick=pick) is None
+    emitted = pt.compute_dynamic_enhancement(con, dict(pick), {})
+    # The existing descriptive display may show n=29; it must not lend that
+    # thin sample to any executable-market candidate.
+    assert emitted['statistical_profile_status'] == 'available'
+    assert emitted['statistical_profile']['n'] == 29
+    assert emitted['event_notes'] == []
+    assert emitted['recommended_enhancement'] is None
+    assert {c['reason'] for c in emitted['enh_candidate_log']} == {'no_realized_cohort'}
+    clean = cc.enhancement_cohort(con, recipe, as_of=pick['date'],
+                                  selection='home', min_n=1)
+    assert clean['n'] == 29
+    assert clean['over25'] == pytest.approx(14 / 29)
+    assert clean['h_o25'] == pytest.approx(14 / 29)
+    assert clean['btts'] == 0
+
+
+def test_live_enh_status_conflict_is_not_resolved_by_donor_order():
+    rows = observations()
+    rows[0]['status'] = 'FT'
+    # Equal score values do not resolve the occurrence/status contradiction.
+    rows.append(dict(rows[0], status='POSTPONED'))
+    for ordered in (rows, list(reversed(rows))):
+        cohort = cc.enhancement_cohort(connection(ordered), edge(),
+                                       as_of='2026-10-20', selection='home', min_n=1)
+        assert cohort['n'] == 99
+        assert cohort['over25'] == pytest.approx(49 / 99)
+
+
+def test_live_enh_boolean_goals_are_not_a_valid_score():
+    # Keep a native BOOLEAN warehouse column, rather than coercing a mixed
+    # Python bool/int series to integer before the production reader sees it.
+    rows = [dict(r, hs=True) for r in observations()]
+    assert cc.enhancement_cohort(connection(rows), edge(),
+                                 as_of='2026-10-20', selection='home', min_n=1) is None
+
+
+def test_live_enh_clean_scores_keep_existing_rates_and_build_cache():
+    rows = [dict(r, status='FT') for r in observations()]
+    con = connection(rows)
+    kwargs = dict(as_of='2026-10-20', selection='home', min_n=30)
+    cohort = cc.enhancement_cohort(con, edge(), cache={}, **kwargs)
+    assert cohort == cc.enhancement_cohort(con, edge(), **kwargs)
+    assert cohort['n'] == 100 and cohort['over25'] == .5
+
+
+def ml_observations(n=100):
+    rows = observations(n)
+    for i, r in enumerate(rows):
+        high = i % 5 != 0
+        r.update(p1=.9 if high else .7, px=.05 if high else .15,
+                 p2=.05 if high else .15, hs=4 if high else 0, gs=0 if high else 1)
+    return rows
+
+
+def test_enh_ml_fits_real_score_target_is_cached_and_has_coherent_markets(monkeypatch):
+    from sklearn.linear_model import LogisticRegression
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    recipe, cache = edge(), {}
+    con = connection(ml_observations())
+    fits, original = [], LogisticRegression.fit
+    def counted(self, *args, **kwargs):
+        fits.append(1)
+        return original(self, *args, **kwargs)
+    monkeypatch.setattr(LogisticRegression, 'fit', counted)
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    p = parent(recipe)
+    cohort = pt.fetch_match_cohort(con, 'home', 90., 1, pick=p, cache=cache)
+    assert cohort['ml_status'] == 'fitted' and len(fits) == 1
+    assert cohort['ml_model']['classes'] == ['0:1', '4:0']  # not 1X2 correctness
+    same = pt.fetch_match_cohort(con, 'home', 70., 1, pick=p, cache=cache)
+    assert same == cohort and len(fits) == 1
+    # Returned model parameters cannot poison build-scoped shared cache.
+    same['ml_model']['coef'][0][0] = 999
+    assert pt.fetch_match_cohort(con, 'home', 90., 1, pick=p, cache=cache) == cohort
+    high = dict(p, avg_p=90., statistical_profile=cohort)
+    low = dict(p, avg_p=70., statistical_profile=cohort)
+    assert score(high, 'match_over_25') > score(low, 'match_over_25')
+    for over, under in [('match_over_25', 'match_under_25'),
+                        ('home_over_15', 'home_under_15'),
+                        ('away_over_05', 'away_under_05'), ('btts_yes', 'btts_no')]:
+        assert score(high, over) + score(high, under) == pytest.approx(1.)
+    assert score(high, 'match_over_45') <= score(high, 'match_over_35') <= score(high, 'match_over_25')
+    assert score(high, 'unrecognized') is None
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '0')
+    assert score(high, 'match_over_25') is None
+    assert pt.fetch_match_cohort(con, 'home', 90., 1, pick=p, cache=cache).get('ml_model') is None
+
+
+@pytest.mark.parametrize('field,value', [('avg_p', None), ('avg_p', True),
+    ('avg_p', float('nan')), ('avg_p', 101.), ('avg_p', 50.),
+    ('date', '2026-10-19'), ('pick', 'away'), ('contract_id', 'another-contract')])
+def test_enh_ml_cannot_borrow_model_or_invent_missing_features(field, value):
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    cohort = cc.enhancement_cohort(connection(ml_observations()), edge(),
+                                   as_of='2026-10-20', selection='home', fit_ml=True)
+    p = dict(parent(edge()), avg_p=80., statistical_profile=cohort)
+    assert score(p, 'match_over_25') is not None
+    assert score(dict(p, **{field: value}), 'match_over_25') is None
+    changed = deepcopy(p)
+    changed['statistical_profile']['ml_model']['coef'][0][0] += 1
+    assert score(changed, 'match_over_25') is None
+
+
+def test_enh_ml_training_excludes_future_duplicate_conflicted_and_disposition_rows():
+    rows = ml_observations()
+    recipe = edge()
+    base = cc.enhancement_cohort(connection(rows), recipe,
+                                as_of='2026-10-20', selection='home', fit_ml=True)
+    same = cc.enhancement_cohort(connection(rows + [rows[0]] +
+        [dict(rows[0], date=d, hs=9) for d in ('2026-10-20', '2026-10-21')]), recipe,
+        as_of='2026-10-20', selection='home', fit_ml=True)
+    assert same['ml_model'] == base['ml_model']
+    disputed = [dict(rows[0], hs=8), dict(rows[1], status='POSTPONED')]
+    clean = cc.enhancement_cohort(connection(rows + disputed), recipe,
+                                 as_of='2026-10-20', selection='home', min_n=1, fit_ml=True)
+    assert clean['n'] == clean['ml_model']['n'] == 98
+    assert clean['ml_model']['train_last_date'] < '2026-10-20'
+    reverse = cc.enhancement_cohort(connection(list(reversed(rows + disputed))), recipe,
+                                   as_of='2026-10-20', selection='home', min_n=1, fit_ml=True)
+    assert reverse['ml_model'] == clean['ml_model']
+
+
+@pytest.mark.parametrize('rows', [observations(), ml_observations(29)])
+def test_enh_ml_unavailable_is_explicit_and_keeps_measured_baseline(rows):
+    cohort = cc.enhancement_cohort(connection(rows), edge(), as_of='2026-10-20',
+                                   selection='home', min_n=1, fit_ml=True)
+    assert cohort['ml_status'] == 'insufficient_or_constant_training_data'
+    assert 'ml_model' not in cohort and cohort['n'] == len(rows)
+
+
+def test_enh_ml_changes_complete_live_pair_not_admission_staking_or_main(monkeypatch):
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    recipe = edge()
+    cohort = cc.enhancement_cohort(connection(ml_observations()), recipe,
+                                   as_of='2026-10-20', selection='home', fit_ml=True)
+    rows = []
+    for name, confidence, price in [('High', 90., 1.6), ('Middle', 80., 1.7), ('Low', 70., 1.8)]:
+        p = dict(parent(recipe), home=name, away='Opponent', league='League',
+            avg_p=confidence, statistical_profile=deepcopy(cohort),
+            as_of='2026-10-20T06:00:00+00:00',
+            recommended_enhancement='match_over_25', enhancement_probability=None,
+            enhancement_cohort_rate=.8, enhancement_cohort_n=100,
+            enhancement_cohort_contract_id=recipe['contract_id'],
+            enhancement_cohort_as_of_exclusive='2026-10-20',
+            enhancement_price=price, enhancement_price_book='Pinnacle',
+            enhancement_price_source='theoddsapi', enhancement_price_at='2026-10-20T05:00:00+00:00',
+            enhancement_price_kickoff='2026-10-20T18:00:00+00:00',
+            event_notes=[dict(market='match_over_25', engine='hybrid_cohort',
+                cohort_rate=.8, cohort_n=100, cohort_contract_id=recipe['contract_id'],
+                cohort_as_of_exclusive='2026-10-20')])
+        rows.append(p)
+    before = deepcopy(rows)
+    legs = at.enhancement_legs(rows, execution_safe=True)
+    assert all(l['verdict'] == 'fire' and l['probability'] == .8 for l in legs)
+    assert len({l['ml_rank_probability'] for l in legs}) == 3
+    pool = at.enhancement_pool(legs)
+    knobs = dict(max_accas=1, min_accas=1, legs_per_acca=2, pairing='consecutive')
+    ml_pair = at.select_accas(pool, enhancements=True, **knobs)[0]
+    assert [l['row']['home'] for l in ml_pair] == ['High', 'Middle']
+    main_pair = at.select_accas(pool, enhancements=False, **knobs)[0]
+    assert [l['row']['home'] for l in main_pair] == ['Low', 'Middle']
+    plan = at.plan_day(pool, 100., enhancements=True, **knobs)
+    at._carry_lane_evidence(plan, pool)
+    assert all(leg['ml_model_key'] == cohort['ml_model']['model_key']
+               and leg['ml_rank_probability'] is not None for leg in plan[0]['legs'])
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '0')
+    baseline_pair = at.select_accas(pool, enhancements=True, **knobs)[0]
+    assert [l['row']['home'] for l in baseline_pair] == ['Low', 'Middle']
+    assert at.STAKE_FRAC == .25 and rows == before
+    # Model probability cannot rescue an unsupported measured cohort/quote.
+    for bad in [dict(rows[0], enhancement_cohort_n=29),
+                dict(rows[0], enhancement_price_book='Matchbook')]:
+        assert at.enhancement_legs([bad], execution_safe=True)[0]['verdict'] != 'fire'
+
+
+def test_enh_ml_multiclass_inference_matches_sklearn_not_binary_shortcut():
+    import numpy as np
+    from sklearn.linear_model import LogisticRegression
+    from edgefactory.enh_registry import enhancement_ml_probability as score, check_enhancement_hit
+    rows = observations(90)
+    for i, r in enumerate(rows):
+        confidence, pair = [(.7, (0, 0)), (.8, (1, 1)), (.9, (4, 0))][i % 3]
+        r.update(p1=confidence, px=(1-confidence)/2, p2=(1-confidence)/2,
+                 hs=pair[0], gs=pair[1])
+    cohort = cc.enhancement_cohort(connection(rows), edge(), as_of='2026-10-20',
+                                   selection='home', min_n=1, fit_ml=True)
+    payload = cohort['ml_model']
+    native = LogisticRegression()
+    native.classes_ = np.array(payload['classes'])
+    native.coef_ = np.array(payload['coef'])
+    native.intercept_ = np.array(payload['intercept'])
+    native.n_features_in_ = 1
+    probabilities = native.predict_proba([[.8]])[0]
+    p = dict(parent(edge()), avg_p=80., statistical_profile=cohort)
+    for market in ('btts_yes', 'match_under_25', 'home_over_15', 'away_under_15'):
+        expected = sum(w for w, label in zip(probabilities, payload['classes'])
+                       if check_enhancement_hit(market, 'home', *map(int, label.split(':'))))
+        assert score(p, market) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("fit_error", [ValueError, TypeError, AttributeError])
+def test_enh_ml_failed_fit_falls_back_without_relabelling_cohort(monkeypatch, fit_error):
+    from sklearn.linear_model import LogisticRegression
+    def fail(*args, **kwargs):
+        raise fit_error('synthetic fitting failure')
+    monkeypatch.setattr(LogisticRegression, 'fit', fail)
+    result = cc.enhancement_cohort(connection(ml_observations()), edge(),
+                                   as_of='2026-10-20', selection='home', fit_ml=True)
+    assert result['ml_status'] == 'fit_unavailable'
+    assert 'ml_model' not in result and result['over25'] == .8 and result['n'] == 100
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    live = pt.fetch_match_cohort(connection(ml_observations()), 'home', 80., 1,
+                                 pick=parent(recipe))
+    assert live['n'] == 100 and live['ml_status'] == 'fit_unavailable'
+
+
+@pytest.mark.parametrize('fallback_ml', [None, float('nan'), float('inf'), True, -0.1, 1.1])
+def test_enh_ml_rank_groups_do_not_compare_model_scores_with_cohort_rates(monkeypatch, fallback_ml):
+    # Already-admitted pool: isolate selection, not the earlier quote gates.
+    def leg(name, cohort_rate, ml):
+        return dict(match=name, pick='over', prob=cohort_rate, odds=2.,
+            ml_rank_probability=ml, market='match_over_25', price_book='Book',
+            row=dict(date='2026-10-20', home=name, away='Opponent'),
+            cohort_evidence=dict(basis='cohort_payout_bound',
+                price_context=dict(book='Book', source='theoddsapi')))
+    pool = [leg('Fallback high', .9, fallback_ml), leg('Model low', .6, .0),
+            leg('Fallback next', .8, None), leg('Model high', .6, .55)]
+    before = deepcopy(pool)
+    knobs = dict(max_accas=2, min_accas=1, legs_per_acca=2, pairing='consecutive')
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    pairs = at.select_accas(pool, enhancements=True, **knobs)
+    assert [[l['match'] for l in pair] for pair in pairs] == [
+        ['Model high', 'Model low'], ['Fallback high', 'Fallback next']]
+    baseline = at.select_accas(pool, enhancements=False, **knobs)
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '0')
+    assert at.select_accas(pool, enhancements=True, **knobs) == baseline
+    # NaN is deliberately in one case; compare unchanged object identity/value
+    # fields rather than NaN == NaN across copies.
+    assert [(l['match'], l['prob'], l['odds']) for l in pool] == [
+        (l['match'], l['prob'], l['odds']) for l in before]
+
+
+def test_enh_ml_recommendation_uses_same_separate_rank_groups(monkeypatch):
+    from edgefactory import enh_registry
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    def price(pick, index):
+        pick.update(enhancement_price=2., enhancement_priced=True,
+                    enhancement_price_book='Book', enhancement_price_source='theoddsapi')
+    monkeypatch.setattr(pt, 'attach_enhancement_price', price)
+    # Controlled scorer output isolates rank policy, while cohort and candidate
+    # eligibility still traverse the production warehouse/contract machinery.
+    monkeypatch.setattr(enh_registry, 'enhancement_ml_probability',
+                        lambda pick, market: .55 if market == 'home_over_05' else None)
+    emitted = pt.compute_dynamic_enhancement(connection(ml_observations()), parent(recipe), {})
+    assert emitted['recommended_enhancement'] == 'home_over_05'
+    assert emitted['event_notes'][0]['ml_rank_probability'] == .55
+    assert len(emitted['event_notes']) > 1
+    assert all(n['ml_rank_probability'] is None for n in emitted['event_notes'][1:])
+    assert all(n['cohort_rate'] > .55 for n in emitted['event_notes'])
+
+
+def _overlapping_book_leg(name, book):
+    return dict(match=name, pick='over', prob={'A': .7, 'B': .7, 'C': .9, 'D': .89}[name],
+        odds=2., market='match_over_25', price_book=book,
+        ml_rank_probability={'A': .95, 'B': .94}.get(name),
+        row=dict(date='2026-10-24', home=name, away='Opponent'),
+        cohort_evidence=dict(basis='cohort_payout_bound',
+            price_context=dict(book=book, source='theoddsapi')))
+
+
+@pytest.mark.parametrize('overlap', ['three_books', 'hidden_alternatives'])
+def test_enh_ml_complete_pair_selection_does_not_strand_an_available_second_acca(monkeypatch, overlap):
+    # Already-admitted quotes. Each group's best pair is attractive but can
+    # consume fixtures needed by the other groups; a fixed distinct-fixture
+    # population alone does NOT prove greedy pair-count invariance.
+    slots = ([('A', 'X'), ('B', 'X'), ('A', 'Y'), ('C', 'Y'), ('B', 'Z'), ('D', 'Z')]
+             if overlap == 'three_books' else
+             [('A', 'X'), ('B', 'X'), ('C', 'X'), ('A', 'Y'), ('B', 'Y'), ('D', 'Y')])
+    pool = [_overlapping_book_leg(*slot) for slot in slots]
+    before = deepcopy(pool)
+    knobs = dict(enhancements=True, max_accas=2, min_accas=1,
+                 legs_per_acca=2, pairing='consecutive', gate_mode='off')
+    for flag in ('1', '0'):
+        monkeypatch.setenv('EDGE_FACTORY_ENH_ML', flag)
+        pairs = at.select_accas(pool, **knobs)
+        assert len(pairs) == 2
+        assert {l['match'] for pair in pairs for l in pair} == {'A', 'B', 'C', 'D'}
+        for pair in pairs:
+            assert len({l['price_book'] for l in pair}) == 1
+        # The existing shared staking function is still bounded at 25%.
+        plan = at.plan_day(pool, 100., **knobs)
+        assert len(plan) == 2
+        assert sum(a['stake_pct'] for a in plan) == pytest.approx(25.)
+    assert pool == before
+
+
+@pytest.mark.parametrize('pairing', ['consecutive', 'barbell'])
+def test_enh_ml_two_acca_capacity_matches_exhaustive_fixture_book_oracle(monkeypatch, pairing):
+    from itertools import combinations, product
+
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    # Exhaust all 4-fixture/3-book populations with either no quotes or at
+    # least 2 distinct fixtures per book. Singleton groups cannot form an
+    # edge. This independent oracle enumerates every executable pair, not
+    # the production recipe's pair list or its look-ahead implementation.
+    subsets = [()] + [g for n in range(2, 5) for g in combinations('ABCD', n)]
+    for groups in product(subsets, repeat=3):
+        edges = [frozenset(pair) for group in groups for pair in combinations(group, 2)]
+        expected = (2 if any(a.isdisjoint(b) for a, b in combinations(edges, 2))
+                    else int(bool(edges)))
+        pool = [_overlapping_book_leg(name, book)
+                for book, group in zip('XYZ', groups) for name in group]
+        pairs = at.select_accas(pool, enhancements=True, max_accas=2, min_accas=1,
+                               legs_per_acca=2, pairing=pairing, gate_mode='off')
+        assert len(pairs) == expected, (pairing, groups)
+        fixtures = [l['match'] for pair in pairs for l in pair]
+        assert len(fixtures) == len(set(fixtures))
+        assert all(len({l['price_book'] for l in pair}) == 1 for pair in pairs)
+
+
+@pytest.mark.parametrize('flag', ['1', '0'])
+def test_enh_ml_two_acca_lookahead_keeps_feasible_original_recipe(monkeypatch, flag):
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', flag)
+    pool = [_overlapping_book_leg(name, 'X') for name in 'ABCD']
+    for pairing in ('consecutive', 'barbell'):
+        ranked = sorted(pool, key=lambda l: (
+            l['ml_rank_probability'] is not None,
+            l['ml_rank_probability'] if l['ml_rank_probability'] is not None else l['prob'],
+            l['prob'], l['odds']), reverse=True) if flag == '1' else at.rank_legs(pool, 'prob')
+        # With a single executable book the original recipe already covers
+        # all four fixtures, and must not be replaced by arbitrary pairs.
+        expected = at.pair_legs(ranked, pairing, 2)
+        assert at.select_accas(pool, enhancements=True, max_accas=2, min_accas=1,
+            legs_per_acca=2, pairing=pairing, gate_mode='off') == expected
+        # Main remains the shared original recipe, independent of ML flag.
+        assert at.select_accas(pool, enhancements=False, max_accas=2, min_accas=1,
+            legs_per_acca=2, pairing=pairing, gate_mode='off') == at.pair_legs(
+                at.rank_legs(pool, 'prob'), pairing, 2)
+
+
+@pytest.mark.parametrize('flag,scored,expected', [('0', True, 1), ('1', False, 1), ('1', True, 2)])
+def test_enh_ml_two_acca_repair_preserves_exact_rollback_and_unscored_recipe(monkeypatch, flag, scored, expected):
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', flag)
+    pool = [_overlapping_book_leg(name, book)
+            for book, names in [('X', 'ABC'), ('Y', 'ABD')] for name in names]
+    # Make cohort order itself encounter the greedy trap. Rollback must
+    # preserve that exact old recipe, not silently fix unrelated baseline
+    # behavior. Missing ML scores must also retain the old fallback recipe.
+    for leg in pool:
+        leg['prob'] = {'A': .9, 'B': .89, 'C': .7, 'D': .7}[leg['match']]
+        if not scored:
+            leg.pop('ml_rank_probability')
+    pairs = at.select_accas(pool, enhancements=True, max_accas=2, min_accas=1,
+                           legs_per_acca=2, pairing='consecutive', gate_mode='off')
+    assert len(pairs) == expected
+    if expected == 1:
+        assert [[(l['match'], l['price_book']) for l in pair] for pair in pairs] == [[('A', 'X'), ('B', 'X')]]

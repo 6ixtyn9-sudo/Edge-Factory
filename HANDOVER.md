@@ -11930,3 +11930,140 @@ All 851 operational SHA256s unchanged. Focused 66 passed in 4.49s; final broader
 retry sleeps explain 51.01s of broader runtime. Full suite and independent agent
 review not claimed; no capture/dispatch/recut/merge. Details and second-review
 prompt: docs/operator/audits/DATA-ENRICHMENT-PIPES-CASE-2026-10-21.md section5.
+
+### 24 October 2026 — live ENH cohort result-status repair
+
+Operator explicitly authorized live ENH behavior changes, superseding the prior
+research-only scope for this repair. Existing `enhancement_cohort` now requests
+status-screened results from the existing observation collector: postponed,
+cancelled, abandoned, and explicitly AET/PEN results without separated regulation
+scores cannot contribute to live ENH sample size or market rates. Conflicting
+score pairs were already rejected on this path; no first-match fix was needed.
+Boolean goals are not scores. Contradictory status evidence quarantines that
+fixture irrespective of donor order; no inferred FT score or cash void is made.
+Main/miner default collection is unchanged; ENH's build-scoped cache is separate.
+No new scripts/services/registries. All existing market predicates, N30,
+60–90% band, >0.8 payout screen and 25% free-bank staking remain unchanged.
+Regression exercises the production fetch and dynamic-enhancement emission:
+30 including one disputed result becomes 29 displayed observations, with no
+executable ENH candidate. Clean FT rates and cached/uncached parity are preserved.
+Validation: 4305 passed, 1 skipped; ten new regression cases in the existing
+ENH evidence-integrity test file. Operational records and frozen tickets untouched.
+Code is changed on arena/76daeb2a-edge-factory, not merged/deployed or dispatched.
+Warehouse absent locally: no current-production pool delta or improved ROI claim.
+Unmarked legacy score periods remain unknown; this is a bounded status repair,
+not complete occurrence adjudication, a trained model or completed v2 census.
+
+### 24 October 2026 — operator-authorized experimental ENH ML ranking
+
+Operator requested ML ENH activation using existing machinery, plus an independent
+Z.ai red-team prompt. `EDGE_FACTORY_ENH_ML` defaults to 1; explicit 0 restores
+cohort-only ordering without disabling ENH. No new script, service or registry.
+Existing exact-contract cohort collection now optionally fits sklearn's existing
+regularized LogisticRegression to observed FT score-pair classes, using only the
+parent's selected-side confidence. This is NOT the main 1X2-correctness model,
+a Poisson/default prior, or an override of measured cohort admission.
+Fit is cached once per contract/selection/window within a build. It requires N30,
+variable observed confidence and multiple score classes; missing/nonconvergent
+fits leave cohort ranking intact. Training excludes same-day/future fixtures,
+score conflicts and the prior status/period quarantines. Historical receipt and
+label-known-by completeness is NOT certified by this date filter.
+Compact coefficients, class labels, training digest/window, model key and fit
+status travel in the existing statistical profile. Every market is scored from
+one common score distribution through existing market predicates. Binding and
+model-key checks reject another contract/day/side, missing/out-of-range confidence
+or modified parameters. All cohort/price/source/payout gates remain unchanged.
+ML changes eligible-market ordering and complete ENH pair competition only;
+main ordering, two-leg/same-fixture/book rules, 25% free-bank staking and frozen
+records remain unchanged. Rank score/model key survive existing evidence carry.
+No marginal probabilities are multiplied to claim joint acca success.
+Validation: full suite 4320 passed, 1 skipped; 15 new ML regression cases.
+Production warehouse is absent here: real-data fit, activation coverage, held-out
+calibration and ROI improvement are NOT demonstrated. No workflow dispatch or
+cash-betting authorization. Changes require PR merge/new build to run live.
+Red-team handoff: docs/operator/audits/ENH-ML-ACTIVATION-RED-TEAM-PROMPT-2026-10-24.md.
+
+### 24 October 2026 — PR149 red-team dispositions
+
+Received operator-pasted Z.ai PASS WITH LIMITS review of 14e18d4. Its reported
+independent synthetic tests do not establish production activation or economics;
+its external scripts/JSON were not supplied here for byte verification. Earlier
+48-row/534-offer reconciliation remains closed; no census design loop reopened.
+P2-1 fixed using reviewer option (a): ML-scored candidates are ordered in one
+first-priority group, cohort-only candidates follow in baseline order. Applied
+consistently to recommendation and complete-pair selection; no numeric comparison
+between model scores and cohort frequencies. This explicitly favors model coverage,
+including valid zero scores; it is experimental policy, not demonstrated uplift.
+P2-3 fixed: optional fit/payload TypeError and AttributeError now produce
+fit_unavailable while retaining measured rates/N through the production fetch.
+P2-2 retained as a documented trust boundary: model self-hash is integrity only,
+not authenticity. No signing service/manifest or extra script was introduced.
+New regressions reproduce the old failures; cover mixed/invalid/zero scores,
+cohort-only ordering, recommendation/selector consistency, main/rollback parity
+and live-fetch retention after fit API failures. Full suite: 4330 passed, 1 skipped.
+Main admission, ENH cohort/quote/payout rules, two-leg constraints, 25% staking,
+frozen/settled records unchanged. No merge, dispatch or financial writes.
+Production warehouse fit/status census and same-day flag-off comparison remain
+unobserved here. Prior-day SQL filtering alone is not authenticated point-in-time
+feature or label-known-by evidence; test passes do not close that data limitation.
+
+### 24 October 2026 — PR149 ML pair-capacity counterexample and bounded repair
+
+Operator supplied a second Z.ai PASS WITH LIMITS re-review of c351606. Its
+P2-1/P2-3 closures stand; production activation/economics remain unproved.
+Independently disproved its blanket claim that ML ordering cannot reduce the
+acca count under live gate-off defaults. Six already-admitted fixture/book offers:
+AX, BX, AY, CY, BZ, DZ; cohort A/B=.70, C=.90, D=.89; ML A=.95, B=.94,
+C/D unscored. All odds 2.0, same source. Before this repair, ML selected only
+AX/BX, whereas flag-off selected CY/AY and DZ/BZ. Global used-fixture exclusions
+across book/source groups invalidate a simple distinct-fixture-count argument.
+This is present at c351606, not caused by its rank-group/fit-error fixes.
+
+Added a bounded capacity check inside the existing ENH two-leg selector, only
+with actual ML scores and ML ranking active and exactly two slots remaining.
+Keep the original greedy pair when it leaves any executable follow-up. Otherwise
+prefer an existing recipe pair that does; if all recipe pairs strand the card,
+consider the groups' alternative pairs. At that point every group has at most
+three fixtures: any group of four would always leave two after any chosen pair.
+Thus alternative enumeration is bounded to three pairs per book/source group,
+not a general/exponential card optimizer, new pipeline or invented payout gate.
+The existing rank order breaks ties; book/source and distinct-fixture checks
+remain in force. Exact flag-off, no-score fallback and Main recipes are unchanged,
+including pre-existing cohort-only greedy underfill. No general cardinality
+claim for larger cards or post-selection conviction-gated profiles is made.
+
+Two regression reproductions failed on c351606 before the fix, including a
+second case where all initial recipe pairs share A/B but AC + BD is feasible.
+Nine new tests in the existing evidence-integrity test file cover those cases,
+rollback/fallback/Main, unchanged feasible recipes, 25% total free-bank staking,
+input immutability and exhaustive capacity comparison against an independent
+pair oracle (1,728 four-fixture/three-book populations for each of consecutive
+and barbell pairing). Focused: 9 passed; full: 4339 passed, 1 skipped (160.66s).
+No extra scripts, admission/staking/config changes, operational writes, merge,
+workflow dispatch or production-data fit. Re-review prompt updated in place.
+
+### 24 October 2026 — PR149 selector re-review accepted with limits
+
+Received operator-pasted Z.ai re-review of a8f320e (report dated 25 October).
+Verdict: PASS WITH LIMITS; counterexample independently confirmed and the prior
+order-invariance claim explicitly retracted. P2-1/P2-3 remain closed; bounded
+ML pair-capacity repair accepted. No further code change indicated by this review.
+Reviewer reports 9 focused / 33 ML tests passed, exactly +9 collected additions,
+and full 4333 passed, 0 skipped; Arena's preceding receipt is 4339 passed,
+1 skipped. Reviewer reports an environment collection offset; primary external
+probe files/verdict artifact were not supplied here for independent verification.
+
+Experiment residuals recorded: armed PAIRING is barbell, MAX_ACCAS=2, k=2,
+GATE_MODE=off. Strand rescue deliberately may choose a non-barbell/non-consecutive
+pair; it remains confined to active ML ranking and two slots remaining, admitted
+legs, executable book/source groups and distinct fixtures. No full-card matching
+guarantee for max_accas>2 or after gate_mode=acca. Exact rollback/unscored behavior
+retains the original cohort-only greedy underfill by design.
+Live STAKE_MODE is per_acca: each slot receives 12.5% of free bank, capped at 25%
+total. Recovering a second acca can increase actual deployment from 12.5% to 25%;
+unchanged staking policy/cap must NOT be described as unchanged deployed exposure.
+Production warehouse fit/status coverage, real-slate activation and same-day
+flag-off comparison, calibration and economic benefit remain unobserved here.
+PR149 verified open/unmerged at reviewed head before this documentation update.
+This entry records engineering acceptance, not merge/dispatch/cash authorization;
+no new scripts, code/config changes, production fit or financial writes.
