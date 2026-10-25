@@ -1796,3 +1796,142 @@ def test_readable_rule_fallback_never_displays_an_unresolved_hash():
     from scripts.audit_recent_picks import _readable_rule
     assert _readable_rule('pfc_missing', {}) == 'Unresolved contract (rule unavailable)'
     assert _readable_rule('ml-meta avg_p&gt;=55', {}) == 'ml-meta avg_p>=55'
+
+
+def _rule_windows_fixture(tmp_path, monkeypatch):
+    import scripts.audit_recent_picks as mod
+    from edgefactory.util import ledger_team_key
+    from edgefactory import enh_registry
+    localdata = tmp_path / 'localdata'
+    localdata.mkdir()
+    monkeypatch.setattr(mod, 'ROOT', tmp_path)
+    monkeypatch.setattr(mod, 'LOCALDATA', localdata)
+    monkeypatch.setattr(mod, 'local_today', lambda: '2026-10-25')
+    monkeypatch.setattr(mod, 'load_event_disposition_index', lambda *a, **k: {})
+    # Any accidental registry read/write through normal audit postprocessing fails the test.
+    def forbidden(*args, **kwargs):
+        pytest.fail('read-only rule history must not touch enhancement registry')
+    monkeypatch.setattr(enh_registry, 'record_outcome', forbidden)
+    monkeypatch.setattr(enh_registry, 'all_statuses', forbidden)
+    results = {}
+    cid, other = 'pfc_a', 'pfc_b'
+    days = ['2026-08-31', '2026-09-01', '2026-09-25', '2026-09-26', '2026-10-24', '2026-10-25']
+    for day in days:
+        picks = [dict(date=day, home='Alpha', away='Beta', market='1x2', pick='home',
+                      edge_rule=cid, odds=2.0 if day != '2026-10-24' else None,
+                      odds_source='betexplorer_odds', bucket='SKIPPED_VETO')]
+        (localdata / f'picks_{day}.json').write_text(json.dumps(picks))
+        result = dict(date=day, home='Alpha', away='Beta', hs=1, gs=0, outcome='home')
+        results[(day, ledger_team_key('Alpha'), ledger_team_key('Beta'))] = result
+    # A legitimately empty archive day versus missing/unreadable archive dates.
+    (localdata / 'picks_2026-10-23.json').write_text('[]')
+    (localdata / 'picks_2026-10-22.json').write_text('{broken')
+    monkeypatch.setattr(mod, 'load_results_index', lambda _: (results, {}))
+    registry = localdata / 'edges_consensus.json'
+    registry.write_text(json.dumps({'edges': [
+        dict(contract_id=cid, research_rule='1x2 single[source] avg_p>=60', status='benched',
+             activated_as_of='2026-09-01', valid=dict(n=500, n_priced=400, hit=0.7, roi=0.12),
+             price_basis='retrospective donor', mining_window=dict(as_of_exclusive='2026-09-01')),
+        dict(contract_id=other, research_rule='1x2 single[source] avg_p>=60', status='certified',
+             activated_as_of='2026-10-20'),
+        dict(contract_id='pfc_missing', research_rule='unknown activation', activated_as_of='bad date'),
+        dict(contract_id='pfc_future', research_rule='future contract', activated_as_of='2026-11-01'),
+    ]}))
+    return mod, localdata, registry
+
+
+def test_rule_windows_keep_activation_recent_and_validation_separate(tmp_path, monkeypatch):
+    mod, ld, registry = _rule_windows_fixture(tmp_path, monkeypatch)
+    before = {p.name: p.read_bytes() for p in ld.iterdir()}
+    data = mod.build_rule_performance_windows('2026-10-25', tmp_path/'unused.duckdb')
+    rule = data['rules']['pfc_a']
+    since, recent = rule['since_activation'], rule['last_30_days']
+    assert data['recent_start'] == '2026-09-26'
+    assert data['history_start'] == '2026-09-01'
+    assert since['settled_picks'] == 4  # excludes preactivation Aug31 and same-day Oct25
+    assert since['priced_picks'] == 3 and since['roi'] == 1.0
+    assert since['pricing_coverage'] == 0.75
+    assert recent['settled_picks'] == 2 and recent['priced_picks'] == 1
+    assert recent['pricing_coverage'] == 0.5
+    assert since['first_observed_pick'] == '2026-09-01'
+    assert recent['first_observed_pick'] == '2026-09-26'
+    assert '2026-10-23' not in recent['missing_archive_dates']  # empty but recorded
+    assert '2026-10-22' in recent['missing_archive_dates']  # corrupt, not coverage
+    assert recent['archive_days_available'] == 3  # Sep26, Oct23 empty, Oct24
+    assert recent['archive_days_expected'] == 29  # same-day exclusion
+    assert recent['by_price_evidence']['BETEXPLORER_RESCUE']['priced_picks'] == 1
+    assert rule['historical_validation']['metrics']['n'] == 500
+    assert rule['historical_validation']['price_basis'] == 'retrospective donor'
+    assert data['rules']['pfc_b']['since_activation']['settled_picks'] == 0  # no pooling by label
+    assert data['rules']['pfc_missing']['since_activation'] is None
+    assert data['rules']['pfc_future']['since_activation'] is None
+    assert data['rules']['pfc_future']['since_activation_unavailable_reason'] == 'activation after report end'
+    assert before == {p.name: p.read_bytes() for p in ld.iterdir()}
+    assert not (ld / 'enhancement_registry.json').exists()
+    text = '\n'.join(mod._render_rule_windows(data))
+    assert 'Since activation' in text and 'Last 30 days' in text
+    assert 'Historical validation — NOT operational performance' in text
+    assert 'coverage 75.0%' in text and 'coverage 50.0%' in text
+    assert '500 / 400' in text and 'retrospective donor' in text
+    assert 'BENCH' not in text  # status rendered faithfully, no new policy
+
+
+def test_rule_windows_same_day_is_explicit_opt_in(tmp_path, monkeypatch):
+    mod, ld, registry = _rule_windows_fixture(tmp_path, monkeypatch)
+    data = mod.build_rule_performance_windows('2026-10-25', tmp_path/'unused.duckdb', include_same_day=True)
+    assert data['include_same_day'] is True
+    assert data['rules']['pfc_a']['since_activation']['settled_picks'] == 5
+    assert data['rules']['pfc_a']['last_30_days']['settled_picks'] == 3
+    assert data['rules']['pfc_a']['last_30_days']['archive_days_expected'] == 30
+
+
+def test_rule_windows_legacy_activation_not_invented_and_recent_is_always_30_days(tmp_path, monkeypatch):
+    mod, ld, registry = _rule_windows_fixture(tmp_path, monkeypatch)
+    day = '2026-10-24'
+    picks = json.loads((ld/f'picks_{day}.json').read_text())
+    picks.append(dict(picks[0], edge_rule='ml-meta avg_p>=55', market='ou_2.5', pick='under', odds=1.5))
+    (ld/f'picks_{day}.json').write_text(json.dumps(picks))
+    data = mod.build_rule_performance_windows('2026-10-25', tmp_path/'unused.duckdb')
+    legacy = data['rules']['ml-meta avg_p>=55']
+    assert legacy['since_activation'] is None
+    assert legacy['historical_validation'] is None
+    assert legacy['last_30_days']['settled_picks'] == 1
+    assert legacy['last_30_days']['roi'] == 0.5
+    assert '\n'.join(mod._render_rule_windows(data)).count('ml-meta avg_p>=55') >= 1
+    assert mod._render_rule_windows(None) == []  # old stored reports stay honest
+
+
+def test_main_adds_windows_without_changing_custom_audit_range(tmp_path, monkeypatch, capsys):
+    import sys
+    import scripts.audit_recent_picks as mod
+    monkeypatch.setattr(mod, 'LOCALDATA', tmp_path)
+    calls = []
+    def report(start, end, warehouse, **kwargs):
+        calls.append(('base', start, end, kwargs))
+        return dict(start=start, end=end, overall={})
+    def windows(end, warehouse, **kwargs):
+        calls.append(('windows', end, kwargs))
+        return dict(end=end, recent_start='2026-09-26', history_start='2026-09-01',
+                    include_same_day=False, same_day_cutoff='2026-10-25', rules={})
+    monkeypatch.setattr(mod, 'build_report', report)
+    monkeypatch.setattr(mod, 'build_rule_performance_windows', windows)
+    monkeypatch.setattr(sys, 'argv', ['audit_recent_picks.py', '--end', '2026-10-25', '--days', '90'])
+    assert mod.main() == 0
+    result = json.loads((tmp_path / 'picks_audit_rolling.json').read_text())
+    assert result['start'] == '2026-07-28'
+    assert result['rule_performance_windows']['recent_start'] == '2026-09-26'
+    text = (tmp_path / 'picks_audit_2026-10-25.md').read_text()
+    assert text.index('## Rule performance — since activation') < text.index('## By rule')
+    assert len(calls) == 2
+
+
+def test_rule_windows_missing_registry_uses_recorded_rows_not_guessed_activation(tmp_path, monkeypatch):
+    mod, ld, registry = _rule_windows_fixture(tmp_path, monkeypatch)
+    data = mod.build_rule_performance_windows('2026-10-25', tmp_path/'unused.duckdb',
+                                             registry_path=tmp_path/'missing.json')
+    assert data['history_start'] == data['recent_start']
+    row = data['rules']['pfc_a']
+    assert row['since_activation'] is None
+    assert row['last_30_days']['settled_picks'] == 2
+    assert row['historical_validation'] is None
+    assert row['label'] == 'Unresolved contract (rule unavailable)'
