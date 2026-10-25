@@ -14,7 +14,7 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 25,
+    "ledger_entries": 26,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -39,20 +39,6 @@
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "palermo|carraresecalcio",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "spartarotterdam|ajax",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
         "fixture": "viktoriaplzen|pardubice",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
@@ -60,7 +46,21 @@
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "albacete|eldense",
+        "fixture": "molde|fredrikstad",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "deportivolaguaira|metropolitanos",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "parissaintgermain|olympiquelyonnais",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -70,13 +70,11 @@
     "usable_snapshots": 0
   },
   "preflight": {
-    "allowance_by_key": {
-      "88739ee5": 6
-    },
+    "allowance_by_key": {},
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=6 [pools=2 cap=90 reserve=20 spent=8 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=0 [pools=2 cap=90 reserve=20 spent=8 month=2026-10] -> unattributed_quota",
     "month": "2026-10",
     "month_spend_by_key": {
       "5b6ed40a": 1,
@@ -91,8 +89,8 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 6,
-    "verdict": "approved"
+    "spendable": 0,
+    "verdict": "unattributed_quota"
   },
   "provenance": {
     "api": "https://football-prediction-api.p.rapidapi.com/api/v2/head-to-head/:id",
