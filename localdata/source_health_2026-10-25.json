@@ -24,10 +24,10 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 1,
+        "fixture_key_miss": 3,
         "market_unmapped": 4,
         "market_unsupported": 239,
-        "no_pick_for_fixture": 5,
+        "no_pick_for_fixture": 3,
         "out_of_window": 31,
         "selection_unmapped": 363
       },
@@ -45,25 +45,25 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 16,
+      "be_matched": 10,
       "be_raw": 24,
-      "be_usable": 21,
+      "be_usable": 24,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 7,
+      "join_matched_rows": 4,
       "join_miss_counts": {
-        "fixture_key_miss": 2,
-        "no_pick_for_fixture": 12
+        "fixture_key_miss": 14,
+        "no_pick_for_fixture": 6
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-25' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -95,10 +95,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 1,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 9,
-        "no_pick_for_fixture": 1,
+        "fixture_key_miss": 11,
         "selection_unsupported": 13
       },
       "reason": null,
@@ -160,16 +159,16 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 1367,
+      "join_matched_rows": 1089,
       "join_miss_counts": {
-        "fixture_key_miss": 15620,
+        "fixture_key_miss": 52964,
         "invalid_price": 2,
-        "market_unsupported": 26212,
-        "no_pick_for_fixture": 32373
+        "market_unsupported": 38470,
+        "no_pick_for_fixture": 23214
       },
-      "op_matched": 9,
-      "op_raw": 75574,
-      "op_usable": 75574,
+      "op_matched": 7,
+      "op_raw": 115739,
+      "op_usable": 115739,
       "reason": null,
       "status": "cache_only"
     },
@@ -188,12 +187,12 @@
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 79,
+      "join_matched_rows": 27,
       "join_miss_counts": {
-        "fixture_key_miss": 24548,
-        "no_pick_for_fixture": 1293
+        "fixture_key_miss": 25215,
+        "no_pick_for_fixture": 678
       },
-      "pa_matched": 90,
+      "pa_matched": 33,
       "pa_raw": 25920,
       "pa_scored": 25920,
       "reason": null,
@@ -245,26 +244,53 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 4,
-        "board_league_count": 3,
+        "board_fixtures": 15,
+        "board_league_count": 10,
         "board_leagues": {
-          "brazil_-_serie_a": 91,
-          "el_salvador_-_primera_division": 86,
-          "usa_-_usl_league_one": 23
+          "argentina_-_primera_division": 59,
+          "argentina_-_primera_nacional": 1,
+          "brazil_-_serie_a": 22,
+          "guatemala_-_liga_nacional": 5,
+          "honduras_-_liga_nacional": 2,
+          "mexican_liga_de_expansion_mx": 6,
+          "usa_-_major_league_soccer": 50,
+          "usa_-_usl_championship": 1,
+          "usa_-_usl_league_one": 1,
+          "usa_united_soccer_league": 53
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 8,
+        "board_team_count": 28,
         "board_team_names": {
-          "AD Isidro Metapan": 48,
-          "Alianza FC (SLV)": 48,
-          "CD Aguila": 38,
-          "CD Fas": 38,
-          "Charlotte Independence": 23,
-          "Corinthians": 91,
-          "Portland Hearts of Pine": 23,
-          "Vasco Da Gama": 91
+          "Antigua GFC": 5,
+          "Atlanta Utd": 15,
+          "Bahia": 22,
+          "CA Huracan": 32,
+          "CD Platense [HON]": 2,
+          "CHI Fire": 15,
+          "CSD Comunicaciones": 5,
+          "Ciudad Bolivar": 1,
+          "Colon de Santa": 1,
+          "DC Utd": 16,
+          "Dorados": 3,
+          "FC Cincinnati": 16,
+          "Huracan": 27,
+          "Mineros de Zacatecas": 3,
+          "NE Revolution": 9,
+          "NYCFC": 10,
+          "Orlando City": 10,
+          "PHI Union": 9,
+          "Piratas FC": 3,
+          "Real Espana": 2,
+          "Rosario Central": 59,
+          "Santos": 22,
+          "Sarasota Paradise": 1,
+          "Sporting Club Jacksonville": 53,
+          "Sporting Jacksonville": 1,
+          "Tampa Bay Rowdies": 54,
+          "Universidad Guadalajara": 3,
+          "Westchester SC": 1
         },
         "board_truncated": false,
         "card_fixture_count": 88,
@@ -327,12 +353,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 144,
+      "join_matched_rows": 65,
       "join_miss_counts": {
-        "fixture_key_miss": 108,
-        "no_pick_for_fixture": 511
+        "fixture_key_miss": 512,
+        "no_pick_for_fixture": 186
       },
-      "oa_matched": 17,
+      "oa_matched": 9,
       "oa_raw": 763,
       "oa_usable": 763,
       "reason": null,
