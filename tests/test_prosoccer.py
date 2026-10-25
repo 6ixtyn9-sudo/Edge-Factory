@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date as _date
 from datetime import timedelta
+from types import SimpleNamespace
 
 import pytest
 
@@ -201,15 +202,38 @@ def test_get_raises_when_all_transports_fail(monkeypatch):
         prosoccer._get("https://www.prosoccer.gr/en/football/predictions/")
 
 
-def test_fetch_day_failure_keeps_http_cause(monkeypatch):
+@pytest.fixture(params=["2026-10-18", "2026-10-25", "2027-01-01"])
+def fetch_today(request, monkeypatch):
+    """Only these transport tests use this clock; never patch global datetime.
+
+    Include the original date, the CI failure date and a later year so the
+    error-path tests cannot silently expire outside the rolling week again.
+    """
+    today = _date.fromisoformat(request.param)
+
+    class PinnedDate(_date):
+        @classmethod
+        def today(cls):
+            return today
+
+    monkeypatch.setattr(prosoccer, "_dt", SimpleNamespace(date=PinnedDate))
+    return today.isoformat()
+
+
+def test_fetch_day_failure_keeps_http_cause(monkeypatch, fetch_today):
     # Regression: the per-URL list kept only the class name, so every HTTP
     # 500 read as "RuntimeError" in CI and an outage looked like a parser fault.
     import urllib.error
+    calls = []
     def http500(_url, retries=3):
+        calls.append(_url)
         raise urllib.error.HTTPError(_url, 500, "Internal Server Error", None, None)
     monkeypatch.setattr(prosoccer, "_get", http500)
     with pytest.raises(RuntimeError) as info:
-        prosoccer.fetch_day("2026-10-18")
+        prosoccer.fetch_day(fetch_today)
+    assert calls == [prosoccer.BASE]
+    assert isinstance(info.value.__cause__, urllib.error.HTTPError)
+    assert info.value.__cause__.code == 500
     message = str(info.value)
     assert "HTTPError" in message
     assert "HTTP Error 500" in message
@@ -229,12 +253,12 @@ def test_columns_cover_row_keys():
         assert set(row) == set(prosoccer.COLUMNS)
 
 
-def test_transport_outage_does_not_multiply_ladder_by_calendar_aliases(monkeypatch):
+def test_transport_outage_does_not_multiply_ladder_by_calendar_aliases(monkeypatch, fetch_today):
     calls = []
     def failed(url, retries=3):
         calls.append(url)
         raise RuntimeError('all independent transports timed out')
     monkeypatch.setattr(prosoccer, '_get', failed)
     with pytest.raises(RuntimeError, match='transport ladder failed'):
-        prosoccer.fetch_day('2026-10-21')
-    assert len(calls) == 1  # still failure, never a successful empty capture
+        prosoccer.fetch_day(fetch_today)
+    assert calls == [prosoccer.BASE]  # still failure, never a successful empty capture
