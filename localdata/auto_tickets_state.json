@@ -2,7 +2,84 @@
   "base_pct": 100.0,
   "bank": 286.9143220000001,
   "cycle_base": 203.9865280000001,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-10-25",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Barcelona vs Real Madrid",
+              "pick": "HOME",
+              "prob": 0.73,
+              "odds": 1.66,
+              "result": null,
+              "fixture_key": [
+                "2026-10-25",
+                "Barcelona",
+                "Real Madrid"
+              ]
+            },
+            {
+              "match": "OFK Beograd vs Crvena Zvezda",
+              "pick": "AWAY",
+              "prob": 0.6977306547619048,
+              "odds": 1.33,
+              "result": null,
+              "fixture_key": [
+                "2026-10-25",
+                "OFK Beograd",
+                "Crvena Zvezda"
+              ]
+            }
+          ],
+          "odds": 2.21,
+          "stake_pct": 35.8643,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
+              "match": "FC Tokyo vs Mito Hollyhock",
+              "pick": "HOME",
+              "prob": 0.7255919252900669,
+              "odds": 1.3058,
+              "result": null,
+              "fixture_key": [
+                "2026-10-25",
+                "FC Tokyo",
+                "Mito Hollyhock"
+              ]
+            },
+            {
+              "match": "Str\u00f8mmen vs Str\u00f8msgodset",
+              "pick": "AWAY",
+              "prob": 0.697925388408224,
+              "odds": 1.34,
+              "result": null,
+              "fixture_key": [
+                "2026-10-25",
+                "Str\u00f8mmen",
+                "Str\u00f8msgodset"
+              ]
+            }
+          ],
+          "odds": 1.75,
+          "stake_pct": 35.8643,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        }
+      ],
+      "staked_pct": 71.7286
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
