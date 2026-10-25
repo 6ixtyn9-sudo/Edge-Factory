@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 4,
@@ -30,7 +30,7 @@
         "selection_unmapped": 308
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-26' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -170,20 +170,20 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 12,
+      "coherence_excluded_rows": 18,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 12
+        "withheld_mixed_events_one_x_two": 18
       },
-      "coherence_withheld_fixtures": 2,
+      "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 17950
+        "out_of_window": 18546
       },
       "pa_matched": 0,
-      "pa_raw": 997,
-      "pa_scored": 17950,
+      "pa_raw": 1031,
+      "pa_scored": 18546,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -233,32 +233,39 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 6,
-        "board_league_count": 5,
+        "board_fixtures": 11,
+        "board_league_count": 4,
         "board_leagues": {
-          "bolivia_-_primera_division": 48,
-          "brazil_-_serie_a": 15,
-          "el_salvador_-_primera_division": 78,
-          "usa_-_usl_championship": 3,
-          "usa_-_usl_league_one": 56
+          "honduras_-_liga_nacional": 2,
+          "usa_-_major_league_soccer": 102,
+          "usa_-_usl_league_one": 13,
+          "usa_united_soccer_league": 83
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 12,
+        "board_team_count": 20,
         "board_team_names": {
-          "AD Isidro Metapan": 1,
-          "Alianza FC (SLV)": 1,
-          "Brooklyn FC": 3,
-          "CD Aguila": 77,
-          "CD Fas": 77,
-          "Charlotte Independence": 56,
-          "Corinthians": 15,
-          "Loudoun United FC": 3,
-          "Portland Hearts of Pine": 56,
-          "Real Potosi": 48,
-          "San Antonio Bulo Bulo": 48,
-          "Vasco da Gama": 15
+          "Atlanta Utd": 22,
+          "Boise Cutthroats FC": 11,
+          "CD Platense [HON]": 2,
+          "CHI Fire": 14,
+          "Chicago Fire": 8,
+          "DC Utd": 26,
+          "FC Cincinnati": 26,
+          "Fort Wayne FC": 11,
+          "NE Revolution": 6,
+          "NYCFC": 13,
+          "New England Revolution": 31,
+          "New York City": 4,
+          "Orlando City": 17,
+          "PHI Union": 6,
+          "Philadelphia": 31,
+          "Real Espana": 2,
+          "Sarasota Paradise": 2,
+          "Sporting Club Jacksonville": 83,
+          "Tampa Bay Rowdies": 83,
+          "Westchester SC": 2
         },
         "board_truncated": false,
         "card_fixture_count": 0,
