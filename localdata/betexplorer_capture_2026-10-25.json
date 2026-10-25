@@ -1,5 +1,5 @@
 {
-  "attempted": 8,
+  "attempted": 5,
   "attempted_fixtures": [
     {
       "avg_p": 76.08554160855417,
@@ -12,24 +12,14 @@
       "w_score": 0.7595
     },
     {
-      "avg_p": 73.0,
+      "avg_p": 69.43272200163862,
       "away": "Real Madrid",
       "date": "2026-10-25",
-      "home": "Barcelona",
-      "league": "Spain La Liga",
+      "home": "FC Barcelona",
+      "league": "La Liga",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.6134
-    },
-    {
-      "avg_p": 69.23857868020305,
-      "away": "Cercle Brugge",
-      "date": "2026-10-25",
-      "home": "Union Saint-Gilloise",
-      "league": "Pro League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
+      "w_score": 0.6138
     },
     {
       "avg_p": 66.8946518476299,
@@ -52,26 +42,6 @@
       "w_score": 0.7595
     },
     {
-      "avg_p": 61.40524099204492,
-      "away": "Fredrikstad",
-      "date": "2026-10-25",
-      "home": "Molde",
-      "league": "Eliteserien",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7535
-    },
-    {
-      "avg_p": 60.84266811673012,
-      "away": "Pardubice",
-      "date": "2026-10-25",
-      "home": "Viktoria Plze\u0148",
-      "league": "Chance Liga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7535
-    },
-    {
       "avg_p": 60.463028496926796,
       "away": "FC Cajamarca",
       "date": "2026-10-25",
@@ -87,20 +57,20 @@
   "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "candidate_fixtures": 8,
-  "captured_at": "2026-10-25T16:21:00.142713+00:00",
+  "candidate_fixtures": 5,
+  "captured_at": "2026-10-25T19:13:14.604922+00:00",
   "date": "2026-10-25",
   "errors": [],
-  "fixtures_with_rows": 4,
+  "fixtures_with_rows": 3,
   "market_budget_stop": false,
-  "market_requests": 15,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 268,
+    "bookmakers": 287,
     "challenge_pages": 0,
-    "fixtures": 19,
-    "market_rows": 653,
-    "markets": 112,
-    "named_rows": 653,
+    "fixtures": 20,
+    "market_rows": 703,
+    "markets": 118,
+    "named_rows": 703,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -109,14 +79,14 @@
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
-      "avg_p": 73.0,
+      "avg_p": 69.43272200163862,
       "away": "Real Madrid",
       "date": "2026-10-25",
-      "home": "Barcelona",
-      "league": "Spain La Liga",
+      "home": "FC Barcelona",
+      "league": "La Liga",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.6134
+      "w_score": 0.6138
     },
     {
       "avg_p": 65.3263613415074,
@@ -129,16 +99,6 @@
       "w_score": 0.7595
     },
     {
-      "avg_p": 61.40524099204492,
-      "away": "Fredrikstad",
-      "date": "2026-10-25",
-      "home": "Molde",
-      "league": "Eliteserien",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7535
-    },
-    {
       "avg_p": 60.463028496926796,
       "away": "FC Cajamarca",
       "date": "2026-10-25",
@@ -149,8 +109,8 @@
       "w_score": 0.7535
     }
   ],
-  "requests": 24,
-  "rows": 12,
+  "requests": 9,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }
