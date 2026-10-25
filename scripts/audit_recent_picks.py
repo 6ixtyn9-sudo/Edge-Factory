@@ -1679,7 +1679,8 @@ def _render_statline_section(cal: dict[str, Any]) -> list[str]:
     return lines
 
 
-def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day: bool = False) -> dict[str, Any]:
+def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day: bool = False,
+                 _rule_rows_only: bool = False) -> dict[str, Any]:
     picks, archive_receipt = load_archived_picks_with_receipt(start, end)
     picks = dedupe_archived_picks(picks)
     results, results_by_date = load_results_index(warehouse_path)
@@ -1860,6 +1861,8 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                 overlay_rescued += 1
             settled_rows.append(settled)
             settled_pairs.append((settled, pick))
+            if _rule_rows_only:
+                continue  # Same adjudication; never feed enhancement registries in history mode.
 
             # Score secondary markets on this settled match. This realized-rates
             # table is measured on the 1X2 consensus slate only: an OU/BTTS row
@@ -2061,6 +2064,10 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                         and math.isfinite(avg_goals_promised)):
                     goal_forecasts.append((float(avg_goals_promised), float(hs + gs)))
 
+    if _rule_rows_only:
+        return {"rule_rows": settled_rows, "archive_receipt": archive_receipt,
+                "archived_pick_dates": archived_dates}
+
     # Enhancement certification registry (round 6D): feed BOTH ledgers - the
     # priced settled outcomes (they advance certification) and the unpriced ones
     # (processed-only; they dedupe and are measurable, but never certify:
@@ -2252,6 +2259,178 @@ def _contract_labels(registry_path: Path | None = None) -> dict[str, str]:
     return out
 
 
+def _iso_day(value: Any) -> str | None:
+    try:
+        text = str(value)
+        return text if date.fromisoformat(text).isoformat() == text else None
+    except (ValueError, TypeError):
+        return None
+
+
+def build_rule_performance_windows(end: str, warehouse_path: Path, *,
+                                   include_same_day: bool = False,
+                                   registry_path: Path | None = None) -> dict[str, Any]:
+    """Read-only operational windows using the audit's exact settlement path.
+
+    Never replay research rules onto old fixtures or infer an activation date.
+    Validation is copied separately with its retrospective pricing caveat.
+    """
+    path = registry_path or (LOCALDATA / "edges_consensus.json")
+    try:
+        edges = json.loads(path.read_text()).get("edges") or []
+    except (OSError, ValueError):
+        edges = []
+    contracts = {e["contract_id"]: e for e in edges
+                 if isinstance(e, dict) and str(e.get("contract_id", "")).startswith("pfc_")}
+    recent_start = (date.fromisoformat(end) - timedelta(days=29)).isoformat()
+    activations = {key: _iso_day(edge.get("activated_as_of")) for key, edge in contracts.items()}
+    history_start = min([recent_start] + [d for d in activations.values() if d and d <= end])
+    history = build_report(history_start, end, warehouse_path,
+                           include_same_day=include_same_day, _rule_rows_only=True)
+    rows = history["rule_rows"]
+    grouped = defaultdict(list)
+    for row in rows:
+        grouped[row.rule_name].append(row)
+    # File availability, not nonempty pick dates: a recorded empty card is evidence too.
+    def readable_archive(path):
+        try:
+            return isinstance(json.loads(path.read_text()), list)
+        except (OSError, ValueError):
+            return False
+    available_dates = {day for day in daterange(history_start, end)
+                       if readable_archive(LOCALDATA / f"picks_morning_{day}.json")
+                       or readable_archive(LOCALDATA / f"picks_{day}.json")}
+    cutoff = local_today()
+
+    def window(source_rows, start):
+        sample = [row for row in source_rows if start <= row.date <= end]
+        expected = [day for day in daterange(start, end)
+                    if include_same_day or day < cutoff]
+        available = sorted(set(expected) & available_dates)
+        missing = sorted(set(expected) - available_dates)
+        summary = summarize_scored(sample)
+        summary.update({
+            "start": start, "end": end,
+            "pricing_coverage": (summary["priced_picks"] / summary["settled_picks"]
+                                 if summary["settled_picks"] else None),
+            "by_price_evidence": summarize_by(sample, "price_evidence"),
+            "by_price_quarantine_reason": summarize_by(sample, "price_quarantine_reason"),
+            "first_observed_pick": min((r.date for r in sample), default=None),
+            "last_observed_pick": max((r.date for r in sample), default=None),
+            "archive_days_available": len(available), "archive_days_expected": len(expected),
+            "missing_archive_dates": missing,
+            "archive_receipt": {key: [d for d in history["archive_receipt"].get(key, [])
+                                      if start <= d <= end] for key in (
+                                          "unsafe_regular_ledger_dates", "empty_regular_ledger_dates")},
+        })
+        return summary
+
+    out = {}
+    for key in sorted(set(contracts) | set(grouped)):
+        edge = contracts.get(key, {})
+        activation = activations.get(key)
+        since = window(grouped[key], activation) if activation and activation <= end else None
+        valid = edge.get("valid")
+        out[key] = {
+            "label": html.unescape(str(edge.get("research_rule") or
+                     ("Unresolved contract (rule unavailable)" if key.startswith("pfc_") else key))),
+            "registry_status": edge.get("status"), "activated_as_of": activation,
+            "since_activation": since,
+            "since_activation_unavailable_reason": (None if since is not None else
+                "activation after report end" if activation else "activation date unavailable"),
+            "last_30_days": window(grouped[key], recent_start),
+            "historical_validation": ({"metrics": valid, "mining_window": edge.get("mining_window"),
+                                       "price_basis": edge.get("price_basis"),
+                                       "statistical_gates_passed": edge.get("statistical_gates_passed")}
+                                      if isinstance(valid, dict) else None),
+        }
+    return {"end": end, "recent_start": recent_start, "history_start": history_start,
+            "include_same_day": include_same_day, "same_day_cutoff": cutoff,
+            "archive_receipt": history["archive_receipt"], "rules": out}
+
+
+def _render_rule_windows(data: dict | None) -> list[str]:
+    if not data:
+        return []  # Older saved audit JSON remains renderable, without invented history.
+    def cell(value):
+        return html.unescape(str(value)).replace("|", "\\|").replace("\n", " ").replace("\r", " ")
+    def metrics(summary):
+        if summary is None:
+            return "unavailable"
+        n, priced = summary["settled_picks"], summary["priced_picks"]
+        roi = f"{summary['roi']:+.1%}" if summary.get("roi") is not None else "unavailable"
+        hr = f"{summary['hit_rate']:.1%}" if summary.get("hit_rate") is not None else "unavailable"
+        coverage = f"{summary['pricing_coverage']:.1%}" if summary.get("pricing_coverage") is not None else "unavailable"
+        flag = "; provisional" if priced < PROVISIONAL_N else ""
+        return f"ROI {roi}; hit {hr} ({summary['wins']}/{n}); {priced} priced; coverage {coverage}{flag}"
+    rules = data.get("rules", {})
+    lines = ["## Rule performance — since activation vs last 30 days", "",
+             "Primary view: recorded post-activation PICK ROWS, including vetoed/watchlist rows; "
+             "not placed bets or acca returns. No retrospective rule replay. "
+             "Missing activation dates remain unavailable. Missing archive days mean partial history, "
+             "not zero activity. Missing/unreadable files are counted as archive gaps. "
+             "Empty recorded cards count as available days. "
+             "Current registry status is not historical status on each pick date.", "",
+             f"Last 30 days: {data['recent_start']} to {data['end']}; "
+             f"same-day inclusion: {data['include_same_day']} (local cutoff {data['same_day_cutoff']}). "
+             "The 30-priced-row provisional flag is reporting only, not an activation gate. "
+             "Priced ROI can include fallback/quarantined odds; provenance is shown separately. "
+             "Historical ml-meta is not the live ML ENH selector.", "",
+             "| Rule | Activation / current status | Since activation | Last 30 days | Archive days: since / recent | Stored key |",
+             "| --- | --- | --- | --- | --- | --- |"]
+    # Supported histories lead; tiny samples and unavailable histories follow.
+    # Never use research validation or silently substitute recent ROI for lifetime ranking.
+    ordered = sorted(rules.items(), key=lambda item: (
+        0 if (item[1].get("since_activation") or {}).get("priced_picks", 0) >= PROVISIONAL_N else
+        1 if (item[1].get("since_activation") or {}).get("roi") is not None else 2,
+        -((item[1].get("since_activation") or {}).get("roi")
+          if (item[1].get("since_activation") or {}).get("roi") is not None else -math.inf), item[0]))
+    for key, rule in ordered:
+        since, recent = rule["since_activation"], rule["last_30_days"]
+        def archive(w):
+            return f"{w['archive_days_available']}/{w['archive_days_expected']}" if w else "unavailable"
+        lines.append(f"| {cell(rule['label'])} | {rule.get('activated_as_of') or 'unavailable'} / "
+                     f"{cell(rule.get('registry_status') or 'unavailable')} | {metrics(since)} | "
+                     f"{metrics(recent)} | {archive(since)} / {archive(recent)} | {cell(key)} |")
+    lines.extend(["", "### Price provenance — operational windows", "",
+                  "Only windows with settled rows are listed below: evidence class, settled/priced rows and quarantine reasons. "
+                  "A priced row alone is not proof of an executable quote.", "",
+                  "| Rule | Window | Evidence class: settled / priced | Quarantine reason: settled / priced | Stored key |",
+                  "| --- | --- | --- | --- | --- |"])
+    for key, rule in ordered:
+        for title, window in (("Since activation", rule["since_activation"]), ("Last 30 days", rule["last_30_days"])):
+            if window is None or not window["settled_picks"]:
+                continue
+            def counts(field):
+                return "; ".join(f"{k}: {v['settled_picks']}/{v['priced_picks']}"
+                                 for k, v in sorted(window[field].items())) or "none observed"
+            lines.append(f"| {cell(rule['label'])} | {title} | {cell(counts('by_price_evidence'))} | "
+                         f"{cell(counts('by_price_quarantine_reason'))} | {cell(key)} |")
+    lines.extend(["", "### Historical validation — NOT operational performance", "",
+                  "Registry validation is separate research evidence, not extra live observations. "
+                  "Price basis and mining dates are retained; unavailable fields are not inferred.", "",
+                  "| Rule | Validation settled / priced | Pricing coverage | Hit rate | ROI | Mining window | Price basis | Stored key |",
+                  "| --- | --- | --- | --- | --- | --- | --- | --- |"])
+    for key, rule in ordered:
+        validation = rule.get("historical_validation")
+        if not validation:
+            lines.append(f"| {cell(rule['label'])} | unavailable | unavailable | unavailable | unavailable | unavailable | unavailable | {cell(key)} |")
+            continue
+        v = validation["metrics"]
+        def pct(value):
+            return f"{float(value):.1%}" if value is not None else "unavailable"
+        coverage = (v["n_priced"] / v["n"] if v.get("n") and v.get("n_priced") is not None else None)
+        mining = validation.get("mining_window") or {}
+        mining_text = "; ".join(f"{name}: {mining[name]}" for name in
+                                ("start", "split", "as_of_exclusive") if mining.get(name)) or "unavailable"
+        lines.append(f"| {cell(rule['label'])} | {v.get('n', 'unavailable')} / {v.get('n_priced', 'unavailable')} | "
+                     f"{pct(coverage)} | {pct(v.get('hit'))} | {pct(v.get('roi'))} | "
+                     f"{cell(mining_text)} | "
+                     f"{cell(validation.get('price_basis') or 'unavailable')} | {cell(key)} |")
+    lines.append("")
+    return lines
+
+
 def _readable_rule(key: Any, labels: dict[str, str]) -> str:
     """Display only: resolve contracts without changing joins or archive keys."""
     key = str(key or "Rule unavailable")
@@ -2370,6 +2549,7 @@ def write_markdown(path: Path, report: dict[str, Any],
         "",
     ]
     
+    lines.extend(_render_rule_windows(report.get("rule_performance_windows")))
     lines.append("Fixture-level secondary rates below score the fixture behind every settled pick; they are not enhancement-bet returns.")
     # Render Secondary Market realized stats
     sec = report.get("secondary_stats", {})
@@ -2779,6 +2959,9 @@ def main() -> int:
     else:
         start = (end - timedelta(days=max(0, args.days - 1))).isoformat()
     report = build_report(start, end.isoformat(), Path(args.warehouse), include_same_day=args.include_same_day)
+
+    report["rule_performance_windows"] = build_rule_performance_windows(
+        end.isoformat(), Path(args.warehouse), include_same_day=args.include_same_day)
 
     json_path = LOCALDATA / "picks_audit_rolling.json"
     md_path = LOCALDATA / f"picks_audit_{end.isoformat()}.md"

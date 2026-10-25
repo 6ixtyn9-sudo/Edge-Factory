@@ -12198,3 +12198,44 @@ keys are untouched. Added diagnostic rendering and fallback regressions: 78
 passed across recent-picks/enh-registry tests after this extension. Previous full
 suite receipt above predates these two added tests. No workflow dispatch or
 financial/state writes. Preparing the same branch for review, not auto-merging.
+
+### 25 October 2026 — since-activation vs recent rule performance
+
+Operator authorized proceeding with lifetime/recent/validation reporting using
+existing machinery. Extended scripts/audit_recent_picks.py only (no new script,
+service, workflow or pricing provider). Normal CLI now adds a leading readable
+side-by-side rule table plus separate provenance and historical-validation
+sections, and additive rule_performance_windows JSON. Original requested-window
+aggregates/by_rule keys remain unchanged; custom --start/--days still control
+those aggregates, while the recent comparison is always end minus 29 days.
+
+History uses build_report's existing archive loader, deduplication, result
+conflict/disposition/reschedule handling and same-day policy via a private
+read-only rows mode. It exits before enhancement evaluation/registry writes.
+Only exact frozen contract IDs/legacy keys are grouped: no threshold pooling,
+no retrospective evaluation of rules on old fixtures, no invented old prices.
+Since activation begins at registry activated_as_of, never earliest observation.
+Missing/invalid activation dates and activation after report end stay explicitly
+unavailable. All registry contracts (including no-observation contracts) plus
+settled legacy keys are represented. Registry validation is copied separately
+with mining dates, price basis, priced/settled denominators and pricing coverage;
+it never enters operational ROI or ranking. 30-priced provisional flag remains
+presentation-only, not a new gate or policy change.
+
+Operational windows include settled/priced counts, hit rate, ROI, pricing
+coverage, evidence/quarantine breakdowns, first/last settled observation and
+archive coverage/gaps. Valid empty card files count as available days; missing
+or malformed files do not. Coverage reflects available daily ledgers, not proof
+of complete intraday capture. Veto/watchlist pick rows remain included, not
+claimed as placed bets. Current registry status is not historical status.
+Historical ml-meta remains distinct from the live ML ENH acca selector.
+
+Validation: full suite 4364 passed, 1 skipped in 210.17s (Python 3.11); excluded
+log .cache/rule-windows/pytest.log. Five added tests cover activation/30-day
+boundaries, preactivation/same-day exclusion and opt-in, exact-contract separation,
+unknown/future activation, missing registry, legacy rules, missing/corrupt versus
+empty archives, separate retrospective validation, read-only byte-identical
+archives/no enhancement registry calls, and CLI custom 90-day aggregates with a
+fixed 30-day comparison. No real report/settlement rerun: this checkout lacks
+warehouse.duckdb; no evidence manufactured to fill it. No bank, registry,
+selection, staking or historical record edits; no dispatch or automatic merge.
