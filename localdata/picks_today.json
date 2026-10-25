@@ -1,12 +1,12 @@
 [
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 72.08771929824562,
     "away": "AC Milan",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -915,13 +915,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 70.90366972477065,
     "away": "Eldense",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -23777,13 +23777,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 69.77306547619048,
     "away": "Crvena Zvezda",
     "bookmaker": "betexplorer_best",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -24805,13 +24805,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 67.63564056434049,
     "away": "FC Bayern M\u00fcnchen",
-    "bookmaker": "Pinnacle",
+    "bookmaker": "betexplorer_best",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -24826,8 +24826,8 @@
       "league_key": "germany bundesliga",
       "league_raw": "Bundesliga",
       "niche": "UNKNOWN",
-      "odds_band": "ALLOW",
-      "odds_band_name": "1.35-1.50",
+      "odds_band": "UNKNOWN",
+      "odds_band_name": "1.50-1.75",
       "purity_evidence_status": "available",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O2-competition_type",
@@ -24842,7 +24842,7 @@
     "date": "2026-10-25",
     "decay_verdict": "WATCH",
     "display_rule": "1x2 single[scoutingstats] avg_p>=65",
-    "draw_risk_flag": "HIGH",
+    "draw_risk_flag": "EXTREME",
     "duplicate_bucket_sources": [
       "CAUTION"
     ],
@@ -25433,41 +25433,41 @@
     "league": "Bundesliga",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
+    "market_recommendation_reason": "high draw risk and weak signal for raw 1X2",
     "market_type": "1x2",
     "match": "SC Freiburg vs FC Bayern M\u00fcnchen",
     "min_lead_minutes": 30,
     "n_way": 1,
-    "odds": 1.3745,
-    "odds_captured_at": "2026-10-24T01:37:02+00:00",
-    "odds_league": "Germany - Bundesliga",
+    "odds": 1.53,
+    "odds_captured_at": "2026-10-25T13:25:33.413801+00:00",
+    "odds_league": "Germany: Bundesliga",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
-    "odds_source": "pinnapi_odds",
+    "odds_source": "betexplorer_odds",
     "odds_tier": "low",
     "pick": "away",
     "price_board": [
       {
         "away": "Bayern Munich",
-        "bookmaker": "Pinnacle",
-        "captured_at": "2026-10-24T01:37:02+00:00",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-25T13:25:33.413801+00:00",
         "chosen": true,
         "home": "Freiburg",
-        "kickoff": "2026-10-25T16:30:00Z",
-        "league": "Germany - Bundesliga",
+        "kickoff": "17:30",
+        "league": "Germany: Bundesliga",
         "line": null,
         "market": "1x2",
         "match_method": "exact",
         "named_bookmaker": true,
-        "odds": 1.3745,
+        "odds": 1.53,
         "odds_kind": "bookmaker",
         "price_coherence": null,
-        "price_independence_family": "pinnacle_book",
+        "price_independence_family": "betexplorer_book",
         "provider_role": "named_bookmaker",
-        "raw_market": "money_line",
+        "raw_market": "1x2",
         "raw_selection": "away",
         "selection": "away",
-        "source": "pinnapi_odds"
+        "source": "betexplorer_odds"
       },
       {
         "away": "FC Bayern M\u00fcnchen",
@@ -25530,18 +25530,14 @@
         "source": "scoutingstats_odds"
       }
     ],
-    "price_corroborated": true,
-    "price_corroborating_families": [
-      "scoutingstats_average"
-    ],
+    "price_corroborated": false,
+    "price_corroborating_families": [],
     "price_corroboration_sufficient": true,
-    "price_corroborators": [
-      "scoutingstats_odds"
-    ],
-    "price_disclosure": "Pinnacle named-book price (Pinnacle)",
+    "price_corroborators": [],
+    "price_disclosure": "BetExplorer named-book price (betexplorer_best)",
     "price_donor_role": "named_bookmaker",
     "price_evidence": "NAMED_BOOKMAKER_PRICE",
-    "price_independence_family": "pinnacle_book",
+    "price_independence_family": "betexplorer_book",
     "price_named_book_corroborated": false,
     "price_odds_kind": "bookmaker",
     "price_push_eligible": true,
@@ -25771,13 +25767,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 65.7957244655582,
     "away": "Ajax",
     "bookmaker": "Betfair",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -28157,13 +28153,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 65.47844175491679,
     "away": "Carrarese",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -29174,13 +29170,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 65.3263613415074,
     "away": "Cerro Porte\u00f1o",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -30166,13 +30162,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 61.40524099204492,
     "away": "Fredrikstad",
     "bookmaker": "GTbets",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_5904b1fc7050646e6321090c",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -32256,13 +32252,13 @@
     "w_score": 0.7535
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 61.11349635990293,
     "away": "Lausanne Sport",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_5904b1fc7050646e6321090c",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -33254,13 +33250,13 @@
     "w_score": 0.7535
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 60.84266811673012,
     "away": "Pardubice",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_5904b1fc7050646e6321090c",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -39953,13 +39949,13 @@
     "w_score": 0.7535
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 60.463028496926796,
     "away": "FC Cajamarca",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_5904b1fc7050646e6321090c",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -79673,13 +79669,13 @@
     "w_score": 0.6145
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 77.6500904159132,
     "away": "H\u00e9rcules",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -80566,13 +80562,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 77.15009041591321,
     "away": "Boston River",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -81482,13 +81478,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 76.81417624521073,
     "away": "Lumezzane",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -82375,13 +82371,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 76.61087866108787,
     "away": "Carabobo",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -83268,13 +83264,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 76.27634194831015,
     "away": "Leeds United",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -85077,13 +85073,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 75.5,
     "away": "Folgore Caratese",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -121054,13 +121050,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 72.67021276595744,
     "away": "Aston Villa W",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -131126,13 +131122,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 71.98034934497817,
     "away": "Moreirense",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -132042,13 +132038,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 71.48034934497817,
     "away": "Metropolitanos",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -148083,13 +148079,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 84.23170503462475,
     "away": "Kalamata",
     "bookmaker": null,
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -150143,13 +150139,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 69.23857868020305,
     "away": "Cercle Brugge",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -151161,13 +151157,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 67.7442658479321,
     "away": "Sint-Truiden",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -210283,13 +210279,13 @@
     "w_score": 0.6145
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 73.0,
     "away": "Real Madrid",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_1607fec83282d02c5254c2bf",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -210923,7 +210919,7 @@
       "kickoff_utc": "2026-10-25T20:00:00+00:00",
       "kind": "betexplorer_pre_cutoff_v1",
       "ledger_file": "betexplorer_match_detail_2026-10-25.json",
-      "ledger_sha256": "2b12d63fc35c05100e21630386b59af2a765dd5bae4cb057255af1892579f47d",
+      "ledger_sha256": "3316643f8aefc5f4874fee5da9d66c510501a47e8c103a6c791868ff9f6a5172",
       "market": "ou_3.5",
       "price": 2.65,
       "quote_evidence": {
@@ -210966,7 +210962,7 @@
           "inferred_fixed_utc_plus_1"
         ],
         "kickoff_utc": "2026-10-25T20:00:00+00:00",
-        "late_witness_records": 0,
+        "late_witness_records": 1,
         "provenance": "witness_corroborated_aware_iso",
         "reason": "independent_pre_cutoff_schedule_witness",
         "status": "corroborated",
@@ -210986,27 +210982,6 @@
             "provider_event_id": "72089d103a5fe6a922c35e17efba6ffc",
             "row_sha256": "05a20e55093bfb3e12e8caeef8449e0e30482b531ae1c3ace2a1e3e883a3b661",
             "source": "theoddsapi"
-          },
-          {
-            "away": "Real Madrid",
-            "board_fetched_at": "2026-10-25T04:47:44+00:00",
-            "board_fixture": {
-              "fixtureId": "id1000000872478654",
-              "participant1Name": "FC Barcelona",
-              "participant2Name": "Real Madrid",
-              "startTime": "2026-10-25T20:00:00.000Z"
-            },
-            "file": "oddspapi_fixture_state.json",
-            "file_sha256": "ce17cdd930949ef35a81021c5ac29b878c1ddcdb2b9ef5011a64dcbd501d8876",
-            "fixture_identity_origin": "provider_participants",
-            "home": "FC Barcelona",
-            "json_pointer": "/boards/2026-10-25/fixtures/943",
-            "kickoff_origin": "provider_startTime",
-            "kickoff_utc": "2026-10-25T20:00:00+00:00",
-            "observed_at_utc": "2026-10-25T04:47:44+00:00",
-            "provider_event_id": "id1000000872478654",
-            "row_sha256": "c997d1715ebe7d53e58df46a8eb50a9555306bf8af0daabdbf96f87db3265c54",
-            "source": "oddspapi"
           }
         ]
       },
@@ -211040,7 +211015,7 @@
           "kickoff_utc": "2026-10-25T20:00:00+00:00",
           "kind": "betexplorer_pre_cutoff_v1",
           "ledger_file": "betexplorer_match_detail_2026-10-25.json",
-          "ledger_sha256": "2b12d63fc35c05100e21630386b59af2a765dd5bae4cb057255af1892579f47d",
+          "ledger_sha256": "3316643f8aefc5f4874fee5da9d66c510501a47e8c103a6c791868ff9f6a5172",
           "market": "ou_3.5",
           "price": 2.63,
           "quote_evidence": {
@@ -211083,7 +211058,7 @@
               "inferred_fixed_utc_plus_1"
             ],
             "kickoff_utc": "2026-10-25T20:00:00+00:00",
-            "late_witness_records": 0,
+            "late_witness_records": 1,
             "provenance": "witness_corroborated_aware_iso",
             "reason": "independent_pre_cutoff_schedule_witness",
             "status": "corroborated",
@@ -211103,27 +211078,6 @@
                 "provider_event_id": "72089d103a5fe6a922c35e17efba6ffc",
                 "row_sha256": "05a20e55093bfb3e12e8caeef8449e0e30482b531ae1c3ace2a1e3e883a3b661",
                 "source": "theoddsapi"
-              },
-              {
-                "away": "Real Madrid",
-                "board_fetched_at": "2026-10-25T04:47:44+00:00",
-                "board_fixture": {
-                  "fixtureId": "id1000000872478654",
-                  "participant1Name": "FC Barcelona",
-                  "participant2Name": "Real Madrid",
-                  "startTime": "2026-10-25T20:00:00.000Z"
-                },
-                "file": "oddspapi_fixture_state.json",
-                "file_sha256": "ce17cdd930949ef35a81021c5ac29b878c1ddcdb2b9ef5011a64dcbd501d8876",
-                "fixture_identity_origin": "provider_participants",
-                "home": "FC Barcelona",
-                "json_pointer": "/boards/2026-10-25/fixtures/943",
-                "kickoff_origin": "provider_startTime",
-                "kickoff_utc": "2026-10-25T20:00:00+00:00",
-                "observed_at_utc": "2026-10-25T04:47:44+00:00",
-                "provider_event_id": "id1000000872478654",
-                "row_sha256": "c997d1715ebe7d53e58df46a8eb50a9555306bf8af0daabdbf96f87db3265c54",
-                "source": "oddspapi"
               }
             ]
           },
@@ -211156,7 +211110,7 @@
           "kickoff_utc": "2026-10-25T20:00:00+00:00",
           "kind": "betexplorer_pre_cutoff_v1",
           "ledger_file": "betexplorer_match_detail_2026-10-25.json",
-          "ledger_sha256": "2b12d63fc35c05100e21630386b59af2a765dd5bae4cb057255af1892579f47d",
+          "ledger_sha256": "3316643f8aefc5f4874fee5da9d66c510501a47e8c103a6c791868ff9f6a5172",
           "market": "ou_3.5",
           "price": 2.55,
           "quote_evidence": {
@@ -211199,7 +211153,7 @@
               "inferred_fixed_utc_plus_1"
             ],
             "kickoff_utc": "2026-10-25T20:00:00+00:00",
-            "late_witness_records": 0,
+            "late_witness_records": 1,
             "provenance": "witness_corroborated_aware_iso",
             "reason": "independent_pre_cutoff_schedule_witness",
             "status": "corroborated",
@@ -211219,27 +211173,6 @@
                 "provider_event_id": "72089d103a5fe6a922c35e17efba6ffc",
                 "row_sha256": "05a20e55093bfb3e12e8caeef8449e0e30482b531ae1c3ace2a1e3e883a3b661",
                 "source": "theoddsapi"
-              },
-              {
-                "away": "Real Madrid",
-                "board_fetched_at": "2026-10-25T04:47:44+00:00",
-                "board_fixture": {
-                  "fixtureId": "id1000000872478654",
-                  "participant1Name": "FC Barcelona",
-                  "participant2Name": "Real Madrid",
-                  "startTime": "2026-10-25T20:00:00.000Z"
-                },
-                "file": "oddspapi_fixture_state.json",
-                "file_sha256": "ce17cdd930949ef35a81021c5ac29b878c1ddcdb2b9ef5011a64dcbd501d8876",
-                "fixture_identity_origin": "provider_participants",
-                "home": "FC Barcelona",
-                "json_pointer": "/boards/2026-10-25/fixtures/943",
-                "kickoff_origin": "provider_startTime",
-                "kickoff_utc": "2026-10-25T20:00:00+00:00",
-                "observed_at_utc": "2026-10-25T04:47:44+00:00",
-                "provider_event_id": "id1000000872478654",
-                "row_sha256": "c997d1715ebe7d53e58df46a8eb50a9555306bf8af0daabdbf96f87db3265c54",
-                "source": "oddspapi"
               }
             ]
           },
@@ -211282,7 +211215,7 @@
           "kickoff_utc": "2026-10-25T20:00:00+00:00",
           "kind": "betexplorer_pre_cutoff_v1",
           "ledger_file": "betexplorer_match_detail_2026-10-25.json",
-          "ledger_sha256": "2b12d63fc35c05100e21630386b59af2a765dd5bae4cb057255af1892579f47d",
+          "ledger_sha256": "3316643f8aefc5f4874fee5da9d66c510501a47e8c103a6c791868ff9f6a5172",
           "market": "ou_3.5",
           "price": 2.65,
           "quote_evidence": {
@@ -211325,7 +211258,7 @@
               "inferred_fixed_utc_plus_1"
             ],
             "kickoff_utc": "2026-10-25T20:00:00+00:00",
-            "late_witness_records": 0,
+            "late_witness_records": 1,
             "provenance": "witness_corroborated_aware_iso",
             "reason": "independent_pre_cutoff_schedule_witness",
             "status": "corroborated",
@@ -211345,27 +211278,6 @@
                 "provider_event_id": "72089d103a5fe6a922c35e17efba6ffc",
                 "row_sha256": "05a20e55093bfb3e12e8caeef8449e0e30482b531ae1c3ace2a1e3e883a3b661",
                 "source": "theoddsapi"
-              },
-              {
-                "away": "Real Madrid",
-                "board_fetched_at": "2026-10-25T04:47:44+00:00",
-                "board_fixture": {
-                  "fixtureId": "id1000000872478654",
-                  "participant1Name": "FC Barcelona",
-                  "participant2Name": "Real Madrid",
-                  "startTime": "2026-10-25T20:00:00.000Z"
-                },
-                "file": "oddspapi_fixture_state.json",
-                "file_sha256": "ce17cdd930949ef35a81021c5ac29b878c1ddcdb2b9ef5011a64dcbd501d8876",
-                "fixture_identity_origin": "provider_participants",
-                "home": "FC Barcelona",
-                "json_pointer": "/boards/2026-10-25/fixtures/943",
-                "kickoff_origin": "provider_startTime",
-                "kickoff_utc": "2026-10-25T20:00:00+00:00",
-                "observed_at_utc": "2026-10-25T04:47:44+00:00",
-                "provider_event_id": "id1000000872478654",
-                "row_sha256": "c997d1715ebe7d53e58df46a8eb50a9555306bf8af0daabdbf96f87db3265c54",
-                "source": "oddspapi"
               }
             ]
           },
@@ -211398,7 +211310,7 @@
               "kickoff_utc": "2026-10-25T20:00:00+00:00",
               "kind": "betexplorer_pre_cutoff_v1",
               "ledger_file": "betexplorer_match_detail_2026-10-25.json",
-              "ledger_sha256": "2b12d63fc35c05100e21630386b59af2a765dd5bae4cb057255af1892579f47d",
+              "ledger_sha256": "3316643f8aefc5f4874fee5da9d66c510501a47e8c103a6c791868ff9f6a5172",
               "market": "ou_3.5",
               "price": 2.63,
               "quote_evidence": {
@@ -211441,7 +211353,7 @@
                   "inferred_fixed_utc_plus_1"
                 ],
                 "kickoff_utc": "2026-10-25T20:00:00+00:00",
-                "late_witness_records": 0,
+                "late_witness_records": 1,
                 "provenance": "witness_corroborated_aware_iso",
                 "reason": "independent_pre_cutoff_schedule_witness",
                 "status": "corroborated",
@@ -211461,27 +211373,6 @@
                     "provider_event_id": "72089d103a5fe6a922c35e17efba6ffc",
                     "row_sha256": "05a20e55093bfb3e12e8caeef8449e0e30482b531ae1c3ace2a1e3e883a3b661",
                     "source": "theoddsapi"
-                  },
-                  {
-                    "away": "Real Madrid",
-                    "board_fetched_at": "2026-10-25T04:47:44+00:00",
-                    "board_fixture": {
-                      "fixtureId": "id1000000872478654",
-                      "participant1Name": "FC Barcelona",
-                      "participant2Name": "Real Madrid",
-                      "startTime": "2026-10-25T20:00:00.000Z"
-                    },
-                    "file": "oddspapi_fixture_state.json",
-                    "file_sha256": "ce17cdd930949ef35a81021c5ac29b878c1ddcdb2b9ef5011a64dcbd501d8876",
-                    "fixture_identity_origin": "provider_participants",
-                    "home": "FC Barcelona",
-                    "json_pointer": "/boards/2026-10-25/fixtures/943",
-                    "kickoff_origin": "provider_startTime",
-                    "kickoff_utc": "2026-10-25T20:00:00+00:00",
-                    "observed_at_utc": "2026-10-25T04:47:44+00:00",
-                    "provider_event_id": "id1000000872478654",
-                    "row_sha256": "c997d1715ebe7d53e58df46a8eb50a9555306bf8af0daabdbf96f87db3265c54",
-                    "source": "oddspapi"
                   }
                 ]
               },
@@ -211514,7 +211405,7 @@
               "kickoff_utc": "2026-10-25T20:00:00+00:00",
               "kind": "betexplorer_pre_cutoff_v1",
               "ledger_file": "betexplorer_match_detail_2026-10-25.json",
-              "ledger_sha256": "2b12d63fc35c05100e21630386b59af2a765dd5bae4cb057255af1892579f47d",
+              "ledger_sha256": "3316643f8aefc5f4874fee5da9d66c510501a47e8c103a6c791868ff9f6a5172",
               "market": "ou_3.5",
               "price": 2.55,
               "quote_evidence": {
@@ -211557,7 +211448,7 @@
                   "inferred_fixed_utc_plus_1"
                 ],
                 "kickoff_utc": "2026-10-25T20:00:00+00:00",
-                "late_witness_records": 0,
+                "late_witness_records": 1,
                 "provenance": "witness_corroborated_aware_iso",
                 "reason": "independent_pre_cutoff_schedule_witness",
                 "status": "corroborated",
@@ -211577,27 +211468,6 @@
                     "provider_event_id": "72089d103a5fe6a922c35e17efba6ffc",
                     "row_sha256": "05a20e55093bfb3e12e8caeef8449e0e30482b531ae1c3ace2a1e3e883a3b661",
                     "source": "theoddsapi"
-                  },
-                  {
-                    "away": "Real Madrid",
-                    "board_fetched_at": "2026-10-25T04:47:44+00:00",
-                    "board_fixture": {
-                      "fixtureId": "id1000000872478654",
-                      "participant1Name": "FC Barcelona",
-                      "participant2Name": "Real Madrid",
-                      "startTime": "2026-10-25T20:00:00.000Z"
-                    },
-                    "file": "oddspapi_fixture_state.json",
-                    "file_sha256": "ce17cdd930949ef35a81021c5ac29b878c1ddcdb2b9ef5011a64dcbd501d8876",
-                    "fixture_identity_origin": "provider_participants",
-                    "home": "FC Barcelona",
-                    "json_pointer": "/boards/2026-10-25/fixtures/943",
-                    "kickoff_origin": "provider_startTime",
-                    "kickoff_utc": "2026-10-25T20:00:00+00:00",
-                    "observed_at_utc": "2026-10-25T04:47:44+00:00",
-                    "provider_event_id": "id1000000872478654",
-                    "row_sha256": "c997d1715ebe7d53e58df46a8eb50a9555306bf8af0daabdbf96f87db3265c54",
-                    "source": "oddspapi"
                   }
                 ]
               },
@@ -235918,13 +235788,13 @@
     "w_score": 0.7624
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 70.68689343258268,
     "away": "Panathinaikos",
     "bookmaker": null,
     "bucket": "WATCHLIST_SUSPECT_PRICE",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -237865,13 +237735,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 66.8946518476299,
     "away": "Olympique Lyonnais",
     "bookmaker": null,
     "bucket": "WATCHLIST_SUSPECT_PRICE",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -238844,13 +238714,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 66.39218170301329,
     "away": "SSC Giugliano",
     "bookmaker": null,
     "bucket": "WATCHLIST_SUSPECT_PRICE",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -239474,25 +239344,25 @@
     "price_board": [
       {
         "away": "Giugliano",
-        "bookmaker": "Pinnacle",
-        "captured_at": "2026-10-24T01:37:02+00:00",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-25T13:26:10.687408+00:00",
         "chosen": true,
         "home": "Catania",
-        "kickoff": "2026-10-25T14:00:00Z",
-        "league": "Italy - Serie C Group C",
+        "kickoff": "15:00",
+        "league": "Italy: Serie C - Group C",
         "line": null,
         "market": "1x2",
         "match_method": "alias_fuzzy",
         "named_bookmaker": true,
-        "odds": 1.3571,
+        "odds": 1.35,
         "odds_kind": "bookmaker",
         "price_coherence": null,
-        "price_independence_family": "pinnacle_book",
+        "price_independence_family": "betexplorer_book",
         "provider_role": "named_bookmaker",
-        "raw_market": "money_line",
+        "raw_market": "1x2",
         "raw_selection": "home",
         "selection": "home",
-        "source": "pinnapi_odds"
+        "source": "betexplorer_odds"
       },
       {
         "away": "SSC Giugliano",
@@ -239812,13 +239682,13 @@
     },
     "statistical_profile_status": "available",
     "suspect_price": {
-      "bookmaker": "Pinnacle",
-      "captured_at": "2026-10-24T01:37:02+00:00",
+      "bookmaker": "betexplorer_best",
+      "captured_at": "2026-10-25T13:26:10.687408+00:00",
       "conflict": null,
-      "league": "Italy - Serie C Group C",
+      "league": "Italy: Serie C - Group C",
       "match_method": "alias_fuzzy",
-      "odds": 1.3571,
-      "source": "pinnapi_odds"
+      "odds": 1.35,
+      "source": "betexplorer_odds"
     },
     "w_score": 0.7595
   },
@@ -246433,13 +246303,13 @@
     "w_score": 0.6145
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 76.08554160855417,
     "away": "G\u00fcemes",
     "bookmaker": "Pinnacle",
     "bucket": "WATCHLIST_UNKNOWN_CTX",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -247450,13 +247320,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-25T12:24:25+02:00",
+    "as_of": "2026-10-25T15:26:42+02:00",
     "avg_p": 75.86489439184268,
     "away": "Sloga Doboj",
     "bookmaker": "Pinnacle",
     "bucket": "WATCHLIST_UNKNOWN_CTX",
-    "build_git_sha": "3331be278c1b6d4f7acfb54ce8bb5df7f7c724c4",
-    "built_at_utc": "2026-10-25T10:38:42.647279+00:00",
+    "build_git_sha": "886c0489e57f2863549ee94df1ce88a72982241d",
+    "built_at_utc": "2026-10-25T13:39:19.475015+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {

@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 89,
-  "captured_at": "2026-10-25T10:40:30+00:00",
+  "captured_at": "2026-10-25T13:41:21+00:00",
   "date": "2026-10-25",
   "due_reasons": {},
   "errors": [],
@@ -24,11 +24,11 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
+    "kickoff_already_passed": 2,
     "kickoff_mismatch": 1,
     "priced": 12,
     "priced_close_window_not_open": 1,
-    "retry_cooldown": 75
+    "retry_cooldown": 74
   },
   "skipped": [
     "Crystal Palace W|Chelsea W (retry cooldown (6h after failed attempt))",
@@ -111,7 +111,7 @@
     "Phoenix Rising FC|Lexington SC (retry cooldown (6h after failed attempt))",
     "Wellington Phoenix|Central Coast Mariners (retry cooldown (6h after failed attempt))",
     "Kawasaki Frontale|Fagiano Okayama (retry cooldown (6h after failed attempt))",
-    "St. Pauli II|Weiche Flensburg (retry cooldown (6h after failed attempt))",
+    "St. Pauli II|Weiche Flensburg (kickoff already passed)",
     "CD Castell\u00f3n|Sporting Gij\u00f3n (priced)",
     "Colorado Rapids|Vancouver Whitecaps (retry cooldown (6h after failed attempt))",
     "Hull City|Brentford (retry cooldown (6h after failed attempt))",
