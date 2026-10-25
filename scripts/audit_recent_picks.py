@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import math
 import os
@@ -2251,9 +2252,83 @@ def _contract_labels(registry_path: Path | None = None) -> dict[str, str]:
     return out
 
 
+def _readable_rule(key: Any, labels: dict[str, str]) -> str:
+    """Display only: resolve contracts without changing joins or archive keys."""
+    key = str(key or "Rule unavailable")
+    if key in labels:
+        rule = labels[key].partition(" [contract · ")[0]
+        return html.unescape(rule)
+    if key.startswith("pfc_"):
+        return "Unresolved contract (rule unavailable)"
+    return html.unescape(key)
+
+
+def _render_rule_performance(by_rule: dict, registry_path: Path | None = None) -> list[str]:
+    """Rank every frozen rule separately; presentation only, never re-key evidence."""
+    lines = ["## By rule", "",
+             "Counts are frozen PICK ROWS, not bets: SKIPPED_VETO / WATCHLIST_* "
+             "rows are included and were never cardable. See the full audit’s `## By bucket` for "
+             "bucket-level counts. These are not acca returns or bank performance.", "",
+             "ROI uses priced rows only; hit rate uses all settled rows. "
+             f"The {PROVISIONAL_N}-priced-row cutoff is a reporting sample flag, "
+             "not proof of profitability or an activation gate. "
+             "Registry status/certification are separate from this audit window. "
+             "Historical ml-meta rules are not the live ML ENH acca selector.", ""]
+    if not by_rule:
+        return lines + ["- none"]
+    labels = _contract_labels(registry_path)
+    groups: dict[str, list] = {name: [] for name in (
+        "Positive ROI", "Negative ROI", "Break-even", "Insufficient priced evidence")}
+
+    def cell(value):
+        return html.unescape(str(value)).replace("|", "\\|").replace("\n", " ").replace("\r", " ")
+
+    for key, summary in by_rule.items():
+        priced = int(summary.get("priced_picks", 0) or 0)
+        settled = int(summary.get("settled_picks", 0) or 0)
+        roi = summary.get("roi")
+        roi = float(roi) if roi is not None else None
+        if roi is not None and not math.isfinite(roi):
+            roi = None
+        if priced < PROVISIONAL_N or roi is None:
+            group = "Insufficient priced evidence"
+        else:
+            group = "Positive ROI" if roi > 0 else "Negative ROI" if roi < 0 else "Break-even"
+        label = labels.get(str(key))
+        if label:
+            rule, _, context = label.partition(" [contract · ")
+            context = "contract · " + context.removesuffix("]")
+        else:
+            rule = _readable_rule(key, labels)
+            context = "not resolved in current registry" if str(key).startswith("pfc_") else "legacy rule key"
+        hr = summary.get("hit_rate")
+        hit = f"{float(hr):.1%}" if hr is not None else "unavailable"
+        roi_text = f"{roi:+.1%}" if roi is not None and priced else "unavailable"
+        flag = f"PROVISIONAL: {priced} priced < {PROVISIONAL_N}" if priced < PROVISIONAL_N else (
+            "ROI unavailable" if roi is None else f"{PROVISIONAL_N}+ priced rows")
+        row = (f"| {cell(rule)} | {roi_text} | {priced} priced | "
+               f"{hit} ({summary.get('wins', 0)}/{settled} settled) | "
+               f"{flag} | {cell(context)} | {cell(key)} |")
+        groups[group].append((roi, priced, str(key), row))
+    for name, rows in groups.items():
+        lines.extend([f"### {name} ({len(rows)} {'rule' if len(rows) == 1 else 'rules'})", ""])
+        if not rows:
+            lines.extend(["- none", ""])
+            continue
+        # Best observed ROI first; provisional rules remain in their own group.
+        rows.sort(key=lambda item: (-(item[0] if item[0] is not None else -math.inf),
+                                    -item[1], item[2]))
+        lines.extend(["| Rule | Priced ROI | Priced sample | Hit rate | Evidence | Registry context | Stored rule ID/key |",
+                      "| --- | ---: | ---: | --- | --- | --- | --- |"])
+        lines.extend(row[3] for row in rows)
+        lines.append("")
+    return lines
+
+
 def write_markdown(path: Path, report: dict[str, Any],
                    registry_path: Path | None = None) -> None:
     overall = report.get("overall", {})
+    rule_labels = _contract_labels(registry_path)
     lines = [
         f"# Edge Factory — Recent picks audit ({report['start']} to {report['end']})",
         "",
@@ -2361,33 +2436,7 @@ def write_markdown(path: Path, report: dict[str, Any],
     lines.extend(_render_event_notes_section(report.get("event_notes_audit") or {}))
     lines.extend(_render_statline_section(report.get("statline_calibration") or {}))
 
-    lines.extend(["## By rule", ""])
-    by_rule = report.get("by_rule", {})
-    if not by_rule:
-        lines.append("- none")
-    else:
-        labels = _contract_labels(registry_path)
-        lines.append(
-            "Counts are frozen PICK ROWS, not bets: rows filed under "
-            "SKIPPED_VETO / WATCHLIST_* are included and were never cardable. "
-            "Cardable-only counts are in `## By bucket`.")
-        lines.append("")
-        for key, summary in by_rule.items():
-            settled_n = int(summary.get("settled_picks", 0) or 0)
-            priced_n = int(summary.get("priced_picks", 0) or 0)
-            bits = []
-            label = labels.get(str(key), "")
-            if label:
-                bits.append(label)
-            if settled_n < PROVISIONAL_N:
-                bits.append(f"PROVISIONAL (settled n={settled_n} < {PROVISIONAL_N})")
-            roi = summary.get("roi")
-            detail = (f"hit_rate {summary.get('hit_rate')} "
-                      f"({summary.get('wins', 0)}/{settled_n} settled) · ROI "
-                      f"{'unavailable' if roi is None else roi} ({priced_n} priced)")
-            if bits:
-                detail = " — ".join(bits) + " — " + detail
-            lines.append(f"- `{key}`: {detail}")
+    lines.extend(_render_rule_performance(report.get("by_rule", {}), registry_path))
     lines.extend(["", "## By bucket", ""])
     by_bucket = report.get("by_bucket", {})
     if not by_bucket:
@@ -2613,7 +2662,7 @@ def write_markdown(path: Path, report: dict[str, Any],
     else:
         for ex in rescheduled[:25]:
             lines.append(
-                f"- {ex.get('date')} `{ex.get('bucket')}` `{ex.get('rule')}` — {ex.get('match')} "
+                f"- {ex.get('date')} `{ex.get('bucket')}` `{_readable_rule(ex.get('rule'), rule_labels)}` — {ex.get('match')} "
                 f"-> {str(ex.get('pick')).upper()} @ {ex.get('odds')} (rescheduled → "
                 f"{ex.get('rescheduled_to')}; actual {ex.get('rescheduled_home')} "
                 f"{ex.get('rescheduled_hs')}-{ex.get('rescheduled_gs')} "
@@ -2627,7 +2676,7 @@ def write_markdown(path: Path, report: dict[str, Any],
     else:
         for ex in examples[:25]:
             lines.append(
-                f"- {ex.get('date')} `{ex.get('bucket')}` `{ex.get('rule')}` — {ex.get('match')} -> {str(ex.get('pick')).upper()} @ {ex.get('odds')} ({ex.get('reason')}); keys={ex.get('home_key_candidates')}/{ex.get('away_key_candidates')}"
+                f"- {ex.get('date')} `{ex.get('bucket')}` `{_readable_rule(ex.get('rule'), rule_labels)}` — {ex.get('match')} -> {str(ex.get('pick')).upper()} @ {ex.get('odds')} ({ex.get('reason')}); keys={ex.get('home_key_candidates')}/{ex.get('away_key_candidates')}"
             )
 
     lines.extend(["", "## Ambiguous result examples", ""])
@@ -2636,7 +2685,7 @@ def write_markdown(path: Path, report: dict[str, Any],
         lines.append("- none")
     else:
         for ex in amb[:25]:
-            lines.append(f"- {ex.get('date')} `{ex.get('bucket')}` `{ex.get('rule')}` — {ex.get('match')} ({ex.get('reason')})")
+            lines.append(f"- {ex.get('date')} `{ex.get('bucket')}` `{_readable_rule(ex.get('rule'), rule_labels)}` — {ex.get('match')} ({ex.get('reason')})")
     path.write_text("\n".join(lines) + "\n")
 
 
@@ -2657,6 +2706,7 @@ def render_track_record(root: Path | None = None) -> str:
                                           market_track_record, slice_for_market)
 
     rows = market_track_record(root)
+    rule_labels = _contract_labels((root or ROOT) / "localdata" / "edges_consensus.json")
     out = ["=" * 78,
            "ENHANCEMENT MARKET TRACK RECORD (settled registry; PAPER unless stated)"]
     if not rows:
@@ -2690,7 +2740,8 @@ def render_track_record(root: Path | None = None) -> str:
             out.append(f"  {r['market']} by {key} (retained sample n={r.get('retained_n', r['n'])}, cumulative n={r['n']}):")
             for name, s in slices.items():
                 rate = f"{s['rate']:.1%}" if s["n"] else "--"
-                out.append(f"    {name:<32}n={s['n']:<5}hits={s['hits']:<5}"
+                display_name = _readable_rule(name, rule_labels) if key == "rule" else name
+                out.append(f"    {display_name:<32}n={s['n']:<5}hits={s['hits']:<5}"
                            f"rate={rate:<7}profit={s['profit']:+.3f}u")
     out.append("=" * 78)
     return "\n".join(out)
