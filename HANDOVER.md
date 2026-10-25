@@ -12165,3 +12165,36 @@ changes; no tests deleted or skipped. Parameter expansion adds four items.
 Validation: 19 ProSoccer cases passed; full local suite 4354 passed, 1 skipped
 in 282.26s (Python 3.11). CI uses Python 3.13; no CI rerun or dispatch performed
 here and no claim of a new green remote run. No merge or financial writes.
+
+### 25 October 2026 — readable performance ranking for every audited rule
+
+Operator requested the readable performance treatment for all rules. Existing
+`audit_recent_picks.write_markdown` now renders every by-rule key once in ROI
+ranked groups: positive, negative, break-even, insufficient priced evidence.
+Readable research rule comes first, registry context and immutable stored ID
+remain secondary. Exact thresholds/contracts are never pooled or renamed in
+JSON. HTML entities are decoded for display and table pipes escaped. The
+30-priced-row reporting flag is explicitly not statistical certification or a
+live activation gate; settled and priced denominators remain distinct. Missing
+ROI/zero prices remain unavailable, not zero ROI. Pick-row/non-cardable and
+historical ml-meta versus live ML ENH distinctions stay explicit.
+
+Snapshot: docs/operator/audits/RULE-PERFORMANCE-2026-10-25.md, rendered only from
+stored rolling JSON (Sep26–Oct25), 35 rules: 2 positive, 3 negative, 0 break-even,
+30 insufficient-priced-evidence. Local snapshot differs from the newer pasted
+report on some counts; no fresh settlement or runner synchronization claimed.
+Regression tests cover all groups, priced-versus-settled sample boundaries,
+missing/nonfinite ROI, unresolved contracts, same-label distinct contracts,
+HTML/table escaping and complete rule coverage. Full local suite: 4357 passed,
+1 skipped in 267.38s; log in excluded .cache/rule-report/pytest.log. No selector,
+staking, registry, ledger, bank, workflow or machine-readable audit changes;
+no dispatch, merge, commit or push performed.
+
+Follow-up: operator explicitly requested fixing the opaque pfc labels. Extended
+readable-name resolution to pending/unmatched, rescheduled and ambiguous audit
+examples and enhancement track-record rule slices. Unknown IDs show an explicit
+unresolved-contract label rather than masquerading as a name; machine-readable
+keys are untouched. Added diagnostic rendering and fallback regressions: 78
+passed across recent-picks/enh-registry tests after this extension. Previous full
+suite receipt above predates these two added tests. No workflow dispatch or
+financial/state writes. Preparing the same branch for review, not auto-merging.
