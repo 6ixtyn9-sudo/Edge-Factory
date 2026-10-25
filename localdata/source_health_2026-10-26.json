@@ -158,13 +158,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -176,18 +171,18 @@
       },
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 18546
       },
       "pa_matched": 0,
-      "pa_raw": 1031,
+      "pa_raw": 18546,
       "pa_scored": 18546,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -233,39 +228,24 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 11,
-        "board_league_count": 4,
+        "board_fixtures": 3,
+        "board_league_count": 3,
         "board_leagues": {
-          "honduras_-_liga_nacional": 2,
-          "usa_-_major_league_soccer": 102,
-          "usa_-_usl_league_one": 13,
-          "usa_united_soccer_league": 83
+          "australia_-_a-league": 23,
+          "australia_-_championship": 91,
+          "australian_championship": 86
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 20,
+        "board_team_count": 6,
         "board_team_names": {
-          "Atlanta Utd": 22,
-          "Boise Cutthroats FC": 11,
-          "CD Platense [HON]": 2,
-          "CHI Fire": 14,
-          "Chicago Fire": 8,
-          "DC Utd": 26,
-          "FC Cincinnati": 26,
-          "Fort Wayne FC": 11,
-          "NE Revolution": 6,
-          "NYCFC": 13,
-          "New England Revolution": 31,
-          "New York City": 4,
-          "Orlando City": 17,
-          "PHI Union": 6,
-          "Philadelphia": 31,
-          "Real Espana": 2,
-          "Sarasota Paradise": 2,
-          "Sporting Club Jacksonville": 83,
-          "Tampa Bay Rowdies": 83,
-          "Westchester SC": 2
+          "Adelaide United": 23,
+          "Bayswater City": 91,
+          "South Hobart": 86,
+          "Sydney FC": 23,
+          "Sydney Olympic": 91,
+          "Wollongong Wolves": 86
         },
         "board_truncated": false,
         "card_fixture_count": 0,
