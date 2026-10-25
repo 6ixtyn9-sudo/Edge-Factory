@@ -21,6 +21,41 @@
               ]
             },
             {
+              "match": "Union Saint-Gilloise vs Cercle Brugge",
+              "pick": "HOME",
+              "prob": 0.6923857868020304,
+              "odds": 1.3115,
+              "result": null,
+              "fixture_key": [
+                "2026-10-25",
+                "Union Saint-Gilloise",
+                "Cercle Brugge"
+              ]
+            }
+          ],
+          "odds": 2.18,
+          "stake_pct": 35.8643,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        },
+        {
+          "legs": [
+            {
+              "match": "Str\u00f8mmen vs Str\u00f8msgodset",
+              "pick": "AWAY",
+              "prob": 0.697925388408224,
+              "odds": 1.34,
+              "result": null,
+              "fixture_key": [
+                "2026-10-25",
+                "Str\u00f8mmen",
+                "Str\u00f8msgodset"
+              ]
+            },
+            {
               "match": "OFK Beograd vs Crvena Zvezda",
               "pick": "AWAY",
               "prob": 0.6977306547619048,
@@ -33,42 +68,7 @@
               ]
             }
           ],
-          "odds": 2.21,
-          "stake_pct": 35.8643,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "FC Tokyo vs Mito Hollyhock",
-              "pick": "HOME",
-              "prob": 0.7255919252900669,
-              "odds": 1.3058,
-              "result": null,
-              "fixture_key": [
-                "2026-10-25",
-                "FC Tokyo",
-                "Mito Hollyhock"
-              ]
-            },
-            {
-              "match": "Str\u00f8mmen vs Str\u00f8msgodset",
-              "pick": "AWAY",
-              "prob": 0.697925388408224,
-              "odds": 1.34,
-              "result": null,
-              "fixture_key": [
-                "2026-10-25",
-                "Str\u00f8mmen",
-                "Str\u00f8msgodset"
-              ]
-            }
-          ],
-          "odds": 1.75,
+          "odds": 1.78,
           "stake_pct": 35.8643,
           "results": [
             null,
@@ -1413,6 +1413,11 @@
     },
     "2026-10-24": {
       "frozen_at": "2026-10-24T09:46:26+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-10-25": {
+      "frozen_at": "2026-10-25T09:56:54+02:00",
       "final": true,
       "lock_source": "state"
     }
