@@ -12141,3 +12141,27 @@ Production fit/status census, activation coverage, same-day flag-off comparison
 and economic evidence remain unobserved here. PR150 verified open/unmerged at
 490b938 before this documentation-only update. No merge/dispatch/production fit
 or financial writes; engineering acceptance is not deployment authorization.
+
+### 25 October 2026 — fix calendar-expiring ProSoccer regression tests
+
+Operator supplied the 01:00 UTC regression-job log at main 9668b813: 1 failed,
+4349 passed, 1 skipped. Failure was test_fetch_day_failure_keeps_http_cause,
+not an ENH/ML failure. Its literal 2026-10-18 target became seven days old on
+25 October, outside ProSoccer's WINDOW_DAYS=6. fetch_day correctly returned []
+without calling the mocked HTTP transport, so no RuntimeError was raised.
+Verified the CI test-file blob matches this branch's baseline exactly.
+Reproduced locally before editing: 1 failed/14 passed in test_prosoccer.py.
+
+Test-only repair: isolate ProSoccer's clock for the two transport-error tests
+at 18 October, 25 October and 1 January 2027, and request that pinned today.
+This also fixes the adjacent outage test's expiring 2026-10-21 literal. Before
+changing targets, the pinned-date probes reproduced both the CI failure and
+the adjacent test's future expiry. The clock stub replaces only the adapter's
+_dt reference, not global datetime. Strengthened assertions: the primary URL
+was actually called exactly once and the original HTTPError/code 500 remains
+chained, in addition to the existing message assertions. No production code,
+coverage-window/source policy, ENH selector, staking, dependency or workflow
+changes; no tests deleted or skipped. Parameter expansion adds four items.
+Validation: 19 ProSoccer cases passed; full local suite 4354 passed, 1 skipped
+in 282.26s (Python 3.11). CI uses Python 3.13; no CI rerun or dispatch performed
+here and no claim of a new green remote run. No merge or financial writes.
