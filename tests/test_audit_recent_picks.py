@@ -1707,13 +1707,92 @@ def test_rule_table_names_a_contract_and_flags_a_tiny_sample(tmp_path):
     out = tmp_path / "audit.md"
     mod.write_markdown(out, report, registry_path=reg)
     text = out.read_text()
-    row = [l for l in text.splitlines() if l.startswith("- `pfc_")][0]
+    row = [l for l in text.splitlines() if l.startswith("| 1x2 single[scoutingstats] avg_p>=60 |")][0]
     assert "1x2 single[scoutingstats] avg_p>=60" in row      # not just the hash
     assert "benched" in row and "n=566" in row               # live status + certified size
     assert "PROVISIONAL" in row                              # 3 rows is not evidence
     # a real sample is not labelled provisional
-    big = [l for l in text.splitlines() if l.startswith("- `ml-meta avg_p>=55`")][0]
+    big = [l for l in text.splitlines() if l.startswith("| ml-meta avg_p>=55 |")][0]
     assert "PROVISIONAL" not in big
     assert "139/189 settled" in big and "162 priced" in big   # both denominators named
     # the population warning is present
     assert "PICK ROWS, not bets" in text
+
+
+def test_rule_performance_groups_all_rules_by_priced_not_settled_sample(tmp_path):
+    from scripts.audit_recent_picks import _render_rule_performance
+    def summary(roi, priced=30, settled=100):
+        return dict(roi=roi, priced_picks=priced, settled_picks=settled,
+                    wins=60, hit_rate=0.6)
+    rules = {
+        "low-positive": summary(0.01),
+        "negative": summary(-0.2),
+        "zero": summary(0),
+        "tiny-but-high-settled": summary(0.9, priced=29, settled=200),
+        "missing-price": summary(None, priced=0),
+        "missing-roi": summary(None),
+        "nonfinite": summary(float('nan')),
+        "higher-positive avg_p&gt;=65": summary(0.2),
+        "pfc_unresolved": summary(0.03),
+        "pipe|label": summary(-0.1),
+    }
+    text = '\n'.join(_render_rule_performance(rules, tmp_path / 'missing.json'))
+    assert "### Positive ROI (3 rules)" in text
+    assert "### Negative ROI (2 rules)" in text
+    assert "### Break-even (1 rule)" in text
+    assert "### Insufficient priced evidence (4 rules)" in text
+    positive = text.split('### Positive ROI')[1].split('### Negative ROI')[0]
+    assert positive.index('higher-positive avg_p>=65') < positive.index('low-positive')
+    provisional = text.split('### Insufficient priced evidence')[1]
+    assert 'tiny-but-high-settled' in provisional
+    assert 'PROVISIONAL: 29 priced < 30' in provisional
+    assert 'missing-roi' in provisional and 'nonfinite' in provisional
+    assert '| missing-price | unavailable | 0 priced |' in provisional
+    assert 'Unresolved contract (rule unavailable)' in positive
+    assert 'pipe\\|label' in text
+    rows = [line for line in text.splitlines() if line.startswith('| ') and
+            not line.startswith(('| Rule |', '| ---'))]
+    assert len(rows) == len(rules)  # no rule omitted or pooled
+    assert '&gt;' not in text
+    assert rules['higher-positive avg_p&gt;=65']['roi'] == 0.2  # no re-keying
+
+
+def test_distinct_contracts_with_same_label_keep_separate_evidence(tmp_path):
+    from scripts.audit_recent_picks import _render_rule_performance
+    reg = tmp_path / 'registry.json'
+    reg.write_text(json.dumps({'edges': [
+        {'contract_id': key, 'research_rule': '1x2 single[source] avg_p>=65',
+         'status': status} for key, status in [('pfc_a', 'benched'), ('pfc_b', 'certified')]
+    ]}))
+    rows = {key: dict(roi=roi, priced_picks=30, settled_picks=31,
+                     wins=20, hit_rate=20/31)
+            for key, roi in [('pfc_a', -0.1), ('pfc_b', 0.2)]}
+    text = '\n'.join(_render_rule_performance(rows, reg))
+    assert text.count('| 1x2 single[source] avg_p>=65 |') == 2
+    assert 'contract · benched | pfc_a |' in text
+    assert 'contract · certified | pfc_b |' in text
+
+
+def test_diagnostic_rule_labels_are_readable_without_rewriting_report(tmp_path):
+    from scripts.audit_recent_picks import write_markdown
+    reg = tmp_path / 'registry.json'
+    cid = 'pfc_0f100c9da356ed1c05d9c642'
+    rule = '1x2 single[scoutingstats] avg_p>=60'
+    reg.write_text(json.dumps({'edges': [{'contract_id': cid, 'research_rule': rule}]}))
+    example = dict(date='2026-10-24', bucket='WATCHLIST', rule=cid,
+                   match='Alpha vs Beta', pick='home', odds=1.5, reason='pending')
+    report = dict(start='2026-10-01', end='2026-10-25', overall={},
+                  unmatched_examples=[example], ambiguous_examples=[example],
+                  rescheduled_examples=[example])
+    out = tmp_path / 'audit.md'
+    write_markdown(out, report, registry_path=reg)
+    text = out.read_text()
+    assert text.count(f'`{rule}`') == 3
+    assert cid not in text
+    assert example['rule'] == cid
+
+
+def test_readable_rule_fallback_never_displays_an_unresolved_hash():
+    from scripts.audit_recent_picks import _readable_rule
+    assert _readable_rule('pfc_missing', {}) == 'Unresolved contract (rule unavailable)'
+    assert _readable_rule('ml-meta avg_p&gt;=55', {}) == 'ml-meta avg_p>=55'
