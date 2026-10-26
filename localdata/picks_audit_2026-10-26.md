@@ -2,12 +2,12 @@
 
 ## Overall
 
-- archived pick rows: 1002
+- archived pick rows: 1014
 - archived pick dates: 30
-- immutable morning-baseline rows: 865
+- immutable morning-baseline rows: 877
 - late-slate additions (regular-ledger rows not in the morning baseline): 139, of which on days whose regular ledger was rewritten: 111
 - regular-ledger-only legacy rows: 0
-- unsafe regular ledgers ignored: 26
+- unsafe regular ledgers ignored: 25
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 942
 - eligible prior picks: 968
@@ -26,7 +26,7 @@
 
 - include same-day picks: False
 - same-day cutoff date: 2026-10-26
-- same-day rows excluded: 8
+- same-day rows excluded: 20
 
 ## Rule performance — since activation vs last 30 days
 
@@ -296,8 +296,8 @@ Performance of deep context-derived recommended enhancements overlay:
 - `home_under_15`: recommended=2, settled=2, hit_rate=100.0% (hits=2/recommended=2), priced_n=2, priced_ROI=0.381 (denominator=2), registry_processed=9, class=priced
 - `home_under_25`: recommended=1, settled=1, hit_rate=0.0% (hits=0/recommended=1), priced_n=1, priced_ROI=-1.0 (denominator=1), registry_processed=56, class=priced
 - `home_under_35`: recommended=35, settled=35, hit_rate=97.1% (hits=34/recommended=35), priced_n=0, priced_ROI=None (denominator=0), registry_processed=75, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
-- `match_over_15`: recommended=26, settled=26, hit_rate=88.5% (hits=23/recommended=26), priced_n=19, priced_ROI=0.165526 (denominator=19), registry_processed=73, class=priced
-- `match_over_25`: recommended=251, settled=251, hit_rate=62.2% (hits=156/recommended=251), priced_n=197, priced_ROI=0.011102 (denominator=197), registry_processed=745, class=priced
+- `match_over_15`: recommended=26, settled=26, hit_rate=88.5% (hits=23/recommended=26), priced_n=20, priced_ROI=0.16525 (denominator=20), registry_processed=73, class=priced
+- `match_over_25`: recommended=251, settled=251, hit_rate=62.2% (hits=156/recommended=251), priced_n=198, priced_ROI=0.005995 (denominator=198), registry_processed=745, class=priced
 - `match_over_35`: recommended=18, settled=18, hit_rate=77.8% (hits=14/recommended=18), priced_n=11, priced_ROI=1.036364 (denominator=11), registry_processed=49, class=priced
 - `match_over_45`: recommended=2, settled=2, hit_rate=100.0% (hits=2/recommended=2), priced_n=2, priced_ROI=4.0 (denominator=2), registry_processed=3, class=priced
 - `match_under_35`: recommended=6, settled=6, hit_rate=16.7% (hits=1/recommended=6), priced_n=6, priced_ROI=-0.563333 (denominator=6), registry_processed=8, class=priced

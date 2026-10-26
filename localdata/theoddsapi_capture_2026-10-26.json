@@ -1,11 +1,21 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 8,
-  "captured_at": "2026-10-26T07:13:39+00:00",
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Ba\u015fak\u015fehir",
+      "date": "2026-10-26",
+      "home": "Be\u015fikta\u015f",
+      "kickoff": "2026-10-26T17:00:00+01:00",
+      "league": "Turkey: S\u00fcper Lig"
+    }
+  ],
+  "candidate_fixtures": 20,
+  "captured_at": "2026-10-26T09:32:43+00:00",
   "date": "2026-10-26",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -22,20 +32,36 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 1,
-    "retry_cooldown": 7
+    "priced": 4,
+    "retry_cooldown": 15
   },
   "skipped": [
-    "Be\u015fikta\u015f|\u0130stanbul Ba\u015fak\u015fehir (retry cooldown (6h after failed attempt))",
+    "Floriana|Zabbar St. Patrick (retry cooldown (6h after failed attempt))",
+    "Sepsi OSK Sfantu Gheorghe|Universitatea Craiova (retry cooldown (6h after failed attempt))",
+    "FC Copenhagen|Odense (priced)",
+    "Al Ahli|Al Gharafa (retry cooldown (6h after failed attempt))",
     "Flamengo|Atl\u00e9tico Mineiro (retry cooldown (6h after failed attempt))",
     "Paris Saint Germain|Olympique Lyonnais (retry cooldown (6h after failed attempt))",
+    "ATK Mohun Bagan|Chennaiyin (retry cooldown (6h after failed attempt))",
     "Santa Clara|Benfica (priced)",
+    "Grobi\u0146a|Riga (retry cooldown (6h after failed attempt))",
+    "Al Ula|Al-Orobah FC (retry cooldown (6h after failed attempt))",
     "Geylang International|Hougang United (retry cooldown (6h after failed attempt))",
     "FC K\u00f8benhavn|Odense BK (retry cooldown (6h after failed attempt))",
     "Mladost \u017ddralovi|Jadran LP (retry cooldown (6h after failed attempt))",
-    "Galatasaray|Fenerbah\u00e7e (retry cooldown (6h after failed attempt))"
+    "Montpellier|RED Star FC 93 (priced)",
+    "Galatasaray|Fenerbah\u00e7e (retry cooldown (6h after failed attempt))",
+    "Paris Saint Germain|Lyon (priced)",
+    "FC Iberia 1999|FC Torpedo Kutaisi (retry cooldown (6h after failed attempt))",
+    "Rizespor|Trabzonspor (retry cooldown (6h after failed attempt))",
+    "Sevilla|Osasuna (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Be\u015fikta\u015f vs Ba\u015fak\u015fehir (no event in soccer_turkey_super_league)"
+  ],
+  "unmatched_reasons": {
+    "no event in soccer_turkey_super_league": 1
+  }
 }
