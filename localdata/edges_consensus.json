@@ -1,7 +1,7 @@
 {
   "contract_revalidations": {
     "pfc_0ad08cd1b2e75a2c9051189e": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -55,7 +55,7 @@
       }
     },
     "pfc_0b290b623e2a54ea7df3006c": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -82,7 +82,7 @@
       }
     },
     "pfc_0f100c9da356ed1c05d9c642": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -108,8 +108,35 @@
         "wins": 513
       }
     },
+    "pfc_144c01b1aa366b88f9c4083a": {
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-26",
+        "split": "2026-09-28",
+        "start": "2026-06-13"
+      },
+      "status": "reproduced_at_revalidation",
+      "train": {
+        "avg_odds": 1.683,
+        "hit": 0.549,
+        "n": 663,
+        "n_priced": 663,
+        "roi": -0.0799,
+        "wilson_lb": 0.511,
+        "wins": 364
+      },
+      "valid": {
+        "avg_odds": 1.668,
+        "hit": 0.6074,
+        "n": 242,
+        "n_priced": 242,
+        "roi": 0.0123,
+        "wilson_lb": 0.5447,
+        "wins": 147
+      }
+    },
     "pfc_14ee12458803822df3013bcd": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -127,16 +154,16 @@
       },
       "valid": {
         "avg_odds": 2.19,
-        "hit": 0.5471,
-        "n": 1517,
-        "n_priced": 1516,
-        "roi": 0.0305,
-        "wilson_lb": 0.522,
-        "wins": 830
+        "hit": 0.5463,
+        "n": 1523,
+        "n_priced": 1522,
+        "roi": 0.0281,
+        "wilson_lb": 0.5212,
+        "wins": 832
       }
     },
     "pfc_1607fec83282d02c5254c2bf": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -153,17 +180,17 @@
         "wins": 1260
       },
       "valid": {
-        "avg_odds": 1.735,
-        "hit": 0.6414,
-        "n": 884,
-        "n_priced": 883,
-        "roi": 0.0528,
-        "wilson_lb": 0.6092,
-        "wins": 567
+        "avg_odds": 1.734,
+        "hit": 0.6415,
+        "n": 887,
+        "n_priced": 886,
+        "roi": 0.0521,
+        "wilson_lb": 0.6094,
+        "wins": 569
       }
     },
     "pfc_1ba3ab3c75e6f3a9680ae43c": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -190,7 +217,7 @@
       }
     },
     "pfc_1e9cfc6500aaac77afa1eaf9": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -208,16 +235,16 @@
       },
       "valid": {
         "avg_odds": 2.252,
-        "hit": 0.5263,
-        "n": 1676,
-        "n_priced": 1675,
-        "roi": 0.0181,
-        "wilson_lb": 0.5023,
-        "wins": 882
+        "hit": 0.5256,
+        "n": 1682,
+        "n_priced": 1681,
+        "roi": 0.016,
+        "wilson_lb": 0.5017,
+        "wins": 884
       }
     },
     "pfc_234f16641d9893e8ec2a01f0": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -234,13 +261,13 @@
         "wins": 835
       },
       "valid": {
-        "avg_odds": 1.641,
-        "hit": 0.6567,
-        "n": 469,
-        "n_priced": 469,
-        "roi": 0.034,
-        "wilson_lb": 0.6126,
-        "wins": 308
+        "avg_odds": 1.64,
+        "hit": 0.6574,
+        "n": 470,
+        "n_priced": 470,
+        "roi": 0.0344,
+        "wilson_lb": 0.6134,
+        "wins": 309
       }
     },
     "pfc_27e0f725859bc708f95c58a3": {
@@ -271,7 +298,7 @@
       }
     },
     "pfc_2bd498a3472b7bbd71982ece": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -288,17 +315,17 @@
         "wins": 733
       },
       "valid": {
-        "avg_odds": 1.567,
-        "hit": 0.6744,
-        "n": 390,
-        "n_priced": 390,
-        "roi": 0.0211,
-        "wilson_lb": 0.6263,
-        "wins": 263
+        "avg_odds": 1.566,
+        "hit": 0.6752,
+        "n": 391,
+        "n_priced": 391,
+        "roi": 0.0215,
+        "wilson_lb": 0.6273,
+        "wins": 264
       }
     },
     "pfc_3072388544a60552346bd162": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -325,7 +352,7 @@
       }
     },
     "pfc_35f7e50bf23db96c2d3dd59d": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -342,13 +369,13 @@
         "wins": 903
       },
       "valid": {
-        "avg_odds": 1.606,
-        "hit": 0.6626,
-        "n": 652,
-        "n_priced": 651,
-        "roi": 0.0259,
-        "wilson_lb": 0.6254,
-        "wins": 432
+        "avg_odds": 1.605,
+        "hit": 0.6636,
+        "n": 654,
+        "n_priced": 653,
+        "roi": 0.0266,
+        "wilson_lb": 0.6265,
+        "wins": 434
       }
     },
     "pfc_3bfaf30507905754f7faab2a": {
@@ -406,7 +433,7 @@
       }
     },
     "pfc_3fbabd0ade3f89853e43fb10": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -433,7 +460,7 @@
       }
     },
     "pfc_40b163633fc01fd0ff7d0ef1": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -487,34 +514,34 @@
       }
     },
     "pfc_444d408c4ccd3a4bf4fb020c": {
-      "input_snapshot_id": "1fe51a15f3cceadf397e55b505cb95ec6a15752eaae08c76ee774496cf813f54",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
-        "as_of_exclusive": "2026-10-22",
-        "split": "2026-09-24",
+        "as_of_exclusive": "2026-10-26",
+        "split": "2026-09-28",
         "start": "2026-06-13"
       },
       "status": "reproduced_at_revalidation",
       "train": {
-        "avg_odds": 1.499,
-        "hit": 0.6942,
-        "n": 363,
-        "n_priced": 363,
-        "roi": 0.0102,
-        "wilson_lb": 0.645,
-        "wins": 252
+        "avg_odds": 1.497,
+        "hit": 0.6945,
+        "n": 383,
+        "n_priced": 383,
+        "roi": 0.0083,
+        "wilson_lb": 0.6466,
+        "wins": 266
       },
       "valid": {
-        "avg_odds": 1.461,
-        "hit": 0.7118,
-        "n": 170,
-        "n_priced": 170,
-        "roi": 0.0056,
-        "wilson_lb": 0.6396,
-        "wins": 121
+        "avg_odds": 1.465,
+        "hit": 0.7033,
+        "n": 182,
+        "n_priced": 182,
+        "roi": 0.0019,
+        "wilson_lb": 0.6333,
+        "wins": 128
       }
     },
     "pfc_4a1f2bb2278d13c8189148d0": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -541,7 +568,7 @@
       }
     },
     "pfc_4cf3df8552488297d7ccf526": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -558,17 +585,17 @@
         "wins": 1611
       },
       "valid": {
-        "avg_odds": 2.032,
-        "hit": 0.568,
-        "n": 1264,
-        "n_priced": 1263,
-        "roi": 0.0119,
-        "wilson_lb": 0.5406,
-        "wins": 718
+        "avg_odds": 2.031,
+        "hit": 0.5674,
+        "n": 1269,
+        "n_priced": 1268,
+        "roi": 0.0099,
+        "wilson_lb": 0.54,
+        "wins": 720
       }
     },
     "pfc_5208b9e15194a691590430ad": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -595,7 +622,7 @@
       }
     },
     "pfc_527524a94e98cff9740d499c": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -622,7 +649,7 @@
       }
     },
     "pfc_5904b1fc7050646e6321090c": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -649,7 +676,7 @@
       }
     },
     "pfc_5954379f3a12700edcfd8387": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -666,13 +693,13 @@
         "wins": 631
       },
       "valid": {
-        "avg_odds": 1.509,
-        "hit": 0.686,
-        "n": 449,
-        "n_priced": 448,
-        "roi": 0.0109,
-        "wilson_lb": 0.6416,
-        "wins": 308
+        "avg_odds": 1.508,
+        "hit": 0.6874,
+        "n": 451,
+        "n_priced": 450,
+        "roi": 0.012,
+        "wilson_lb": 0.6431,
+        "wins": 310
       }
     },
     "pfc_5a9d3d3426ee7a4e63461d75": {
@@ -784,7 +811,7 @@
       }
     },
     "pfc_754f7247e83f901ae415b35f": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -811,7 +838,7 @@
       }
     },
     "pfc_7d20e19c2c26174fa21e9e86": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -838,7 +865,7 @@
       }
     },
     "pfc_7eb24434123da46374442290": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -892,7 +919,7 @@
       }
     },
     "pfc_9ae5a305a703bca83fd321b3": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -919,7 +946,7 @@
       }
     },
     "pfc_a460a0e9dcb1f980cde169c0": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -946,7 +973,7 @@
       }
     },
     "pfc_a8e99ebc0016f0d0bb95aa70": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -972,31 +999,85 @@
         "wins": 118
       }
     },
-    "pfc_b011652ec3e473fbc0afbb6a": {
-      "input_snapshot_id": "8a49b0807282580a3567ce3bcfa1ee9f2d12739db649a58e648dd8ced51ef0f8",
+    "pfc_adb24b31e9ca43c42506156a": {
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
-        "as_of_exclusive": "2026-10-24",
-        "split": "2026-09-26",
+        "as_of_exclusive": "2026-10-26",
+        "split": "2026-09-28",
         "start": "2026-06-13"
       },
       "status": "reproduced_at_revalidation",
       "train": {
-        "avg_odds": 1.692,
-        "hit": 0.6315,
-        "n": 1403,
-        "n_priced": 1403,
-        "roi": 0.0185,
-        "wilson_lb": 0.6059,
-        "wins": 886
+        "avg_odds": 1.683,
+        "hit": 0.549,
+        "n": 663,
+        "n_priced": 663,
+        "roi": -0.0799,
+        "wilson_lb": 0.511,
+        "wins": 364
       },
       "valid": {
-        "avg_odds": 1.709,
-        "hit": 0.6238,
-        "n": 513,
-        "n_priced": 513,
-        "roi": 0.0012,
-        "wilson_lb": 0.5811,
-        "wins": 320
+        "avg_odds": 1.668,
+        "hit": 0.6074,
+        "n": 242,
+        "n_priced": 242,
+        "roi": 0.0123,
+        "wilson_lb": 0.5447,
+        "wins": 147
+      }
+    },
+    "pfc_afdf26c0a105a0f5e6ffff27": {
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-26",
+        "split": "2026-09-28",
+        "start": "2026-06-13"
+      },
+      "status": "reproduced_at_revalidation",
+      "train": {
+        "avg_odds": 1.683,
+        "hit": 0.549,
+        "n": 663,
+        "n_priced": 663,
+        "roi": -0.0799,
+        "wilson_lb": 0.511,
+        "wins": 364
+      },
+      "valid": {
+        "avg_odds": 1.668,
+        "hit": 0.6074,
+        "n": 242,
+        "n_priced": 242,
+        "roi": 0.0123,
+        "wilson_lb": 0.5447,
+        "wins": 147
+      }
+    },
+    "pfc_b011652ec3e473fbc0afbb6a": {
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-26",
+        "split": "2026-09-28",
+        "start": "2026-06-13"
+      },
+      "status": "reproduced_at_revalidation",
+      "train": {
+        "avg_odds": 1.689,
+        "hit": 0.6306,
+        "n": 1432,
+        "n_priced": 1432,
+        "roi": 0.015,
+        "wilson_lb": 0.6053,
+        "wins": 903
+      },
+      "valid": {
+        "avg_odds": 1.721,
+        "hit": 0.6213,
+        "n": 536,
+        "n_priced": 536,
+        "roi": 0.0034,
+        "wilson_lb": 0.5795,
+        "wins": 333
       }
     },
     "pfc_b0b7a0c1932e3636d2b485d6": {
@@ -1027,7 +1108,7 @@
       }
     },
     "pfc_b11e22bfdd27d85fad78ba74": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -1051,6 +1132,33 @@
         "roi": 0.0183,
         "wilson_lb": 0.575,
         "wins": 244
+      }
+    },
+    "pfc_b9aa429be62178cc76b1ca8d": {
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-26",
+        "split": "2026-09-28",
+        "start": "2026-06-13"
+      },
+      "status": "reproduced_at_revalidation",
+      "train": {
+        "avg_odds": 1.683,
+        "hit": 0.549,
+        "n": 663,
+        "n_priced": 663,
+        "roi": -0.0799,
+        "wilson_lb": 0.511,
+        "wins": 364
+      },
+      "valid": {
+        "avg_odds": 1.668,
+        "hit": 0.6074,
+        "n": 242,
+        "n_priced": 242,
+        "roi": 0.0123,
+        "wilson_lb": 0.5447,
+        "wins": 147
       }
     },
     "pfc_bdce95a736d6cc8667f7ac31": {
@@ -1081,7 +1189,7 @@
       }
     },
     "pfc_c83d885867c9025a351b9b8c": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -1108,7 +1216,7 @@
       }
     },
     "pfc_c8cbcf76ea758fd6de596ae1": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -1125,17 +1233,17 @@
         "wins": 364
       },
       "valid": {
-        "avg_odds": 1.421,
-        "hit": 0.7309,
-        "n": 249,
-        "n_priced": 248,
-        "roi": 0.0271,
-        "wilson_lb": 0.6726,
-        "wins": 182
+        "avg_odds": 1.419,
+        "hit": 0.7331,
+        "n": 251,
+        "n_priced": 250,
+        "roi": 0.029,
+        "wilson_lb": 0.6751,
+        "wins": 184
       }
     },
     "pfc_d17123b85e11155f22e40051": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -1189,7 +1297,7 @@
       }
     },
     "pfc_e25602082a90cb64fb9c5451": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -1216,7 +1324,7 @@
       }
     },
     "pfc_e5c10af025fc5071367c9b47": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -1243,7 +1351,7 @@
       }
     },
     "pfc_f2b2a2e84093abe72bbc01c0": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -1270,7 +1378,7 @@
       }
     },
     "pfc_fb2e721d2bb8a41fe9fa3713": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -1323,8 +1431,35 @@
         "wins": 109
       }
     },
+    "pfc_fc7adf360790baec2b1ce044": {
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
+      "mining_window": {
+        "as_of_exclusive": "2026-10-26",
+        "split": "2026-09-28",
+        "start": "2026-06-13"
+      },
+      "status": "reproduced_at_revalidation",
+      "train": {
+        "avg_odds": 1.683,
+        "hit": 0.549,
+        "n": 663,
+        "n_priced": 663,
+        "roi": -0.0799,
+        "wilson_lb": 0.511,
+        "wins": 364
+      },
+      "valid": {
+        "avg_odds": 1.668,
+        "hit": 0.6074,
+        "n": 242,
+        "n_priced": 242,
+        "roi": 0.0123,
+        "wilson_lb": 0.5447,
+        "wins": 147
+      }
+    },
     "pfc_fdade2e70df4d4bb78a8cd6e": {
-      "input_snapshot_id": "f4cbbb4801cb6e24697b143be65028099a31eac7da48ac9cb122c9e25e1bcee5",
+      "input_snapshot_id": "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155",
       "mining_window": {
         "as_of_exclusive": "2026-10-26",
         "split": "2026-09-28",
@@ -1869,26 +2004,27 @@
     },
     {
       "activated_as_of": "2026-10-24",
+      "benched_at": "2026-10-26",
       "contract_id": "pfc_754f7247e83f901ae415b35f",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.6007,
+        "bench": true,
+        "bench_min_priced_n": 30,
+        "bench_reason": "verdict_decaying",
         "checked_at": "2026-10-26",
         "recent": {
-          "n": 17,
-          "wins": 10,
-          "n_priced": 17,
           "hit": 0.5882,
+          "n": 17,
+          "n_priced": 17,
+          "roi": -0.1382,
           "wilson_lb": 0.3601,
-          "roi": -0.1382
+          "wins": 10
         },
-        "baseline_lb": 0.6007,
         "recent_lb": 0.3601,
         "recent_ub": 0.7839,
-        "bench": true,
-        "bench_reason": "verdict_decaying",
-        "bench_min_priced_n": 30
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -1933,31 +2069,31 @@
         "wins": 114
       },
       "view": "pfc_754f7247e83f901ae415b35f",
-      "where": "1=1",
-      "benched_at": "2026-10-26"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-24",
+      "benched_at": "2026-10-26",
       "contract_id": "pfc_a8e99ebc0016f0d0bb95aa70",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.6007,
+        "bench": true,
+        "bench_min_priced_n": 30,
+        "bench_reason": "verdict_decaying",
         "checked_at": "2026-10-26",
         "recent": {
-          "n": 17,
-          "wins": 10,
-          "n_priced": 17,
           "hit": 0.5882,
+          "n": 17,
+          "n_priced": 17,
+          "roi": -0.1382,
           "wilson_lb": 0.3601,
-          "roi": -0.1382
+          "wins": 10
         },
-        "baseline_lb": 0.6007,
         "recent_lb": 0.3601,
         "recent_ub": 0.7839,
-        "bench": true,
-        "bench_reason": "verdict_decaying",
-        "bench_min_priced_n": 30
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -2002,8 +2138,7 @@
         "wins": 114
       },
       "view": "pfc_a8e99ebc0016f0d0bb95aa70",
-      "where": "1=1",
-      "benched_at": "2026-10-26"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-25",
@@ -2142,26 +2277,27 @@
     },
     {
       "activated_as_of": "2026-10-24",
+      "benched_at": "2026-10-26",
       "contract_id": "pfc_9ae5a305a703bca83fd321b3",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.6138,
+        "bench": true,
+        "bench_min_priced_n": 30,
+        "bench_reason": "verdict_decaying",
         "checked_at": "2026-10-26",
         "recent": {
-          "n": 21,
-          "wins": 12,
-          "n_priced": 21,
           "hit": 0.5714,
+          "n": 21,
+          "n_priced": 21,
+          "roi": -0.1443,
           "wilson_lb": 0.3655,
-          "roi": -0.1443
+          "wins": 12
         },
-        "baseline_lb": 0.6138,
         "recent_lb": 0.3655,
         "recent_ub": 0.7553,
-        "bench": true,
-        "bench_reason": "verdict_decaying",
-        "bench_min_priced_n": 30
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -2205,8 +2341,7 @@
         "wins": 155
       },
       "view": "pfc_9ae5a305a703bca83fd321b3",
-      "where": "1=1",
-      "benched_at": "2026-10-26"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-10-20",
@@ -3420,16 +3555,16 @@
         "window_days": 30,
         "checked_at": "2026-10-26",
         "recent": {
-          "n": 185,
-          "wins": 120,
-          "n_priced": 185,
-          "hit": 0.6486,
-          "wilson_lb": 0.5775,
-          "roi": 0.0893
+          "n": 188,
+          "wins": 122,
+          "n_priced": 188,
+          "hit": 0.6489,
+          "wilson_lb": 0.5783,
+          "roi": 0.0853
         },
         "baseline_lb": 0.6134,
-        "recent_lb": 0.5775,
-        "recent_ub": 0.7138,
+        "recent_lb": 0.5783,
+        "recent_ub": 0.7136,
         "bench": false,
         "bench_reason": "recent_roi_non_negative",
         "bench_min_priced_n": 30
@@ -7259,6 +7394,277 @@
           },
           "observation_sha256": "aac40d0edf54ce586cc1587855d381802305331b60ee9ac59ebfc68b5a4a822c",
           "rows": 5934,
+          "status": "present",
+          "table": "zulubet"
+        }
+      },
+      "start": "2026-06-13"
+    },
+    "156bedcc428ff9dab3927730be76da7c98ff791a38ecf5af5c0c7468a6e22155": {
+      "as_of_exclusive": "2026-10-26",
+      "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+      "sources": {
+        "afootballreport": {
+          "first_date": "2026-08-28",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 0,
+            "btts": 0,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 0,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "ee9bc7808acfb7208c6f59b3b4558e4ad33d3078086744c71b7fed8a2a718f9d",
+          "rows": 17551,
+          "status": "present",
+          "table": "afootballreport"
+        },
+        "betclan": {
+          "first_date": "2026-08-28",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 2466,
+            "btts": 0,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 0,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "5929d7aa0fc44184ba020bf2686120933af5dd7e9db096c97bf97e4262786045",
+          "rows": 2577,
+          "status": "present",
+          "table": "betclan"
+        },
+        "betexplorer": {
+          "first_date": "2026-06-13",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-09-01",
+          "market_votes": {
+            "1x2": 0,
+            "btts": 0,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 0,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "624afb5badfb820ebc2bf85aa381bc7516c9a488bbacec5af6ee357c8b52b71a",
+          "rows": 28299,
+          "status": "present",
+          "table": "betexplorer_settled"
+        },
+        "bettingclosed": {
+          "first_date": "2026-07-29",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 7820,
+            "btts": 20722,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 0,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "f748e28ec6b73727c2839e794c9584be3a1c37495f3d5bb2e65d08fa51fb641a",
+          "rows": 21212,
+          "status": "present",
+          "table": "bettingclosed"
+        },
+        "bzzoiro": {
+          "first_date": "2026-08-27",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 3859,
+            "btts": 3797,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 3900,
+            "ou_2.5": 3800,
+            "ou_3.5": 3894,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "0752bcf0fa50e6b6600d7eda809a66c5e6e3a3f39ab70e6358f59bb11dacc012",
+          "rows": 4602,
+          "status": "present",
+          "table": "bzzoiro"
+        },
+        "freesupertips": {
+          "first_date": "2026-09-24",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 0,
+            "btts": 0,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 0,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "fe3d7bdbfed965a3cacd0d438248b23203968d74ffda7f35e41ea95e395edb9d",
+          "rows": 86,
+          "status": "present",
+          "table": "freesupertips"
+        },
+        "predictz": {
+          "first_date": "2026-08-08",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-24",
+          "market_votes": {
+            "1x2": 2955,
+            "btts": 0,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 0,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "1881289ad45da5b2d58a098713d93bbbba801d78365e35eed0da64c5dd8c343c",
+          "rows": 3036,
+          "status": "present",
+          "table": "predictz_raw"
+        },
+        "prosoccer": {
+          "first_date": "2026-09-29",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 2187,
+            "btts": 0,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 2046,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "bbf89adf6e2d9e8f2f11e1667ab33f000d9f732f7f50b82843ce15115d0820a5",
+          "rows": 2256,
+          "status": "present",
+          "table": "prosoccer"
+        },
+        "scoutingstats": {
+          "first_date": "2026-07-29",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 10360,
+            "btts": 8320,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 9228,
+            "ou_2.5": 10127,
+            "ou_3.5": 9023,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "be4e029ac43ff3863e184531122a70a9ae51797340a304c5c7f0f69f18a5d5e0",
+          "rows": 12673,
+          "status": "present",
+          "table": "scoutingstats"
+        },
+        "soccervista": {
+          "rows": 0,
+          "status": "missing_table"
+        },
+        "statarea": {
+          "first_date": "2026-07-29",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 11114,
+            "btts": 0,
+            "ht_1x2": 10890,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 11445,
+            "ou_2.5": 11106,
+            "ou_3.5": 11278,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "ec5d82f607f7073843d7ecb184ed05e502a0bca767aa5f5203a9e7ccf2c95fae",
+          "rows": 11672,
+          "status": "present",
+          "table": "statarea"
+        },
+        "vitibet": {
+          "first_date": "2026-07-29",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 15365,
+            "btts": 0,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 0,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "b2279d74aa7d4df6d356f4d3ddabdf33971bc8a801a92e21f1d54bd2afa76ac8",
+          "rows": 46719,
+          "status": "present",
+          "table": "vitibet"
+        },
+        "windrawwin": {
+          "first_date": "2026-08-29",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 1402,
+            "btts": 0,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 0,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "479aaead39ad790576ccdf87127b5ec0a379950253146c40c31845a980f3eec1",
+          "rows": 1454,
+          "status": "present",
+          "table": "windrawwin"
+        },
+        "zulubet": {
+          "first_date": "2026-07-29",
+          "hash_basis": "sorted_query_rows_in_exclusive_mining_window",
+          "last_date": "2026-10-25",
+          "market_votes": {
+            "1x2": 5734,
+            "btts": 0,
+            "ht_1x2": 0,
+            "ht_ou_1.5": 0,
+            "ht_ou_2.5": 0,
+            "ou_1.5": 0,
+            "ou_2.5": 0,
+            "ou_3.5": 0,
+            "ou_4.5": 0
+          },
+          "observation_sha256": "a4b49a8f0a61cc122eac53cff60c4addc6a7a236b1133f8ebd110790f3130bc3",
+          "rows": 6182,
           "status": "present",
           "table": "zulubet"
         }

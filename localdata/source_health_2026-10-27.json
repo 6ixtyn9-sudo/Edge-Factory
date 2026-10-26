@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-27' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -157,13 +157,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -175,18 +170,18 @@
       },
       "coherence_withheld_fixtures": 4,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 14683
       },
       "pa_matched": 0,
-      "pa_raw": 790,
+      "pa_raw": 14683,
       "pa_scored": 14683,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -230,43 +225,60 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 2,
-        "board_league_count": 1,
+        "board_fixtures": 3,
+        "board_league_count": 2,
         "board_leagues": {
-          "mexico_-_liga_mx": 200
+          "indonesia_-_liga_1": 125,
+          "singapore_-_premier_league": 75
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 0,
+        "board_priced_rows": 39,
         "board_rows": 200,
-        "board_team_count": 3,
+        "board_team_count": 6,
         "board_team_names": {
-          "Santos Laguna": 200,
-          "Tijuana": 191,
-          "Tijuana Caliente": 9
+          "Bhayangkara FC": 71,
+          "Geylang International": 75,
+          "Hougang United": 75,
+          "Madura United": 54,
+          "PSM Makassar": 71,
+          "Persebaya Surabaya": 54
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_moneyline": 9,
+          "unknown_market:2nd_half_moneyline": 9,
+          "unknown_market:match_result_total_goals": 27,
+          "unknown_market:point_spread": 6,
+          "unknown_market:team_clean_sheet": 12,
+          "unknown_market:team_to_win_to_nil": 6,
+          "unsupported_market:double_chance": 9,
+          "unsupported_market:team_total_exact": 30,
+          "unsupported_market:team_total_goals": 39,
+          "unsupported_market:team_total_points_odd_even": 8
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 200
-        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 39
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 3,
+      "sa_scored": 39,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
