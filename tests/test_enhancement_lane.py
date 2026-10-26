@@ -242,7 +242,7 @@ def test_a_lone_eligible_leg_is_a_no_bet_that_says_so(tmp_path, _tmp_lane):
     txt = at.render_enhancement_tickets(at.fresh_state(), DAY, legs, plan, _now(),
                                         should_freeze=False, freeze_record=None,
                                         bank_eff=100.0)
-    assert "NO BET — only 1 eligible leg(s), need 2 for an acca" in txt
+    assert "NO BET — only 1 eligible fixture, need 2 for an acca" in txt
     assert "(bank stays unbet; a lone leg is never a single)" in txt
     assert "[ACCA #" not in txt and "[ENH #" not in txt and "deploying" not in txt
 
@@ -276,7 +276,9 @@ def test_a_same_fixture_duplicate_is_dropped_and_reported(tmp_path, _tmp_lane):
                                         should_freeze=False, freeze_record=None,
                                         bank_eff=100.0, fixture_report=report)
     assert "Pyunik Yerevan vs BKMA" not in txt   # the card reports no diagnostics
-    assert "NO BET — only 1 eligible leg(s), need 2 for an acca" in txt
+    # one FIXTURE from two priced quotes: the count that decides NO BET is the
+    # fixture count, and the quote count is stated beside it.
+    assert "NO BET — only 1 eligible fixture (2 priced quotes), need 2 for an acca" in txt
 
 
 def test_a_vetoed_parent_is_staked_and_not_called_paper(tmp_path, _tmp_lane):
@@ -563,8 +565,13 @@ def test_a_missing_score_holds_the_leg_and_the_slip_date_timer_voids_it(tmp_path
     # The settle reads the void clock through ``at.datetime``, which _tmp_lane
     # pins to DAY 08:00. The slip date must come from that same clock, not the
     # real one, or the horizon depends on the day the test happens to run.
-    state["open_slips"][0]["date"] = (
-        at.datetime.now(at.TZ) - _dt.timedelta(days=6)).strftime("%Y-%m-%d")
+    backdated = (at.datetime.now(at.TZ)
+                 - _dt.timedelta(days=6)).strftime("%Y-%m-%d")
+    state["open_slips"][0]["date"] = backdated
+    # the backdated card must still carry its own freeze, or settlement is
+    # withheld as unplaceable before the void timer can be reached
+    at.record_freeze(state, backdated, at.datetime.now(at.TZ),
+                     lane=at.ENHANCEMENT_LANE)
     lines = at.settle_open_slips(state, {}, archives=[], entries_by_date={},
                                  lane=at.ENHANCEMENT_LANE, scores={})
     assert state["open_slips"] == []
@@ -1015,7 +1022,7 @@ def test_a_priced_leg_with_no_floor_prints_no_bet_and_never_crashes(tmp_path, _t
                                             bank_eff=100.0)
         # refusals are not printed on the card; it says no bet and does not crash
         assert "Alpha FC" not in txt, verdict
-        assert "NO BET — only 0 eligible leg(s)" in txt, verdict
+        assert "NO BET — only 0 eligible fixtures" in txt, verdict
 
 
 def test_the_enhancement_lane_builds_three_accas_and_the_main_lane_stays_at_two():
@@ -1184,8 +1191,13 @@ def test_a_no_bet_recut_notice_reads_no_bet_from_the_file_alone(tmp_path, _tmp_l
 
 
 def test_enhancement_legs_already_kicked_off_or_finished_are_withdrawn_from_the_card():
-    """A draft built after a kickoff must not list that match (2026-10-15 card:
-    Marquense 05:00, LA FC 04:30 and Nashville 02:30 were still on it at 07:28)."""
+    """A draft must not list a match that can no longer be bet (2026-10-15 card:
+    Marquense 05:00, LA FC 04:30 and Nashville 02:30 were still on it at 07:28).
+
+    At 07:28 the card had not reached its 09:00 freeze, so the 05:00 kickoff is
+    unplaceable rather than merely started; the reason is the freeze floor. A
+    build AFTER the freeze hour reports the older ``already started`` reason.
+    """
     now = datetime.fromisoformat(f"{DAY}T08:00:00").replace(tzinfo=at.TZ)
     started = _pick(home="Marquense", away="Mixco", price=1.64, market="match_over_25")
     started["kickoff_utc"] = f"{DAY}T05:00:00+00:00"     # 07:00 SAST: already started
@@ -1198,12 +1210,21 @@ def test_enhancement_legs_already_kicked_off_or_finished_are_withdrawn_from_the_
     report = at.apply_enhancement_timing(legs, now, DAY, {(DAY, hk, ak): (1, 0)})
     pool = at.enhancement_pool(legs)
     assert [l["match"] for l in pool] == ["Riga FC vs Kairat Almaty"]
-    assert "Marquense vs Mixco" in report[at.KO_SKIP_STARTED]
+    # 07:00 SAST kickoff, 09:00 freeze: the card was not final yet at kickoff.
+    assert "Marquense vs Mixco" in report[at.KO_SKIP_PRE_FREEZE]
     assert "Alpha FC vs Beta FC" in report["result already known"]
     by_match = {l["match"]: l for l in legs}
     assert by_match["Marquense vs Mixco"]["verdict"] == "kickoff_guard"
     assert by_match["Alpha FC vs Beta FC"]["verdict"] == "result_known"
     assert by_match["Riga FC vs Kairat Almaty"]["verdict"] == "fire"
+
+    # After the freeze hour the card is final: the same fixture is judged by
+    # the ordinary "already started" rule instead.
+    after = datetime.fromisoformat(f"{DAY}T10:00:00").replace(tzinfo=at.TZ)
+    late = at.enhancement_legs([dict(started), dict(upcoming)])
+    late_report = at.apply_enhancement_timing(late, after, DAY, {})
+    assert any("Marquense vs Mixco" in names
+               for names in late_report.get(at.KO_SKIP_STARTED, []))
 
 
 def test_fresh_no_bet_replaces_stale_reason_without_changing_finances(_tmp_lane):
@@ -1218,7 +1239,7 @@ def test_fresh_no_bet_replaces_stale_reason_without_changing_finances(_tmp_lane)
     at.cmd_enhancement(_args(), st)
     text = artifact.read_text()
     assert 'warehouse unavailable' not in text
-    assert '2 eligible leg(s), but no supported complete acca' in text
+    assert '2 eligible fixtures, but no supported complete acca' in text
     assert 'No complete same-book/source acca on distinct fixtures; no joint probability estimated.' in text
     assert st == before
     assert not at.ENHANCEMENT_LANE.state_file.exists()

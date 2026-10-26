@@ -18,6 +18,7 @@ graded from, so a wrong score behind a booked loss is visible in the run log
 instead of only in the bank.
 """
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -46,14 +47,21 @@ def _over_leg(match="Molde vs Fredrikstad", market="match_over_25", label="Match
             "market": market, "result": None}
 
 
+_FROZEN_AT = datetime(2026, 10, 25, 9, 0, tzinfo=at.TZ)
+
+
 def _state(legs, stake=3.288):
-    return {
+    st = {
         "base_pct": 100.0, "bank": 100.0, "cycle_base": 100.0,
         "history": [], "events": [],
         "open_slips": [{"date": DAY, "staked_pct": stake, "accas": [
             {"odds": 1.44, "stake_pct": stake, "results": [None] * len(legs),
              "won": None, "legs": legs}]}],
     }
+    # A hand-built slip stands for a card that WAS frozen, hence placeable.
+    # Only a frozen card settles; see settle_open_slips' unfrozen gate.
+    at.record_freeze(st, DAY, _FROZEN_AT)
+    return st
 
 
 # --- the selection decides the grading path, not the presence of a market ---

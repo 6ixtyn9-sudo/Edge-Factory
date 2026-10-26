@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "action": "reconcile_unplaced_enhancement_settlement",
+  "lane": "enh",
+  "date": "2026-10-26",
+  "confirmed_none_placed": true,
+  "operator_confirmation": "i only placed main accas, i did not place enh.",
+  "approved_at": "2026-10-26T07:07:47+02:00",
+  "staked_pct": 4.6937,
+  "returned_pct": 0.0,
+  "bank_before_reconcile": 39.0372,
+  "bank_after_reconcile": 43.7309,
+  "history_row_sha256": "8b5faf7c3693f1cfd76999dc241f4116d3a575982db05799555e8a2e92965007",
+  "evidence": {
+    "settlement_line": "settled 2026-10-26 acca @2.11 legs=['win', 'loss']: bank 39.0%",
+    "settled_at_sast": "2026-10-26T06:42:00+02:00",
+    "drafted_at_sast": "2026-10-26T00:00:00+02:00",
+    "drafted_by": "22:00Z run; target rolled to 2026-10-26 with hour < FREEZE_HOUR=9",
+    "freeze_book_has_date": false,
+    "freeze_book_days": 12,
+    "artifact_frozen_footer": false,
+    "artifact_sha256": "6f9b5d3ab36a7be5a647e7261bc445090183de7c2a588193a17896ab6e7c50b4",
+    "artifact_description": "NO BET text written after the draft; the ticket the stake was sized from no longer exists on disk",
+    "stake_pct_note": "4.6937 = 12.5% of the pre-regrade bank 37.5495, i.e. sized before the 01:11 regrade and never re-sized",
+    "legs": [
+      "win",
+      "loss"
+    ],
+    "why_unplaceable": "no freeze entry for the date, so the card was still changing at kickoff; the user confirms the enhancement lane was not staked"
+  },
+  "expected_state_after": {
+    "bank_pct": 43.7309,
+    "bet_days": 12,
+    "record": "10W/18L",
+    "last_bet_day": "2026-10-25"
+  }
+}
