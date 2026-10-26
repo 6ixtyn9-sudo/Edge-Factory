@@ -12516,3 +12516,30 @@ current slate and then runs the normal ENH generation/freeze step. Existing
 new prices/cohorts/conflicts/started fixtures can still change eligibility.
 No unconditional exact-card guarantee and no workflow dispatch by agent.
 Final targeted validation **696 passed**; no full-suite claim.
+
+### 26 October 2026 — ENH ML uses existing goal forecasts and prior form
+
+Operator explicitly requested stock-taking and connection of existing unused
+machinery/inputs. Inventory and boundaries:
+`docs/operator/audits/ENH-ML-INPUT-INVENTORY-2026-10-26.md`.
+Extended existing consensus_contracts learner to enh_score_logit_v2; no new
+scripts/services/registries. Features now include observed full 1X2/goal/BTTS
+forecast means/spreads from nonambiguous same-fixture/parent-market sources,
+observed xG when present, and existing form_intel last-10 team/H2H goal features.
+Other sources provide context, never substitute for certified recipe voters.
+Form archive reuses cohort regulation-result adjudication, not unfiltered raw
+archives; features exclude each fixture's own day/future, respect squad identity,
+and retain explicit thin/missing history. Legacy label-known-by authenticity
+remains uncertified. Recorded training means/scales + missing flags, N30 measured
+variable optional columns, training coverage and per-fixture imputation receipts.
+Actual serving emission and fetch_match_cohort attach context; shared scorer
+handles v1 unchanged and v2 fit/serve vectors; existing selector/replay consume it.
+Optional duplicate/timing conflicts are order-invariant; context failure retains
+cohort evidence; cached fits do not contain another fixture's inputs. Main,
+admission/floors, 25% free-bank staking, frozen tickets and settlement untouched.
+No production warehouse, economic uplift claim, workflow dispatch or auto-merge.
+Validation on final implementation: **4564 passed, 1 skipped in 243.80s**.
+Seventeen added parameterized cases plus the existing multiclass sklearn oracle
+updated for the new shared feature vector. Full repository diff check clean;
+no workflow or localdata changes. Actual production warehouse/capture coverage
+and out-of-time economic uplift remain unmeasured, not inferred from test passes.
