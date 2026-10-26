@@ -152,3 +152,88 @@ def test_cache_still_settles_when_the_push_only_lost_the_settlement(settlement_s
     restored = json.loads(path.read_text())
     assert restored["bank"] == pytest.approx(cache["bank"])
     assert restored["open_slips"] == []
+
+
+def _reconciled(state, day='2026-10-25'):
+    state['settled_enhancement_reconciliations'] = {
+        day: {'confirmed_none_placed': True, 'removed_row_sha256': 'a' * 64,
+              'receipt_sha256': 'b' * 64, 'bank_before_pct': 35., 'bank_after_pct': 39.}}
+
+
+@pytest.mark.parametrize('cache_claims_applied', [False, True])
+def test_old_cache_cannot_resurrect_reconciled_unplaced_settlement(settlement_step, cache_claims_applied):
+    repo, path, head, cache, install = settlement_step
+    head['open_slips'] = []
+    head['frozen_by_date'] = {}
+    _reconciled(head)
+    cache['open_slips'] = []
+    cache['frozen_by_date'] = {}
+    if cache_claims_applied:
+        _reconciled(cache)
+    install(head, cache)
+    before = path.read_bytes()
+    # No original receipt file exists: the committed application book suffices.
+    with pytest.raises(persistence.EvidenceMergeError, match='refusing to resurrect an unplaced bet'):
+        persistence.restore_committed_localdata(repo)
+    assert path.read_bytes() == before
+
+
+def test_real_later_frozen_card_on_reconciled_date_can_still_settle(settlement_step):
+    repo, path, head, cache, install = settlement_step
+    _reconciled(head)
+    install(head, cache)
+    persistence.restore_committed_localdata(repo)
+    restored = json.loads(path.read_text())
+    assert restored['bank'] == pytest.approx(cache['bank'])
+    assert restored['history'] == cache['history']
+    assert restored['settled_enhancement_reconciliations'] == head['settled_enhancement_reconciliations']
+
+
+def test_reconciliation_guard_rejects_topup_with_no_committed_position(settlement_step):
+    repo, path, head, cache, install = settlement_step
+    row = json.loads(json.dumps(cache['history'][-1]))
+    row['accas'] = row['accas'][:1]
+    row['staked_pct'] = row['accas'][0]['stake_pct']
+    row['returned_pct'] = row['accas'][0]['returned_pct']
+    head['history'].append(row)
+    head['open_slips'] = []
+    cache['open_slips'] = []
+    cache['bank'] = head['bank'] - cache['history'][-1]['accas'][-1]['stake_pct']
+    _reconciled(head)
+    install(head, cache)
+    with pytest.raises(persistence.EvidenceMergeError, match='reconciled date'):
+        persistence.restore_committed_localdata(repo)
+
+
+def test_reconciliation_guard_does_not_repair_already_committed_loss(settlement_step):
+    repo, path, head, cache, install = settlement_step
+    _reconciled(cache)
+    install(cache, cache)
+    persistence.restore_committed_localdata(repo)
+    assert json.loads(path.read_text()) == cache
+
+
+def test_forged_cached_reconciliation_cannot_block_a_valid_settlement(settlement_step):
+    repo, path, head, cache, install = settlement_step
+    _reconciled(cache)
+    install(head, cache)
+    persistence.restore_committed_localdata(repo)
+    assert json.loads(path.read_text())['bank'] == pytest.approx(cache['bank'])
+
+
+@pytest.mark.parametrize('change', ['not_frozen', 'settles_same_position_twice'])
+def test_reconciled_date_requires_one_frozen_position_per_added_acca(settlement_step, change):
+    repo, path, head, cache, install = settlement_step
+    _reconciled(head)
+    if change == 'not_frozen':
+        head['frozen_by_date'] = {}
+        cache['frozen_by_date'] = {}
+    else:
+        row = cache['history'][-1]
+        row['accas'].append(json.loads(json.dumps(row['accas'][0])))
+        row['staked_pct'] += row['accas'][0]['stake_pct']
+        row['returned_pct'] += row['accas'][0]['returned_pct']
+        cache['bank'] += row['accas'][0]['returned_pct'] - row['accas'][0]['stake_pct']
+    install(head, cache)
+    with pytest.raises(persistence.EvidenceMergeError, match='reconciled date'):
+        persistence.restore_committed_localdata(repo)
