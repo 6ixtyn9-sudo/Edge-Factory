@@ -28,6 +28,37 @@ def load_source(key: str):
         print(f"ERROR: source '{key}' not found", file=sys.stderr)
         sys.exit(2)
 
+SCHEDULE_CAPTURE_SOURCES = frozenset({"scoutingstats", "vitibet"})
+SCHEDULE_CAPTURE_COLUMNS = ["captured_at", "source", "kickoff_origin", "fixture_identity_origin", "schedule_history"]
+
+
+def stamp_schedule_capture(source: str, rows: list[dict], *, captured_at: str) -> list[dict]:
+    """Receipt for the response just fetched, never a kickoff-derived timestamp."""
+    if source not in SCHEDULE_CAPTURE_SOURCES:
+        return rows
+    return [dict(row, captured_at=captured_at, source=source,
+                 kickoff_origin="provider_explicit_offset",
+                 fixture_identity_origin="provider_participants") for row in rows]
+
+
+def retain_schedule_history(previous: dict, current: dict) -> dict:
+    """Retain clocks without duplicating mutable prediction rows in the warehouse."""
+    if current.get("source") not in SCHEDULE_CAPTURE_SOURCES:
+        return current
+    history = json.loads(previous.get("schedule_history") or "[]")
+    if not isinstance(history, list) or any(not isinstance(r, dict) for r in history):
+        raise ValueError("invalid retained source schedule history")
+    if (previous.get("source") == current["source"] and previous.get("captured_at")
+            and previous.get("kickoff_origin") == "provider_explicit_offset"
+            and previous.get("fixture_identity_origin") == "provider_participants"):
+        fields = ("date", "home", "away", "kickoff", "captured_at", "source",
+                  "kickoff_origin", "fixture_identity_origin")
+        record = {k: previous.get(k, "") for k in fields}
+        if record not in history:
+            history.append(record)
+    return dict(current, schedule_history=json.dumps(history, sort_keys=True))
+
+
 def dedup_key(row: dict, columns: list[str]):
     # Odds adapters emit multiple rows per event; preserve market/selection/bookmaker.
     # Include kickoff when available so same-day duplicate fixtures do not collapse.
@@ -150,6 +181,8 @@ def main():
         sys.exit(2)
 
     columns = getattr(mod, "COLUMNS", None)
+    if columns and source_key in SCHEDULE_CAPTURE_SOURCES:
+        columns = list(dict.fromkeys([*columns, *SCHEDULE_CAPTURE_COLUMNS]))
     if not columns:
         print(f"WARNING: {source_key} has no COLUMNS, will infer from first row", file=sys.stderr)
 
@@ -194,7 +227,8 @@ def main():
             for r in rows:
                 k = dedup_key(r, file_columns)
                 # stringify all values for csv
-                existing[k] = {col: "" if r.get(col) is None else str(r.get(col, "")) for col in file_columns}
+                current = {col: "" if r.get(col) is None else str(r.get(col, "")) for col in file_columns}
+                existing[k] = retain_schedule_history(existing.get(k, {}), current)
             # write
             with gzip.open(path, "wt", newline="", compresslevel=6) as f:
                 w = csv.DictWriter(f, fieldnames=file_columns)
@@ -241,6 +275,9 @@ def main():
                     phase5_forward_days.add(requested_day)
             try:
                 rows = mod.fetch_day(requested_day)
+                rows = stamp_schedule_capture(
+                    source_key, rows or [],
+                    captured_at=datetime.now(timezone.utc).isoformat(timespec="seconds"))
                 if phase5_capture:
                     try:
                         shadow_result = append_shadow_rows(

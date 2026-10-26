@@ -288,9 +288,27 @@ def decision_cutoff_utc(day: str) -> datetime | None:
         return None
 
 
+def _schedule_archive_rows(reader, *, schedule_source):
+    for ordinal, row in enumerate(reader, 1):
+        if not schedule_source:
+            yield ordinal, None, row
+            continue
+        # Capture keeps one current prediction per fixture. Only its clocks
+        # retain history, so schedule evidence cannot change consensus units.
+        history = json.loads(row.get("schedule_history") or "[]")
+        if not isinstance(history, list) or any(not isinstance(r, dict) for r in history):
+            raise ValueError("invalid retained source schedule history")
+        yield ordinal, None, row
+        for index, previous in enumerate(history):
+            yield ordinal, index, previous
+
+
 def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[dict, list[dict]]:
     """Read existing provider archives, never cards, warehouse labels or the network.
 
+    Timestamped ScoutingStats/Vitibet response rows are schedule witnesses too;
+    no generated pick, warehouse label, mtime or research ledger is consulted.
+    Legacy source CSV rows without capture/origin receipts cannot corroborate.
     OddsPapi kickoff is provider startTime (oddspapi_odds.parse_odds_response).
     Legacy TheOddsAPI rows may inherit pick kickoff: require an explicit
     provider_commence_time origin before treating those rows as witnesses.
@@ -316,9 +334,11 @@ def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[d
     by_pair: dict[tuple, list[dict]] = {}
     receipts = []
     team_keys: dict[str, str] = {}
-    for provider in ("oddspapi", "theoddsapi"):
-        for path in sorted(localdata.glob(f"{provider}_odds_*.csv.gz")):
-            month = re.fullmatch(rf"{provider}_odds_(\d{{4}}-\d{{2}})\.csv\.gz", path.name)
+    for provider in ("oddspapi", "theoddsapi", "scoutingstats", "vitibet"):
+        schedule_source = provider in ("scoutingstats", "vitibet")
+        prefix = provider if schedule_source else f"{provider}_odds"
+        for path in sorted(localdata.glob(f"{prefix}_????-??.csv.gz" if schedule_source else f"{prefix}_*.csv.gz")):
+            month = re.fullmatch(rf"{prefix}_(\d{{4}}-\d{{2}})\.csv\.gz", path.name)
             canonical_month = month[1] if month else None
             try:
                 if canonical_month:
@@ -339,7 +359,8 @@ def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[d
                 seen = set()
                 file_witnesses = {}
                 with gzip.open(io.BytesIO(archive_bytes), "rt", newline="") as handle:
-                    for ordinal, row in enumerate(csv.DictReader(handle), 1):
+                    for ordinal, history_index, row in _schedule_archive_rows(
+                            csv.DictReader(handle), schedule_source=schedule_source):
                         receipt["rows_scanned"] += 1
                         home, away = row.get("home", ""), row.get("away", "")
                         for name in (home, away):
@@ -352,7 +373,7 @@ def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[d
                         reason = None
                         if normalize_source_family(row.get("source")) != provider:
                             reason = "archive_source_mismatch"
-                        elif row.get("source_type") != "odds" or row.get("sport") != "soccer":
+                        elif not schedule_source and (row.get("source_type") != "odds" or row.get("sport") != "soccer"):
                             reason = "unsupported_record_contract"
                         elif provider == "theoddsapi" and row.get("kickoff_origin") != "provider_commence_time":
                             reason = "provider_kickoff_origin_unproven"
@@ -363,6 +384,9 @@ def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[d
                                     or not str(row.get("provider_event_id") or "").strip()
                                     or parse_iso_utc(row.get("provider_commence_time")) != parse_iso_utc(row.get("kickoff"))):
                                 reason = "provider_event_identity_or_clock_unproven"
+                        if schedule_source and (row.get("kickoff_origin") != "provider_explicit_offset"
+                                                or row.get("fixture_identity_origin") != "provider_participants"):
+                            reason = "provider_schedule_origin_unproven"
                         kickoff = parse_iso_utc(row.get("kickoff"))
                         observed = parse_iso_utc(row.get("captured_at"))
                         if reason is None and (kickoff is None or observed is None):
@@ -382,11 +406,16 @@ def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[d
                                   "file": path.name, "file_sha256": receipt["sha256"],
                                   "csv_data_row": ordinal,
                                   "row_sha256": hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest(),
-                                  "kickoff_origin": ("provider_startTime" if provider == "oddspapi"
+                                  "kickoff_origin": ("provider_explicit_offset" if schedule_source else
+                                                     "provider_startTime" if provider == "oddspapi"
                                                      else "provider_commence_time"),
                                   "fixture_identity_origin": row.get("fixture_identity_origin"),
                                   "provider_event_id": row.get("provider_event_id"),
                                   "provider_commence_time": row.get("provider_commence_time")}
+                        if schedule_source:
+                            record["schedule_row"] = row
+                            if history_index is not None:
+                                record["csv_history_index"] = history_index
                         file_witnesses.setdefault(pair, []).append(record)
                         receipt["witness_records"] += 1
                 for pair, records in file_witnesses.items():

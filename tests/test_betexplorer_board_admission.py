@@ -140,7 +140,8 @@ def test_persisted_board_receipt_is_revalidated_at_live_door(tmp_path, field, va
 
 
 @pytest.mark.parametrize('market', SUPPORTED_BE_MARKETS)
-def test_board_quote_can_reach_existing_complete_ticket_recipe(tmp_path, market):
+@pytest.mark.parametrize('schedule_source', [None, 'scoutingstats', 'vitibet'])
+def test_board_quote_can_reach_existing_complete_ticket_recipe(tmp_path, market, schedule_source):
     board_only(tmp_path, markets=ALL_BE_MARKETS)
     row = attach_enhancement_price(_be_pick(market, pick='home'), load_prices_index(tmp_path, BE_DAY))
     # Distinct synthetic fixture, independently corroborated through the same board.
@@ -156,6 +157,19 @@ def test_board_quote_can_reach_existing_complete_ticket_recipe(tmp_path, market)
                   participant1Name='Other Home', participant2Name='Other Away')
     data['boards'][BE_DAY]['fixtures'].append(second)
     path.write_text(json.dumps(data))
+    if schedule_source:
+        import csv
+        import gzip
+        records = [dict(date=BE_DAY, home=f['participant1Name'], away=f['participant2Name'],
+            kickoff=f['startTime'], captured_at=f'{BE_DAY}T05:30:00Z', source=schedule_source,
+            kickoff_origin='provider_explicit_offset', fixture_identity_origin='provider_participants')
+            for f in data['boards'][BE_DAY]['fixtures']]
+        path.unlink()
+        with gzip.open(tmp_path / f'localdata/{schedule_source}_2026-10.csv.gz', 'wt', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=list(records[0]))
+            writer.writeheader()
+            writer.writerows(records)
+        row = attach_enhancement_price(_be_pick(market, pick='home'), load_prices_index(tmp_path, BE_DAY))
     other = attach_enhancement_price(_be_pick(market, pick='home', home='Other Home', away='Other Away',
         match='Other Home vs Other Away'), load_prices_index(tmp_path, BE_DAY))
     legs = at.enhancement_legs([with_evidence(dict(p, pick='home', league='Synthetic League')) for p in (row, other)], execution_safe=True)
@@ -207,3 +221,164 @@ def test_match_totals_are_never_substituted_for_missing_team_totals(tmp_path, ma
     row = attach_enhancement_price(_be_pick(market, pick='home'), load_prices_index(tmp_path, BE_DAY))
     assert not row['enhancement_priced']
     assert row['enhancement_price'] is None
+
+
+def source_schedule_only(root, source='scoutingstats', *, changes=None):
+    """Existing response CSV, no odds-provider schedule and no research reader."""
+    import csv
+    import gzip
+    _, fixture = board_only(root, markets=ALL_BE_MARKETS)
+    (root / 'localdata/oddspapi_fixture_state.json').unlink()
+    row = dict(date=BE_DAY, home=fixture['home'], away=fixture['away'],
+               kickoff=f'{BE_DAY}T20:00:00Z', captured_at=f'{BE_DAY}T05:30:00Z',
+               source=source, kickoff_origin='provider_explicit_offset',
+               fixture_identity_origin='provider_participants')
+    row.update(changes or {})
+    with gzip.open(root / f'localdata/{source}_2026-10.csv.gz', 'wt', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=list(row))
+        writer.writeheader()
+        writer.writerow(row)
+    return row
+
+
+@pytest.mark.parametrize('source', ['scoutingstats', 'vitibet'])
+@pytest.mark.parametrize('market', SUPPORTED_BE_MARKETS)
+def test_source_schedule_corroborates_without_other_odds_provider(tmp_path, source, market):
+    source_schedule_only(tmp_path, source)
+    row = attach_enhancement_price(_be_pick(market, pick='home'), load_prices_index(tmp_path, BE_DAY))
+    assert row['enhancement_priced']
+    assert betexplorer_price_rejection(row) is None
+    assert at.enhancement_legs([with_evidence(dict(row, pick='home', league='Synthetic League'))], execution_safe=True)[0]['verdict'] == 'fire'
+    witness = row['enhancement_price_provenance']['resolution']['witnesses'][0]
+    assert witness['source'] == source
+    assert witness['file'] == f'{source}_2026-10.csv.gz'
+    assert witness['schedule_row']['captured_at'] == f'{BE_DAY}T05:30:00Z'
+
+
+@pytest.mark.parametrize('changes', [
+    {'captured_at': ''}, {'captured_at': f'{BE_DAY}T05:30:00'},
+    {'captured_at': f'{BE_DAY}T07:00:00Z'}, {'captured_at': f'{BE_DAY}T21:00:00Z'},
+    {'kickoff': f'{BE_DAY}T20:00:00'}, {'kickoff_origin': 'pick_fallback'},
+    {'fixture_identity_origin': 'pick_fallback'}, {'source': 'betexplorer'},
+    {'home': 'Coventry U21'}, {'home': 'Coventry Women'},
+    {'away': 'Other Club'}, {'home': 'Newcastle Utd', 'away': 'Coventry'},
+])
+def test_source_schedule_requires_original_identity_and_predecision_clock(tmp_path, changes):
+    source_schedule_only(tmp_path, changes=changes)
+    row = attach_enhancement_price(_be_pick('match_over_25'), load_prices_index(tmp_path, BE_DAY))
+    assert not row['enhancement_priced']
+
+
+def test_source_schedule_after_actual_decision_is_not_backfilled(tmp_path):
+    source_schedule_only(tmp_path, changes={'captured_at': f'{BE_DAY}T06:45:00Z'})
+    index = load_prices_index(tmp_path, BE_DAY)
+    for instant, expected in [('06:30:00', False), ('06:50:00', True)]:
+        row = attach_enhancement_price(_be_pick('match_over_25', as_of=f'{BE_DAY}T{instant}Z'), index)
+        assert row['enhancement_priced'] is expected
+
+
+def test_source_schedule_conflicts_do_not_choose_convenient_witness(tmp_path):
+    source_schedule_only(tmp_path)
+    source_schedule_only(tmp_path, 'vitibet', changes={'kickoff': f'{BE_DAY}T19:00:00Z'})
+    index = load_prices_index(tmp_path, BE_DAY)
+    assert index['betexplorer_admission']['rejections']['conflicting_schedule_witnesses'] == 1
+    assert not attach_enhancement_price(_be_pick('match_over_25'), index)['enhancement_priced']
+
+
+@pytest.mark.parametrize('field,value', [
+    ('schedule_row.kickoff', 'bad'), ('schedule_row.captured_at', 'bad'),
+    ('schedule_row.home', 'Coventry U21'), ('schedule_row.source', 'betexplorer'),
+    ('fixture_identity_origin', 'pick_fallback'), ('kickoff_origin', 'pick_fallback'),
+    ('file', 'picks_2026-10-12.json'), ('row_sha256', '0' * 64),
+    ('csv_data_row', 0), ('schedule_row', None),
+])
+def test_source_schedule_receipt_is_revalidated_at_live_door(tmp_path, field, value):
+    source_schedule_only(tmp_path)
+    row = attach_enhancement_price(_be_pick('match_over_25'), load_prices_index(tmp_path, BE_DAY))
+    proof = row['enhancement_price_provenance']['resolution']['witnesses'][0]
+    target = proof
+    parts = field.split('.')
+    for key in parts[:-1]:
+        target = target[key]
+    target[parts[-1]] = value
+    assert betexplorer_price_rejection(row) is not None
+    assert at.enhancement_legs([with_evidence(row)], execution_safe=True)[0]['verdict'] != 'fire'
+
+
+def test_research_shadow_is_not_an_operational_schedule_input(tmp_path):
+    source_schedule_only(tmp_path)
+    (tmp_path / 'localdata/scoutingstats_2026-10.csv.gz').unlink()
+    shadow = tmp_path / 'localdata/phase5_shadow'
+    shadow.mkdir()
+    (shadow / 'rows.jsonl').write_text(json.dumps(dict(source='scoutingstats',
+        kickoff_at_utc=f'{BE_DAY}T20:00:00Z', captured_at=f'{BE_DAY}T05:30:00Z')) + '\n')
+    assert not attach_enhancement_price(_be_pick('match_over_25'), load_prices_index(tmp_path, BE_DAY))['enhancement_priced']
+
+
+def test_curated_same_club_alias_reaches_its_own_corroborated_quote(tmp_path):
+    path, fixture = board_only(tmp_path, markets=ALL_BE_MARKETS)
+    ledger = tmp_path / f'localdata/betexplorer_match_detail_{BE_DAY}.json'
+    data = json.loads(ledger.read_text())
+    data['fixtures']['event'].update(home='Besiktas', away='Basaksehir')
+    ledger.write_text(json.dumps(data))
+    data = json.loads(path.read_text())
+    data['boards'][BE_DAY]['fixtures'][0].update(participant1Name='Beşiktaş', participant2Name='İstanbul Başakşehir')
+    path.write_text(json.dumps(data))
+    index = load_prices_index(tmp_path, BE_DAY)
+    from edgefactory.util import norm_team
+    # A schedule-only source's earlier display-name bucket has no prices.
+    own = (norm_team('Beşiktaş'), norm_team('İstanbul Başakşehir'))
+    index['names'] = {own: ('Beşiktaş', 'İstanbul Başakşehir'), **index['names']}
+    index.pop('betexplorer_context', None)  # Preserve this exact test index order.
+    pick = _be_pick('match_over_25', home='Beşiktaş', away='İstanbul Başakşehir')
+    row = attach_enhancement_price(pick, index)
+    assert row['enhancement_priced']
+    assert row['enhancement_price_source'] == 'betexplorer'
+    assert betexplorer_price_rejection(row) is None
+    for other in ['İstanbulspor', 'Başakşehir U21', 'Başakşehir Women']:
+        row = attach_enhancement_price(_be_pick('match_over_25', home='Beşiktaş', away=other), index)
+        assert not row['enhancement_priced']
+
+
+def test_source_schedule_history_survives_post_cutoff_refresh_without_backdating(tmp_path):
+    import csv
+    import gzip
+    previous = source_schedule_only(tmp_path)
+    current = dict(previous, captured_at=f'{BE_DAY}T08:30:00Z', schedule_history=json.dumps([previous]))
+    path = tmp_path / 'localdata/scoutingstats_2026-10.csv.gz'
+    with gzip.open(path, 'wt', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=list(current)); writer.writeheader(); writer.writerow(current)
+    row = attach_enhancement_price(_be_pick('match_over_25'), load_prices_index(tmp_path, BE_DAY))
+    assert row['enhancement_priced']
+    assert betexplorer_price_rejection(row) is None
+    witness = row['enhancement_price_provenance']['resolution']['witnesses'][0]
+    assert witness['observed_at_utc'] == f'{BE_DAY}T05:30:00+00:00'
+    assert witness['csv_history_index'] == 0
+    assert witness['schedule_row'] == previous
+
+
+def test_conflicting_pre_cutoff_schedule_history_stays_closed(tmp_path):
+    import csv
+    import gzip
+    previous = source_schedule_only(tmp_path)
+    current = dict(previous, kickoff=f'{BE_DAY}T19:00:00Z', captured_at=f'{BE_DAY}T06:00:00Z',
+                   schedule_history=json.dumps([previous]))
+    path = tmp_path / 'localdata/scoutingstats_2026-10.csv.gz'
+    with gzip.open(path, 'wt', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=list(current)); writer.writeheader(); writer.writerow(current)
+    index = load_prices_index(tmp_path, BE_DAY)
+    assert index['betexplorer_admission']['rejections']['conflicting_schedule_witnesses'] == 1
+    assert not attach_enhancement_price(_be_pick('match_over_25'), index)['enhancement_priced']
+
+
+@pytest.mark.parametrize('history', ['bad json', '{}', '[null]'])
+def test_corrupt_source_schedule_history_cannot_hide_a_conflict(tmp_path, history):
+    import csv
+    import gzip
+    current = dict(source_schedule_only(tmp_path), schedule_history=history)
+    path = tmp_path / 'localdata/scoutingstats_2026-10.csv.gz'
+    with gzip.open(path, 'wt', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=list(current)); writer.writeheader(); writer.writerow(current)
+    index = load_prices_index(tmp_path, BE_DAY)
+    assert index['betexplorer_admission']['rejections']['schedule_archive_unavailable'] == 1
+    assert not attach_enhancement_price(_be_pick('match_over_25'), index)['enhancement_priced']
