@@ -57,3 +57,69 @@ Targeted checks cover both schedule sources; supported match totals, BTTS and do
 **676 targeted tests passed** on the final code, covering capture, corroboration, ENH pricing/selection, live evidence admission, freeze/unplaced protection, daily orchestration and research isolation. `git diff --check` passed. This is not a claim of a completed full-suite run.
 
 Machine-readable evidence: [enh_schedule_repair_2026-10-26.json](enh_schedule_repair_2026-10-26.json).
+
+## Follow-up: make the recovered schedules available to a normal workflow
+
+The missing operational recovery is now implemented as two tiny, committed,
+schedule-only source archives:
+
+- `localdata/schedule_scoutingstats_2026-10.csv.gz` — six original observations.
+- `localdata/schedule_vitibet_2026-10.csv.gz` — sixteen original observations.
+
+Their 22 rows are exact projections of the original source capture records in
+the companion JSON: original fixture names, kickoff strings, capture times,
+source and capture-row IDs are preserved. The extraction verified each original
+record's SHA-256 row ID. No observation time was assigned from the current
+clock or from kickoff. No probabilities, scores, odds, or selected tickets were
+inserted into these schedule files.
+
+The normal schedule reader and live receipt checker now accept this separate
+archive prefix. The warehouse's existing source globs do not match it, so it
+cannot add predictions or change mining/consensus units. The existing workflow
+restore step restores these tracked inputs over a missing or stale cache. A
+normal run therefore has the recovered pre-cutoff schedules available without
+reading any Phase 5 shadow file.
+
+The four relevant BetExplorer detail-cache entries were already visited and
+remain within their existing 24-hour freshness window. Their normal cache path
+does not refetch and replace those quote captures merely because a workflow is
+dispatched. No collection policy was changed.
+
+### Verified freeze, not just a selector result
+
+Using the saved exact-parent profiles and quotes, the restored source archives,
+and the original run's ENH financial state, the **actual `cmd_enhancement` entry
+point** was executed with `force=False` in an isolated scratch lane at 10:40 SAST.
+It produced the two accas above and wrote all three real freeze outputs:
+
+1. `frozen_by_date['2026-10-26']` with `final=True`;
+2. an open slip with two accas and total stake **9.7592 capital points**;
+3. `FROZEN AT 10:40 - FINAL` on its ticket text.
+
+The scratch state's paths were isolated from production. This proves the
+normal freeze path can consume the recovered inputs; it does **not** claim
+that production has already frozen or that fresh prices/cohorts cannot change.
+
+### Dispatch after the follow-up is merged
+
+Use the existing **Autonomous Edge Factory 3-Hour Service** workflow,
+branch **main**, execution mode **auto**. Equivalent command, for the operator
+to run (not dispatched by the agent):
+
+```bash
+gh workflow run daily.yml --repo 6ixtyn9-sudo/Edge-Factory --ref main -f mode=auto
+```
+
+`auto` performs the existing current-day intraday rebuild because today's
+official marker exists, then reaches the separate **Enhancement tickets
+(generate/freeze)** step. There is no need for `recover_and_rebuild`, a reset,
+remine-only mode, an ENH force flag or a manually fabricated ticket. A qualifying
+card after 09:00 SAST freezes at that run's actual time. Existing frozen cards
+remain write-once. If a real new conflict, started fixture, unavailable price or
+other execution check prevents a card, the workflow must report that rejection
+rather than force this reconstructed card.
+
+Follow-up validation: **696 targeted tests passed**, including both archived
+schedule sources, restored/missing runner-cache handling, preservation of original
+capture values, exclusion from prediction warehouse inputs and existing freeze,
+selection, orchestration and isolation protections. No workflow was dispatched.

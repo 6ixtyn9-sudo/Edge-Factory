@@ -337,8 +337,12 @@ def load_schedule_witnesses(fixtures: list[dict], *, localdata: Path) -> tuple[d
     for provider in ("oddspapi", "theoddsapi", "scoutingstats", "vitibet"):
         schedule_source = provider in ("scoutingstats", "vitibet")
         prefix = provider if schedule_source else f"{provider}_odds"
-        for path in sorted(localdata.glob(f"{prefix}_????-??.csv.gz" if schedule_source else f"{prefix}_*.csv.gz")):
-            month = re.fullmatch(rf"{prefix}_(\d{{4}}-\d{{2}})\.csv\.gz", path.name)
+        patterns = ([f"{prefix}_????-??.csv.gz", f"schedule_{prefix}_????-??.csv.gz"]
+                    if schedule_source else [f"{prefix}_*.csv.gz"])
+        paths = sorted({path for pattern in patterns for path in localdata.glob(pattern)})
+        for path in paths:
+            archive_prefix = rf"(?:schedule_)?{prefix}" if schedule_source else prefix
+            month = re.fullmatch(rf"{archive_prefix}_(\d{{4}}-\d{{2}})\.csv\.gz", path.name)
             canonical_month = month[1] if month else None
             try:
                 if canonical_month:
