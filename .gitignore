@@ -200,6 +200,8 @@ localdata/scored_candidate_shadow_*.jsonl
 
 # Explicit operator-approved, unplaced enhancement resets survive stale caches.
 !localdata/autobets_enh_tickets_20*_reset.json
+# Operator-confirmed reversal of a settlement that booked an unplaced card.
+!localdata/autobets_enh_tickets_20*_settled_reconciliation.json
 
 # Compact recovery receipt only; raw history and key inventories stay cached.
 !localdata/prediction_history_guard.json

@@ -1,12 +1,14 @@
 """Settlement speed must not change winners, identity guards or bank history."""
 from copy import deepcopy
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import random
 from types import SimpleNamespace
 
 import pytest
 
 import scripts.auto_tickets as at
+
+_FROZEN_AT = datetime(2026, 10, 25, 9, 0, tzinfo=at.TZ)
 
 
 @pytest.mark.parametrize('seed', range(6))
@@ -78,6 +80,7 @@ def test_settlement_reuses_snapshot_without_rebuilding_donors(tmp_path, monkeypa
     state = at.fresh_state()
     state['open_slips'] = [{'date': day, 'staked_pct': 12.5,
                            'accas': [{'stake_pct': 12.5, 'odds': 1.5, 'legs': [leg]}]}]
+    at.record_freeze(state, day, _FROZEN_AT)   # a placed slip is a frozen one
     entries = {day: [{'home': 'Alpha', 'away': 'Beta', 'outcome': 'home'}]}
     keys = at._result_write_keys('Alpha', 'Beta')
     outcomes = {(day, h, a): 'home' for h, a in keys}
@@ -200,6 +203,7 @@ def test_draw_ticket_pays_correct_return_in_scratch_state_only(played, tmp_path,
     state = at.fresh_state()
     state['open_slips'] = [dict(date=day, staked_pct=10., accas=[
         dict(stake_pct=10., odds=3.5, legs=[leg])])]
+    at.record_freeze(state, day, _FROZEN_AT)   # a placed slip is a frozen one
     hk, ak = at._result_write_keys(pick['home'], pick['away'])[0]
     lane = at.Lane(tmp_path / 'draw_state.json', 'scratch_draw', 'scratch_draw', at.STAKE_FRAC)
     at.settle_open_slips(state, {(played, hk, ak): 'draw'}, archives=[pick],

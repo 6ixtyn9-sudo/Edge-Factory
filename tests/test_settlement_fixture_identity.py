@@ -181,6 +181,7 @@ def test_the_stuck_italy_turkiye_acca_settles(monkeypatch):
                         "prob": 0.64, "odds": 1.47, "result": None},
                        {"match": "Moss vs Kongsvinger", "pick": "AWAY",
                         "prob": 0.62, "odds": 1.75, "result": None}]}]}]}
+    _frozen(st, "2026-10-05")
     archives = [_archive_row("Italy", "Türkiye", "home"),
                 _archive_row("Moss", "Kongsvinger", "away")]
     settled = {("2026-10-05", "italy", "turkiye"): "home",
@@ -230,6 +231,7 @@ def test_unmatched_fixture_expiry_is_not_an_alias_match(
               "odds": 1.47, "stake_pct": 10.0, "results": [None], "won": None,
               "legs": [{"match": "Italy vs Türkiye", "pick": "HOME",
                         "prob": 0.64, "odds": 1.47, "result": None}]}]}]}
+    _frozen(st, "2026-10-05")
 
     def reject_unrelated_grading(*args):
         pytest.fail("unrelated archive fixture reached pick_result")
@@ -328,6 +330,7 @@ def test_settlement_records_that_a_compatibility_key_answered(monkeypatch, tmp_p
                         "prob": 0.64, "odds": 1.47, "result": None,
                         "fixture_key": ["2026-10-05", "coventry",
                                         "newcastleutd", "AWAY"]}]}]}]}
+    _frozen(st, "2026-10-05")
     at.settle_open_slips(st, {})
     assert st["open_slips"] == []           # resolved, so the slip left the book
     assert st["history"][-1]["accas"][0]["won"] is True
@@ -356,8 +359,18 @@ def _slip(day, stored, *, pick="AWAY", match="Coventry vs Newcastle Utd"):
 
 
 def _state(slip):
-    return {"bank": 100.0, "base_pct": 10.0, "cycle_base": 10.0,
-            "history": [], "events": [], "open_slips": [slip]}
+    st = {"bank": 100.0, "base_pct": 10.0, "cycle_base": 10.0,
+          "history": [], "events": [], "open_slips": [slip]}
+    # Only a frozen card is a placed bet, so a hand-built slip is frozen here.
+    at.record_freeze(st, str(slip["date"]), datetime(2026, 10, 25, 9, 0, tzinfo=at.TZ))
+    return st
+
+
+def _frozen(st, *days):
+    """Freeze hand-built slips (only a frozen card is a placed bet)."""
+    for day in days:
+        at.record_freeze(st, str(day), datetime(2026, 10, 25, 9, 0, tzinfo=at.TZ))
+    return st
 
 
 def _archive(day, home, away, *, pick="AWAY", outcome="away"):
