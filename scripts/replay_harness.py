@@ -6,6 +6,17 @@ overrides). There is no re-implementation of the recipe in this file — the
 2026-09-04 audit found two parity bugs and one no-op A/B caused by exactly
 that duplication. One code path, or the harness lies.
 
+POOL DOCTRINE (2026-10-26): the default universe is LIVE-FAITHFUL — each day's
+pool runs the live execution gate (``execution_safe=True``) and the live kickoff
+guard at the instant that day's card was ACTUALLY built (the freeze marker, or
+09:00 SAST when it never froze), from the MORNING slate the builder consumed
+(``picks_morning_<day>.json``) rather than the end-of-day re-scoring. Before
+this, replays rode quotes no ticket could carry, legs that had already kicked
+off, and re-scored probabilities in re-bucketed purity classes — which is why
+no replay card ever matched the ledger. ``--unfaithful-pool`` restores the old
+superset for reproducing published numbers. ``--parity`` is the harness's own
+integration test: it rebuilds each ledger day and diffs the card.
+
 DOCTRINE (read before trusting any output):
   - Replays are for RELATIVE comparisons (variant A vs variant B on the same
     data) and for COUNTERFACTUALS (what would today's card have been).
@@ -45,6 +56,9 @@ Usage (from repo root):
   PYTHONPATH=src python3 scripts/replay_harness.py --legs           # stated-prob band table
   PYTHONPATH=src python3 scripts/replay_harness.py --rules          # quality by rule family
   PYTHONPATH=src python3 scripts/replay_harness.py --today          # today's card, live settings
+  PYTHONPATH=src python3 scripts/replay_harness.py --parity          # replay vs the ledger, per day
+  PYTHONPATH=src python3 scripts/replay_harness.py --slate 2026-10-25  # one slate in build order
+  PYTHONPATH=src python3 scripts/replay_harness.py --unfaithful-pool  # reproduce old superset numbers
   PYTHONPATH=src python3 scripts/replay_harness.py --warehouse-replay  # feasibility audit
 """
 from __future__ import annotations
@@ -56,9 +70,11 @@ import itertools
 import json
 import math
 import random
+import re
 import sys
 import unicodedata
-from datetime import date
+from collections import Counter
+from datetime import date, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -181,8 +197,127 @@ def label_of(spec):
 # universe: every archived day's settled playable legs, floor NOT applied
 # (variants apply their own floor via the live selector)
 # --------------------------------------------------------------------------
-def build_universe(archives, settled, unresolved=None):
+MORNING_RE = re.compile(r"^picks_morning_(\d{4}-\d{2}-\d{2})\.json$")
+
+
+def slate_generation(faithful: bool = True) -> dict:
+    """``{day: rows}`` from the slate generation the build actually consumed.
+
+    ``localdata`` holds TWO slates per day: ``picks_morning_<day>.json`` (the
+    capture the card was built from) and ``picks_<day>.json`` (a later,
+    re-scored capture). ``at.load_archived_picks()`` reads only the latter, so
+    every replay has been rebuilding cards from a post-hoc re-scoring that
+    changed both the ranking and the purity bucket: 2026-10-25 Barcelona reads
+    73.0% / SKIPPED_VETO in the morning slate the builder saw, and 69.4% /
+    CAUTION in the end-of-day file. Replaying the later file silently
+    substitutes a different ranking rule and a different door policy for the
+    one that was live, which is why replay cards never matched the ledger.
+
+    Days with no morning capture fall back to the archive file, so this is a
+    narrowing of the source, never a gap.
+    """
+    by_day: dict[str, list] = {}
+    if not faithful:
+        for r in at.load_archived_picks():
+            day = str(r.get("date") or r.get("_archive_day") or "")[:10]
+            if day:
+                by_day.setdefault(day, []).append(r)
+        return by_day
+    for f in sorted(LOCALDATA.glob("picks_morning_*.json")):
+        m = MORNING_RE.match(f.name)
+        if not m:
+            continue
+        try:
+            rows = json.loads(f.read_text())
+        except (OSError, ValueError):
+            continue
+        if not isinstance(rows, list):
+            continue
+        for r in rows:
+            r.setdefault("_archive_day", m.group(1))
+        by_day.setdefault(m.group(1), []).extend(rows)
+    for r in at.load_archived_picks():
+        day = str(r.get("date") or r.get("_archive_day") or "")[:10]
+        if day and day not in by_day:
+            by_day.setdefault(day, []).append(r)
+    return by_day
+
+
+def _ledger_state() -> dict:
+    """The main lane's state, read WITHOUT the engine's load-time repairs.
+
+    ``at.load_state`` is the wrong reader here: it applies operator receipts
+    (reconciliations, unplaced-card withdrawals) and rewrites the file. A
+    replay must observe the ledger, never repair it.
+    """
+    try:
+        return json.loads(at.state_path().read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def build_instant_for(day: str, state: dict | None = None):
+    """When that day's card was ACTUALLY built — the freeze marker, or 09:00.
+
+    The kickoff guard is a clock: a leg that had already kicked off when the
+    card was built cannot be on it. Replaying every day at the canonical 09:00
+    build therefore invents cards that were never buildable (2026-10-25 froze
+    at 09:56, by which time a 09:00 kickoff was gone). The freeze book records
+    the real instant, so use it and fall back to the canonical build only for
+    days that never froze.
+    """
+    state = _ledger_state() if state is None else state
+    entry = (state.get(at.FROZEN_BOOK_KEY) or {}).get(str(day)) or {}
+    stamp = str(entry.get("frozen_at") or "").strip()
+    if stamp:
+        try:
+            when = datetime.fromisoformat(stamp)
+        except ValueError:
+            when = None
+        if when is not None:
+            return when if when.tzinfo else when.replace(tzinfo=at.TZ)
+    return at.canonical_build_instant(day)
+
+
+def live_pool(rows, settled, day, *, faithful=True, state=None):
+    """The pool that day's card could actually have been built from.
+
+    Two live gates were missing from every historical replay:
+
+    * ``execution_safe=True`` — the live builder refuses a price it could not
+      have executed (sole-source/uncorroborated quotes). Replays used the
+      legacy default, so they rode quotes no ticket could carry.
+    * ``live_kickoff_guard`` at the day's real build instant — a leg that had
+      already kicked off cannot be bet. Without it a replay "improves" every
+      day by claiming legs the build never saw (2026-10-25: FC Tokyo, kickoff
+      09:00 SAST, was gone by the 09:56 freeze).
+
+    ``faithful=False`` restores the pre-2026-10-26 superset pool so older
+    published numbers can still be reproduced.
+    """
+    pool = at.playable_legs(rows, day=day, settled=settled, floor=0.0,
+                            execution_safe=faithful)
+    drops: dict[str, list[str]] = {}
+    if faithful:
+        pool, drops = at.live_kickoff_guard(pool, build_instant_for(day, state))
+    return pool, drops
+
+
+def build_universe(archives, settled, unresolved=None, *, faithful=True, census=None):
     """Settled playable legs per day.
+
+    ``faithful=True`` (default) builds each day's pool through :func:`live_pool`
+    — the live execution gate plus the kickoff guard at the day's real build
+    instant — so a replay sees what the builder saw. Pass ``faithful=False`` to
+    reproduce the pre-2026-10-26 superset pool.
+
+    Rows come from :func:`slate_generation` — the MORNING capture the builder
+    actually consumed — not from the end-of-day re-scoring in
+    ``at.load_archived_picks()``. With ``faithful=False`` the historical
+    archive union is used instead, and the ``archives`` argument (when given)
+    is honoured verbatim so older callers keep their exact inputs.
+
+    ``census`` (optional dict) collects ``{day: guard_drops}`` for the run log.
 
     ``unresolved=None`` (default, and every shipped number so far) drops legs
     that never graded, because a replay cannot score a pending result. That is
@@ -190,10 +325,23 @@ def build_universe(archives, settled, unresolved=None):
     instead of costing money. ``unresolved="loss"`` keeps them and grades them
     as losses, which is the pessimistic bound on every number in this file.
     """
-    days = sorted({str(p.get("date") or p.get("_archive_day") or "")[:10] for p in archives})
+    if archives is not None:
+        # A caller that hands over rows owns the input: use exactly those, and
+        # apply only the pool gates below. Generation choice is for callers
+        # that let the harness load the slates itself (pass archives=None).
+        by_day: dict[str, list] = {}
+        for r in archives:
+            day = str(r.get("date") or r.get("_archive_day") or "")[:10]
+            if day:
+                by_day.setdefault(day, []).append(r)
+    else:
+        by_day = slate_generation(faithful)
+    state = _ledger_state()
     universe = {}
-    for d in days:
-        pool = at.playable_legs(archives, day=d, settled=settled, floor=0.0)
+    for d in sorted(by_day):
+        pool, drops = live_pool(by_day[d], settled, d, faithful=faithful, state=state)
+        if census is not None and drops:
+            census[d] = drops
         if unresolved == "loss":
             pool = [dict(l, result=l["result"] or "loss") for l in pool]
         else:
@@ -969,6 +1117,188 @@ def cmd_today(universe, settled):
         prod = math.prod(l["odds"] for l in a)
         print(f"  ACCA #{i} @{prod:.2f}: " + " x ".join(
             f"{l['match']} ({l['pick']} @{l['odds']:.2f}, stated {l['prob']:.0%})" for l in a))
+
+
+# --------------------------------------------------------------------------
+# parity: does a faithful replay rebuild the card the ledger actually shipped?
+# --------------------------------------------------------------------------
+def _card_names(accas):
+    """Fixture sets per acca, folded so naming drift is not a false diff."""
+    return [frozenset(at._fixture_fold(m) for m in acca) for acca in accas]
+
+
+def _card_equal(got, want) -> bool:
+    """Same accas, any order. Which acca is printed first is presentation."""
+    return sorted(sorted(a) for a in got) == sorted(sorted(a) for a in want)
+
+
+def _ledger_cards():
+    """``{day: [frozenset(match names) per acca]}`` from the main lane ledger."""
+    st = _ledger_state()
+    out = {}
+    for row in st.get("history") or []:
+        accas = [a for a in (row.get("accas") or []) if a.get("legs")]
+        if not accas:
+            continue
+        out[str(row.get("date"))] = [
+            frozenset(at._fixture_fold(str(l.get("match"))) for l in a["legs"])
+            for a in accas]
+    return out
+
+
+def cmd_parity(archives, settled, *, since=None, until=None, faithful=True):
+    """Replay each ledger day at its REAL build instant and diff against it.
+
+    This is the harness's own integration test. A replay that claims to use the
+    live selector but builds from a pool the live builder never saw is a
+    different engine wearing the same name — and the diff says exactly where.
+
+    Reported per day: MATCH, DIFF (with both cards) or LEDGER-ONLY (a ledger day
+    the replay cannot rebuild at all). Differences are then classified:
+      * ``missing-leg``   — a leg the ledger shipped that today's archive no
+        longer offers (re-bucketed, re-priced or removed since the build);
+      * ``extra-leg``     — a leg the faithful pool ranks above the ledger's
+        weakest selected leg and the replay would have taken instead. These are
+        the days where a live gate the harness does not model (the slice
+        ladder's bench/caps, the P&L tripwire, the price-evidence gate) changed
+        the card.
+    """
+    by_day = slate_generation(faithful)
+    cards = _ledger_cards()
+    scope = [d for d in sorted(cards) if (not since or d >= since)
+             and (not until or d <= until)]
+    match = diff = unbuildable = 0
+    causes: Counter = Counter()
+    rows = []
+    for d in scope:
+        pool, _drops = live_pool(by_day.get(d) or [], settled, d, faithful=faithful)
+        pool = [l for l in pool if l["result"]]
+        if len(pool) < at.LEGS_PER_ACCA:
+            unbuildable += 1
+            rows.append((d, "LEDGER-ONLY", None, cards[d]))
+            continue
+        plan = at.plan_day(pool, 100.0)
+        got = _card_names([[l["match"] for l in a["legs"]] for a in plan])
+        want = _card_names(list(cards[d]))
+        if _card_equal(got, want):
+            match += 1
+            rows.append((d, "MATCH", got, want))
+            continue
+        diff += 1
+        got_legs = {m for acca in got for m in acca}
+        want_legs = {m for acca in want for m in acca}
+        missing = want_legs - got_legs
+        extra = got_legs - want_legs
+        if missing:
+            causes["days with ledger-only legs"] += 1
+        if extra:
+            causes["days with replay-only legs"] += 1
+        in_pool = {at._fixture_fold(l["match"]) for l in pool}
+        absent = sorted(m for m in want_legs if m not in in_pool)
+        rows.append((d, "DIFF", got, want, sorted(missing), sorted(extra),
+                     absent))
+
+    print(f"PARITY ({'faithful' if faithful else 'SUPERSET'} pool, real build instants)")
+    print(f"  days compared {len(scope)}   MATCH {match}   DIFF {diff}   "
+          f"LEDGER-ONLY {unbuildable}")
+    print("  caveat: the build-time slate is not archived per run; the morning "
+          "capture is the closest generation, so a residual diff can be data "
+          "generation, not policy.")
+    if match + diff:
+        print(f"  exact-card parity {match / (match + diff):.1%} (n={match + diff})")
+    for cause, n in sorted(causes.items()):
+        print(f"  {cause:22s} {n}")
+    print()
+    for row in rows:
+        d, status, got, want = row[:4]
+        if status == "MATCH":
+            continue
+        order_only = (got is not None and got and want
+                      and sorted(sorted(a) for a in got) == sorted(sorted(a) for a in want))
+        print(f"  {d}  {status}{' (pairs identical, printed in another order)' if order_only else ''}")
+        print(f"     ledger  {['+'.join(sorted(a)) for a in want]}")
+        if got:
+            print(f"     replay  {['+'.join(sorted(a)) for a in got]}")
+        if len(row) > 4:
+            if row[4]:
+                print(f"     ledger-only legs: {row[4]}")
+            if row[5]:
+                print(f"     replay-only legs: {row[5]}")
+            if len(row) > 6:
+                print("     cause: " + (
+                    "DATA — the archived slate no longer holds every ledger leg"
+                    f" ({len(row[6])} absent)" if row[6] else
+                    "POLICY — every ledger leg was in the pool; a live gate this "
+                    "replay does not model (ladder bench/caps, P&L tripwire, "
+                    "price-evidence) changed the card"))
+    return 0
+
+
+def cmd_slate(archives, settled, day, *, faithful=True):
+    """Everything that happened to one day's slate, in build order.
+
+    Row funnel -> guard census -> the card the ledger shipped -> the card a
+    faithful replay builds -> the day's excluded winners, with the exact gate
+    that refused each one. This is the "did we miss something" report, and it
+    answers with the gate's own rejection code rather than an opinion.
+    """
+    state = _ledger_state()
+    when = build_instant_for(day, state)
+    rows = list(slate_generation(faithful).get(day) or [])
+    print(f"SLATE {day} — build instant {when.strftime('%Y-%m-%d %H:%M %Z')} "
+          f"({'freeze marker' if (state.get(at.FROZEN_BOOK_KEY) or {}).get(day) else 'canonical 09:00 fallback'})")
+    print(f"  archived candidate rows: {len(rows)}")
+
+    census: dict[str, list[str]] = {}
+    winners: list[tuple] = []
+    for r in rows:
+        code = at.playable_leg_rejection(r, day=day, floor=at.MIN_LEG_ODDS,
+                                         execution_safe=faithful)
+        res = at.pick_result(r, settled) if settled is not None else None
+        name = f"{r.get('home')} vs {r.get('away')}"
+        if code is not None:
+            census.setdefault(code[0], []).append(name)
+            if res == "win":
+                winners.append((name, r.get("pick"), r.get("odds"),
+                                r.get("avg_p"), code[0], r.get("bucket")))
+    pool, drops = live_pool(rows, settled, day, faithful=faithful, state=state)
+    for reason, names in drops.items():
+        census.setdefault("kickoff_guard", []).extend(names)
+        for n in names:
+            leg = next((l for l in pool if l["match"] == n), None)
+            if leg is not None and leg.get("result") == "win":
+                winners.append((n, leg.get("pick"), leg.get("odds"),
+                                leg["prob"] * 100, "kickoff_guard",
+                                (leg.get("row") or {}).get("bucket")))
+    print("  funnel:")
+    for code, names in sorted(census.items(), key=lambda kv: -len(kv[1])):
+        print(f"     {len(names):3d}  {code}")
+    admitted = len([l for l in pool if l["odds"] >= at.MIN_LEG_ODDS])
+    print(f"     {admitted:3d}  admitted to selection "
+          f"(floor {at.MIN_LEG_ODDS}, execution-safe, still open at the build)")
+
+    cards = _ledger_cards().get(day) or []
+    print("  ledger card (what was actually built):")
+    for i, acca in enumerate(cards, 1):
+        print(f"     ACCA #{i}: {(' + '.join(sorted(acca))) or 'empty'}")
+    plan = at.plan_day([l for l in pool if l["result"]], 100.0)
+    print("  faithful replay at live settings:")
+    if not plan:
+        print("     NO BET")
+    for i, a in enumerate(plan, 1):
+        prod = math.prod(l["odds"] for l in a["legs"])
+        print(f"     ACCA #{i} @{prod:.2f}: " + " + ".join(
+            f"{l['match']} ({l['pick']} @{l['odds']:.2f}, stated {l['prob']:.0%})"
+            for l in a["legs"]))
+
+    print(f"  excluded legs that WON ({len(winners)}):")
+    for name, pick, odds, prob, code, bucket in sorted(
+            winners, key=lambda w: -(w[3] or 0)):
+        price = "no price" if odds is None else f"@{float(odds):.3f}"
+        print(f"     {str(name)[:42]:42s} {str(pick):5s} {price:9s} "
+              f"p={prob if prob is None else round(float(prob), 1)}  "
+              f"{code:36s} bucket={bucket}")
+    return 0
 
 
 def cmd_kelly(universe, spec=None):
@@ -3020,6 +3350,17 @@ def main():
     ap.add_argument("--rules", action="store_true",
                     help="leg quality + calibration by rule family, and the "
                          "paired cost of removing the ml-meta family")
+    ap.add_argument("--parity", action="store_true",
+                    help="does a faithful replay rebuild the card the ledger "
+                         "actually shipped? per-day MATCH/DIFF + causes")
+    ap.add_argument("--slate", metavar="YYYY-MM-DD",
+                    help="one day's slate in build order: funnel, guard census, "
+                         "ledger card vs faithful replay, and every EXCLUDED leg "
+                         "that won with the gate that refused it")
+    ap.add_argument("--unfaithful-pool", action="store_true",
+                    help="reproduce the pre-2026-10-26 SUPERSET replay pool "
+                         "(no execution gate, no kickoff guard at the build "
+                         "instant). Only for reproducing old numbers.")
     ap.add_argument("--warehouse-replay", action="store_true",
                     help="Phase-1 feasibility audit: can the live picks be "
                          "reconstructed from localdata at all? (research only)")
@@ -3109,14 +3450,24 @@ def main():
     if args.enhancements:
         return cmd_enhancements(args)
 
+    faithful = not args.unfaithful_pool
+    if args.parity:
+        cmd_parity(archives, settled, since=args.since, until=args.until,
+                   faithful=faithful)
+        return 0
+    if args.slate:
+        cmd_slate(archives, settled, args.slate, faithful=faithful)
+        return 0
     if args.warehouse_replay:
         # Runs against the RAW archive (not the settled-only replay universe):
         # feasibility is about whether inputs exist, not whether legs graded.
         return cmd_warehouse_replay(archives, settled,
                                     since=args.since, until=args.until)
 
-    universe = build_universe(archives, settled,
-                              unresolved="loss" if args.pessimistic else None)
+    guard_census: dict = {}
+    universe = build_universe(None, settled,
+                              unresolved="loss" if args.pessimistic else None,
+                              faithful=faithful, census=guard_census)
     if args.pessimistic:
         print("PESSIMISTIC MODE: unsettled legs graded as losses "
               "(the bound, not the estimate)")
@@ -3146,6 +3497,15 @@ def main():
     live_settings()
     print("=" * 74)
     print(f"REPLAY UNIVERSE: {len(universe)} bet-days with settled playable legs")
+    if faithful:
+        dropped = sum(len(v) for drops in guard_census.values()
+                      for v in drops.values())
+        print(f"live-faithful pool: execution-safe quotes + kickoff guard at "
+              f"each day's real build instant ({dropped} leg(s) dropped as "
+              f"unbettable; --unfaithful-pool restores the old superset)")
+    else:
+        print("SUPERSET POOL (--unfaithful-pool): no execution gate, no kickoff "
+              "guard. Numbers are NOT what the builder could have bet.")
     print("=" * 74)
     print("doctrine: RELATIVE differences + paired bootstrap. Primary metric is")
     print("mean LOG GROWTH per bet-day; final bank is one lucky path, not evidence.\n")
@@ -3166,7 +3526,7 @@ def main():
     if args.october is not None:
         return cmd_october(universe, [parse_spec(x) for x in args.october],
                            since=args.new_since,
-                           pes_universe=build_universe(archives, settled, unresolved="loss"))
+                           pes_universe=build_universe(None, settled, unresolved="loss"))
 
     if args.clv:
         spec = parse_spec(args.variant[0]) if args.variant else {}

@@ -12297,3 +12297,77 @@ reversal/idempotence/refusals). Existing settlement fixtures were frozen at
 their own dates rather than given an escape hatch, so every settlement test
 still exercises the production rule. `settle_open_slips` keeps the fail-closed
 default; no lane, stake, selection or pricing rule changed.
+
+### 26 October 2026 — the replay harness was reading the wrong slate (and the 10-25 card was not a miss)
+
+Question: the main lane lost 71.73pp on 2026-10-25 (its biggest single-day
+fall, 286.91 → 215.19), both accas losing on the 1x1 favourite while the other
+leg won. Did the build miss something on that slate? Answer, after fixing the
+harness and replaying it: **no — the card was the correct output of the live
+policy, and every alternative policy that looks better on that one day loses
+over the record.**
+
+The harness could not answer that before, because it was replaying the wrong
+inputs. Three faithfulness bugs, all repaired in `scripts/replay_harness.py`:
+
+1. **Wrong pool.** `build_universe` called `playable_legs` without
+   `execution_safe=True` and without `live_kickoff_guard`, so replays rode
+   quotes no ticket could carry and legs that had already kicked off. Both are
+   now the default (`live_pool`); `--unfaithful-pool` restores the superset for
+   reproducing published numbers.
+2. **Wrong clock.** Every day was replayed at the canonical 09:00 build. Days
+   froze at 09:56 (10-25), 10:09 (10-20), 11:25 (10-22); a card that froze
+   after a 09:00 kickoff cannot contain it. `build_instant_for` now uses the
+   day's real freeze stamp from the ledger's freeze book, falling back to 09:00.
+3. **Wrong slate generation.** `localdata` keeps two slates per day:
+   `picks_morning_<day>.json` (what the build consumed) and `picks_<day>.json`
+   (a later re-scoring). The archive loader reads only the second, so replays
+   ranked on re-scored probabilities *and* re-bucketed purity — 2026-10-25
+   Barcelona is 73.0% / SKIPPED_VETO in the morning slate and 69.4% / CAUTION
+   in the end-of-day file, which is a different ranking rule and a different
+   door policy. `slate_generation` reads the morning capture first.
+
+With those fixed the harness rebuilds 2026-10-25 exactly: `@2.18` Barcelona
+(73%) + Union Saint-Gilloise (69%), `@1.78` Strømmen + OFK Beograd — the ledger
+card, leg for leg. Two new modes make this checkable and repeatable:
+
+* `--parity` — rebuilds every ledger day and diffs the card, classifying each
+  difference as DATA (the archived slate no longer holds a ledger leg) or
+  POLICY (every ledger leg was in the pool; a gate the harness does not model —
+  the slice ladder's bench/caps, the P&L tripwire, the price-evidence gate —
+  changed the card). Current ledger window: MATCH 5, DIFF 7, LEDGER-ONLY 1
+  (41.7% exact-card parity; the 10-25 case is a MATCH).
+* `--slate <day>` — the day's slate in build order: the rejection funnel with
+  the engine's own codes, the kickoff-guard census, the ledger card, the
+  faithful replay, and every EXCLUDED leg that won with the gate that refused
+  it.
+
+What the 10-25 slate actually shows: 98 archived rows → 45 non-1x2 markets, 15
+non-execution-eligible price sources, 13 bucket-vetoed (suspect price / no
+price), 4 below the 1.30 floor, 4 already kicked off, 2 price-quarantined → 15
+admitted. Of the 11 excluded legs that won, six carried no usable price at all,
+five were short prices (1.08–1.215) whose stated probability still prices them
+below 1.00 (87.1% × 1.08 = 0.94; 79.1% × 1.20 = 0.95) — excluded correctly, and
+they are losers at those prices over time, not missed winners.
+
+Counterfactuals on that exact slate (faithful pool, live stake): live 0.750x;
+`rank=ev` 1.048x; `floor=1.50` 1.035x; `pairing=consecutive` 0.968x;
+`max_accas=1` 0.875x; CAUTION 0.70 caps 0.750x (the cap never bites: every
+CAUTION leg's probability is already ≤ 0.70). The tempting one is `rank=ev`,
+which would have turned the day positive — so it was replayed over the record:
+`--ab live "rank=ev"` gives Δlog/day −0.0637, compounded ×0.03 over 55 bet-days,
+P(ev better) = 1%, leave-one-day-out range −0.0716…−0.0549 (broad-based, not one
+day). The 10-25 win was luck, and the replay says so.
+
+Also measured: the late freeze cost nothing on 10-25. At the canonical 09:00
+instant the card would have been `@2.21` Barcelona + OFK and `@1.75` FC Tokyo
+(6-0 winner) + Strømmen — still 0.750x, because FC Tokyo pairs with a leg that
+lost. The build was late, the selection was faithful, the day was a loss.
+
+Validation: full suite 4438 passed, 1 skipped. New `tests/test_replay_harness_parity.py`
+(16 cases) pins the morning-slate preference, the fallback, the real-vs-canonical
+build instant, the guard/execution gates in `live_pool`, the superset escape, the
+order-insensitive and name-folded card comparison, a read-only ledger reader, and
+end-to-end `--parity` / `--slate` runs. One pre-existing harness test was switched
+to `faithful=False` because it grades a synthetic pool, not pool faithfulness.
+No lane, stake, selection or pricing rule changed by this section.
