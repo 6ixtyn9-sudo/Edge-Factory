@@ -29,6 +29,19 @@ A no-plan/zero-active/missing-bank result persists an explicit **NO BET**, witho
 a lock or stake. Missing bank state is **not** reconstructed or initialized.
 Only the already approved none-placed date is eligible for this rebuild.
 
+## Queued-run checkout safety (26 October 2026)
+
+Both production and regression jobs explicitly check out `${{ github.ref }}`.
+This resolves the requested branch when the job actually starts, after the
+workflow concurrency queue releases, rather than checking out the event's
+possibly older SHA. Run 40303936519 was queued eight seconds before run
+40296649721 committed its frozen state, then restored that newer run's cache
+against the older event checkout. The financial-state guard correctly refused
+that combination. The branch-tip checkout prevents this queued-run race without
+deleting caches, resetting finance, or weakening conflict validation. It does
+not reconcile genuine uncommitted/cache-only financial divergence; that still
+fails closed. No workflow is dispatched by this patch.
+
 ## Deployment
 
 The GitHub App previously rejected workflow pushes for lack of `workflows`
@@ -123,6 +136,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Resolve the requested branch AFTER the concurrency queue releases.
+          # The event SHA may predate the preceding run's state commit/cache.
+          ref: ${{ github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -325,6 +342,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Resolve the requested branch AFTER the concurrency queue releases.
+          # The event SHA may predate the preceding run's state commit/cache.
+          ref: ${{ github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
