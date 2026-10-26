@@ -57,6 +57,8 @@ Usage (from repo root):
   PYTHONPATH=src python3 scripts/replay_harness.py --rules          # quality by rule family
   PYTHONPATH=src python3 scripts/replay_harness.py --today          # today's card, live settings
   PYTHONPATH=src python3 scripts/replay_harness.py --parity          # replay vs the ledger, per day
+  PYTHONPATH=src python3 scripts/replay_harness.py --enhancements --enh-ml  # + the LIVE ML ordering arm
+  PYTHONPATH=src python3 scripts/replay_harness.py --enh-parity      # ENH card vs the lane's own ledger
   PYTHONPATH=src python3 scripts/replay_harness.py --slate 2026-10-25  # one slate in build order
   PYTHONPATH=src python3 scripts/replay_harness.py --unfaithful-pool  # reproduce old superset numbers
   PYTHONPATH=src python3 scripts/replay_harness.py --warehouse-replay  # feasibility audit
@@ -722,14 +724,122 @@ def _firing_by_day(records, floors, *, derived=False):
     return by_day
 
 
+# --------------------------------------------------------------------------
+# ML ENH ordering: the LIVE selector, recomputed from the archived slate
+#
+# The enhancement card is ordered by auto_tickets.select_accas' ML branch, which
+# engages only when a leg carries `ml_rank_probability`. That value is never
+# persisted (registry records carry no ML field at all) and the pre-2026-10-26
+# harness never set it, so every enh replay silently ranked on the realized
+# cohort rate -- the pre-ML basis -- while calling itself "the lane's own code".
+#
+# The machinery to close that already exists: `enhancement_ml_probability` is a
+# pure function of an archived pick row plus a market, and every row from
+# 2026-10-25 on carries the retained compact model
+# (`statistical_profile.ml_model`, schema enh_score_logit_v1, hash-verified
+# model_key). Recomputing it here -- the same call picks_today and
+# auto_tickets.enhancement_legs make -- keeps ONE ordering rule. Nothing is
+# re-implemented and no probability is invented: a row without a model, or a
+# model that fails its own hash/contract/date guards, yields None and the leg
+# ranks in the cohort group, exactly as live.
+# --------------------------------------------------------------------------
+_SLATE_CACHE: dict[tuple[str, str], list] = {}
+
+
+def _slate_rows(root, day):
+    """Archived pick rows for one day: the morning capture first, then the day file."""
+    key = (str(root or at.ROOT), str(day))
+    if key not in _SLATE_CACHE:
+        base = (root or at.ROOT) / "localdata"
+        rows: list = []
+        for name in (f"picks_morning_{day}.json", f"picks_{day}.json"):
+            try:
+                data = json.loads((base / name).read_text())
+            except (OSError, ValueError):
+                continue
+            if isinstance(data, list) and data:
+                rows = data
+                break
+        _SLATE_CACHE[key] = rows
+    return _SLATE_CACHE[key]
+
+
+def archived_parent(root, day, rec):
+    """The archived pick row a settled registry record came from, or None.
+
+    Matched on the registry's own contract id plus the fixture, because the
+    record keeps only the price context, not the parent row.
+    """
+    context = rec.get("price_context") or {}
+    contract = context.get("contract_id")
+    home = _fold_name(str(rec.get("home") or ""))
+    away = _fold_name(str(rec.get("away") or ""))
+    for row in _slate_rows(root, day):
+        if contract and row.get("contract_id") != contract:
+            continue
+        if (_fold_name(str(row.get("home") or "")) == home
+                and _fold_name(str(row.get("away") or "")) == away):
+            return row
+    return None
+
+
+def enh_ml_probability(root, day, rec):
+    """The live ML ordering score for one settled record, or None.
+
+    Delegates to ``edgefactory.enh_registry.enhancement_ml_probability`` -- the
+    function the shipped lane calls -- so the replay cannot drift into a
+    differently-shaped model score.
+    """
+    row = archived_parent(root, day, rec)
+    if row is None:
+        return None
+    from edgefactory.enh_registry import enhancement_ml_probability
+    return enhancement_ml_probability(row, rec.get("market"))
+
+
+def enh_ml_coverage(records, root=None, since=None):
+    """``(scores, stats)``: the live ML score per settled record, and its coverage.
+
+    ``scores`` is keyed by ``(day, contract_id, market)`` -- the identity a
+    registry record and a card leg share. A leg with no model data is simply
+    absent, because the live lane leaves ``ml_rank_probability`` unset in the
+    same case and ranks it in the cohort group.
+    """
+    scores: dict[tuple[str, str, str], float] = {}
+    stats = {"legs": 0, "scored": 0, "days": set(), "scored_days": set(),
+             "first_day": None, "last_day": None}
+    for rec in records:
+        day = str(rec.get("date") or "")[:10]
+        if not day or (since and day < since):
+            continue
+        stats["legs"] += 1
+        stats["days"].add(day)
+        score = enh_ml_probability(root, day, rec)
+        if score is None:
+            continue
+        stats["scored"] += 1
+        stats["scored_days"].add(day)
+        key = (day, str((rec.get("price_context") or {}).get("contract_id") or ""),
+               str(rec.get("market") or ""))
+        scores[key] = score
+    if stats["scored_days"]:
+        stats["first_day"] = min(stats["scored_days"])
+        stats["last_day"] = max(stats["scored_days"])
+    return scores, stats
+
+
 def enh_firing_days(records, floors, *, derived=False) -> set:
     """The days with at least one floor-cleared leg — the NO BET denominator."""
     return set(_firing_by_day(records, floors, derived=derived))
 
 
-def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
-                   stake_per_acca=None, weights=None, derived=False, supported=False, root=None):
-    """{day: {"growth": factor, "log_growth": x, "bets": n, "hits": k}}.
+def enh_day_plans(records, floors, *, stake_frac=None, stake_mode=None,
+                  stake_per_acca=None, weights=None, supported=False, root=None,
+                  derived=False, ml_scores=None):
+    """{day: (plan, pool)} — the ONLY place a replay card is built.
+
+    Both the P&L replay and the parity check call this, so a parity report
+    can never grade a card the arm did not build.
 
     The lane's own card, modelled by the lane's own code: the day's
     floor-cleared legs go through THE selection recipe and the shared staking
@@ -742,6 +852,12 @@ def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
 
     ``derived=True`` gates each day by the floors derived from the records
     before it (slice-aware), instead of a static table.
+
+    ``ml_scores`` (from :func:`enh_ml_coverage`) supplies the LIVE ML ordering
+    input. When a leg has a score it is attached as ``ml_rank_probability`` and
+    ``select_accas``' ML branch orders it ahead of the unscored cohort group --
+    the same rule the shipped card uses. Passing None replays the pre-ML lane
+    (cohort ordering only), which is what every number before 2026-10-26 is.
     """
     stake = at.ENHANCEMENT_LANE.stake_frac if stake_frac is None else float(stake_frac)
     by_day = _firing_by_day(records, floors, derived=derived)
@@ -783,21 +899,64 @@ def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
                 if evidence is None or evidence["cohort_lower_bound"] * rec["price"] <= 0.8:
                     continue
                 rank_prob = evidence["rate"]
+            ml_score = None
+            if ml_scores is not None:
+                ml_score = ml_scores.get((day, str((rec.get("price_context") or {})
+                                                   .get("contract_id") or ""),
+                                          str(rec["market"])))
             pool.append({"match": rec.get("match") or f"{home} vs {away}",
                          "pick": rec["market"], "prob": float(rank_prob),
                          "odds": rec["price"], "hit": bool(rec["hit"]),
                          "floor": rec.get("floor"), "cohort_evidence": evidence,
                          "market": rec["market"], "price_book": (rec.get("price_context") or {}).get("book"),
+                         # The live ordering input, or None exactly as live.
+                         "ml_rank_probability": ml_score,
                          "row": {"date": day, "home": home, "away": away}})
         # The live lane ranks by hit rate (auto_tickets.ENHANCEMENT_RANK). The
         # replay must rank the same way, or it tests a rule that never ships.
-        # Sizing keys are forwarded as given; None means the live default, so
-        # the replay sizes exactly as the lane does unless a variant moves it.
-        plan = at.plan_day(pool, 100.0, stake_frac=stake, stake_mode=stake_mode,
-                           stake_per_acca=stake_per_acca, weights=weights,
-                           max_accas=at.ENH_MAX_ACCAS, rank=at.ENHANCEMENT_RANK, enhancements=supported)
+        plan = at.plan_day(pool, 100.0, stake_frac=stake,
+                           stake_mode=stake_mode, stake_per_acca=stake_per_acca,
+                           weights=weights,
+                           max_accas=at.ENH_MAX_ACCAS, rank=at.ENHANCEMENT_RANK,
+                           # select_accas' ML ordering lives behind
+                           # enhancements=True; an ML arm must engage it or the
+                           # arm would be a silent no-op.
+                           enhancements=supported or ml_scores is not None)
         if not plan:
             continue                                   # MIN_ACCAS: NO BET
+        out[day] = (plan, pool)
+    return out
+
+
+def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
+                   stake_per_acca=None, weights=None, derived=False, supported=False, root=None,
+                   ml_scores=None):
+    """{day: {"growth": factor, "log_growth": x, "bets": n, "hits": k}}.
+
+    The lane's own card, modelled by the lane's own code: the day's
+    floor-cleared legs go through THE selection recipe (``enh_day_plans``) and
+    the shared staking arithmetic (``auto_tickets.plan_day``), so the replay
+    pairs, de-dupes and sizes exactly as the live card does — 2-leg accas, and
+    a day that cannot form one is a NO BET day, never a single. ``bets``/``hits``
+    count ACCAS. A market with no floor does not fire; a record without a
+    fixture string cannot be de-duplicated, so it is kept as its own identity
+    rather than merged with an unrelated leg.
+
+    ``derived=True`` gates each day by the floors derived from the records
+    before it (slice-aware), instead of a static table.
+
+    ``ml_scores`` (from :func:`enh_ml_coverage`) supplies the LIVE ML ordering
+    input. When a leg has a score it is attached as ``ml_rank_probability`` and
+    ``select_accas``' ML branch orders it ahead of the unscored cohort group --
+    the same rule the shipped card uses. Passing None replays the pre-ML lane
+    (cohort ordering only), which is what every number before 2026-10-26 is.
+    """
+    plans = enh_day_plans(records, floors, stake_frac=stake_frac, stake_mode=stake_mode,
+                          stake_per_acca=stake_per_acca, weights=weights,
+                          supported=supported, root=root, derived=derived,
+                          ml_scores=ml_scores)
+    out = {}
+    for day, (plan, pool) in plans.items():
         # plan_day copies the four card keys, so the leg's own settled hit is
         # read back off the pool. (match, pick) identifies a carded leg: the
         # recipe has already dropped same-fixture duplicates, so no two legs
@@ -819,7 +978,8 @@ def enh_day_growth(records, floors, *, stake_frac=None, stake_mode=None,
 
 
 def enh_arm(records, floors, *, stake_frac=None, stake_mode=None,
-            stake_per_acca=None, weights=None, derived=False):
+            stake_per_acca=None, weights=None, derived=False, supported=False,
+            root=None, ml_scores=None):
     """Summary of one floor variant over the settled history.
 
     ``mean_log_growth`` is the acceptance metric — the mean over BET-DAYS, so a
@@ -828,7 +988,8 @@ def enh_arm(records, floors, *, stake_frac=None, stake_mode=None,
     refusing to bet must show that in the same row.
     """
     days = enh_day_growth(records, floors, stake_frac=stake_frac, stake_mode=stake_mode,
-                          stake_per_acca=stake_per_acca, weights=weights, derived=derived)
+                          stake_per_acca=stake_per_acca, weights=weights, derived=derived,
+                          supported=supported, root=root, ml_scores=ml_scores)
     firing = enh_firing_days(records, floors, derived=derived)
     bets = sum(d["bets"] for d in days.values())
     hits = sum(d["hits"] for d in days.values())
@@ -845,6 +1006,139 @@ def enh_arm(records, floors, *, stake_frac=None, stake_mode=None,
         "by_day": {d: v["log_growth"] for d, v in days.items()},
         "_days_detail": days,
     }
+
+
+def _enh_ledger_cards():
+    """``{day: [frozenset((folded match, market)) per acca]}`` from the ENH lane.
+
+    Read straight from the lane's state file: the ledger is evidence, so this
+    must never run load_state's repairs.
+    """
+    try:
+        st = json.loads(at.ENHANCEMENT_LANE.state_file.read_text())
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    for row in st.get("history") or []:
+        accas = []
+        for acca in row.get("accas") or []:
+            legs = acca.get("legs") or []
+            if not legs:
+                continue
+            # Identity is the FIXTURE plus the quoted PRICE, not the market
+            # name: a shipped history leg stores a generic pick ("over") and
+            # its human label, so the price is the only exact identifier the
+            # ledger and a rebuilt card share.
+            accas.append(frozenset(
+                (_fold_name(str(l.get("match"))), round(float(l.get("odds") or 0), 2))
+                for l in legs))
+        if accas:
+            out[str(row.get("date"))] = accas
+    return out
+
+
+def enh_cards_for(records, floors, *, supported=False, ml_scores=None, root=None):
+    """``{day: [frozenset((folded match, market)) per acca]}`` for the replay.
+
+    Built through :func:`enh_day_plans` — the same pool and the same recipe the
+    P&L arm uses — so a parity check can never grade a card the arm did not
+    build.
+    """
+    cards = {}
+    for day, (plan, _pool) in enh_day_plans(records, floors, supported=supported,
+                                            root=root, ml_scores=ml_scores).items():
+        cards[day] = [frozenset((_fold_name(str(l["match"])), round(float(l["odds"]), 2))
+                                for l in acca["legs"]) for acca in plan]
+    return cards
+
+
+def cmd_enh_parity(records, *, since=None, until=None, root=None):
+    """Does the ENH replay rebuild the card the lane actually shipped?
+
+    Two arms are diffed against the ledger: the pre-ML ordering (cohort rate)
+    and the LIVE ML ordering rebuilt from the archived model. A day the ledger
+    bet and the replay will not card at all is reported as NO-CARD (the settled
+    registry cannot reconstruct it: no record, no floor, or a lost price).
+    """
+    ledger = _enh_ledger_cards()
+    scope = [d for d in sorted(ledger) if (not since or d >= since)
+             and (not until or d <= until)]
+    if not scope:
+        print("no enhancement bet-days in the ledger for this window")
+        return 0
+    floors = _root_floors(records)
+    ml_scores, stats = enh_ml_coverage(records, root=root)
+    # Both arms run the LIVE eligibility (supported admission); the only
+    # difference between them is the ordering input, so a card change can only
+    # come from the ML selector.
+    arms = {
+        "cohort order (pre-ML basis)": enh_cards_for(records, floors, supported=True,
+                                                     root=root),
+        "LIVE ML order (recomputed)": enh_cards_for(records, floors, supported=True,
+                                                    root=root, ml_scores=ml_scores),
+    }
+    print("ENH PARITY — replay card vs the lane's own ledger")
+    print(f"  ML model coverage: {stats['scored']}/{stats['legs']} settled records "
+          f"scored, {len(stats['scored_days'])}/{len(stats['days'])} day(s)"
+          + (f" ({stats['first_day']}..{stats['last_day']})" if stats['first_day'] else ""))
+    print(f"  ledger bet-days in scope: {len(scope)}")
+    # The settled registry is a log of GRADED, PRICED candidates -- not a copy
+    # of the slate. A leg that shipped on a frozen card without such a record
+    # can never be rebuilt by any replay, so measure that gap first: it is the
+    # ceiling on card parity, and it is a ledger gap, not a harness bug.
+    have = {}
+    for rec in records:
+        have.setdefault(str(rec.get("date") or "")[:10], set()).add(
+            (_fold_name(str(rec.get("match"))), round(float(rec.get("price") or 0), 2)))
+    total_legs = missing = 0
+    gap_days = []
+    for d in scope:
+        absent = 0
+        for acca in ledger[d]:
+            for match, price in acca:
+                total_legs += 1
+                if not any(m == match and abs(p - price) < 0.02
+                           for m, p in have.get(d, ())):
+                    absent += 1
+        if absent:
+            gap_days.append((d, absent, sum(len(a) for a in ledger[d])))
+        missing += absent
+    if missing:
+        print(f"  ledger legs with NO settled registry record: {missing}/{total_legs} "
+              "— unreconstructable by construction")
+        for d, absent, n in gap_days:
+            print(f"     {d}: {absent}/{n} legs absent from the registry")
+    else:
+        print(f"  every ledger leg ({total_legs}) has a settled registry record")
+    print()
+    for label, cards in arms.items():
+        match = diff = no_card = 0
+        detail = []
+        for d in scope:
+            want = ledger[d]
+            got = cards.get(d) or []
+            if not got:
+                no_card += 1
+                detail.append((d, "NO-CARD", [], want))
+            elif sorted(sorted(x) for x in got) == sorted(sorted(x) for x in want):
+                match += 1
+            else:
+                diff += 1
+                detail.append((d, "DIFF", got, want))
+        total = match + diff
+        pct = f"{match / total:.0%}" if total else "-"
+        print(f"  {label:30s} MATCH {match}  DIFF {diff}  NO-CARD {no_card}  "
+              f"(exact-card {pct} of {total} rebuildable day(s))")
+        for d, status, got, want in detail:
+            print(f"     {d} {status}")
+            print(f"        ledger  {['+'.join(f'{m} @{k:g}' for m, k in sorted(a)) for a in want]}")
+            if got:
+                print(f"        replay  {['+'.join(f'{m} @{k:g}' for m, k in sorted(a)) for a in got]}")
+        print()
+    print("  caveat: a NO-CARD day cannot be judged — the settled registry only")
+    print("  holds priced, graded legs, so a card built from a leg that never")
+    print("  priced or never graded is unreconstructable by construction.")
+    return 0
 
 
 def cmd_enhancements(args):
@@ -912,6 +1206,58 @@ def cmd_enhancements(args):
               f"{s['rate']:>7.1%}{s['mean_log_growth']:>+25.4f}"
               f"{str(s['no_bet_days']) + '/' + str(s['firing_days']):>13}"
               f"{noise_flag(s['bets'])}")
+    # ------------------------------------------------------------------
+    # The LIVE ML ordering arm. Only days whose archived slate still carries
+    # the retained model can be scored; anywhere else the leg ranks in the
+    # cohort group exactly as live. Coverage is printed with the number so a
+    # two-day sample can never be read as a policy result.
+    # ------------------------------------------------------------------
+    if getattr(args, "enh_ml", False):
+        ml_scores, ml_stats = enh_ml_coverage(records, root=getattr(args, "root", None))
+        print()
+        span = (f"{ml_stats['first_day']}..{ml_stats['last_day']}"
+                if ml_stats["first_day"] else "none")
+        print("ML ENH ordering (LIVE selector, recomputed from the archived slate)")
+        print(f"  coverage: {ml_stats['scored']}/{ml_stats['legs']} settled records scored, "
+              f"{len(ml_stats['scored_days'])}/{len(ml_stats['days'])} day(s) — {span}")
+        if not ml_stats["scored"]:
+            print("  no archived model on any slate in scope: the ML arm cannot be")
+            print("  replayed, and every number above is the pre-ML (cohort) basis.")
+        else:
+            # The live lane only ranks legs that its cohort ADMISSION let
+            # through, so the arm is the supported policy plus ML ordering --
+            # comparing it with the legacy flood replay would measure admission
+            # and ordering in one number and attribute both to the model.
+            base = enh_arm(records, dict(live), supported=True, root=at.ROOT)
+            ml = enh_arm(records, dict(live), supported=True, root=at.ROOT,
+                         ml_scores=ml_scores)
+            arm_summaries.append(("supported policy + ML ordering", ml))
+            print(f"  {'supported + ML ordering':<52}{ml['days']:>9}{ml['bets']:>6}{ml['hits']:>6}"
+                  f"{ml['rate']:>7.1%}{ml['mean_log_growth']:>+25.4f}"
+                  f"{str(ml['no_bet_days']) + '/' + str(ml['firing_days']):>13}")
+            print(f"  {'supported, cohort ordering':<52}{base['days']:>9}{base['bets']:>6}"
+                  f"{base['hits']:>6}{base['rate']:>7.1%}{base['mean_log_growth']:>+25.4f}"
+                  f"{str(base['no_bet_days']) + '/' + str(base['firing_days']):>13}")
+            overlap = sorted(set(base["_days_detail"]) & ml_stats["scored_days"])
+            print(f"  scored bet-days: {len(overlap)}/{len(base['_days_detail'])} "
+                  + (f"({', '.join(overlap)})" if overlap else "")
+                  + " — the ML order can only be judged on these")
+            delta = ml["mean_log_growth"] - base["mean_log_growth"]
+            print(f"  vs supported cohort ordering: {ml['bets'] - base['bets']:+d} accas, "
+                  f"{ml['hits'] - base['hits']:+d} hits, {delta:+.4f} log/day")
+            changed = [d for d, v in ml["_days_detail"].items()
+                       if v["bets"] != (base["_days_detail"].get(d) or {}).get("bets")
+                       or (v["bets"] and v["hits"] != (base["_days_detail"].get(d) or {}).get("hits"))]
+            if changed:
+                print(f"  days whose card or result moved: {', '.join(sorted(changed))}")
+            else:
+                print("  no day's card or result moved: the ML order agrees with the")
+                print("  cohort order on every scored day (ML ~ cohort by construction —")
+                print("  a single-feature logistic on the same avg_p).")
+            if len(ml_stats["scored_days"]) < 20:
+                print(f"  CAVEAT: {len(ml_stats['scored_days'])} scored day(s) is a parity")
+                print("  check, NOT an A/B. The ML arm cannot be judged on this sample:")
+                print("  the retained model only exists on the slates listed above.")
     print()
     note = arm_summaries[1][1]
     print(f"NO BET frequency (MIN_ACCAS/LEGS_PER_ACCA: a day without a {at.LEGS_PER_ACCA}-leg")
@@ -3341,6 +3687,14 @@ def main():
     ap.add_argument("--enhancements", action="store_true",
                     help="replay the settled enhancement registry against floor "
                          "variants (hit rate + mean log growth per bet-day)")
+    ap.add_argument("--enh-ml", action="store_true",
+                    help="with --enhancements: add the LIVE ML ordering arm, "
+                         "recomputed from the archived slate model, and state "
+                         "its coverage (a 2-day sample is not a policy result)")
+    ap.add_argument("--enh-parity", action="store_true",
+                    help="does the ENH replay rebuild the card the lane actually "
+                         "shipped? diffs cohort vs LIVE-ML ordering against the "
+                         "lane's own ledger")
     ap.add_argument("--legs", action="store_true", help="stated-prob band table, saturated days")
     ap.add_argument("--slots", action="store_true",
                     help="leg/acca quality by rank slot (checkpoint ① at leg scale)")
@@ -3447,6 +3801,9 @@ def main():
 
     # The enhancement lane replays the settled registry, not the acca universe,
     # so it answers before any universe is built.
+    if getattr(args, "enh_parity", False):
+        return cmd_enh_parity(enh_records(), since=args.since, until=args.until,
+                              root=at.ROOT)
     if args.enhancements:
         return cmd_enhancements(args)
 
