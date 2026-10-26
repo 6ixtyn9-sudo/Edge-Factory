@@ -1983,9 +1983,16 @@ def _collect_settled_facts() -> tuple[_SettledOutcomes, dict, dict]:
                         continue
                     for day, home, away, outcome, hs, gs in rows:
                         d = str(day)[:10]
+                        pair = _goal_pair(hs, gs)
                         for hk, ak in _result_write_keys(home, away):
                             key_to.setdefault((d, hk, ak), str(outcome))
-                            scores.setdefault((d, hk, ak), _goal_pair(hs, gs))
+                            # A half or non-numeric score must not CLAIM the
+                            # key: setdefault() would store None and every
+                            # later donor with the real score would be
+                            # ignored, hiding a settleable market leg behind a
+                            # broken row from the highest-priority table.
+                            if pair is not None:
+                                scores.setdefault((d, hk, ak), pair)
                         entries.setdefault(d, []).append(
                             {"home": str(home), "away": str(away), "outcome": str(outcome)}
                         )
@@ -3922,6 +3929,60 @@ def _slip_day_anchor(slip_date):
         return None
 
 
+_ONE_X_TWO_SELECTIONS = frozenset({"home", "away", "draw"})
+
+# "Match Over 2.5 Goals" -> match_over_25, "Home Team Over 0.5 Goals" ->
+# home_over_05, "Away Team Under 2.5 Goals" -> away_under_25. The registry's
+# market names are exactly these strings, so a leg frozen before the market
+# field existed can still be graded from its own label instead of being held.
+_ENH_LABEL_RE = re.compile(
+    r"^(match|home team|away team)\s+(over|under)\s+(\d+(?:\.\d+)?)\s*goals?$", re.I)
+_ENH_LABEL_SCOPE = {"match": "match", "home team": "home", "away team": "away"}
+
+# Every market-graded leg settled from a score, named. A wrong score behind a
+# booked loss is invisible in the "settled acca legs=[...]" line; this receipt
+# puts the score, the fixture key and the verdict next to each other in the run
+# log (2026-10-25: Molde 3-1 and Lillestrøm 3-2 were booked as Over-2.5 losses,
+# and nothing in the log showed the score the grader had actually used).
+MARKET_LEG_SETTLED: list = []
+
+
+def selection_market(leg: dict):
+    """The registry market a leg's own label names, or None.
+
+    Used only when the leg carries no ``market``: older slips stored the label
+    ("Match Over 2.5 Goals") and the selection ("over") but not the market key.
+    """
+    label = str(leg.get("label") or "").strip()
+    if label.lower().startswith("both teams to score"):
+        return "btts_yes" if str(leg.get("pick") or "").lower() in ("yes", "home", "away") else "btts_no"
+    match = _ENH_LABEL_RE.match(label)
+    if not match:
+        return None
+    scope = _ENH_LABEL_SCOPE[match.group(1).lower()]
+    line = match.group(3).replace(".", "")        # 2.5 -> 25, 0.5 -> 05
+    return f"{scope}_{match.group(2).lower()}_{line}"
+
+
+def market_graded_selection(leg: dict) -> bool:
+    """True when only the score can grade this leg.
+
+    A selection that is not a 1x2 outcome ("over", "under", "yes") can never
+    equal the archive's outcome column, so grading such a leg from the archived
+    pick row booked a LOSS on every resolved fixture whatever the score was.
+    Those legs resolve from the score, or not at all.
+    """
+    if str(leg.get("market") or "").strip().lower() not in ("", "1x2"):
+        return True
+    return str(leg.get("pick") or "").strip().lower() not in _ONE_X_TWO_SELECTIONS
+
+
+def _receipt_market_leg(day, market, selection, hs, gs, key, result) -> None:
+    MARKET_LEG_SETTLED.append((day, market, selection, f"{hs}-{gs}", key, result))
+    print(f"settled_market_leg {day} {market} {selection!r} score={hs}-{gs} "
+          f"key={key[0]}/{key[1]} result={result}", file=sys.stderr)
+
+
 def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
     """win / loss / "conflict" / None for one enhancement leg, from its score.
 
@@ -3949,7 +4010,7 @@ def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
     if entries_by_date and alias_outcome_conflict(
             {"date": day, "home": home, "away": away}, entries_by_date):
         return "conflict"
-    market = leg.get("market")
+    market = leg.get("market") or selection_market(leg)
     selection = str(leg.get("pick") or "")
     candidates = [day]
     try:
@@ -3964,9 +4025,21 @@ def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
         pass
     # The staked day first. Only when the fixture is not on that day do the
     # nearby days count, and then every one of them must agree on the leg.
+    from edgefactory.util import squad_markers
+
+    markers = (squad_markers(home), squad_markers(away))
+    narrow_keys = _narrow_result_keys(home, away)
     verdicts: set[bool] = set()
     for d in candidates:
         for hk, ak in _result_write_keys(home, away):
+            # The same identity guards the 1x2 path already applies. Without
+            # them a truncated nine-character key answered a market leg with a
+            # NEIGHBOUR's score, and a wrong score is a booked loss.
+            if _marker_boundary_blocks(markers[0], markers[1], d, hk, ak):
+                continue
+            if ((hk, ak) in narrow_keys
+                    and _narrow_key_blocks(d, hk, ak, home, away)):
+                continue
             pair = scores.get((d, hk, ak))
             if pair is None:
                 continue
@@ -3974,6 +4047,8 @@ def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
             if hit is None:
                 return None          # no scoring rule for this market: hold it
             if d == day:
+                _receipt_market_leg(d, market, selection, pair[0], pair[1],
+                                    (hk, ak), "win" if hit else "loss")
                 return "win" if hit else "loss"
             verdicts.add(bool(hit))
             break
@@ -3982,6 +4057,128 @@ def enhancement_leg_result(leg, slip_date, scores, entries_by_date=None):
     if len(verdicts) > 1:
         return "conflict"
     return "win" if verdicts.pop() else "loss"
+
+
+def _leg_fixture_names(leg: dict):
+    """(home, away) as written on the frozen leg, or (None, None)."""
+    home, away = leg.get("home"), leg.get("away")
+    if not (home and away):
+        row = leg.get("row") or {}
+        home, away = row.get("home"), row.get("away")
+    if not (home and away):
+        parts = str(leg.get("match") or "").split(" vs ")
+        if len(parts) == 2:
+            home, away = parts
+    return home, away
+
+
+def _verified_leg_result(leg: dict, day: str, verified: list):
+    """win / loss that an operator-verified final score gives this leg, else None.
+
+    Matching is by date and by club identity on both sides, using the same
+    deterministic link test as settlement, so a verified row cannot be applied
+    to a differently-spelled neighbour.
+    """
+    home, away = _leg_fixture_names(leg)
+    if not (home and away):
+        return None
+    for row in verified:
+        if str(row.get("date") or "")[:10] != day:
+            continue
+        if not (_same_club_names(row.get("home"), home)
+                and _same_club_names(row.get("away"), away)):
+            continue
+        hs, gs = row.get("hs"), row.get("gs")
+        if market_graded_selection(leg):
+            market = leg.get("market") or selection_market(leg)
+            hit = check_enhancement_hit(market, str(leg.get("pick") or ""), hs, gs)
+            return None if hit is None else ("win" if hit else "loss")
+        outcome = str(row.get("outcome") or "")
+        if outcome not in ("home", "away", "draw"):
+            return None
+        return "win" if str(leg.get("pick") or "").lower() == outcome else "loss"
+    return None
+
+
+def regrade_verified_settlements(st: dict, *, verified=None) -> list[str]:
+    """Re-book settled legs that an operator-verified score contradicts.
+
+    Donor rows never move money that has already been booked: a donor may be
+    wrong, and that is a research finding, not a correction. Only
+    ``Config/verified_results.json`` -- final scores an operator has checked
+    against the evidence and committed -- can rewrite a settled leg result.
+    That is the difference between the 2026-10-25 card being graded from what
+    the feeds happened to hold and being graded from what the matches finished.
+
+    Everything is printed as a before/after receipt, the affected day's totals
+    are rebuilt from its accas, and every later day's bank is shifted by the
+    same delta so the ladder stays arithmetically closed. Running it twice
+    changes nothing.
+    """
+    from edgefactory.settlement import load_verified_results
+
+    if verified is None:
+        verified = load_verified_results()
+    if not verified or not st.get("history"):
+        print("regrade_verified_changes=0", file=sys.stderr)
+        return []
+
+    lines: list[str] = []
+    shift = 0.0
+    for row in st["history"]:
+        day = str(row.get("date") or "")[:10]
+        row_shift = 0.0
+        for acca in row.get("accas") or []:
+            results, touched = [], False
+            for leg in acca.get("legs") or []:
+                result = leg.get("result")
+                corrected = _verified_leg_result(leg, day, verified)
+                if corrected is not None and corrected != result:
+                    lines.append(
+                        f"regrade_verified {day} {leg.get('match')} "
+                        f"{leg.get('pick')!r} {result} -> {corrected} "
+                        "(operator-verified final score)")
+                    leg["result"] = result = corrected
+                    touched = True
+                results.append(result)
+            if not touched:
+                continue
+            if any(result not in ("win", "loss") for result in results):
+                lines.append(
+                    f"regrade_verified_held {day} acca @{acca.get('odds')}: "
+                    "a leg is void or pending, day left exactly as booked")
+                continue
+            won = all(result == "win" for result in results)
+            old_delta = (float(acca.get("returned_pct") or 0.0)
+                         - float(acca.get("stake_pct") or 0.0))
+            acca["won"] = won
+            acca["returned_pct"] = (round(float(acca.get("stake_pct") or 0.0)
+                                          * float(acca.get("odds") or 0.0), 4)
+                                    if won else 0.0)
+            new_delta = (float(acca["returned_pct"])
+                         - float(acca.get("stake_pct") or 0.0))
+            row_shift += new_delta - old_delta
+            lines.append(f"regrade_verified_acca {day} @{acca.get('odds')} "
+                         f"won={won} returned={acca['returned_pct']}%")
+        if row_shift:
+            accas = row.get("accas") or []
+            row["staked_pct"] = round(sum(float(a.get("stake_pct") or 0.0) for a in accas), 4)
+            row["returned_pct"] = round(sum(float(a.get("returned_pct") or 0.0) for a in accas), 4)
+        if row_shift or shift:
+            if isinstance(row.get("bank_pct"), (int, float)):
+                row["bank_pct"] = round(float(row["bank_pct"]) + shift + row_shift, 4)
+        shift += row_shift
+
+    if not lines:
+        print("regrade_verified_changes=0", file=sys.stderr)
+        return []
+    before = st.get("bank")
+    if isinstance(before, (int, float)):
+        st["bank"] = round(float(before) + shift, 4)
+        lines.append(f"regrade_verified_bank {before:.4f}% -> {st['bank']:.4f}%")
+    print(f"regrade_verified_changes={sum(1 for line in lines if line.startswith('regrade_verified '))}",
+          file=sys.stderr)
+    return lines
 
 
 def _rescheduled_leg_result(day: str, pick: dict, settled: dict):
@@ -4058,32 +4255,39 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
             legres = []
             conflicts = []
             for l in a["legs"]:
-                keys = leg_lookup_keys(slip["date"], l)
+                # A market selection can only be graded from the score. Reading
+                # the archived pick row instead compared a 1x2 outcome with
+                # "over"/"under", which is never equal, so every resolved
+                # fixture booked a LOSS whatever the score was (2026-10-25:
+                # Molde 3-1 and Lillestrøm 3-2 both booked as Over-2.5 losses).
+                market_leg = market_graded_selection(l)
                 p = None
-                for leg_key in keys:
-                    p = index.get(leg_key)
-                    if p is None:
-                        continue
-                    if leg_key != keys[0]:
-                        # A compatibility candidate. Primary-first by the
-                        # loop order above; taken only when the matched row
-                        # corroborates the stored identity (A1b).
-                        refusal = _compat_refusal(l, p)
-                        record = _compat_record(slip, l, keys[0], leg_key, p,
-                                                reason=refusal)
-                        if refusal is not None:
-                            LEGACY_KEY_REFUSED.append(record)
-                            run_refusals += 1
-                            lines.append(_compat_line("refused", record))
-                            p = None
-                        else:
-                            LEGACY_KEY_HITS.append(record)
-                            run_hits += 1
-                            lines.append(_compat_line("matched", record))
-                    break
+                if not market_leg:
+                    keys = leg_lookup_keys(slip["date"], l)
+                    for leg_key in keys:
+                        p = index.get(leg_key)
+                        if p is None:
+                            continue
+                        if leg_key != keys[0]:
+                            # A compatibility candidate. Primary-first by the
+                            # loop order above; taken only when the matched row
+                            # corroborates the stored identity (A1b).
+                            refusal = _compat_refusal(l, p)
+                            record = _compat_record(slip, l, keys[0], leg_key, p,
+                                                    reason=refusal)
+                            if refusal is not None:
+                                LEGACY_KEY_REFUSED.append(record)
+                                run_refusals += 1
+                                lines.append(_compat_line("refused", record))
+                                p = None
+                            else:
+                                LEGACY_KEY_HITS.append(record)
+                                run_hits += 1
+                                lines.append(_compat_line("matched", record))
+                        break
                 if p is None:
                     r = None
-                    if l.get("market"):
+                    if market_leg:
                         # An enhancement leg: its market is the bet, so the
                         # archived 1x2 row cannot grade it. Grade the market
                         # from the score behind the fixture; no score means
@@ -5654,6 +5858,9 @@ def main():
     ap.add_argument("--rebuild-unplaced", action="store_true",
                     help="approved enhancement date only: cache-only rebuild or persist explicit NO BET; no settlement")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--regrade-verified", action="store_true",
+                    help="enhancement lane only: re-book settled legs contradicted by an "
+                         "operator-verified final score (Config/verified_results.json)")
     ap.add_argument("--enhancements", action="store_true",
                     help=f"the enhancement lane's own slip (needs {ENH_BOARD_FLAG}=1)")
     args = ap.parse_args()
@@ -5694,6 +5901,16 @@ def main():
         if not st and (wants_today or args.settle):
             st = fresh_state()
             save_state(st, ENHANCEMENT_LANE)
+        if args.regrade_verified or args.settle or wants_today:
+            # Settlement honours operator-verified final scores before it books
+            # anything else, and before the card is built, so a corrected bank
+            # is the bank the next stake is sized from. Without a verified row
+            # this is a no-op that prints regrade_verified_changes=0.
+            lines = regrade_verified_settlements(st)
+            if lines:
+                for line in lines:
+                    print(line)
+                save_state(st, ENHANCEMENT_LANE)
         if args.settle or wants_today:
             settled = load_settled()
             for line in settle_open_slips(st, settled, lane=ENHANCEMENT_LANE):
