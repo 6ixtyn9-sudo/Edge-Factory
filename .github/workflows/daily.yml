@@ -64,6 +64,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Resolve the requested branch AFTER the concurrency queue releases.
+          # The event SHA may predate the preceding run's state commit/cache.
+          ref: ${{ github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -251,6 +255,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Resolve the requested branch AFTER the concurrency queue releases.
+          # The event SHA may predate the preceding run's state commit/cache.
+          ref: ${{ github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
