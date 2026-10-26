@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 20,
-  "captured_at": "2026-10-26T11:18:19+00:00",
+  "captured_at": "2026-10-26T13:20:29+00:00",
   "date": "2026-10-26",
   "due_reasons": {},
   "errors": [],
@@ -24,10 +24,11 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
     "kickoff_mismatch": 1,
     "priced": 4,
     "priced_close_window_not_open": 1,
-    "retry_cooldown": 15
+    "retry_cooldown": 14
   },
   "skipped": [
     "Floriana|Zabbar St. Patrick (retry cooldown (6h after failed attempt))",
@@ -43,7 +44,7 @@
     "Al Ula|Al-Orobah FC (retry cooldown (6h after failed attempt))",
     "Geylang International|Hougang United (retry cooldown (6h after failed attempt))",
     "FC K\u00f8benhavn|Odense BK (retry cooldown (6h after failed attempt))",
-    "Mladost \u017ddralovi|Jadran LP (retry cooldown (6h after failed attempt))",
+    "Mladost \u017ddralovi|Jadran LP (kickoff already passed)",
     "Montpellier|RED Star FC 93 (priced)",
     "WARN kickoff-mismatch Galatasaray|Fenerbah\u00e7e: pick legacy display says 18:30 SAST, captured rows say 20:30 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Galatasaray|Fenerbah\u00e7e (priced, close window not open)",
