@@ -89,14 +89,14 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 6,
         "selection_unsupported": 1
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "bzzoiro": {
       "blocker": null,
@@ -233,36 +233,28 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 8,
-        "board_league_count": 6,
+        "board_fixtures": 5,
+        "board_league_count": 4,
         "board_leagues": {
-          "chinese_-_1st_division": 2,
-          "czech_republic_-_first_league": 46,
-          "england_-_wsl": 61,
-          "finland_-_veikkausliiga": 66,
-          "german_frauen_bundesliga": 24,
-          "spain_-_liga_f": 1
+          "albanian_kategoria_superiore": 6,
+          "greece_-_super_league": 10,
+          "spain_-_la_liga": 145,
+          "spain_-_la_liga_2": 39
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 15,
+        "board_team_count": 9,
         "board_team_names": {
-          "Chelsea (W)": 39,
-          "Chelsea [W]": 22,
-          "Crystal Palace (W)": 39,
-          "Crystal Palace [W]": 22,
-          "Deportivo Alaves (W)": 1,
-          "Deportivo La Coruna (W)": 1,
-          "FK Jablonec": 35,
-          "FSV Mainz 05 (W)": 24,
-          "Hoffenheim (W)": 24,
-          "Hradec Kralove": 46,
-          "Jablonec": 11,
-          "Jaro": 66,
-          "Jiangxi Dingnan United FC": 2,
-          "PK-35 RY": 66,
-          "Yanbian Longding": 2
+          "Aris": 10,
+          "Atromitos": 10,
+          "CD Castellon": 28,
+          "Castellon": 11,
+          "Dinamo Tirana": 6,
+          "Egnatia Rrogozhine": 6,
+          "Levante": 145,
+          "Real Sociedad": 145,
+          "Sporting Gijon": 39
         },
         "board_truncated": false,
         "card_fixture_count": 0,

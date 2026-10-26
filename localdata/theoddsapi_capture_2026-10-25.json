@@ -2,15 +2,13 @@
   "added": 0,
   "attempted": 0,
   "attempted_fixtures": [],
-  "candidate_fixtures": 89,
-  "captured_at": "2026-10-25T13:41:21+00:00",
+  "candidate_fixtures": 88,
+  "captured_at": "2026-10-25T19:19:14+00:00",
   "date": "2026-10-25",
   "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
-  "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 1
-  },
+  "kickoff_mismatch_detail": {},
   "quoted_fixtures": [],
   "requested_markets": [
     "h2h",
@@ -25,9 +23,7 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 2,
-    "kickoff_mismatch": 1,
     "priced": 12,
-    "priced_close_window_not_open": 1,
     "retry_cooldown": 74
   },
   "skipped": [
@@ -54,8 +50,6 @@
     "Oita Trinita|Ventforet Kofu (retry cooldown (6h after failed attempt))",
     "Foggia|Cavese (retry cooldown (6h after failed attempt))",
     "Alcorc\u00f3n|UD Ibiza (retry cooldown (6h after failed attempt))",
-    "WARN kickoff-mismatch Barcelona|Real Madrid: pick legacy display says 20:00 SAST, captured rows say 22:00 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Barcelona|Real Madrid (priced, close window not open)",
     "Portland Timbers|Charlotte FC (retry cooldown (6h after failed attempt))",
     "Everton W|Aston Villa W (retry cooldown (6h after failed attempt))",
     "FC Tokyo|Mito Hollyhock (retry cooldown (6h after failed attempt))",
