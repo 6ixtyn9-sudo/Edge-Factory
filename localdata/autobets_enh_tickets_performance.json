@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-10-26T07:07:58",
+  "generated_at": "2026-10-26T09:34:24",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 43.7309,
-  "multiple": 0.437309,
+  "bank_pct": 39.0372,
+  "multiple": 0.390372,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 12,
+  "bet_days": 13,
   "accas": {
     "wins": 10,
-    "losses": 18
+    "losses": 19
   },
   "open_slips": [],
   "events": [],
@@ -702,6 +702,37 @@
       ],
       "bank_pct": 43.7309,
       "close_pct": 37.5495
+    },
+    {
+      "date": "2026-10-26",
+      "staked_pct": 4.6937,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.11,
+          "won": false,
+          "stake_pct": 4.6937,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Barracas Central vs Estudiantes de Rio Cuarto",
+              "pick": "home",
+              "odds": 1.3,
+              "result": "win",
+              "label": "Home Team Over 0.5 Goals"
+            },
+            {
+              "match": "Deportes Tolima vs Deportivo Pasto",
+              "pick": "home",
+              "odds": 1.62,
+              "result": "loss",
+              "label": "Home Team Over 1.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 39.0372,
+      "close_pct": 32.8558
     }
   ]
 }

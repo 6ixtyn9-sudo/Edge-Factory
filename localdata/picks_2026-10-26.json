@@ -1,12 +1,12 @@
 [
   {
-    "as_of": "2026-10-26T06:18:06+02:00",
+    "as_of": "2026-10-26T09:11:02+02:00",
     "avg_p": 72.65428064606479,
     "away": "\u0130stanbul Ba\u015fak\u015fehir",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "dc3bff6f7618ec1569f9424cc84a49849379429e",
-    "built_at_utc": "2026-10-26T04:19:31.556428+00:00",
+    "build_git_sha": "504a0caf625e21e0f0143a8556363bb5692c219b",
+    "built_at_utc": "2026-10-26T07:12:28.270828+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -1031,13 +1031,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-26T06:18:06+02:00",
+    "as_of": "2026-10-26T09:11:02+02:00",
     "avg_p": 70.7268784764778,
     "away": "Atl\u00e9tico Mineiro",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "dc3bff6f7618ec1569f9424cc84a49849379429e",
-    "built_at_utc": "2026-10-26T04:19:31.556428+00:00",
+    "build_git_sha": "504a0caf625e21e0f0143a8556363bb5692c219b",
+    "built_at_utc": "2026-10-26T07:12:28.270828+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -2048,13 +2048,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-26T06:18:06+02:00",
+    "as_of": "2026-10-26T09:11:02+02:00",
     "avg_p": 67.53028890959925,
     "away": "Benfica",
     "bookmaker": "betexplorer_best",
     "bucket": "CAUTION",
-    "build_git_sha": "dc3bff6f7618ec1569f9424cc84a49849379429e",
-    "built_at_utc": "2026-10-26T04:19:31.556428+00:00",
+    "build_git_sha": "504a0caf625e21e0f0143a8556363bb5692c219b",
+    "built_at_utc": "2026-10-26T07:12:28.270828+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -5074,13 +5074,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-26T06:18:06+02:00",
+    "as_of": "2026-10-26T09:11:02+02:00",
     "avg_p": 50.241844769403826,
     "away": "Fenerbah\u00e7e",
-    "bookmaker": "Pinnacle",
+    "bookmaker": "betexplorer_best",
     "bucket": "CAUTION",
-    "build_git_sha": "dc3bff6f7618ec1569f9424cc84a49849379429e",
-    "built_at_utc": "2026-10-26T04:19:31.556428+00:00",
+    "build_git_sha": "504a0caf625e21e0f0143a8556363bb5692c219b",
+    "built_at_utc": "2026-10-26T07:12:28.270828+00:00",
     "contract_id": "pfc_444d408c4ccd3a4bf4fb020c",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -5708,26 +5708,86 @@
     "match": "Galatasaray vs Fenerbah\u00e7e",
     "min_lead_minutes": 30,
     "n_way": 3,
-    "odds": 2.18,
-    "odds_captured_at": "2026-10-25T01:31:08+00:00",
-    "odds_league": "Turkey - Super League",
+    "odds": 2.05,
+    "odds_captured_at": "2026-10-26T04:18:06.429377+00:00",
+    "odds_league": "Turkey: Super Lig",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
-    "odds_source": "pinnapi_odds",
+    "odds_source": "betexplorer_odds",
     "odds_tier": "low",
     "pick": "home",
     "price_board": [
       {
         "away": "Fenerbahce",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-26T04:18:06.429377+00:00",
+        "chosen": true,
+        "home": "Galatasaray",
+        "kickoff": "19:30",
+        "league": "Turkey: Super Lig",
+        "line": null,
+        "market": "1x2",
+        "match_method": "exact",
+        "named_bookmaker": true,
+        "odds": 2.05,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "home",
+        "selection": "home",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Fenerbahce",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-26T04:18:06.429377+00:00",
+        "home": "Galatasaray",
+        "kickoff": "19:30",
+        "league": "Turkey: Super Lig",
+        "line": null,
+        "market": "1x2",
+        "named_bookmaker": true,
+        "odds": 4.0,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "draw",
+        "selection": "draw",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Fenerbahce",
+        "bookmaker": "betexplorer_best",
+        "captured_at": "2026-10-26T04:18:06.429377+00:00",
+        "home": "Galatasaray",
+        "kickoff": "19:30",
+        "league": "Turkey: Super Lig",
+        "line": null,
+        "market": "1x2",
+        "named_bookmaker": true,
+        "odds": 3.25,
+        "odds_kind": "bookmaker",
+        "price_coherence": null,
+        "price_independence_family": "betexplorer_book",
+        "provider_role": "named_bookmaker",
+        "raw_market": "1x2",
+        "raw_selection": "away",
+        "selection": "away",
+        "source": "betexplorer_odds"
+      },
+      {
+        "away": "Fenerbahce",
         "bookmaker": "Pinnacle",
         "captured_at": "2026-10-25T01:31:08+00:00",
-        "chosen": true,
         "home": "Galatasaray",
         "kickoff": "2026-10-26T18:30:00Z",
         "league": "Turkey - Super League",
         "line": null,
         "market": "1x2",
-        "match_method": "exact",
         "named_bookmaker": true,
         "odds": 2.18,
         "odds_kind": "bookmaker",
@@ -5842,17 +5902,19 @@
     ],
     "price_corroborated": true,
     "price_corroborating_families": [
+      "pinnacle_book",
       "scoutingstats_average"
     ],
     "price_corroboration_sufficient": true,
     "price_corroborators": [
+      "pinnapi_odds",
       "scoutingstats_odds"
     ],
-    "price_disclosure": "Pinnacle named-book price (Pinnacle)",
+    "price_disclosure": "BetExplorer named-book price (betexplorer_best)",
     "price_donor_role": "named_bookmaker",
     "price_evidence": "NAMED_BOOKMAKER_PRICE",
-    "price_independence_family": "pinnacle_book",
-    "price_named_book_corroborated": false,
+    "price_independence_family": "betexplorer_book",
+    "price_named_book_corroborated": true,
     "price_odds_kind": "bookmaker",
     "price_push_eligible": true,
     "probability_available": true,
@@ -6098,13 +6160,13 @@
     "w_score": 0.6333
   },
   {
-    "as_of": "2026-10-26T06:18:06+02:00",
+    "as_of": "2026-10-26T09:11:02+02:00",
     "avg_p": 61.0,
     "away": "Jadran LP",
     "bookmaker": "betexplorer_best",
     "bucket": "CERTIFIED_CLEAN",
-    "build_git_sha": "dc3bff6f7618ec1569f9424cc84a49849379429e",
-    "built_at_utc": "2026-10-26T04:19:31.556428+00:00",
+    "build_git_sha": "504a0caf625e21e0f0143a8556363bb5692c219b",
+    "built_at_utc": "2026-10-26T07:12:28.270828+00:00",
     "contract_id": "pfc_1607fec83282d02c5254c2bf",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -6138,7 +6200,7 @@
     "edge_status": "certified",
     "enh_candidate_log": [
       {
-        "cohort_rate": 0.2009,
+        "cohort_rate": 0.2006,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 1.5 Goals",
@@ -6152,7 +6214,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.4028,
+        "cohort_rate": 0.4023,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 2.5 Goals",
@@ -6166,7 +6228,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.5972,
+        "cohort_rate": 0.5977,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Over 2.5 Goals",
@@ -6180,7 +6242,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.5125,
+        "cohort_rate": 0.513,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Both Teams to Score - Yes (BTTS-Yes)",
@@ -6194,7 +6256,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.4875,
+        "cohort_rate": 0.487,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Both Teams to Score - No (BTTS-No)",
@@ -6208,7 +6270,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.3724,
+        "cohort_rate": 0.3731,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 2.5 Goals",
@@ -6222,7 +6284,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.195,
+        "cohort_rate": 0.1953,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 3.5 Goals",
@@ -6236,7 +6298,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.1225,
+        "cohort_rate": 0.1224,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 0.5 Goals",
@@ -6250,7 +6312,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.3708,
+        "cohort_rate": 0.3704,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 1.5 Goals",
@@ -6264,7 +6326,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.5807,
+        "cohort_rate": 0.5812,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Over 0.5 Goals",
@@ -6278,7 +6340,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.2302,
+        "cohort_rate": 0.2304,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Over 1.5 Goals",
@@ -6320,7 +6382,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.4193,
+        "cohort_rate": 0.4188,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Under 0.5 Goals",
@@ -6502,7 +6564,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.382,
+        "cohort_rate": 0.3827,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Over 3.5 Goals",
@@ -6516,7 +6578,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.2227,
+        "cohort_rate": 0.223,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Over 4.5 Goals",
@@ -6544,7 +6606,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.7991,
+        "cohort_rate": 0.7994,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Over 1.5 Goals",
@@ -6558,7 +6620,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.618,
+        "cohort_rate": 0.6173,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 3.5 Goals",
@@ -6572,7 +6634,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.8775,
+        "cohort_rate": 0.8776,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 0.5 Goals",
@@ -6586,7 +6648,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.6292,
+        "cohort_rate": 0.6296,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 1.5 Goals",
@@ -6600,7 +6662,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.6276,
+        "cohort_rate": 0.6269,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 2.5 Goals",
@@ -6614,7 +6676,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.805,
+        "cohort_rate": 0.8047,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 3.5 Goals",
@@ -6628,7 +6690,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.7698,
+        "cohort_rate": 0.7696,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Under 1.5 Goals",
@@ -6670,7 +6732,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.7773,
+        "cohort_rate": 0.777,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 4.5 Goals",
@@ -6809,20 +6871,20 @@
       "zulubet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Exact-contract realized stats (n=1877; selection=home; before 2026-10-26; pfc_1607fec83282d02c5254c2bf): Parent hit rate: 66.4% (1246/1877) | Avg Goals: 3.16 | Over 1.5: 79.9% | Under 1.5: 20.1% | Over 2.5: 59.7% | Under 2.5: 40.3% | Over 3.5: 38.2% | Under 3.5: 61.8% | Over 4.5: 22.3% | Under 4.5: 77.7% | BTTS: 51.3% | BTTS-No: 48.7% | Home Over 0.5 Goals: 87.7% | Home Under 0.5 Goals: 12.3% | Home Over 1.5 Goals: 62.9% | Home Under 1.5 Goals: 37.1% | Home Over 2.5 Goals: 37.2% | Home Under 2.5 Goals: 62.8% | Home Over 3.5 Goals: 19.5% | Home Under 3.5 Goals: 80.5% | Away Over 0.5 Goals: 58.1% | Away Under 0.5 Goals: 41.9% | Away Over 1.5 Goals: 23.0% | Away Under 1.5 Goals: 77.0% | Away Over 2.5 Goals: 6.9% | Away Under 2.5 Goals: 93.1% | Away Over 3.5 Goals: 1.9% | Away Under 3.5 Goals: 98.1% | All parent outcomes; descriptive history, not untouched forward validation",
+    "statistical_comment": "\ud83d\udcca Exact-contract realized stats (n=1879; selection=home; before 2026-10-26; pfc_1607fec83282d02c5254c2bf): Parent hit rate: 66.4% (1248/1879) | Avg Goals: 3.16 | Over 1.5: 79.9% | Under 1.5: 20.1% | Over 2.5: 59.8% | Under 2.5: 40.2% | Over 3.5: 38.3% | Under 3.5: 61.7% | Over 4.5: 22.3% | Under 4.5: 77.7% | BTTS: 51.3% | BTTS-No: 48.7% | Home Over 0.5 Goals: 87.8% | Home Under 0.5 Goals: 12.2% | Home Over 1.5 Goals: 63.0% | Home Under 1.5 Goals: 37.0% | Home Over 2.5 Goals: 37.3% | Home Under 2.5 Goals: 62.7% | Home Over 3.5 Goals: 19.5% | Home Under 3.5 Goals: 80.5% | Away Over 0.5 Goals: 58.1% | Away Under 0.5 Goals: 41.9% | Away Over 1.5 Goals: 23.0% | Away Under 1.5 Goals: 77.0% | Away Over 2.5 Goals: 6.9% | Away Under 2.5 Goals: 93.1% | Away Over 3.5 Goals: 1.9% | Away Under 3.5 Goals: 98.1% | All parent outcomes; descriptive history, not untouched forward validation",
     "statistical_profile": {
-      "a_o05": 0.580713905167821,
-      "a_o15": 0.23015450186467767,
-      "a_o25": 0.0687266915290357,
-      "a_o35": 0.019179541822056473,
+      "a_o05": 0.581160191591272,
+      "a_o15": 0.23044172432144758,
+      "a_o25": 0.06865353911655135,
+      "a_o35": 0.019159127195316657,
       "as_of_exclusive": "2026-10-26",
-      "avg_goals": 3.1603622802344167,
-      "btts": 0.512519978689398,
+      "avg_goals": 3.1628525811601915,
+      "btts": 0.5130388504523683,
       "contract_id": "pfc_1607fec83282d02c5254c2bf",
-      "h_o05": 0.8774640383590836,
-      "h_o15": 0.6291955247735749,
-      "h_o25": 0.3724027703782632,
-      "h_o35": 0.1949920085242408,
+      "h_o05": 0.8775944651410325,
+      "h_o15": 0.6295902075572113,
+      "h_o25": 0.37307078233102714,
+      "h_o35": 0.19531665779670038,
       "ml_model": {
         "as_of_exclusive": "2026-10-26",
         "classes": [
@@ -6878,222 +6940,222 @@
         ],
         "coef": [
           [
-            -0.6659384361176115
+            -0.6774169876001989
           ],
           [
-            -0.8979663038822725
+            -0.8997536312914741
           ],
           [
-            -0.6567137132846633
+            -0.6391795135547734
           ],
           [
-            -0.384389988583184
+            -0.36148611801030167
           ],
           [
-            -0.32243280520616124
+            -0.3180550012021246
           ],
           [
-            -0.1088250861166472
+            -0.11796235307717631
           ],
           [
-            0.03155207642430108
+            0.017612604242225764
           ],
           [
-            -0.07142476424968315
+            -0.08181962581123334
           ],
           [
-            0.07842046563010648
+            0.06282964364304457
           ],
           [
-            -0.1088250861166506
+            -0.11796235307717506
           ],
           [
-            -0.6328630841685067
+            -0.6643811817603803
           ],
           [
-            -0.852698896165598
+            -0.8887143697822804
           ],
           [
-            -1.0789300063055371
+            -1.0733557791443178
           ],
           [
-            0.021730956585730127
+            0.036743247368241624
           ],
           [
-            -0.21687763881452077
+            -0.2093034078152181
           ],
           [
-            -0.11670058999396468
+            -0.14255943742528404
           ],
           [
-            0.7402408241907715
+            0.7461661622285463
           ],
           [
-            -0.32220680828839043
+            -0.34602574965159427
           ],
           [
-            -0.20822254016299735
+            -0.20502670876486345
           ],
           [
-            -0.2480351741340534
+            -0.23682841891800194
           ],
           [
-            -0.17514289828835777
+            -0.19839806868522158
           ],
           [
-            -0.05825123286493276
+            -0.08668946308331585
           ],
           [
-            -0.12751604955476123
+            -0.13603099979145603
           ],
           [
-            0.2064032174296814
+            0.20621540133388405
           ],
           [
-            0.16253050873718544
+            0.2106182324648226
           ],
           [
-            1.1534227320738493
+            1.1790743795830123
           ],
           [
-            0.02272950611628135
+            0.026647143280541144
           ],
           [
-            0.004692396207603917
+            -0.013725802961539503
           ],
           [
-            0.9041693231401987
+            0.9275872239766795
           ],
           [
-            1.2620744938198722
+            1.2882080763724957
           ],
           [
-            -0.14002176124670937
+            -0.12493646784593523
           ],
           [
-            0.021494783797050564
+            0.0314649673688378
           ],
           [
-            0.0209649832199637
+            0.016635449909253492
           ],
           [
-            1.122768665124323
+            1.1384353126813864
           ],
           [
-            0.8236125358972215
+            0.8345392314475001
           ],
           [
-            -0.3346343992649185
+            -0.18842481023501587
           ],
           [
-            0.2526046191583147
+            0.24265830629628574
           ],
           [
-            -0.01928137066133089
+            -0.049425727865918694
           ],
           [
-            0.3993503008052955
+            0.4082227330271273
           ],
           [
-            0.40537823950863466
+            0.3999737089310574
           ],
           [
-            0.3251360104861136
+            0.31807470550336386
           ],
           [
-            0.1560896712714785
+            0.1484948089516781
           ],
           [
-            -0.22603185015522312
+            -0.22186273705104584
           ],
           [
-            0.10973155409129426
+            0.07623239873463492
           ],
           [
-            0.0529242868688553
+            0.03321642170604332
           ],
           [
-            0.1513414306871205
+            0.14187908958206508
           ],
           [
-            -0.21016180403303986
+            -0.23627149647186813
           ],
           [
-            -0.22999287329244064
+            -0.22834170101109466
           ],
           [
-            -0.015278420319059023
+            -0.02759133674390933
           ]
         ],
         "contract_id": "pfc_1607fec83282d02c5254c2bf",
         "feature_max": 0.95,
         "feature_min": 0.55,
         "intercept": [
-          2.5896350150418432,
-          2.407815775619639,
-          1.4261596501418135,
-          0.603178048134846,
-          -0.6648650054174685,
-          -2.3792294908451037,
-          -2.471519298351406,
-          -2.4038091385574365,
-          -2.5023509901758696,
-          -2.3792294908450966,
-          3.2503336131038996,
-          3.2233662489574146,
-          2.279198734966637,
-          0.6845560051690601,
-          0.0640702735998956,
-          -1.7180190549691303,
-          2.2094314410950746,
-          2.989947561593063,
-          2.1283308152991856,
-          0.7824855388487317,
-          -1.6803462942748033,
-          -1.755714798717915,
-          -2.366948370817499,
-          2.3214573851671405,
-          2.08024249137134,
-          0.9903762120701843,
-          0.07097615721471127,
-          -0.6805681849057786,
-          1.2668158039426614,
-          0.8731263939652252,
-          0.8757462254636166,
-          -0.2986010477145211,
-          -1.105532738776308,
-          0.5633043661704582,
-          0.4434228195532617,
-          0.637548505838826,
-          -1.2605719956444146,
-          -1.780858180551379,
-          0.39259903775050087,
-          -0.34781842871575996,
-          -0.6066444896511317,
-          -1.1959473635524227,
-          0.16036106818435572,
-          -1.429508416007752,
-          -0.7123217372234482,
-          -0.9776684699719267,
-          -1.2178847208296264,
-          -0.937806270268493,
-          -2.44072121148205
+          2.5886722457613622,
+          2.40010627386848,
+          1.4058430685869494,
+          0.5971478280330824,
+          -0.6671804351950849,
+          -2.332948833644997,
+          -2.4178158566511048,
+          -2.355514938071585,
+          -2.4462495487504285,
+          -2.3329488336449957,
+          3.263903414545004,
+          3.239363201534635,
+          2.2663168946247136,
+          0.6730050621792372,
+          0.05030013608942528,
+          -1.7119188754153594,
+          2.195942815661816,
+          2.9968665819347744,
+          2.117404839066593,
+          0.7603347528563366,
+          -1.6753318330481612,
+          -1.7485168556601605,
+          -2.3216839594914744,
+          2.3132015037770226,
+          2.049053045322836,
+          0.9637586024855225,
+          0.05700841486850939,
+          -0.7029902435191862,
+          1.2419140451863353,
+          0.846093214533509,
+          0.8597860959087632,
+          -0.29391511986074376,
+          -1.0936441065865066,
+          0.5432955207333552,
+          0.43022107176191215,
+          0.5822070393634893,
+          -1.2430268154770454,
+          -1.7729216122583622,
+          0.38145787255159774,
+          -0.3548736715164614,
+          -0.6085518259680385,
+          -1.1807432330168897,
+          0.1393211159177805,
+          -1.4370410258474193,
+          -0.7340775083856562,
+          -0.9734959448167386,
+          -1.2354838365021472,
+          -0.9321962563782656,
+          -2.389453487445225
         ],
-        "model_key": "049d8db3e7aac108726ac5dddfe8e720ea021ba0a8fd4b9b932cf990b9f145c4",
-        "n": 1877,
+        "model_key": "e8f60b9784ffe3224f57d06004ab853d09e5e0a4eac524422412bbe1b2a77e85",
+        "n": 1879,
         "schema": "enh_score_logit_v1",
         "selection": "home",
         "train_last_date": "2026-10-25",
-        "training_sha256": "df624111b87ab3ddb1c6a84d3fbe96a8ba9c05d94132e9bd80968f54a54ab37b"
+        "training_sha256": "affeb7edeb4903073bb753d148bf8d0141b349e47eb33f767e3702f57479d00a"
       },
       "ml_status": "fitted",
-      "n": 1877,
-      "over15": 0.7991475759190197,
-      "over25": 0.597229621736814,
-      "over35": 0.38199254128929144,
-      "over45": 0.22269579115610016,
-      "parent_hit_rate": 0.663825253063399,
-      "parent_hits": 1246,
+      "n": 1879,
+      "over15": 0.7993613624268228,
+      "over25": 0.5976583288983501,
+      "over35": 0.38265034592868546,
+      "over45": 0.22299095263437999,
+      "parent_hit_rate": 0.6641830761043108,
+      "parent_hits": 1248,
       "selection": "home",
       "window_start": "2026-06-13"
     },
@@ -7101,13 +7163,13 @@
     "w_score": 0.6134
   },
   {
-    "as_of": "2026-10-26T06:18:06+02:00",
+    "as_of": "2026-10-26T09:11:02+02:00",
     "avg_p": 65.0,
     "away": "Hougang United",
     "bookmaker": null,
     "bucket": "WATCHLIST_NO_ODDS",
-    "build_git_sha": "dc3bff6f7618ec1569f9424cc84a49849379429e",
-    "built_at_utc": "2026-10-26T04:19:31.556428+00:00",
+    "build_git_sha": "504a0caf625e21e0f0143a8556363bb5692c219b",
+    "built_at_utc": "2026-10-26T07:12:28.270828+00:00",
     "contract_id": "pfc_1607fec83282d02c5254c2bf",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -7141,7 +7203,7 @@
     "edge_status": "certified",
     "enh_candidate_log": [
       {
-        "cohort_rate": 0.2009,
+        "cohort_rate": 0.2006,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 1.5 Goals",
@@ -7155,7 +7217,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.4028,
+        "cohort_rate": 0.4023,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 2.5 Goals",
@@ -7169,7 +7231,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.5972,
+        "cohort_rate": 0.5977,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Over 2.5 Goals",
@@ -7183,7 +7245,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.5125,
+        "cohort_rate": 0.513,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Both Teams to Score - Yes (BTTS-Yes)",
@@ -7197,7 +7259,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.4875,
+        "cohort_rate": 0.487,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Both Teams to Score - No (BTTS-No)",
@@ -7211,7 +7273,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.3724,
+        "cohort_rate": 0.3731,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 2.5 Goals",
@@ -7225,7 +7287,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.195,
+        "cohort_rate": 0.1953,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 3.5 Goals",
@@ -7239,7 +7301,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.1225,
+        "cohort_rate": 0.1224,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 0.5 Goals",
@@ -7253,7 +7315,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.3708,
+        "cohort_rate": 0.3704,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 1.5 Goals",
@@ -7267,7 +7329,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.5807,
+        "cohort_rate": 0.5812,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Over 0.5 Goals",
@@ -7281,7 +7343,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.2302,
+        "cohort_rate": 0.2304,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Over 1.5 Goals",
@@ -7323,7 +7385,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.4193,
+        "cohort_rate": 0.4188,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Under 0.5 Goals",
@@ -7505,7 +7567,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.382,
+        "cohort_rate": 0.3827,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Over 3.5 Goals",
@@ -7519,7 +7581,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.2227,
+        "cohort_rate": 0.223,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Over 4.5 Goals",
@@ -7547,7 +7609,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.7991,
+        "cohort_rate": 0.7994,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Over 1.5 Goals",
@@ -7561,7 +7623,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.618,
+        "cohort_rate": 0.6173,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 3.5 Goals",
@@ -7575,7 +7637,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.8775,
+        "cohort_rate": 0.8776,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 0.5 Goals",
@@ -7589,7 +7651,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.6292,
+        "cohort_rate": 0.6296,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Over 1.5 Goals",
@@ -7603,7 +7665,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.6276,
+        "cohort_rate": 0.6269,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 2.5 Goals",
@@ -7617,7 +7679,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.805,
+        "cohort_rate": 0.8047,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Home Team Under 3.5 Goals",
@@ -7631,7 +7693,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.7698,
+        "cohort_rate": 0.7696,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Away Team Under 1.5 Goals",
@@ -7673,7 +7735,7 @@
         "status": "excluded"
       },
       {
-        "cohort_rate": 0.7773,
+        "cohort_rate": 0.777,
         "engine": "hybrid_cohort",
         "implied_probability": null,
         "label": "Match Under 4.5 Goals",
@@ -7742,20 +7804,20 @@
       "zulubet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Exact-contract realized stats (n=1877; selection=home; before 2026-10-26; pfc_1607fec83282d02c5254c2bf): Parent hit rate: 66.4% (1246/1877) | Avg Goals: 3.16 | Over 1.5: 79.9% | Under 1.5: 20.1% | Over 2.5: 59.7% | Under 2.5: 40.3% | Over 3.5: 38.2% | Under 3.5: 61.8% | Over 4.5: 22.3% | Under 4.5: 77.7% | BTTS: 51.3% | BTTS-No: 48.7% | Home Over 0.5 Goals: 87.7% | Home Under 0.5 Goals: 12.3% | Home Over 1.5 Goals: 62.9% | Home Under 1.5 Goals: 37.1% | Home Over 2.5 Goals: 37.2% | Home Under 2.5 Goals: 62.8% | Home Over 3.5 Goals: 19.5% | Home Under 3.5 Goals: 80.5% | Away Over 0.5 Goals: 58.1% | Away Under 0.5 Goals: 41.9% | Away Over 1.5 Goals: 23.0% | Away Under 1.5 Goals: 77.0% | Away Over 2.5 Goals: 6.9% | Away Under 2.5 Goals: 93.1% | Away Over 3.5 Goals: 1.9% | Away Under 3.5 Goals: 98.1% | All parent outcomes; descriptive history, not untouched forward validation",
+    "statistical_comment": "\ud83d\udcca Exact-contract realized stats (n=1879; selection=home; before 2026-10-26; pfc_1607fec83282d02c5254c2bf): Parent hit rate: 66.4% (1248/1879) | Avg Goals: 3.16 | Over 1.5: 79.9% | Under 1.5: 20.1% | Over 2.5: 59.8% | Under 2.5: 40.2% | Over 3.5: 38.3% | Under 3.5: 61.7% | Over 4.5: 22.3% | Under 4.5: 77.7% | BTTS: 51.3% | BTTS-No: 48.7% | Home Over 0.5 Goals: 87.8% | Home Under 0.5 Goals: 12.2% | Home Over 1.5 Goals: 63.0% | Home Under 1.5 Goals: 37.0% | Home Over 2.5 Goals: 37.3% | Home Under 2.5 Goals: 62.7% | Home Over 3.5 Goals: 19.5% | Home Under 3.5 Goals: 80.5% | Away Over 0.5 Goals: 58.1% | Away Under 0.5 Goals: 41.9% | Away Over 1.5 Goals: 23.0% | Away Under 1.5 Goals: 77.0% | Away Over 2.5 Goals: 6.9% | Away Under 2.5 Goals: 93.1% | Away Over 3.5 Goals: 1.9% | Away Under 3.5 Goals: 98.1% | All parent outcomes; descriptive history, not untouched forward validation",
     "statistical_profile": {
-      "a_o05": 0.580713905167821,
-      "a_o15": 0.23015450186467767,
-      "a_o25": 0.0687266915290357,
-      "a_o35": 0.019179541822056473,
+      "a_o05": 0.581160191591272,
+      "a_o15": 0.23044172432144758,
+      "a_o25": 0.06865353911655135,
+      "a_o35": 0.019159127195316657,
       "as_of_exclusive": "2026-10-26",
-      "avg_goals": 3.1603622802344167,
-      "btts": 0.512519978689398,
+      "avg_goals": 3.1628525811601915,
+      "btts": 0.5130388504523683,
       "contract_id": "pfc_1607fec83282d02c5254c2bf",
-      "h_o05": 0.8774640383590836,
-      "h_o15": 0.6291955247735749,
-      "h_o25": 0.3724027703782632,
-      "h_o35": 0.1949920085242408,
+      "h_o05": 0.8775944651410325,
+      "h_o15": 0.6295902075572113,
+      "h_o25": 0.37307078233102714,
+      "h_o35": 0.19531665779670038,
       "ml_model": {
         "as_of_exclusive": "2026-10-26",
         "classes": [
@@ -7811,222 +7873,222 @@
         ],
         "coef": [
           [
-            -0.6659384361176115
+            -0.6774169876001989
           ],
           [
-            -0.8979663038822725
+            -0.8997536312914741
           ],
           [
-            -0.6567137132846633
+            -0.6391795135547734
           ],
           [
-            -0.384389988583184
+            -0.36148611801030167
           ],
           [
-            -0.32243280520616124
+            -0.3180550012021246
           ],
           [
-            -0.1088250861166472
+            -0.11796235307717631
           ],
           [
-            0.03155207642430108
+            0.017612604242225764
           ],
           [
-            -0.07142476424968315
+            -0.08181962581123334
           ],
           [
-            0.07842046563010648
+            0.06282964364304457
           ],
           [
-            -0.1088250861166506
+            -0.11796235307717506
           ],
           [
-            -0.6328630841685067
+            -0.6643811817603803
           ],
           [
-            -0.852698896165598
+            -0.8887143697822804
           ],
           [
-            -1.0789300063055371
+            -1.0733557791443178
           ],
           [
-            0.021730956585730127
+            0.036743247368241624
           ],
           [
-            -0.21687763881452077
+            -0.2093034078152181
           ],
           [
-            -0.11670058999396468
+            -0.14255943742528404
           ],
           [
-            0.7402408241907715
+            0.7461661622285463
           ],
           [
-            -0.32220680828839043
+            -0.34602574965159427
           ],
           [
-            -0.20822254016299735
+            -0.20502670876486345
           ],
           [
-            -0.2480351741340534
+            -0.23682841891800194
           ],
           [
-            -0.17514289828835777
+            -0.19839806868522158
           ],
           [
-            -0.05825123286493276
+            -0.08668946308331585
           ],
           [
-            -0.12751604955476123
+            -0.13603099979145603
           ],
           [
-            0.2064032174296814
+            0.20621540133388405
           ],
           [
-            0.16253050873718544
+            0.2106182324648226
           ],
           [
-            1.1534227320738493
+            1.1790743795830123
           ],
           [
-            0.02272950611628135
+            0.026647143280541144
           ],
           [
-            0.004692396207603917
+            -0.013725802961539503
           ],
           [
-            0.9041693231401987
+            0.9275872239766795
           ],
           [
-            1.2620744938198722
+            1.2882080763724957
           ],
           [
-            -0.14002176124670937
+            -0.12493646784593523
           ],
           [
-            0.021494783797050564
+            0.0314649673688378
           ],
           [
-            0.0209649832199637
+            0.016635449909253492
           ],
           [
-            1.122768665124323
+            1.1384353126813864
           ],
           [
-            0.8236125358972215
+            0.8345392314475001
           ],
           [
-            -0.3346343992649185
+            -0.18842481023501587
           ],
           [
-            0.2526046191583147
+            0.24265830629628574
           ],
           [
-            -0.01928137066133089
+            -0.049425727865918694
           ],
           [
-            0.3993503008052955
+            0.4082227330271273
           ],
           [
-            0.40537823950863466
+            0.3999737089310574
           ],
           [
-            0.3251360104861136
+            0.31807470550336386
           ],
           [
-            0.1560896712714785
+            0.1484948089516781
           ],
           [
-            -0.22603185015522312
+            -0.22186273705104584
           ],
           [
-            0.10973155409129426
+            0.07623239873463492
           ],
           [
-            0.0529242868688553
+            0.03321642170604332
           ],
           [
-            0.1513414306871205
+            0.14187908958206508
           ],
           [
-            -0.21016180403303986
+            -0.23627149647186813
           ],
           [
-            -0.22999287329244064
+            -0.22834170101109466
           ],
           [
-            -0.015278420319059023
+            -0.02759133674390933
           ]
         ],
         "contract_id": "pfc_1607fec83282d02c5254c2bf",
         "feature_max": 0.95,
         "feature_min": 0.55,
         "intercept": [
-          2.5896350150418432,
-          2.407815775619639,
-          1.4261596501418135,
-          0.603178048134846,
-          -0.6648650054174685,
-          -2.3792294908451037,
-          -2.471519298351406,
-          -2.4038091385574365,
-          -2.5023509901758696,
-          -2.3792294908450966,
-          3.2503336131038996,
-          3.2233662489574146,
-          2.279198734966637,
-          0.6845560051690601,
-          0.0640702735998956,
-          -1.7180190549691303,
-          2.2094314410950746,
-          2.989947561593063,
-          2.1283308152991856,
-          0.7824855388487317,
-          -1.6803462942748033,
-          -1.755714798717915,
-          -2.366948370817499,
-          2.3214573851671405,
-          2.08024249137134,
-          0.9903762120701843,
-          0.07097615721471127,
-          -0.6805681849057786,
-          1.2668158039426614,
-          0.8731263939652252,
-          0.8757462254636166,
-          -0.2986010477145211,
-          -1.105532738776308,
-          0.5633043661704582,
-          0.4434228195532617,
-          0.637548505838826,
-          -1.2605719956444146,
-          -1.780858180551379,
-          0.39259903775050087,
-          -0.34781842871575996,
-          -0.6066444896511317,
-          -1.1959473635524227,
-          0.16036106818435572,
-          -1.429508416007752,
-          -0.7123217372234482,
-          -0.9776684699719267,
-          -1.2178847208296264,
-          -0.937806270268493,
-          -2.44072121148205
+          2.5886722457613622,
+          2.40010627386848,
+          1.4058430685869494,
+          0.5971478280330824,
+          -0.6671804351950849,
+          -2.332948833644997,
+          -2.4178158566511048,
+          -2.355514938071585,
+          -2.4462495487504285,
+          -2.3329488336449957,
+          3.263903414545004,
+          3.239363201534635,
+          2.2663168946247136,
+          0.6730050621792372,
+          0.05030013608942528,
+          -1.7119188754153594,
+          2.195942815661816,
+          2.9968665819347744,
+          2.117404839066593,
+          0.7603347528563366,
+          -1.6753318330481612,
+          -1.7485168556601605,
+          -2.3216839594914744,
+          2.3132015037770226,
+          2.049053045322836,
+          0.9637586024855225,
+          0.05700841486850939,
+          -0.7029902435191862,
+          1.2419140451863353,
+          0.846093214533509,
+          0.8597860959087632,
+          -0.29391511986074376,
+          -1.0936441065865066,
+          0.5432955207333552,
+          0.43022107176191215,
+          0.5822070393634893,
+          -1.2430268154770454,
+          -1.7729216122583622,
+          0.38145787255159774,
+          -0.3548736715164614,
+          -0.6085518259680385,
+          -1.1807432330168897,
+          0.1393211159177805,
+          -1.4370410258474193,
+          -0.7340775083856562,
+          -0.9734959448167386,
+          -1.2354838365021472,
+          -0.9321962563782656,
+          -2.389453487445225
         ],
-        "model_key": "049d8db3e7aac108726ac5dddfe8e720ea021ba0a8fd4b9b932cf990b9f145c4",
-        "n": 1877,
+        "model_key": "e8f60b9784ffe3224f57d06004ab853d09e5e0a4eac524422412bbe1b2a77e85",
+        "n": 1879,
         "schema": "enh_score_logit_v1",
         "selection": "home",
         "train_last_date": "2026-10-25",
-        "training_sha256": "df624111b87ab3ddb1c6a84d3fbe96a8ba9c05d94132e9bd80968f54a54ab37b"
+        "training_sha256": "affeb7edeb4903073bb753d148bf8d0141b349e47eb33f767e3702f57479d00a"
       },
       "ml_status": "fitted",
-      "n": 1877,
-      "over15": 0.7991475759190197,
-      "over25": 0.597229621736814,
-      "over35": 0.38199254128929144,
-      "over45": 0.22269579115610016,
-      "parent_hit_rate": 0.663825253063399,
-      "parent_hits": 1246,
+      "n": 1879,
+      "over15": 0.7993613624268228,
+      "over25": 0.5976583288983501,
+      "over35": 0.38265034592868546,
+      "over45": 0.22299095263437999,
+      "parent_hit_rate": 0.6641830761043108,
+      "parent_hits": 1248,
       "selection": "home",
       "window_start": "2026-06-13"
     },
@@ -8034,13 +8096,13 @@
     "w_score": 0.6134
   },
   {
-    "as_of": "2026-10-26T06:18:06+02:00",
+    "as_of": "2026-10-26T09:11:02+02:00",
     "avg_p": 69.84293193717276,
     "away": "Olympique Lyonnais",
     "bookmaker": null,
     "bucket": "WATCHLIST_SUSPECT_PRICE",
-    "build_git_sha": "dc3bff6f7618ec1569f9424cc84a49849379429e",
-    "built_at_utc": "2026-10-26T04:19:31.556428+00:00",
+    "build_git_sha": "504a0caf625e21e0f0143a8556363bb5692c219b",
+    "built_at_utc": "2026-10-26T07:12:28.270828+00:00",
     "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -9013,13 +9075,13 @@
     "w_score": 0.7595
   },
   {
-    "as_of": "2026-10-26T06:18:06+02:00",
+    "as_of": "2026-10-26T09:11:02+02:00",
     "avg_p": 62.9359107666131,
     "away": "Odense BK",
     "bookmaker": null,
     "bucket": "WATCHLIST_SUSPECT_PRICE",
-    "build_git_sha": "dc3bff6f7618ec1569f9424cc84a49849379429e",
-    "built_at_utc": "2026-10-26T04:19:31.556428+00:00",
+    "build_git_sha": "504a0caf625e21e0f0143a8556363bb5692c219b",
+    "built_at_utc": "2026-10-26T07:12:28.270828+00:00",
     "contract_id": "pfc_5904b1fc7050646e6321090c",
     "contract_schema": "post_forebet_v1",
     "ctx": {

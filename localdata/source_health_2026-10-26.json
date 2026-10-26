@@ -44,24 +44,24 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 3,
+      "be_matched": 5,
       "be_raw": 9,
-      "be_usable": 6,
+      "be_usable": 9,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 2,
+      "join_matched_rows": 3,
       "join_miss_counts": {
-        "no_pick_for_fixture": 4
+        "no_pick_for_fixture": 6
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-26' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -238,43 +238,66 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 2,
-        "board_league_count": 1,
+        "board_fixtures": 4,
+        "board_league_count": 2,
         "board_leagues": {
-          "mexico_-_liga_mx": 200
+          "indonesia_-_liga_1": 197,
+          "singapore_-_premier_league": 3
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 0,
+        "board_priced_rows": 37,
         "board_rows": 200,
-        "board_team_count": 3,
+        "board_team_count": 8,
         "board_team_names": {
-          "Santos Laguna": 200,
-          "Tijuana": 185,
-          "Tijuana Caliente": 15
+          "Bhayangkara FC": 71,
+          "Geylang International": 3,
+          "Hougang United": 3,
+          "Madura United": 72,
+          "PSM Makassar": 71,
+          "Persebaya Surabaya": 72,
+          "Persija Jakarta": 54,
+          "Persik Kediri": 54
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_moneyline": 9,
+          "unknown_market:2nd_half_moneyline": 9,
+          "unknown_market:match_result_total_goals": 27,
+          "unknown_market:point_spread": 6,
+          "unknown_market:team_clean_sheet": 11,
+          "unknown_market:team_to_win_to_nil": 6,
+          "unsupported_market:double_chance": 9,
+          "unsupported_market:team_total_exact": 31,
+          "unsupported_market:team_total_goals": 39,
+          "unsupported_market:team_total_points_odd_even": 10
+        },
+        "card_canonicalization_drop_reasons": {
+          "unsupported_market:team_total_exact": 1,
+          "unsupported_market:team_total_points_odd_even": 2
+        },
         "card_fixture_count": 8,
-        "card_fixtures_on_board": 0,
+        "card_fixtures_on_board": 1,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 200
-        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "card_fixtures_unmatched_on_board",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "fixture_key_miss": 37
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 3,
+      "sa_scored": 37,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
