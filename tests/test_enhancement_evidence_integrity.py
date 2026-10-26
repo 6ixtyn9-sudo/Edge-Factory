@@ -24,6 +24,16 @@ def edge(market='1x2', **updates):
     return dict(recipe, contract_id=identity, rule=identity, view=identity, where='1=1')
 
 
+def with_synthetic_ml_inputs(pick):
+    """Explicitly absent optional measurements for scalar-confidence unit tests."""
+    pick = deepcopy(pick)
+    profile = pick['statistical_profile']
+    profile['ml_inputs'] = dict(fixture=cc.enhancement_fixture_identity(pick),
+        contract_id=pick['contract_id'], model_key=profile['ml_model']['model_key'],
+        values={'confidence': pick['avg_p'] / 100})
+    return pick
+
+
 def observations(n=100):
     return [dict(date='2026-09-10', home=f'Alpha Town {i:04d}', away='Bravo United',
                  p1=.8, px=.1, p2=.1, p1_ht=.8, px_ht=.1, p2_ht=.1,
@@ -552,7 +562,7 @@ def test_enh_ml_cannot_borrow_model_or_invent_missing_features(field, value):
     from edgefactory.enh_registry import enhancement_ml_probability as score
     cohort = cc.enhancement_cohort(connection(ml_observations()), edge(),
                                    as_of='2026-10-20', selection='home', fit_ml=True)
-    p = dict(parent(edge()), avg_p=80., statistical_profile=cohort)
+    p = with_synthetic_ml_inputs(dict(parent(edge()), avg_p=80., statistical_profile=cohort))
     assert score(p, 'match_over_25') is not None
     assert score(dict(p, **{field: value}), 'match_over_25') is None
     changed = deepcopy(p)
@@ -607,7 +617,7 @@ def test_enh_ml_changes_complete_live_pair_not_admission_staking_or_main(monkeyp
             event_notes=[dict(market='match_over_25', engine='hybrid_cohort',
                 cohort_rate=.8, cohort_n=100, cohort_contract_id=recipe['contract_id'],
                 cohort_as_of_exclusive='2026-10-20')])
-        rows.append(p)
+        rows.append(with_synthetic_ml_inputs(p))
     before = deepcopy(rows)
     legs = at.enhancement_legs(rows, execution_safe=True)
     assert all(l['verdict'] == 'fire' and l['probability'] == .8 for l in legs)
@@ -651,7 +661,7 @@ def test_enh_ml_multiclass_inference_matches_sklearn_not_binary_shortcut():
     vector = cc.enhancement_feature_vector({'confidence': .8}, payload)
     native.n_features_in_ = len(vector)
     probabilities = native.predict_proba([vector])[0]
-    p = dict(parent(edge()), avg_p=80., statistical_profile=cohort)
+    p = with_synthetic_ml_inputs(dict(parent(edge()), avg_p=80., statistical_profile=cohort))
     for market in ('btts_yes', 'match_under_25', 'home_over_15', 'away_under_15'):
         expected = sum(w for w, label in zip(probabilities, payload['classes'])
                        if check_enhancement_hit(market, 'home', *map(int, label.split(':'))))
@@ -1218,3 +1228,107 @@ def test_enh_v1_archives_keep_their_original_probability_without_new_inputs():
     p = dict(parent(recipe), statistical_profile=profile)
     assert score(p, 'match_over_25') == pytest.approx(1 / (1 + math.exp(-.6)))
     assert score(p, 'match_under_25') == pytest.approx(1 - score(p, 'match_over_25'))
+
+
+@pytest.mark.parametrize('suffix', ['U21', 'W', 'II'])
+def test_redteam_regulation_form_retains_raw_squad_markers(suffix):
+    rows = [dict(r, date=f'2026-09-{i+1:02d}', home='Alpha Town ' + suffix,
+                 away='Bravo United ' + suffix, hs=3, gs=1)
+            for i, r in enumerate(observations(5))]
+    con = connection(rows)
+    snapshot = cc._enhancement_snapshot(con, '2026-06-13', '2026-10-20', {})
+    archive = cc._enhancement_archive(con, '2026-06-13', '2026-10-20', snapshot[3], {})
+    p = dict(parent(edge()), home=rows[0]['home'], away=rows[0]['away'])
+    f = cc.enhancement_model_features(p, archive)
+    assert f['home_form_gf'] == 3. and f['away_form_ga'] == 3.
+    assert f['h2h_gf'] == 3.
+
+
+def test_redteam_form_cache_must_respect_squad_veto_even_for_equal_keys():
+    from edgefactory.form_intel import ResultsArchive
+    from edgefactory.identity import source_team_key
+    assert source_team_key('FC Porto B') == source_team_key('Portoii')
+    rows = [dict(date=f'2026-09-{i+1:02d}', home='FC Porto B', away='Bravo United',
+                 hs=3, gs=0, league='League') for i in range(5)]
+    archive, cache = ResultsArchive(rows), {}
+    p = dict(parent(edge()), home='FC Porto B')
+    assert cc.enhancement_model_features(p, archive, cache)['home_form_gf'] == 3.
+    assert cc.enhancement_model_features(dict(p, home='Portoii'), archive, cache)['home_form_gf'] is None
+
+
+def test_redteam_v2_missing_receipt_must_not_silently_score_all_imputed_context(monkeypatch):
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    recipe, p = edge(), rich_pick(edge(), .9)
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    profile = pt.fetch_match_cohort(connection(rich_observations()), 'home', 80., 1, pick=p)
+    assert score(dict(p, statistical_profile=profile), 'match_over_25') is not None
+    profile.pop('ml_inputs')
+    assert score(dict(p, statistical_profile=profile), 'match_over_25') is None
+
+
+def test_redteam_v2_receipt_must_bind_the_specific_fit_not_just_contract(monkeypatch):
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    recipe, p = edge(), rich_pick(edge(), .9)
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    profile = pt.fetch_match_cohort(connection(rich_observations()), 'home', 80., 1, pick=p)
+    profile['ml_inputs']['model_key'] = 'wrong-fit'
+    assert score(dict(p, statistical_profile=profile), 'match_over_25') is None
+
+
+def test_redteam_training_feature_failure_must_not_erase_measured_cohort(monkeypatch):
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    def broken(*args, **kwargs):
+        raise ValueError('synthetic optional training feature error')
+    monkeypatch.setattr(cc, 'enhancement_model_features', broken)
+    profile = pt.fetch_match_cohort(connection(rich_observations()), 'home', 80., 1, pick=parent(recipe))
+    assert profile is not None and profile['n'] == 200 and profile['over25'] == .8
+    assert profile['ml_status'] == 'fit_unavailable' and 'ml_model' not in profile
+    assert profile['ml_feature_coverage'] is None  # unavailable is not measured zero
+
+
+def test_redteam_bool_vs_number_duplicate_context_is_order_invariant(monkeypatch):
+    row = dict(observations(1)[0], p_o25=1.)
+    models = []
+    for rows in ([row, dict(row, p_o25=True)], [dict(row, p_o25=True), row]):
+        # Preserve Python types at the reader boundary (pandas would coerce or
+        # reject bool/float mixtures before the collector ever sees them).
+        class Cursor:
+            description = [(k,) for k in rows[0]]
+            def fetchall(self):
+                return [tuple(r.values()) for r in rows]
+        class Connection:
+            def execute(self, *args):
+                return Cursor()
+        monkeypatch.setattr(cc, '_table_exists', lambda con, name: name == 'scoutingstats')
+        monkeypatch.setattr(cc, '_table_columns', lambda con, name: set(rows[0]))
+        snapshot = cc.collect_observations(Connection(), start='2026-06-13', as_of='2026-10-20')
+        emitted = list(cc.contract_rows(snapshot[1], snapshot[2], snapshot[3], edge(), enhancement_features=True))
+        assert len(emitted) == 1
+        models.append(emitted[0]['enhancement_source_features'])
+    assert models[0] == models[1]
+    assert models[0]['forecast_ou_2.5_over_mean'] is None
+
+
+def test_redteam_live_optional_forecast_failure_cannot_remove_parent_or_cohort(tmp_path, monkeypatch):
+    recipe = edge(valid={'wilson_lb': .8})
+    live = dict(rich_observations()[0], date='2026-10-20', home='Live Alpha', hs=None, gs=None,
+                kickoff='2026-10-20T18:00:00Z')
+    with duckdb.connect(str(tmp_path / 'warehouse.duckdb')) as con:
+        con.register('seed', pd.DataFrame(rich_observations() + [live]))
+        con.execute('CREATE TABLE scoutingstats AS SELECT * FROM seed')
+    registry = {'operating_contract': cc.SCHEMA, 'edges': [recipe]}
+    monkeypatch.setattr(pt, 'LOCALDATA', tmp_path)
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: registry)
+    original = cc.enhancement_source_features
+    def broken(*args, **kwargs):
+        raise ValueError('synthetic live optional context failure')
+    monkeypatch.setattr(cc, 'enhancement_source_features', broken)
+    picks, _, _, _ = pt.eval_post_forebet('2026-10-20', registry)
+    assert len(picks) == 1 and picks[0]['enhancement_input_status'] == 'unavailable'
+    # Training is healthy; this *fixture's* context failed at emission.
+    monkeypatch.setattr(cc, 'enhancement_source_features', original)
+    with duckdb.connect(str(tmp_path / 'warehouse.duckdb')) as con:
+        profile = pt.fetch_match_cohort(con, 'home', 80., 1, pick=picks[0])
+    assert profile['n'] == 200 and profile['ml_status'] == 'input_unavailable'
+    assert 'ml_model' not in profile

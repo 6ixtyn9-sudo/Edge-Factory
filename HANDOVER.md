@@ -12546,3 +12546,26 @@ and out-of-time economic uplift remain unmeasured, not inferred from test passes
 
 Published as PR #161: https://github.com/6ixtyn9-sudo/Edge-Factory/pull/161
 Open, not merged; no workflow dispatched.
+
+### 26 October 2026 — PR161 adversarial engineering follow-up
+
+User requested red-team engineering and no regression failures. Nine new
+adversarial cases fail against published 739c9ec in an isolated ignored baseline
+with original modules explicitly preloaded, then all pass on repaired code.
+Fixed actual issues: donor raw squad markers lost in compact form keys;
+canonical-only cache/receipt binding bypassing squad veto; v2 accepting absent
+or wrong-fit receipts; optional training/live context exceptions erasing cohort
+or parent candidates; bool/numeric duplicate context order dependence.
+ENH-only snapshots now retain deterministic raw donor names, quarantine
+conflicting squad classes, and use squad-aware cache and receipt identities.
+V2 requires fixture/contract/squad/model-key binding. Missing measured features
+within a valid receipt remain explicit train-mean/missing-flag inputs. Optional
+fit failures retain cohort statistics with null/unavailable feature coverage;
+optional live forecast failures retain parent/Main candidates with unavailable
+ML context. No partial-population fit; v1/ML-off remain supported.
+Updated existing evidence-integrity tests (explicitly bound receipts in scalar
+unit fixtures, not relaxed assertions); no extra script/service/registry.
+Full final suite **4573 passed, 1 skipped in 244.68s**. Original PR Workers relay
+check failed; GitHub output supplies no cause/log, so not claimed fixed or
+conflated with pytest. Detailed dispositions appended to existing inventory.
+PR161 remains open; no merge/dispatch or operational financial writes.

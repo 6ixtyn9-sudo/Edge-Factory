@@ -11,7 +11,7 @@ import math
 from collections import Counter, defaultdict
 from datetime import date
 
-from edgefactory.identity import source_team_key
+from edgefactory.identity import source_team_key, squad_markers
 from edgefactory.market_registry import get_bettable_markets
 from edgefactory.settlement import terminal_event_disposition
 
@@ -139,7 +139,7 @@ def _remine_odds(rows, market, side):
 
 
 def collect_observations(con, *, start, as_of, include_snapshot=False,
-                         regulation_only=False):
+                         regulation_only=False, include_form_names=False):
     """Collect once; ENH can exclude disputed event status/score periods.
 
     Default contract mining/main semantics are unchanged. Missing status on a
@@ -176,6 +176,7 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
 
 
     scores = defaultdict(lambda: defaultdict(set))
+    form_names = defaultdict(set)
     # Only self-scoring donors. In particular do NOT use results_donor or
     # categorical *_settled scores which may have been inherited from Forebet.
     donors = {"zulubet", "statarea", "vitibet", "scoutingstats", "prosoccer",
@@ -203,9 +204,18 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
                 pair = _score_pair(row, prefix)
                 if pair is not None:
                     scores[key][period].add(pair)
+                    if include_form_names and period == 'ft':
+                        form_names[key].add((str(row['home']), str(row['away'])))
     resolved = {key: {period: next(iter(values)) for period, values in periods.items()
                       if len(values) == 1} for key, periods in scores.items()
                 if key not in blocked}
+    if include_form_names:
+        for key, result in resolved.items():
+            names = sorted(form_names[key])
+            classes = {(squad_markers(h), squad_markers(a)) for h, a in names}
+            # Preserve donor spellings: compact keys erase marker word boundaries.
+            # A canonical collision across squad classes is not usable form.
+            result['_form_names'] = names[0] if names and len(classes) == 1 else None
     observations = defaultdict(dict)
     ambiguous = set()
     for source in REMINE_SOURCES:
@@ -234,7 +244,8 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
                         vote["row"] = dict(row)
                         conflicts = set(previous["row"].get("_enh_conflicts", []))
                         conflicts.update(f for f in ENH_FORECAST_FIELDS
-                                         if _number(previous["row"].get(f)) != _number(row.get(f)))
+                                         if _enhancement_forecast_number(previous["row"].get(f))
+                                         != _enhancement_forecast_number(row.get(f)))
                         vote["row"]["_enh_conflicts"] = sorted(conflicts)
                         vote["row"]["_enh_timing_blocked"] = (
                             not _enhancement_forecast_eligible(previous["row"])
@@ -362,8 +373,13 @@ def contract_rows(observations, ambiguous, resolved, edge, *, settled=True, enha
                "pick_odds": _remine_odds(rows, market, side), "source_rows": rows}
         if enhancement_features:
             # Extra observed sources are context, never replacement voters.
-            emitted['enhancement_source_features'] = enhancement_source_features(
-                [v['row'] for v in votes.values()])
+            try:
+                emitted['enhancement_source_features'] = enhancement_source_features(
+                    [v['row'] for v in votes.values()])
+            except (KeyError, TypeError, ValueError, AttributeError, ArithmeticError):
+                # Optional context cannot remove a valid Main/parent candidate.
+                emitted['enhancement_source_features'] = None
+                emitted['enhancement_input_status'] = 'unavailable'
             emitted['enhancement_feature_sources'] = sorted(votes)
         yield emitted
 
@@ -423,6 +439,16 @@ ENH_OPTIONAL_FEATURES = tuple(
     for stat in ('mean', 'spread')) + tuple(
     f"{side}_{field}" for side in ("home_form", "away_form", "h2h")
     for field in ENH_FORM_FIELDS)
+
+
+def _enhancement_forecast_number(value):
+    return None if isinstance(value, bool) else _number(value)
+
+
+def enhancement_fixture_identity(row):
+    """JSON-stable binding, including squad classes lost in compact keys."""
+    return [row['date'], source_team_key(row['home']), source_team_key(row['away']),
+            sorted(squad_markers(row['home'])), sorted(squad_markers(row['away']))]
 
 
 def _enhancement_forecast_eligible(row):
@@ -495,7 +521,7 @@ def _enhancement_snapshot(con, start, as_of, cache):
     key = ('observations', con, start, as_of, 'enh_regulation')
     if cache is not None and key in cache:
         return cache[key]
-    snapshot = collect_observations(con, start=start, as_of=as_of, regulation_only=True)
+    snapshot = collect_observations(con, start=start, as_of=as_of, regulation_only=True, include_form_names=True)
     if cache is not None:
         cache[key] = snapshot
     return snapshot
@@ -507,10 +533,11 @@ def _enhancement_archive(con, start, as_of, resolved, cache):
     if cache is not None and key in cache:
         return cache[key]
     # Reuse the cohort's adjudication, NOT load_archive's unfiltered donors.
-    # Canonical fixture keys preserve squad distinctions; no fuzzy/trunc joins.
-    archive = ResultsArchive([dict(date=k[0], home=k[1], away=k[2],
+    # Keep raw donor names so form_intel's squad veto still recognizes tokens.
+    # Missing/ambiguous spellings are unavailable, not guessed from a compact key.
+    archive = ResultsArchive([dict(date=k[0], home=v['_form_names'][0], away=v['_form_names'][1],
         hs=v['ft'][0], gs=v['ft'][1], league='')
-        for k, v in sorted(resolved.items()) if 'ft' in v])
+        for k, v in sorted(resolved.items()) if 'ft' in v and v.get('_form_names')])
     if cache is not None:
         cache[key] = archive
     return archive
@@ -531,7 +558,9 @@ def enhancement_model_features(row, archive, cache=None):
             features[name] = float(value)
     for prefix, team in (('home_form', row['home']), ('away_form', row['away']), ('h2h', None)):
         key = ('enh_form', id(archive), row['date'], prefix,
-               source_team_key(team) if team else (source_team_key(row['home']), source_team_key(row['away'])))
+               (source_team_key(team), tuple(sorted(squad_markers(team)))) if team else
+               tuple(enhancement_fixture_identity(row)[1:3]) +
+               tuple(tuple(m) for m in enhancement_fixture_identity(row)[3:]))
         form = cache.get(key) if cache is not None else None
         if form is None:
             form = (team_form(archive, team, row['date']) if team else
@@ -552,13 +581,13 @@ def enhancement_model_features(row, archive, cache=None):
     return features
 
 
-def enhancement_ml_inputs(con, edge, pick, cache=None):
+def enhancement_ml_inputs(con, edge, pick, cache=None, *, model_key):
     """Fixture-bound feature receipt, separate from the shared cached fit."""
     start, day = edge['mining_window']['start'], pick['date']
     resolved = _enhancement_snapshot(con, start, day, cache)[3]
     archive = _enhancement_archive(con, start, day, resolved, cache)
-    return dict(fixture=[day, source_team_key(pick['home']), source_team_key(pick['away'])],
-                contract_id=edge['contract_id'],
+    return dict(fixture=enhancement_fixture_identity(pick),
+                contract_id=edge['contract_id'], model_key=model_key,
                 sources=pick.get('enhancement_feature_sources', []),
                 values=enhancement_model_features(pick, archive, cache))
 
@@ -612,10 +641,8 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
     snapshot = _enhancement_snapshot(con, start, as_of, cache)
     _, observations, ambiguous, resolved, _ = snapshot
     pairs, training = [], []
-    archive = _enhancement_archive(con, start, as_of, resolved, cache) if fit_ml else None
-    feature_cache = cache if cache is not None else {}
     parent_hits = 0
-    for row in contract_rows(observations, ambiguous, resolved, edge, enhancement_features=fit_ml):
+    for row in contract_rows(observations, ambiguous, resolved, edge):
         if row['pick'] != selection:
             continue
         pair = resolved.get(_remine_key(row), {}).get('ft')
@@ -624,7 +651,7 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
             probability = _number(row.get('avg_p'))
             if probability is not None and 0 <= probability <= 100:
                 training.append((_remine_key(row), probability / 100, f'{pair[0]}:{pair[1]}',
-                                 enhancement_model_features(row, archive, feature_cache) if fit_ml else {}))
+                                 row))
             parent_hits += row['pick'] == row['outcome']
     n = len(pairs)
     if not n or n < min_n:
@@ -649,10 +676,28 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
         # the unrelated main 1X2-correctness target. One fit per cached contract.
         from edgefactory.enh_registry import MIN_COHORT_N
         result['ml_status'] = 'insufficient_or_constant_training_data'
+        try:
+            archive = _enhancement_archive(con, start, as_of, resolved, cache)
+            feature_cache = cache if cache is not None else {}
+            enriched = []
+            for key, probability, label, row in training:
+                votes = observations[(key, edge['market'])]
+                context = [v['row'] for source, v in votes.items()
+                           if (key, edge['market'], source) not in ambiguous]
+                row = dict(row, enhancement_source_features=enhancement_source_features(context))
+                enriched.append((key, probability, label,
+                                 enhancement_model_features(row, archive, feature_cache)))
+            training = enriched
+        except (ImportError, KeyError, TypeError, ValueError, AttributeError, ArithmeticError):
+            # An optional training feature failure must not erase measured rates
+            # or quietly train on a different, partial population.
+            training = []
+            result['ml_status'] = 'fit_unavailable'
         training.sort(key=lambda r: r[0])
         observed = {c: [r[3][c] for r in training if r[3].get(c) is not None]
                     for c in ('confidence', *ENH_OPTIONAL_FEATURES)}
-        result['ml_feature_coverage'] = {c: len(v) for c, v in observed.items()}
+        result['ml_feature_coverage'] = (None if result['ml_status'] == 'fit_unavailable'
+                                         else {c: len(v) for c, v in observed.items()})
         cols = ['confidence'] + [c for c in ENH_OPTIONAL_FEATURES
             if len(observed[c]) >= MIN_COHORT_N and len(set(observed[c])) > 1]
         if (len(training) >= MIN_COHORT_N and any(len(set(observed[c])) > 1 for c in cols)

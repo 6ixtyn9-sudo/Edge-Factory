@@ -560,7 +560,10 @@ def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=No
                                       fit_ml=os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1')
             if cohort and cohort.get('ml_model', {}).get('schema') == 'enh_score_logit_v2':
                 try:
-                    cohort['ml_inputs'] = enhancement_ml_inputs(con, edge, pick, build_cache)
+                    if pick.get('enhancement_input_status') == 'unavailable':
+                        raise ValueError('optional forecast context unavailable at emission')
+                    cohort['ml_inputs'] = enhancement_ml_inputs(con, edge, pick, build_cache,
+                        model_key=cohort['ml_model']['model_key'])
                     cols = cohort['ml_model']['feature_cols']
                     cohort['ml_imputed_features'] = [c for c in cols
                         if cohort['ml_inputs']['values'].get(c) is None]
@@ -1382,6 +1385,7 @@ def eval_post_forebet(day, registry, fixture_audit=None):
                 "avg_p": row["avg_p"],
                 "enhancement_source_features": row["enhancement_source_features"],
                 "enhancement_feature_sources": row["enhancement_feature_sources"],
+                "enhancement_input_status": row.get("enhancement_input_status", "available"),
                 "probability_available": row["avg_p"] is not None,
                 "w_score": float(edge["valid"]["wilson_lb"]),
                 "odds": None, "odds_source": None, "bookmaker": None,
