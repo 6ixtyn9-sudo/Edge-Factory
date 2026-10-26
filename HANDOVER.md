@@ -12239,3 +12239,61 @@ archives/no enhancement registry calls, and CLI custom 90-day aggregates with a
 fixed 30-day comparison. No real report/settlement rerun: this checkout lacks
 warehouse.duckdb; no evidence manufactured to fill it. No bank, registry,
 selection, staking or historical record edits; no dispatch or automatic merge.
+
+### 26 October 2026 — an unfrozen card is not a placed bet (3 gates + one reconciliation)
+
+The 04:00Z run repaired the settlement wedge but the same log exposed a second
+fault: `settled 2026-10-26 acca @2.11 legs=['win', 'loss']: bank 39.0%`. That
+enhancement card was drafted at 00:00 SAST by the 22:00Z run (the target rolls
+to the new date while the hour is still below `FREEZE_HOUR`), so nothing was
+ever frozen for 2026-10-26; both legs finished overnight and the 06:42 run
+settled the draft as a bet. The operator confirms he did not place it ("i only
+placed main accas, i did not place enh"). Three rules now make that impossible,
+and one receipt undoes it:
+
+1. `settle_open_slips` settles ONLY a frozen slip — freeze book entry, or the
+   legacy `<prefix>_<date>.frozen` marker for that lane. An unfrozen slip stays
+   open, is never graded, and its date is named on every run
+   (`settlement_unfrozen_withheld=<dates|none>` on stderr, plus a `held …`
+   settlement line) so a missed freeze is visible instead of becoming a phantom
+   bet. This also covers the main lane: `auto_tickets_state.json` still holds an
+   unfrozen 2026-10-26 draft with two accas, which can no longer settle before
+   the 09:00 freeze lands.
+2. `freeze_floor(target, now)` is the first instant a card for `target` can be a
+   placed bet, and `live_kickoff_guard` drops any leg that kicks off before it
+   (`KO_SKIP_PRE_FREEZE`). A 00:00 draft could list a 05:00 kickoff that the
+   card only froze at 09:00 — after the match. Once the freeze hour has passed
+   the floor is `None` and the ordinary "already started" rule is the
+   instrument. The floor is `None` for historical/replayed dates, so backfill
+   and audit replays are unchanged.
+3. The NO BET line counts FIXTURES, not quotes: "16 eligible legs" was sixteen
+   books pricing one match (Santa Clara vs Benfica, `match_over_25`), which the
+   acca recipe cannot use at all. It now reads `1 eligible fixture (16 priced
+   quotes)`, stating both the count that decides the verdict and the quote
+   population that explains it.
+
+`_apply_settled_enhancement_reconciliations` is the deliberate counterpart to
+`_apply_unplaced_enhancement_resets`: that receipt path withdraws an unplaced
+card BEFORE settlement and refuses once history exists ("reconciliation
+required"). When the settlement has already landed, the repair is a committed
+receipt naming the exact history row it removes
+(`localdata/autobets_enh_tickets_<date>_settled_reconciliation.json`, now
+gitignore-exempt). It fails closed on an unknown row, a row hash mismatch, a
+staked/returned mismatch, a reversal that does not equal the documented bank, or
+a second receipt for the same date; the reversal is the row's own
+`returned_pct - staked_pct` and nothing is re-derived.
+
+2026-10-26 applied: bank 39.0372% → 43.7309%, record 10W/19L → 10W/18L, bet-days
+13 → 12, last bet-day 2026-10-25; the surviving 10-25 close stays at its stored
+37.5495% (closes are day-level evidence, never re-derived). The 10-26 artifact
+was regenerated on the corrected bank; it still says NO BET, now with the honest
+fixture count.
+
+Validation: full suite 4422 passed, 1 skipped (Python 3.11, `duckdb<2`), 20 of
+them in the new `tests/test_unfrozen_settlement_gate.py` (unfrozen slip never
+settles, frozen slip does, legacy marker counts, zero-included run log, floor
+boundaries, pre-freeze vs started, fixture-vs-quote counts, and the receipt's
+reversal/idempotence/refusals). Existing settlement fixtures were frozen at
+their own dates rather than given an escape hatch, so every settlement test
+still exercises the production rule. `settle_open_slips` keeps the fail-closed
+default; no lane, stake, selection or pricing rule changed.

@@ -7,6 +7,7 @@ research controls, committed-stake accounting, settlement moves the bank in
 cycle, moves no amounts, resets the cycle baseline).
 """
 import sys
+from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -101,6 +102,7 @@ def test_settle_stale_0910_replay(monkeypatch):
     # Donor gap: settled has only the PSV fixture (away => the leg's loss).
     settled = {("2026-09-10", norm_team("PSV Eindhoven"),
                 norm_team("Shakhtar Donetsk")): "away"}
+    _frozen(st)
     lines = at.settle_open_slips(st, settled, archives=archives,
                                  entries_by_date={})
     assert st["open_slips"] == []
@@ -127,11 +129,13 @@ def test_settle_missing_row_voids_on_slip_timer(monkeypatch):
 
     st = _stale_0910_state()
     monkeypatch.setattr(at, "datetime", EarlyFake)
+    _frozen(st)
     at.settle_open_slips(st, {}, archives=[], entries_by_date={})
     assert len(st["open_slips"]) == 1  # 3 days old: still open
 
     st2 = _stale_0910_state()
     monkeypatch.setattr(at, "datetime", _FakeDateTime)
+    _frozen(st2)
     lines2 = at.settle_open_slips(st2, {}, archives=[], entries_by_date={})
     hist = st2["history"][-1]["accas"][0]
     assert hist["won"] is True and hist["odds"] == 1.0
@@ -158,6 +162,7 @@ def test_settle_recent_slip_untouched(monkeypatch):
                      kickoff="10-09, 17:00"),
         _archive_row("2026-09-10", "PSV Eindhoven", "Shakhtar Donetsk", "home"),
     ]
+    _frozen(st)
     at.settle_open_slips(st, {}, archives=archives, entries_by_date={})
     assert len(st["open_slips"]) == 1
     assert st["open_slips"][0]["accas"][0]["won"] is None
@@ -358,6 +363,18 @@ def test_plan_day_too_few_legs_or_busted_bank():
 
 # ---------------- settlement + take-profit notification ----------------
 
+# Hand-built slips below stand for cards that WERE frozen and therefore
+# placed; only a frozen card is settled (see settle_open_slips' gate).
+_PLACED_AT = datetime(2026, 8, 20, 9, 0, tzinfo=at.TZ)
+
+
+def _frozen(st):
+    """Freeze every slip in ``st`` before it is handed to settlement."""
+    for slip in st.get("open_slips") or []:
+        at.record_freeze(st, str(slip["date"]), _PLACED_AT)
+    return st
+
+
 def _one_acca_slip(date, legs_spec, stake_pct, odds):
     return {"date": date, "staked_pct": stake_pct,
             "accas": [{"odds": odds, "stake_pct": stake_pct,
@@ -381,6 +398,7 @@ def test_settle_losing_day_moves_bank_no_notification():
     # parsed as a reserve-team marker by settlement identity.
     spec = [("alpha", 1.4, "win"), ("delta", 1.43, "loss")]
     st["open_slips"].append(_one_acca_slip("2026-08-20", spec, 50.0, 2.0))
+    _frozen(st)
     at.settle_open_slips(st, _settled_for("2026-08-20", spec),
                          archives=_archives_for("2026-08-20", spec))
     assert st["bank"] == pytest.approx(50.0)
@@ -392,6 +410,7 @@ def test_settle_winning_day_below_target_no_notification():
     st = at.fresh_state()
     spec = [("w1", 1.5, "win"), ("w2", 1.67, "win")]
     st["open_slips"].append(_one_acca_slip("2026-08-21", spec, 50.0, 2.5))
+    _frozen(st)
     at.settle_open_slips(st, _settled_for("2026-08-21", spec),
                          archives=_archives_for("2026-08-21", spec))
     # 100 - 50 + 125 = 175% — below the 200% target: bank moves, NO notification
@@ -430,6 +449,7 @@ def test_settle_keeps_unresolved_slips_open_and_stakes_committed(monkeypatch):
     st = at.fresh_state()
     spec = [("p", 1.4, None), ("q", 1.43, None)]
     st["open_slips"].append(_one_acca_slip("2026-08-22", spec, 50.0, 2.0))
+    _frozen(st)
     done = at.settle_open_slips(st, {}, archives=_archives_for("2026-08-22", spec))
     assert done == []
     assert len(st["open_slips"]) == 1
@@ -593,6 +613,7 @@ def test_settle_per_acca_does_not_freeze_bank_on_one_stuck_leg(monkeypatch):
         for h, a in [("Viking", "Aalesund"), ("Celtic", "Falkirk"),
                      ("Pafos", "Tirana"), ("Minsk", "Baranovichi")]
     ]
+    _frozen(st)
     lines = at.settle_open_slips(st, settled, archives=archives)
 
     # acca 1 wins @1.69 -> bank 100 - 25 + 25*1.69 = 117.25
@@ -651,6 +672,7 @@ def test_settle_holds_acca_on_alias_conflict():
         {"date": "2026-08-27", "home": "MC Alger", "away": "MC Oran", "pick": "home",
          "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.44, "avg_p": 62.0},
     ]
+    _frozen(st)
     lines = at.settle_open_slips(st, settled, archives=archives, entries_by_date=entries)
     assert st["bank"] == pytest.approx(100.0)          # no settlement happened
     assert len(st["open_slips"]) == 1
@@ -929,6 +951,7 @@ def test_settle_loss_leg_decides_acca_without_waiting_for_void(monkeypatch):
          "pick": "away", "bucket": "SKIPPED_VETO", "quarantine": "none",
          "odds": 1.48, "avg_p": 68.0},
     ]
+    _frozen(st)
     lines = at.settle_open_slips(st, settled, archives=archives)
 
     assert st["open_slips"] == []
@@ -973,6 +996,7 @@ def test_settle_loss_leg_decides_even_with_conflicted_sibling(monkeypatch):
         {"date": "2026-08-27", "home": "MC Alger", "away": "MC Oran", "pick": "home",
          "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.44, "avg_p": 62.0},
     ]
+    _frozen(st)
     lines = at.settle_open_slips(st, settled, archives=archives,
                                  entries_by_date=entries)
 
