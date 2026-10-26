@@ -2,16 +2,6 @@
   "attempted": 12,
   "attempted_fixtures": [
     {
-      "avg_p": 76.0,
-      "away": "Odense",
-      "date": "2026-10-26",
-      "home": "FC Copenhagen",
-      "league": "Denmark Superliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
-    {
       "avg_p": 75.0,
       "away": "Zabbar St. Patrick",
       "date": "2026-10-26",
@@ -30,6 +20,16 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 0.6134
+    },
+    {
+      "avg_p": 74.0,
+      "away": "Odense",
+      "date": "2026-10-26",
+      "home": "FC Copenhagen",
+      "league": "Denmark: Superliga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5799
     },
     {
       "avg_p": 73.24561403508771,
@@ -122,20 +122,18 @@
       "w_score": 0.5799
     }
   ],
-  "be_429": 1,
-  "be_cached": 4,
+  "be_429": 0,
+  "be_cached": 12,
   "be_cooling_down": false,
-  "be_rows_rejected": 3,
-  "be_rows_rejected_reasons": {
-    "row teams do not both match the pick": 3
-  },
-  "candidate_fixtures": 20,
-  "captured_at": "2026-10-26T09:23:21.663309+00:00",
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "candidate_fixtures": 19,
+  "captured_at": "2026-10-26T11:13:05.097076+00:00",
   "date": "2026-10-26",
   "errors": [],
   "fixtures_with_rows": 7,
   "market_budget_stop": false,
-  "market_requests": 35,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 135,
     "challenge_pages": 0,
@@ -151,16 +149,6 @@
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
-      "avg_p": 76.0,
-      "away": "Odense",
-      "date": "2026-10-26",
-      "home": "FC Copenhagen",
-      "league": "Denmark Superliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
-    {
       "avg_p": 75.0,
       "away": "Zabbar St. Patrick",
       "date": "2026-10-26",
@@ -169,6 +157,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6134
+    },
+    {
+      "avg_p": 74.0,
+      "away": "Odense",
+      "date": "2026-10-26",
+      "home": "FC Copenhagen",
+      "league": "Denmark: Superliga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5799
     },
     {
       "avg_p": 73.24561403508771,
@@ -221,7 +219,7 @@
       "w_score": 0.6134
     }
   ],
-  "requests": 54,
+  "requests": 0,
   "rows": 21,
   "schema": 1,
   "status": "ok"
