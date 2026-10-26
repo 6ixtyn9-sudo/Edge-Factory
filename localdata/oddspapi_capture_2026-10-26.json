@@ -1,0 +1,211 @@
+{
+  "added": 5093,
+  "attempted": 6,
+  "attempted_fixtures": [
+    {
+      "away": "Jiangxi Lushan",
+      "fixture_id": "id1001563674454996",
+      "home": "Shandong Taishan B"
+    },
+    {
+      "away": "Ispe FC",
+      "fixture_id": "id1005369675364878",
+      "home": "Yangon United"
+    },
+    {
+      "away": "Zwekapin United",
+      "fixture_id": "id1005369675364880",
+      "home": "Ayeyawady FC"
+    },
+    {
+      "away": "Kryvbas-D Krivyi Rig",
+      "fixture_id": "id1000089273301428",
+      "home": "Bukovyna Chernivtsi U21"
+    },
+    {
+      "away": "Fardu Ferghana",
+      "fixture_id": "id1002347772217632",
+      "home": "Lochin"
+    },
+    {
+      "away": "KAC 1909",
+      "fixture_id": "id1004378172562728",
+      "home": "SC St. Veit"
+    }
+  ],
+  "budget": {
+    "day": "2026-10-26",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 417,
+    "remaining_today": 18,
+    "spent_today": 45
+  },
+  "captured_at": "2026-10-26T04:15:46+00:00",
+  "date": "2026-10-26",
+  "errors": [
+    "fetch id1004378172562728: HTTP 429 (quota); capture stopped"
+  ],
+  "excluded_srl_fixtures": 5,
+  "fixtures": 149,
+  "future_slate_fixtures": 2,
+  "http_status": 429,
+  "keys": 3,
+  "markets": {
+    "1x2": 947,
+    "btts": 278,
+    "ou_0.5": 124,
+    "ou_0.75": 40,
+    "ou_1": 46,
+    "ou_1.25": 42,
+    "ou_1.5": 235,
+    "ou_1.75": 68,
+    "ou_2": 82,
+    "ou_2.25": 106,
+    "ou_2.5": 473,
+    "ou_2.75": 98,
+    "ou_3": 121,
+    "ou_3.25": 83,
+    "ou_3.5": 360,
+    "ou_3.75": 96,
+    "ou_4": 110,
+    "ou_4.25": 80,
+    "ou_4.5": 289,
+    "ou_4.75": 60,
+    "ou_5": 80,
+    "ou_5.25": 50,
+    "ou_5.5": 152,
+    "ou_5.75": 44,
+    "ou_6": 38,
+    "ou_6.25": 22,
+    "ou_6.5": 17,
+    "ou_6.75": 13,
+    "ou_7": 12,
+    "ou_7.25": 12,
+    "ou_7.5": 13,
+    "ou_7.75": 8,
+    "ou_8": 8,
+    "ou_8.25": 8,
+    "ou_8.5": 9,
+    "tt_away_0.5": 100,
+    "tt_away_0.75": 24,
+    "tt_away_1": 20,
+    "tt_away_1.25": 18,
+    "tt_away_1.5": 116,
+    "tt_away_2": 34,
+    "tt_away_2.5": 65,
+    "tt_away_3.5": 21,
+    "tt_away_4.5": 6,
+    "tt_home_0.5": 72,
+    "tt_home_0.75": 2,
+    "tt_home_1": 36,
+    "tt_home_1.25": 18,
+    "tt_home_1.5": 118,
+    "tt_home_1.75": 18,
+    "tt_home_2": 20,
+    "tt_home_2.25": 2,
+    "tt_home_2.5": 74,
+    "tt_home_3.5": 30,
+    "tt_home_4": 16,
+    "tt_home_4.5": 43,
+    "tt_home_5": 16
+  },
+  "markets_source": "cache",
+  "matched": 5,
+  "parse_skips": {
+    "market_id_unknown": 900,
+    "market_inactive": 77,
+    "market_unsupported_clean_sheet": 34,
+    "market_unsupported_corners": 193,
+    "market_unsupported_correct_score": 359,
+    "market_unsupported_double_chance": 312,
+    "market_unsupported_draw_no_bet": 221,
+    "market_unsupported_handicap": 1522,
+    "market_unsupported_odd_even": 340,
+    "market_unsupported_period": 3598,
+    "market_unsupported_win_to_nil": 68,
+    "outcome_inactive": 1428
+  },
+  "pending_fixtures": 6,
+  "quoted_fixtures": [
+    {
+      "away": "Jiangxi Lushan",
+      "fixture_id": "id1001563674454996",
+      "home": "Shandong Taishan B"
+    },
+    {
+      "away": "Ispe FC",
+      "fixture_id": "id1005369675364878",
+      "home": "Yangon United"
+    },
+    {
+      "away": "Zwekapin United",
+      "fixture_id": "id1005369675364880",
+      "home": "Ayeyawady FC"
+    },
+    {
+      "away": "Kryvbas-D Krivyi Rig",
+      "fixture_id": "id1000089273301428",
+      "home": "Bukovyna Chernivtsi U21"
+    },
+    {
+      "away": "Fardu Ferghana",
+      "fixture_id": "id1002347772217632",
+      "home": "Lochin"
+    }
+  ],
+  "rate_limit": {
+    "http_status": 429,
+    "rate_limit_limit": null,
+    "rate_limit_remaining": null,
+    "rate_limit_reset": null,
+    "retry_after_s": null
+  },
+  "reserved_requests": 2,
+  "rows": 5093,
+  "schema": 1,
+  "slate_candidate_fixtures": 8,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 0,
+  "slate_provider_overlap_fixtures": 2,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "\u0130stanbul Ba\u015fak\u015fehir",
+      "home": "Be\u015fikta\u015f",
+      "league": "Super Lig",
+      "normalized_pair": "besiktas|istanbul basaksehir"
+    },
+    {
+      "away": "Atl\u00e9tico Mineiro",
+      "home": "Flamengo",
+      "league": "Serie A",
+      "normalized_pair": "atletico mineiro|flamengo"
+    },
+    {
+      "away": "Olympique Lyonnais",
+      "home": "Paris Saint Germain",
+      "league": "Ligue 1",
+      "normalized_pair": "olympique lyonnais|paris saint germain"
+    },
+    {
+      "away": "Benfica",
+      "home": "Santa Clara",
+      "league": "Liga Portugal",
+      "normalized_pair": "benfica|santa clara"
+    },
+    {
+      "away": "Odense BK",
+      "home": "FC K\u00f8benhavn",
+      "league": "Superliga",
+      "normalized_pair": "kobenhavn|odense"
+    },
+    {
+      "away": "Jadran LP",
+      "home": "Mladost \u017ddralovi",
+      "league": "Croatia First NL",
+      "normalized_pair": "jadran lp|mladost zdralovi"
+    }
+  ],
+  "source": "oddspapi_odds",
+  "status": "quota"
+}

@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-25T21:28:31",
+  "generated_at": "2026-10-26T06:32:51",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 286.9143220000001,
-  "multiple": 2.8691432200000007,
+  "bank_pct": 215.18572200000006,
+  "multiple": 2.1518572200000006,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 56,
+  "bet_days": 57,
   "accas": {
     "wins": 69,
-    "losses": 46
+    "losses": 48
   },
   "open_slips": [
     {
-      "date": "2026-10-25",
-      "staked_pct": 71.7286
+      "date": "2026-10-26",
+      "staked_pct": 53.7964
     }
   ],
   "events": [
@@ -1251,6 +1251,55 @@
       ],
       "bank_pct": 286.9143,
       "close_pct": 286.9142
+    },
+    {
+      "date": "2026-10-25",
+      "staked_pct": 71.7286,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.18,
+          "won": false,
+          "stake_pct": 35.8643,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Barcelona vs Real Madrid",
+              "pick": "HOME",
+              "odds": 1.66,
+              "result": "loss"
+            },
+            {
+              "match": "Union Saint-Gilloise vs Cercle Brugge",
+              "pick": "HOME",
+              "odds": 1.3115,
+              "result": "win"
+            }
+          ]
+        },
+        {
+          "odds": 1.78,
+          "won": false,
+          "stake_pct": 35.8643,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Str\u00f8mmen vs Str\u00f8msgodset",
+              "pick": "AWAY",
+              "odds": 1.34,
+              "result": "loss"
+            },
+            {
+              "match": "OFK Beograd vs Crvena Zvezda",
+              "pick": "AWAY",
+              "odds": 1.33,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 215.1857,
+      "close_pct": 215.1856
     }
   ]
 }

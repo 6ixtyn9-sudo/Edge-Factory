@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 39.45649999999999,
+  "bank": 39.0372,
   "cycle_base": 100.0,
   "history": [
     {
@@ -615,326 +615,116 @@
       ],
       "bank_pct": 39.4565,
       "close_pct": 39.4565
-    }
-  ],
-  "events": [],
-  "open_slips": [
+    },
     {
       "date": "2026-10-25",
+      "staked_pct": 9.864,
+      "returned_pct": 14.1384,
       "accas": [
         {
+          "odds": 2.42,
+          "won": true,
+          "stake_pct": 3.288,
+          "returned_pct": 7.957,
           "legs": [
             {
               "match": "Konyaspor vs Gen\u00e7lerbirli\u011fi",
               "pick": "away",
-              "prob": 0.8955,
               "odds": 1.818,
-              "result": null,
-              "market": "away_under_25",
-              "price_book": "estrelabet",
-              "price_source": "oddspapi",
-              "cohort_evidence": {
-                "rate": 0.8955,
-                "n": 1167,
-                "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
-                "as_of_exclusive": "2026-10-25",
-                "market": "away_under_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 1045,
-                "cohort_lower_bound": 0.876587670649681,
-                "price_context": {
-                  "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
-                  "selection": "under",
-                  "league": "Super Lig",
-                  "book": "estrelabet",
-                  "source": "oddspapi",
-                  "price": 1.818,
-                  "captured_at": "2026-10-25T07:28:33.085081+00:00",
-                  "decision_at": "2026-10-25T09:28:57+02:00",
-                  "kickoff": "2026-10-25T13:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.8953400307623004,
-              "ml_model_key": "eac31aea05b82d25eff990ebd3636dcabd79d052f63d1b30a196e509b525e171",
-              "label": "Away Team Under 2.5 Goals",
-              "floor": null,
-              "floor_basis": "none",
-              "league": "Super Lig",
-              "price_at": "2026-10-25T07:28:33.085081+00:00",
-              "price_kickoff": "2026-10-25T13:00:00.000Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-25",
-                "Konyaspor",
-                "Gen\u00e7lerbirli\u011fi"
-              ]
+              "result": "win",
+              "label": "Away Team Under 2.5 Goals"
             },
             {
               "match": "Batman Petrolspor vs Esenler Erokspor",
               "pick": "home",
-              "prob": 0.7069,
               "odds": 1.333,
-              "result": null,
-              "market": "home_over_05",
-              "price_book": "estrelabet",
-              "price_source": "oddspapi",
-              "cohort_evidence": {
-                "rate": 0.7069,
-                "n": 1167,
-                "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
-                "as_of_exclusive": "2026-10-25",
-                "market": "home_over_05",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 825,
-                "cohort_lower_bound": 0.6801814425495667,
-                "price_context": {
-                  "contract_id": "pfc_bdce95a736d6cc8667f7ac31",
-                  "selection": "under",
-                  "league": "1. Lig",
-                  "book": "estrelabet",
-                  "source": "oddspapi",
-                  "price": 1.333,
-                  "captured_at": "2026-10-25T04:47:46.902180+00:00",
-                  "decision_at": "2026-10-25T09:28:57+02:00",
-                  "kickoff": "2026-10-25T10:30:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.7104859513123245,
-              "ml_model_key": "eac31aea05b82d25eff990ebd3636dcabd79d052f63d1b30a196e509b525e171",
-              "label": "Home Team Over 0.5 Goals",
-              "floor": null,
-              "floor_basis": "inherited",
-              "league": "1. Lig",
-              "price_at": "2026-10-25T04:47:46.902180+00:00",
-              "price_kickoff": "2026-10-25T10:30:00.000Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-25",
-                "Batman Petrolspor",
-                "Esenler Erokspor"
-              ]
+              "result": "win",
+              "label": "Home Team Over 0.5 Goals"
             }
-          ],
-          "odds": 2.42,
-          "stake_pct": 3.288,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         },
         {
+          "odds": 2.19,
+          "won": false,
+          "stake_pct": 3.288,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "Molde vs Fredrikstad",
               "pick": "over",
-              "prob": 0.6681,
               "odds": 1.44,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Betsson",
-              "price_source": "theoddsapi",
-              "cohort_evidence": {
-                "rate": 0.6681,
-                "n": 461,
-                "contract_id": "pfc_5904b1fc7050646e6321090c",
-                "as_of_exclusive": "2026-10-25",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 308,
-                "cohort_lower_bound": 0.6238938719635004,
-                "price_context": {
-                  "contract_id": "pfc_5904b1fc7050646e6321090c",
-                  "selection": "home",
-                  "league": "Eliteserien",
-                  "book": "Betsson",
-                  "source": "theoddsapi",
-                  "price": 1.44,
-                  "captured_at": "2026-10-24T22:25:16.117829+00:00",
-                  "decision_at": "2026-10-25T09:28:57+02:00",
-                  "kickoff": "2026-10-25T18:15:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.6617202008068396,
-              "ml_model_key": "0ea6e655918a453cb2f4c4cf15af1611f7ea9a0d9bf0793197bfd47879413979",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7331637226204615,
-              "floor_basis": "inherited",
-              "league": "Eliteserien",
-              "price_at": "2026-10-24T22:25:16.117829+00:00",
-              "price_kickoff": "2026-10-25T18:15:00Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-25",
-                "Molde",
-                "Fredrikstad"
-              ]
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
             },
             {
               "match": "\u015al\u0105sk Wroc\u0142aw vs Wieczysta Krak\u00f3w",
               "pick": "over",
-              "prob": 0.6483,
               "odds": 1.52,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Betsson",
-              "price_source": "theoddsapi",
-              "cohort_evidence": {
-                "rate": 0.6483,
-                "n": 634,
-                "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                "as_of_exclusive": "2026-10-25",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 411,
-                "cohort_lower_bound": 0.6103038149060902,
-                "price_context": {
-                  "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                  "selection": "over",
-                  "league": "Ekstraklasa",
-                  "book": "Betsson",
-                  "source": "theoddsapi",
-                  "price": 1.52,
-                  "captured_at": "2026-10-24T22:25:16.542036+00:00",
-                  "decision_at": "2026-10-25T00:35:05+02:00",
-                  "kickoff": "2026-10-25T11:15:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.6514487914898599,
-              "ml_model_key": "4960ed57e77d03589214b4ee393ead8f03ce429b6185d09c15dee30bc1ddb331",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7331637226204615,
-              "floor_basis": "inherited",
-              "league": "Ekstraklasa",
-              "price_at": "2026-10-24T22:25:16.542036+00:00",
-              "price_kickoff": "2026-10-25T11:15:00Z",
-              "price_provenance": null,
-              "shadow": true,
-              "fixture_key": [
-                "2026-10-25",
-                "\u015al\u0105sk Wroc\u0142aw",
-                "Wieczysta Krak\u00f3w"
-              ]
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
             }
-          ],
-          "odds": 2.19,
-          "stake_pct": 3.288,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         },
         {
+          "odds": 1.88,
+          "won": true,
+          "stake_pct": 3.288,
+          "returned_pct": 6.1814,
           "legs": [
             {
               "match": "Sparta Rotterdam vs Ajax",
               "pick": "over",
-              "prob": 0.6667,
               "odds": 1.33,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Nordic Bet",
-              "price_source": "theoddsapi",
-              "cohort_evidence": {
-                "rate": 0.6667,
-                "n": 300,
-                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
-                "as_of_exclusive": "2026-10-25",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 200,
-                "cohort_lower_bound": 0.6115124568840806,
-                "price_context": {
-                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
-                  "selection": "away",
-                  "league": "Eredivisie",
-                  "book": "Nordic Bet",
-                  "source": "theoddsapi",
-                  "price": 1.33,
-                  "captured_at": "2026-10-24T22:25:16.934025+00:00",
-                  "decision_at": "2026-10-25T09:28:57+02:00",
-                  "kickoff": "2026-10-25T15:45:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.660865281255536,
-              "ml_model_key": "aa401dd89d6fb55b1d44f2dd8b0005ea9cae0cd07439446a6b9f07ad7791b559",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7331637226204615,
-              "floor_basis": "inherited",
-              "league": "Eredivisie",
-              "price_at": "2026-10-24T22:25:16.934025+00:00",
-              "price_kickoff": "2026-10-25T15:45:00Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-25",
-                "Sparta Rotterdam",
-                "Ajax"
-              ]
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
             },
             {
               "match": "Lillestr\u00f8m SK vs SK Brann",
               "pick": "over",
-              "prob": 0.6483,
               "odds": 1.41,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "Nordic Bet",
-              "price_source": "theoddsapi",
-              "cohort_evidence": {
-                "rate": 0.6483,
-                "n": 634,
-                "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                "as_of_exclusive": "2026-10-25",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 411,
-                "cohort_lower_bound": 0.6103038149060902,
-                "price_context": {
-                  "contract_id": "pfc_27e0f725859bc708f95c58a3",
-                  "selection": "over",
-                  "league": "Eliteserien",
-                  "book": "Nordic Bet",
-                  "source": "theoddsapi",
-                  "price": 1.41,
-                  "captured_at": "2026-10-24T22:25:16.005977+00:00",
-                  "decision_at": "2026-10-25T00:35:05+02:00",
-                  "kickoff": "2026-10-25T16:00:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.6526145826409929,
-              "ml_model_key": "4960ed57e77d03589214b4ee393ead8f03ce429b6185d09c15dee30bc1ddb331",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.7331637226204615,
-              "floor_basis": "inherited",
-              "league": "Eliteserien",
-              "price_at": "2026-10-24T22:25:16.005977+00:00",
-              "price_kickoff": "2026-10-25T16:00:00Z",
-              "price_provenance": null,
-              "shadow": false,
-              "fixture_key": [
-                "2026-10-25",
-                "Lillestr\u00f8m SK",
-                "SK Brann"
-              ]
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
             }
-          ],
-          "odds": 1.88,
-          "stake_pct": 3.288,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         }
       ],
-      "staked_pct": 9.864
+      "bank_pct": 43.7309,
+      "close_pct": 37.5495
+    },
+    {
+      "date": "2026-10-26",
+      "staked_pct": 4.6937,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.11,
+          "won": false,
+          "stake_pct": 4.6937,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Barracas Central vs Estudiantes de Rio Cuarto",
+              "pick": "home",
+              "odds": 1.3,
+              "result": "win",
+              "label": "Home Team Over 0.5 Goals"
+            },
+            {
+              "match": "Deportes Tolima vs Deportivo Pasto",
+              "pick": "home",
+              "odds": 1.62,
+              "result": "loss",
+              "label": "Home Team Over 1.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 39.0372,
+      "close_pct": 32.8558
     }
   ],
+  "events": [],
+  "open_slips": [],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,

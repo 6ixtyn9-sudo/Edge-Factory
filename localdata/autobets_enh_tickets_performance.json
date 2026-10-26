@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-25T21:34:54",
+  "generated_at": "2026-10-26T06:41:14",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 39.45649999999999,
-  "multiple": 0.3945649999999999,
+  "bank_pct": 39.0372,
+  "multiple": 0.390372,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 11,
+  "bet_days": 13,
   "accas": {
-    "wins": 8,
-    "losses": 17
+    "wins": 10,
+    "losses": 19
   },
-  "open_slips": [
-    {
-      "date": "2026-10-25",
-      "staked_pct": 9.864
-    }
-  ],
+  "open_slips": [],
   "events": [],
   "history": [
     {
@@ -632,6 +627,112 @@
       ],
       "bank_pct": 39.4565,
       "close_pct": 39.4565
+    },
+    {
+      "date": "2026-10-25",
+      "staked_pct": 9.864,
+      "returned_pct": 14.1384,
+      "accas": [
+        {
+          "odds": 2.42,
+          "won": true,
+          "stake_pct": 3.288,
+          "returned_pct": 7.957,
+          "legs": [
+            {
+              "match": "Konyaspor vs Gen\u00e7lerbirli\u011fi",
+              "pick": "away",
+              "odds": 1.818,
+              "result": "win",
+              "label": "Away Team Under 2.5 Goals"
+            },
+            {
+              "match": "Batman Petrolspor vs Esenler Erokspor",
+              "pick": "home",
+              "odds": 1.333,
+              "result": "win",
+              "label": "Home Team Over 0.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 2.19,
+          "won": false,
+          "stake_pct": 3.288,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Molde vs Fredrikstad",
+              "pick": "over",
+              "odds": 1.44,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "\u015al\u0105sk Wroc\u0142aw vs Wieczysta Krak\u00f3w",
+              "pick": "over",
+              "odds": 1.52,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        },
+        {
+          "odds": 1.88,
+          "won": true,
+          "stake_pct": 3.288,
+          "returned_pct": 6.1814,
+          "legs": [
+            {
+              "match": "Sparta Rotterdam vs Ajax",
+              "pick": "over",
+              "odds": 1.33,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            },
+            {
+              "match": "Lillestr\u00f8m SK vs SK Brann",
+              "pick": "over",
+              "odds": 1.41,
+              "result": "win",
+              "label": "Match Over 2.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 43.7309,
+      "close_pct": 37.5495
+    },
+    {
+      "date": "2026-10-26",
+      "staked_pct": 4.6937,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.11,
+          "won": false,
+          "stake_pct": 4.6937,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Barracas Central vs Estudiantes de Rio Cuarto",
+              "pick": "home",
+              "odds": 1.3,
+              "result": "win",
+              "label": "Home Team Over 0.5 Goals"
+            },
+            {
+              "match": "Deportes Tolima vs Deportivo Pasto",
+              "pick": "home",
+              "odds": 1.62,
+              "result": "loss",
+              "label": "Home Team Over 1.5 Goals"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 39.0372,
+      "close_pct": 32.8558
     }
   ]
 }
