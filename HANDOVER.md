@@ -12539,7 +12539,10 @@ cohort evidence; cached fits do not contain another fixture's inputs. Main,
 admission/floors, 25% free-bank staking, frozen tickets and settlement untouched.
 No production warehouse, economic uplift claim, workflow dispatch or auto-merge.
 Validation on final implementation: **4564 passed, 1 skipped in 243.80s**.
-Seventeen added parameterized cases plus the existing multiclass sklearn oracle
+Sixteen added test cases (including parameterization), plus the existing multiclass sklearn oracle
 updated for the new shared feature vector. Full repository diff check clean;
 no workflow or localdata changes. Actual production warehouse/capture coverage
 and out-of-time economic uplift remain unmeasured, not inferred from test passes.
+
+Published as PR #161: https://github.com/6ixtyn9-sudo/Edge-Factory/pull/161
+Open, not merged; no workflow dispatched.
