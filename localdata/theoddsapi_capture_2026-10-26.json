@@ -1,11 +1,21 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Zabbar St. Patrick",
+      "date": "2026-10-26",
+      "home": "Floriana",
+      "kickoff": "2026-10-26T18:00:00+01:00",
+      "league": "Malta: Premier League"
+    }
+  ],
   "candidate_fixtures": 20,
-  "captured_at": "2026-10-26T13:20:29+00:00",
+  "captured_at": "2026-10-26T16:19:25+00:00",
   "date": "2026-10-26",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -24,14 +34,13 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 1,
+    "kickoff_already_passed": 2,
     "kickoff_mismatch": 1,
     "priced": 4,
     "priced_close_window_not_open": 1,
-    "retry_cooldown": 14
+    "retry_cooldown": 12
   },
   "skipped": [
-    "Floriana|Zabbar St. Patrick (retry cooldown (6h after failed attempt))",
     "Sepsi OSK Sfantu Gheorghe|Universitatea Craiova (retry cooldown (6h after failed attempt))",
     "FC Copenhagen|Odense (priced)",
     "Al Ahli|Al Gharafa (retry cooldown (6h after failed attempt))",
@@ -40,7 +49,7 @@
     "Paris Saint Germain|Olympique Lyonnais (retry cooldown (6h after failed attempt))",
     "ATK Mohun Bagan|Chennaiyin (retry cooldown (6h after failed attempt))",
     "Santa Clara|Benfica (priced)",
-    "Grobi\u0146a|Riga (retry cooldown (6h after failed attempt))",
+    "Grobi\u0146a|Riga (kickoff already passed)",
     "Al Ula|Al-Orobah FC (retry cooldown (6h after failed attempt))",
     "Geylang International|Hougang United (retry cooldown (6h after failed attempt))",
     "FC K\u00f8benhavn|Odense BK (retry cooldown (6h after failed attempt))",
@@ -54,6 +63,11 @@
     "Sevilla|Osasuna (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Floriana vs Zabbar St. Patrick (league not covered: Malta: Premier League)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Malta: Premier League": 1
+  }
 }
