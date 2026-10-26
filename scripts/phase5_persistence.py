@@ -364,6 +364,32 @@ def _retain_financial_state(repo, relative=ENH_STATE):
             and receipt.get("superseded_financial_sha256") == cache_sha
             and receipt.get("retained_financial_sha256") == head_sha):
         return blob
+    # A reversed unplaced settlement is not "new history" just because an old
+    # cache has more rows. The committed reconciliation book is a durable
+    # tombstone even if its original receipt file was later removed. Permit a
+    # new settlement on that date ONLY for actual committed frozen positions.
+    # Already-committed history is left untouched: this guard never retroactively
+    # repairs money, and a legitimate later card on the same day may settle.
+    for day, approval in (head.get("settled_enhancement_reconciliations") or {}).items():
+        if not isinstance(approval, dict) or approval.get("confirmed_none_placed") is not True:
+            continue
+        before = (hrows.get(day) or {}).get("accas") or []
+        after = (crows.get(day) or {}).get("accas") or []
+        if after[:len(before)] != before:
+            continue  # Not an extension; existing conflict/rollback checks decide.
+        added = after[len(before):]
+        if not added:
+            continue
+        committed = [_acca_identity(a) for slip in head.get("open_slips") or []
+                     if slip.get("date") == day for a in slip.get("accas") or []]
+        for acca in added:
+            identity = _acca_identity(acca)
+            if day not in (head.get("frozen_by_date") or {}) or identity not in committed:
+                raise EvidenceMergeError(
+                    f"cached settlement on reconciled date {day} does not match "
+                    "a committed frozen position; refusing to resurrect an unplaced bet")
+            committed.remove(identity)  # One open position cannot settle twice.
+
     # Equal settled totals do not prove equal bets. Check full position metadata,
     # market/selection, freeze locks and cycle state BEFORE either extension path.
     # Unknown differences must fail closed; only the exact committed receipt

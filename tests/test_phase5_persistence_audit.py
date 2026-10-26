@@ -388,3 +388,88 @@ def test_committed_schedule_recovery_overrides_stale_runner_cache(tmp_path, sour
     destination.unlink()
     _persistence_module().restore_committed_localdata(repo)
     assert destination.read_bytes() == expected
+
+
+def test_queued_workflow_resolves_requested_branch_before_cache_restore():
+    import yaml
+
+    workflow = yaml.safe_load(WORKFLOW.read_text())
+    assert workflow['concurrency'] == {'group': 'edge-factory-main', 'cancel-in-progress': False}
+    for job_name in ('run-autonomous-agent', 'regression-tests'):
+        steps = workflow['jobs'][job_name]['steps']
+        checkout = next(i for i, s in enumerate(steps) if s.get('uses') == 'actions/checkout@v4')
+        assert steps[checkout]['with']['ref'] == '${{ github.ref }}'
+        assert 'github.sha' not in str(steps[checkout])
+        for i, step in enumerate(steps):
+            if step.get('uses') == 'actions/cache/restore@v4' or 'phase5_persistence.py restore' in step.get('run', ''):
+                assert checkout < i
+    # The copy/paste replacement must not reintroduce the old event-SHA race.
+    doc = (ROOT / 'docs/operator/POST-FOREBET-RECOVERY.md').read_text()
+    replacement = yaml.safe_load(doc.split('```yaml\n', 1)[1].rsplit('\n```', 1)[0])
+    for job_name in ('run-autonomous-agent', 'regression-tests'):
+        checkout = next(s for s in replacement['jobs'][job_name]['steps']
+                        if s.get('uses') == 'actions/checkout@v4')
+        assert checkout['with']['ref'] == '${{ github.ref }}'
+
+
+@pytest.mark.parametrize('relative', [
+    'localdata/enhancement_tickets_state.json', 'localdata/auto_tickets_state.json',
+])
+def test_queued_old_sha_new_frozen_cache_race_fixed_by_branch_checkout(tmp_path, relative):
+    """Real Git reproduction: never make the financial guard accept unknown stakes."""
+    publisher = tmp_path / 'publisher'
+    publisher.mkdir()
+    _seed_repo(publisher)
+    state = dict(base_pct=100., bank=39.0372, cycle_base=100., history=[], events=[],
+                 open_slips=[], frozen_by_date={})
+    (publisher / relative).write_text(json.dumps(state))
+    _git(publisher, 'add', relative)
+    _git(publisher, 'commit', '-qm', 'state when next workflow event was queued')
+    event_sha = _git(publisher, 'rev-parse', 'HEAD').stdout.strip()
+    bare = tmp_path / 'origin.git'
+    _git(tmp_path, 'init', '-q', '--bare', '--initial-branch=main', str(bare))
+    _git(publisher, 'remote', 'add', 'origin', str(bare))
+    _git(publisher, 'push', '-qu', 'origin', 'main')
+    stale, fresh = tmp_path / 'event-checkout', tmp_path / 'branch-checkout'
+    for runner in (stale, fresh):
+        _git(tmp_path, 'clone', '-q', str(bare), str(runner))
+        _git(runner, 'checkout', '-q', '--detach', event_sha)
+
+    frozen = dict(state, open_slips=[dict(date='2026-10-26', staked_pct=4.8796,
+        accas=[dict(stake_pct=4.8796, odds=2.41, legs=[
+            dict(match='Alpha vs Beta', market='match_over_15', odds=1.30),
+            dict(match='Gamma vs Delta', market='match_over_25', odds=1.85)])])],
+        frozen_by_date={'2026-10-26': dict(frozen_at='2026-10-26T11:54:14+02:00', final=True)})
+    payload = json.dumps(frozen).encode()
+    (publisher / relative).write_bytes(payload)
+    _git(publisher, 'add', relative)
+    _git(publisher, 'commit', '-qm', 'preceding run persists its frozen slip')
+    _git(publisher, 'push', '-q', 'origin', 'main')
+    committed_sha = _git(publisher, 'rev-parse', 'HEAD').stdout.strip()
+
+    # Former default checkout: the event SHA plus a cache from the preceding run.
+    (stale / relative).write_bytes(payload)
+    with pytest.raises(_persistence_module().EvidenceMergeError, match='divergent enhancement financial histories'):
+        _persistence_module().restore_committed_localdata(stale)
+    assert (stale / relative).read_bytes() == payload
+
+    # Explicit branch ref: resolve current origin/main BEFORE cache extraction.
+    _git(fresh, 'fetch', '-q', 'origin', '+refs/heads/main:refs/remotes/origin/main')
+    _git(fresh, 'checkout', '-q', '-B', 'main', 'refs/remotes/origin/main')
+    assert _git(fresh, 'rev-parse', 'HEAD').stdout.strip() == committed_sha != event_sha
+    (fresh / relative).write_bytes(payload)
+    _append_fixture(fresh, 'Cached evidence')
+    _persistence_module().restore_committed_localdata(fresh)
+    retained = json.loads((fresh / relative).read_bytes())
+    assert retained == frozen
+    assert retained['bank'] == state['bank'] and retained['history'] == state['history']
+    assert retained['frozen_by_date']['2026-10-26']['final'] is True
+    assert 'Cached evidence Home FC' in (fresh / LEDGER).read_text()
+
+    # A genuinely different cached stake remains fatal even at the latest tip.
+    divergent = json.loads(payload)
+    divergent['open_slips'][0]['accas'][0]['stake_pct'] += 1
+    (fresh / relative).write_text(json.dumps(divergent))
+    with pytest.raises(_persistence_module().EvidenceMergeError):
+        _persistence_module().restore_committed_localdata(fresh)
+    assert json.loads((fresh / relative).read_text()) == divergent
