@@ -173,9 +173,18 @@ def _default_match_fn(*, allow_truncated: bool = True) -> Callable[[object, obje
     """Lazy-import the adapter's team matcher; None degrades to exact-key-only."""
     try:
         from .sources.theoddsapi import _team_names_match
-        if not allow_truncated:
-            return lambda a, b: _team_names_match(a, b, allow_truncated=False)
-        return _team_names_match
+        from .identity import TEAM_KEY_ALIASES, source_team_key, source_team_key_base
+
+        def match(a, b):
+            # Reuse ONLY curated same-club aliases already accepted by fixture
+            # corroboration (e.g. Basaksehir / İstanbul Başakşehir). Do not
+            # broaden token fuzz or trust a shared truncated identity prefix.
+            ka, kb = source_team_key_base(a), source_team_key_base(b)
+            alias = ((ka in TEAM_KEY_ALIASES or kb in TEAM_KEY_ALIASES)
+                     and source_team_key(a) == source_team_key(b)
+                     and not squad_marker_mismatch(a, b))
+            return alias or _team_names_match(a, b, allow_truncated=allow_truncated)
+        return match
     except Exception:
         return None
 
@@ -494,16 +503,34 @@ def betexplorer_price_rejection(pick: dict, *, execution_at: datetime | None = N
             source = witness.get("source")
             observed = parse_iso_utc(witness.get("observed_at_utc"))
             board_witness = source == "oddspapi" and witness.get("file") == "oddspapi_fixture_state.json"
-            if (source not in ("oddspapi", "theoddsapi")
+            schedule_witness = source in ("scoutingstats", "vitibet")
+            prefix = source if schedule_witness else f"{source}_odds"
+            if (source not in ("oddspapi", "theoddsapi", "scoutingstats", "vitibet")
                     or observed is None or observed >= min(cutoff, decision, kickoff)
-                    or (not board_witness and not str(witness.get("file") or "").startswith(f"{source}_odds_"))
+                    or (not board_witness and not re.fullmatch(rf"{prefix}_\d{{4}}-\d{{2}}\.csv\.gz", str(witness.get("file") or "")))
                     or not re.fullmatch(r"[0-9a-f]{64}", str(witness.get("file_sha256")))
                     or not re.fullmatch(r"[0-9a-f]{64}", str(witness.get("row_sha256")))
                     or (not board_witness and (type(witness.get("csv_data_row")) is not int
                                               or witness["csv_data_row"] < 1))
-                    or witness.get("kickoff_origin") != ("provider_startTime" if source == "oddspapi"
+                    or witness.get("kickoff_origin") != ("provider_explicit_offset" if schedule_witness else
+                                                         "provider_startTime" if source == "oddspapi"
                                                          else "provider_commence_time")):
                 return "betexplorer_schedule_witness_invalid"
+            if schedule_witness:
+                raw = witness.get("schedule_row")
+                if (not isinstance(raw, dict)
+                        or ("csv_history_index" in witness
+                            and (type(witness["csv_history_index"]) is not int or witness["csv_history_index"] < 0))
+                        or raw.get("source") != source
+                        or raw.get("kickoff_origin") != "provider_explicit_offset"
+                        or raw.get("fixture_identity_origin") != "provider_participants"
+                        or witness.get("fixture_identity_origin") != "provider_participants"
+                        or (raw.get("home"), raw.get("away")) !=
+                           (witness.get("home"), witness.get("away"))
+                        or parse_iso_utc(raw.get("kickoff")) != parse_iso_utc(witness.get("kickoff_utc"))
+                        or parse_iso_utc(raw.get("captured_at")) != observed
+                        or hashlib.sha256(json.dumps(raw, sort_keys=True).encode()).hexdigest() != witness["row_sha256"]):
+                    return "betexplorer_schedule_witness_invalid"
             if board_witness:
                 raw = witness.get("board_fixture")
                 pointer = str(witness.get("json_pointer") or "")
@@ -818,6 +845,10 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
             mfn = match_fn or _default_match_fn()
             if mfn:
                 for (nh, na), (raw_h, raw_a) in names.items():
+                    # A schedule-only source contributes display names but no
+                    # quote bucket. It must not hide a later priced alias.
+                    if (nh, na) not in pairs:
+                        continue
                     both = (mfn(pick.get("home"), raw_h) and mfn(pick.get("away"), raw_a))
                     swap = (mfn(pick.get("home"), raw_a) and mfn(pick.get("away"), raw_h))
                     if both or swap:
