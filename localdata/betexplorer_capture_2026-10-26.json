@@ -1,25 +1,15 @@
 {
-  "attempted": 12,
+  "attempted": 11,
   "attempted_fixtures": [
     {
-      "avg_p": 75.0,
-      "away": "Zabbar St. Patrick",
-      "date": "2026-10-26",
-      "home": "Floriana",
-      "league": "Malta Premier League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
-    {
-      "avg_p": 74.0,
+      "avg_p": 74.5,
       "away": "Universitatea Craiova",
       "date": "2026-10-26",
       "home": "Sepsi OSK Sfantu Gheorghe",
-      "league": "Romania Liga I",
+      "league": "Romania: Liga I",
       "market": "1x2",
       "pick": "away",
-      "w_score": 0.6134
+      "w_score": 0.5799
     },
     {
       "avg_p": 74.0,
@@ -32,14 +22,14 @@
       "w_score": 0.5799
     },
     {
-      "avg_p": 73.24561403508771,
-      "away": "Al Gharafa",
+      "avg_p": 73.0,
+      "away": "Zabbar St. Patrick",
       "date": "2026-10-26",
-      "home": "Al Ahli",
-      "league": "AFC Champions League Elite",
+      "home": "Floriana",
+      "league": "Malta: Premier League",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.7595
+      "w_score": 0.5799
     },
     {
       "avg_p": 72.79019736226732,
@@ -52,31 +42,11 @@
       "w_score": 0.7595
     },
     {
-      "avg_p": 72.50000000000001,
-      "away": "Ba\u015fak\u015fehir",
-      "date": "2026-10-26",
-      "home": "Be\u015fikta\u015f",
-      "league": "Turkey: S\u00fcper Lig",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5799
-    },
-    {
       "avg_p": 69.84293193717276,
       "away": "Olympique Lyonnais",
       "date": "2026-10-26",
       "home": "Paris Saint Germain",
       "league": "Ligue 1",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
-    },
-    {
-      "avg_p": 69.60644007155634,
-      "away": "Chennaiyin",
-      "date": "2026-10-26",
-      "home": "ATK Mohun Bagan",
-      "league": "Indian Super League",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7595
@@ -90,16 +60,6 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 0.7595
-    },
-    {
-      "avg_p": 68.0,
-      "away": "Riga",
-      "date": "2026-10-26",
-      "home": "Grobi\u0146a",
-      "league": "Latvia Virsliga",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6134
     },
     {
       "avg_p": 67.32477788746299,
@@ -120,27 +80,59 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7535
+    },
+    {
+      "avg_p": 57.49999999999999,
+      "away": "RED Star FC 93",
+      "date": "2026-10-26",
+      "home": "Montpellier",
+      "league": "France: Ligue 2",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5799
+    },
+    {
+      "avg_p": 55.49999999999999,
+      "away": "Lyon",
+      "date": "2026-10-26",
+      "home": "Paris Saint Germain",
+      "league": "France: Ligue 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5799
+    },
+    {
+      "avg_p": 52.68886352105531,
+      "away": "Osasuna",
+      "date": "2026-10-26",
+      "home": "Sevilla",
+      "league": "La Liga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6333
     }
   ],
   "be_429": 0,
-  "be_cached": 12,
+  "be_cached": 8,
   "be_cooling_down": false,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "candidate_fixtures": 18,
-  "captured_at": "2026-10-26T13:15:25.018603+00:00",
+  "be_rows_rejected": 3,
+  "be_rows_rejected_reasons": {
+    "row teams do not both match the pick": 3
+  },
+  "candidate_fixtures": 11,
+  "captured_at": "2026-10-26T16:14:11.812537+00:00",
   "date": "2026-10-26",
   "errors": [],
-  "fixtures_with_rows": 7,
+  "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 15,
   "match_detail": {
-    "bookmakers": 135,
+    "bookmakers": 191,
     "challenge_pages": 0,
-    "fixtures": 11,
-    "market_rows": 323,
-    "markets": 66,
-    "named_rows": 323,
+    "fixtures": 14,
+    "market_rows": 478,
+    "markets": 84,
+    "named_rows": 478,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -148,16 +140,6 @@
   },
   "max_fixtures": 12,
   "quoted_fixtures": [
-    {
-      "avg_p": 75.0,
-      "away": "Zabbar St. Patrick",
-      "date": "2026-10-26",
-      "home": "Floriana",
-      "league": "Malta Premier League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
     {
       "avg_p": 74.0,
       "away": "Odense",
@@ -169,34 +151,14 @@
       "w_score": 0.5799
     },
     {
-      "avg_p": 73.24561403508771,
-      "away": "Al Gharafa",
+      "avg_p": 73.0,
+      "away": "Zabbar St. Patrick",
       "date": "2026-10-26",
-      "home": "Al Ahli",
-      "league": "AFC Champions League Elite",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
-    },
-    {
-      "avg_p": 72.50000000000001,
-      "away": "Ba\u015fak\u015fehir",
-      "date": "2026-10-26",
-      "home": "Be\u015fikta\u015f",
-      "league": "Turkey: S\u00fcper Lig",
+      "home": "Floriana",
+      "league": "Malta: Premier League",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5799
-    },
-    {
-      "avg_p": 69.60644007155634,
-      "away": "Chennaiyin",
-      "date": "2026-10-26",
-      "home": "ATK Mohun Bagan",
-      "league": "Indian Super League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
     },
     {
       "avg_p": 68.76288659793815,
@@ -209,18 +171,28 @@
       "w_score": 0.7595
     },
     {
-      "avg_p": 68.0,
-      "away": "Riga",
+      "avg_p": 57.49999999999999,
+      "away": "RED Star FC 93",
       "date": "2026-10-26",
-      "home": "Grobi\u0146a",
-      "league": "Latvia Virsliga",
+      "home": "Montpellier",
+      "league": "France: Ligue 2",
       "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6134
+      "pick": "home",
+      "w_score": 0.5799
+    },
+    {
+      "avg_p": 52.68886352105531,
+      "away": "Osasuna",
+      "date": "2026-10-26",
+      "home": "Sevilla",
+      "league": "La Liga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6333
     }
   ],
-  "requests": 0,
-  "rows": 21,
+  "requests": 23,
+  "rows": 15,
   "schema": 1,
   "status": "ok"
 }
