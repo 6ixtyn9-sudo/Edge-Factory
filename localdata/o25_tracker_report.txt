@@ -1,11 +1,11 @@
-O2.5 TRACKER — graded 859/902 listed overs (window 2026-07-31..2026-10-26)
+O2.5 TRACKER — graded 860/902 listed overs (window 2026-07-31..2026-10-26)
 
 cut                                   n    hit      stated  p_n     ROI
-ALL priced                          493    64%         54%  466   -1.6%
+ALL priced                          494    64%         54%  466   -1.4%
 band 50-60%                         140    64%         54%  140   -5.3%
 band <50%                           221    64%         47%  221   +0.5%
 band >=60%                          105    63%         68%  105   -7.9%
-SHARP-priced (theoddsapi/betexpl)    98    65%         54%   74   +3.7%
+SHARP-priced (theoddsapi/betexpl)    99    66%         54%   74   +4.6%
 SOFT-priced (scoutingstats)         298    64%         50%  298   -1.7%
 
 --- goals surface by rule ---
@@ -28,7 +28,7 @@ rule pfc_4a1f2bb2278d13c8189148d0     1   100% unavailable    0  +53.0%
 rule pfc_5904b1fc7050646e6321090c     1   100% unavailable    0  +44.0%
 rule pfc_5a9d3d3426ee7a4e63461d75     1     0%         61%    1 -100.0%
 rule pfc_d94d447efe0742440e953722     2    50%         56%    2  -18.5%
-rule pfc_fdade2e70df4d4bb78a8cd6e     1   100% unavailable    0  +33.0%
+rule pfc_fdade2e70df4d4bb78a8cd6e     2   100% unavailable    0  +62.0%
 rule unanimous[betclan+statarea+vitibet    1   100%         61%    1  +44.0%
 rule unanimous[betclan+vitibet] avg_p>=    0      -       -       -
 rule unanimous[bzzoiro+statarea+vitibet    3   100%         68%    3  +42.7%
@@ -37,7 +37,7 @@ rule unanimous[statarea+vitibet+zulubet    4    75%         65%    4  +25.0%
 rule unanimous[statarea+vitibet] avg_p>    9    67%         69%    9   -2.2%
 rule unanimous[vitibet+zulubet] avg_p>=    1     0%         74%    1 -100.0%
 --- goals surface by bucket ---
-bucket CAUTION                       44    73%         60%   37  +13.8%
+bucket CAUTION                       45    73%         60%   37  +15.5%
 bucket CERTIFIED_CLEAN               21    43%         54%   21  -35.9%
 bucket SKIPPED_VETO                 302    65%         53%  282   -0.3%
 bucket WATCHLIST_NO_ODDS              6    50%         53%    6  -26.7%
@@ -50,7 +50,8 @@ CHECKPOINT 3 GATE (50-60% band, priced):
    band 50-60% priced               140    64%         54%  140   -5.3%
    STATUS: PENDING — hit 64% < 70%, ROI -5.3% <= 0
 
-pending priced overs (results not yet filed): 12
+pending priced overs (results not yet filed): 11
+   2026-08-22 50% @ 1.61 (scoutingstats)
    2026-08-22 48% @ 1.8 (scoutingstats)
    2026-08-22 45% @ 1.57 (scoutingstats)
    2026-08-23 47% @ 1.7 (scoutingstats)
@@ -60,4 +61,3 @@ pending priced overs (results not yet filed): 12
    2026-10-25 unavailable @ 1.44 (theoddsapi)
    2026-10-25 63% @ 1.3953 (pinnapi_odds)
    2026-10-25 unavailable @ 1.44 (theoddsapi)
-   2026-10-26 unavailable @ 1.91 (theoddsapi)

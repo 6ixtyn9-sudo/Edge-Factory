@@ -1,0 +1,73 @@
+{
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 35,
+  "captured_at": "2026-10-26T22:30:03+00:00",
+  "date": "2026-10-27",
+  "due_reasons": {},
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
+  "quoted_fixtures": [],
+  "requested_markets": [
+    "h2h",
+    "totals",
+    "team_totals"
+  ],
+  "requested_scope": "6a09969a791b6e0d",
+  "requested_total_points": [
+    "2.5"
+  ],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "kickoff_mismatch": 1,
+    "priced": 5,
+    "priced_close_window_not_open": 1,
+    "retry_cooldown": 29
+  },
+  "skipped": [
+    "Manacor|Villarreal (retry cooldown (6h after failed attempt))",
+    "Fleetwood Town|Arsenal (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch AS Roma|Cagliari: pick legacy display says 19:45 SAST, captured rows say 21:45 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "AS Roma|Cagliari (priced, close window not open)",
+    "Rot-Weiss Essen|RB Leipzig (priced)",
+    "Cuarte Industrial|Girona (retry cooldown (6h after failed attempt))",
+    "Excelsior '31|ADO Den Haag (retry cooldown (6h after failed attempt))",
+    "Johor Darul Ta'zim|Port FC (retry cooldown (6h after failed attempt))",
+    "Levadia|Tammeka (retry cooldown (6h after failed attempt))",
+    "Koninklijke HFC|Go Ahead Eagles (retry cooldown (6h after failed attempt))",
+    "Larne|Limavady United (retry cooldown (6h after failed attempt))",
+    "Kloetinge|SC Cambuur (retry cooldown (6h after failed attempt))",
+    "Truro City|Slough Town (retry cooldown (6h after failed attempt))",
+    "Sonnenhof Gro\u00dfaspach|FC Augsburg (priced)",
+    "Cherno More Varna|Septemvri Sofia (retry cooldown (6h after failed attempt))",
+    "Arda Kardzhali|Levski Sofia (retry cooldown (6h after failed attempt))",
+    "Borussia M\u00f6nchengladbach|Karlsruher SC (priced)",
+    "Trans Narva|N\u00f5mme United (retry cooldown (6h after failed attempt))",
+    "RSD Alcal\u00e1|Las Palmas (retry cooldown (6h after failed attempt))",
+    "Borussia Dortmund|Werder Bremen (priced)",
+    "Leicester City|Wigan Athletic (retry cooldown (6h after failed attempt))",
+    "Al Shamal SC|Al Hilal (retry cooldown (6h after failed attempt))",
+    "Elversberg|Darmstadt 98 (priced)",
+    "Boston United|Gateshead (retry cooldown (6h after failed attempt))",
+    "Milton Keynes Dons|Bromley (retry cooldown (6h after failed attempt))",
+    "Benevento|Catanzaro (retry cooldown (6h after failed attempt))",
+    "Woking|Boreham Wood (retry cooldown (6h after failed attempt))",
+    "Torino|Como (retry cooldown (6h after failed attempt))",
+    "Altrincham FC|Kidderminster Harriers (retry cooldown (6h after failed attempt))",
+    "Ascoli|Sampdoria (retry cooldown (6h after failed attempt))",
+    "Mantova|Cremonese (retry cooldown (6h after failed attempt))",
+    "Tamworth|Scunthorpe United (retry cooldown (6h after failed attempt))",
+    "Cesena|Empoli (retry cooldown (6h after failed attempt))",
+    "Sassuolo|Lazio (retry cooldown (6h after failed attempt))",
+    "Barnet|York City (retry cooldown (6h after failed attempt))",
+    "Wealdstone|Solihull Moors (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "not_due",
+  "unmatched_reasons": {}
+}
