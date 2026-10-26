@@ -369,3 +369,22 @@ def test_exhausted_transient_failure_is_named_and_not_a_race(tmp_path, monkeypat
     assert 'transient push failure' in result['reason']
     assert 'push race' not in result['reason']
     assert 'Internal Server Error' in result['reason']
+
+
+@pytest.mark.parametrize('source', ['scoutingstats', 'vitibet'])
+def test_committed_schedule_recovery_overrides_stale_runner_cache(tmp_path, source):
+    repo = tmp_path / 'runner'
+    repo.mkdir()
+    _seed_repo(repo)
+    relative = f'localdata/schedule_{source}_2026-10.csv.gz'
+    destination = repo / relative
+    shutil.copy2(ROOT / relative, destination)
+    expected = destination.read_bytes()
+    _git(repo, 'add', relative)
+    _git(repo, 'commit', '-qm', 'preserve original source schedule evidence')
+    destination.write_bytes(b'stale runner cache')
+    _persistence_module().restore_committed_localdata(repo)
+    assert destination.read_bytes() == expected
+    destination.unlink()
+    _persistence_module().restore_committed_localdata(repo)
+    assert destination.read_bytes() == expected

@@ -504,7 +504,7 @@ def betexplorer_price_rejection(pick: dict, *, execution_at: datetime | None = N
             observed = parse_iso_utc(witness.get("observed_at_utc"))
             board_witness = source == "oddspapi" and witness.get("file") == "oddspapi_fixture_state.json"
             schedule_witness = source in ("scoutingstats", "vitibet")
-            prefix = source if schedule_witness else f"{source}_odds"
+            prefix = rf"(?:schedule_)?{source}" if schedule_witness else f"{source}_odds"
             if (source not in ("oddspapi", "theoddsapi", "scoutingstats", "vitibet")
                     or observed is None or observed >= min(cutoff, decision, kickoff)
                     or (not board_witness and not re.fullmatch(rf"{prefix}_\d{{4}}-\d{{2}}\.csv\.gz", str(witness.get("file") or "")))
