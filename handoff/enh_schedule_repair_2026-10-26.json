@@ -1,0 +1,2211 @@
+{
+  "status": "RECONSTRUCTED_NOT_FROZEN_NOT_PLACED",
+  "day": "2026-10-26",
+  "run_id": 40283113075,
+  "input_commit": "c8e77c3946b5ceeaf7b44f385916142925deb39f",
+  "source_evidence": "Original source captures recovered OFFLINE from phase5_shadow/rows.jsonl. Live code does not read that ledger. CSV schedule rows reconstructed with the original capture times, never current or kickoff-derived times.",
+  "execution_checked_at": "2026-10-26T10:24:56.439497+02:00",
+  "bank_eff": 39.0372,
+  "verdict_counts": {
+    "fire": 23,
+    "invalid_execution_quote_context": 1
+  },
+  "timing_drops": {},
+  "plan": [
+    {
+      "odds": 1.92,
+      "stake_pct": 4.8796,
+      "legs": [
+        {
+          "match": "Mladost Ždralovi vs Jadran LP",
+          "pick": "over",
+          "prob": 0.7994,
+          "odds": 1.3,
+          "result": null,
+          "market": "match_over_15",
+          "price_book": "bet365.us",
+          "price_source": "betexplorer",
+          "cohort_evidence": {
+            "rate": 0.7994,
+            "n": 1879,
+            "contract_id": "pfc_1607fec83282d02c5254c2bf",
+            "as_of_exclusive": "2026-10-26",
+            "market": "match_over_15",
+            "basis": "cohort_payout_bound",
+            "cohort_min_hits": 1502,
+            "cohort_lower_bound": 0.7806510537547943,
+            "price_context": {
+              "contract_id": "pfc_1607fec83282d02c5254c2bf",
+              "selection": "home",
+              "league": "Croatia First NL",
+              "book": "bet365.us",
+              "source": "betexplorer",
+              "price": 1.3,
+              "captured_at": "2026-10-26T04:17:34.514701+00:00",
+              "decision_at": "2026-10-26T09:11:02+02:00",
+              "kickoff": "2026-10-26T13:00:00+00:00"
+            }
+          },
+          "ml_rank_probability": 0.7923881782738202,
+          "ml_model_key": "e8f60b9784ffe3224f57d06004ab853d09e5e0a4eac524422412bbe1b2a77e85",
+          "label": "Match Over 1.5 Goals",
+          "floor": 1.45,
+          "floor_basis": "inherited",
+          "league": "Croatia First NL",
+          "price_at": "2026-10-26T04:17:34.514701+00:00",
+          "price_kickoff": "2026-10-26T13:00:00+00:00",
+          "price_provenance": {
+            "kind": "betexplorer_pre_cutoff_v1",
+            "decision_day": "2026-10-26",
+            "home": "Mladost Zdralovi",
+            "away": "Jadran LP",
+            "kickoff_utc": "2026-10-26T13:00:00+00:00",
+            "captured_at": "2026-10-26T04:17:34.514701+00:00",
+            "decision_cutoff_utc": "2026-10-26T07:00:00+00:00",
+            "data_dt": [
+              26,
+              10,
+              2026,
+              14,
+              0
+            ],
+            "raw_kickoff": "14:00",
+            "ledger_file": "betexplorer_match_detail_2026-10-26.json",
+            "ledger_sha256": "3f9e865abb5c9b6686861ab9f3505d6369add9c6d08c76715884cb571bff7609",
+            "site_best": true,
+            "resolution": {
+              "status": "corroborated",
+              "reason": "independent_pre_cutoff_schedule_witness",
+              "kickoff_utc": "2026-10-26T13:00:00+00:00",
+              "provenance": "witness_corroborated_aware_iso",
+              "witnesses": [
+                {
+                  "source": "vitibet",
+                  "home": "Mladost Ždralovi",
+                  "away": "Jadran LP",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T13:00:00+00:00",
+                  "observed_at_utc": "2026-10-24T22:02:09+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 62,
+                  "row_sha256": "db4be831a570660bae7d4305899521d81c5124256909af9646d18c0019d2a842",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Jadran LP",
+                    "date": "2026-10-26",
+                    "home": "Mladost Ždralovi",
+                    "kickoff": "2026-10-26T14:00:00+01:00",
+                    "captured_at": "2026-10-24T22:02:09+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Mladost Ždralovi",
+                  "away": "Jadran LP",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T13:00:00+00:00",
+                  "observed_at_utc": "2026-10-25T04:12:58+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 135,
+                  "row_sha256": "6a6988e3e6d2906f7173d4f829c175d479fc7c4bf2efb44ce46a97e0e805c81b",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Jadran LP",
+                    "date": "2026-10-26",
+                    "home": "Mladost Ždralovi",
+                    "kickoff": "2026-10-26T14:00:00+01:00",
+                    "captured_at": "2026-10-25T04:12:58+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Mladost Ždralovi",
+                  "away": "Jadran LP",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T13:00:00+00:00",
+                  "observed_at_utc": "2026-10-25T22:02:02+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 209,
+                  "row_sha256": "8c1cdb7d7d6bb866c4f2fd81cf972b6d9e35b0f4e1d0bd164211a36855315ad2",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Jadran LP",
+                    "date": "2026-10-26",
+                    "home": "Mladost Ždralovi",
+                    "kickoff": "2026-10-26T14:00:00+01:00",
+                    "captured_at": "2026-10-25T22:02:02+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Mladost Ždralovi",
+                  "away": "Jadran LP",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T13:00:00+00:00",
+                  "observed_at_utc": "2026-10-26T04:02:01+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 267,
+                  "row_sha256": "ef7c7293e472a7f640791e0c00c7f209b17c515b3c04c1c4d1dbc1a5c61286cf",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Jadran LP",
+                    "date": "2026-10-26",
+                    "home": "Mladost Ždralovi",
+                    "kickoff": "2026-10-26T14:00:00+01:00",
+                    "captured_at": "2026-10-26T04:02:01+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                }
+              ],
+              "interpretations": [
+                "inferred_europe_prague",
+                "inferred_fixed_utc_plus_1"
+              ],
+              "late_witness_records": 0
+            },
+            "quote_evidence": {
+              "market_slug": "ou",
+              "row_index": 2,
+              "column_index": 0,
+              "columns": [
+                "Over",
+                "Under"
+              ],
+              "row": {
+                "best": true,
+                "bookmaker": "bet365.us",
+                "bookmaker_id": "1105",
+                "created": [
+                  "2026-10-25T18:54",
+                  "2026-10-25T18:54"
+                ],
+                "line": "1.50",
+                "movement": [
+                  null,
+                  null
+                ],
+                "odds": [
+                  1.3,
+                  3.4
+                ],
+                "pos": [
+                  "1",
+                  "2"
+                ],
+                "source": "all"
+              },
+              "row_sha256": "448d76d83ce94ac304b140c9d1c54405c9734ff32cfe27b5bc5b93b855d38353"
+            },
+            "market": "ou_1.5",
+            "selection": "over",
+            "price": 1.3,
+            "bookmaker": "bet365.us"
+          },
+          "shadow": false,
+          "home": "Mladost Ždralovi",
+          "away": "Jadran LP",
+          "kickoff_utc": "2026-10-26T13:00:00+00:00",
+          "as_of": "2026-10-26T09:11:02+02:00",
+          "original_profile_sha256": "07da887e4bef7cbd58b388ff8092f078e26f11c07e836e5726275b56f7b36469"
+        },
+        {
+          "match": "Galatasaray vs Fenerbahçe",
+          "pick": "over",
+          "prob": 0.6376,
+          "odds": 1.48,
+          "result": null,
+          "market": "match_over_25",
+          "price_book": "bet365.us",
+          "price_source": "betexplorer",
+          "cohort_evidence": {
+            "rate": 0.6376,
+            "n": 436,
+            "contract_id": "pfc_444d408c4ccd3a4bf4fb020c",
+            "as_of_exclusive": "2026-10-26",
+            "market": "match_over_25",
+            "basis": "cohort_payout_bound",
+            "cohort_min_hits": 278,
+            "cohort_lower_bound": 0.5914741571912302,
+            "price_context": {
+              "contract_id": "pfc_444d408c4ccd3a4bf4fb020c",
+              "selection": "home",
+              "league": "Super Lig",
+              "book": "bet365.us",
+              "source": "betexplorer",
+              "price": 1.48,
+              "captured_at": "2026-10-26T04:18:06.427454+00:00",
+              "decision_at": "2026-10-26T09:11:02+02:00",
+              "kickoff": "2026-10-26T18:30:00+00:00"
+            }
+          },
+          "ml_rank_probability": 0.6224540239084599,
+          "ml_model_key": "a300ca4dbc27b44b435e62eb0ed76a584289fd1bc10c7cd67bd3e4b02f43531b",
+          "label": "Match Over 2.5 Goals",
+          "floor": 1.6,
+          "floor_basis": "inherited",
+          "league": "Super Lig",
+          "price_at": "2026-10-26T04:18:06.427454+00:00",
+          "price_kickoff": "2026-10-26T18:30:00+00:00",
+          "price_provenance": {
+            "kind": "betexplorer_pre_cutoff_v1",
+            "decision_day": "2026-10-26",
+            "home": "Galatasaray",
+            "away": "Fenerbahce",
+            "kickoff_utc": "2026-10-26T18:30:00+00:00",
+            "captured_at": "2026-10-26T04:18:06.427454+00:00",
+            "decision_cutoff_utc": "2026-10-26T07:00:00+00:00",
+            "data_dt": [
+              26,
+              10,
+              2026,
+              19,
+              30
+            ],
+            "raw_kickoff": "19:30",
+            "ledger_file": "betexplorer_match_detail_2026-10-26.json",
+            "ledger_sha256": "3f9e865abb5c9b6686861ab9f3505d6369add9c6d08c76715884cb571bff7609",
+            "site_best": true,
+            "resolution": {
+              "status": "corroborated",
+              "reason": "independent_pre_cutoff_schedule_witness",
+              "kickoff_utc": "2026-10-26T18:30:00+00:00",
+              "provenance": "witness_corroborated_aware_iso",
+              "witnesses": [
+                {
+                  "source": "scoutingstats",
+                  "home": "Galatasaray",
+                  "away": "Fenerbahçe",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:30:00+00:00",
+                  "observed_at_utc": "2026-10-25T22:02:50+00:00",
+                  "file": "scoutingstats_2026-10.csv.gz",
+                  "file_sha256": "af88e361a4ea2b46de688ff21fd157516ae866da5026b8011820982ddb9b684d",
+                  "csv_data_row": 37,
+                  "row_sha256": "fe758bb0bde0031774fad29d5d5e2848646f01c5895c506b5e3180a51b0078eb",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Fenerbahçe",
+                    "date": "2026-10-26",
+                    "home": "Galatasaray",
+                    "kickoff": "2026-10-26T18:30:00Z",
+                    "captured_at": "2026-10-25T22:02:50+00:00",
+                    "source": "scoutingstats",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "scoutingstats",
+                  "home": "Galatasaray",
+                  "away": "Fenerbahçe",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:30:00+00:00",
+                  "observed_at_utc": "2026-10-26T04:02:52+00:00",
+                  "file": "scoutingstats_2026-10.csv.gz",
+                  "file_sha256": "af88e361a4ea2b46de688ff21fd157516ae866da5026b8011820982ddb9b684d",
+                  "csv_data_row": 70,
+                  "row_sha256": "e9e71881f2fea9054c562829f2138cdc0a16b3c8e7bd6a9bcf5660e398d09a07",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Fenerbahçe",
+                    "date": "2026-10-26",
+                    "home": "Galatasaray",
+                    "kickoff": "2026-10-26T18:30:00Z",
+                    "captured_at": "2026-10-26T04:02:52+00:00",
+                    "source": "scoutingstats",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Galatasaray",
+                  "away": "Fenerbahçe",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:30:00+00:00",
+                  "observed_at_utc": "2026-10-24T22:02:09+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 5,
+                  "row_sha256": "e0682110320b7c377fd75079c363ad8957dd388f076542feca3fb7e820ee33d2",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Fenerbahçe",
+                    "date": "2026-10-26",
+                    "home": "Galatasaray",
+                    "kickoff": "2026-10-26T19:30:00+01:00",
+                    "captured_at": "2026-10-24T22:02:09+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Galatasaray",
+                  "away": "Fenerbahçe",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:30:00+00:00",
+                  "observed_at_utc": "2026-10-25T04:12:58+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 78,
+                  "row_sha256": "c0c0ca1cfb35c82612b934849c2e59d611ec3ed814edf8f93b49f9b847d78c35",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Fenerbahçe",
+                    "date": "2026-10-26",
+                    "home": "Galatasaray",
+                    "kickoff": "2026-10-26T19:30:00+01:00",
+                    "captured_at": "2026-10-25T04:12:58+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Galatasaray",
+                  "away": "Fenerbahçe",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:30:00+00:00",
+                  "observed_at_utc": "2026-10-25T22:02:02+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 151,
+                  "row_sha256": "1d907d1ee4462666651b628e7dd0c929ff0faa33863d0d7352cca4df9a0a7464",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Fenerbahçe",
+                    "date": "2026-10-26",
+                    "home": "Galatasaray",
+                    "kickoff": "2026-10-26T19:30:00+01:00",
+                    "captured_at": "2026-10-25T22:02:02+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Galatasaray",
+                  "away": "Fenerbahçe",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:30:00+00:00",
+                  "observed_at_utc": "2026-10-26T04:02:01+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 226,
+                  "row_sha256": "02ecb02b502787bfb49045f7de5ca4dc09a788dd7727e2561ad4fcdc69c115f2",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Fenerbahçe",
+                    "date": "2026-10-26",
+                    "home": "Galatasaray",
+                    "kickoff": "2026-10-26T19:30:00+01:00",
+                    "captured_at": "2026-10-26T04:02:01+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                }
+              ],
+              "interpretations": [
+                "inferred_europe_prague",
+                "inferred_fixed_utc_plus_1"
+              ],
+              "late_witness_records": 0
+            },
+            "quote_evidence": {
+              "market_slug": "ou",
+              "row_index": 10,
+              "column_index": 0,
+              "columns": [
+                "Over",
+                "Under"
+              ],
+              "row": {
+                "best": true,
+                "bookmaker": "bet365.us",
+                "bookmaker_id": "1105",
+                "created": [
+                  "2026-10-20T00:08",
+                  "2026-10-20T00:08"
+                ],
+                "line": "2.50",
+                "movement": [
+                  "down",
+                  "up"
+                ],
+                "odds": [
+                  1.48,
+                  2.6
+                ],
+                "pos": [
+                  "1",
+                  "2"
+                ],
+                "source": "all"
+              },
+              "row_sha256": "45a3f7eaa833045e5a86a0df3a091418571e9ceb370103dbb95c96a06e459afc"
+            },
+            "market": "ou_2.5",
+            "selection": "over",
+            "price": 1.48,
+            "bookmaker": "bet365.us"
+          },
+          "shadow": false,
+          "home": "Galatasaray",
+          "away": "Fenerbahçe",
+          "kickoff_utc": "2026-10-26T18:30:00+00:00",
+          "as_of": "2026-10-26T09:11:02+02:00",
+          "original_profile_sha256": "0d1e8cb1eec357b638cd317249710c770a730e8eef796f01acbae613125eacb4"
+        }
+      ]
+    },
+    {
+      "odds": 2.59,
+      "stake_pct": 4.8796,
+      "legs": [
+        {
+          "match": "Beşiktaş vs İstanbul Başakşehir",
+          "pick": "over",
+          "prob": 0.6598,
+          "odds": 1.4,
+          "result": null,
+          "market": "match_over_25",
+          "price_book": "bet365.us",
+          "price_source": "betexplorer",
+          "cohort_evidence": {
+            "rate": 0.6598,
+            "n": 920,
+            "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+            "as_of_exclusive": "2026-10-26",
+            "market": "match_over_25",
+            "basis": "cohort_payout_bound",
+            "cohort_min_hits": 607,
+            "cohort_lower_bound": 0.6285598027458591,
+            "price_context": {
+              "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+              "selection": "home",
+              "league": "Super Lig",
+              "book": "bet365.us",
+              "source": "betexplorer",
+              "price": 1.4,
+              "captured_at": "2026-10-26T04:16:23.064252+00:00",
+              "decision_at": "2026-10-26T09:11:02+02:00",
+              "kickoff": "2026-10-26T16:00:00+00:00"
+            }
+          },
+          "ml_rank_probability": 0.6591297816987266,
+          "ml_model_key": "d7b5177190b49143cd934324187656b7b2008fc5087ea1090892e60de87158c5",
+          "label": "Match Over 2.5 Goals",
+          "floor": 1.6,
+          "floor_basis": "inherited",
+          "league": "Super Lig",
+          "price_at": "2026-10-26T04:16:23.064252+00:00",
+          "price_kickoff": "2026-10-26T16:00:00+00:00",
+          "price_provenance": {
+            "kind": "betexplorer_pre_cutoff_v1",
+            "decision_day": "2026-10-26",
+            "home": "Besiktas",
+            "away": "Basaksehir",
+            "kickoff_utc": "2026-10-26T16:00:00+00:00",
+            "captured_at": "2026-10-26T04:16:23.064252+00:00",
+            "decision_cutoff_utc": "2026-10-26T07:00:00+00:00",
+            "data_dt": [
+              26,
+              10,
+              2026,
+              17,
+              0
+            ],
+            "raw_kickoff": "17:00",
+            "ledger_file": "betexplorer_match_detail_2026-10-26.json",
+            "ledger_sha256": "3f9e865abb5c9b6686861ab9f3505d6369add9c6d08c76715884cb571bff7609",
+            "site_best": true,
+            "resolution": {
+              "status": "corroborated",
+              "reason": "independent_pre_cutoff_schedule_witness",
+              "kickoff_utc": "2026-10-26T16:00:00+00:00",
+              "provenance": "witness_corroborated_aware_iso",
+              "witnesses": [
+                {
+                  "source": "scoutingstats",
+                  "home": "Beşiktaş",
+                  "away": "İstanbul Başakşehir",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T16:00:00+00:00",
+                  "observed_at_utc": "2026-10-25T22:02:50+00:00",
+                  "file": "scoutingstats_2026-10.csv.gz",
+                  "file_sha256": "af88e361a4ea2b46de688ff21fd157516ae866da5026b8011820982ddb9b684d",
+                  "csv_data_row": 35,
+                  "row_sha256": "4b3030c7b2b6554fc16e7500635f1d64905d235672ea06b8a3c8078d195b8748",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "İstanbul Başakşehir",
+                    "date": "2026-10-26",
+                    "home": "Beşiktaş",
+                    "kickoff": "2026-10-26T16:00:00Z",
+                    "captured_at": "2026-10-25T22:02:50+00:00",
+                    "source": "scoutingstats",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "scoutingstats",
+                  "home": "Beşiktaş",
+                  "away": "İstanbul Başakşehir",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T16:00:00+00:00",
+                  "observed_at_utc": "2026-10-26T04:02:52+00:00",
+                  "file": "scoutingstats_2026-10.csv.gz",
+                  "file_sha256": "af88e361a4ea2b46de688ff21fd157516ae866da5026b8011820982ddb9b684d",
+                  "csv_data_row": 68,
+                  "row_sha256": "76c72d9cb886ab1c95de8fbfbf376bac8b45899b038d58a346655f0ffb639cf1",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "İstanbul Başakşehir",
+                    "date": "2026-10-26",
+                    "home": "Beşiktaş",
+                    "kickoff": "2026-10-26T16:00:00Z",
+                    "captured_at": "2026-10-26T04:02:52+00:00",
+                    "source": "scoutingstats",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Beşiktaş",
+                  "away": "Başakşehir",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T16:00:00+00:00",
+                  "observed_at_utc": "2026-10-24T22:02:09+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 3,
+                  "row_sha256": "dfa31433ad85fed4cdade9cfb0312f7fb4bb1835be3b5b77ba740266b88efdab",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Başakşehir",
+                    "date": "2026-10-26",
+                    "home": "Beşiktaş",
+                    "kickoff": "2026-10-26T17:00:00+01:00",
+                    "captured_at": "2026-10-24T22:02:09+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Beşiktaş",
+                  "away": "Başakşehir",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T16:00:00+00:00",
+                  "observed_at_utc": "2026-10-25T04:12:58+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 76,
+                  "row_sha256": "59f9fe580a03730fc8d57d4d4edce71fe793e6726db2b47df38acf90346f79e1",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Başakşehir",
+                    "date": "2026-10-26",
+                    "home": "Beşiktaş",
+                    "kickoff": "2026-10-26T17:00:00+01:00",
+                    "captured_at": "2026-10-25T04:12:58+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Beşiktaş",
+                  "away": "Başakşehir",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T16:00:00+00:00",
+                  "observed_at_utc": "2026-10-25T22:02:02+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 149,
+                  "row_sha256": "fca07d7bd57f870c6e2dc3c22858099add941f6b2b6c379b6c1e71c15ace5a26",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Başakşehir",
+                    "date": "2026-10-26",
+                    "home": "Beşiktaş",
+                    "kickoff": "2026-10-26T17:00:00+01:00",
+                    "captured_at": "2026-10-25T22:02:02+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Beşiktaş",
+                  "away": "Başakşehir",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T16:00:00+00:00",
+                  "observed_at_utc": "2026-10-26T04:02:01+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 224,
+                  "row_sha256": "0780e9cffd0df0fecb9eb0a43479998f81445967d8da61e6bf8db5bf3121c97b",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Başakşehir",
+                    "date": "2026-10-26",
+                    "home": "Beşiktaş",
+                    "kickoff": "2026-10-26T17:00:00+01:00",
+                    "captured_at": "2026-10-26T04:02:01+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                }
+              ],
+              "interpretations": [
+                "inferred_europe_prague",
+                "inferred_fixed_utc_plus_1"
+              ],
+              "late_witness_records": 0
+            },
+            "quote_evidence": {
+              "market_slug": "ou",
+              "row_index": 8,
+              "column_index": 0,
+              "columns": [
+                "Over",
+                "Under"
+              ],
+              "row": {
+                "best": true,
+                "bookmaker": "bet365.us",
+                "bookmaker_id": "1105",
+                "created": [
+                  "2026-10-26T02:11",
+                  "2026-10-26T02:11"
+                ],
+                "line": "2.50",
+                "movement": [
+                  "down",
+                  "up"
+                ],
+                "odds": [
+                  1.4,
+                  2.88
+                ],
+                "pos": [
+                  "1",
+                  "2"
+                ],
+                "source": "all"
+              },
+              "row_sha256": "e21d08a1d4986112985cbe4a7508733d24f973f955098087ec1343a30f4cfaf0"
+            },
+            "market": "ou_2.5",
+            "selection": "over",
+            "price": 1.4,
+            "bookmaker": "bet365.us"
+          },
+          "shadow": false,
+          "home": "Beşiktaş",
+          "away": "İstanbul Başakşehir",
+          "kickoff_utc": "2026-10-26T16:00:00+00:00",
+          "as_of": "2026-10-26T09:11:02+02:00",
+          "original_profile_sha256": "537202342e314854365fc36b93109790473037d5c518c814158421adf215be20"
+        },
+        {
+          "match": "Santa Clara vs Benfica",
+          "pick": "over",
+          "prob": 0.658,
+          "odds": 1.85,
+          "result": null,
+          "market": "match_over_25",
+          "price_book": "bet365.us",
+          "price_source": "betexplorer",
+          "cohort_evidence": {
+            "rate": 0.658,
+            "n": 307,
+            "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+            "as_of_exclusive": "2026-10-26",
+            "market": "match_over_25",
+            "basis": "cohort_payout_bound",
+            "cohort_min_hits": 202,
+            "cohort_lower_bound": 0.6032555536161874,
+            "price_context": {
+              "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+              "selection": "away",
+              "league": "Liga Portugal",
+              "book": "bet365.us",
+              "source": "betexplorer",
+              "price": 1.85,
+              "captured_at": "2026-10-26T04:17:03.104544+00:00",
+              "decision_at": "2026-10-26T09:11:02+02:00",
+              "kickoff": "2026-10-26T18:45:00+00:00"
+            }
+          },
+          "ml_rank_probability": 0.6526882098953084,
+          "ml_model_key": "2010ecf5cbecc3433364024d3f463ca41e2e37cbfe1bb8ee7189e10cb7ea1a87",
+          "label": "Match Over 2.5 Goals",
+          "floor": 1.6,
+          "floor_basis": "inherited",
+          "league": "Liga Portugal",
+          "price_at": "2026-10-26T04:17:03.104544+00:00",
+          "price_kickoff": "2026-10-26T18:45:00+00:00",
+          "price_provenance": {
+            "kind": "betexplorer_pre_cutoff_v1",
+            "decision_day": "2026-10-26",
+            "home": "Santa Clara",
+            "away": "Benfica",
+            "kickoff_utc": "2026-10-26T18:45:00+00:00",
+            "captured_at": "2026-10-26T04:17:03.104544+00:00",
+            "decision_cutoff_utc": "2026-10-26T07:00:00+00:00",
+            "data_dt": [
+              26,
+              10,
+              2026,
+              19,
+              45
+            ],
+            "raw_kickoff": "19:45",
+            "ledger_file": "betexplorer_match_detail_2026-10-26.json",
+            "ledger_sha256": "3f9e865abb5c9b6686861ab9f3505d6369add9c6d08c76715884cb571bff7609",
+            "site_best": true,
+            "resolution": {
+              "status": "corroborated",
+              "reason": "independent_pre_cutoff_schedule_witness",
+              "kickoff_utc": "2026-10-26T18:45:00+00:00",
+              "provenance": "witness_corroborated_aware_iso",
+              "witnesses": [
+                {
+                  "source": "theoddsapi",
+                  "home": "Santa Clara",
+                  "away": "Benfica",
+                  "league": "Liga Portugal",
+                  "kickoff_utc": "2026-10-26T18:45:00+00:00",
+                  "observed_at_utc": "2026-10-26T04:14:45.853827+00:00",
+                  "file": "theoddsapi_odds_2026-10.csv.gz",
+                  "file_sha256": "31a174784119d7b6e0a32e46642249812e4b86af9a1da68706de2e02e792f20e",
+                  "csv_data_row": 21000,
+                  "row_sha256": "ae73cb71c991f4bb846db1320c4d88244acd70ef051515853b7340357ae5b314",
+                  "kickoff_origin": "provider_commence_time",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": "7f4d1fc269584543a305935a2d3552fd",
+                  "provider_commence_time": "2026-10-26T18:45:00Z"
+                },
+                {
+                  "source": "scoutingstats",
+                  "home": "Santa Clara",
+                  "away": "Benfica",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:45:00+00:00",
+                  "observed_at_utc": "2026-10-25T22:02:50+00:00",
+                  "file": "scoutingstats_2026-10.csv.gz",
+                  "file_sha256": "af88e361a4ea2b46de688ff21fd157516ae866da5026b8011820982ddb9b684d",
+                  "csv_data_row": 14,
+                  "row_sha256": "52edb8bd2aa6e287991dd6e2ba9eea74628563c6a0e51c890b86ec48883dc867",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Benfica",
+                    "date": "2026-10-26",
+                    "home": "Santa Clara",
+                    "kickoff": "2026-10-26T18:45:00Z",
+                    "captured_at": "2026-10-25T22:02:50+00:00",
+                    "source": "scoutingstats",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "scoutingstats",
+                  "home": "Santa Clara",
+                  "away": "Benfica",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:45:00+00:00",
+                  "observed_at_utc": "2026-10-26T04:02:52+00:00",
+                  "file": "scoutingstats_2026-10.csv.gz",
+                  "file_sha256": "af88e361a4ea2b46de688ff21fd157516ae866da5026b8011820982ddb9b684d",
+                  "csv_data_row": 51,
+                  "row_sha256": "3f142b24a62d0377787e27cc263f8d691eb63c5817c32b6b07d65092c1bff016",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Benfica",
+                    "date": "2026-10-26",
+                    "home": "Santa Clara",
+                    "kickoff": "2026-10-26T18:45:00Z",
+                    "captured_at": "2026-10-26T04:02:52+00:00",
+                    "source": "scoutingstats",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Santa Clara",
+                  "away": "Benfica",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:45:00+00:00",
+                  "observed_at_utc": "2026-10-24T22:02:09+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 2,
+                  "row_sha256": "d4d375468d704d6e2736aead7084795f1f92b7580c36fe145cecf9086361791c",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Benfica",
+                    "date": "2026-10-26",
+                    "home": "Santa Clara",
+                    "kickoff": "2026-10-26T19:45:00+01:00",
+                    "captured_at": "2026-10-24T22:02:09+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Santa Clara",
+                  "away": "Benfica",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:45:00+00:00",
+                  "observed_at_utc": "2026-10-25T04:12:58+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 75,
+                  "row_sha256": "53ac4d5d5b4da51ff56a5e76526c3e59cf607d7ea31f660d769fcd3bf7d56e5a",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Benfica",
+                    "date": "2026-10-26",
+                    "home": "Santa Clara",
+                    "kickoff": "2026-10-26T19:45:00+01:00",
+                    "captured_at": "2026-10-25T04:12:58+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Santa Clara",
+                  "away": "Benfica",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:45:00+00:00",
+                  "observed_at_utc": "2026-10-25T22:02:02+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 148,
+                  "row_sha256": "1186e26352b182c7953888c5b787ee91ac4dee15d574c5ec723f2aa40453c74e",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Benfica",
+                    "date": "2026-10-26",
+                    "home": "Santa Clara",
+                    "kickoff": "2026-10-26T19:45:00+01:00",
+                    "captured_at": "2026-10-25T22:02:02+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                },
+                {
+                  "source": "vitibet",
+                  "home": "Santa Clara",
+                  "away": "Benfica",
+                  "league": null,
+                  "kickoff_utc": "2026-10-26T18:45:00+00:00",
+                  "observed_at_utc": "2026-10-26T04:02:01+00:00",
+                  "file": "vitibet_2026-10.csv.gz",
+                  "file_sha256": "3cb85c7ee51679aa700bf57322152f99eb96ba6cd5236a5ac11942c092af1fc1",
+                  "csv_data_row": 223,
+                  "row_sha256": "a20d7bcdbfee3a103c15bb618d665cd8d6cdc90ea90a941fe4af699de527770b",
+                  "kickoff_origin": "provider_explicit_offset",
+                  "fixture_identity_origin": "provider_participants",
+                  "provider_event_id": null,
+                  "provider_commence_time": null,
+                  "schedule_row": {
+                    "away": "Benfica",
+                    "date": "2026-10-26",
+                    "home": "Santa Clara",
+                    "kickoff": "2026-10-26T19:45:00+01:00",
+                    "captured_at": "2026-10-26T04:02:01+00:00",
+                    "source": "vitibet",
+                    "kickoff_origin": "provider_explicit_offset",
+                    "fixture_identity_origin": "provider_participants"
+                  }
+                }
+              ],
+              "interpretations": [
+                "inferred_europe_prague",
+                "inferred_fixed_utc_plus_1"
+              ],
+              "late_witness_records": 0
+            },
+            "quote_evidence": {
+              "market_slug": "ou",
+              "row_index": 11,
+              "column_index": 0,
+              "columns": [
+                "Over",
+                "Under"
+              ],
+              "row": {
+                "best": true,
+                "bookmaker": "bet365.us",
+                "bookmaker_id": "1105",
+                "created": [
+                  "2026-10-26T05:13",
+                  "2026-10-26T05:13"
+                ],
+                "line": "2.50",
+                "movement": [
+                  "up",
+                  "down"
+                ],
+                "odds": [
+                  1.85,
+                  1.95
+                ],
+                "pos": [
+                  "1",
+                  "2"
+                ],
+                "source": "all"
+              },
+              "row_sha256": "e1926c2cb8a442a411b3ec3bbe64f98236c9db91301f4fee92ceac2ea0c64132"
+            },
+            "market": "ou_2.5",
+            "selection": "over",
+            "price": 1.85,
+            "bookmaker": "bet365.us"
+          },
+          "shadow": false,
+          "home": "Santa Clara",
+          "away": "Benfica",
+          "kickoff_utc": "2026-10-26T18:45:00+00:00",
+          "as_of": "2026-10-26T09:11:02+02:00",
+          "original_profile_sha256": "b92ecd3ea2937b12955bec1d65aa62be176db01fe661653986e823eda8b9a0a4"
+        }
+      ]
+    }
+  ],
+  "original_source_capture_records": [
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-25",
+      "captured_at": "2026-10-24T22:02:09+00:00",
+      "identity": {
+        "away_key": "benfica",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "santa clara",
+          [],
+          "benfica",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "santaclara",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:45:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T19:45:00+01:00",
+      "league": "Portugal: Primeira Liga",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.54,
+        "1x2.draw": 0.26,
+        "1x2.home": 0.2
+      },
+      "probabilities_raw": {
+        "1x2.away": 54.0,
+        "1x2.draw": 26.0,
+        "1x2.home": 20.0
+      },
+      "raw_fixture": {
+        "away": "Benfica",
+        "date": "2026-10-26",
+        "home": "Santa Clara"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "1102f939fa614450462ac402cf69cf011bc092008d9fbab752881867221f9360",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-25",
+      "captured_at": "2026-10-24T22:02:09+00:00",
+      "identity": {
+        "away_key": "istanbulbasaksehir",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "besiktas",
+          [],
+          "basaksehir",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "besiktas",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T16:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T17:00:00+01:00",
+      "league": "Turkey: Süper Lig",
+      "picks": {
+        "tip": "1"
+      },
+      "probabilities": {
+        "1x2.away": 0.12,
+        "1x2.draw": 0.22,
+        "1x2.home": 0.66
+      },
+      "probabilities_raw": {
+        "1x2.away": 12.0,
+        "1x2.draw": 22.0,
+        "1x2.home": 66.0
+      },
+      "raw_fixture": {
+        "away": "Başakşehir",
+        "date": "2026-10-26",
+        "home": "Beşiktaş"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "2d8c0d76864535d1dbeb3892f53df8914ac49f29d8cd16710e14c882e1fd9147",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-25",
+      "captured_at": "2026-10-24T22:02:09+00:00",
+      "identity": {
+        "away_key": "fenerbahce",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "galatasaray",
+          [],
+          "fenerbahce",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "galatasaray",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:30:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T19:30:00+01:00",
+      "league": "Turkey: Süper Lig",
+      "picks": {
+        "tip": "2"
+      },
+      "probabilities": {
+        "1x2.away": 0.64,
+        "1x2.draw": 0.23,
+        "1x2.home": 0.13
+      },
+      "probabilities_raw": {
+        "1x2.away": 64.0,
+        "1x2.draw": 23.0,
+        "1x2.home": 13.0
+      },
+      "raw_fixture": {
+        "away": "Fenerbahçe",
+        "date": "2026-10-26",
+        "home": "Galatasaray"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "d64ed2037fd2fdf97a00acb584e611de2324964c3ce8bf96e63a2001785cebb0",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-25",
+      "captured_at": "2026-10-24T22:02:09+00:00",
+      "identity": {
+        "away_key": "jadranlp",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "mladost zdralovi",
+          [],
+          "jadran lp",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "mladostzdralovi",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T13:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T14:00:00+01:00",
+      "league": "Croatia: First NL",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.44,
+        "1x2.draw": 0.28,
+        "1x2.home": 0.28
+      },
+      "probabilities_raw": {
+        "1x2.away": 44.0,
+        "1x2.draw": 28.0,
+        "1x2.home": 28.0
+      },
+      "raw_fixture": {
+        "away": "Jadran LP",
+        "date": "2026-10-26",
+        "home": "Mladost Ždralovi"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "822855c2909d9b63b34badc4e5a1cae880f6247389c643c96ae56c29b3d389e1",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-25",
+      "captured_at": "2026-10-25T04:12:58+00:00",
+      "identity": {
+        "away_key": "benfica",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "santa clara",
+          [],
+          "benfica",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "santaclara",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:45:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T19:45:00+01:00",
+      "league": "Portugal: Primeira Liga",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.54,
+        "1x2.draw": 0.26,
+        "1x2.home": 0.2
+      },
+      "probabilities_raw": {
+        "1x2.away": 54.0,
+        "1x2.draw": 26.0,
+        "1x2.home": 20.0
+      },
+      "raw_fixture": {
+        "away": "Benfica",
+        "date": "2026-10-26",
+        "home": "Santa Clara"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "2a43f5e612a3ba2d7f4d88c82cd21086b988d32c2bdb714affa78c948b585bb8",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-25",
+      "captured_at": "2026-10-25T04:12:58+00:00",
+      "identity": {
+        "away_key": "istanbulbasaksehir",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "besiktas",
+          [],
+          "basaksehir",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "besiktas",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T16:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T17:00:00+01:00",
+      "league": "Turkey: Süper Lig",
+      "picks": {
+        "tip": "1"
+      },
+      "probabilities": {
+        "1x2.away": 0.12,
+        "1x2.draw": 0.22,
+        "1x2.home": 0.66
+      },
+      "probabilities_raw": {
+        "1x2.away": 12.0,
+        "1x2.draw": 22.0,
+        "1x2.home": 66.0
+      },
+      "raw_fixture": {
+        "away": "Başakşehir",
+        "date": "2026-10-26",
+        "home": "Beşiktaş"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "07fde4c7b497016d8c8337866e7e6391d76b66276a2a3b39319eb533846d096f",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-25",
+      "captured_at": "2026-10-25T04:12:58+00:00",
+      "identity": {
+        "away_key": "fenerbahce",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "galatasaray",
+          [],
+          "fenerbahce",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "galatasaray",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:30:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T19:30:00+01:00",
+      "league": "Turkey: Süper Lig",
+      "picks": {
+        "tip": "2"
+      },
+      "probabilities": {
+        "1x2.away": 0.64,
+        "1x2.draw": 0.23,
+        "1x2.home": 0.13
+      },
+      "probabilities_raw": {
+        "1x2.away": 64.0,
+        "1x2.draw": 23.0,
+        "1x2.home": 13.0
+      },
+      "raw_fixture": {
+        "away": "Fenerbahçe",
+        "date": "2026-10-26",
+        "home": "Galatasaray"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "3681a4fe033bf6351377f7d3f94c5d45e0aa507ade0cf710b19ba7beca78f8c6",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-25",
+      "captured_at": "2026-10-25T04:12:58+00:00",
+      "identity": {
+        "away_key": "jadranlp",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "mladost zdralovi",
+          [],
+          "jadran lp",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "mladostzdralovi",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T13:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T14:00:00+01:00",
+      "league": "Croatia: First NL",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.44,
+        "1x2.draw": 0.28,
+        "1x2.home": 0.28
+      },
+      "probabilities_raw": {
+        "1x2.away": 44.0,
+        "1x2.draw": 28.0,
+        "1x2.home": 28.0
+      },
+      "raw_fixture": {
+        "away": "Jadran LP",
+        "date": "2026-10-26",
+        "home": "Mladost Ždralovi"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "28dddc3d7cf90ce2d5d3086fdfb03bbdd1632adb4b5f4ca3f6e6bd3dc58d1f96",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-25T22:02:02+00:00",
+      "identity": {
+        "away_key": "benfica",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "santa clara",
+          [],
+          "benfica",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "santaclara",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:45:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T19:45:00+01:00",
+      "league": "Portugal: Primeira Liga",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.51,
+        "1x2.draw": 0.27,
+        "1x2.home": 0.22
+      },
+      "probabilities_raw": {
+        "1x2.away": 51.0,
+        "1x2.draw": 27.0,
+        "1x2.home": 22.0
+      },
+      "raw_fixture": {
+        "away": "Benfica",
+        "date": "2026-10-26",
+        "home": "Santa Clara"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "33ebcf406231ea4ec85760f0c7f5046fa64e734919513dae186ac607d301894d",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-25T22:02:02+00:00",
+      "identity": {
+        "away_key": "istanbulbasaksehir",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "besiktas",
+          [],
+          "basaksehir",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "besiktas",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T16:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T17:00:00+01:00",
+      "league": "Turkey: Süper Lig",
+      "picks": {
+        "tip": "1"
+      },
+      "probabilities": {
+        "1x2.away": 0.12,
+        "1x2.draw": 0.22,
+        "1x2.home": 0.66
+      },
+      "probabilities_raw": {
+        "1x2.away": 12.0,
+        "1x2.draw": 22.0,
+        "1x2.home": 66.0
+      },
+      "raw_fixture": {
+        "away": "Başakşehir",
+        "date": "2026-10-26",
+        "home": "Beşiktaş"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "da0047a73300bece483880f948d6d6843446eb55f0886ea327d77d726f4a1637",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-25T22:02:02+00:00",
+      "identity": {
+        "away_key": "fenerbahce",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "galatasaray",
+          [],
+          "fenerbahce",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "galatasaray",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:30:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T19:30:00+01:00",
+      "league": "Turkey: Süper Lig",
+      "picks": {
+        "tip": "2"
+      },
+      "probabilities": {
+        "1x2.away": 0.64,
+        "1x2.draw": 0.23,
+        "1x2.home": 0.13
+      },
+      "probabilities_raw": {
+        "1x2.away": 64.0,
+        "1x2.draw": 23.0,
+        "1x2.home": 13.0
+      },
+      "raw_fixture": {
+        "away": "Fenerbahçe",
+        "date": "2026-10-26",
+        "home": "Galatasaray"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "a0c0e1bd050bac815a573a8d1f617c976fc1184dab8f0bb04b5bb6fee0786bd7",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-25T22:02:02+00:00",
+      "identity": {
+        "away_key": "jadranlp",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "mladost zdralovi",
+          [],
+          "jadran lp",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "mladostzdralovi",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T13:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T14:00:00+01:00",
+      "league": "Croatia: First NL",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.44,
+        "1x2.draw": 0.28,
+        "1x2.home": 0.28
+      },
+      "probabilities_raw": {
+        "1x2.away": 44.0,
+        "1x2.draw": 28.0,
+        "1x2.home": 28.0
+      },
+      "raw_fixture": {
+        "away": "Jadran LP",
+        "date": "2026-10-26",
+        "home": "Mladost Ždralovi"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "a24fa9ce1f4b2668d1af895b6d1349033792e86d87c8521c2d82ad7aedac572b",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-25T22:02:50+00:00",
+      "identity": {
+        "away_key": "benfica",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "santa clara",
+          [],
+          "benfica",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "santaclara",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:45:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T18:45:00Z",
+      "league": "Liga Portugal",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.6753028891,
+        "1x2.draw": 0.2150978565,
+        "1x2.home": 0.1095992544,
+        "btts.no": 0.5585106383,
+        "btts.yes": 0.4414893617,
+        "ou_1.5.over": 0.75,
+        "ou_2.5.over": 0.5131578947,
+        "ou_3.5.over": 0.3119266055
+      },
+      "probabilities_raw": {
+        "1x2.away": 67.53028890959925,
+        "1x2.draw": 21.509785647716683,
+        "1x2.home": 10.959925442684066,
+        "btts.no": 55.851063829787236,
+        "btts.yes": 44.148936170212764,
+        "ou_1.5.over": 75.0,
+        "ou_2.5.over": 51.315789473684205,
+        "ou_3.5.over": 31.19266055045872
+      },
+      "raw_fixture": {
+        "away": "Benfica",
+        "date": "2026-10-26",
+        "home": "Santa Clara"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "b90fcd753d9281364744cc123a09a3bad5b7240b25d2d1ebd223cd9fe5232682",
+      "schema": 1,
+      "source": "scoutingstats",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-25T22:02:50+00:00",
+      "identity": {
+        "away_key": "istanbulbasaksehir",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "besiktas",
+          [],
+          "istanbul basaksehir",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "besiktas",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T16:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T16:00:00Z",
+      "league": "Super Lig",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.1037251424,
+        "1x2.draw": 0.1697320512,
+        "1x2.home": 0.7265428065,
+        "btts.no": 0.4109947644,
+        "btts.yes": 0.5890052356,
+        "ou_1.5.over": 0.8541392904,
+        "ou_2.5.over": 0.6950672646,
+        "ou_3.5.over": 0.4864864865
+      },
+      "probabilities_raw": {
+        "1x2.away": 10.37251423769956,
+        "1x2.draw": 16.973205116235647,
+        "1x2.home": 72.65428064606479,
+        "btts.no": 41.09947643979058,
+        "btts.yes": 58.90052356020943,
+        "ou_1.5.over": 85.41392904073587,
+        "ou_2.5.over": 69.5067264573991,
+        "ou_3.5.over": 48.648648648648646
+      },
+      "raw_fixture": {
+        "away": "İstanbul Başakşehir",
+        "date": "2026-10-26",
+        "home": "Beşiktaş"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "5bb5d026e4ee49e1cd6b9f72077f6b40a76a4a2bf99b72f3a937daa071635a27",
+      "schema": 1,
+      "source": "scoutingstats",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-25T22:02:50+00:00",
+      "identity": {
+        "away_key": "fenerbahce",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "galatasaray",
+          [],
+          "fenerbahce",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "galatasaray",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:30:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T18:30:00Z",
+      "league": "Super Lig",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.3107112893,
+        "1x2.draw": 0.2453621702,
+        "1x2.home": 0.4439265405,
+        "btts.no": 0.354679803,
+        "btts.yes": 0.645320197,
+        "ou_1.5.over": 0.828313253,
+        "ou_2.5.over": 0.6388206388,
+        "ou_3.5.over": 0.4414893617
+      },
+      "probabilities_raw": {
+        "1x2.away": 31.07112892700662,
+        "1x2.draw": 24.536217022466676,
+        "1x2.home": 44.39265405052671,
+        "btts.no": 35.4679802955665,
+        "btts.yes": 64.5320197044335,
+        "ou_1.5.over": 82.83132530120481,
+        "ou_2.5.over": 63.88206388206389,
+        "ou_3.5.over": 44.148936170212764
+      },
+      "raw_fixture": {
+        "away": "Fenerbahçe",
+        "date": "2026-10-26",
+        "home": "Galatasaray"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "7669c2af9d11d18d1432ee2ab66bc794ffd568fb9f437dc3939fc6b2d911304b",
+      "schema": 1,
+      "source": "scoutingstats",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-26T04:02:01+00:00",
+      "identity": {
+        "away_key": "benfica",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "santa clara",
+          [],
+          "benfica",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "santaclara",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:45:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T19:45:00+01:00",
+      "league": "Portugal: Primeira Liga",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.51,
+        "1x2.draw": 0.27,
+        "1x2.home": 0.22
+      },
+      "probabilities_raw": {
+        "1x2.away": 51.0,
+        "1x2.draw": 27.0,
+        "1x2.home": 22.0
+      },
+      "raw_fixture": {
+        "away": "Benfica",
+        "date": "2026-10-26",
+        "home": "Santa Clara"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "9a16b5671b373901fcfb7006f8f5bb0a5bb403b3b1410f264325791242eacf27",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-26T04:02:01+00:00",
+      "identity": {
+        "away_key": "istanbulbasaksehir",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "besiktas",
+          [],
+          "basaksehir",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "besiktas",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T16:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T17:00:00+01:00",
+      "league": "Turkey: Süper Lig",
+      "picks": {
+        "tip": "1"
+      },
+      "probabilities": {
+        "1x2.away": 0.12,
+        "1x2.draw": 0.22,
+        "1x2.home": 0.66
+      },
+      "probabilities_raw": {
+        "1x2.away": 12.0,
+        "1x2.draw": 22.0,
+        "1x2.home": 66.0
+      },
+      "raw_fixture": {
+        "away": "Başakşehir",
+        "date": "2026-10-26",
+        "home": "Beşiktaş"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "a839e78bc82d4711df61bebde8eabbcdc2268647fd8ee9cf20869ce124f628e3",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-26T04:02:01+00:00",
+      "identity": {
+        "away_key": "fenerbahce",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "galatasaray",
+          [],
+          "fenerbahce",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "galatasaray",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:30:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T19:30:00+01:00",
+      "league": "Turkey: Süper Lig",
+      "picks": {
+        "tip": "2"
+      },
+      "probabilities": {
+        "1x2.away": 0.64,
+        "1x2.draw": 0.23,
+        "1x2.home": 0.13
+      },
+      "probabilities_raw": {
+        "1x2.away": 64.0,
+        "1x2.draw": 23.0,
+        "1x2.home": 13.0
+      },
+      "raw_fixture": {
+        "away": "Fenerbahçe",
+        "date": "2026-10-26",
+        "home": "Galatasaray"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "37d3a16c93b7ac0e6df143cefe79adcb64f036b7e3b9dd8a919c636f2e07d6f2",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-26T04:02:01+00:00",
+      "identity": {
+        "away_key": "jadranlp",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "mladost zdralovi",
+          [],
+          "jadran lp",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "mladostzdralovi",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T13:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T14:00:00+01:00",
+      "league": "Croatia: First NL",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.44,
+        "1x2.draw": 0.28,
+        "1x2.home": 0.28
+      },
+      "probabilities_raw": {
+        "1x2.away": 44.0,
+        "1x2.draw": 28.0,
+        "1x2.home": 28.0
+      },
+      "raw_fixture": {
+        "away": "Jadran LP",
+        "date": "2026-10-26",
+        "home": "Mladost Ždralovi"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "42b8bce31bd5345f355444de62d7164625dc4f3ff0a2749e6738775b878ac626",
+      "schema": 1,
+      "source": "vitibet",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-26T04:02:52+00:00",
+      "identity": {
+        "away_key": "benfica",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "santa clara",
+          [],
+          "benfica",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "santaclara",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:45:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T18:45:00Z",
+      "league": "Liga Portugal",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.6753028891,
+        "1x2.draw": 0.2150978565,
+        "1x2.home": 0.1095992544,
+        "btts.no": 0.5585106383,
+        "btts.yes": 0.4414893617,
+        "ou_1.5.over": 0.75,
+        "ou_2.5.over": 0.5263157895,
+        "ou_3.5.over": 0.3119266055
+      },
+      "probabilities_raw": {
+        "1x2.away": 67.53028890959925,
+        "1x2.draw": 21.509785647716683,
+        "1x2.home": 10.959925442684066,
+        "btts.no": 55.851063829787236,
+        "btts.yes": 44.148936170212764,
+        "ou_1.5.over": 75.0,
+        "ou_2.5.over": 52.63157894736842,
+        "ou_3.5.over": 31.19266055045872
+      },
+      "raw_fixture": {
+        "away": "Benfica",
+        "date": "2026-10-26",
+        "home": "Santa Clara"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "853ac998778717e44e9562fff4a11f5f7befb41440ed16e13b73908c6915ea24",
+      "schema": 1,
+      "source": "scoutingstats",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-26T04:02:52+00:00",
+      "identity": {
+        "away_key": "istanbulbasaksehir",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "besiktas",
+          [],
+          "istanbul basaksehir",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "besiktas",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T16:00:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T16:00:00Z",
+      "league": "Super Lig",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.1037251424,
+        "1x2.draw": 0.1697320512,
+        "1x2.home": 0.7265428065,
+        "btts.no": 0.4225721785,
+        "btts.yes": 0.5774278215,
+        "ou_1.5.over": 0.8541392904,
+        "ou_2.5.over": 0.6721311475,
+        "ou_3.5.over": 0.4623655914
+      },
+      "probabilities_raw": {
+        "1x2.away": 10.37251423769956,
+        "1x2.draw": 16.973205116235647,
+        "1x2.home": 72.65428064606479,
+        "btts.no": 42.257217847769034,
+        "btts.yes": 57.74278215223097,
+        "ou_1.5.over": 85.41392904073587,
+        "ou_2.5.over": 67.21311475409837,
+        "ou_3.5.over": 46.23655913978495
+      },
+      "raw_fixture": {
+        "away": "İstanbul Başakşehir",
+        "date": "2026-10-26",
+        "home": "Beşiktaş"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "626959b1ea1e4d52b3f2caa9d16486b322812b00b136f8e57b6abec0ea6b37dd",
+      "schema": 1,
+      "source": "scoutingstats",
+      "source_event_id": null,
+      "source_timestamp": null
+    },
+    {
+      "capture_context": "official_daily_pipeline",
+      "capture_day": "2026-10-26",
+      "captured_at": "2026-10-26T04:02:52+00:00",
+      "identity": {
+        "away_key": "fenerbahce",
+        "away_markers": [],
+        "date": "2026-10-26",
+        "era_pair_key": [
+          "2026-10-26",
+          "galatasaray",
+          [],
+          "fenerbahce",
+          []
+        ],
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
+        "home_key": "galatasaray",
+        "home_markers": [],
+        "normalizer": "edgefactory.identity.source_team_key",
+        "orientation": "home_away"
+      },
+      "kickoff_at_utc": "2026-10-26T18:30:00+00:00",
+      "kickoff_parse_status": "exact_offset",
+      "kickoff_raw": "2026-10-26T18:30:00Z",
+      "league": "Super Lig",
+      "picks": {},
+      "probabilities": {
+        "1x2.away": 0.3023997,
+        "1x2.draw": 0.2403449569,
+        "1x2.home": 0.4572553431,
+        "btts.no": 0.354679803,
+        "btts.yes": 0.645320197,
+        "ou_1.5.over": 0.828313253,
+        "ou_2.5.over": 0.6388206388,
+        "ou_3.5.over": 0.4414893617
+      },
+      "probabilities_raw": {
+        "1x2.away": 30.239970003749526,
+        "1x2.draw": 24.034495688038994,
+        "1x2.home": 45.72553430821147,
+        "btts.no": 35.4679802955665,
+        "btts.yes": 64.5320197044335,
+        "ou_1.5.over": 82.83132530120481,
+        "ou_2.5.over": 63.88206388206389,
+        "ou_3.5.over": 44.148936170212764
+      },
+      "raw_fixture": {
+        "away": "Fenerbahçe",
+        "date": "2026-10-26",
+        "home": "Galatasaray"
+      },
+      "record_type": "phase5_shadow_prediction",
+      "row_id": "f15eb9bf9452b06a9f23b4f37c3b54f3b9b3c627d9d18855fab31bdd5fb85077",
+      "schema": 1,
+      "source": "scoutingstats",
+      "source_event_id": null,
+      "source_timestamp": null
+    }
+  ],
+  "caveat": "Existing quote captures, not newly fetched odds. Saved exact-parent profiles/models reused without refitting. No production ticket, bank, freeze, placed flag or settlement mutated."
+}

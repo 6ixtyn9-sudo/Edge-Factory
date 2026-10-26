@@ -12436,3 +12436,52 @@ with the branch off would be a silent no-op), `enh_cards_for` and
 `enh_day_growth` share one card, and the shipped selector still recomputes on the
 committed 2026-10-25 slate. No lane, stake, selection, settlement or pricing rule
 changed by this section; nothing is re-fitted and no historical row is edited.
+
+## 2026-10-26 — ENH schedule admission repair and recovered two-acca card
+
+Operator requested fixing run 40283113075's NO BET and producing the missing
+bets. Root causes: BetExplorer's schedule witness loader ignored the existing
+ScoutingStats/Vitibet response schedules; source CSV capture lacked durable
+observation/origin receipts; an earlier names-only bucket could hide a priced
+curated alias (Basaksehir / İstanbul Başakşehir).
+
+Reused existing machinery only: `local_backfill.py` records real response time
+and source identity in the normal source monthly CSV, retaining schedule-only
+history inside the current row. The prediction dedup key remains unchanged:
+mutable prediction snapshots are NOT multiplied into consensus/mining units.
+The existing corroboration reader and live receipt revalidator admit these
+explicit-offset source schedules, reject legacy/late/naive/circular/conflicting
+or tampered evidence, and preserve earlier clocks across post-cutoff refreshes.
+ENH price lookup reuses existing curated aliases and skips names-only buckets.
+No new script, source request, model, admission threshold or staking rule.
+Phase 5 shadow files remain excluded from operational readers.
+
+Recovered card using the original run's saved cohort/models and quotes, with
+original response-backed schedule captures recovered OFFLINE (not wired into
+live selection):
+
+1. Mladost Ždralovi–Jadran LP O1.5 @1.30 + Galatasaray–Fenerbahçe O2.5 @1.48:
+   **1.924 raw / 1.92 displayed**.
+2. Beşiktaş–İstanbul Başakşehir O2.5 @1.40 + Santa Clara–Benfica O2.5 @1.85:
+   **2.59**.
+
+All four quotes bet365.us / BetExplorer. Existing barbell pairing; four distinct
+fixtures. Recorded free bank 39.0372%; stake 4.8796 capital points per acca,
+9.7592 total = unchanged 25% of free bank. ML scores respectively .7923881783,
+.6224540239,.6591297817,.6526882099. Matchbook's exchange quote remains rejected.
+Final replay: 23 firing quotes / four fixtures / two accas; no execution-time
+timing drops. Quotes are preserved observations, not freshly fetched availability.
+
+Evidence/card: `handoff/enh_schedule_repair_2026-10-26.md` and companion JSON.
+The JSON includes the original source capture records/row IDs, selected quote
+receipts, exact models' keys, original profile hashes and reconstruction status.
+**NOT frozen, placed, backdated or inserted into the production ledger.** No
+bank/open-slip/history mutation or workflow dispatch. Future ordinary capture
+must retain the new receipts before cutoff; selection-only reruns cannot
+retroactively stamp legacy source rows. Original NO BET output remains intact.
+
+Validation on final code: **676 targeted tests passed**, including source capture,
+corroboration/receipt tampering, ENH pricing/evidence/selection, complete tickets,
+freeze/unplaced protections, daily orchestration and Phase 5 isolation. Final
+real-input reconstruction reproduced the exact two accas and stake above.
+`git diff --check` passed. No completed full-suite result is claimed for this repair.
