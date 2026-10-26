@@ -1099,15 +1099,13 @@ def enhancement_ml_probability(pick: dict, market: str) -> float | None:
             return None  # no extrapolated or fabricated missing features
         vector = [x]
         if model['schema'] == 'enh_score_logit_v2':
-            from edgefactory.consensus_contracts import enhancement_feature_vector
+            from edgefactory.consensus_contracts import enhancement_feature_vector, enhancement_fixture_identity
             receipt = profile.get('ml_inputs')
-            features = {}
-            if receipt is not None:
-                from edgefactory.identity import source_team_key
-                if (receipt['contract_id'] != pick['contract_id'] or receipt['fixture'] !=
-                        [pick['date'], source_team_key(pick['home']), source_team_key(pick['away'])]):
-                    return None
-                features.update(receipt['values'])
+            if (not isinstance(receipt, dict) or receipt.get('contract_id') != pick['contract_id']
+                    or receipt.get('model_key') != model['model_key']
+                    or receipt.get('fixture') != enhancement_fixture_identity(pick)):
+                return None
+            features = dict(receipt['values'])
             features['confidence'] = x  # never inherit another fixture's confidence
             vector = enhancement_feature_vector(features, model)
         classes, coef, intercept = model['classes'], model['coef'], model['intercept']

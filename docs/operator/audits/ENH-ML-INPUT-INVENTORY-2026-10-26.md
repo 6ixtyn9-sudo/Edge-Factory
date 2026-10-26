@@ -84,3 +84,51 @@ sklearn or a warehouse at scoring time. No workflow was dispatched.
 
 Final validation: `PYTHONPATH=src:. .venv/bin/python -m pytest -q` →
 **4564 passed, 1 skipped in 243.80s**. No workflow or `localdata` diff.
+
+## Red-team follow-up — PR #161
+
+Adversarial tests were run against the originally published `739c9ec` source
+in an isolated ignored tree with its modules explicitly preloaded (to avoid
+pytest importing the repaired checkout). **All nine new cases failed there**;
+the same nine pass after repair. These are regression reproductions, not new
+profitability evidence.
+
+Fixed findings:
+
+1. **Raw squad identity lost in form.** Building form rows from compact keys
+   removed token boundaries recognized by `form_intel` (U21/W/II), so valid
+   non-senior history became unavailable. The ENH-only snapshot now retains
+   deterministic raw donor spellings. Conflicting squad classes or absent raw
+   spellings remain unavailable, not inferred from a compact key. Default
+   non-ENH result collection is unchanged.
+2. **Cache could bypass the squad veto.** Equal canonical keys do not prove
+   equal squad classes. Both team/H2H feature-cache keys and fixture receipts
+   now include squad classes.
+3. **Missing or mismatched v2 receipt was accepted.** The scorer now requires
+   a receipt bound to the specific model key as well as fixture, contract and
+   squad identity. A missing receipt falls back to cohort ordering rather than
+   silently scoring an entirely imputed context. Valid missing measurements
+   *inside* a bound receipt still use documented training-mean imputation.
+   Historical v1 payload interpretation remains unchanged.
+4. **Optional failure could erase legitimate evidence.** Optional training
+   feature preparation is isolated from descriptive cohort construction. A
+   failure disables that fit, never silently trains on a partial population,
+   and reports coverage as null (unavailable), not observed zero. Optional live
+   forecast failures retain the parent candidate and mark context unavailable;
+   the ENH scorer then falls back while retaining measured cohort admission.
+5. **Boolean/numeric duplicate mismatch.** A bool and numeric 1 could compare
+   equal during conflict detection but produce different optional forecasts
+   depending on capture order. Type-aware feature conflict comparison now
+   quarantines that context in either order without changing parent admission.
+
+Final repaired-suite validation:
+`PYTHONPATH=src:. .venv/bin/python -m pytest -q` →
+**4573 passed, 1 skipped in 244.68s**. The nine red-team tests separately pass.
+No workflows dispatched; no workflow, Main policy, staking, frozen-card or
+financial-state edits. Existing historical capture/label-known-by limitations
+and unproven production economics remain open, not certified by this review.
+
+The original PR head also has a failed external `Workers Builds:
+edge-factory-source-relay` check. GitHub exposes its dashboard link but no
+failure log in the check output; this review does not diagnose that build or
+represent local pytest success as all remote checks passing.
