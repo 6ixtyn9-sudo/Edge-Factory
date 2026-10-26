@@ -12485,3 +12485,34 @@ corroboration/receipt tampering, ENH pricing/evidence/selection, complete ticket
 freeze/unplaced protections, daily orchestration and Phase 5 isolation. Final
 real-input reconstruction reproduced the exact two accas and stake above.
 `git diff --check` passed. No completed full-suite result is claimed for this repair.
+
+### 2026-10-26 — complete the missing normal-workflow schedule recovery
+
+Operator challenged the conditional answer about dispatch/freeze. Closed the
+actual input gap: committed two tiny schedule-only source archives under
+`localdata/schedule_{scoutingstats,vitibet}_2026-10.csv.gz` (6 + 16 rows, ~1.6 KB
+compressed total). All are exact projections of the original capture records
+already preserved in the handoff JSON; original capture row IDs were SHA-256
+verified. No fresh timestamps, prediction rows, probabilities, odds or tickets
+were fabricated. The existing corroboration loader / live receipt validator
+accept the separate prefix; ordinary prediction/warehouse globs do not. The
+existing restore-committed-data workflow step restores the tracked receipts over
+stale/missing caches (tested). Normal live code still does not read research
+shadow ledgers. Fresh normal source CSVs and recovered schedules both compete
+under the same pre-cutoff/conflict/identity rules.
+
+Executed the actual `cmd_enhancement` freeze entry point in an ISOLATED scratch
+lane at **10:40 SAST**, using saved original cohort/models, price receipts and ENH
+financial state: two exact accas @1.92 and @2.59, stake9.7592 capital points,
+`frozen_by_date[2026-10-26].final=True`, open slip and FINAL footer. No production
+financial/frozen state was changed. Relevant BetExplorer detail caches were
+already visited and remain within their normal 24h window, so ordinary dispatch
+does not itself replace these earlier quote captures.
+
+After this follow-up is merged, operator dispatch is existing `daily.yml`, ref
+`main`, mode`auto` (not recover_and_rebuild/remine_only/force-ENH). It rebuilds the
+current slate and then runs the normal ENH generation/freeze step. Existing
+09:00 SAST rule automatically freezes any resulting valid card at real run time;
+new prices/cohorts/conflicts/started fixtures can still change eligibility.
+No unconditional exact-card guarantee and no workflow dispatch by agent.
+Final targeted validation **696 passed**; no full-suite claim.
