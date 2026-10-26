@@ -1,21 +1,11 @@
 {
   "added": 0,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Zabbar St. Patrick",
-      "date": "2026-10-26",
-      "home": "Floriana",
-      "kickoff": "2026-10-26T18:00:00+01:00",
-      "league": "Malta: Premier League"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 20,
-  "captured_at": "2026-10-26T16:19:25+00:00",
+  "captured_at": "2026-10-26T19:10:32+00:00",
   "date": "2026-10-26",
-  "due_reasons": {
-    "first_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -34,16 +24,16 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 2,
+    "kickoff_already_passed": 3,
     "kickoff_mismatch": 1,
     "priced": 4,
-    "priced_close_window_not_open": 1,
-    "retry_cooldown": 12
+    "retry_cooldown": 13
   },
   "skipped": [
     "Sepsi OSK Sfantu Gheorghe|Universitatea Craiova (retry cooldown (6h after failed attempt))",
     "FC Copenhagen|Odense (priced)",
     "Al Ahli|Al Gharafa (retry cooldown (6h after failed attempt))",
+    "Floriana|Zabbar St. Patrick (retry cooldown (6h after failed attempt))",
     "Flamengo|Atl\u00e9tico Mineiro (retry cooldown (6h after failed attempt))",
     "Be\u015fikta\u015f|Ba\u015fak\u015fehir (retry cooldown (6h after failed attempt))",
     "Paris Saint Germain|Olympique Lyonnais (retry cooldown (6h after failed attempt))",
@@ -56,18 +46,13 @@
     "Mladost \u017ddralovi|Jadran LP (kickoff already passed)",
     "Montpellier|RED Star FC 93 (priced)",
     "WARN kickoff-mismatch Galatasaray|Fenerbah\u00e7e: pick legacy display says 18:30 SAST, captured rows say 20:30 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Galatasaray|Fenerbah\u00e7e (priced, close window not open)",
+    "Galatasaray|Fenerbah\u00e7e (kickoff already passed)",
     "Paris Saint Germain|Lyon (priced)",
     "FC Iberia 1999|FC Torpedo Kutaisi (retry cooldown (6h after failed attempt))",
     "Rizespor|Trabzonspor (retry cooldown (6h after failed attempt))",
     "Sevilla|Osasuna (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Floriana vs Zabbar St. Patrick (league not covered: Malta: Premier League)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Malta: Premier League": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
