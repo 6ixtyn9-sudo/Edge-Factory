@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 39.0372,
+  "bank": 43.7309,
   "cycle_base": 100.0,
   "history": [
     {
@@ -690,37 +690,6 @@
       ],
       "bank_pct": 43.7309,
       "close_pct": 37.5495
-    },
-    {
-      "date": "2026-10-26",
-      "staked_pct": 4.6937,
-      "returned_pct": 0.0,
-      "accas": [
-        {
-          "odds": 2.11,
-          "won": false,
-          "stake_pct": 4.6937,
-          "returned_pct": 0.0,
-          "legs": [
-            {
-              "match": "Barracas Central vs Estudiantes de Rio Cuarto",
-              "pick": "home",
-              "odds": 1.3,
-              "result": "win",
-              "label": "Home Team Over 0.5 Goals"
-            },
-            {
-              "match": "Deportes Tolima vs Deportivo Pasto",
-              "pick": "home",
-              "odds": 1.62,
-              "result": "loss",
-              "label": "Home Team Over 1.5 Goals"
-            }
-          ]
-        }
-      ],
-      "bank_pct": 39.0372,
-      "close_pct": 32.8558
     }
   ],
   "events": [],
@@ -2839,6 +2808,21 @@
       "receipt_sha256": "d36bc2d4f8d05ae98584778682a1b3fa5b5256255906dde3460b2dbca37805c4",
       "approved_at": "2026-10-23T12:11:37.576560+02:00",
       "confirmed_none_placed": true
+    }
+  },
+  "settled_enhancement_reconciliations": {
+    "2026-10-26": {
+      "receipt_sha256": "08b6a5b123bf47a5fdcf07ed5febb0f981747b859c9a99c485bb04c1d167f9b8",
+      "approved_at": "2026-10-26T07:07:47+02:00",
+      "confirmed_none_placed": true,
+      "removed_row_sha256": "8b5faf7c3693f1cfd76999dc241f4116d3a575982db05799555e8a2e92965007",
+      "removed": {
+        "date": "2026-10-26",
+        "staked_pct": 4.6937,
+        "returned_pct": 0.0
+      },
+      "bank_before_pct": 39.0372,
+      "bank_after_pct": 43.7309
     }
   }
 }

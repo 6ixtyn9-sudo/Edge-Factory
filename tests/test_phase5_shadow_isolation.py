@@ -182,7 +182,8 @@ def test_phase5_rows_cannot_create_acca_or_change_bank(tmp_path, monkeypatch):
     monkeypatch.setattr(tickets, "_shadow_record_outcome", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(tickets, "price_supply_report", lambda *_args, **_kwargs: [])
     monkeypatch.setattr(tickets, "_superseded_no_bet_lines", lambda *_args, **_kwargs: [])
-    monkeypatch.setattr(tickets, "live_kickoff_guard", lambda pool, _now: (pool, {}))
+    monkeypatch.setattr(tickets, "live_kickoff_guard",
+                        lambda pool, _now, **_kw: (pool, {}))
 
     original_plan_day = tickets.plan_day
     plan_calls: list[int] = []

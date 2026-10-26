@@ -48,11 +48,16 @@ TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
 
 Slip lifecycle matches the production cadence: builds from 06:00 SAST,
 FREEZES at 09:00 (FREEZE_HOUR; later runs re-print), settles as results
-land. Every build runs the LIVE KICKOFF GUARD: a leg whose kickoff is
+land — and ONLY a frozen slip settles: an unfrozen draft was still changing
+when its legs kicked off, so it is a recommendation, not a stake (the
+2026-10-26 enhancement card was booked as a bet this way). Every build runs
+the LIVE KICKOFF GUARD: a leg whose kickoff is
 missing/garbage, or clock-only (bare "HH:MM" or no-year day-month) in a
 league region whose clock is far from SAST (Americas / Asia-Pacific — the
 incident-#6 Vancouver class), or already started at build time, drops, and
-each run prints the skip census. The fail-closed KICKOFF PROOF CONTRACT
+each run prints the skip census. Before the freeze hour the guard also drops
+a leg whose kickoff precedes that hour: the card was not final at kickoff, so
+the leg could never have been staked. The fail-closed KICKOFF PROOF CONTRACT
 exists as an OFF-by-default audit tool (replay_harness.py --kickoff-contract)
 — it is not the live rule. State persists in localdata/auto_tickets_state.json
 (gitignore exception exists).
@@ -184,6 +189,7 @@ KO_SKIP_REMOTE_CLOCK = ("clock-only kickoff (bare time or no-year day-month) in 
                         "league region far from SAST — SAST rendering untrusted")
 KO_SKIP_UNPROVEN = "unprovable kickoff (no explicit offset or row-carried zone)"
 KO_SKIP_STARTED = "already started (dated kickoff at/past build time)"
+KO_SKIP_PRE_FREEZE = "kickoff precedes the card's own freeze hour (unplaceable)"
 KO_SKIP_TOO_CLOSE = f"audit: kickoff under {KICKOFF_MIN_LEAD_HOURS:g}h away or already started (provable)"
 
 # ---------------- the validated recipe (receipts, not knobs) ----------------
@@ -1409,9 +1415,38 @@ def kickoff_utc_from_archived_row(row) -> tuple[str | None, str | None]:
     return None, None
 
 
-def live_kickoff_guard(pool, now):
+def freeze_floor(target: str, now) -> datetime | None:
+    """The first instant a card for ``target`` can be a PLACED bet — or None.
+
+    A card is only final at FREEZE_HOUR on its own date, so a fixture that
+    kicks off before that instant can never be part of a bet the operator was
+    able to place: by the time the card stopped changing, the match was over or
+    under way. The 2026-10-26 enhancement card proved the cost — drafted at
+    00:00 SAST, both legs finished by 06:42, and the settlement booked a bet
+    that the operator never placed (his confirmation: "i only placed main
+    accas, i did not place enh").
+
+    Returns the floor only while the build itself still runs BEFORE it; once
+    the freeze hour has passed the card is final and the ordinary "already
+    started" rule is the right instrument. None for a historical/replayed date.
+    """
+    if not 0 <= FREEZE_HOUR <= 23:
+        return None            # an unreachable freeze hour defines no floor
+    local = now.astimezone(TZ)
+    if str(target) != local.strftime("%Y-%m-%d"):
+        return None
+    floor = datetime.strptime(str(target), "%Y-%m-%d").replace(
+        tzinfo=TZ, hour=FREEZE_HOUR)
+    return floor if local < floor else None
+
+
+def live_kickoff_guard(pool, now, freeze_floor_at=None):
     """The LIVE kickoff guard (incident #6 fix; region-narrowed after the
     2026-09-06 round-2 audit, then keyed to ingest normalisation in Task A).
+
+    0a. When the build still runs before the target date's FREEZE_HOUR, a row
+       whose kickoff precedes that floor drops: the card was not final yet at
+       kickoff, so no placement was possible (see ``freeze_floor``).
 
     0. A row carrying a resolved ``kickoff_utc`` (emitted by picks_today's
        ingest normalisation from an explicit zone-bearing witness) is judged
@@ -1439,7 +1474,9 @@ def live_kickoff_guard(pool, now):
         pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
         ku = _zoned_instant_utc(pick.get("kickoff_utc"))
         if ku is not None:
-            if ku.astimezone(TZ) < now.astimezone(TZ):
+            if freeze_floor_at is not None and ku < freeze_floor_at.astimezone(_UTC):
+                drops.setdefault(KO_SKIP_PRE_FREEZE, []).append(leg["match"])
+            elif ku.astimezone(TZ) < now.astimezone(TZ):
                 drops.setdefault(KO_SKIP_STARTED, []).append(leg["match"])
             else:
                 kept.append(leg)
@@ -1456,7 +1493,9 @@ def live_kickoff_guard(pool, now):
     for leg in rideable:
         pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
         kt = parse_kickoff(pick)
-        if kt is not None and kt.astimezone(TZ) < now.astimezone(TZ):
+        if kt is not None and freeze_floor_at is not None and kt < freeze_floor_at:
+            drops.setdefault(KO_SKIP_PRE_FREEZE, []).append(leg["match"])
+        elif kt is not None and kt.astimezone(TZ) < now.astimezone(TZ):
             started.append(leg)
         else:
             kept.append(leg)
@@ -2946,6 +2985,92 @@ def alias_outcome_conflict(pick, entries_by_date) -> bool:
 
 
 # ---------------- state (all percentages of capital) ----------------
+def _history_row_digest(row: dict) -> str:
+    """Hash witness of one settled bet-day, so a reconciliation names its row."""
+    return hashlib.sha256(json.dumps(row, sort_keys=True, default=str)
+                          .encode("utf-8")).hexdigest()
+
+
+def _apply_settled_enhancement_reconciliations(st: dict, localdata: Path) -> bool:
+    """Undo a settlement that booked a bet the operator never placed.
+
+    This is the deliberate counterpart to ``_apply_unplaced_enhancement_resets``:
+    that receipt path withdraws an UNPLACED card *before* it can settle and
+    refuses outright once history exists ("settled history exists;
+    reconciliation required"). When the settlement has already landed, the only
+    honest repair is a receipt that names the exact history row it removes.
+
+    It is scoped to one date, one lane and one witnessed row, and it fails
+    closed: an unknown row, a changed row (hash mismatch), a bank that does not
+    equal the documented reversal, or a second receipt for the same date all
+    raise rather than adjust money. Nothing else is re-derived — the reversal is
+    the row's own ``returned_pct - staked_pct``, exactly what settlement added —
+    and every later bet-day's close is rechained from the corrected bank.
+    """
+    changed = False
+    pattern = "autobets_enh_tickets_20??-??-??_settled_reconciliation.json"
+    for path in sorted(localdata.glob(pattern)):
+        raw = path.read_bytes()
+        receipt = json.loads(raw)
+        target = str(receipt.get("date") or "")
+        if (re.fullmatch(r"\d{4}-\d{2}-\d{2}", target) is None
+                or path.name != f"autobets_enh_tickets_{target}_settled_reconciliation.json"
+                or receipt.get("schema") != 1
+                or receipt.get("action") != "reconcile_unplaced_enhancement_settlement"
+                or receipt.get("lane") != "enh"
+                or receipt.get("confirmed_none_placed") is not True):
+            raise ValueError(f"invalid settled-enhancement reconciliation receipt: {path.name}")
+        approved = datetime.fromisoformat(str(receipt.get("approved_at")))
+        if approved.tzinfo is None:
+            raise ValueError(f"reconciliation {target} refused: unzoned approval timestamp")
+        expected_row = receipt.get("history_row_sha256")
+        if not isinstance(expected_row, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_row):
+            raise ValueError(f"reconciliation {target} refused: no row witness")
+        identity = hashlib.sha256(raw).hexdigest()
+        book = st.get("settled_enhancement_reconciliations") or {}
+        if book.get(target, {}).get("receipt_sha256") == identity:
+            continue
+        if target in book:
+            raise ValueError(f"reconciliation {target} refused: a different receipt already applied")
+        rows = [h for h in st.get("history", []) if str(h.get("date")) == target]
+        if len(rows) != 1:
+            raise ValueError(f"reconciliation {target} refused: "
+                             f"{len(rows)} settled row(s) for that date")
+        row = rows[0]
+        if _history_row_digest(row) != expected_row:
+            raise ValueError(f"reconciliation {target} refused: settled row changed since approval")
+        staked = float(row.get("staked_pct") or 0.0)
+        returned = float(row.get("returned_pct") or 0.0)
+        for name, stored, given in (("staked_pct", staked, receipt.get("staked_pct")),
+                                    ("returned_pct", returned, receipt.get("returned_pct"))):
+            if given is None or abs(float(given) - stored) > 1e-6:
+                raise ValueError(f"reconciliation {target} refused: {name} differs from the receipt")
+        if not st.get("bank"):
+            raise ValueError(f"reconciliation {target} refused: no live bank to reverse")
+        before = round(float(st["bank"]), 4)
+        after = round(before - (returned - staked), 4)
+        documented = receipt.get("bank_after_reconcile")
+        if documented is None or abs(float(documented) - after) > 1e-4:
+            raise ValueError(f"reconciliation {target} refused: reversal lands at {after:.4f}%, "
+                             f"receipt documents {documented}%")
+        st["history"] = [h for h in st["history"] if str(h.get("date")) != target]
+        st["bank"] = after
+        _rechain_from(st, target)
+        st.setdefault("settled_enhancement_reconciliations", {})[target] = {
+            "receipt_sha256": identity,
+            "approved_at": receipt["approved_at"],
+            "confirmed_none_placed": True,
+            "removed_row_sha256": expected_row,
+            "removed": {"date": target, "staked_pct": staked, "returned_pct": returned},
+            "bank_before_pct": before,
+            "bank_after_pct": after,
+        }
+        changed = True
+        print(f"ENHANCEMENT_RECONCILIATION {target}: unplaced settlement reversed; "
+              f"bank {before:.4f}% -> {after:.4f}%")
+    return changed
+
+
 def _apply_unplaced_enhancement_resets(st: dict, localdata: Path) -> bool:
     """Apply committed operator receipts BEFORE enhancement settlement.
 
@@ -3023,6 +3148,11 @@ def load_state(lane: "Lane | None" = None) -> dict:
                               or not math.isfinite(st[k])) for k in ("bank", "base_pct", "cycle_base")):
         raise RuntimeError("invalid financial state; refusing non-finite bank/base")
     if lane is not None and lane.state_file == ENHANCEMENT_LANE.state_file:
+        # Reconciliation first: it corrects a settlement that should never
+        # have been booked, so any withdrawal receipt for the same date is then
+        # judged against a state that no longer claims the bet.
+        if _apply_settled_enhancement_reconciliations(st, state_path(lane).parent) and st:
+            save_state(st, lane)
         if _apply_unplaced_enhancement_resets(st, state_path(lane).parent) and st:
             save_state(st, lane)
     if not st:
@@ -4249,7 +4379,20 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
         index[_folded_leg_key(day, p.get("home"), p.get("away"), p.get("pick"))] = p
     lines, still_open = [], []
     run_hits = run_refusals = 0
+    withheld = []
     for slip in st["open_slips"]:
+        # ONLY A FROZEN CARD IS A PLACED BET. A slip drafted at 00:00 SAST and
+        # never frozen was still changing when its legs kicked off, so it is a
+        # recommendation, not a stake; grading it moved the bank (and the
+        # win/loss record) with money the operator never committed. The
+        # 2026-10-26 enhancement card settled this way at 06:42 and had to be
+        # reconciled out by hand. Unfrozen slips stay open and are named on
+        # every run rather than silently discarded, so a missed freeze is
+        # visible instead of becoming a phantom settlement.
+        if not is_frozen(st, str(slip["date"]), lane):
+            withheld.append(str(slip["date"]))
+            still_open.append(slip)
+            continue
         open_accas = []
         for a in slip["accas"]:
             legres = []
@@ -4383,6 +4526,14 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
     # criterion read off the run log.
     print(f"settlement_compat_key_hits={run_hits} refused={run_refusals}",
           file=sys.stderr)
+    # Zero-included for the same reason as the counter above: "an unfrozen slip
+    # was withheld" must be readable off the run log, and its absence too.
+    print("settlement_unfrozen_withheld="
+          + (",".join(sorted(set(withheld))) if withheld else "none"),
+          file=sys.stderr)
+    if withheld:
+        lines.append("held " + ", ".join(sorted(set(withheld)))
+                     + ": card never frozen (not a placed bet) — settlement withheld")
     # Route the write the same way the read was routed: a lane settles into
     # its OWN state file. (Caught by the §5 run-1-freezes/run-2-settles
     # proof: without the lane here the settlement landed in the main lane's
@@ -4816,7 +4967,8 @@ def cmd_today(args, st, *, settled=None):
     # from the region list; the fail-closed proof contract is NOT applied
     # here (it is the off-by-default --kickoff-contract audit instrument).
     pre_kickoff_pool = list(pool)
-    pool, ko_drops = live_kickoff_guard(pool, now)
+    pool, ko_drops = live_kickoff_guard(pool, now,
+                                       freeze_floor_at=freeze_floor(target, now))
     for reason, names in ko_drops.items():
         census.setdefault(reason, []).extend(names)
         stage_rejections(
@@ -5395,7 +5547,8 @@ def apply_enhancement_timing(legs: list[dict], now, target: str, scores) -> dict
     Returns ``{reason: [match, ...]}`` for the run log.
     """
     firing = [l for l in legs if l.get("verdict") == "fire"]
-    kept, drops = live_kickoff_guard(firing, now)
+    kept, drops = live_kickoff_guard(firing, now,
+                                     freeze_floor_at=freeze_floor(target, now))
     kept_ids = {id(l) for l in kept}
     report: dict[str, list[str]] = {}
     for reason, names in drops.items():
@@ -5536,6 +5689,30 @@ def _enh_floor_lines(floors: dict | None) -> list[str]:
     return out
 
 
+def _distinct_fixture_count(legs: list[dict]) -> int:
+    """How many DIFFERENT matches a set of legs covers.
+
+    An acca needs distinct fixtures, so the eligibility count that decides
+    NO BET must be a fixture count. Counting quotes instead told the operator
+    "16 eligible legs" on 2026-10-26 when sixteen books were pricing one match
+    (Santa Clara vs Benfica): the NO BET verdict was right, the number read
+    like sixteen chances and was not even two.
+    """
+    seen = set()
+    for leg in legs or []:
+        row = leg.get("row") if isinstance(leg.get("row"), dict) else {}
+        key = leg.get("fixture_key") or row.get("fixture_key")
+        if not key:
+            home = str(row.get("home") or "").strip().lower()
+            away = str(row.get("away") or "").strip().lower()
+            if home and away:
+                key = (home, away)
+            else:
+                key = str(leg.get("match") or "").strip().lower()
+        seen.add(tuple(key) if isinstance(key, (list, tuple)) else key)
+    return len(seen)
+
+
 def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                                plan: list[dict], now, *,
                                should_freeze: bool, freeze_record: dict | None,
@@ -5577,13 +5754,21 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                 lines.append(f"   {str(l.get('match')):46s} {l.get('label')}{detail}")
             lines.append("")
     else:
-        # Eligibility = priced at or above the minimum, not a fixture duplicate.
-        dropped = list((fixture_report or {}).get("dropped") or [])
-        eligible = sum(1 for l in legs if l.get("verdict") == "fire") - len(dropped)
+        # Eligibility = priced at or above the minimum, on DISTINCT FIXTURES:
+        # the acca is staked on matches, so that is what the count reports.
+        # Quotes are stated alongside it, because "16 books, one match" is the
+        # fact that explains the verdict rather than contradicting it.
+        firing = [l for l in legs if l.get("verdict") == "fire"]
+        quotes = len(firing)
+        eligible = _distinct_fixture_count(firing)
+        noun = "fixture" if eligible == 1 else "fixtures"
+        quote_txt = "1 priced quote" if quotes == 1 else f"{quotes} priced quotes"
+        counted = f"{eligible} eligible {noun}" + (
+            "" if quotes == eligible else f" ({quote_txt})")
         if eligible < LEGS_PER_ACCA:
-            lines.append(f"NO BET — only {eligible} eligible leg(s), need {LEGS_PER_ACCA} for an acca")
+            lines.append(f"NO BET — only {counted}, need {LEGS_PER_ACCA} for an acca")
         else:
-            lines.append(f"NO BET — {eligible} eligible leg(s), but no supported complete acca")
+            lines.append(f"NO BET — {counted}, but no supported complete acca")
         lines.append("(bank stays unbet; a lone leg is never a single)")
         lines.append("Quote/payout evidence: " + json.dumps(dict(Counter(
             l.get("verdict", "unknown") for l in legs)), sort_keys=True))

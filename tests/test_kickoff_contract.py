@@ -412,12 +412,16 @@ def test_guard_source_has_no_zone_table_and_live_path_uses_the_live_guard():
     assert at.parse_kickoff.__doc__ and "NOT a bet-time proof" in at.parse_kickoff.__doc__
     # cmd_today wires the live guard; the audit contract is NOT on the live path
     body = src[src.index("def cmd_today"):src.index("def print_status")]
-    assert "live_kickoff_guard(pool, now)" in body
+    # the live call also carries the card's own freeze floor: no leg may kick
+    # off before the hour at which the card stops changing (2026-10-26)
+    assert "live_kickoff_guard(pool, now," in body
+    assert "freeze_floor_at=freeze_floor(target, now)" in body
     assert "kickoff_contract(pool" not in body
     guard_src = src[src.index("def live_kickoff_guard"):src.index("def parse_kickoff_proven")]
     assert "KO_SKIP_NO_DATE" in guard_src
     assert "KO_SKIP_REMOTE_CLOCK" in guard_src
     assert "KO_SKIP_STARTED" in guard_src
+    assert "KO_SKIP_PRE_FREEZE" in guard_src
     # the region classifier is boolean-only: present, and used by the guard
     assert "_REMOTE_CLOCK_REGION_HINTS" in src
     assert "kickoff_clock_region_is_remote" in guard_src
