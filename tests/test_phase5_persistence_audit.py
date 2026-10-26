@@ -313,3 +313,59 @@ def test_exhausted_push_race_keeps_last_rejection(tmp_path, monkeypatch):
     result = module.persist_localdata(repo, max_push_attempts=2)
     assert '2 bounded' in result['reason']
     assert 'diagnostic retained' in result['reason']
+
+
+def test_transient_upstream_error_is_retried_in_place(tmp_path, monkeypatch):
+    """A remote 500 must not turn a finished settlement step into a dead run.
+
+    2026-10-25: `git push` was rejected with "remote: Internal Server Error".
+    The pushed state was correct and complete; the run only had to try again.
+    """
+    repo = tmp_path / 'runner'
+    repo.mkdir()
+    _seed_repo(repo)
+    _append_fixture(repo, 'Unpublished')
+    module = _persistence_module()
+    real_run = module._run
+    pushes = []
+
+    def run(repo, *args, **kwargs):
+        if args[0] == 'pull':
+            return subprocess.CompletedProcess(args, 0, b'', b'')
+        if args[0] == 'push':
+            pushes.append(args)
+            if len(pushes) < 3:
+                return subprocess.CompletedProcess(
+                    args, 1, b'', b'remote: Internal Server Error\n'
+                    b'! [remote rejected] main -> main (Internal Server Error)')
+            return subprocess.CompletedProcess(args, 0, b'', b'')
+        return real_run(repo, *args, **kwargs)
+
+    monkeypatch.setattr(module, '_run', run)
+    result = module.persist_localdata(repo, push_backoff=(0, 0, 0))
+    assert result['status'] == 'pushed' and result['attempt'] == 3
+    assert len(pushes) == 3
+
+
+def test_exhausted_transient_failure_is_named_and_not_a_race(tmp_path, monkeypatch):
+    repo = tmp_path / 'runner'
+    repo.mkdir()
+    _seed_repo(repo)
+    _append_fixture(repo, 'Unpublished')
+    module = _persistence_module()
+    real_run = module._run
+
+    def run(repo, *args, **kwargs):
+        if args[0] == 'pull':
+            return subprocess.CompletedProcess(args, 0, b'', b'')
+        if args[0] == 'push':
+            return subprocess.CompletedProcess(
+                args, 1, b'', b'remote: Internal Server Error')
+        return real_run(repo, *args, **kwargs)
+
+    monkeypatch.setattr(module, '_run', run)
+    result = module.persist_localdata(repo, max_push_attempts=2, push_backoff=(0, 0))
+    assert result['status'] == 'not_persisted'
+    assert 'transient push failure' in result['reason']
+    assert 'push race' not in result['reason']
+    assert 'Internal Server Error' in result['reason']
