@@ -12371,3 +12371,68 @@ order-insensitive and name-folded card comparison, a read-only ledger reader, an
 end-to-end `--parity` / `--slate` runs. One pre-existing harness test was switched
 to `faithful=False` because it grades a synthetic pool, not pool faithfulness.
 No lane, stake, selection or pricing rule changed by this section.
+
+### 26 October 2026 — the enhancement replay now runs the LIVE ML selector (and cannot rebuild the shipped card)
+
+The `--enhancements` replay claimed to run "the lane's own code" while ordering
+every enhancement leg on the realized cohort rate. It could not have done
+otherwise: `enh_day_growth` built its pool without `ml_rank_probability`, and
+`auto_tickets.select_accas` engages its ML branch only when some leg carries a
+finite `ml_rank_probability` (`any(finite_probability(...))`). The 739 settled
+registry records carry no ML field at all — the score was never persisted — so
+the branch was False on every replayed day and the harness silently graded the
+pre-ML ordering.
+
+Wired, using existing machinery only:
+
+* `enh_ml_probability(root, day, rec)` finds the archived parent row (match on
+  the record's own `price_context.contract_id` plus the folded fixture) and calls
+  `edgefactory.enh_registry.enhancement_ml_probability` — the same pure function
+  `picks_today` and `auto_tickets.enhancement_legs` call. No score is re-derived
+  and no probability is invented: a row without a model, or a model that fails
+  its own hash/schema/date/cohort guards, yields `None` and the leg ranks in the
+  cohort group, exactly as live.
+* `enh_day_plans` is now the single place a replay card is built (pool + floors +
+  admission + `plan_day` + sizing). `enh_day_growth` (P&L) and `enh_cards_for`
+  (parity) both call it, so a parity report cannot grade a card the P&L arm did
+  not build. `enh_arm` forwards `supported`/`root`/`ml_scores`.
+* `--enh-ml` adds the LIVE-ordered arm on top of the supported policy and prints
+  its coverage; `--enh-parity` diffs the replay card against the lane's own
+  ledger (frozen-card identity = folded fixture + quoted price, because a
+  shipped history leg stores a generic `pick` and a human label, not the
+  market name).
+
+What the numbers say, with the sample stated rather than implied:
+
+* ML coverage: **44/739 settled records, 1/83 day (2026-10-25)**. The retained
+  compact model exists only on the 2026-10-25 (98/98) and 2026-10-26 (8/8)
+  slates. Supported policy fires on three bet-days (10-23, 10-24, 10-25) and
+  only **1/3** of them is scored.
+* On that one scored day the ML order changes nothing: 3 accas, 4 hits, +0.0324
+  log/bet-day for BOTH the ML arm and the cohort arm. That is expected — the
+  model is a single-feature logistic on the same `avg_p` the cohort rate uses —
+  but it is now demonstrated by the shipped selector instead of assumed. This is
+  a parity check, not an A/B: one scored bet-day cannot judge a ranking rule,
+  and the report prints that caveat next to the numbers.
+* `--enh-parity`: **MATCH 0 / DIFF 3 / NO-CARD 8** over the 11 ledger bet-days.
+  The cause is measured, not guessed: **26 of the 52 legs on frozen ENH cards
+  have no settled registry record at all** (2026-10-21: 6/6 absent; 10-25: 3/6,
+  including Konyaspor `away_under_25` @1.82 and Batman Petrolspor
+  `home_over_05` @1.33, both winners on the frozen card). The registry is a log
+  of graded, priced candidates — it is not a copy of the slate — so an ENH card
+  rebuilt from it can never be card-exact, whatever the harness does. That is a
+  ledger-coverage fact, and it is why ENH card parity is not a harness target;
+  the report now prints the gap per day.
+
+Validation: full suite **4450 passed, 1 skipped** (Python 3.11, `duckdb<2`), 12
+of them in the new `tests/test_replay_harness_enh_ml.py`: the replay delegates to
+the shipped function (asserted on the call, not the value), the parent is matched
+on contract id rather than only the fixture, a model-less slate and a tampered
+`model_key` both score `None`, coverage is keyed by (day, contract, market) with
+honest spans, a zero score still counts as a scored leg, the ML order can change
+which legs the card takes (positive control) while the cohort order is untouched
+without scores, `ml_scores` flips `enhancements=True` (an arm that passed scores
+with the branch off would be a silent no-op), `enh_cards_for` and
+`enh_day_growth` share one card, and the shipped selector still recomputes on the
+committed 2026-10-25 slate. No lane, stake, selection, settlement or pricing rule
+changed by this section; nothing is re-fitted and no historical row is edited.
