@@ -377,8 +377,11 @@ def test_pessimistic_universe_grades_unsettled_legs_as_losses(monkeypatch):
              "result": "loss", "row": {}}]
     monkeypatch.setattr(rh.at, "playable_legs",
                         lambda *a, **k: [dict(l) for l in legs])
-    opt = rh.build_universe([{"date": "2026-08-01"}], {})
-    pes = rh.build_universe([{"date": "2026-08-01"}], {}, unresolved="loss")
+    # faithful=False: this case grades a synthetic pool, not pool faithfulness
+    # (that has its own tests in tests/test_replay_harness_parity.py).
+    opt = rh.build_universe([{"date": "2026-08-01"}], {}, faithful=False)
+    pes = rh.build_universe([{"date": "2026-08-01"}], {}, unresolved="loss",
+                            faithful=False)
     assert len(opt["2026-08-01"]) == 2                       # default: dropped
     assert len(pes["2026-08-01"]) == 3                       # pessimistic: kept
     assert [l["result"] for l in pes["2026-08-01"] if l["match"] == "C vs D"] == ["loss"]
