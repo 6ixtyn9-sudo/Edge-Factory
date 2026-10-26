@@ -16,6 +16,7 @@ import math
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -188,6 +189,152 @@ def _financial_fingerprint(state):
     return hashlib.sha256(payload).hexdigest()
 
 
+def _acca_identity(acca: dict) -> tuple:
+    """The money identity of one acca: stake, price and every priced leg.
+
+    Numeric parts are rounded at the precision the ledger itself stores, so a
+    re-rounded settling price (book-style ``round(prod, 2)``) is still the same
+    bet, while different legs at equal stakes are still different bets.
+    """
+    return (
+        round(float(acca.get("stake_pct") or 0.0), 4),
+        round(float(acca.get("odds") or 0.0), 2),
+        tuple(
+            (str(leg.get("match") or ""), str(leg.get("pick") or ""),
+             round(float(leg.get("odds") or 0.0), 3), str(leg.get("label") or ""))
+            for leg in (acca.get("legs") or [])
+        ),
+    )
+
+
+def _ledger_extends(new_rows: dict, old_rows: dict) -> bool:
+    """True when every bet-day of `old_rows` survives unchanged or extended.
+
+    Only the older days are inspected, so a committed ledger that carries days
+    the cache never had is still a valid superset. This is the read-only
+    direction used to decide that HEAD already contains the cache.
+    """
+    for day, original in old_rows.items():
+        current = new_rows.get(day)
+        if current is None:
+            return False
+        before = original.get("accas") or []
+        after = current.get("accas") or []
+        if after[:len(before)] != before or len(after) < len(before):
+            return False
+        extra = after[len(before):]
+        for field, key in (("staked_pct", "stake_pct"),
+                           ("returned_pct", "returned_pct")):
+            expected = float(original.get(field) or 0.0) + sum(
+                float(acca.get(key) or 0.0) for acca in extra)
+            if abs(float(current.get(field) or 0.0) - expected) > 1e-3:
+                return False
+    return True
+
+
+def _settlement_step(newer, older):
+    """(settled_accas, draft_accas) when `newer` is one settlement step ahead.
+
+    A settlement step is: the committed ledger, plus newly booked accas on days
+    it already carries, plus (optionally) one brand-new bet-day; then every
+    committed open position has to be accounted for exactly once -- either it
+    was settled by one of those booked accas, or it is still open unchanged.
+    Anything else that appears in the open book must be a fresh draft: a day
+    that has already been bet cannot gain an unbooked position, and a frozen
+    day cannot gain one at all.
+
+    Returns None for anything that is not exactly that, so every refusal stays
+    a refusal. The caller never trusts ``newer`` on a truthy result alone: it
+    also requires the bank to move by exactly the booked delta.
+    """
+    unchanged = ("base_pct", "cycle_base", "events", "frozen_by_date",
+                 "superseded_by_date")
+    if any(newer.get(k) != older.get(k) for k in unchanged):
+        return None
+    old_rows, new_rows = _financial_rows(older), _financial_rows(newer)
+    added: list[tuple[str, dict, bool]] = []      # (day, acca, brand_new_day)
+    for day, old in old_rows.items():
+        new = new_rows.get(day)
+        if new is None:
+            return None
+        before = old.get("accas") or []
+        after = new.get("accas") or []
+        if after[:len(before)] != before:
+            return None                      # an already-booked acca changed
+        extra = after[len(before):]
+        for field, key in (("staked_pct", "stake_pct"),
+                           ("returned_pct", "returned_pct")):
+            expected = float(old.get(field) or 0.0) + sum(
+                float(acca.get(key) or 0.0) for acca in extra)
+            if abs(float(new.get(field) or 0.0) - expected) > 1e-3:
+                return None
+        added.extend((day, acca, False) for acca in extra)
+    for day, new in new_rows.items():
+        if day in old_rows:
+            continue
+        accas = new.get("accas") or []
+        if not accas:
+            return None                      # a new bet-day is a settled card
+        for field, key in (("staked_pct", "stake_pct"),
+                           ("returned_pct", "returned_pct")):
+            if abs(float(new.get(field) or 0.0)
+                   - sum(float(acca.get(key) or 0.0) for acca in accas)) > 1e-3:
+                return None
+        added.extend((day, acca, True) for acca in accas)
+    if not added or any(type(acca.get("won")) is not bool for _, acca, _ in added):
+        return None
+
+    committed: list[tuple[str, dict]] = []
+    for slip in older.get("open_slips") or []:
+        day = str(slip.get("date") or "")
+        if not day:
+            return None
+        for acca in slip.get("accas") or []:
+            committed.append((day, acca))
+
+    settled: set[int] = set()
+    for day, acca, new_day in added:
+        identity = _acca_identity(acca)
+        hits = [i for i, (cday, cacca) in enumerate(committed)
+                if cday == day and i not in settled
+                and _acca_identity(cacca) == identity]
+        if new_day and len(hits) != 1:
+            # A whole new bet-day may only book bets that were actually placed.
+            # (A day the committed ledger already carries may be topped up by
+            # settlements whose slip the ledger no longer lists.)
+            return None
+        if len(hits) > 1:
+            return None                      # ambiguous position
+        if hits:
+            settled.add(hits[0])
+
+    kept: set[int] = set()
+    drafted = 0
+    newest_day = max(old_rows) if old_rows else ""
+    frozen = older.get("frozen_by_date") or {}
+    for slip in newer.get("open_slips") or []:
+        day = str(slip.get("date") or "")
+        for acca in slip.get("accas") or []:
+            same = [i for i, (cday, cacca) in enumerate(committed)
+                    if cday == day and i not in kept and cacca == acca]
+            if same:
+                kept.add(same[0])
+                continue
+            if not day or day in frozen or (newest_day and day <= newest_day):
+                return None                  # an unbooked position on a bet day
+            drafted += 1
+    if kept & settled or (kept | settled) != set(range(len(committed))):
+        return None                          # a position vanished unbooked
+
+    delta = sum(float(acca.get("returned_pct") or 0.0)
+                - float(acca.get("stake_pct") or 0.0) for _, acca, _ in added)
+    if not math.isfinite(delta):
+        return None
+    if abs(float(newer["bank"]) - float(older["bank"]) - delta) > 1e-3:
+        return None                          # the bank did not move with the bets
+    return len(settled), drafted
+
+
 def _retain_financial_state(repo, relative=ENH_STATE):
     """Cache is never allowed to reset/truncate durable ticket finance.
 
@@ -217,65 +364,6 @@ def _retain_financial_state(repo, relative=ENH_STATE):
             and receipt.get("superseded_financial_sha256") == cache_sha
             and receipt.get("retained_financial_sha256") == head_sha):
         return blob
-    # Main has no ENH draft exception. Preserve only an exact settlement
-    # extension of already committed open bets, never a newly invented card.
-    if relative == MAIN_STATE and cache_sha != head_sha:
-        def settlement_extension(newer, older):
-            unchanged = ("base_pct", "cycle_base", "events", "frozen_by_date",
-                         "superseded_by_date")
-            pending = json.loads(json.dumps(older.get("open_slips") or []))
-            added = []
-            valid = all(newer.get(k) == older.get(k) for k in unchanged)
-            old_rows, new_rows = _financial_rows(older), _financial_rows(newer)
-            for day, old in old_rows.items():
-                new = new_rows.get(day, {})
-                before, after = old.get("accas") or [], new.get("accas") or []
-                if day not in new_rows or after[:len(before)] != before:
-                    valid = False
-            for day, row in new_rows.items():
-                old = old_rows.get(day, {"accas": [], "staked_pct": 0, "returned_pct": 0})
-                extra = (row.get("accas") or [])[len(old.get("accas") or []):]
-                if any(abs(row[k] - old[k] - sum(a["stake_pct" if k == "staked_pct" else k] for a in extra)) > .001
-                       for k in ("staked_pct", "returned_pct")):
-                    valid = False
-                added.extend((day, a) for a in extra)
-            for day, settled in added:
-                matches = [(slip, a) for slip in pending if slip.get("date") == day
-                           for a in slip.get("accas", [])
-                           if a.get("odds") == settled.get("odds")
-                           and round(a.get("stake_pct", 0), 4) == settled.get("stake_pct")
-                           and [{k: l.get(k) for k in ("match", "pick", "odds", "label")}
-                                for l in a.get("legs", [])]
-                           == [{k: l.get(k) for k in ("match", "pick", "odds", "label")}
-                               for l in settled.get("legs", [])]]
-                if len(matches) != 1 or type(settled.get("won")) is not bool:
-                    valid = False
-                    continue
-                slip, acca = matches[0]
-                results = [leg.get("result") for leg in settled.get("legs", [])]
-                decided = (bool(results) and all(r in ("win", "void") for r in results)
-                           if settled["won"] else "loss" in results)
-                if not decided:
-                    valid = False
-                expected = round(acca["stake_pct"] * acca["odds"] if settled["won"] else 0, 4)
-                if abs(expected - settled.get("returned_pct", float("inf"))) > .001:
-                    valid = False
-                slip["accas"].remove(acca)
-                slip["staked_pct"] = round(sum(a["stake_pct"] for a in slip["accas"]), 4)
-            pending = [s for s in pending if s.get("accas")]
-            delta = sum(a["returned_pct"] - a["stake_pct"] for _, a in added)
-            return (valid and bool(added) and pending == newer.get("open_slips", [])
-                    and math.isfinite(delta)
-                    and abs(newer["bank"] - older["bank"] - delta) <= .001)
-
-        if settlement_extension(cache, head):
-            retained = dict(head)
-            retained.update(bank=cache["bank"], history=cache["history"],
-                            open_slips=cache["open_slips"])
-            return json.dumps(retained, indent=2).encode()
-        if settlement_extension(head, cache):
-            return blob
-        raise EvidenceMergeError("divergent main financial histories; not an exact committed-ticket settlement extension")
     # Equal settled totals do not prove equal bets. Check full position metadata,
     # market/selection, freeze locks and cycle state BEFORE either extension path.
     # Unknown differences must fail closed; only the exact committed receipt
@@ -301,48 +389,53 @@ def _retain_financial_state(repo, relative=ENH_STATE):
         print("PHASE5_PERSISTENCE retained_committed_unfrozen_draft; bank/history/locks unchanged")
         return blob
 
-    position_fields = ("base_pct", "cycle_base", "events", "open_slips", "frozen_by_date",
-                       "superseded_by_date")
-    if any(cache.get(k) != head.get(k) for k in position_fields):
-        raise EvidenceMergeError(
-            "divergent enhancement financial histories: different open positions, "
-            "freeze locks or cycle state; no matching committed supersession receipt"
-        )
-    def extends(new, old):
-        for day, original in old.items():
-            if day not in new:
-                return False
-            current = new[day]
-            if current == original:
-                continue
-            before, after = original.get("accas") or [], current.get("accas") or []
-            if after[:len(before)] != before or len(after) <= len(before):
-                return False
-            extra = after[len(before):]
-            if any("stake_pct" not in a or "returned_pct" not in a for a in extra):
-                return False
-            for field, acca_field in (("staked_pct", "stake_pct"), ("returned_pct", "returned_pct")):
-                expected = original[field] + sum(a[acca_field] for a in extra)
-                if abs(current[field] - expected) > .001:
-                    return False
-        return True
-    if extends(crows, hrows):
-        delta = (sum(r["returned_pct"] - r["staked_pct"] for r in crows.values())
-                 - sum(r["returned_pct"] - r["staked_pct"] for r in hrows.values()))
-        if not math.isfinite(delta) or abs(cache["bank"] - head["bank"] - delta) > .001:
-            raise EvidenceMergeError("cached enhancement bank does not reconcile to committed history")
-        # Keep durable correction/approval metadata from HEAD even when the
-        # cache carries a valid newer settled ledger or stale descriptive floors.
-        retained = dict(head)
-        retained.update(bank=cache["bank"], history=cache.get("history", []))
-        return json.dumps(retained, indent=2).encode()
-    if extends(hrows, crows):
-        # Position equality was verified above; committed history is newer.
+    # Both lanes, one rule. A run settles the slips it just closed and then
+    # drafts the next card; when the push that would have carried that step is
+    # rejected, the cache ends up exactly one legitimate step ahead of HEAD.
+    # Refusing that step is what wedged the 2026-10-26 run: restore raised on a
+    # settlement plus a fresh draft, the workflow died at step one, and every
+    # later run restored the same cache and hit the same wall. Accept the step,
+    # but only after proving it is one: an exact ledger extension, every
+    # committed position either settled by it or still open, and anything new
+    # an unfrozen draft for a day that has not been bet yet.
+    if cache_sha != head_sha:
+        step = _settlement_step(cache, head)
+        if step is not None:
+            settled, drafted = step
+            print("PHASE5_PERSISTENCE retained_cached_settlement_step; "
+                  f"settled_accas={settled} draft_accas={drafted}")
+            # Keep durable correction/approval metadata from HEAD even when the
+            # cache carries the newer settled ledger and the next draft.
+            retained = dict(head)
+            retained.update(bank=cache["bank"], history=cache.get("history", []),
+                            open_slips=cache.get("open_slips") or [])
+            return json.dumps(retained, indent=2).encode()
+    if cache_sha == head_sha:
+        return blob
+    # No position changed: the ledger alone decides, as it always has.
+    position_fields = ("base_pct", "cycle_base", "events", "open_slips",
+                       "frozen_by_date", "superseded_by_date")
+    if all(cache.get(k) == head.get(k) for k in position_fields):
+        if _ledger_extends(crows, hrows):
+            delta = (sum(r["returned_pct"] - r["staked_pct"] for r in crows.values())
+                     - sum(r["returned_pct"] - r["staked_pct"] for r in hrows.values()))
+            if not math.isfinite(delta) or abs(cache["bank"] - head["bank"] - delta) > .001:
+                raise EvidenceMergeError(
+                    "cached enhancement bank does not reconcile to committed history")
+            retained = dict(head)
+            retained.update(bank=cache["bank"], history=cache.get("history", []))
+            return json.dumps(retained, indent=2).encode()
+        if _ledger_extends(hrows, crows):
+            # Committed history is newer: the cache is a rollback, keep HEAD.
+            return blob
+    elif _settlement_step(head, cache) is not None:
+        # HEAD is itself one settlement step ahead of the cache: the cache is
+        # stale, and the committed ledger already books everything in it.
         return blob
     raise EvidenceMergeError(
-        "divergent enhancement financial histories "
-        f"(committed={head_sha}, cached={cache_sha}); "
-        "no matching committed supersession receipt"
+        "divergent enhancement financial histories: different open positions, "
+        "freeze locks or cycle state; no matching committed supersession receipt "
+        f"(committed={head_sha}, cached={cache_sha})"
     )
 
 
@@ -478,6 +571,24 @@ def finish_rebase(repo: Path | str, *, max_steps: int = 32) -> tuple[bool, str |
     return False, "rebase exceeded the bounded conflict-resolution step count"
 
 
+# Upstream 5xx and transport blips are not review findings. On 2026-10-25 a
+# state push was rejected with "remote: Internal Server Error" and the whole
+# settlement step was left cache-only; the next run then had to reconcile it.
+# Those failures are retried in place instead of being reported as terminal.
+_TRANSIENT_PUSH_MARKERS = (
+    "internal server error", "bad gateway", "service unavailable",
+    "gateway timeout", "timed out", "timeout", "connection reset",
+    "connection refused", "rpc failed", "early eof", "unexpected eof",
+    "remote end hung up", "unexpected disconnect", "http 500", "http 502",
+    "http 503", "http 504", "sideband",
+)
+
+
+def _is_transient_push_failure(detail: str) -> bool:
+    lower = detail.lower()
+    return any(marker in lower for marker in _TRANSIENT_PUSH_MARKERS)
+
+
 def _warn_not_persisted(reason: str) -> None:
     print(
         "::warning::Pipeline state commit was not pushed. "
@@ -491,6 +602,7 @@ def persist_localdata(
     *,
     run_id: str | None = None,
     max_push_attempts: int = 3,
+    push_backoff: tuple[int, ...] = (5, 15, 30),
 ) -> dict[str, Any]:
     """Commit, rebase with safe JSONL unions, and push without force."""
     repo = Path(repo)
@@ -516,6 +628,7 @@ def persist_localdata(
 
     push_error = "no push attempted"
     for attempt in range(1, max_push_attempts + 1):
+        transient = False
         pull = _run(repo, "pull", "--rebase", "--autostash")
         if pull.returncode != 0:
             if not _rebase_in_progress(repo):
@@ -534,11 +647,22 @@ def persist_localdata(
             return {"status": "pushed", "attempt": attempt}
         push_error = _decode_output(pushed.stderr) or _decode_output(pushed.stdout)
         lower = push_error.lower()
-        if not any(marker in lower for marker in ("non-fast-forward", "fetch first")):
+        transient = _is_transient_push_failure(push_error)
+        if transient:
+            print(f"PHASE5_PERSISTENCE push_transient_failure attempt={attempt} "
+                  f"of {max_push_attempts}: "
+                  + push_error.splitlines()[0][:200], flush=True)
+        if not transient and not any(marker in lower for marker in
+                                     ("non-fast-forward", "fetch first")):
             _warn_not_persisted(f"git push failed: {push_error}")
             return {"status": "not_persisted", "reason": push_error}
+        if transient and attempt < max_push_attempts:
+            walk = push_backoff[min(attempt - 1, len(push_backoff) - 1)] if push_backoff else 0
+            if walk:
+                time.sleep(walk)
 
-    reason = (f"push race persisted after {max_push_attempts} bounded synchronization attempts: "
+    kind = "push race" if not transient else "transient push failure"
+    reason = (f"{kind} persisted after {max_push_attempts} bounded synchronization attempts: "
               f"{push_error}")
     _warn_not_persisted(reason)
     return {"status": "not_persisted", "reason": reason}
