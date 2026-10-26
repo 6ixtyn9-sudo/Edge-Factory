@@ -206,3 +206,8 @@ localdata/scored_candidate_shadow_*.jsonl
 # Compact recovery receipt only; raw history and key inventories stay cached.
 !localdata/prediction_history_guard.json
 localdata/prediction_history_keys.json.gz
+
+# Original, timestamped schedule-only evidence recovered for ENH admission.
+# Separate prefix prevents these receipts entering prediction/warehouse globs.
+!localdata/schedule_scoutingstats_????-??.csv.gz
+!localdata/schedule_vitibet_????-??.csv.gz

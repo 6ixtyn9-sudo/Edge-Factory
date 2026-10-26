@@ -382,3 +382,56 @@ def test_corrupt_source_schedule_history_cannot_hide_a_conflict(tmp_path, histor
     index = load_prices_index(tmp_path, BE_DAY)
     assert index['betexplorer_admission']['rejections']['schedule_archive_unavailable'] == 1
     assert not attach_enhancement_price(_be_pick('match_over_25'), index)['enhancement_priced']
+
+
+@pytest.mark.parametrize('source', ['scoutingstats', 'vitibet'])
+def test_recovered_schedule_archive_is_an_execution_witness(tmp_path, source):
+    source_schedule_only(tmp_path, source)
+    original = tmp_path / f'localdata/{source}_2026-10.csv.gz'
+    original.rename(tmp_path / f'localdata/schedule_{source}_2026-10.csv.gz')
+    row = attach_enhancement_price(_be_pick('match_over_25'), load_prices_index(tmp_path, BE_DAY))
+    assert row['enhancement_priced']
+    assert betexplorer_price_rejection(row) is None
+    witness = row['enhancement_price_provenance']['resolution']['witnesses'][0]
+    assert witness['file'] == f'schedule_{source}_2026-10.csv.gz'
+    assert at.enhancement_legs([with_evidence(dict(row, pick='home', league='Synthetic League'))],
+                               execution_safe=True)[0]['verdict'] == 'fire'
+
+
+def test_recovered_schedule_archives_do_not_enter_prediction_warehouse(tmp_path, monkeypatch):
+    import shutil
+    from pathlib import Path
+    from edgefactory import warehouse
+    root = Path(__file__).resolve().parents[1]
+    for source in ['scoutingstats', 'vitibet']:
+        shutil.copy2(root / f'localdata/schedule_{source}_2026-10.csv.gz', tmp_path)
+    monkeypatch.setattr(warehouse, 'LOCALDATA', tmp_path)
+    con = warehouse.connect()
+    try:
+        names = {r[0] for r in con.execute('SHOW TABLES').fetchall()}
+        assert not {'scoutingstats', 'vitibet', 'scoutingstats_settled', 'vitibet_settled'} & names
+    finally:
+        con.close()
+
+
+def test_committed_schedule_recovery_preserves_original_capture_identity():
+    import csv
+    import gzip
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    evidence = json.loads((root / 'handoff/enh_schedule_repair_2026-10-26.json').read_text())
+    originals = {r['row_id']: r for r in evidence['original_source_capture_records']}
+    seen = set()
+    for source in ['scoutingstats', 'vitibet']:
+        with gzip.open(root / f'localdata/schedule_{source}_2026-10.csv.gz', 'rt') as f:
+            for row in csv.DictReader(f):
+                original = originals[row['original_capture_row_id']]
+                assert row['source'] == original['source'] == source
+                assert row['captured_at'] == original['captured_at']
+                assert row['kickoff'] == original['kickoff_raw']
+                assert (row['home'], row['away'], row['date']) == tuple(
+                    original['raw_fixture'][k] for k in ['home', 'away', 'date'])
+                assert row['original_capture_commit'] == evidence['input_commit']
+                assert not {'p1', 'px', 'p2', 'odds', 'hs', 'gs'} & row.keys()
+                seen.add(row['original_capture_row_id'])
+    assert seen == set(originals)
