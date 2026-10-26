@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-26T21:19:18",
+  "generated_at": "2026-10-27T00:46:05",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 215.18572200000006,
-  "multiple": 2.1518572200000006,
+  "bank_pct": 267.906194,
+  "multiple": 2.6790619400000004,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 57,
+  "bet_days": 58,
   "accas": {
-    "wins": 69,
+    "wins": 70,
     "losses": 48
   },
   "open_slips": [
     {
       "date": "2026-10-26",
-      "staked_pct": 53.7964
+      "staked_pct": 26.8982
     }
   ],
   "events": [
@@ -1300,6 +1300,35 @@
       ],
       "bank_pct": 215.1857,
       "close_pct": 215.1856
+    },
+    {
+      "date": "2026-10-26",
+      "staked_pct": 26.8982,
+      "returned_pct": 79.6187,
+      "accas": [
+        {
+          "odds": 2.96,
+          "won": true,
+          "stake_pct": 26.8982,
+          "returned_pct": 79.6187,
+          "legs": [
+            {
+              "match": "Be\u015fikta\u015f vs \u0130stanbul Ba\u015fak\u015fehir",
+              "pick": "HOME",
+              "odds": 1.3745,
+              "result": "win"
+            },
+            {
+              "match": "Mladost \u017ddralovi vs Jadran LP",
+              "pick": "HOME",
+              "odds": 2.15,
+              "result": "win"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 267.9062,
+      "close_pct": 267.9061
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-10-26",
+ "generated_at": "2026-10-27",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -3985,9 +3985,9 @@
   },
   "match_over_15@v1": {
    "hits": 39,
-   "inv_price_sum": 41.71686227029901,
+   "inv_price_sum": 42.48609303952978,
    "multi_n": 4,
-   "n": 49,
+   "n": 50,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -4061,9 +4061,10 @@
     "2026-10-19|Mes Shahr-e Babak vs Persepolis FC|match_over_15@v1",
     "2026-10-20|El Geish vs Pyramids FC|match_over_15@v1",
     "2026-10-21|Millonarios vs Once Caldas|match_over_15@v1",
-    "2026-10-25|Sagan Tosu vs Vanraure Hachinohe|match_over_15@v1"
+    "2026-10-25|Sagan Tosu vs Vanraure Hachinohe|match_over_15@v1",
+    "2026-10-26|Mladost \u017ddralovi vs Jadran LP|match_over_15@v1"
    ],
-   "profit": -2.725,
+   "profit": -3.725,
    "records": [
     {
      "away": "Aston Villa",
@@ -4766,6 +4767,35 @@
      "rule": "pfc_5904b1fc7050646e6321090c",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Jadran LP",
+     "away_key": "jadranlp",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.7994,
+     "date": "2026-10-26",
+     "hit": false,
+     "home": "Mladost \u017ddralovi",
+     "home_key": "mladostzdralovi",
+     "league": "Croatia First NL",
+     "match": "Mladost \u017ddralovi vs Jadran LP",
+     "multi_source": false,
+     "price": 1.3,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-10-26T04:17:34.514701+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-10-26T11:27:43+02:00",
+      "kickoff": "2026-10-26T13:00:00+00:00",
+      "league": "Croatia First NL",
+      "price": 1.3,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-26T22:35:28.809710+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "betexplorer",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -4774,11 +4804,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 331,
+   "hits": 332,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 325.79110114826375,
-   "multi_n": 102,
-   "n": 501,
+   "inv_price_sum": 326.31466135768784,
+   "multi_n": 103,
+   "n": 502,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -5524,9 +5554,10 @@
     "2026-10-25|CD Castell\u00f3n vs Sporting Gij\u00f3n|match_over_25@v1",
     "2026-10-25|Legia Warszawa vs Lech Pozna\u0144|match_over_25@v1",
     "2026-10-25|Sydney FC vs Adelaide United|match_over_25@v1",
-    "2026-10-25|Molde FK vs Fredrikstad FK|match_over_25@v1"
+    "2026-10-25|Molde FK vs Fredrikstad FK|match_over_25@v1",
+    "2026-10-26|Santa Clara vs Benfica|match_over_25@v1"
    ],
-   "profit": 9.757,
+   "profit": 10.667,
    "records": [
     {
      "away": "Spartak Varna",
@@ -13034,6 +13065,25 @@
      "rule": "pfc_27e0f725859bc708f95c58a3",
      "source": "theoddsapi",
      "stated": null
+    },
+    {
+     "away": "Benfica",
+     "away_key": "benfica",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.658,
+     "date": "2026-10-26",
+     "hit": true,
+     "home": "Santa Clara",
+     "home_key": "santaclara",
+     "league": "Liga Portugal",
+     "match": "Santa Clara vs Benfica",
+     "multi_source": true,
+     "price": 1.91,
+     "price_context": {},
+     "recorded_at": "2026-10-26T22:35:28.802559+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "theoddsapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -14104,10 +14154,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_35@v1": {
-   "hits": 3,
-   "inv_price_sum": 4.126657393868822,
+   "hits": 4,
+   "inv_price_sum": 4.698085965297393,
    "multi_n": 0,
-   "n": 8,
+   "n": 9,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -14116,9 +14166,10 @@
     "2026-10-23|Brisbane Roar vs Perth Glory|match_under_35@v1",
     "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|match_under_35@v1",
     "2026-10-24|Necaxa vs Ju\u00e1rez|match_under_35@v1",
-    "2026-10-25|Barcelona vs Real Madrid|match_under_35@v1"
+    "2026-10-25|Barcelona vs Real Madrid|match_under_35@v1",
+    "2026-10-26|Be\u015fikta\u015f vs Ba\u015fak\u015fehir|match_under_35@v1"
    ],
-   "profit": 0.15,
+   "profit": 0.9,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -14349,6 +14400,35 @@
      },
      "recorded_at": "2026-10-26T04:24:34.005542+00:00",
      "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "Ba\u015fak\u015fehir",
+     "away_key": "istanbulbasaksehir",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6213,
+     "date": "2026-10-26",
+     "hit": true,
+     "home": "Be\u015fikta\u015f",
+     "home_key": "besiktas",
+     "league": "Turkey: S\u00fcper Lig",
+     "match": "Be\u015fikta\u015f vs Ba\u015fak\u015fehir",
+     "multi_source": false,
+     "price": 1.75,
+     "price_context": {
+      "book": "BetMGM.us",
+      "captured_at": "2026-10-26T04:16:23.064252+00:00",
+      "contract_id": "pfc_b011652ec3e473fbc0afbb6a",
+      "decision_at": "2026-10-26T11:27:43+02:00",
+      "kickoff": "2026-10-26T16:00:00+00:00",
+      "league": "Turkey: S\u00fcper Lig",
+      "price": 1.75,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-26T22:35:28.816224+00:00",
+     "rule": "pfc_b011652ec3e473fbc0afbb6a",
      "source": "betexplorer",
      "stated": null
     }
