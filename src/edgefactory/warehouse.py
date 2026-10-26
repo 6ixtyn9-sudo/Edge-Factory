@@ -54,7 +54,7 @@ def _src_view(con, name: str, glob: str, select: str) -> None:
         f"DESCRIBE SELECT * FROM read_csv_auto('{glob}', all_varchar=true, union_by_name=true)"
     ).fetchall()}
     selected = {r[0] for r in con.execute(f"DESCRIBE {name}").fetchall()}
-    optional = ("kickoff", "time", "status", "captured_at", "result_source",
+    optional = ("kickoff", "time", "status", "captured_at", "observed_at_utc", "result_source", "p_o45",
                 "odd_o15", "odd_u15", "odd_o35", "odd_u35", "odd_o45", "odd_u45",
                 "odd1_ht", "oddx_ht", "odd2_ht", "odd_o15_ht", "odd_u15_ht",
                 "odd_o25_ht", "odd_u25_ht")

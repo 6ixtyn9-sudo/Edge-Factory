@@ -232,6 +232,13 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
                         # may not make historical ROI depend on input row order:
                         # retain the conservative explicit price for each field.
                         vote["row"] = dict(row)
+                        conflicts = set(previous["row"].get("_enh_conflicts", []))
+                        conflicts.update(f for f in ENH_FORECAST_FIELDS
+                                         if _number(previous["row"].get(f)) != _number(row.get(f)))
+                        vote["row"]["_enh_conflicts"] = sorted(conflicts)
+                        vote["row"]["_enh_timing_blocked"] = (
+                            not _enhancement_forecast_eligible(previous["row"])
+                            or not _enhancement_forecast_eligible(row))
                         for field, old in previous["row"].items():
                             if not field.startswith("odd"):
                                 continue
@@ -323,7 +330,7 @@ def validate_contract(edge):
     return identity
 
 
-def contract_rows(observations, ambiguous, resolved, edge, *, settled=True):
+def contract_rows(observations, ambiguous, resolved, edge, *, settled=True, enhancement_features=False):
     """Project an exact recipe; never substitute votes, sides, lines or prices."""
     sources, market = edge["sources"], edge["market"]
     for (key, observed_market), all_votes in observations.items():
@@ -349,10 +356,16 @@ def contract_rows(observations, ambiguous, resolved, edge, *, settled=True):
                                for r in rows):
             continue
         anchor = rows[0]
-        yield {"date": key[0], "home": anchor["home"], "away": anchor["away"],
+        emitted = {"date": key[0], "home": anchor["home"], "away": anchor["away"],
                "league": anchor.get("league"), "kickoff": anchor.get("kickoff") or anchor.get("time"),
                "pick": side, "outcome": outcome, "avg_p": probability,
                "pick_odds": _remine_odds(rows, market, side), "source_rows": rows}
+        if enhancement_features:
+            # Extra observed sources are context, never replacement voters.
+            emitted['enhancement_source_features'] = enhancement_source_features(
+                [v['row'] for v in votes.values()])
+            emitted['enhancement_feature_sources'] = sorted(votes)
+        yield emitted
 
 
 def recreate_contract_views(con, edges, *, as_of=None):
@@ -394,6 +407,191 @@ def recreate_contract_views(con, edges, *, as_of=None):
     return available
 
 
+
+# Feature allowlist: predictions, not realized scores, HT results, prices or
+# inherited Main/Forebet model inputs. Same units and builder in fit and serve.
+ENH_FORECAST_FIELDS = ("p1", "px", "p2", "p_o15", "p_o25", "p_o35", "p_o45", "p_gg", "xg_home", "xg_away")
+ENH_FORECAST_MARKETS = {"1x2": ("home", "draw", "away"),
+                        "ou_1.5": ("over",), "ou_2.5": ("over",),
+                        "ou_3.5": ("over",), "ou_4.5": ("over",), "btts": ("yes",)}
+ENH_FORM_FIELDS = ("gf", "ga", "over15", "over25", "over35", "btts")
+ENH_OPTIONAL_FEATURES = tuple(
+    f"forecast_{market}_{side}_{stat}"
+    for market, sides in ENH_FORECAST_MARKETS.items() for side in sides
+    for stat in ("mean", "spread")) + tuple(
+    f"forecast_xg_{side}_{stat}" for side in ('home', 'away')
+    for stat in ('mean', 'spread')) + tuple(
+    f"{side}_{field}" for side in ("home_form", "away_form", "h2h")
+    for field in ENH_FORM_FIELDS)
+
+
+def _enhancement_forecast_eligible(row):
+    from datetime import datetime
+    if row.get('_enh_timing_blocked'):
+        return False
+    # Inspect every retained receipt, not whichever one happened to be first.
+    for captured in (row.get('captured_at'), row.get('observed_at_utc')):
+        if not captured:
+            continue
+        try:
+            at = datetime.fromisoformat(str(captured).replace('Z', '+00:00'))
+            ko = datetime.fromisoformat(str(row.get('kickoff')).replace('Z', '+00:00'))
+            if at.tzinfo is None or ko.tzinfo is None or at >= ko:
+                return False
+        except (TypeError, ValueError):
+            return False
+    return True
+
+
+def enhancement_source_features(rows):
+    """Observed same-fixture forecasts; extras never replace contract voters.
+
+    Legacy archives lack authenticated capture times. We cannot certify their
+    point-in-time provenance; explicitly late/timing-malformed observations
+    are excluded. Missing values remain None, never a neutral prediction.
+    """
+    buckets = defaultdict(list)
+    for original in rows:
+        row = dict(original)
+        if not _enhancement_forecast_eligible(row):
+            continue
+        for field in ENH_FORECAST_FIELDS:
+            if isinstance(row.get(field), bool) or field in row.get('_enh_conflicts', []):
+                row[field] = None
+        if any(f in row.get('_enh_conflicts', []) for f in ('p1', 'px', 'p2')):
+            for field in ('p1', 'px', 'p2'):
+                row[field] = None
+        for side in ('home', 'away'):
+            value = _number(row.get('xg_' + side))
+            if value is not None and value >= 0:
+                buckets['forecast_xg_' + side].append(value)
+        for market, sides in ENH_FORECAST_MARKETS.items():
+            signal = _remine_signal(row, market)
+            if signal is None or signal[1] is None:
+                continue
+            for side in sides:
+                buckets[f"forecast_{market}_{side}"].append(signal[1][side])
+    result = {}
+    for market, sides in ENH_FORECAST_MARKETS.items():
+        for side in sides:
+            name = f"forecast_{market}_{side}"
+            values = buckets.get(name, [])
+            result[name + '_mean'] = sum(values) / len(values) if values else None
+            result[name + '_spread'] = max(values) - min(values) if values else None
+    for side in ('home', 'away'):
+        name = 'forecast_xg_' + side
+        values = buckets.get(name, [])
+        result[name + '_mean'] = sum(values) / len(values) if values else None
+        result[name + '_spread'] = max(values) - min(values) if values else None
+    return result
+
+
+def _enhancement_feature_valid(name, value):
+    return (type(value) in (int, float) and math.isfinite(value) and value >= 0
+            and (name.endswith(('_gf', '_ga')) or name.startswith('forecast_xg_') or value <= 1))
+
+
+def _enhancement_snapshot(con, start, as_of, cache):
+    key = ('observations', con, start, as_of, 'enh_regulation')
+    if cache is not None and key in cache:
+        return cache[key]
+    snapshot = collect_observations(con, start=start, as_of=as_of, regulation_only=True)
+    if cache is not None:
+        cache[key] = snapshot
+    return snapshot
+
+
+def _enhancement_archive(con, start, as_of, resolved, cache):
+    from edgefactory.form_intel import ResultsArchive
+    key = ('enh_form_archive', con, start, as_of)
+    if cache is not None and key in cache:
+        return cache[key]
+    # Reuse the cohort's adjudication, NOT load_archive's unfiltered donors.
+    # Canonical fixture keys preserve squad distinctions; no fuzzy/trunc joins.
+    archive = ResultsArchive([dict(date=k[0], home=k[1], away=k[2],
+        hs=v['ft'][0], gs=v['ft'][1], league='')
+        for k, v in sorted(resolved.items()) if 'ft' in v])
+    if cache is not None:
+        cache[key] = archive
+    return archive
+
+
+def enhancement_model_features(row, archive, cache=None):
+    """One feature meaning in historical fitting and current fixture scoring.
+
+    form_intel's last-10 windows/min-history/squad guards are reused. Same-day
+    results are never features. Counts are coverage, not invented zero rates.
+    """
+    from edgefactory.form_intel import team_form, pair_history, MIN_HISTORY, H2H_MIN_MEETINGS
+    features = dict.fromkeys(ENH_OPTIONAL_FEATURES)
+    supplied = row.get('enhancement_source_features') or {}
+    for name in features:
+        value = supplied.get(name)
+        if name.startswith('forecast_') and _enhancement_feature_valid(name, value):
+            features[name] = float(value)
+    for prefix, team in (('home_form', row['home']), ('away_form', row['away']), ('h2h', None)):
+        key = ('enh_form', id(archive), row['date'], prefix,
+               source_team_key(team) if team else (source_team_key(row['home']), source_team_key(row['away'])))
+        form = cache.get(key) if cache is not None else None
+        if form is None:
+            form = (team_form(archive, team, row['date']) if team else
+                    pair_history(archive, row['home'], row['away'], row['date']))
+            if cache is not None:
+                cache[key] = form
+        n = form['n']
+        if n < (MIN_HISTORY if team else H2H_MIN_MEETINGS):
+            continue
+        features[prefix + '_gf'] = form['goals_for' if team else 'goals_for_home'] / n
+        features[prefix + '_ga'] = form['goals_against' if team else 'goals_for_away'] / n
+        for field, hits in (('over15', 'over_15_hits'), ('over25', 'over_25_hits'),
+                            ('over35', 'over_35_hits'), ('btts', 'btts_hits')):
+            features[prefix + '_' + field] = form[hits] / n
+    probability = row.get('avg_p')
+    features['confidence'] = (probability / 100 if type(probability) in (int, float)
+                              and math.isfinite(probability) and 0 <= probability <= 100 else None)
+    return features
+
+
+def enhancement_ml_inputs(con, edge, pick, cache=None):
+    """Fixture-bound feature receipt, separate from the shared cached fit."""
+    start, day = edge['mining_window']['start'], pick['date']
+    resolved = _enhancement_snapshot(con, start, day, cache)[3]
+    archive = _enhancement_archive(con, start, day, resolved, cache)
+    return dict(fixture=[day, source_team_key(pick['home']), source_team_key(pick['away'])],
+                contract_id=edge['contract_id'],
+                sources=pick.get('enhancement_feature_sources', []),
+                values=enhancement_model_features(pick, archive, cache))
+
+
+def enhancement_feature_vector(features, model):
+    """Recorded train-mean imputation + explicit missing flags, never defaults.
+
+    Unobserved columns cannot enter the fit. Missing observations stay absent
+    in the receipt; zero below is *standardized mean*, not a fabricated rate.
+    """
+    from edgefactory.enh_registry import MIN_COHORT_N
+    cols = model['feature_cols']
+    if (not cols or cols[0] != 'confidence' or len(cols) != len(set(cols))
+            or any(c not in ('confidence', *ENH_OPTIONAL_FEATURES) for c in cols)):
+        raise ValueError('invalid enhancement feature contract')
+    vector, missing = [], []
+    for col in cols:
+        mean, scale = model['feature_means'][col], model['feature_scales'][col]
+        if (type(mean) not in (int, float) or not math.isfinite(mean)
+                or type(scale) not in (int, float) or not math.isfinite(scale) or scale <= 0
+                or type(model['feature_observed_n'][col]) is not int
+                or not MIN_COHORT_N <= model['feature_observed_n'][col] <= model['n']):
+            raise ValueError('invalid observed training statistics')
+        value = features.get(col)
+        if value is not None and not _enhancement_feature_valid(col, value):
+            raise ValueError('invalid feature value')
+        if col == 'confidence' and value is None:
+            raise ValueError('missing parent confidence')
+        vector.append((value - mean) / scale if value is not None else 0.)
+        if col != 'confidence':
+            missing.append(float(value is None))
+    return vector + missing
+
 def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fit_ml=False):
     """All outcomes of the exact parent recipe; never condition on its winning.
 
@@ -407,23 +605,17 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
     # Caller-owned, read-phase-only cache. Never shared across warehouse builds
     # or invocations; validation above still runs on every request.
     start = edge['mining_window']['start']
-    snapshot_key = ('observations', con, start, as_of, 'enh_regulation')
     cohort_key = ('cohort', con, identity, start, as_of, selection, min_n, 'enh_regulation', fit_ml)
     if cache is not None and cohort_key in cache:
-        cached = cache[cohort_key]
         from copy import deepcopy
-        return deepcopy(cached) if cached is not None else None
-    if cache is not None and snapshot_key in cache:
-        snapshot = cache[snapshot_key]
-    else:
-        snapshot = collect_observations(con, start=start, as_of=as_of,
-                                        regulation_only=True)
-        if cache is not None:
-            cache[snapshot_key] = snapshot
+        return deepcopy(cache[cohort_key])
+    snapshot = _enhancement_snapshot(con, start, as_of, cache)
     _, observations, ambiguous, resolved, _ = snapshot
     pairs, training = [], []
+    archive = _enhancement_archive(con, start, as_of, resolved, cache) if fit_ml else None
+    feature_cache = cache if cache is not None else {}
     parent_hits = 0
-    for row in contract_rows(observations, ambiguous, resolved, edge):
+    for row in contract_rows(observations, ambiguous, resolved, edge, enhancement_features=fit_ml):
         if row['pick'] != selection:
             continue
         pair = resolved.get(_remine_key(row), {}).get('ft')
@@ -431,7 +623,8 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
             pairs.append(pair)
             probability = _number(row.get('avg_p'))
             if probability is not None and 0 <= probability <= 100:
-                training.append((_remine_key(row), probability / 100, f'{pair[0]}:{pair[1]}'))
+                training.append((_remine_key(row), probability / 100, f'{pair[0]}:{pair[1]}',
+                                 enhancement_model_features(row, archive, feature_cache) if fit_ml else {}))
             parent_hits += row['pick'] == row['outcome']
     n = len(pairs)
     if not n or n < min_n:
@@ -456,8 +649,13 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
         # the unrelated main 1X2-correctness target. One fit per cached contract.
         from edgefactory.enh_registry import MIN_COHORT_N
         result['ml_status'] = 'insufficient_or_constant_training_data'
-        training.sort()
-        if (len(training) >= MIN_COHORT_N and len({r[1] for r in training}) > 1
+        training.sort(key=lambda r: r[0])
+        observed = {c: [r[3][c] for r in training if r[3].get(c) is not None]
+                    for c in ('confidence', *ENH_OPTIONAL_FEATURES)}
+        result['ml_feature_coverage'] = {c: len(v) for c, v in observed.items()}
+        cols = ['confidence'] + [c for c in ENH_OPTIONAL_FEATURES
+            if len(observed[c]) >= MIN_COHORT_N and len(set(observed[c])) > 1]
+        if (len(training) >= MIN_COHORT_N and any(len(set(observed[c])) > 1 for c in cols)
                 and len({r[2] for r in training}) > 1):
             try:
                 import warnings
@@ -465,14 +663,23 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
                 from sklearn.linear_model import LogisticRegression
                 with warnings.catch_warnings():
                     warnings.simplefilter('error', ConvergenceWarning)
+                    means = {c: sum(observed[c]) / len(observed[c]) for c in cols}
+                    scales = {c: math.sqrt(sum((v - means[c]) ** 2 for v in observed[c]) / len(observed[c])) or 1.
+                              for c in cols}
+                    feature_spec = dict(feature_cols=cols, feature_means=means, feature_scales=scales,
+                        feature_observed_n={c: len(observed[c]) for c in cols}, n=len(training))
                     model = LogisticRegression(C=1.0, max_iter=1000, random_state=42)
-                    model.fit([[r[1]] for r in training], [r[2] for r in training])
-                payload = dict(schema='enh_score_logit_v1', contract_id=identity,
+                    model.fit([enhancement_feature_vector(r[3], feature_spec) for r in training],
+                              [r[2] for r in training])
+                payload = dict(schema='enh_score_logit_v2', contract_id=identity,
+                    feature_basis='observed_forecasts_and_prior_regulation_form',
+                    train_window_start=start, form_window=10,
                     as_of_exclusive=as_of, selection=selection, n=len(training),
                     train_last_date=max(r[0][0] for r in training),
                     feature_min=min(r[1] for r in training),
                     feature_max=max(r[1] for r in training),
                     training_sha256=hashlib.sha256(json.dumps(training).encode()).hexdigest(),
+                    **{k: v for k, v in feature_spec.items() if k != 'n'},
                     classes=model.classes_.tolist(), coef=model.coef_.tolist(),
                     intercept=model.intercept_.tolist())
                 payload['model_key'] = hashlib.sha256(json.dumps(

@@ -648,8 +648,9 @@ def test_enh_ml_multiclass_inference_matches_sklearn_not_binary_shortcut():
     native.classes_ = np.array(payload['classes'])
     native.coef_ = np.array(payload['coef'])
     native.intercept_ = np.array(payload['intercept'])
-    native.n_features_in_ = 1
-    probabilities = native.predict_proba([[.8]])[0]
+    vector = cc.enhancement_feature_vector({'confidence': .8}, payload)
+    native.n_features_in_ = len(vector)
+    probabilities = native.predict_proba([vector])[0]
     p = dict(parent(edge()), avg_p=80., statistical_profile=cohort)
     for market in ('btts_yes', 'match_under_25', 'home_over_15', 'away_under_15'):
         expected = sum(w for w, label in zip(probabilities, payload['classes'])
@@ -975,3 +976,245 @@ def test_enh_ml_three_acca_keeps_feasible_recipe_and_main_limit(monkeypatch, pai
     main = at.select_accas(pool, pairing=pairing, gate_mode='off')
     assert main == at.pair_legs(at.rank_legs(pool, 'prob')[:4], pairing, 2)
     assert len(main) == at.MAX_ACCAS == 2
+
+
+# All probes below are synthetic: mechanism/causality, NOT a return claim.
+def rich_observations():
+    # Identical parent confidence: the original one-feature learner cannot fit.
+    # Only the existing goal prediction carries predictive information.
+    return [dict(r, p1=.8, px=.1, p2=.1, p_o25=.9 if i < 160 else .2,
+                 hs=4 if i < 160 else 0, gs=0 if i < 160 else 1)
+            for i, r in enumerate(observations(200))]
+
+
+def rich_pick(recipe, probability, name='Live Alpha'):
+    p = dict(parent(recipe), home=name, avg_p=80.)
+    p['enhancement_source_features'] = cc.enhancement_source_features([
+        dict(p1=.8, px=.1, p2=.1, p_o25=probability)])
+    return p
+
+
+def test_enh_v2_unused_goal_forecasts_now_change_live_scores_and_complete_pair(monkeypatch):
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    recipe, cache = edge(), {}
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    con = connection(rich_observations())
+    picks = [rich_pick(recipe, p, name) for name, p in [('Low', .2), ('High', .9), ('Next', .8)]]
+    original = deepcopy(picks)
+    for p in picks:
+        p['statistical_profile'] = pt.fetch_match_cohort(con, 'home', 80., 1, pick=p, cache=cache)
+    model = picks[0]['statistical_profile']['ml_model']
+    assert model['schema'] == 'enh_score_logit_v2'
+    assert 'forecast_ou_2.5_over_mean' in model['feature_cols']
+    assert all(p['statistical_profile']['ml_model'] == model for p in picks)
+    scores = [score(p, 'match_over_25') for p in picks]
+    assert scores[1] > scores[2] > scores[0]
+    # The actual two-leg ENH selector consumes these recomputed scores.
+    pool = [dict(match=p['home'] + ' vs Opponent', pick='over', prob=.8, odds=1.6,
+                 market='match_over_25', ml_rank_probability=s, row=p,
+                 cohort_evidence={'basis': 'cohort_payout_bound',
+                     'price_context': {'book': 'Book', 'source': 'theoddsapi'}})
+            for p, s in zip(picks, scores)]
+    selected = at.select_accas(pool, enhancements=True, max_accas=1, min_accas=1,
+                               legs_per_acca=2, pairing='consecutive')
+    assert [l['row']['home'] for l in selected[0]] == ['High', 'Next']
+    assert [{k: v for k, v in p.items() if k != 'statistical_profile'} for p in picks] == original
+    for p in picks:
+        for over, under in [('btts_yes', 'btts_no'), ('match_over_25', 'match_under_25'),
+                            ('home_over_15', 'home_under_15'), ('away_over_05', 'away_under_05')]:
+            assert score(p, over) + score(p, under) == pytest.approx(1.)
+    # The same retained model+receipt is replayable without sklearn/a warehouse.
+    from scripts import replay_harness as replay
+    monkeypatch.setattr(replay, '_slate_rows', lambda root, day: picks)
+    rec = dict(home=picks[1]['home'], away=picks[1]['away'], market='match_over_25',
+               price_context={'contract_id': recipe['contract_id']})
+    assert replay.enh_ml_probability(None, picks[1]['date'], rec) == scores[1]
+
+
+def test_enh_v2_emitted_parent_carries_observed_source_inputs(tmp_path, monkeypatch):
+    recipe = edge(valid={'wilson_lb': .8})
+    rows = rich_observations() + [dict(r, date='2026-10-20', home='Live Alpha',
+        hs=None, gs=None, kickoff='2026-10-20T18:00:00Z') for r in rich_observations()[:1]]
+    with duckdb.connect(str(tmp_path / 'warehouse.duckdb')) as con:
+        con.register('seed', pd.DataFrame(rows))
+        con.execute('CREATE TABLE scoutingstats AS SELECT * FROM seed')
+    monkeypatch.setattr(pt, 'LOCALDATA', tmp_path)
+    registry = {'operating_contract': cc.SCHEMA, 'edges': [recipe]}
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: registry)
+    picks, _, _, _ = pt.eval_post_forebet('2026-10-20', registry)
+    assert len(picks) == 1
+    pick = picks[0]
+    assert pick['enhancement_source_features']['forecast_ou_2.5_over_mean'] == .9
+    with duckdb.connect(str(tmp_path / 'warehouse.duckdb')) as con:
+        profile = pt.fetch_match_cohort(con, 'home', 80., 1, pick=pick, cache={})
+    assert profile['ml_inputs']['values']['forecast_ou_2.5_over_mean'] == .9
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    assert score(dict(pick, statistical_profile=profile), 'match_over_25') is not None
+
+
+def test_enh_v2_missing_features_use_recorded_means_and_masks_not_invented_rates(monkeypatch):
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    p = parent(recipe)
+    cohort = pt.fetch_match_cohort(connection(rich_observations()), 'home', 80., 1, pick=p)
+    model = cohort['ml_model']
+    name = 'forecast_ou_2.5_over_mean'
+    assert cohort['ml_inputs']['values'][name] is None
+    assert name in cohort['ml_imputed_features']
+    assert model['feature_means'][name] == pytest.approx(.76)
+    cols = model['feature_cols']
+    vector = cc.enhancement_feature_vector(cohort['ml_inputs']['values'], model)
+    assert vector[cols.index(name)] == 0.  # centered training mean, not raw 0
+    assert vector[len(cols) + cols.index(name) - 1] == 1.
+    assert 'home_form_gf' not in cols  # entirely unobserved never enters a fit
+
+
+def test_enh_v2_fixture_receipt_cannot_be_borrowed_and_optional_failure_retains_cohort(monkeypatch):
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    recipe = edge()
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    p = rich_pick(recipe, .9)
+    con = connection(rich_observations())
+    profile = pt.fetch_match_cohort(con, 'home', 80., 1, pick=p)
+    p['statistical_profile'] = profile
+    assert score(p, 'match_over_25') is not None
+    assert score(dict(p, home='Different Team'), 'match_over_25') is None
+    monkeypatch.setattr(cc, 'enhancement_ml_inputs', lambda *a, **kw: (_ for _ in ()).throw(ValueError('bad context')))
+    fallback = pt.fetch_match_cohort(con, 'home', 80., 1, pick=p)
+    assert fallback['n'] == 200 and fallback['over25'] == .8
+    assert fallback['ml_status'] == 'input_unavailable' and 'ml_model' not in fallback
+
+
+def test_enh_form_reuses_prior_windows_without_own_same_day_or_future_results():
+    from edgefactory.form_intel import ResultsArchive
+    rows = [dict(date=f'2026-09-{d:02d}', home='Alpha Town', away='Bravo United',
+                 hs=3, gs=1, league='League') for d in range(1, 11)]
+    p = parent(edge())
+    features = cc.enhancement_model_features(p, ResultsArchive(rows))
+    assert features['home_form_gf'] == 3. and features['away_form_gf'] == 1.
+    assert features['h2h_gf'] == 3. and features['h2h_over25'] == 1.
+    later = [dict(rows[0], date=day, hs=99) for day in ('2026-10-20', '2026-10-21')]
+    assert cc.enhancement_model_features(p, ResultsArchive(rows + later)) == features
+    thin = cc.enhancement_model_features(p, ResultsArchive(rows[:2]))
+    assert thin['home_form_gf'] is None and thin['h2h_gf'] is None
+    reserve = cc.enhancement_model_features(dict(p, home='Alpha Town U21'), ResultsArchive(rows))
+    assert reserve['home_form_gf'] is None and reserve['h2h_gf'] is None
+
+
+def test_enh_form_archive_uses_only_unconflicted_regulation_donors():
+    rows = [dict(r, date=f'2026-09-{i+1:02d}', home='Alpha Town', away='Bravo United')
+            for i, r in enumerate(observations(10))]
+    rows += [dict(rows[0], hs=99), dict(rows[1], status='AET')]
+    con = connection(rows)
+    resolved = cc._enhancement_snapshot(con, '2026-06-13', '2026-10-20', {})[3]
+    archive = cc._enhancement_archive(con, '2026-06-13', '2026-10-20', resolved, {})
+    assert len(archive.rows) == 8
+    assert all(r['date'] not in ('2026-09-01', '2026-09-02') for r in archive.rows)
+
+
+def test_enh_source_features_ignore_scores_prices_and_reject_explicit_late_receipts():
+    row = dict(p1=80., px=10., p2=10., p_o25=70., hs=9, gs=8,
+               kickoff='2026-10-20T18:00:00Z', captured_at='2026-10-20T17:00:00Z')
+    actual = cc.enhancement_source_features([row])
+    assert actual['forecast_ou_2.5_over_mean'] == .7
+    assert actual == cc.enhancement_source_features([dict(row, hs=0, gs=0, odd1=99, ht_hs=7)])
+    late = cc.enhancement_source_features([dict(row, captured_at='2026-10-20T18:00:00Z')])
+    assert all(v is None for v in late.values())
+    boolean = cc.enhancement_source_features([dict(row, p_o25=True)])
+    assert boolean['forecast_ou_2.5_over_mean'] is None
+
+
+def test_enh_optional_forecast_conflicts_are_order_invariant_without_vetoing_parent():
+    rows = rich_observations()
+    duplicate = dict(rows[0], p_o25=.2)
+    results = []
+    for ordered in (rows + [duplicate], list(reversed(rows + [duplicate]))):
+        con = connection(ordered)
+        cohort = cc.enhancement_cohort(con, edge(), as_of='2026-10-20', selection='home', fit_ml=True)
+        assert cohort['n'] == 200  # disagreement is not a new parent admission veto
+        assert cohort['ml_model']['feature_observed_n']['forecast_ou_2.5_over_mean'] == 199
+        results.append(cohort['ml_model'])
+    assert results[0] == results[1]
+
+
+@pytest.mark.parametrize('bad', [True, float('nan'), -1., 1.01])
+def test_enh_v2_rejects_invalid_feature_values(bad):
+    model = cc.enhancement_cohort(connection(rich_observations()), edge(),
+        as_of='2026-10-20', selection='home', fit_ml=True)['ml_model']
+    with pytest.raises(ValueError):
+        cc.enhancement_feature_vector({'confidence': .8, 'forecast_ou_2.5_over_mean': bad}, model)
+
+
+def test_enh_v2_form_inputs_are_fitted_and_change_scores_at_equal_confidence(monkeypatch):
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    recipe, rows = edge(), observations()
+    prior = []
+    for i, row in enumerate(rows):
+        high = i < 80
+        row.update(hs=4 if high else 0, gs=0 if high else 1)
+        for d in range(1, 6):
+            # Below parent threshold, but valid earlier regulation form evidence.
+            prior.append(dict(row, date=f'2026-08-{d:02d}', away=f'Prior Opponent {i:04d}',
+                              p1=.6, px=.2, p2=.2))
+    con = connection(rows + prior)
+    monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
+    picks = [dict(parent(recipe), home=rows[i]['home'], away='Next Opponent') for i in (0, 99)]
+    for p in picks:
+        p['statistical_profile'] = pt.fetch_match_cohort(con, 'home', 80., 1, pick=p, cache={})
+    high, low = picks
+    model = high['statistical_profile']['ml_model']
+    assert model['n'] == 100
+    assert 'home_form_gf' in model['feature_cols'] and 'home_form_ga' in model['feature_cols']
+    assert model == low['statistical_profile']['ml_model']
+    assert score(high, 'match_over_25') > score(low, 'match_over_25')
+
+
+def test_enh_duplicate_capture_timing_is_conservative_and_order_invariant():
+    rows = [dict(r, kickoff='2026-09-10T18:00:00Z', captured_at='2026-09-10T17:00:00Z')
+            for r in rich_observations()]
+    duplicate = dict(rows[0], captured_at='2026-09-10T19:00:00Z')
+    results = []
+    for ordered in (rows + [duplicate], list(reversed(rows + [duplicate]))):
+        model = cc.enhancement_cohort(connection(ordered), edge(),
+            as_of='2026-10-20', selection='home', fit_ml=True)['ml_model']
+        assert model['feature_observed_n']['forecast_ou_2.5_over_mean'] == 199
+        results.append(model)
+    assert results[0] == results[1]
+
+
+def test_enh_context_can_use_other_observed_sources_and_xg_without_replacing_voters():
+    rows = rich_observations()
+    con = connection(rows)
+    # Opposing source is useful context but is NOT this certified electorate.
+    other = [dict(r, p1=.1, px=.2, p2=.7, xg_home=3.2, xg_away=.8,
+                  p_o25=.8 if i < 160 else .1) for i, r in enumerate(rows)]
+    con.register('other', pd.DataFrame(other))
+    con.execute('CREATE TABLE bzzoiro AS SELECT * FROM other')
+    snapshot = cc.collect_observations(con, start='2026-06-13', as_of='2026-10-20', regulation_only=True)
+    projected = list(cc.contract_rows(snapshot[1], snapshot[2], snapshot[3], edge(), enhancement_features=True))
+    assert len(projected) == 200 and all(r['avg_p'] == 80. for r in projected)
+    first = next(r for r in projected if r['home'] == rows[0]['home'])
+    features = first['enhancement_source_features']
+    assert features['forecast_ou_2.5_over_mean'] == pytest.approx(.85)
+    assert features['forecast_ou_2.5_over_spread'] == pytest.approx(.1)
+    assert features['forecast_xg_home_mean'] == 3.2
+    assert features['forecast_xg_away_mean'] == .8
+    assert cc.enhancement_model_features(first, cc._enhancement_archive(
+        con, '2026-06-13', '2026-10-20', snapshot[3], {}))['forecast_xg_home_mean'] == 3.2
+    assert cc.enhancement_cohort(con, edge(), as_of='2026-10-20', selection='home')['n'] == 200
+
+
+def test_enh_v1_archives_keep_their_original_probability_without_new_inputs():
+    import hashlib
+    import math
+    from edgefactory.enh_registry import enhancement_ml_probability as score
+    recipe = edge()
+    model = dict(schema='enh_score_logit_v1', contract_id=recipe['contract_id'],
+        selection='home', as_of_exclusive='2026-10-20', train_last_date='2026-10-19',
+        n=100, feature_min=.7, feature_max=.9, classes=['0:0', '3:0'], coef=[[2.]], intercept=[-1.])
+    model['model_key'] = hashlib.sha256(json.dumps(model, sort_keys=True, allow_nan=False).encode()).hexdigest()
+    profile = dict(contract_id=recipe['contract_id'], selection='home', as_of_exclusive='2026-10-20',
+                   n=100, ml_model=model)
+    p = dict(parent(recipe), statistical_profile=profile)
+    assert score(p, 'match_over_25') == pytest.approx(1 / (1 + math.exp(-.6)))
+    assert score(p, 'match_under_25') == pytest.approx(1 - score(p, 'match_over_25'))
