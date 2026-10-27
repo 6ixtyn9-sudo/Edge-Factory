@@ -12516,3 +12516,56 @@ current slate and then runs the normal ENH generation/freeze step. Existing
 new prices/cohorts/conflicts/started fixtures can still change eligibility.
 No unconditional exact-card guarantee and no workflow dispatch by agent.
 Final targeted validation **696 passed**; no full-suite claim.
+
+### 26 October 2026 — ENH ML uses existing goal forecasts and prior form
+
+Operator explicitly requested stock-taking and connection of existing unused
+machinery/inputs. Inventory and boundaries:
+`docs/operator/audits/ENH-ML-INPUT-INVENTORY-2026-10-26.md`.
+Extended existing consensus_contracts learner to enh_score_logit_v2; no new
+scripts/services/registries. Features now include observed full 1X2/goal/BTTS
+forecast means/spreads from nonambiguous same-fixture/parent-market sources,
+observed xG when present, and existing form_intel last-10 team/H2H goal features.
+Other sources provide context, never substitute for certified recipe voters.
+Form archive reuses cohort regulation-result adjudication, not unfiltered raw
+archives; features exclude each fixture's own day/future, respect squad identity,
+and retain explicit thin/missing history. Legacy label-known-by authenticity
+remains uncertified. Recorded training means/scales + missing flags, N30 measured
+variable optional columns, training coverage and per-fixture imputation receipts.
+Actual serving emission and fetch_match_cohort attach context; shared scorer
+handles v1 unchanged and v2 fit/serve vectors; existing selector/replay consume it.
+Optional duplicate/timing conflicts are order-invariant; context failure retains
+cohort evidence; cached fits do not contain another fixture's inputs. Main,
+admission/floors, 25% free-bank staking, frozen tickets and settlement untouched.
+No production warehouse, economic uplift claim, workflow dispatch or auto-merge.
+Validation on final implementation: **4564 passed, 1 skipped in 243.80s**.
+Sixteen added test cases (including parameterization), plus the existing multiclass sklearn oracle
+updated for the new shared feature vector. Full repository diff check clean;
+no workflow or localdata changes. Actual production warehouse/capture coverage
+and out-of-time economic uplift remain unmeasured, not inferred from test passes.
+
+Published as PR #161: https://github.com/6ixtyn9-sudo/Edge-Factory/pull/161
+Open, not merged; no workflow dispatched.
+
+### 26 October 2026 — PR161 adversarial engineering follow-up
+
+User requested red-team engineering and no regression failures. Nine new
+adversarial cases fail against published 739c9ec in an isolated ignored baseline
+with original modules explicitly preloaded, then all pass on repaired code.
+Fixed actual issues: donor raw squad markers lost in compact form keys;
+canonical-only cache/receipt binding bypassing squad veto; v2 accepting absent
+or wrong-fit receipts; optional training/live context exceptions erasing cohort
+or parent candidates; bool/numeric duplicate context order dependence.
+ENH-only snapshots now retain deterministic raw donor names, quarantine
+conflicting squad classes, and use squad-aware cache and receipt identities.
+V2 requires fixture/contract/squad/model-key binding. Missing measured features
+within a valid receipt remain explicit train-mean/missing-flag inputs. Optional
+fit failures retain cohort statistics with null/unavailable feature coverage;
+optional live forecast failures retain parent/Main candidates with unavailable
+ML context. No partial-population fit; v1/ML-off remain supported.
+Updated existing evidence-integrity tests (explicitly bound receipts in scalar
+unit fixtures, not relaxed assertions); no extra script/service/registry.
+Full final suite **4573 passed, 1 skipped in 244.68s**. Original PR Workers relay
+check failed; GitHub output supplies no cause/log, so not claimed fixed or
+conflated with pytest. Detailed dispositions appended to existing inventory.
+PR161 remains open; no merge/dispatch or operational financial writes.

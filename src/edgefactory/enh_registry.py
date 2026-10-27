@@ -1078,7 +1078,7 @@ def enhancement_ml_probability(pick: dict, market: str) -> float | None:
         profile = pick.get('statistical_profile') or {}
         model = profile.get('ml_model') or {}
         unsigned = {k: v for k, v in model.items() if k != 'model_key'}
-        if (model.get('schema') != 'enh_score_logit_v1'
+        if (model.get('schema') not in ('enh_score_logit_v1', 'enh_score_logit_v2')
                 or model.get('model_key') != hashlib.sha256(json.dumps(
                     unsigned, sort_keys=True, allow_nan=False).encode()).hexdigest()
                 or model['contract_id'] != pick['contract_id']
@@ -1097,10 +1097,24 @@ def enhancement_ml_probability(pick: dict, market: str) -> float | None:
         x = probability / 100
         if not model['feature_min'] <= x <= model['feature_max']:
             return None  # no extrapolated or fabricated missing features
+        vector = [x]
+        if model['schema'] == 'enh_score_logit_v2':
+            from edgefactory.consensus_contracts import enhancement_feature_vector, enhancement_fixture_identity
+            receipt = profile.get('ml_inputs')
+            if (not isinstance(receipt, dict) or receipt.get('contract_id') != pick['contract_id']
+                    or receipt.get('model_key') != model['model_key']
+                    or receipt.get('fixture') != enhancement_fixture_identity(pick)):
+                return None
+            features = dict(receipt['values'])
+            features['confidence'] = x  # never inherit another fixture's confidence
+            vector = enhancement_feature_vector(features, model)
         classes, coef, intercept = model['classes'], model['coef'], model['intercept']
         if len(classes) < 2 or len(coef) != len(intercept):
             return None
-        logits = [b + c[0] * x for b, c in zip(intercept, coef) if len(c) == 1]
+        if (any(len(c) != len(vector) or any(type(v) not in (int, float) or not math.isfinite(v) for v in c)
+                for c in coef) or any(type(b) not in (int, float) or not math.isfinite(b) for b in intercept)):
+            return None
+        logits = [b + sum(w * v for w, v in zip(c, vector)) for b, c in zip(intercept, coef)]
         if len(classes) == 2 and len(logits) == 1:
             logits = [0., logits[0]]  # sklearn's binary logistic encoding
         if len(logits) != len(classes) or not all(math.isfinite(v) for v in logits):

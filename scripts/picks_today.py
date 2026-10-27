@@ -537,7 +537,7 @@ def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=No
     if pick is not None:
         # Production never proxies a dynamic electorate through consensus3/2.
         # The no-pick SQL below remains for historical/offline diagnostics only.
-        from edgefactory.consensus_contracts import enhancement_cohort, validate_contract
+        from edgefactory.consensus_contracts import enhancement_cohort, enhancement_ml_inputs, validate_contract
         try:
             registry = load_post_forebet_registry()
             edges = [e for e in (registry or {}).get("edges", [])
@@ -552,11 +552,26 @@ def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int, *, pick=No
                     or sorted(pick.get("sources_used", [])) != edge["sources"]
                     or pick.get("edge_rule") != identity):
                 return None
-            return enhancement_cohort(con, edge, as_of=pick["date"],
+            build_cache = cache if cache is not None else {}
+            cohort = enhancement_cohort(con, edge, as_of=pick["date"],
                                       selection=selection,
                                       min_n=HYBRID_MIN_N if min_n is None else min_n,
-                                      cache=cache,
+                                      cache=build_cache,
                                       fit_ml=os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1')
+            if cohort and cohort.get('ml_model', {}).get('schema') == 'enh_score_logit_v2':
+                try:
+                    if pick.get('enhancement_input_status') == 'unavailable':
+                        raise ValueError('optional forecast context unavailable at emission')
+                    cohort['ml_inputs'] = enhancement_ml_inputs(con, edge, pick, build_cache,
+                        model_key=cohort['ml_model']['model_key'])
+                    cols = cohort['ml_model']['feature_cols']
+                    cohort['ml_imputed_features'] = [c for c in cols
+                        if cohort['ml_inputs']['values'].get(c) is None]
+                except (KeyError, TypeError, ValueError, AttributeError, ArithmeticError):
+                    # Optional context failure must not erase measured admission.
+                    cohort.pop('ml_model', None)
+                    cohort['ml_status'] = 'input_unavailable'
+            return cohort
         except (KeyError, TypeError, ValueError):
             return None
     view_name = "consensus3" if n_way >= 3 else "consensus2"
@@ -1358,7 +1373,7 @@ def eval_post_forebet(day, registry, fixture_audit=None):
             if (key, market, source) not in ambiguous:
                 data.setdefault(source, {})[(key[1], key[2])] = vote["row"]
     for edge in edges:
-        for row in contract_rows(observations, ambiguous, resolved, edge, settled=False):
+        for row in contract_rows(observations, ambiguous, resolved, edge, settled=False, enhancement_features=True):
             unstable, _ = fixture_schedule_unstable(*row["source_rows"])
             if unstable:
                 continue
@@ -1368,6 +1383,9 @@ def eval_post_forebet(day, registry, fixture_audit=None):
                 "match": f"{home} vs {away}", "home": home, "away": away,
                 "league": row["league"], "kickoff": row["kickoff"], "pick": row["pick"],
                 "avg_p": row["avg_p"],
+                "enhancement_source_features": row["enhancement_source_features"],
+                "enhancement_feature_sources": row["enhancement_feature_sources"],
+                "enhancement_input_status": row.get("enhancement_input_status", "available"),
                 "probability_available": row["avg_p"] is not None,
                 "w_score": float(edge["valid"]["wilson_lb"]),
                 "odds": None, "odds_source": None, "bookmaker": None,
