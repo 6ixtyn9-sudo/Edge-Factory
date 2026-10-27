@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 from datetime import datetime, timezone
@@ -57,6 +58,32 @@ def _read_same_day_rows(day: str) -> list[dict]:
     return []
 
 
+def _enh_pricing_gap_count(row: dict) -> int:
+    """Count distinct in-band missing markets this adapter can actually supply.
+
+    This orders bounded collection only; it does not admit a leg or invent a
+    quote. Team totals are not supplied by the existing BetExplorer tabs.
+    """
+    from edgefactory.enh_pricing import MARKET_PRICE_MAP
+
+    notes = row.get("enh_candidate_log")
+    if not isinstance(notes, list):
+        return 0
+    markets = set()
+    for note in notes:
+        if not isinstance(note, dict) or note.get("reason") != "unpriced":
+            continue
+        market, rate = note.get("market"), note.get("cohort_rate")
+        if not isinstance(market, str):
+            continue
+        mapping = MARKET_PRICE_MAP.get(market)
+        if (mapping and (mapping[0].startswith("ou_") or mapping[0] in {"btts", "dc"})
+                and isinstance(rate, (int, float)) and not isinstance(rate, bool)
+                and math.isfinite(rate) and 0.60 <= rate <= 0.90):
+            markets.add(market)
+    return len(markets)
+
+
 def _candidate_rows(day: str) -> list[dict]:
     rows = _read_same_day_rows(day)
     if not rows:
@@ -79,7 +106,7 @@ def _candidate_rows(day: str) -> list[dict]:
 
     candidates.sort(
         key=lambda row: (
-            -score(row, "avg_p"), -score(row, "w_score"),
+            -_enh_pricing_gap_count(row), -score(row, "avg_p"), -score(row, "w_score"),
             str(row.get("home") or ""), str(row.get("away") or ""),
         )
     )
@@ -176,7 +203,7 @@ def _detail_summary(day: str) -> dict:
 
 
 def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
-    """Populate bounded fixture caches and return a secret-free receipt."""
+    """Capture up to max_fixtures network candidates plus free cache reads."""
     limit = max(0, min(MAX_FIXTURES_CEILING, int(max_fixtures)))
     receipt = {
         "schema": 1,
@@ -184,6 +211,9 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
         "captured_at": datetime.now(timezone.utc).isoformat(),
         "candidate_fixtures": 0,
         "attempted": 0,
+        "network_attempted": 0,
+        "cache_only": 0,
+        "deferred_fixtures": 0,
         "fixtures_with_rows": 0,
         "rows": 0,
         "max_fixtures": limit,
@@ -200,13 +230,24 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
         receipt["candidate_fixtures"] = len(candidates)
         source.reset_fetch_count()
         source._MAX_FETCHES_PER_RUN = limit
-        for pick in candidates[:limit]:
+        for pick in candidates:
+            # Negative cache entries remain answers: never retry them just to
+            # fill a card. Free reads must not consume fresh fixture slots.
+            needs_capture = source.fixture_capture_needed(pick, day)
+            if needs_capture and receipt["network_attempted"] >= limit:
+                receipt["deferred_fixtures"] += 1
+                continue
             receipt["attempted"] += 1
             receipt["attempted_fixtures"].append(_fixture_receipt(pick))
             try:
-                rows = source.betexplorer_odds_rows_for_pick(
-                    pick, day, norm_team_fn=norm_team,
-                )
+                if needs_capture:
+                    receipt["network_attempted"] += 1
+                    rows = source.betexplorer_odds_rows_for_pick(
+                        pick, day, norm_team_fn=norm_team,
+                    )
+                else:
+                    receipt["cache_only"] += 1
+                    rows = source.cached_odds_rows_for_pick(pick, day)
             except Exception as exc:  # noqa: BLE001 — source is fail-soft
                 receipt["errors"].append(type(exc).__name__)
                 continue
@@ -232,14 +273,17 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--date", required=True)
-    parser.add_argument("--max-fixtures", type=int, default=DEFAULT_MAX_FIXTURES)
+    parser.add_argument("--max-fixtures", type=int, default=DEFAULT_MAX_FIXTURES,
+                        help="maximum network fixture attempts; cache-only reads are free")
     args = parser.parse_args()
     receipt = capture(args.date, max_fixtures=args.max_fixtures)
     detail = receipt.get("match_detail") or {}
     print(
         "betexplorer snapshot "
         f"{receipt['date']}: candidates={receipt['candidate_fixtures']} "
-        f"attempted={receipt['attempted']} fixtures={receipt['fixtures_with_rows']} "
+        f"attempted={receipt['attempted']} network_attempted={receipt['network_attempted']} "
+        f"cache_only={receipt['cache_only']} deferred={receipt['deferred_fixtures']} "
+        f"fixtures={receipt['fixtures_with_rows']} "
         f"rows={receipt['rows']} detail={detail.get('fixtures', 0)}fixtures/"
         f"{detail.get('markets', 0)}markets/{detail.get('market_rows', 0)}rows "
         f"status={receipt['status']}"
