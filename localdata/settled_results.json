@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_at": "2026-10-27T06:03:49",
+ "generated_at": "2026-10-27T07:08:39",
  "window_days": 90,
  "rows": [
   {
@@ -18734,15 +18734,6 @@
   },
   {
    "date": "2026-08-01",
-   "home": "Gold Coast U23",
-   "away": "Gold Coast Knights U23",
-   "hs": 1,
-   "gs": 0,
-   "outcome": "home",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-01",
    "home": "Gold Coast United",
    "away": "Gold Coast Knights",
    "hs": 1,
@@ -18757,6 +18748,15 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-01",
+   "home": "Gold Coast W",
+   "away": "Gold Coast Knights W",
+   "hs": 0,
+   "gs": 1,
+   "outcome": "away",
    "src": "betexplorer_settled"
   },
   {
@@ -24485,9 +24485,9 @@
   },
   {
    "date": "2026-08-01",
-   "home": "Queensland Lions U23",
-   "away": "Peninsula U23",
-   "hs": 3,
+   "home": "Queensland Lions",
+   "away": "Peninsula",
+   "hs": 1,
    "gs": 0,
    "outcome": "home",
    "src": "betexplorer_settled"
@@ -30317,21 +30317,21 @@
   },
   {
    "date": "2026-08-02",
+   "home": "Blacktown City",
+   "away": "Sydney FC U23",
+   "hs": 4,
+   "gs": 2,
+   "outcome": "home",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-02",
    "home": "Blacktown City D",
    "away": "Sydney FC U21",
    "hs": 4,
    "gs": 2,
    "outcome": "home",
    "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-08-02",
-   "home": "Blacktown City U20",
-   "away": "Sydney FC U20",
-   "hs": 2,
-   "gs": 2,
-   "outcome": "draw",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-02",
@@ -63536,21 +63536,21 @@
   },
   {
    "date": "2026-08-08",
-   "home": "Devonport",
-   "away": "Launceston",
-   "hs": 6,
-   "gs": 0,
-   "outcome": "home",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-08",
    "home": "Devonport City",
    "away": "Launceston City",
    "hs": 6,
    "gs": 0,
    "outcome": "home",
    "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-08-08",
+   "home": "Devonport U21",
+   "away": "Launceston U21",
+   "hs": 0,
+   "gs": 1,
+   "outcome": "away",
+   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-08",
@@ -64166,21 +64166,21 @@
   },
   {
    "date": "2026-08-08",
+   "home": "Eastern Suburbs",
+   "away": "Wynnum Wolves",
+   "hs": 0,
+   "gs": 0,
+   "outcome": "draw",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-08",
    "home": "Eastern Suburbs (NZL)",
    "away": "Fencibles United",
    "hs": 4,
    "gs": 1,
    "outcome": "home",
    "src": "forebet_settled"
-  },
-  {
-   "date": "2026-08-08",
-   "home": "Eastern Suburbs U23",
-   "away": "Wynnum Wolves U23",
-   "hs": 1,
-   "gs": 1,
-   "outcome": "draw",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-08",
@@ -66498,20 +66498,20 @@
   {
    "date": "2026-08-08",
    "home": "Gold Coast Knights",
-   "away": "Peninsula",
-   "hs": 2,
-   "gs": 2,
-   "outcome": "draw",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-08",
-   "home": "Gold Coast Knights",
    "away": "Peninsula Power",
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
    "src": "vitibet_settled"
+  },
+  {
+   "date": "2026-08-08",
+   "home": "Gold Coast Knights U23",
+   "away": "Peninsula U23",
+   "hs": 5,
+   "gs": 2,
+   "outcome": "home",
+   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-08",
@@ -72896,21 +72896,21 @@
   },
   {
    "date": "2026-08-08",
+   "home": "Olympic FC",
+   "away": "Moreton City Excelsior",
+   "hs": 1,
+   "gs": 2,
+   "outcome": "away",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-08",
    "home": "Olympic FC QLD",
    "away": "Moreton City Excelsior",
    "hs": 1,
    "gs": 2,
    "outcome": "away",
    "src": "forebet_settled"
-  },
-  {
-   "date": "2026-08-08",
-   "home": "Olympic FC U23",
-   "away": "Moreton City Excelsior U23",
-   "hs": 1,
-   "gs": 2,
-   "outcome": "away",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-08",
@@ -110229,6 +110229,15 @@
   {
    "date": "2026-08-14",
    "home": "Galatasaray",
+   "away": "Corum",
+   "hs": 2,
+   "gs": 2,
+   "outcome": "draw",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-14",
+   "home": "Galatasaray",
    "away": "Corumspor",
    "hs": 2,
    "gs": 2,
@@ -110261,15 +110270,6 @@
    "gs": 2,
    "outcome": "draw",
    "src": "zulubet_settled"
-  },
-  {
-   "date": "2026-08-14",
-   "home": "Galatasaray U19",
-   "away": "Corum U19",
-   "hs": 9,
-   "gs": 1,
-   "outcome": "home",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-14",
@@ -120614,17 +120614,17 @@
   },
   {
    "date": "2026-08-15",
-   "home": "Dortmund U19",
-   "away": "Schalke U19",
-   "hs": 1,
-   "gs": 0,
-   "outcome": "home",
+   "home": "Dortmund",
+   "away": "AS Roma",
+   "hs": 2,
+   "gs": 2,
+   "outcome": "draw",
    "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-15",
-   "home": "Dortmund W",
-   "away": "AS Roma W",
+   "home": "Dortmund U19",
+   "away": "Schalke U19",
    "hs": 1,
    "gs": 0,
    "outcome": "home",
@@ -134105,10 +134105,10 @@
   },
   {
    "date": "2026-08-15",
-   "home": "Sydney Olympic",
-   "away": "Sydney Utd",
+   "home": "Sydney Olympic U20",
+   "away": "Sydney Utd U20",
    "hs": 1,
-   "gs": 2,
+   "gs": 9,
    "outcome": "away",
    "src": "betexplorer_settled"
   },
@@ -179177,10 +179177,10 @@
   },
   {
    "date": "2026-08-22",
-   "home": "Corum U19",
-   "away": "Kasimpasa U19",
-   "hs": 1,
-   "gs": 4,
+   "home": "Corum",
+   "away": "Kasimpasa",
+   "hs": 0,
+   "gs": 1,
    "outcome": "away",
    "src": "betexplorer_settled"
   },
@@ -196817,10 +196817,10 @@
   },
   {
    "date": "2026-08-22",
-   "home": "UNSW U20",
-   "away": "Manly Utd U20",
-   "hs": 2,
-   "gs": 3,
+   "home": "UNSW",
+   "away": "Manly Utd",
+   "hs": 0,
+   "gs": 2,
    "outcome": "away",
    "src": "betexplorer_settled"
   },
@@ -545072,9 +545072,9 @@
   },
   {
    "date": "2026-10-21",
-   "home": "Guadalajara-Chivas (w)",
-   "away": "Necaxa (w)",
-   "hs": 7,
+   "home": "Guadalajara-Chivas",
+   "away": "Necaxa",
+   "hs": 1,
    "gs": 0,
    "outcome": "home",
    "src": "statarea_settled"
@@ -567329,6 +567329,15 @@
   },
   {
    "date": "2026-10-26",
+   "home": "Atlas (w)",
+   "away": "Puebla (w)",
+   "hs": 2,
+   "gs": 1,
+   "outcome": "home",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-10-26",
    "home": "Austin II",
    "away": "Los Angeles FC 2",
    "hs": 0,
@@ -567551,6 +567560,15 @@
    "gs": 1,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-26",
+   "home": "Deportivo Capiata",
+   "away": "Tacuary",
+   "hs": 3,
+   "gs": 0,
+   "outcome": "home",
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-10-26",
@@ -568279,7 +568297,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "scoutingstats_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-10-26",
