@@ -12637,3 +12637,37 @@ budget changes. No assistant workflow dispatch or merge. The external Workers
 relay build was failed on initial PR162; pytest is not proof of deployment health
 and no external build repair is claimed. Old discarded quotes still require
 normal fresh capture; no live quote availability or economic uplift is implied.
+
+### 27 October 2026 — Borussia initial false-positive repair
+
+User authorized investigating/fixing the production BetExplorer squad-marker
+refusal for `B. Monchengladbach` versus `Borussia Mönchengladbach` after PR162.
+Confirmed two blockers: identity.squad_markers classified the leading B as a
+reserve marker, and the row-level team comparison did not recognize the senior
+abbreviation even if the page/write veto passed. The tracked result archive
+also contains `B. Monchengladbach II` and `B. Monchengladbach W`; exempting the
+entire name family from squad checks would be unsafe.
+
+Added one comparison-only, exact-token club-initial expansion in the existing
+identity module: leading `b monchengladbach` becomes `borussia monchengladbach`.
+Accent/case/punctuation folding uses existing machinery. Both the marker detector
+and BetExplorer row comparison use it. ALL following tokens remain present, so
+II/B/Reserves, W/Women, exact U ages, SRL and side-market markers still veto
+senior/squad substitution. Other B-prefixed clubs and lookalike city tokens are
+not exempt. No persisted source/settlement/canonical key function is changed;
+raw displayed names and captured evidence are not rewritten. Other row identity,
+opponent, date and kickoff requirements remain in place. No cache invalidation
+or added network budget: an existing fresh negative cache remains subject to
+normal expiry, so this does not promise immediate live price availability.
+
+Six new tests cover senior spelling variants, suffix preservation, unrelated
+clubs/lookalikes, matcher/write/row seams in both orientations, unchanged stored
+source keys, and capture followed by network-free cache reuse with poisoned
+squad/opponent cache rejection. Before patch: 3 new regression tests failed,
+2 safety controls passed (the sixth integration case was added after repair).
+After repair: identity/BetExplorer focused suite 1170 passed before adding the
+sixth case; final identity-guard file 16 passed. Full final suite: 4600 passed,
+1 skipped in 279.94s; diff check clean. Diagnostic logs /tmp/gladbach-before.log
+and /tmp/gladbach-full-suite.log are sandbox-only, not runtime receipts.
+No localdata/financial history, staking/admission, providers, dependencies,
+workflows or request limits changed. No assistant workflow dispatch or merge.
