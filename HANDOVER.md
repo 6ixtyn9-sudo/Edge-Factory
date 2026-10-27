@@ -12671,3 +12671,69 @@ sixth case; final identity-guard file 16 passed. Full final suite: 4600 passed,
 and /tmp/gladbach-full-suite.log are sandbox-only, not runtime receipts.
 No localdata/financial history, staking/admission, providers, dependencies,
 workflows or request limits changed. No assistant workflow dispatch or merge.
+
+### 27 October 2026 — PR163 adversarial and adjacent identity repair
+
+PR163 was merged as df898c61e7befaa3d0084982168f2727e8632795. User then
+requested red-team engineering and authorized repairing adjacent defects beyond
+the original Borussia-initial scope. Work stays on arena/e4c1759c-edge-factory.
+
+Reproduced the merged implementation against 29 new cases by explicitly
+preloading BOTH original identity and BetExplorer adapter modules from df898c61:
+26 failed, 3 passed, 25 existing cases deselected in 0.28s. This is failing-test
+count, not a claim of 26 independent defect classes. Baseline diagnostic log:
+/tmp/pr163-red-merged-baseline.log (sandbox-only). Earlier targeted failure logs
+are /tmp/pr163-red-before.log, /tmp/pr163-red-cache-before.log and
+/tmp/pr163-red-numbered-before.log. No production workflow was dispatched.
+
+Repairs, all in existing machinery:
+- Squad veto now precedes EVERY BetExplorer comparison/fallback. Raw full-name
+  II/W/U-age/SRL/side-market cache rows cannot escape through short keys or
+  token subsets after the alias-only check fails.
+- Pair agreement binds both clubs AND their own squad markers in ONE orientation.
+  A page for Arsenal men / Chelsea women cannot pass a pick for Arsenal women /
+  Chelsea men merely because swapped marker sets agree. The write seam checks
+  full pair identity before any match-page fetch/detail persistence.
+- Matcher no longer admits a wrong opponent on a one-sided match. The observed
+  Borussia abbreviation works among unrelated matches sharing the opponent, and
+  in reverse orientation. Distinct equally plausible top events are refused,
+  rather than selected by input order; exact duplicate page records are harmless.
+- Nine-character keys (including injected caller normalizers) are not identity
+  proof. Manchester City/United cannot equate on their shared short prefix.
+  Existing full-stem/affix relations remain, including Arda and Buriram. The
+  already-curated Borussia M'gladbach display variant is expanded for comparison
+  only, preserving its suffixes, rather than depending on that short-key collision.
+- Conflicting explicit club numbers cannot disappear in letter-only matching
+  (B 1903/1908, Excelsior 31/32). Year omission remains a supported display form:
+  the October 27 page's Darmstadt still matches the pick's Darmstadt 98. An
+  interim stricter numeric check dropped that receipt; the audit caught it, a
+  regression test was added and the final implementation retains it.
+- Existing entity marker parsing also supplies numeric second-team and III/C
+  third-team markers to the pricing veto. Second/third/senior sides remain
+  distinct; numeric 2 W and II Women remain compatible display variants.
+  No persisted identity-key implementation is changed.
+- Date windows anchor to the pick fixture's date, not the capture partition.
+  Explicit malformed dates reject rather than becoming zero-day differences.
+  Capture preserves the matched page's observed date instead of stamping the
+  pick date over it; a pre-fetch schedule gate protects against matcher overrides.
+  Explicit kickoff_utc fields take precedence over bare display clocks and are
+  retained when present. Bare region-relative clocks are still not compared as
+  instants, and the existing +/-1-day timezone window is unchanged.
+- Poisoned legacy cached rows no longer qualify for a detail network upgrade.
+  Valid legacy entries retain their existing bounded upgrade/fallback behavior.
+
+One pre-existing detail-refetch test fixture used Germany/Japan rows and page
+names under an unrelated Other FC/Team B pick. Corrected the synthetic fixture
+names, not its assertions: both VALID legacy fixtures must still re-read and
+must not spend fixture allowance. No production guard was mocked away to make
+that test pass. No new scripts, providers, dependencies or collection expansion.
+
+Final validation: focused identity/BetExplorer/capture suite 1206 passed; full
+suite 4629 passed, 1 skipped in 212.97s; diff check clean. Logs:
+/tmp/pr163-red-focused.log and /tmp/pr163-red-full-suite.log. Read-only audit of
+tracked October 27 cache retains ALL 45 rows across its 15 priced fixtures under
+the final row guard (not a fresh-network or profitability witness). All 29 new
+cases pass the repair. Persisted source/settlement keys, raw quote orientation,
+financial history, bank balances, admission/staking thresholds, cache expiry,
+request budgets, workflows and dependencies are unchanged. Fresh negative caches
+still expire normally. No assistant workflow dispatch or merge.

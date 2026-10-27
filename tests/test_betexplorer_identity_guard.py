@@ -228,3 +228,75 @@ def test_gladbach_capture_and_cached_read_use_real_identity_guards(tmp_path, mon
             assert be.cached_odds_rows_for_pick(pick, pick['date']) == []
     finally:
         be.reset_fetch_count()
+
+
+# PR163 adversarial follow-up: compare the same raw squad at EVERY seam.
+def test_redteam_squad_veto_cannot_fall_through_to_short_name_matching():
+    cases = [
+        ('Borussia Mönchengladbach II', 'Borussia Mönchengladbach'),
+        ('Borussia Mönchengladbach W', 'Borussia Mönchengladbach'),
+        ('B. Monchengladbach U21', 'B. Monchengladbach U23'),
+        ('Arsenal U21', 'Arsenal'), ('Arsenal SRL', 'Arsenal'),
+        ('Arsenal (Bookings)', 'Arsenal'),
+    ]
+    for row, pick in cases:
+        assert not betexplorer_odds.team_names_agree(row, pick), (row, pick)
+        assert not betexplorer_odds.team_names_agree(pick, row), (pick, row)
+
+
+def test_redteam_unrelated_clubs_with_same_nine_characters_do_not_agree():
+    assert not betexplorer_odds.team_names_agree('Manchester City', 'Manchester United')
+    assert not betexplorer_odds.team_names_agree('Manchester United', 'Manchester City')
+
+
+def test_redteam_squad_orientation_is_bound_to_the_corresponding_club():
+    pick = {'home': 'Arsenal W', 'away': 'Chelsea'}
+    wrong = {'home': 'Arsenal', 'away': 'Chelsea W'}
+    assert not betexplorer_odds._orientation_marker_clean_guard(wrong, pick)
+    assert not betexplorer_odds.row_belongs_to_pick(wrong, pick, '2026-10-27')[0]
+    assert betexplorer_odds._orientation_marker_clean_guard(
+        {'home': 'Chelsea', 'away': 'Arsenal Women'}, pick)
+
+
+def test_redteam_borussia_alias_wins_among_other_matches_for_the_same_opponent():
+    pick = {'home': 'Borussia Mönchengladbach', 'away': 'Karlsruher SC', 'date': '2026-10-27'}
+    good = dict(pick, home='B. Monchengladbach', event_id='good')
+    wrong = dict(pick, home='Other Club', event_id='wrong')
+    for pages in ([good, wrong], [wrong, good]):
+        assert betexplorer_odds.match_pick_to_betexplorer(pick, pages) is good
+    reverse = dict(good, home=good['away'], away=good['home'])
+    assert betexplorer_odds.match_pick_to_betexplorer(pick, [reverse]) is reverse
+    assert betexplorer_odds.match_pick_to_betexplorer(pick, [wrong]) is None
+
+
+def test_redteam_distinct_equally_plausible_events_are_not_selected_by_list_order():
+    pick = {'home': 'Arsenal', 'away': 'Chelsea', 'date': '2026-10-27'}
+    first = dict(pick, event_id='first')
+    second = dict(pick, event_id='second')
+    for pages in ([first, second], [second, first]):
+        assert betexplorer_odds.match_pick_to_betexplorer(pick, pages) is None
+    assert betexplorer_odds.match_pick_to_betexplorer(pick, [first, dict(first)]) is first
+
+
+def test_redteam_pre_fetch_guard_prevents_wrong_fixture_detail_persistence(tmp_path, monkeypatch):
+    be = betexplorer_odds
+    pick = {'home': 'Borussia Mönchengladbach', 'away': 'Karlsruher SC', 'date': '2026-10-27'}
+    wrong = dict(pick, home='Other Club', kickoff='18:00', match_url='test', event_id='wrong')
+    monkeypatch.setattr(be, 'LOCALDATA', tmp_path)
+    monkeypatch.setattr(be, 'fetch_day_matches', lambda day: [wrong])
+    # Defense in depth: a future matcher bug must not persist detail under the
+    # pick's key before a later row guard has a chance to see the wrong club.
+    monkeypatch.setattr(be, 'match_pick_to_betexplorer', lambda *a, **kw: wrong)
+    fetched = []
+    def fake_prices(*args):
+        fetched.append(args)
+        be.LAST_MATCH_DETAIL = {'markets': {}, 'page': {}, 'captured_at': 'test'}
+        return {'odd1': 1.5, 'oddx': 4., 'odd2': 6.}
+    monkeypatch.setattr(be, 'fetch_match_odds', fake_prices)
+    be.reset_fetch_count()
+    try:
+        assert be.betexplorer_odds_rows_for_pick(pick, pick['date']) == []
+        assert fetched == []
+        assert not be._match_detail_path(pick['date']).exists()
+    finally:
+        be.reset_fetch_count()
