@@ -79,7 +79,7 @@ def _enh_pricing_gap_count(row: dict) -> int:
         mapping = MARKET_PRICE_MAP.get(market)
         if (mapping and (mapping[0].startswith("ou_") or mapping[0] in {"btts", "dc"})
                 and isinstance(rate, (int, float)) and not isinstance(rate, bool)
-                and math.isfinite(rate) and 0.60 <= rate <= 0.90):
+                and 0.60 <= rate <= 0.90 and math.isfinite(rate)):
             markets.add(market)
     return len(markets)
 
@@ -100,8 +100,9 @@ def _candidate_rows(day: str) -> list[dict]:
     ]
     def score(row: dict, key: str) -> float:
         try:
-            return float(row.get(key) or 0.0)
-        except (TypeError, ValueError):
+            value = float(row.get(key) or 0.0)
+            return value if math.isfinite(value) else 0.0
+        except (TypeError, ValueError, OverflowError):
             return 0.0
 
     candidates.sort(
@@ -231,15 +232,20 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
         source.reset_fetch_count()
         source._MAX_FETCHES_PER_RUN = limit
         for pick in candidates:
-            # Negative cache entries remain answers: never retry them just to
-            # fill a card. Free reads must not consume fresh fixture slots.
-            needs_capture = source.fixture_capture_needed(pick, day)
-            if needs_capture and receipt["network_attempted"] >= limit:
-                receipt["deferred_fixtures"] += 1
-                continue
-            receipt["attempted"] += 1
-            receipt["attempted_fixtures"].append(_fixture_receipt(pick))
             try:
+                # A deferred detail upgrade is not a refusal of the cached
+                # quote. Read it through the identity guard without networking.
+                needs_capture = source.fixture_capture_needed(pick, day)
+                network_stopped = (
+                    source.run_stats().get("be_cooling_down", False)
+                    or source.request_stats().get("requests", 0) >= source._MAX_REQUESTS_PER_RUN)
+                if needs_capture and (receipt["network_attempted"] >= limit or network_stopped):
+                    receipt["deferred_fixtures"] += 1
+                    if not source.cached_fixture_present(pick, day):
+                        continue
+                    needs_capture = False
+                receipt["attempted"] += 1
+                receipt["attempted_fixtures"].append(_fixture_receipt(pick))
                 if needs_capture:
                     receipt["network_attempted"] += 1
                     rows = source.betexplorer_odds_rows_for_pick(
@@ -248,7 +254,7 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
                 else:
                     receipt["cache_only"] += 1
                     rows = source.cached_odds_rows_for_pick(pick, day)
-            except Exception as exc:  # noqa: BLE001 — source is fail-soft
+            except Exception as exc:  # noqa: BLE001 — isolate this fixture, not the entire pass
                 receipt["errors"].append(type(exc).__name__)
                 continue
             if rows:

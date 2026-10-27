@@ -12604,3 +12604,36 @@ missing lines and tighter retention caps. Focused adapter/capture suite: 47 pass
 Full suite: 4584 passed, 1 skipped in 257.09s. No localdata, financial history,
 workflow, admission/staking or dependency changes; no workflow dispatched.
 This validates engineering behavior, not new live quote supply or profitability.
+
+### 27 October 2026 — PR162 red-team follow-up
+
+Published initial patch a29ab1e as PR162. Operator requested adversarial review
+and regression protection. Ten additional adversarial cases independently fail
+against isolated original a29ab1e capture/adapter modules (explicit preload to
+avoid mixing current code), and pass against this repair. Before-proof log:
+/tmp/pr162-red-published-baseline.log; final full-suite log:
+/tmp/pr162-red-full-suite.log (sandbox diagnostics, not production artifacts).
+
+Repaired: a deferred legacy priced-cache detail upgrade used to suppress valid
+cached quotes at zero/exhausted fixture allowance or cooldown. The capture loop
+now falls back to the same identity-guarded cache reader while recording the
+upgrade as deferred; it does not make a blocked network attempt. Also handles
+request-budget exhaustion and cooldown reached mid-pass, without dropping later
+cache reads. Classification errors now stay within one fixture, not the entire
+capture pass. Oversized optional numeric rates cannot overflow math.isfinite;
+non-finite/overflowing confidence scores get deterministic ordering fallback.
+These are collection priority scores only, not invented betting probabilities.
+
+Totals retention now reserves one original label per supported numeric level
+before extra equivalent spellings (1.5 / 1.50 / +1.50) can spend the row budget.
+Raw evidence labels, prices and books are not rewritten. Added shuffled-input
+coverage over twenty fixed seeds alongside existing cap, missing-line, handicap,
+cache freshness, poisoned-cache, cooldown and detail-upgrade controls.
+
+Validation: 10 adversarial failures on original a29ab1e; repaired focused suite
+57 passed; repaired full suite 4594 passed, 1 skipped in 250.23s. Diff check clean.
+No localdata/financial history, admission/staking, dependency, workflow or request
+budget changes. No assistant workflow dispatch or merge. The external Workers
+relay build was failed on initial PR162; pytest is not proof of deployment health
+and no external build repair is claimed. Old discarded quotes still require
+normal fresh capture; no live quote availability or economic uplift is implied.
