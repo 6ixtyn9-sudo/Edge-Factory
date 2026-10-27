@@ -157,13 +157,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -175,18 +170,18 @@
       },
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 18070
       },
       "pa_matched": 0,
-      "pa_raw": 987,
+      "pa_raw": 18070,
       "pa_scored": 18070,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -230,50 +225,58 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 5,
-        "board_league_count": 3,
+        "board_fixtures": 2,
+        "board_league_count": 2,
         "board_leagues": {
-          "argentina_-_primera_division": 170,
-          "bolivia_-_primera_division": 9,
-          "brazil_-_serie_b": 21
+          "afc_-_champions_league": 130,
+          "indonesia_-_liga_1": 70
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 0,
+        "board_priced_rows": 17,
         "board_rows": 200,
-        "board_team_count": 8,
+        "board_team_count": 4,
         "board_team_names": {
-          "Bolivar": 9,
-          "Deportivo Riestra": 170,
-          "Instituto": 164,
-          "Instituto Cordoba": 6,
-          "Juventude": 21,
-          "Nautico Capibaribe": 10,
-          "Nautico PE": 11,
-          "Universitario de Vinto": 9
+          "Borneo Samarinda": 70,
+          "Cong An Nhan Dan": 130,
+          "PSS Sleman": 70,
+          "Shanghai Port FC": 130
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_correct_score": 21,
+          "unknown_market:1st_half_moneyline": 6,
+          "unknown_market:exact_total_goals": 9,
+          "unknown_market:match_result_total_goals": 9,
+          "unknown_market:team_clean_sheet": 4,
+          "unsupported_market:correct_score": 88,
+          "unsupported_market:double_chance": 6,
+          "unsupported_market:team_total_exact": 10,
+          "unsupported_market:team_total_goals": 13,
+          "unsupported_market:team_total_points_odd_even": 4
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 200
-        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 17
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 2,
+      "sa_scored": 17,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
