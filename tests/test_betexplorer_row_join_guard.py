@@ -290,3 +290,122 @@ def test_a_leg_with_no_price_is_left_unpriced_not_mis_joined(tmp_path):
     assert leg["odds"] is None
     assert leg.get("price_board") in (None, [])
     assert stats["be_rows_rejected"] >= 1
+
+
+def test_redteam_date_window_is_anchored_to_fixture_not_capture_partition():
+    pick = dict(FORGE_PICK, date='2026-10-14')
+    row = dict(FORGE_ROWS[0], away='York United', date='2026-10-14')
+    assert be.row_belongs_to_pick(row, pick, DAY)[0]
+    # Same cache/run partition must not rescue a stale fixture date.
+    assert not be.row_belongs_to_pick(dict(row, date=DAY), pick, DAY)[0]
+
+
+@pytest.mark.parametrize('bad', ['not-a-date', '2026-02-30', '2026-10-99'])
+def test_redteam_explicit_malformed_dates_do_not_fail_open(bad):
+    row = dict(FORGE_ROWS[0], away='York United', date=bad)
+    assert be.row_belongs_to_pick(row, FORGE_PICK, DAY) == (False, be.ROW_REJECT_DATE)
+    row['date'] = DAY
+    assert be.row_belongs_to_pick(row, dict(FORGE_PICK, date=bad), DAY) == (False, be.ROW_REJECT_DATE)
+
+
+def test_redteam_explicit_utc_witness_is_not_hidden_by_bare_display_clock():
+    row = dict(FORGE_ROWS[0], away='York United', kickoff_utc=f'{DAY}T18:00:00Z')
+    pick = dict(FORGE_PICK, kickoff_utc=f'{DAY}T21:00:00Z')
+    assert be.row_belongs_to_pick(row, pick, DAY) == (False, be.ROW_REJECT_DATE)
+    pick['kickoff_utc'] = f'{DAY}T20:00:00+02:00'
+    assert be.row_belongs_to_pick(row, pick, DAY)[0]
+
+
+def test_redteam_capture_preserves_page_date_and_refuses_forged_schedule(monkeypatch, tmp_path):
+    pick = dict(FORGE_PICK, date=DAY)
+    page = dict(pick, date='2026-10-11', event_id='page', match_url='test')
+    monkeypatch.setattr(be, 'MARKET_TABS_ENABLED', False)
+    monkeypatch.setattr(be, 'fetch_day_matches', lambda day: [page])
+    monkeypatch.setattr(be, 'match_pick_to_betexplorer', lambda *a, **kw: page)
+    fetched = []
+    def fake_prices(*args):
+        fetched.append(args)
+        return {'odd1': 1.5, 'oddx': 4., 'odd2': 6.}
+    monkeypatch.setattr(be, 'fetch_match_odds', fake_prices)
+    rows = be.betexplorer_odds_rows_for_pick(pick, DAY)
+    assert rows and {r['date'] for r in rows} == {'2026-10-11'}
+    # A matcher override must not launder an old page date into today's rows.
+    be.reset_fetch_count()
+    monkeypatch.setattr(be, 'LOCALDATA', tmp_path / 'second')
+    page['date'] = '2026-10-01'
+    fetched.clear()
+    assert be.betexplorer_odds_rows_for_pick(pick, DAY) == []
+    assert fetched == []
+
+
+def test_redteam_poisoned_legacy_cache_cannot_buy_a_detail_network_attempt(monkeypatch):
+    key = be._fixture_cache_key(FORGE_PICK, DAY)
+    be._fixture_cache[key] = _stamp(FORGE_ROWS)
+    monkeypatch.setattr(be, 'MARKET_TABS_ENABLED', True)
+    attempts = []
+    monkeypatch.setattr(be, 'fetch_day_matches', lambda day: attempts.append(day) or [])
+    assert not be.fixture_capture_needed(FORGE_PICK, DAY)
+    assert be.betexplorer_odds_rows_for_pick(FORGE_PICK, DAY) == []
+    assert attempts == []
+
+
+@pytest.mark.parametrize('suffix', ['II', 'W', 'U21', 'SRL', '(Bookings)'])
+def test_redteam_poisoned_full_name_squads_are_blocked_from_disk_and_memory(suffix):
+    pick = dict(FORGE_PICK, home='Borussia Mönchengladbach', away='Karlsruher SC')
+    rows = _stamp([dict(row, home=f'Borussia Mönchengladbach {suffix}', away=pick['away'])
+                   for row in FORGE_ROWS])
+    key = be._fixture_cache_key(pick, DAY)
+    _write_cache(be.LOCALDATA, key, pick['home'], pick['away'], rows)
+    assert be.cached_odds_rows_for_pick(pick, DAY) == []
+    assert be.cached_odds_rows_for_pick(pick, DAY) == []  # now in memory
+    assert be.run_stats()['be_rows_rejected'] == 2 * len(rows)
+
+
+def test_redteam_custom_short_normalizer_is_not_identity_proof():
+    assert not be.team_names_agree('Manchester City', 'Manchester United',
+                                   norm_team_fn=lambda *a, **kw: 'same')
+
+
+def test_borussia_preexisting_mgladbach_alias_remains_squad_safe():
+    for abbreviated in ("Borussia M'gladbach", 'Borussia Mgladbach', 'B. Monchengladbach'):
+        assert be.team_names_agree(abbreviated, 'Borussia Mönchengladbach')
+        assert be.team_names_agree(abbreviated + ' II', 'Borussia Mönchengladbach II')
+        assert not be.team_names_agree(abbreviated + ' II', 'Borussia Mönchengladbach')
+
+
+def test_raw_reversed_prices_are_not_silently_relabelled():
+    pick = dict(FORGE_PICK)
+    row = dict(FORGE_ROWS[0], home=pick['away'], away=pick['home'])
+    assert be.row_belongs_to_pick(row, pick, DAY)[0]
+    kept, rejected = be.filter_rows_for_pick([row], pick, DAY)
+    assert not rejected
+    assert kept == [row]  # selection is source-home, not pick-home
+    assert kept[0] is row
+
+
+@pytest.mark.parametrize('left,right', [
+    ('B 1903', 'B 1908'),
+    ('Excelsior 31', 'Excelsior 32'),
+    ('B. Monchengladbach 2', 'Borussia Mönchengladbach'),
+    ('Borussia Mönchengladbach III', 'Borussia Mönchengladbach'),
+    ('Borussia Mönchengladbach III', 'Borussia Mönchengladbach II'),
+    ('B. Monchengladbach 2 W', 'Borussia Mönchengladbach W'),
+])
+def test_redteam_club_digits_and_numbered_squads_are_not_erased(left, right):
+    assert not be.team_names_agree(left, right)
+    assert not be.team_names_agree(right, left)
+
+
+def test_numbered_reserve_display_variants_remain_compatible():
+    from edgefactory.identity import squad_marker_mismatch
+    assert not squad_marker_mismatch('B. Monchengladbach 2 W', 'Borussia Mönchengladbach II Women')
+    assert be.team_names_agree('B. Monchengladbach 2 W', 'Borussia Mönchengladbach II Women')
+    assert be.team_names_agree("Excelsior '31", 'Excelsior 31')
+
+
+def test_numeric_club_year_omission_retains_observed_darmstadt_receipt():
+    # October 27 captured page omitted the 98 in the official pick. Preserve
+    # the existing display relation without equating conflicting club numbers.
+    assert be.team_names_agree('Darmstadt', 'Darmstadt 98')
+    assert be.team_names_agree('Darmstadt 98', 'Darmstadt')
+    assert not be.team_names_agree('Darmstadt 98', 'Darmstadt 99')
