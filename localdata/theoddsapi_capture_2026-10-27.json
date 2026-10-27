@@ -1,21 +1,11 @@
 {
   "added": 0,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "N\u00f5mme United",
-      "date": "2026-10-27",
-      "home": "Trans Narva",
-      "kickoff": "27-10, 16:00",
-      "league": "Estonia Meistriliiga"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 35,
-  "captured_at": "2026-10-27T13:17:25+00:00",
+  "captured_at": "2026-10-27T16:15:57+00:00",
   "date": "2026-10-27",
-  "due_reasons": {
-    "close_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -34,6 +24,7 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
     "kickoff_mismatch": 1,
     "priced": 5,
     "priced_close_window_not_open": 1,
@@ -52,10 +43,11 @@
     "Koninklijke HFC|Go Ahead Eagles (retry cooldown (6h after failed attempt))",
     "Larne|Limavady United (retry cooldown (6h after failed attempt))",
     "Kloetinge|SC Cambuur (retry cooldown (6h after failed attempt))",
+    "Arda Kardzhali|Levski Sofia (retry cooldown (6h after failed attempt))",
     "Truro City|Slough Town (retry cooldown (6h after failed attempt))",
     "Sonnenhof Gro\u00dfaspach|FC Augsburg (priced)",
-    "Arda Kardzhali|Levski Sofia (retry cooldown (6h after failed attempt))",
     "Borussia M\u00f6nchengladbach|Karlsruher SC (priced)",
+    "Trans Narva|N\u00f5mme United (kickoff already passed)",
     "RSD Alcal\u00e1|Las Palmas (retry cooldown (6h after failed attempt))",
     "Borussia Dortmund|Werder Bremen (priced)",
     "Leicester City|Wigan Athletic (retry cooldown (6h after failed attempt))",
@@ -77,11 +69,6 @@
     "Wealdstone|Solihull Moors (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Trans Narva vs N\u00f5mme United (league not covered: Estonia Meistriliiga)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Estonia Meistriliiga": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
