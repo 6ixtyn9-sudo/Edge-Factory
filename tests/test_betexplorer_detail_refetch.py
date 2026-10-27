@@ -51,7 +51,8 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setattr(be, "_orientation_marker_clean_guard", lambda m, p: True)
     monkeypatch.setattr(be, "filter_rows_for_pick", lambda rows, p, d, **k: (list(rows), {}))
     monkeypatch.setattr(be, "fetch_day_matches", lambda d: [MATCHED])
-    monkeypatch.setattr(be, "match_pick_to_betexplorer", lambda p, ms, **k: MATCHED)
+    monkeypatch.setattr(be, "match_pick_to_betexplorer",
+                        lambda p, ms, **k: dict(MATCHED, home=p["home"], away=p["away"]))
     calls = {"n": 0, "detail": True, "odds": ODDS}
 
     def fake_fetch(url, event_id):
@@ -170,8 +171,9 @@ def test_rereads_do_not_spend_the_fixture_budget(env):
     _, calls = env
     other = {"home": "Other FC", "away": "Team B", "date": DAY, "kickoff": "16:45"}
     _seed_cache(_rows(1.70))
-    be._fixture_cache[be._fixture_cache_key(other, DAY)] = _rows(1.70)
-    be._write_fixture_cache(other, DAY, _rows(1.70))
+    other_rows = [dict(row, home=other["home"], away=other["away"]) for row in _rows(1.70)]
+    be._fixture_cache[be._fixture_cache_key(other, DAY)] = other_rows
+    be._write_fixture_cache(other, DAY, other_rows)
 
     be.betexplorer_odds_rows_for_pick(PICK, DAY)
     be.betexplorer_odds_rows_for_pick(other, DAY)

@@ -45,6 +45,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 from edgefactory.identity import club_initial_words_for_comparison, squad_marker_mismatch
+from edgefactory.util import strip_squad_markers
 
 BASE = "https://www.betexplorer.com"
 # A descriptive, cooperative identity; no evasion or browser impersonation is
@@ -381,76 +382,40 @@ def match_pick_to_betexplorer(
     norm_team_fn=None,
     norm_width: int = 9,
 ) -> dict | None:
-    """Find the BetExplorer match corresponding to a pick.
+    """Find a unique, pair- and schedule-consistent page for this pick.
 
-    Uses norm_team() keys at the given width for fuzzy matching.
-    Returns the match dict or None if no unique match found.
+    Legacy norm_width remains an interface argument, not identity proof: a
+    shared short key or one matching opponent cannot identify a fixture.
     """
-    if norm_team_fn is None:
-        try:
-            from edgefactory.util import norm_team as _norm
-            norm_team_fn = _norm
-        except ImportError:
-            norm_team_fn = lambda n, width=9: re.sub(r"[^a-z]", "", str(n or "").lower())[:width]
-
-    pick_home = str(pick.get("home") or "")
-    pick_away = str(pick.get("away") or "")
     pick_league = str(pick.get("league") or "")
-
-    pick_hk = norm_team_fn(pick_home, width=norm_width)
-    pick_ak = norm_team_fn(pick_away, width=norm_width)
-
     candidates = []
-    for m in matches:
-        m_hk = norm_team_fn(m.get("home", ""), width=norm_width)
-        m_ak = norm_team_fn(m.get("away", ""), width=norm_width)
-
-        # Squad-marker veto BEFORE any branch can accept: wherever a
-        # truncated fuzzy key treats a provider name as one of the pick's
-        # teams, the full names must carry the same squad markers. Without
-        # this, "Club Brugge KV U23" shares the width-9 key of "Club Brugge
-        # KV" and the reserve side's page gets priced as the senior side
-        # (receipt 2026-10-10: Dender vs Club Brugge KV U23 rows cached under the
-        # RAAL La Louvière vs Club Brugge KV key).
-        if m_hk == pick_hk and squad_marker_mismatch(m.get("home", ""), pick_home):
+    for match in matches:
+        straight, swapped = _team_pair_agreement(match, pick, norm_team_fn=norm_team_fn)
+        if straight == swapped:  # neither agrees, or orientation is ambiguous
             continue
-        if m_hk == pick_ak and squad_marker_mismatch(m.get("home", ""), pick_away):
+        if not row_belongs_to_pick(
+                match, pick, str(pick.get("date") or match.get("date") or ""),
+                norm_team_fn=norm_team_fn)[0]:
             continue
-        if m_ak == pick_hk and squad_marker_mismatch(m.get("away", ""), pick_home):
-            continue
-        if m_ak == pick_ak and squad_marker_mismatch(m.get("away", ""), pick_away):
-            continue
-
-        # Exact team-key match (both sides)
-        if m_hk == pick_hk and m_ak == pick_ak:
-            candidates.append((0, m))
-        # Reverse match (home/away swapped)
-        elif m_hk == pick_ak and m_ak == pick_hk:
-            candidates.append((1, m))
-        # Partial match (one side matches)
-        elif m_hk == pick_hk or m_ak == pick_ak:
-            candidates.append((2, m))
+        candidates.append((0 if straight else 1, match))
 
     if not candidates:
         return None
 
-    # Prefer exact, then partial. Among ties, prefer same league.
     def sort_key(item):
-        priority, m = item
-        m_league = str(m.get("league", "") or m.get("country", "") or "").lower()
-        league_match = 0 if pick_league.lower() in m_league or m_league in pick_league.lower() else 1
-        return (priority, league_match)
+        priority, match = item
+        league = str(match.get("league") or match.get("country") or "").lower()
+        league_match = 0 if pick_league.lower() in league or league in pick_league.lower() else 1
+        return priority, league_match
 
     candidates.sort(key=sort_key)
-
-    # Only return if best candidate is exact or reversed
-    if candidates[0][0] <= 1:
-        return candidates[0][1]
-    # Partial match: only accept if there's exactly one candidate
-    partials = [c for c in candidates if c[0] == 2]
-    if len(partials) == 1:
-        return partials[0][1]
-    return None
+    best = candidates[0]
+    # Duplicate copies of one page are harmless; distinct equally plausible
+    # events must not be resolved by input order (or arbitrary event ID).
+    if any(match != best[1] for priority, match in candidates
+           if sort_key((priority, match)) == sort_key(best)):
+        return None
+    return best[1]
 
 
 def parse_best_1x2(odds_html: str) -> dict | None:
@@ -1139,19 +1104,25 @@ def cached_odds_rows_for_pick(pick: dict, day: str) -> list[dict]:
     return kept
 
 
-def _orientation_marker_clean_guard(matched: dict, pick: dict) -> bool:
-    """True when the matched page can stand for the pick in either orientation.
+def _team_pair_agreement(row: dict, pick: dict, *, norm_team_fn=None) -> tuple[bool, bool]:
+    """Bind names AND squad markers in the same orientation at every seam."""
+    rh, ra = row.get("home"), row.get("away")
+    ph, pa = pick.get("home"), pick.get("away")
+    straight = (team_names_agree(rh, ph, norm_team_fn=norm_team_fn)
+                and team_names_agree(ra, pa, norm_team_fn=norm_team_fn))
+    swapped = (team_names_agree(rh, pa, norm_team_fn=norm_team_fn)
+               and team_names_agree(ra, ph, norm_team_fn=norm_team_fn))
+    return straight, swapped
 
-    Module-level so the write-seam refusal is unit-testable without network.
+
+def _orientation_marker_clean_guard(matched: dict, pick: dict) -> bool:
+    """The page must identify both clubs and their squads in ONE orientation.
+
+    Retain the write-seam helper/interface, but a bag of matching marker
+    classes alone is not proof of the corresponding club's squad identity.
     """
-    matched_home = str(matched.get("home") or "")
-    matched_away = str(matched.get("away") or "")
-    pick_home = str(pick.get("home") or "")
-    pick_away = str(pick.get("away") or "")
-    return (not squad_marker_mismatch(matched_home, pick_home)
-            and not squad_marker_mismatch(matched_away, pick_away)) or \
-           (not squad_marker_mismatch(matched_home, pick_away)
-            and not squad_marker_mismatch(matched_away, pick_home))
+    straight, swapped = _team_pair_agreement(matched, pick)
+    return straight != swapped
 
 
 # ---------------------------------------------------------------------------
@@ -1161,24 +1132,22 @@ def _orientation_marker_clean_guard(matched: dict, pick: dict) -> bool:
 # "2026-10-12|forge|yorkunited" (fixture home "Forge", away "York United") whose
 # three rows are Forge vs INTER TORONTO 1.35/4.80/6.40 — a different match. The
 # cache key is built from the PICK's teams, but the rows are built from the
-# matched PAGE's teams, so when the matcher accepts a one-sided partial match
-# the wrong fixture's prices land under the right key. The squad-marker veto
-# (``_orientation_marker_clean_guard``) cannot see this: "York United" and
-# "Inter Toronto" carry no squad markers, they are simply different clubs.
+# matched PAGE's teams. Historically a one-sided partial match let the wrong
+# fixture's prices land under the right key: marker-only checks could not see
+# that York United and Inter Toronto are simply different clubs.
 #
-# ``match_pick_to_betexplorer`` accepts a partial match when exactly one
-# candidate has one side matching (the "Buriram" vs "Buriram United" display
-# variant is a legitimate case that must keep working). The guard therefore runs
-# on the ROWS, at the seam where a row is about to price a pick, and requires
-# BOTH teams to agree in one orientation — a strictly stronger condition than the
-# one-sided partial match it backstops, so no legitimate row is lost.
+# Matcher, pre-fetch/write seam and cached-row admission now share the same
+# two-club, same-orientation relation. Raw rows still pass this guard even after
+# a successful page match: cache metadata or a future matcher change must never
+# stand in for the identity actually attached to the quoted prices. Observed
+# display variants (Buriram / Buriram United, Arda / Arda Kardzhali) remain valid.
 # ---------------------------------------------------------------------------
 ROW_REJECT_TEAMS = "row teams do not both match the pick"
 ROW_REJECT_DATE = "row date outside the pick's +/-1 day window"
 
 # Shortest normalised form allowed to match by prefix containment. "Arda" for
 # "Arda Kardzhali" is a real same-date receipt (2026-10-12, captured 01:06Z) and
-# must survive; it is 4 characters, which is why the tolerant width-9 relation
+# must survive; it is 4 characters, which is why the full-stem prefix relation
 # accepts from 4 and not from the 5 the token-subset rule uses.
 _TEAM_PREFIX_MIN = 4
 # The fetch path deliberately searches the pick date and its neighbours for
@@ -1196,36 +1165,39 @@ def _default_norm_team(name: object, width: int = 9) -> str:
 
 
 def team_names_agree(row_name: object, pick_name: object, *, norm_team_fn=None) -> bool:
-    """True when a row's team name and the pick's team name denote one club.
+    """Full-name equivalence with a hard squad veto, never a short-key proof.
 
-    Reuses the cross-feed equivalence the rest of the pipeline trusts
-    (``theoddsapi._team_names_match``: width-9 keys, prefix containment,
-    significant-token subset) and adds width-9 prefix containment down to
-    ``_TEAM_PREFIX_MIN`` characters, which is what keeps short display forms
-    ("Arda" for "Arda Kardzhali") pricing their own fixture without letting
-    "Inter Toronto" stand in for "York United".
+    Preserve existing affix/subset and full-stem prefix relations (including
+    Arda / Arda Kardzhali), but not nine-character collisions between clubs.
     """
-    # Comparison-only expansion: the evidenced Borussia initial must pass
-    # the row seam as well as the page's squad veto. Preserve every suffix;
-    # this does not turn B./II/W/U21 rows into senior-team aliases or rekey
-    # any cache, source evidence, settlement record or financial history.
+    if squad_marker_mismatch(row_name, pick_name):
+        return False  # Must precede EVERY alias, subset and fallback branch.
     row_words = club_initial_words_for_comparison(row_name)
     pick_words = club_initial_words_for_comparison(pick_name)
-    if row_words and row_words == pick_words and not squad_marker_mismatch(row_name, pick_name):
+    if not row_words or not pick_words:
+        return False
+    if row_words == pick_words:
         return True
+    # Conflicting club numbers are identity (B 1903 != B 1908, '31 != '32).
+    # A feed may omit the year (observed Darmstadt / Darmstadt 98), so absence
+    # alone is not a contradiction. Strip parsed squad markers first, so
+    # reserve "2" remains compatible with "II"; the hard squad veto above
+    # still refuses a numeric second side donating to the senior team.
+    row_digits = re.findall(r"\d+", strip_squad_markers(row_words))
+    pick_digits = re.findall(r"\d+", strip_squad_markers(pick_words))
+    if row_digits and pick_digits and row_digits != pick_digits:
+        return False
     try:
         from edgefactory.sources.theoddsapi import _team_names_match
-        if _team_names_match(pick_name, row_name):
+        if _team_names_match(pick_words, row_words, allow_truncated=False):
             return True
     except Exception:
         pass
-    norm = norm_team_fn or _default_norm_team
-    try:
-        na = norm(pick_name, width=9)
-        nb = norm(row_name, width=9)
-    except TypeError:  # caller supplied a 1-arg norm_fn
-        na = norm(pick_name)
-        nb = norm(row_name)
+    # Use untruncated stems. Keep norm_team_fn as an interface argument only:
+    # an injected short-key normalizer is not evidence of full-name identity.
+    width = max(len(row_words), len(pick_words))
+    na = _default_norm_team(pick_words, width=width)
+    nb = _default_norm_team(row_words, width=width)
     if not na or not nb:
         return False
     if na == nb:
@@ -1245,7 +1217,8 @@ def _kickoff_agrees(row: dict, pick: dict) -> bool:
     guard exists to protect, so an unprovable pair fails OPEN (never a
     rejection basis) exactly like ``_fresh_row`` in enh_pricing.
     """
-    row_ko, pick_ko = str(row.get("kickoff") or ""), str(pick.get("kickoff") or "")
+    row_ko = str(row.get("kickoff_utc") or row.get("kickoff") or "")
+    pick_ko = str(pick.get("kickoff_utc") or pick.get("kickoff") or "")
     if "T" not in row_ko or "T" not in pick_ko:
         return True
     try:
@@ -1267,22 +1240,22 @@ def row_belongs_to_pick(row: dict, pick: dict, day: str, *,
     +/-1-day window, and — when both are provable instants — the kickoff to
     agree. ``reason`` is "" when the row is accepted.
     """
-    row_home, row_away = row.get("home"), row.get("away")
-    pick_home, pick_away = pick.get("home"), pick.get("away")
-    straight = (team_names_agree(row_home, pick_home, norm_team_fn=norm_team_fn)
-                and team_names_agree(row_away, pick_away, norm_team_fn=norm_team_fn))
-    swapped = (team_names_agree(row_home, pick_away, norm_team_fn=norm_team_fn)
-               and team_names_agree(row_away, pick_home, norm_team_fn=norm_team_fn))
-    if not (straight or swapped):
+    straight, swapped = _team_pair_agreement(row, pick, norm_team_fn=norm_team_fn)
+    if straight == swapped:
         return False, ROW_REJECT_TEAMS
+    # `day` is a capture/cache partition; tomorrow's fixture may be collected
+    # today. Anchor to the pick when supplied. Explicit invalid dates are not
+    # missing evidence and cannot silently become a zero-day difference.
+    reference = str(pick.get("date") or day)[:10]
     row_day = str(row.get("date") or "")[:10]
-    if row_day:
-        try:
-            delta = abs((date.fromisoformat(row_day) - date.fromisoformat(str(day)[:10])).days)
-        except ValueError:
-            delta = 0  # unparseable date: fail open, the teams already agreed
-        if delta > _DATE_WINDOW_DAYS:
-            return False, ROW_REJECT_DATE
+    try:
+        pick_day = date.fromisoformat(reference) if reference else None
+        observed_day = date.fromisoformat(row_day) if row_day else None
+    except ValueError:
+        return False, ROW_REJECT_DATE
+    if observed_day and (pick_day is None or
+                         abs((observed_day - pick_day).days) > _DATE_WINDOW_DAYS):
+        return False, ROW_REJECT_DATE
     if not _kickoff_agrees(row, pick):
         return False, ROW_REJECT_DATE
     return True, ""
@@ -1326,8 +1299,8 @@ def _detail_refetch_due(pick: dict, day: str) -> bool:
     earlier run (before the detail tabs existed) never gets its O/U, BTTS or DC
     tabs retained. Such an entry gets one re-read; entries written by a visit
     under the detail tabs are served from cache, which keeps the one-visit-per-
-    fixture-per-day bound. Only priced entries qualify: an empty entry is a
-    refusal or a day with no odds. A re-read is attempted at most once per run.
+    fixture-per-day bound. Only identity-valid priced entries qualify: empty
+    or poisoned entries cannot buy another network attempt. A re-read is attempted at most once per run.
     """
     if not MARKET_TABS_ENABLED:
         return False
@@ -1335,7 +1308,7 @@ def _detail_refetch_due(pick: dict, day: str) -> bool:
     if key in _detail_attempted:
         return False
     rows = _fixture_cache[key] if key in _fixture_cache else _read_fixture_cache(pick, day)
-    if not rows:
+    if not rows or not filter_rows_for_pick(rows, pick, day)[0]:
         return False
     return not _entry_detail_visited(pick, day)
 
@@ -1439,8 +1412,8 @@ def betexplorer_odds_rows_for_pick(
 
     # Second, write-seam identity check (defense in depth against future
     # matcher changes and caller-supplied norm functions): the matched page's
-    # team names must not carry squad markers the pick's names lack, in
-    # EITHER orientation. Marker classes deliberately allow display variants
+    # both team names and their squad markers must agree with the pick in
+    # ONE orientation. Comparisons deliberately allow display variants
     # ("Buriram" vs "Buriram United") and reject squad swaps ("Club Brugge KV
     # U23" for "Club Brugge KV"). A refusal here must never write rows under
     # the pick's key: wrong-fixture prices are worse than an absent cache.
@@ -1448,10 +1421,19 @@ def betexplorer_odds_rows_for_pick(
         print(
             f"  betexplorer_odds: refused matched page "
             f"{matched.get('home')} vs {matched.get('away')} for pick "
-            f"{pick.get('home')} vs {pick.get('away')}: squad-marker mismatch; "
+            f"{pick.get('home')} vs {pick.get('away')}: team/squad identity mismatch; "
             f"no rows cached",
             file=sys.stderr,
         )
+        _fixture_cache[cache_key] = []
+        _write_fixture_cache(pick, day, [])
+        return []
+
+    # Defense in depth against a future matcher regression: validate observed
+    # schedule BEFORE fetching/persisting any detail under the pick's key.
+    page_ok, reason = row_belongs_to_pick(matched, pick, day, norm_team_fn=norm_team_fn)
+    if not page_ok:
+        _record_row_rejections({reason: 1})
         _fixture_cache[cache_key] = []
         _write_fixture_cache(pick, day, [])
         return []
@@ -1476,7 +1458,7 @@ def betexplorer_odds_rows_for_pick(
     captured_at = datetime.now(timezone.utc).isoformat()
 
     base = {
-        "date": pick_date,
+        "date": matched.get("date") or pick_date,
         "kickoff": matched["kickoff"],
         "league": f"{matched.get('country', '')}: {matched.get('league', '')}",
         "home": matched["home"],
@@ -1484,6 +1466,8 @@ def betexplorer_odds_rows_for_pick(
         "bookmaker": "betexplorer_best",
         "captured_at": captured_at,
     }
+    if matched.get("kickoff_utc"):
+        base["kickoff_utc"] = matched["kickoff_utc"]
 
     rows = []
     for market, mapping in (

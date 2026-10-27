@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import re
 
-from .util import fold_ascii
+from .util import fold_ascii, squad_markers as _entity_squad_markers
 
 _WS_RE = re.compile(r"\s+")
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9 ]+")
@@ -463,6 +463,12 @@ def club_initial_words_for_comparison(name: object) -> str:
     words = team_identity_words(name).split()
     if words[:2] == ["b", "monchengladbach"]:
         words[0] = "borussia"
+    # Existing curated spelling (TEAM_KEY_RAW_ALIASES): preserve this display
+    # variant when the odds seam stops accepting a nine-character collision.
+    elif words[:3] == ["borussia", "m", "gladbach"]:
+        words[:3] = ["borussia", "monchengladbach"]
+    elif words[:2] == ["borussia", "mgladbach"]:
+        words[1] = "monchengladbach"
     return " ".join(words)
 
 
@@ -474,6 +480,15 @@ def squad_markers(name: object) -> frozenset[str]:
         cls = SQUAD_MARKER_CLASSES.get(word)
         if cls:
             out.add(cls)
+    # Reuse the existing entity parser for numeric second-team suffixes
+    # (including "2 W") and third-team III/C markers. Keep the class distinct
+    # from II/B: a third side cannot donate the second team's prices. This
+    # is marker recognition only; the persisted key implementation is untouched.
+    entity_markers = _entity_squad_markers(words)
+    if "b" in entity_markers:
+        out.add("reserve")
+    if "c" in entity_markers:
+        out.add("third")
     # Punctuation folding separates U-21 / Under-23 / Sub-21. Preserve the
     # actual age, not a generic 'under'/'sub' class that merges U21 with U23.
     # Marker recognition only: persisted team-key spelling is not rewritten.
