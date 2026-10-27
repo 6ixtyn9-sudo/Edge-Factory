@@ -44,7 +44,7 @@ from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
-from edgefactory.identity import squad_marker_mismatch
+from edgefactory.identity import club_initial_words_for_comparison, squad_marker_mismatch
 
 BASE = "https://www.betexplorer.com"
 # A descriptive, cooperative identity; no evasion or browser impersonation is
@@ -1205,6 +1205,14 @@ def team_names_agree(row_name: object, pick_name: object, *, norm_team_fn=None) 
     ("Arda" for "Arda Kardzhali") pricing their own fixture without letting
     "Inter Toronto" stand in for "York United".
     """
+    # Comparison-only expansion: the evidenced Borussia initial must pass
+    # the row seam as well as the page's squad veto. Preserve every suffix;
+    # this does not turn B./II/W/U21 rows into senior-team aliases or rekey
+    # any cache, source evidence, settlement record or financial history.
+    row_words = club_initial_words_for_comparison(row_name)
+    pick_words = club_initial_words_for_comparison(pick_name)
+    if row_words and row_words == pick_words and not squad_marker_mismatch(row_name, pick_name):
+        return True
     try:
         from edgefactory.sources.theoddsapi import _team_names_match
         if _team_names_match(pick_name, row_name):
