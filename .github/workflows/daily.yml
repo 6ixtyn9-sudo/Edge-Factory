@@ -202,6 +202,20 @@ jobs:
         run: |
           PYTHONPATH=src python3 scripts/fit_phase5_candidate.py --explain || true
 
+      - name: Ticket decision replay parity (read-only, flag never gate)
+        if: always() && inputs.mode != 'remine_only'
+        continue-on-error: true
+        run: |
+          set +e
+          mkdir -p localdata
+          PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity > localdata/replay_parity.json
+          result=$?
+          echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat localdata/replay_parity.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          exit "$result"
+
       - name: Final history completeness publication gate
         if: inputs.mode != 'remine_only'
         run: python3 scripts/phase5_persistence.py history-check
