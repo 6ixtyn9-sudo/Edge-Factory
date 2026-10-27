@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-10-27",
+ "generated_at": "2026-10-28",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -14438,10 +14438,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 14,
-   "inv_price_sum": 9.559472014650895,
+   "hits": 15,
+   "inv_price_sum": 10.24440352150021,
    "multi_n": 0,
-   "n": 17,
+   "n": 18,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -14459,9 +14459,10 @@
     "2026-10-25|Houston Dynamo vs Minnesota United|match_under_45@v1",
     "2026-10-25|Wellington Phoenix vs Central Coast Mariners|match_under_45@v1",
     "2026-10-25|Colorado Rapids vs Vancouver Whitecaps|match_under_45@v1",
-    "2026-10-25|Sydney FC vs Adelaide United|match_under_45@v1"
+    "2026-10-25|Sydney FC vs Adelaide United|match_under_45@v1",
+    "2026-10-27|Levadia vs Tammeka|match_under_45@v1"
    ],
-   "profit": 8.141,
+   "profit": 8.601,
    "records": [
     {
      "away": "Atlante",
@@ -14912,6 +14913,35 @@
      "recorded_at": "2026-10-26T04:24:33.982902+00:00",
      "rule": "pfc_27e0f725859bc708f95c58a3",
      "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Tammeka",
+     "away_key": "tammeka",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7235,
+     "date": "2026-10-27",
+     "hit": true,
+     "home": "Levadia",
+     "home_key": "levadia",
+     "league": "Meistriliiga",
+     "match": "Levadia vs Tammeka",
+     "multi_source": false,
+     "price": 1.46,
+     "price_context": {
+      "book": "BetMGM.us",
+      "captured_at": "2026-10-26T22:24:10.573070+00:00",
+      "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+      "decision_at": "2026-10-27T00:25:14+02:00",
+      "kickoff": "2026-10-27T16:00:00+00:00",
+      "league": "Meistriliiga",
+      "price": 1.46,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-27T22:30:20.388695+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "betexplorer",
      "stated": null
     }
    ],
