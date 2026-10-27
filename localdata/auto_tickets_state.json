@@ -1,50 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 267.906194,
+  "bank": 289.96271800000005,
   "cycle_base": 203.9865280000001,
-  "open_slips": [
-    {
-      "date": "2026-10-26",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Flamengo vs Atl\u00e9tico Mineiro",
-              "pick": "HOME",
-              "prob": 0.707268784764778,
-              "odds": 1.3165,
-              "result": null,
-              "fixture_key": [
-                "2026-10-26",
-                "Flamengo",
-                "Atl\u00e9tico Mineiro"
-              ]
-            },
-            {
-              "match": "Santa Clara vs Benfica",
-              "pick": "AWAY",
-              "prob": 0.6753028890959925,
-              "odds": 1.38,
-              "result": null,
-              "fixture_key": [
-                "2026-10-26",
-                "Santa Clara",
-                "Benfica"
-              ]
-            }
-          ],
-          "odds": 1.82,
-          "stake_pct": 26.8982,
-          "results": [
-            null,
-            "win"
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 26.8982
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -1321,8 +1279,8 @@
     },
     {
       "date": "2026-10-26",
-      "staked_pct": 26.8982,
-      "returned_pct": 79.6187,
+      "staked_pct": 53.7964,
+      "returned_pct": 128.5734,
       "accas": [
         {
           "odds": 2.96,
@@ -1343,10 +1301,30 @@
               "result": "win"
             }
           ]
+        },
+        {
+          "odds": 1.82,
+          "won": true,
+          "stake_pct": 26.8982,
+          "returned_pct": 48.9547,
+          "legs": [
+            {
+              "match": "Flamengo vs Atl\u00e9tico Mineiro",
+              "pick": "HOME",
+              "odds": 1.3165,
+              "result": "win"
+            },
+            {
+              "match": "Santa Clara vs Benfica",
+              "pick": "AWAY",
+              "odds": 1.38,
+              "result": "win"
+            }
+          ]
         }
       ],
-      "bank_pct": 267.9062,
-      "close_pct": 267.9061
+      "bank_pct": 289.9627,
+      "close_pct": 289.9626
     }
   ],
   "events": [

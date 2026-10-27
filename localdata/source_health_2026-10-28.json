@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 8,
@@ -29,7 +29,7 @@
         "selection_unmapped": 12
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-28' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -178,11 +178,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 17741
+        "out_of_window": 18070
       },
       "pa_matched": 0,
-      "pa_raw": 968,
-      "pa_scored": 17741,
+      "pa_raw": 987,
+      "pa_scored": 18070,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -232,33 +232,26 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 8,
-        "board_league_count": 4,
+        "board_fixtures": 5,
+        "board_league_count": 3,
         "board_leagues": {
-          "chile_-_primera_division": 110,
-          "ecuador_-_serie_a": 5,
-          "mexico_-_liga_mx_women": 48,
-          "portugal_-_segunda_liga": 37
+          "argentina_-_primera_division": 170,
+          "bolivia_-_primera_division": 9,
+          "brazil_-_serie_b": 21
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 14,
+        "board_team_count": 8,
         "board_team_names": {
-          "Amarante": 37,
-          "Atlante (W)": 42,
-          "Atlante [W]": 6,
-          "Chivas Guadalajara [W]": 6,
-          "Everton CD": 11,
-          "Everton De Vina": 99,
-          "Guadalajara (W)": 42,
-          "Mushuc Runa": 5,
-          "Tecnico Univ Ambato": 2,
-          "Tecnico Universitario": 3,
-          "Torreense": 33,
-          "Uni De Chile": 11,
-          "Uniao Torreense": 4,
-          "Universidad de Chile": 99
+          "Bolivar": 9,
+          "Deportivo Riestra": 170,
+          "Instituto": 164,
+          "Instituto Cordoba": 6,
+          "Juventude": 21,
+          "Nautico Capibaribe": 10,
+          "Nautico PE": 11,
+          "Universitario de Vinto": 9
         },
         "board_truncated": false,
         "card_fixture_count": 0,

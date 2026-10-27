@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-27T00:46:05",
+  "generated_at": "2026-10-27T03:35:57",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 267.906194,
-  "multiple": 2.6790619400000004,
+  "bank_pct": 289.96271800000005,
+  "multiple": 2.8996271800000004,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
   "bet_days": 58,
   "accas": {
-    "wins": 70,
+    "wins": 71,
     "losses": 48
   },
-  "open_slips": [
-    {
-      "date": "2026-10-26",
-      "staked_pct": 26.8982
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -1303,8 +1298,8 @@
     },
     {
       "date": "2026-10-26",
-      "staked_pct": 26.8982,
-      "returned_pct": 79.6187,
+      "staked_pct": 53.7964,
+      "returned_pct": 128.5734,
       "accas": [
         {
           "odds": 2.96,
@@ -1325,10 +1320,30 @@
               "result": "win"
             }
           ]
+        },
+        {
+          "odds": 1.82,
+          "won": true,
+          "stake_pct": 26.8982,
+          "returned_pct": 48.9547,
+          "legs": [
+            {
+              "match": "Flamengo vs Atl\u00e9tico Mineiro",
+              "pick": "HOME",
+              "odds": 1.3165,
+              "result": "win"
+            },
+            {
+              "match": "Santa Clara vs Benfica",
+              "pick": "AWAY",
+              "odds": 1.38,
+              "result": "win"
+            }
+          ]
         }
       ],
-      "bank_pct": 267.9062,
-      "close_pct": 267.9061
+      "bank_pct": 289.9627,
+      "close_pct": 289.9626
     }
   ]
 }
