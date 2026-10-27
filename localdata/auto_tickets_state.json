@@ -1,85 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 289.96271800000005,
+  "bank": 358.4663350000001,
   "cycle_base": 203.9865280000001,
-  "open_slips": [
-    {
-      "date": "2026-10-27",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "AS Roma vs Cagliari",
-              "pick": "HOME",
-              "prob": 0.81,
-              "odds": 1.34,
-              "result": null,
-              "fixture_key": [
-                "2026-10-27",
-                "AS Roma",
-                "Cagliari"
-              ]
-            },
-            {
-              "match": "RSD Alcal\u00e1 vs Las Palmas",
-              "pick": "AWAY",
-              "prob": 0.6716805443638643,
-              "odds": 1.55,
-              "result": null,
-              "fixture_key": [
-                "2026-10-27",
-                "RSD Alcal\u00e1",
-                "Las Palmas"
-              ]
-            }
-          ],
-          "odds": 2.08,
-          "stake_pct": 36.2453,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Sonnenhof Gro\u00dfaspach vs FC Augsburg",
-              "pick": "AWAY",
-              "prob": 0.7222535211267604,
-              "odds": 1.3205,
-              "result": null,
-              "fixture_key": [
-                "2026-10-27",
-                "Sonnenhof Gro\u00dfaspach",
-                "FC Augsburg"
-              ]
-            },
-            {
-              "match": "Borussia M\u00f6nchengladbach vs Karlsruher SC",
-              "pick": "HOME",
-              "prob": 0.6876288659793814,
-              "odds": 1.37,
-              "result": null,
-              "fixture_key": [
-                "2026-10-27",
-                "Borussia M\u00f6nchengladbach",
-                "Karlsruher SC"
-              ]
-            }
-          ],
-          "odds": 1.81,
-          "stake_pct": 36.2453,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 72.4906
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -1402,6 +1325,75 @@
       ],
       "bank_pct": 289.9627,
       "close_pct": 289.9626
+    },
+    {
+      "date": "2026-10-27",
+      "staked_pct": 72.4906,
+      "returned_pct": 140.9942,
+      "accas": [
+        {
+          "odds": 2.08,
+          "won": true,
+          "stake_pct": 36.2453,
+          "returned_pct": 75.3902,
+          "legs": [
+            {
+              "match": "AS Roma vs Cagliari",
+              "pick": "HOME",
+              "odds": 1.34,
+              "result": "win",
+              "fixture_key": [
+                "2026-10-27",
+                "AS Roma",
+                "Cagliari"
+              ]
+            },
+            {
+              "match": "RSD Alcal\u00e1 vs Las Palmas",
+              "pick": "AWAY",
+              "odds": 1.55,
+              "result": "win",
+              "fixture_key": [
+                "2026-10-27",
+                "RSD Alcal\u00e1",
+                "Las Palmas"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 1.81,
+          "won": true,
+          "stake_pct": 36.2453,
+          "returned_pct": 65.604,
+          "legs": [
+            {
+              "match": "Sonnenhof Gro\u00dfaspach vs FC Augsburg",
+              "pick": "AWAY",
+              "odds": 1.3205,
+              "result": "win",
+              "fixture_key": [
+                "2026-10-27",
+                "Sonnenhof Gro\u00dfaspach",
+                "FC Augsburg"
+              ]
+            },
+            {
+              "match": "Borussia M\u00f6nchengladbach vs Karlsruher SC",
+              "pick": "HOME",
+              "odds": 1.37,
+              "result": "win",
+              "fixture_key": [
+                "2026-10-27",
+                "Borussia M\u00f6nchengladbach",
+                "Karlsruher SC"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 358.4663,
+      "close_pct": 358.4662
     }
   ],
   "events": [

@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-27T21:43:51",
+  "generated_at": "2026-10-28T00:46:04",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 34.1576,
-  "multiple": 0.34157600000000005,
+  "bank_pct": 40.348665000000004,
+  "multiple": 0.40348665000000006,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 13,
+  "bet_days": 14,
   "accas": {
-    "wins": 10,
+    "wins": 11,
     "losses": 20
   },
   "open_slips": [
     {
-      "date": "2026-10-27",
-      "staked_pct": 4.2697
+      "date": "2026-10-28",
+      "staked_pct": 10.0872
     }
   ],
   "events": [],
@@ -760,6 +760,362 @@
       ],
       "bank_pct": 34.1576,
       "close_pct": 27.9762
+    },
+    {
+      "date": "2026-10-27",
+      "staked_pct": 4.2697,
+      "returned_pct": 10.4608,
+      "accas": [
+        {
+          "odds": 2.45,
+          "won": true,
+          "stake_pct": 4.2697,
+          "returned_pct": 10.4608,
+          "legs": [
+            {
+              "match": "RSD Alcal\u00e1 vs Las Palmas",
+              "pick": "over",
+              "odds": 1.68,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "BetMGM.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-27T05:17:05.307575+00:00",
+              "price_provenance": {
+                "away": "Las Palmas",
+                "bookmaker": "BetMGM.us",
+                "captured_at": "2026-10-27T05:17:05.307575+00:00",
+                "data_dt": [
+                  27,
+                  10,
+                  2026,
+                  20,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-10-27T07:00:00+00:00",
+                "decision_day": "2026-10-27",
+                "home": "RSD Alcala",
+                "kickoff_utc": "2026-10-27T19:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-27.json",
+                "ledger_sha256": "e0ae0c08a50d877ab9f85b97658c9a35dde23a4ae936335507a782a785b81ce5",
+                "market": "ou_2.5",
+                "price": 1.68,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": false,
+                    "bookmaker": "BetMGM.us",
+                    "bookmaker_id": "1103",
+                    "created": [
+                      "2026-10-26T22:55",
+                      "2026-10-26T22:55"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      1.68,
+                      2.05
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 8,
+                  "row_sha256": "768491f797dad025617b4a5a4f399a9e26138d234bb3bf70a9a859d94de5921d"
+                },
+                "raw_kickoff": "20:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-27T19:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Las Palmas",
+                      "csv_data_row": 3891,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "c5517252d5acd3058699bd51b059c9cc349fa08b12c28961b74b1339ad7628b7",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "RSD Alcal\u00e1",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-27T19:00:00+00:00",
+                      "league": "Copa Del Rey",
+                      "observed_at_utc": "2026-10-26T22:02:48+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "56591a155f058d645573a8bf203ac4f15f3dd7fc1866a6f75bdf40e21bb1baa0",
+                      "schedule_row": {
+                        "away": "Las Palmas",
+                        "captured_at": "2026-10-26T22:02:48+00:00",
+                        "country": "Spain",
+                        "date": "2026-10-27",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "RSD Alcal\u00e1",
+                        "hs": "",
+                        "kickoff": "2026-10-27T19:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Copa Del Rey",
+                        "odd1": "6.0",
+                        "odd2": "1.33",
+                        "odd_gg": "2.0",
+                        "odd_ng": "1.75",
+                        "odd_o15": "1.2",
+                        "odd_o25": "1.61",
+                        "odd_o35": "2.62",
+                        "odd_u15": "4.33",
+                        "odd_u25": "2.25",
+                        "odd_u35": "1.44",
+                        "oddx": "5.0",
+                        "p1": "14.925239502193573",
+                        "p2": "67.16805443638643",
+                        "p_gg": "46.666666666666664",
+                        "p_ng": "53.333333333333336",
+                        "p_o15": "78.30018083182641",
+                        "p_o25": "58.290155440414516",
+                        "p_o35": "35.4679802955665",
+                        "px": "17.906706061420003",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "19:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Las Palmas",
+                      "csv_data_row": 15590,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "15839768fa222b7dec1148550ae9d5feb08c26f94bdba3c474ac9009891cf1cd",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "RSD Alcal\u00e1",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-27T19:00:00+00:00",
+                      "league": "Spain: Copa del Rey",
+                      "observed_at_utc": "2026-10-26T22:02:13+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "e5536ca371b075d2b440b1cf6debeb76c6ba27ba32745e76a005b53ddea27a29",
+                      "schedule_row": {
+                        "away": "Las Palmas",
+                        "captured_at": "2026-10-26T22:02:13+00:00",
+                        "date": "2026-10-27",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "RSD Alcal\u00e1",
+                        "hs": "",
+                        "index": "",
+                        "kickoff": "2026-10-27T20:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Spain: Copa del Rey",
+                        "p1": "",
+                        "p2": "",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "",
+                        "schedule_history": "[{\"away\": \"Las Palmas\", \"captured_at\": \"2026-10-26T09:05:27+00:00\", \"date\": \"2026-10-27\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"RSD Alcal\\u00e1\", \"kickoff\": \"2026-10-27T20:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Las Palmas",
+                      "csv_data_row": 15590,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "15839768fa222b7dec1148550ae9d5feb08c26f94bdba3c474ac9009891cf1cd",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "RSD Alcal\u00e1",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-27T19:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-10-26T09:05:27+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "1ce2e07f3909f0f361784273be47fdd41d56f39676881c77a11bb1649764eb9c",
+                      "schedule_row": {
+                        "away": "Las Palmas",
+                        "captured_at": "2026-10-26T09:05:27+00:00",
+                        "date": "2026-10-27",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "RSD Alcal\u00e1",
+                        "kickoff": "2026-10-27T20:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": false
+              },
+              "fixture_key": [
+                "2026-10-27",
+                "RSD Alcal\u00e1",
+                "Las Palmas"
+              ]
+            },
+            {
+              "match": "Levadia vs Tammeka",
+              "pick": "under",
+              "odds": 1.46,
+              "result": "win",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "BetMGM.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-26T22:24:10.573070+00:00",
+              "price_provenance": {
+                "away": "Tammeka",
+                "bookmaker": "BetMGM.us",
+                "captured_at": "2026-10-26T22:24:10.573070+00:00",
+                "data_dt": [
+                  27,
+                  10,
+                  2026,
+                  17,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-10-27T07:00:00+00:00",
+                "decision_day": "2026-10-27",
+                "home": "Levadia",
+                "kickoff_utc": "2026-10-27T16:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-27.json",
+                "ledger_sha256": "e0ae0c08a50d877ab9f85b97658c9a35dde23a4ae936335507a782a785b81ce5",
+                "market": "ou_4.5",
+                "price": 1.46,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "BetMGM.us",
+                    "bookmaker_id": "1103",
+                    "created": [
+                      "2026-10-26T21:34",
+                      "2026-10-26T21:34"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      2.5,
+                      1.46
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 3,
+                  "row_sha256": "d043b3c5a9378005f2b9511302755f987c8b28d972e33d2be008100bafc25032"
+                },
+                "raw_kickoff": "17:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-27T16:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Tammeka",
+                      "csv_data_row": 3877,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "c5517252d5acd3058699bd51b059c9cc349fa08b12c28961b74b1339ad7628b7",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Levadia",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-27T16:00:00+00:00",
+                      "league": "Meistriliiga",
+                      "observed_at_utc": "2026-10-26T22:02:48+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "f16a8e24c260c69926c92073529dfbe3a9c2d11e952ce073d42fc12828b40b3f",
+                      "schedule_row": {
+                        "away": "Tammeka",
+                        "captured_at": "2026-10-26T22:02:48+00:00",
+                        "country": "Estonia",
+                        "date": "2026-10-27",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Levadia",
+                        "hs": "",
+                        "kickoff": "2026-10-27T16:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Meistriliiga",
+                        "odd1": "1.2",
+                        "odd2": "10.0",
+                        "odd_gg": "1.72",
+                        "odd_ng": "2.0",
+                        "odd_o15": "1.08",
+                        "odd_o25": "1.3",
+                        "odd_o35": "1.72",
+                        "odd_u15": "7.0",
+                        "odd_u25": "3.4",
+                        "odd_u35": "2.0",
+                        "oddx": "6.25",
+                        "p1": "76.21878715814506",
+                        "p2": "9.14662032379036",
+                        "p_gg": "53.76344086021506",
+                        "p_ng": "46.23655913978495",
+                        "p_o15": "86.63366336633665",
+                        "p_o25": "72.34042553191489",
+                        "p_o35": "53.76344086021506",
+                        "px": "14.634592518064576",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "16:00"
+                      },
+                      "source": "scoutingstats"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-10-27",
+                "Levadia",
+                "Tammeka"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 40.3487,
+      "close_pct": 34.1673
     }
   ]
 }
