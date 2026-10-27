@@ -452,10 +452,24 @@ for _tokens, _cls in (
         SQUAD_MARKER_CLASSES[_tok] = _cls or _tok
 
 
+def club_initial_words_for_comparison(name: object) -> str:
+    """Expand an evidenced club initial for comparisons, never stored keys.
+
+    October 27 BetExplorer receipt: ``B. Monchengladbach`` denotes Borussia,
+    not a reserve side. The archive also has this spelling with II and W:
+    expand only the leading club initial and leave ALL suffixes for the
+    squad veto. No generic B/Borussia rule or prefix-string matching.
+    """
+    words = team_identity_words(name).split()
+    if words[:2] == ["b", "monchengladbach"]:
+        words[0] = "borussia"
+    return " ".join(words)
+
+
 def squad_markers(name: object) -> frozenset[str]:
     """The squad-marker classes a team name carries (empty for a senior side)."""
     out: set[str] = set()
-    words = team_identity_words(name)
+    words = club_initial_words_for_comparison(name)
     for word in words.split():
         cls = SQUAD_MARKER_CLASSES.get(word)
         if cls:
