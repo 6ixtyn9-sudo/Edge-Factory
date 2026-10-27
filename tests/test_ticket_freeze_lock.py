@@ -309,3 +309,38 @@ def test_the_recut_diff_separates_staked_legs_from_the_re_cut():
     assert "Zrinjski vs Siroki Brijeg" in out[3]
     assert not any("Rudes" in line for line in out)          # refused legs are not staked
     assert at._recut_diff_lines("", recut) == ["  frozen slip text missing; leg diff not computed"]
+
+
+def test_real_main_builder_records_replayable_freeze_not_force_or_reprint(lane, monkeypatch):
+    import replay_harness as rh
+    monkeypatch.setattr(at, "datetime", _clock(2026, 9, 6, 9, 13))
+    state = _run()
+    receipt = at.decision_receipt_path(DAY)
+    assert receipt.exists()
+    payload = json.loads(receipt.read_text())
+    assert payload["status"] == "frozen"
+    assert payload["context"]["bank_state"]["bank"] == state["bank"]
+    context = payload["context"]
+    replayed = at.plan_ticket_decision(context)
+    assert at.ticket_card_identity(replayed) == at.ticket_card_identity(payload["plan"])
+    assert rh._ledger_ticket_core(state["open_slips"][0]["accas"], "main") == rh._ledger_ticket_core(replayed, "main")
+    before = receipt.read_bytes()
+    at.cmd_today(SimpleNamespace(date=DAY, force=False), state, settled={})
+    at.cmd_today(SimpleNamespace(date=DAY, force=True), state, settled={})
+    assert receipt.read_bytes() == before
+    # A historical freeze without evidence must not be retroactively invented.
+    receipt.unlink()
+    at.cmd_today(SimpleNamespace(date=DAY, force=False), state, settled={})
+    at.cmd_today(SimpleNamespace(date=DAY, force=True), state, settled={})
+    assert not receipt.exists()
+
+
+def test_main_no_bet_records_empty_decision_without_financial_change(lane, monkeypatch):
+    monkeypatch.setattr(at, "datetime", _clock(2026, 9, 6, 8, 0))
+    (lane / "picks_today.json").write_text("[]")
+    state = at.fresh_state()
+    before = json.dumps(state, sort_keys=True)
+    at.cmd_today(SimpleNamespace(date=DAY, force=False), state, settled={})
+    receipt = json.loads(at.decision_receipt_path(DAY).read_text())
+    assert receipt["status"] == "no_bet" and receipt["plan"] == []
+    assert json.dumps(state, sort_keys=True) == before

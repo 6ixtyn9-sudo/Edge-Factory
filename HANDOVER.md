@@ -1,5 +1,86 @@
 Edge Factory — Handover
 
+2026-10-27 addendum — decision-time replay through the existing ticket machinery
+
+- Authorized scope: "proceed using existing machinery". Main and ENH now share
+  captured-context gate/planner adapters with scripts/replay_harness.py. No new
+  simulator, provider, job, collection budget, staking rule or admission relaxation.
+- Honest boundary: execution_safe_admission_to_ticket. The real execution-safe
+  builders capture their admitted candidate pools, full source slate (including
+  alternatives/evidence and observed ML scores/model keys), aware build time,
+  explicit freeze floor (including no floor), decision-time known results, and
+  effective planner settings. Main also retains prior fixture pairs, P&L weights,
+  slice benches/caps and dynamic blocked labels. These are observed policy/admission
+  OUTPUTS; replay does NOT refetch prices, reconstruct upstream provider/cohort
+  decisions or retrain a historical ML model from today's registry.
+- Real builds write auto_tickets_DATE_decision.json and
+  autobets_enh_tickets_DATE_decision.json using the existing localdata persistence
+  and artifacts. Draft/no-bet receipts can advance to the actual freeze. Frozen
+  receipts are write-once; reprints and frozen --force recuts cannot replace or
+  invent them. Receipt failures warn, never cancel a ticket. SHA256 detects
+  corruption, not authenticity; engine_sha256 identifies auto_tickets.py only.
+- Captured bank context includes the actual total bank and open positions before
+  replacement. Replay independently checks free bank excluding the target draft,
+  compares full fixture/market/pick/book/source/odds/pairing/stake identities with
+  retained financial positions, and reconciles settled outcomes/stakes/returns separately
+  (including partially settled days). Future settled legs preserve quote identity;
+  no historical rows or financial arithmetic are rewritten. Void-adjusted payouts
+  are distinguished from original booked quotes.
+- Default faithful research selection no longer removes unresolved candidates
+  before choosing a card. Selected unresolved cards remain explicit pending, not
+  replacement bets, losses or zero-return days. Summary full-path growth is NaN
+  while incomplete; conditional realized growth is separately named. Paired
+  statistics exclude the pending union from BOTH arms, A/B/projections decline
+  incomplete paths, and rank-slot descriptive grading cannot promote another leg
+  around an unresolved slot. Void reductions and early decided losses follow the
+  live book-style arithmetic. Explicit legacy superset/pessimistic modes remain
+  labeled reproductions/bounds, never the decision-time parity verdict.
+- Run: PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity
+  This dispatches before settlement/archive loading and does not write localdata.
+  Workflow deployment is MANUAL: the user will paste the full daily.yml supplied
+  in chat. The workflow edit is excluded from this PR because the GitHub App lacks
+  workflows permission. After that manual update, daily.yml runs replay after ticket
+  generation, writes replay_parity.json, publishes JSON in the job summary and
+  existing artifacts/persistence, and flags failure without stopping betting.
+  Manual application was verified on main at 2daafdf (the code PR is rebased onto
+  that operator-applied workflow). PASS requires complete retained coverage;
+  PARTIAL exposes missing legacy days/bank/identity evidence; no receipts is
+  INSUFFICIENT_EVIDENCE; corruption/differences are FAIL (exit 1). Legacy --parity
+  and --enh-parity explicitly identify themselves as approximations.
+- Cache restoration protects untracked receipts. A cached freeze can replace a
+  tracked draft receipt only when the independently retained financial freeze
+  agrees. Divergent frozen receipts are quarantined for the existing artifact and
+  flagged by the report; audit receipts never authorize financial restoration.
+- Actual checkout result: INSUFFICIENT_EVIDENCE, zero receipts, 59 Main and 14 ENH
+  ledger dates without decision-time evidence. This is NOT a historical parity
+  pass. Missing snapshots were not guessed or backfilled. localdata/replay_parity.json
+  retains this measured baseline; future genuine builds must supply the receipts.
+- Validation: 4674 passed, 1 skipped (194.22s), including 45 additional cases over
+  the 4629-pass baseline. Real Main/ENH builder capture-to-replay tests are synthetic
+  code proofs, not production coverage or an ROI improvement. The actual CLI left
+  every pre-existing localdata file byte-identical. No production ticket command, bank
+  edit, provider call, workflow dispatch or merge was performed for this work.
+
+
+Manual replay step for the existing daily workflow (after ticket generation):
+
+```yaml
+- name: Ticket decision replay parity (read-only, flag never gate)
+  if: always() && inputs.mode != 'remine_only'
+  continue-on-error: true
+  run: |
+    set +e
+    mkdir -p localdata
+    PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity > localdata/replay_parity.json
+    result=$?
+    echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
+    echo '```json' >> "$GITHUB_STEP_SUMMARY"
+    cat localdata/replay_parity.json >> "$GITHUB_STEP_SUMMARY"
+    echo '```' >> "$GITHUB_STEP_SUMMARY"
+    exit "$result"
+```
+
+
 2026-10-21 addendum — Phase 3 secondary quotes in the existing live ENH path
 
 Implementation follow-up to merged PR125 / main 33320f1. Work is on the fixed
