@@ -210,3 +210,137 @@ def test_cache_capture_classification_preserves_freshness_and_detail_upgrade(tmp
         entry["cached_at"] = "2000-01-01T00:00:00+00:00"
     cache.write_text(json.dumps(payload))
     assert be.fixture_capture_needed(pick, day)
+
+
+# PR162 adversarial cases: each fails on the published a29ab1e patch.
+def test_legacy_detail_upgrade_with_zero_budget_keeps_cached_quote(tmp_path, monkeypatch):
+    _assert_deferred_legacy_quote(tmp_path, monkeypatch, budget=0)
+
+
+def test_legacy_detail_upgrade_after_fresh_slot_keeps_cached_quote(tmp_path, monkeypatch):
+    _assert_deferred_legacy_quote(tmp_path, monkeypatch, budget=1, fresh_first=True)
+
+
+def test_legacy_detail_upgrade_during_cooldown_keeps_cached_quote(tmp_path, monkeypatch):
+    _assert_deferred_legacy_quote(tmp_path, monkeypatch, budget=1, cooling=True)
+
+
+def _assert_deferred_legacy_quote(tmp_path, monkeypatch, *, budget, fresh_first=False, cooling=False):
+    from edgefactory.sources import betexplorer_odds as be
+    monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(be, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(be, "MARKET_TABS_ENABLED", True)
+    be.reset_fetch_count()
+    day = "2026-10-27"
+    legacy = {"date": day, "home": "Legacy", "away": "Visitors", "market": "1x2"}
+    be._write_fixture_cache(legacy, day, [dict(legacy, selection="home", odds=1.6)], detail=False)
+    picks = ([dict(legacy, home="Fresh")] if fresh_first else []) + [legacy]
+    monkeypatch.setattr(capture, "_candidate_rows", lambda day: picks)
+    reset = be.reset_fetch_count
+    def reset_state():
+        reset()
+        be._be_cooling_down = cooling
+    monkeypatch.setattr(be, "reset_fetch_count", reset_state)
+    def fake_fetch(pick, day, **kwargs):
+        assert pick["home"] == "Fresh", "a blocked detail upgrade must not request"
+        return []
+    if fresh_first:
+        monkeypatch.setattr(be, "betexplorer_odds_rows_for_pick", fake_fetch)
+    else:
+        monkeypatch.setattr(be, "_fetch", lambda *a, **kw: (_ for _ in ()).throw(AssertionError("no network")))
+    receipt = capture.capture(day, max_fixtures=budget)
+    assert receipt["fixtures_with_rows"] == 1
+    assert receipt["cache_only"] == 1
+    assert receipt["errors"] == []
+    assert receipt["network_attempted"] == int(fresh_first)
+    assert receipt["deferred_fixtures"] == 1
+    assert be._read_fixture_cache(legacy, day)[0]["odds"] == 1.6
+
+
+def test_capture_classification_failure_does_not_erase_other_fixtures(tmp_path, monkeypatch):
+    from edgefactory.sources import betexplorer_odds as be
+    monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(be, "LOCALDATA", tmp_path)
+    picks = [{"date": "2026-10-27", "home": home, "away": "Visitors", "market": "1x2"}
+             for home in ["Broken", "Healthy"]]
+    monkeypatch.setattr(capture, "_candidate_rows", lambda day: picks)
+    def classify(pick, day):
+        if pick["home"] == "Broken":
+            raise ValueError("one malformed fixture")
+        return True
+    monkeypatch.setattr(be, "fixture_capture_needed", classify)
+    monkeypatch.setattr(be, "betexplorer_odds_rows_for_pick",
+                        lambda pick, day, **kwargs: [dict(pick, selection="home", odds=1.6)])
+    receipt = capture.capture("2026-10-27", max_fixtures=1)
+    assert receipt["fixtures_with_rows"] == 1
+    assert receipt["status"] == "ok"
+    assert receipt["errors"] == ["ValueError"]
+
+
+def test_oversized_optional_rate_cannot_abort_candidate_build(tmp_path, monkeypatch):
+    monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
+    rows = [{"date": "2026-10-27", "home": home, "away": "Visitors", "market": "1x2",
+             "avg_p": 70, "enh_candidate_log": [{"market": "match_over_25", "reason": "unpriced",
+                                                   "cohort_rate": rate}]}
+            for home, rate in [("Broken rate", 10**400), ("Valid rate", .7)]]
+    (tmp_path / "picks_today.json").write_text(json.dumps(rows))
+    assert [r["home"] for r in capture._candidate_rows("2026-10-27")] == ["Valid rate", "Broken rate"]
+
+
+def test_nonfinite_parent_scores_do_not_make_order_depend_on_input(tmp_path, monkeypatch):
+    monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
+    rows = [{"date": "2026-10-27", "home": home, "away": "Visitors", "market": "1x2", "avg_p": score}
+            for home, score in [("NaN parent", "nan"), ("Finite parent", 80)]]
+    for slate in [rows, rows[::-1]]:
+        (tmp_path / "picks_today.json").write_text(json.dumps(slate))
+        assert [r["home"] for r in capture._candidate_rows("2026-10-27")] == ["Finite parent", "NaN parent"]
+
+
+def test_request_budget_exhaustion_keeps_legacy_and_never_attempts_fresh(tmp_path, monkeypatch):
+    from edgefactory.sources import betexplorer_odds as be
+    monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(be, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(be, "MARKET_TABS_ENABLED", True)
+    be.reset_fetch_count()
+    day = "2026-10-27"
+    legacy = {"date": day, "home": "Legacy", "away": "Visitors", "market": "1x2"}
+    be._write_fixture_cache(legacy, day, [dict(legacy, selection="home", odds=1.6)], detail=False)
+    monkeypatch.setattr(capture, "_candidate_rows", lambda day: [dict(legacy, home="Fresh"), legacy])
+    reset = be.reset_fetch_count
+    def reset_exhausted():
+        reset()
+        be._request_count = be._MAX_REQUESTS_PER_RUN
+    monkeypatch.setattr(be, "reset_fetch_count", reset_exhausted)
+    def forbidden(*args, **kwargs):
+        raise AssertionError("exhausted transport budget must not be entered")
+    monkeypatch.setattr(be, "betexplorer_odds_rows_for_pick", forbidden)
+    receipt = capture.capture(day, max_fixtures=2)
+    assert receipt["network_attempted"] == 0
+    assert receipt["cache_only"] == receipt["fixtures_with_rows"] == 1
+    assert receipt["deferred_fixtures"] == 2
+    assert receipt["errors"] == []
+
+
+def test_cooldown_midpass_preserves_later_cached_quote(tmp_path, monkeypatch):
+    from edgefactory.sources import betexplorer_odds as be
+    monkeypatch.setattr(capture, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(be, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(be, "MARKET_TABS_ENABLED", True)
+    be.reset_fetch_count()
+    day = "2026-10-27"
+    picks = [{"date": day, "home": home, "away": "Visitors", "market": "1x2"}
+             for home in ["Trigger", "Deferred", "Legacy"]]
+    be._write_fixture_cache(picks[2], day, [dict(picks[2], selection="home", odds=1.6)], detail=False)
+    monkeypatch.setattr(capture, "_candidate_rows", lambda day: picks)
+    calls = []
+    def fetch(pick, day, **kwargs):
+        calls.append(pick["home"])
+        be._be_cooling_down = True
+        return []
+    monkeypatch.setattr(be, "betexplorer_odds_rows_for_pick", fetch)
+    receipt = capture.capture(day, max_fixtures=3)
+    assert calls == ["Trigger"]
+    assert receipt["network_attempted"] == 1
+    assert receipt["fixtures_with_rows"] == receipt["cache_only"] == 1
+    assert receipt["deferred_fixtures"] == 2
+    assert receipt["errors"] == []

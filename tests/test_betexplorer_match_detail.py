@@ -731,3 +731,33 @@ def test_totals_priority_also_respects_tighter_row_and_line_caps(monkeypatch):
     assert market["lines"] == ["1.50", "2.50"]
     assert len(market["rows"]) == 4
     assert set(Counter(r["line"] for r in market["rows"]).values()) == {2}
+
+
+def test_equivalent_totals_labels_cannot_starve_other_supported_lines():
+    # Raw labels remain evidence, but spelling aliases must not consume the
+    # entire row budget before the 3.5/4.5 levels can be retained.
+    labels = ["1.5", "1.50", "+1.50", "1.500", "2.5", "2.50", "+2.50", "2.500", "3.50", "4.50"]
+    rows = [{"line": line, "bookmaker": f"Book{book}", "odds": [1.5, 2.5]}
+            for line in labels for book in range(6)]
+    kept, lines = be._cap_market_rows(rows, totals=True)
+    assert {1.5, 2.5, 3.5, 4.5} <= {float(line) for line in lines}
+    assert len(kept) <= be._MAX_MARKET_ROWS
+    assert len(lines) <= be._MAX_MARKET_LINES
+    assert all(row in rows for row in kept)
+
+
+def test_supported_totals_levels_survive_input_permutations_and_caps():
+    import random
+    rows = [{"line": line, "bookmaker": f"Book{book}", "odds": [1.5, 2.5]}
+            for line in ["1.5", "1.50", "+1.50", "1.500", "2.5", "2.50", "+2.50", "2.500",
+                         "3.50", "4.50", "0.25", "0.50", "0.75", "1.00"] for book in range(9)]
+    for seed in range(20):
+        shuffled = list(rows)
+        random.Random(seed).shuffle(shuffled)
+        kept, lines = be._cap_market_rows(shuffled, totals=True)
+        assert {1.5, 2.5, 3.5, 4.5} <= {float(line) for line in lines}
+        assert len(kept) <= be._MAX_MARKET_ROWS
+        assert len(lines) <= be._MAX_MARKET_LINES
+        assert max(Counter(r["line"] for r in kept).values()) <= be._MAX_MARKET_BOOKS_PER_LINE
+        assert set(lines) == {r["line"] for r in kept}
+        assert all(r in rows for r in kept)

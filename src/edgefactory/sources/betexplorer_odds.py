@@ -696,12 +696,23 @@ def _cap_market_rows(rows: list[dict], *, totals: bool = False) -> tuple[list[di
     if len(lines) <= 1:
         return rows[:_MAX_BOOKS_RETAINED], lines
 
+    # Reserve one original spelling of each supported numeric level before
+    # allocating more rows to aliases such as "1.5" / "1.50" / "+1.50".
+    # Do not rewrite the evidence or let aliases hide the other half lines.
+    preferred = set()
+    seen_levels = set()
+    if totals:
+        for label in sorted(lines, key=lambda label: (_line_sort_key(label), label)):
+            try:
+                value = float(label)
+            except ValueError:
+                continue
+            if value in {1.5, 2.5, 3.5, 4.5} and value not in seen_levels:
+                preferred.add(label)
+                seen_levels.add(value)
+
     def retention_key(label):
-        try:
-            supported = float(label) in {1.5, 2.5, 3.5, 4.5}
-        except ValueError:
-            supported = False
-        return (not (totals and supported), _line_sort_key(label))
+        return (label not in preferred, _line_sort_key(label))
 
     keep_lines = sorted(lines, key=retention_key)[:_MAX_MARKET_LINES]
     kept: list[dict] = []
