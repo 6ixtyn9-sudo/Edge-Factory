@@ -473,3 +473,76 @@ def test_queued_old_sha_new_frozen_cache_race_fixed_by_branch_checkout(tmp_path,
     with pytest.raises(_persistence_module().EvidenceMergeError):
         _persistence_module().restore_committed_localdata(fresh)
     assert json.loads((fresh / relative).read_text()) == divergent
+
+
+def _decision_receipt_blob(status='frozen', stamp='2026-10-27T09:00:00+02:00', **extra):
+    import hashlib
+    payload = dict(schema=1, status=status, context=dict(lane='main', date='2026-10-27', build_at=stamp), **extra)
+    digest = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+    return json.dumps(dict(payload, sha256=digest)).encode()
+
+
+def test_cached_untracked_ticket_decision_survives_existing_restore(tmp_path):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    path = repo / 'localdata/auto_tickets_2026-10-27_decision.json'
+    blob = _decision_receipt_blob()
+    path.write_bytes(blob)
+    _persistence_module().restore_committed_localdata(repo)
+    assert path.read_bytes() == blob
+    assert _git(repo, 'check-ignore', '--no-index', '-q', str(path.relative_to(repo)), check=False).returncode == 1
+
+
+def test_cached_frozen_receipt_replaces_draft_only_for_independently_retained_freeze(tmp_path):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    module = _persistence_module()
+    relative = 'localdata/auto_tickets_2026-10-27_decision.json'
+    path = repo / relative
+    path.write_bytes(_decision_receipt_blob('draft'))
+    _git(repo, 'add', relative)
+    _git(repo, 'commit', '-qm', 'draft audit')
+    frozen = _decision_receipt_blob()
+    path.write_bytes(frozen)
+    state = dict(frozen_by_date={'2026-10-27': {'frozen_at': '2026-10-27T09:00:00+02:00'}})
+    assert module._retain_ticket_decisions(repo, {module.MAIN_STATE: json.dumps(state).encode()}) == {relative: frozen}
+    # The audit receipt itself can NEVER authorize finance or a freeze.
+    assert module._retain_ticket_decisions(repo, {module.MAIN_STATE: b'{}'}) == {}
+    assert path.with_name(path.stem + '_cache_conflict.json').read_bytes() == frozen
+
+
+def test_divergent_frozen_decisions_are_quarantined_not_auto_merged(tmp_path):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    relative = 'localdata/auto_tickets_2026-10-27_decision.json'
+    path = repo / relative
+    committed = _decision_receipt_blob()
+    path.write_bytes(committed)
+    _git(repo, 'add', relative)
+    _git(repo, 'commit', '-qm', 'frozen audit')
+    cached = _decision_receipt_blob(unrecognized_extra='different retained evidence')
+    path.write_bytes(cached)
+    _persistence_module().restore_committed_localdata(repo)
+    assert path.read_bytes() == committed
+    assert path.with_name(path.stem + '_cache_conflict.json').read_bytes() == cached
+
+
+def test_operator_applied_decision_report_step_reuses_existing_artifacts_and_persistence(tmp_path):
+    import yaml
+    # The operator applied the workflow separately; this PR does not edit it.
+    # Check the applied command, documented step and existing artifact coverage.
+    doc = (ROOT / 'HANDOVER.md').read_text()
+    step = yaml.safe_load(doc.split('```yaml\n', 1)[1].split('\n```', 1)[0])[0]
+    assert 'scripts/replay_harness.py --decision-parity > localdata/replay_parity.json' in step['run']
+    assert 'scripts/replay_harness.py --decision-parity > localdata/replay_parity.json' in WORKFLOW.read_text()
+    assert step['continue-on-error'] is True
+    assert 'exit "$result"' in step['run']
+    assert 'localdata/*.json' in WORKFLOW.read_text()
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    for relative in ('localdata/autobets_enh_tickets_2026-10-27_decision.json', 'localdata/replay_parity.json'):
+        assert _git(repo, 'check-ignore', '--no-index', '-q', relative, check=False).returncode == 1

@@ -1293,3 +1293,54 @@ def test_live_enhancement_command_uses_three_slot_ml_capacity_repair(_tmp_lane, 
     assert sum(a['stake_pct'] for a in saved) == pytest.approx(25., abs=.001)
     assert '[ACCA #3]' in (_tmp_lane / f'autobets_enh_tickets_{DAY}.txt').read_text()
     assert not at.STATE_FILE.exists()
+
+
+def test_real_enh_builder_retains_alternatives_and_replays_with_captured_ml(_tmp_lane, monkeypatch):
+    import replay_harness as rh
+    monkeypatch.setattr(at, 'FREEZE_HOUR', 0)
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '1')
+    monkeypatch.setattr(reg, 'enhancement_ml_probability', lambda row, market: .8)
+    rows = _distinct(6)
+    alternative = dict(rows[0], recommended_enhancement='btts_yes',
+                       enhancement_label='Both Teams To Score Yes')
+    rows.append(alternative)
+    _board(_tmp_lane, rows)
+    state = at.fresh_state()
+    assert at.cmd_enhancement(_args(), state, scores={}) == 0
+    receipt = at.decision_receipt_path(DAY, 'enh')
+    payload = json.loads(receipt.read_text())
+    assert payload['status'] == 'frozen'
+    context = payload['context']
+    assert len(context['slate']) == 7
+    assert len(context['pool']) >= 6
+    assert context['options']['ml_enabled'] is True
+    assert any(l.get('ml_rank_probability') == .8 for l in context['pool'])
+    assert len({l['market'] for l in context['pool']}) >= 2
+    # Runtime environment, planner defaults and today's policy cannot replace
+    # the observed decision-time inputs.
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML', '0')
+    monkeypatch.setattr(at, 'ENH_MAX_ACCAS', 99)
+    monkeypatch.setattr(at, 'STAKE_FRAC', .99)
+    replayed = at.plan_ticket_decision(context)
+    assert at.ticket_card_identity(replayed) == at.ticket_card_identity(payload['plan'])
+    (_tmp_lane / 'auto_tickets_state.json').write_text(json.dumps(at.fresh_state()))
+    report = rh.decision_parity_report(_tmp_lane.parent)
+    assert report['status'] == 'PASS'
+    assert report['lanes']['enh']['receipts'][0]['ledger'] == 'MATCH'
+    before = receipt.read_bytes()
+    at.cmd_enhancement(_args(), state, scores={})
+    at.cmd_enhancement(_args(force=True), state, scores={})
+    assert receipt.read_bytes() == before
+    receipt.unlink()
+    at.cmd_enhancement(_args(force=True), state, scores={})
+    assert not receipt.exists()
+
+
+def test_enh_no_bet_is_a_receipt_not_a_freeze(_tmp_lane):
+    _board(_tmp_lane, [])
+    state = at.fresh_state()
+    before = json.dumps(state, sort_keys=True)
+    at.cmd_enhancement(_args(), state, scores={})
+    receipt = json.loads(at.decision_receipt_path(DAY, 'enh').read_text())
+    assert receipt['status'] == 'no_bet' and receipt['plan'] == []
+    assert json.dumps(state, sort_keys=True) == before

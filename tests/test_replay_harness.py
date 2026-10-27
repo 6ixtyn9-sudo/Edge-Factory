@@ -707,3 +707,280 @@ def test_october_bar_catches_an_arm_that_leans_on_unsettled_legs(monkeypatch, ca
     assert "[PASS] grows on its own" in out
     assert "[FAIL] optimism penalty <= live's" in out
     assert "NOT ADOPTABLE" in out
+
+
+# Exact downstream replay: real planner, retained decision, independent ledger.
+def _retained_decision(tmp_path, monkeypatch):
+    import json
+    import copy
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    monkeypatch.setattr(at, "LOCALDATA", localdata)
+    day = "2026-10-27"
+    now = at.datetime.fromisoformat(day + "T09:00:00+02:00")
+    pool = [_leg(i, .85 - i * .01, 1.5, None) for i in range(8)]
+    for leg in pool:
+        home, away = leg["match"].split(" vs ")
+        leg["row"] = dict(home=home, away=away, date=day, market="1x2",
+                          bucket="CERTIFIED_CLEAN", bookmaker="Book A", odds_source="oddspapi",
+                          kickoff=day + "T20:00:00+02:00", price_evidence="TEST")
+    bank_state = dict(bank=100., open_slips=[dict(date="2026-10-26", staked_pct=20.,
+                                                accas=[dict(stake_pct=20.)])])
+    context = at.ticket_decision_context(
+        "main", day, now, [l["row"] for l in pool], pool, 80., bank=100.,
+        bank_state=bank_state,
+        policy=dict(pnl_weights={}, slice_policy={}, gate_labels=[]))
+    plan = at.plan_ticket_decision(context)
+    assert plan
+    at.write_decision_receipt(context, plan, frozen=True)
+    state = dict(bank=100., history=[], open_slips=[dict(date=day, accas=copy.deepcopy(plan))],
+                 frozen_by_date={day: dict(frozen_at=now.isoformat())})
+    (localdata / "auto_tickets_state.json").write_text(json.dumps(state))
+    (localdata / "enhancement_tickets_state.json").write_text(json.dumps(at.fresh_state()))
+    return localdata, context, plan, state
+
+
+def test_exact_receipt_replay_is_read_only_and_captures_free_bank(tmp_path, monkeypatch):
+    localdata, context, plan, state = _retained_decision(tmp_path, monkeypatch)
+    def forbidden(*a, **kw):
+        raise AssertionError("replay must not refresh policy, settle, or resolve results")
+    for name in ("load_settled", "load_settled_scores", "save_state", "compute_bucket_pnl",
+                 "compute_bucket_slice", "ensure_slice_seeded"):
+        monkeypatch.setattr(at, name, forbidden)
+    monkeypatch.setattr(at.acca_gate, "refresh", forbidden)
+    monkeypatch.setattr(at, "MAX_ACCAS", 99)
+    monkeypatch.setattr(at, "STAKE_FRAC", .99)
+    before = {p: p.read_bytes() for p in localdata.iterdir()}
+    report = rh.decision_parity_report(tmp_path)
+    assert report["status"] == "PASS"
+    item = report["lanes"]["main"]["receipts"][0]
+    assert (item["status"], item["ledger"], item["bank_reconciliation"]) == ("MATCH",) * 3
+    assert item["committed_excluding_target"] == 20
+    assert sum(a["stake_pct"] for a in plan) == 20
+    assert before == {p: p.read_bytes() for p in localdata.iterdir()}
+
+
+@pytest.mark.parametrize("field,value", [
+    ("match", "Other vs Fixture"), ("market", "btts_yes"), ("pick", "DRAW"),
+    ("price_book", "Book B"), ("price_source", "other_source"), ("odds", 1.6),
+])
+def test_full_retained_execution_identity_matters(tmp_path, monkeypatch, field, value):
+    import json
+    localdata, _, _, state = _retained_decision(tmp_path, monkeypatch)
+    state["open_slips"][0]["accas"][0]["legs"][0][field] = value
+    (localdata / "auto_tickets_state.json").write_text(json.dumps(state))
+    report = rh.decision_parity_report(tmp_path)
+    assert report["status"] == "FAIL"
+    assert report["lanes"]["main"]["receipts"][0]["ledger"] == "DIFF"
+
+
+@pytest.mark.parametrize("change", ["stake", "pairing", "freeze", "bank", "hash", "plan_identity"])
+def test_parity_red_team_corruption_never_passes(tmp_path, monkeypatch, change):
+    import json
+    localdata, context, plan, state = _retained_decision(tmp_path, monkeypatch)
+    receipt = at.decision_receipt_path(context["date"])
+    payload = json.loads(receipt.read_text())
+    if change == "stake":
+        state["open_slips"][0]["accas"][0]["stake_pct"] += 1
+    elif change == "pairing":
+        a, b = state["open_slips"][0]["accas"][:2]
+        a["legs"][0], b["legs"][0] = b["legs"][0], a["legs"][0]
+    elif change == "freeze":
+        state["frozen_by_date"][context["date"]]["frozen_at"] = "2026-10-27T10:00:00+02:00"
+    elif change == "bank":
+        payload["context"]["bank_total"] += 1
+    elif change == "plan_identity":
+        payload["plan"][0]["legs"][0]["price_book"] = "unretained different book"
+    else:
+        payload["sha256"] = "corrupt"
+    if change != "hash":
+        payload.pop("sha256")
+        payload["sha256"] = at._decision_digest(payload)
+    receipt.write_text(json.dumps(payload))
+    (localdata / "auto_tickets_state.json").write_text(json.dumps(state))
+    assert rh.decision_parity_report(tmp_path)["status"] == "FAIL"
+
+
+def test_frozen_receipt_write_once_and_nonfinite_capture_failure_is_a_warning(tmp_path, monkeypatch, capsys):
+    localdata, context, _, _ = _retained_decision(tmp_path, monkeypatch)
+    receipt = at.decision_receipt_path(context["date"])
+    before = receipt.read_bytes()
+    at.write_decision_receipt(context, [], frozen=False)
+    assert receipt.read_bytes() == before
+    context["date"] = "2026-10-28"
+    context["slate"][0]["optional_research_field"] = float("nan")
+    at.write_decision_receipt(context, [])
+    assert not at.decision_receipt_path(context["date"]).exists()
+    assert "::warning::DECISION RECEIPT NOT PERSISTED" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("raw", ["[]", "null", '{"open_slips":null}', '{"history":[null]}'])
+def test_malformed_state_is_reported_not_repaired(tmp_path, raw):
+    base = tmp_path / "localdata"
+    base.mkdir()
+    (base / "auto_tickets_state.json").write_text(raw)
+    report = rh.decision_parity_report(tmp_path)
+    assert report["status"] == "INSUFFICIENT_EVIDENCE"
+    assert report["lanes"]["main"]["state_error"]
+    assert (base / "auto_tickets_state.json").read_text() == raw
+
+
+def test_legacy_days_are_unreconstructable_not_a_historical_pass(tmp_path, monkeypatch):
+    import json
+    localdata, context, _, state = _retained_decision(tmp_path, monkeypatch)
+    state["history"].append(dict(date="2026-01-01", staked_pct=25))
+    (localdata / "auto_tickets_state.json").write_text(json.dumps(state))
+    report = rh.decision_parity_report(tmp_path)
+    assert report["status"] == "PARTIAL"
+    assert report["lanes"]["main"]["missing_receipt_days"] == ["2026-01-01"]
+    at.decision_receipt_path(context["date"]).unlink()
+    assert rh.decision_parity_report(tmp_path)["status"] == "INSUFFICIENT_EVIDENCE"
+
+
+def test_selection_precedes_grading_and_pending_is_not_repaired_or_zero(tmp_path):
+    import math
+    universe = _universe(1)
+    day, pool = next(iter(universe.items()))
+    chosen = rh.card_for_day(pool, {})
+    for leg in pool:
+        leg["result"] = "win"
+    chosen[0][0]["result"] = None
+    days = rh.replay(universe, {})
+    assert day not in days and day in days.pending
+    assert [tuple(l["match"] for l in a["legs"]) for a in days.pending[day]] == [
+        tuple(l["match"] for l in a) for a in chosen]
+    summary = rh.summarise(days)
+    assert summary["pending_days"] == 1
+    assert math.isnan(summary["final"]) and math.isnan(summary["mean_log"])
+    assert summary["days"] == 0
+
+
+@pytest.mark.parametrize("results,expected", [
+    (["win", "void"], 1.025), (["void", "void"], 1.),
+    (["loss", "void"], .9), (["loss", None], .9), (["win", "win"], 1.056),
+])
+def test_void_and_early_loss_use_book_style_settlement(results, expected):
+    plan = [dict(stake_pct=10., odds=1.56, legs=[dict(odds=1.25, result=results[0]),
+                                                dict(odds=1.25, result=results[1])])]
+    assert rh.day_growth(plan) == pytest.approx(expected)
+
+
+def test_pending_is_excluded_from_both_paired_arms_not_flattened_to_no_bet(monkeypatch):
+    a, b = rh.ReplayDays(), rh.ReplayDays()
+    a["known"] = dict(growth=1.1)
+    b["known"] = dict(growth=1.1)
+    a.pending["unknown"] = ["selected ungraded card"]
+    b["unknown"] = dict(growth=2.)
+    monkeypatch.setattr(rh, "replay", lambda universe, spec: a if spec == "A" else b)
+    result = rh.paired_bootstrap({}, "A", "B")
+    assert result is not None
+    assert result["horizon"] == 1
+    assert result["median"] == result["p10"] == result["p90"] == 0
+
+
+def test_shared_main_sequence_retains_timing_known_results_prior_slate_and_policies(tmp_path, monkeypatch):
+    _, context, _, _ = _retained_decision(tmp_path, monkeypatch)
+    pool = context['pool']
+    pool[0]['row']['kickoff'] = context['date'] + 'T08:00:00+02:00'
+    pool[1]['result'] = 'win'
+    context['past'] = [[pool[2]['row']['home'].lower(), pool[2]['row']['away'].lower()]]
+    pool[3]['row']['bucket'] = 'DOOR_BENCH'
+    pool[4]['row']['bucket'] = 'SLICE_BENCH'
+    pool[5]['row']['price_evidence'] = 'BLOCKED'
+    context['policy'] = dict(pnl_weights={'DOOR_BENCH': 0., 'CERTIFIED_CLEAN': .5},
+                             slice_policy={'bench_buckets': ['SLICE_BENCH'],
+                                           'rank_caps': {'CAUTION': .7}},
+                             gate_labels=['BLOCKED'])
+    prepared = at.prepare_ticket_pool(context)
+    assert [l['match'] for l in prepared['pool']] == [l['match'] for l in pool[6:]]
+    assert {rule for _, rule, _ in prepared['rejections']} == {
+        'kickoff_guard', 'already_settled', 'earlier_slate_fixture',
+        'tripwire_bucket_benched', 'selection_ladder_bucket_benched', 'acca_price_evidence_gate'}
+    assert prepared['gate_pool_size'] == 3
+    plan = at.plan_ticket_decision(context, prepared=prepared)
+    assert len(plan) == 1 and plan[0]['stake_pct'] == 5.  # free bank 80, 12.5% slot, half weight
+
+
+@pytest.mark.parametrize('all_void', [False, True])
+def test_void_quote_identity_and_partial_settlement_reconcile_separately(tmp_path, monkeypatch, all_void):
+    import json
+    import copy
+    localdata, context, plan, state = _retained_decision(tmp_path, monkeypatch)
+    settled = copy.deepcopy(state['open_slips'][0]['accas'].pop(0))
+    settled['legs'][0]['result'] = 'void'
+    settled['legs'][1]['result'] = 'void' if all_void else 'win'
+    settled['odds'] = 1. if all_void else settled['legs'][1]['odds']
+    settled['won'] = True
+    settled['returned_pct'] = settled['stake_pct'] * settled['odds']
+    state['history'] = [dict(date=context['date'], accas=[settled],
+                             staked_pct=settled['stake_pct'], returned_pct=settled['returned_pct'])]
+    path = localdata / 'auto_tickets_state.json'
+    path.write_text(json.dumps(state))
+    report = rh.decision_parity_report(tmp_path)
+    item = report['lanes']['main']['receipts'][0]
+    assert report['status'] == 'PASS'
+    assert item['ledger'] == item['settlement'] == 'MATCH'
+    assert item['open_accas'] == 1
+    state['history'][0]['returned_pct'] += 1
+    path.write_text(json.dumps(state))
+    assert rh.decision_parity_report(tmp_path)['status'] == 'FAIL'
+
+
+@pytest.mark.parametrize('raw', ['[]', 'null', '{}', '{"sha256":"broken"}'])
+def test_malformed_receipts_do_not_crash_or_pass(tmp_path, monkeypatch, raw):
+    _, context, _, _ = _retained_decision(tmp_path, monkeypatch)
+    at.decision_receipt_path(context['date']).write_text(raw)
+    report = rh.decision_parity_report(tmp_path)
+    assert report['status'] == 'FAIL'
+    assert report['lanes']['main']['receipts'][0]['status'] == 'INVALID'
+
+
+def test_capture_preserves_lane_stake_fraction_and_global_slot_divisor(monkeypatch):
+    monkeypatch.setattr(at, 'ENHANCEMENT_LANE', at.Lane(Path('unused'), 'unused', 'unused', .4))
+    options = at.ticket_planner_options('enh')
+    assert options['stake_frac'] == .4
+    assert options['stake_per_acca'] == .4 / at.MAX_ACCAS
+    assert options['max_accas'] == at.ENH_MAX_ACCAS
+
+
+def test_incomplete_research_path_declines_projection_and_keeps_rank_slots(capsys):
+    universe = _universe(1)
+    pool = next(iter(universe.values()))
+    for leg in pool:
+        leg['result'] = 'win'
+    pool[0]['result'] = None
+    assert rh.cmd_kelly(universe) == 1
+    assert rh.cmd_target(universe, {}, 1000.) == 1
+    assert capsys.readouterr().out.count('PENDING') == 2
+    slots, _, _ = rh.slot_table(universe)
+    assert slots[1][0] == 0 and slots[2][0] == 1
+
+
+def test_captured_no_freeze_floor_does_not_fall_back_to_current_clock_policy(monkeypatch):
+    monkeypatch.setattr(at, 'FREEZE_HOUR', 25)
+    now = at.datetime.fromisoformat('2026-10-27T08:00:00+02:00')
+    legs = [dict(match=f'T{i} vs O{i}', market='btts_yes', price=1.8, probability=.8,
+                 verdict='fire', row=dict(date='2026-10-27', home=f'T{i}', away=f'O{i}',
+                                          kickoff='2026-10-27T08:30:00+02:00')) for i in range(2)]
+    context = at.ticket_decision_context('enh', '2026-10-27', now, [], legs, 100.,
+                                         known_results=[None, None])
+    assert context['freeze_floor'] is None
+    monkeypatch.setattr(at, 'FREEZE_HOUR', 9)
+    assert len(at.prepare_ticket_pool(context)['pool']) == 2
+    # The uncaptured legacy API still uses the current floor by default.
+    assert 'kickoff precedes' in str(at.apply_enhancement_timing(legs, now, '2026-10-27', {}))
+
+
+def test_consistent_payout_totals_cannot_hide_contradictory_settled_outcomes(tmp_path, monkeypatch):
+    import json
+    localdata, context, _, state = _retained_decision(tmp_path, monkeypatch)
+    acca = state['open_slips'][0]['accas'].pop(0)
+    for leg in acca['legs']:
+        leg['result'] = 'win'
+    acca.update(won=False, returned_pct=0.)  # totals reconcile but outcomes contradict the loss
+    state['history'] = [dict(date=context['date'], accas=[acca],
+                             staked_pct=acca['stake_pct'], returned_pct=0.)]
+    (localdata / 'auto_tickets_state.json').write_text(json.dumps(state))
+    report = rh.decision_parity_report(tmp_path)
+    assert report['status'] == 'FAIL'
+    assert report['lanes']['main']['receipts'][0]['settlement'] == 'DIFF'

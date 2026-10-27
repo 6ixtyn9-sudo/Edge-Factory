@@ -32,6 +32,7 @@ PHASE5_CLEAN_EXCLUDES = (
     "/localdata/card_enrich_call_ledger.jsonl",
     "/localdata/card_enrich_shadow_*.json",
     "/localdata/scored_candidate_shadow_*.jsonl",
+    "/localdata/*_decision*.json",
 )
 
 
@@ -465,12 +466,61 @@ def _retain_financial_state(repo, relative=ENH_STATE):
     )
 
 
+def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, bytes]:
+    """Keep cached frozen audit receipts when finance restore retains that freeze.
+
+    Receipt bytes NEVER influence the financial restore. Divergent frozen
+    receipts are retained as an artifact-visible conflict, never auto-merged.
+    """
+    retained = {}
+    for pattern in ("auto_tickets_????-??-??_decision.json",
+                    "autobets_enh_tickets_????-??-??_decision.json"):
+        for path in (repo / "localdata").glob(pattern):
+            relative = path.relative_to(repo).as_posix()
+            cached = path.read_bytes()
+            head_result = _run(repo, "show", f"HEAD:{relative}")
+            head_blob = head_result.stdout if head_result.returncode == 0 else None
+            try:
+                candidate = json.loads(cached)
+                digest = candidate.pop("sha256")
+                encoded = json.dumps(candidate, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+                if hashlib.sha256(encoded).hexdigest() != digest:
+                    raise ValueError("cached decision receipt hash mismatch")
+                if head_blob is None:
+                    retained[relative] = cached
+                    continue
+                head = json.loads(head_blob)
+                if candidate["status"] != "frozen" or head.get("sha256") == digest:
+                    continue
+                if head.get("status") == "frozen":
+                    raise ValueError("divergent frozen decision receipts")
+                lane = candidate["context"]["lane"]
+                day = candidate["context"]["date"]
+                state_path = MAIN_STATE if lane == "main" else ENH_STATE
+                state_blob = financial_blobs.get(state_path)
+                if state_blob is None:
+                    state_blob = _run(repo, "show", f"HEAD:{state_path}").stdout
+                state = json.loads(state_blob)
+                freeze = (state.get("frozen_by_date") or {}).get(day) or {}
+                if freeze.get("frozen_at") != candidate["context"]["build_at"]:
+                    raise ValueError("cached receipt is not the independently retained financial freeze")
+                retained[relative] = cached
+            except (ValueError, KeyError, TypeError, AttributeError) as exc:
+                # Keep HEAD authoritative and the differing cache bytes visible
+                # to the report/artifact, without modifying bank or history.
+                conflict = path.with_name(path.stem + "_cache_conflict.json")
+                conflict.write_bytes(cached)
+                print(f"::warning::Ticket decision receipt conflict: {relative}: {exc}")
+    return retained
+
+
 def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     """Restore ordinary tracked state without overwriting cached append-only evidence."""
     repo = Path(repo)
     # Validate BOTH lanes before checkout/clean mutates any restored evidence.
     financial_blobs = {relative: _retain_financial_state(repo, relative)
                        for relative in (ENH_STATE, MAIN_STATE)}
+    decision_blobs = _retain_ticket_decisions(repo, financial_blobs)
     try:
         merge_counts = merge_cached_phase5_evidence(repo)
     except (OSError, EvidenceMergeError) as exc:
@@ -491,6 +541,9 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
                 f"{_decode_output(result.stderr)}"
             )
         restored.append(relative)
+
+    for relative, blob in decision_blobs.items():
+        _atomic_write(repo / relative, blob)
 
     for relative, financial_blob in financial_blobs.items():
         if financial_blob is not None:

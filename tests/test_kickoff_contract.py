@@ -414,8 +414,11 @@ def test_guard_source_has_no_zone_table_and_live_path_uses_the_live_guard():
     body = src[src.index("def cmd_today"):src.index("def print_status")]
     # the live call also carries the card's own freeze floor: no leg may kick
     # off before the hour at which the card stops changing (2026-10-26)
-    assert "live_kickoff_guard(pool, now," in body
-    assert "freeze_floor_at=freeze_floor(target, now)" in body
+    assert "prepared_decision = prepare_ticket_pool(decision_context)" in body
+    shared = src[src.index("def prepare_ticket_pool"):src.index("def plan_ticket_decision")]
+    assert "live_kickoff_guard(" in shared
+    assert 'context["freeze_floor"]' in shared
+    assert "freeze_floor(target, now).isoformat()" in src
     assert "kickoff_contract(pool" not in body
     guard_src = src[src.index("def live_kickoff_guard"):src.index("def parse_kickoff_proven")]
     assert "KO_SKIP_NO_DATE" in guard_src
