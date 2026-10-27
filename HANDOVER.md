@@ -12569,3 +12569,38 @@ Full final suite **4573 passed, 1 skipped in 244.68s**. Original PR Workers rela
 check failed; GitHub output supplies no cause/log, so not claimed fixed or
 conflated with pytest. Detailed dispositions appended to existing inventory.
 PR161 remains open; no merge/dispatch or operational financial writes.
+
+### 27 October 2026 — bounded BetExplorer capture starvation / totals retention
+
+PR161 was subsequently merged as d8e0e239 (27 October, 03:54:54Z).
+User authorized patching the two capture limitations identified while inspecting
+October 27 autobets: a fixed top-12 shortlist consumed by cache hits, and totals
+retention dropping useful half-goal lines behind low/quarter lines.
+
+Existing capture now scans the same-day candidate slate, serving identity-checked
+cache reads without spending network fixture slots. Fresh negative cache entries
+remain answers, not retry permission. Uncached fixtures and the existing priced
+legacy detail upgrade share the bounded network-attempt allowance (default 12,
+existing ceiling unchanged). Missing, in-band ENH markets the adapter actually
+supports take collection priority; parent confidence remains a tie-breaker.
+Unsupported team totals, malformed/duplicate notes, and out-of-band rates cannot
+inflate that priority. Receipts and CLI distinguish network attempts, cache-only
+reads and budget-deferred fixtures; attempts are not claims of actual requests.
+Transport throttling, cooldown, freshness and request budget remain unchanged.
+
+Totals responses with explicit Over/Under columns preserve observed 1.5, 2.5,
+3.5 and 4.5 lines before quarter/integer lines, within the same 48-row/10-line/
+6-book-per-line caps. Raw labels, bookmaker evidence and prices are retained;
+handicap ordering and single-line markets are unchanged. No absent quote is
+manufactured, no schedule witness relaxed. Already-truncated old cache snapshots
+cannot be reconstructed: normal fresh capture must obtain the missing evidence.
+No unbounded retry, forced cache invalidation or collection-budget expansion.
+
+Four regression tests failed before the patch (one additional handicap control
+passed); all pass after it. Eleven new tests total cover cache starvation,
+ENH-aware ordering, malformed/duplicate notes, exhausted/zero budgets, poisoned
+cache rejection, cooldown, freshness/detail upgrade, dense ladders, raw labels,
+missing lines and tighter retention caps. Focused adapter/capture suite: 47 passed.
+Full suite: 4584 passed, 1 skipped in 257.09s. No localdata, financial history,
+workflow, admission/staking or dependency changes; no workflow dispatched.
+This validates engineering behavior, not new live quote supply or profitability.

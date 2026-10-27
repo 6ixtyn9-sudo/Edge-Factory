@@ -515,8 +515,9 @@ _MARKET_INTERVAL = 5.1
 _MAX_REQUESTS_PER_RUN = int(
     os.environ.get("EDGE_FACTORY_BE_MAX_REQUESTS_PER_RUN", "180") or 180)
 #: Bounds for one market's retained rows: single-line markets keep up to 24
-#: rows (all of their bookmakers), multi-line markets keep the 10 lines nearest
-#: level with up to 6 bookmakers each. Column labels and line labels come from
+#: rows (all of their bookmakers), multi-line markets keep up to 10 lines
+#: with up to 6 bookmakers each. Totals preserve supported 1.5/2.5/3.5/4.5
+#: lines first; other markets keep lines nearest level. Labels come from
 #: the response markup; nothing is padded, renamed or guessed.
 _MAX_MARKET_ROWS = 48
 _MAX_MARKET_LINES = 10
@@ -679,8 +680,13 @@ def _collect_market_rows(html_text: str, width: int) -> list[dict]:
     return rows
 
 
-def _cap_market_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
-    """Bound one market's rows, keeping the lines nearest level first."""
+def _cap_market_rows(rows: list[dict], *, totals: bool = False) -> tuple[list[dict], list[str]]:
+    """Bound retained evidence, not betting eligibility or the request budget.
+
+    Totals must not lose the supported half-goal ladder to low quarter lines.
+    Handicap markets retain their existing nearest-level policy. Preserve the
+    page's labels and per-line book order, with the same row/line/book caps.
+    """
     lines: list[str] = []
     for row in rows:
         label = row.get("line")
@@ -689,7 +695,15 @@ def _cap_market_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
     lines = sorted(lines, key=_line_sort_key)
     if len(lines) <= 1:
         return rows[:_MAX_BOOKS_RETAINED], lines
-    keep_lines = lines[:_MAX_MARKET_LINES]
+
+    def retention_key(label):
+        try:
+            supported = float(label) in {1.5, 2.5, 3.5, 4.5}
+        except ValueError:
+            supported = False
+        return (not (totals and supported), _line_sort_key(label))
+
+    keep_lines = sorted(lines, key=retention_key)[:_MAX_MARKET_LINES]
     kept: list[dict] = []
     for label in keep_lines:
         on_line = 0
@@ -702,8 +716,9 @@ def _cap_market_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
             on_line += 1
     # Report the lines that survived the cap: `lines` always describes what
     # `rows` holds, never a line whose rows the budget pushed out.
-    kept_lines = [label for label in keep_lines
+    kept_lines = [label for label in lines
                   if any(row.get("line") == label for row in kept)]
+    kept.sort(key=lambda row: _line_sort_key(row["line"]))
     return kept, kept_lines
 
 
@@ -758,7 +773,8 @@ def parse_market_response(odds_html: str) -> dict:
         key = (row["bookmaker"], row["line"], tuple(row["odds"]))
         deduped.setdefault(key, row)
 
-    kept, lines = _cap_market_rows(list(deduped.values()))
+    kept, lines = _cap_market_rows(
+        list(deduped.values()), totals=[c.lower() for c in columns] == ["over", "under"])
     average, average_by_line = _averages_from_sections(html_text, columns)
     return {
         "columns": columns,
@@ -1303,6 +1319,16 @@ def _detail_refetch_due(pick: dict, day: str) -> bool:
     if not rows:
         return False
     return not _entry_detail_visited(pick, day)
+
+
+def fixture_capture_needed(pick: dict, day: str) -> bool:
+    """Whether this fixture needs a bounded network slot rather than a free read.
+
+    Fresh negative answers are cached too. Priced legacy entries may still
+    need their existing one-time detail visit; this does not bypass cooldown,
+    freshness, identity validation or either network budget.
+    """
+    return not cached_fixture_present(pick, day) or _detail_refetch_due(pick, day)
 
 
 def _refetch_for_detail(pick: dict, day: str, *, norm_team_fn=None) -> list[dict]:

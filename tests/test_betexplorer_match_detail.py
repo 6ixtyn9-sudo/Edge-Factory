@@ -355,12 +355,13 @@ def test_unnamed_rows_are_never_given_a_bookmaker():
     assert market["rows"][0]["odds"] == [2.00, 3.40, 3.50]
 
 
-def test_multi_line_markets_are_capped_to_the_lines_nearest_level():
+def test_handicap_multi_line_markets_are_capped_to_the_lines_nearest_level():
     lines = [f"{0.5 * step:.2f}" for step in range(1, 13)]           # 0.50 .. 6.00
     books = [f"bk{index}" for index in range(9)]                     # 9 books per line
     html_text = "".join(
         _ou_table(line, book, book.lstrip("bk"), (1.0 + index / 10, 2.0 + index / 10))
         for line in lines for index, book in enumerate(books))
+    html_text = html_text.replace('>Over<', '>1<').replace('>Under<', '>2<')
     market = be.parse_market_response(html_text)
     # 12 lines x 9 books arrive; the cap keeps the lines nearest level with at
     # most six books each, and `lines` always describes the rows that remain.
@@ -684,3 +685,49 @@ def test_wrapper_receipt_summarises_the_detail_ledger(tmp_path, monkeypatch):
                        "with_last_results": 1, "with_standings": 1,
                        "challenge_pages": 1}
     assert capture._detail_summary("2026-10-11")["fixtures"] == 0
+
+
+def test_dense_totals_ladder_preserves_supported_half_lines_before_quarters():
+    # 0.50 .. 6.00 in quarter steps: nearest-zero used to lose 3.5 and 4.5.
+    lines = [f"{step / 4:.2f}" for step in range(2, 25)]
+    html = "".join(_ou_table(line, f"Book{book}", str(book), (1.5, 2.5))
+                   for line in lines for book in range(9))
+    market = be.parse_market_response(html)
+    assert {"1.50", "2.50", "3.50", "4.50"} <= set(market["lines"])
+    assert len(market["rows"]) <= be._MAX_MARKET_ROWS
+    assert len(market["lines"]) <= be._MAX_MARKET_LINES
+    assert max(Counter(r["line"] for r in market["rows"]).values()) <= be._MAX_MARKET_BOOKS_PER_LINE
+    assert set(market["lines"]) == {r["line"] for r in market["rows"]}
+
+
+def test_handicap_retention_is_not_reordered_as_totals():
+    # Identical line labels, different page columns: only totals get priority.
+    html = "".join(_ou_table(f"{step / 4:.2f}", "Book", "1", (1.5, 2.5))
+                   for step in range(2, 25))
+    html = html.replace('>Over<', '>1<').replace('>Under<', '>2<')
+    market = be.parse_market_response(html)
+    assert market["columns"] == ["1", "2"]
+    assert market["lines"] == [f"{step / 4:.2f}" for step in range(2, 12)]
+
+
+def test_totals_retention_preserves_original_labels_books_and_missing_lines():
+    # Never manufacture an absent 3.5 line or round 4.25 into 4.5.
+    html = "".join(_ou_table(line, "Named Book", "123", (1.55, 2.55))
+                   for line in ["0.50", "1.50", "2.50", "4.25", "4.50", "5.50"])
+    market = be.parse_market_response(html)
+    assert "3.50" not in market["lines"]
+    assert set(market["lines"]) == {"0.50", "1.50", "2.50", "4.25", "4.50", "5.50"}
+    assert all(r["bookmaker"] == "Named Book" and r["odds"] == [1.55, 2.55]
+               for r in market["rows"])
+
+
+def test_totals_priority_also_respects_tighter_row_and_line_caps(monkeypatch):
+    monkeypatch.setattr(be, "_MAX_MARKET_ROWS", 4)
+    monkeypatch.setattr(be, "_MAX_MARKET_LINES", 2)
+    monkeypatch.setattr(be, "_MAX_MARKET_BOOKS_PER_LINE", 2)
+    html = "".join(_ou_table(f"{step / 4:.2f}", f"Book{book}", str(book), (1.5, 2.5))
+                   for step in range(2, 25) for book in range(9))
+    market = be.parse_market_response(html)
+    assert market["lines"] == ["1.50", "2.50"]
+    assert len(market["rows"]) == 4
+    assert set(Counter(r["line"] for r in market["rows"]).values()) == {2}
