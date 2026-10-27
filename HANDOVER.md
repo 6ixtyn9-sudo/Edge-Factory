@@ -12569,3 +12569,71 @@ Full final suite **4573 passed, 1 skipped in 244.68s**. Original PR Workers rela
 check failed; GitHub output supplies no cause/log, so not claimed fixed or
 conflated with pytest. Detailed dispositions appended to existing inventory.
 PR161 remains open; no merge/dispatch or operational financial writes.
+
+### 27 October 2026 — bounded BetExplorer capture starvation / totals retention
+
+PR161 was subsequently merged as d8e0e239 (27 October, 03:54:54Z).
+User authorized patching the two capture limitations identified while inspecting
+October 27 autobets: a fixed top-12 shortlist consumed by cache hits, and totals
+retention dropping useful half-goal lines behind low/quarter lines.
+
+Existing capture now scans the same-day candidate slate, serving identity-checked
+cache reads without spending network fixture slots. Fresh negative cache entries
+remain answers, not retry permission. Uncached fixtures and the existing priced
+legacy detail upgrade share the bounded network-attempt allowance (default 12,
+existing ceiling unchanged). Missing, in-band ENH markets the adapter actually
+supports take collection priority; parent confidence remains a tie-breaker.
+Unsupported team totals, malformed/duplicate notes, and out-of-band rates cannot
+inflate that priority. Receipts and CLI distinguish network attempts, cache-only
+reads and budget-deferred fixtures; attempts are not claims of actual requests.
+Transport throttling, cooldown, freshness and request budget remain unchanged.
+
+Totals responses with explicit Over/Under columns preserve observed 1.5, 2.5,
+3.5 and 4.5 lines before quarter/integer lines, within the same 48-row/10-line/
+6-book-per-line caps. Raw labels, bookmaker evidence and prices are retained;
+handicap ordering and single-line markets are unchanged. No absent quote is
+manufactured, no schedule witness relaxed. Already-truncated old cache snapshots
+cannot be reconstructed: normal fresh capture must obtain the missing evidence.
+No unbounded retry, forced cache invalidation or collection-budget expansion.
+
+Four regression tests failed before the patch (one additional handicap control
+passed); all pass after it. Eleven new tests total cover cache starvation,
+ENH-aware ordering, malformed/duplicate notes, exhausted/zero budgets, poisoned
+cache rejection, cooldown, freshness/detail upgrade, dense ladders, raw labels,
+missing lines and tighter retention caps. Focused adapter/capture suite: 47 passed.
+Full suite: 4584 passed, 1 skipped in 257.09s. No localdata, financial history,
+workflow, admission/staking or dependency changes; no workflow dispatched.
+This validates engineering behavior, not new live quote supply or profitability.
+
+### 27 October 2026 — PR162 red-team follow-up
+
+Published initial patch a29ab1e as PR162. Operator requested adversarial review
+and regression protection. Ten additional adversarial cases independently fail
+against isolated original a29ab1e capture/adapter modules (explicit preload to
+avoid mixing current code), and pass against this repair. Before-proof log:
+/tmp/pr162-red-published-baseline.log; final full-suite log:
+/tmp/pr162-red-full-suite.log (sandbox diagnostics, not production artifacts).
+
+Repaired: a deferred legacy priced-cache detail upgrade used to suppress valid
+cached quotes at zero/exhausted fixture allowance or cooldown. The capture loop
+now falls back to the same identity-guarded cache reader while recording the
+upgrade as deferred; it does not make a blocked network attempt. Also handles
+request-budget exhaustion and cooldown reached mid-pass, without dropping later
+cache reads. Classification errors now stay within one fixture, not the entire
+capture pass. Oversized optional numeric rates cannot overflow math.isfinite;
+non-finite/overflowing confidence scores get deterministic ordering fallback.
+These are collection priority scores only, not invented betting probabilities.
+
+Totals retention now reserves one original label per supported numeric level
+before extra equivalent spellings (1.5 / 1.50 / +1.50) can spend the row budget.
+Raw evidence labels, prices and books are not rewritten. Added shuffled-input
+coverage over twenty fixed seeds alongside existing cap, missing-line, handicap,
+cache freshness, poisoned-cache, cooldown and detail-upgrade controls.
+
+Validation: 10 adversarial failures on original a29ab1e; repaired focused suite
+57 passed; repaired full suite 4594 passed, 1 skipped in 250.23s. Diff check clean.
+No localdata/financial history, admission/staking, dependency, workflow or request
+budget changes. No assistant workflow dispatch or merge. The external Workers
+relay build was failed on initial PR162; pytest is not proof of deployment health
+and no external build repair is claimed. Old discarded quotes still require
+normal fresh capture; no live quote availability or economic uplift is implied.
