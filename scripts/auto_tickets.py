@@ -71,6 +71,7 @@ Usage (daily.py runs this bare — same entry point as always):
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import math
@@ -3441,7 +3442,7 @@ def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
 def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
                  max_accas=None, legs_per_acca=None, volume_pool=None,
                  volume_min=None, gate_mode=None, fallback=True,
-                 saturated_accas=None, min_accas=None, fixture_report=None, enhancements=False):
+                 saturated_accas=None, min_accas=None, fixture_report=None, enhancements=False, ml_enabled=None):
     """THE selection recipe — one code path for live and for the replay harness.
 
     Every knob defaults to the validated live value; the harness passes
@@ -3463,7 +3464,7 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
     pool = rank_legs([l for l in pool if l["odds"] >= floor], rank,
                      rank_caps=rank_caps)
     ml_ranking = (enhancements and rank == "prob" and rank_caps is None
-                  and os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1'
+                  and (os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1' if ml_enabled is None else ml_enabled)
                   and any(finite_probability(l.get('ml_rank_probability')) is not None for l in pool))
     if ml_ranking:
         # Separate estimands: scored legs first, ordered only against other
@@ -3750,6 +3751,198 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
     return plan
 
 
+# Decision-time replay uses the SAME gates and planner, with captured policy
+# outputs instead of recomputing historical policies from today's registries.
+def ticket_planner_options(lane="main") -> dict:
+    return dict(floor=MIN_LEG_ODDS, rank=ENHANCEMENT_RANK if lane == "enh" else "prob",
+                pairing=PAIRING, max_accas=ENH_MAX_ACCAS if lane == "enh" else MAX_ACCAS,
+                min_accas=MIN_ACCAS, legs_per_acca=LEGS_PER_ACCA,
+                volume_pool=VOLUME_POOL, volume_min=VOLUME_MIN_PROB,
+                gate_mode=GATE_MODE, fallback=True, saturated_accas=None,
+                stake_frac=ENHANCEMENT_LANE.stake_frac if lane == "enh" else STAKE_FRAC,
+                stake_mode=STAKE_MODE,
+                stake_per_acca=(STAKE_PER_ACCA if STAKE_PER_ACCA is not None
+                                else (ENHANCEMENT_LANE.stake_frac if lane == "enh" else STAKE_FRAC)
+                                / MAX_ACCAS), weights=STAKE_WEIGHTS,
+                enhancements=lane == "enh",
+                ml_enabled=os.environ.get("EDGE_FACTORY_ENH_ML", "1") == "1")
+
+
+def ticket_decision_context(lane, target, now, slate, pool, bank_eff, *,
+                            policy=None, past=(), known_results=None, bank=None, bank_state=None):
+    """Snapshot the validated-admission boundary; no future outcomes or reads.
+
+    `pool` is the live execution-safe admission output, including competing ENH
+    quotes and retained models. Raw slate is retained too, but replay does NOT
+    claim to re-mine cohorts or refetch/reauthorize historical provider quotes.
+    """
+    return copy.deepcopy(dict(
+        lane=lane, date=target, build_at=now.isoformat(), slate=slate, pool=pool,
+        bank_eff=bank_eff, bank_total=bank, policy=policy or {},
+        bank_state=bank_state,
+        past=sorted([list(pair) for pair in past]), known_results=known_results,
+        freeze_floor=(freeze_floor(target, now).isoformat()
+                      if freeze_floor(target, now) is not None else None),
+        options=ticket_planner_options(lane)))
+
+
+def prepare_ticket_pool(context):
+    """Pure shared live/replay gating AFTER execution-safe price admission."""
+    pool = copy.deepcopy(context["pool"])
+    now = datetime.fromisoformat(context["build_at"])
+    target = context["date"]
+    if context["lane"] == "enh":
+        withdrawn = apply_enhancement_timing(
+            pool, now, target, {}, known_results=context["known_results"],
+            freeze_floor_at=(datetime.fromisoformat(context["freeze_floor"])
+                             if context.get("freeze_floor") else None))
+        return dict(legs=pool, pool=enhancement_pool(pool), withdrawn=withdrawn)
+    if context["lane"] != "main":
+        raise ValueError("unknown ticket lane")
+    census, rejections = {}, []
+
+    def reject(legs, rule, detail, label=None, names=None):
+        if legs:
+            rejections.append((legs, rule, detail))
+            census[label or detail] = names or [l["match"] for l in legs]
+
+    initial = list(pool)
+    pool, drops = live_kickoff_guard(
+        pool, now, freeze_floor_at=(datetime.fromisoformat(context["freeze_floor"])
+                                    if context.get("freeze_floor") else None))
+    for reason, names in drops.items():
+        reject([l for l in initial if l["match"] in set(names)], "kickoff_guard", reason,
+               names=names)
+    reject([l for l in pool if l.get("result")], "already_settled",
+           "result is already known", "already settled (result known)")
+    pool = [l for l in pool if not l.get("result")]
+    past = {tuple(pair) for pair in context["past"]}
+
+    def previous(leg):
+        row = leg["row"]
+        return (str(row.get("home") or "").strip().lower(),
+                str(row.get("away") or "").strip().lower()) in past
+
+    reject([l for l in pool if previous(l)], "earlier_slate_fixture",
+           "fixture already appeared on an earlier slate and has kicked off",
+           "fixture already on an earlier day's slate (kicked off)")
+    pool = [l for l in pool if not previous(l)]
+    base_pool = list(pool)
+    policy = context["policy"]
+    pnl_weights = policy["pnl_weights"]
+    benched = [l for l in pool if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) <= 0.0]
+    reject(benched, "tripwire_bucket_benched",
+           f"P&L tripwire bucket bench streak >= {PNL_BENCH_STREAK} days",
+           f"P&L tripwire: bucket benched (VETO streak >= {PNL_BENCH_STREAK} days)",
+           sorted(f"{l['match']} [{l['row'].get('bucket')}]" for l in benched))
+    pool = [l for l in pool if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) > 0.0]
+    slice_benched = set(policy["slice_policy"].get("bench_buckets") or ())
+    benched = [l for l in pool if str(l["row"].get("bucket") or "") in slice_benched]
+    reject(benched, "selection_ladder_bucket_benched",
+           "selection ladder bench_buckets policy vetoed the bucket",
+           "SELECTION LADDER: slice bucket benched",
+           sorted(f"{l['match']} [{l['row'].get('bucket')}]" for l in benched))
+    pool = [l for l in pool if str(l["row"].get("bucket") or "") not in slice_benched]
+    gate_pool_size = len(pool)
+    pool, blocked = acca_price_evidence_gate(pool, set(policy["gate_labels"]))
+    reject(blocked, "acca_price_evidence_gate",
+           "price-evidence label is blocked from accas (dynamic gate, 30-day z <= -2 with hysteresis)",
+           "ACCA PRICE-EVIDENCE GATE: blocked label",
+           sorted(f"{l['match']} [{(l['row'].get('price_evidence') or '').upper()}]" for l in blocked))
+    return dict(pool=pool, base_pool=base_pool, census=census, rejections=rejections,
+                price_gate_blocked=blocked, gate_pool_size=gate_pool_size)
+
+
+def plan_ticket_decision(context, *, prepared=None, fixture_report=None):
+    """One live/replay call path for policy gates, selection and actual sizing."""
+    prepared = prepare_ticket_pool(context) if prepared is None else prepared
+    options = dict(context["options"])
+    if context["lane"] == "main":
+        policy = context["policy"]
+        options.update(bucket_weights=policy["pnl_weights"],
+                       rank_caps=policy["slice_policy"].get("rank_caps") or None)
+    plan = plan_day(prepared["pool"], context["bank_eff"],
+                    fixture_report=fixture_report, **options)
+    if context["lane"] == "enh":
+        _carry_lane_evidence(plan, prepared["pool"])
+    else:
+        # Keep execution identity on FUTURE frozen/settled legs too, not just
+        # in the replay receipt. Prices, selections and stakes are unchanged.
+        for acca in plan:
+            for leg in acca["legs"]:
+                meta = next(l for l in prepared["pool"] if _leg_key(l) == _leg_key(leg)
+                            and l["odds"] == leg["odds"])
+                row = meta.get("row") or {}
+                leg.update(market=row.get("market") or "1x2",
+                           price_book=row.get("bookmaker"), price_source=row.get("odds_source"))
+    return plan
+
+
+def ticket_card_identity(plan, pool=None):
+    """Full execution identity, order-insensitive within/between accas.
+
+    Result/probability fields are deliberately not identities. Quote provenance
+    is compared separately via the receipt hash; market/book/source must not
+    disappear merely because two contracts share one quoted price.
+    """
+    cards = []
+    for acca in plan:
+        legs = []
+        for leg in acca.get("legs", []):
+            meta = leg
+            if pool is not None:
+                meta = next((l for l in pool if l["match"] == leg["match"]
+                             and str(l["pick"]).upper() == str(leg["pick"]).upper()
+                             and l["odds"] == leg["odds"]
+                             and (not leg.get("market") or l.get("market") == leg["market"])
+                             and (not leg.get("price_book") or l.get("price_book") == leg["price_book"])
+                             and (not leg.get("price_source") or l.get("price_source") == leg["price_source"])), leg)
+            row = meta.get("row") or {}
+            legs.append((str(leg["match"]), str(meta.get("market") or row.get("market") or "1x2"),
+                         str(leg["pick"]).upper(), float(leg["odds"]),
+                         str(meta.get("price_book") or row.get("bookmaker") or ""),
+                         str(meta.get("price_source") or row.get("odds_source") or "")))
+        cards.append((sorted(legs), float(acca["odds"]), float(acca["stake_pct"])))
+    return sorted(cards)
+
+
+def decision_receipt_path(target, lane="main"):
+    prefix = "auto_tickets" if lane == "main" else "autobets_enh_tickets"
+    return LOCALDATA / f"{prefix}_{target}_decision.json"
+
+
+def _decision_digest(payload):
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                                     allow_nan=False).encode()).hexdigest()
+
+
+def write_decision_receipt(context, plan, *, frozen=False):
+    """Audit only; never replace frozen evidence or repair a financial state.
+
+    Drafts track the latest real build. Force recuts never reach this writer
+    for a frozen date. A failure is explicit but cannot cancel a live ticket.
+    """
+    try:
+        path = decision_receipt_path(context["date"], context["lane"])
+        if path.exists():
+            old = json.loads(path.read_text())
+            if old.get("status") == "frozen":
+                return
+        prepared = prepare_ticket_pool(context)
+        payload = dict(schema=1, engine_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                       boundary="execution_safe_admission_to_ticket",
+                       status="frozen" if frozen and plan else "draft" if plan else "no_bet",
+                       context=context, plan=plan,
+                       card_identity=ticket_card_identity(plan, prepared["pool"]))
+        payload["sha256"] = _decision_digest(payload)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False))
+        tmp.replace(path)
+    except Exception as exc:
+        print(f"::warning::DECISION RECEIPT NOT PERSISTED: {type(exc).__name__}: {exc}", file=sys.stderr)
+
+
 # ---------------- settlement + take-profit notification ----------------
 def _apply_settlement(st, ret_pct, staked_pct, when, lane: "Lane | None" = None):
     """Move the bank by the settled P&L (all %) and fire the TAKE-PROFIT
@@ -3791,6 +3984,9 @@ def _settled_leg_record(leg, result):
            "odds": leg.get("odds"), "result": result}
     if leg.get("label"):
         rec["label"] = leg.get("label")
+    for key in ("market", "price_book", "price_source", "price_at", "price_provenance", "fixture_key"):
+        if key in leg:
+            rec[key] = leg[key]
     return rec
 
 
@@ -4954,108 +5150,33 @@ def cmd_today(args, st, *, settled=None):
     def stage_rejections(legs, rule: str, detail: str) -> None:
         for leg in legs:
             staged_rejections[_fixture_selection_key(leg)] = (rule, detail)
-    # LIVE KICKOFF GUARD (incident #6, revised 2026-09-06 round 2 after the
-    # region audit): the Vancouver row's kickoff was the bare string "22:30"
-    # — no date, no offset, no zone — in an MLS league whose local clock is
-    # far from SAST; the deleted 2026-09-04 chain (SAST-defaulted parse +
-    # league-substring -> IANA zone table) failed OPEN on it. The guard drops
-    # missing/garbage kickoffs, clock-only kickoffs (bare or no-year
-    # day-month) from remote-clock regions (Americas/Asia-Pacific — the
-    # Vancouver class; Europe/Africa clock-only rows ride, their clocks are
-    # within ~1-2h of SAST), and dated legs already started at build time.
-    # It never assumes a zone for a remote clock and never computes a kickoff
-    # from the region list; the fail-closed proof contract is NOT applied
-    # here (it is the off-by-default --kickoff-contract audit instrument).
-    pre_kickoff_pool = list(pool)
-    pool, ko_drops = live_kickoff_guard(pool, now,
-                                       freeze_floor_at=freeze_floor(target, now))
-    for reason, names in ko_drops.items():
-        census.setdefault(reason, []).extend(names)
-        stage_rejections(
-            [leg for leg in pre_kickoff_pool if leg["match"] in set(names)],
-            "kickoff_guard",
-            reason,
-        )
-    # Already-settled legs are finished matches: result known -> not a bet.
-    settled_legs = [l for l in pool if l.get("result")]
-    settled_drops = [l["match"] for l in settled_legs]
-    pool = [l for l in pool if not l.get("result")]
-    if settled_drops:
-        census["already settled (result known)"] = settled_drops
-        stage_rejections(settled_legs, "already_settled", "result is already known")
-    # Cross-slate guard: a fixture already archived on an EARLIER day's slate
-    # has already kicked off (late finishers carried into today's capture).
-    past = set()
-    for a in load_archived_picks():
-        if str(a.get("date") or a.get("_archive_day") or "")[:10] < target:
-            past.add((str(a.get("home") or "").strip().lower(),
-                      str(a.get("away") or "").strip().lower()))
-    cross_drop_legs = [l for l in pool
-                       if (str(l["row"].get("home") or "").strip().lower(),
-                           str(l["row"].get("away") or "").strip().lower()) in past]
-    cross_drops = [l["match"] for l in cross_drop_legs]
-    pool = [l for l in pool
-            if (str(l["row"].get("home") or "").strip().lower(),
-                str(l["row"].get("away") or "").strip().lower()) not in past]
-    if cross_drops:
-        census["fixture already on an earlier day's slate (kicked off)"] = cross_drops
-        stage_rejections(
-            cross_drop_legs,
-            "earlier_slate_fixture",
-            "fixture already appeared on an earlier slate and has kicked off",
-        )
-    # --- selection ladder + door P&L tripwires --------------------------
-    # Door-level P&L remains the first policy call. Its bench filter and
-    # stake weighting remain separate from the slice ladder's rank-only cap.
+    # Capture policy OUTPUTS at this decision, never recompute them later from
+    # a newer ledger. The pure adapter below is also the replay entry point.
+    past = {(str(a.get("home") or "").strip().lower(),
+             str(a.get("away") or "").strip().lower())
+            for a in load_archived_picks()
+            if str(a.get("date") or a.get("_archive_day") or "")[:10] < target}
     pnl_weights, pnl_verdicts = compute_bucket_pnl(target, settled=settled)
-    # Seed/read the result-free slice before scoring. Settlement is always a
-    # read-time join, so an unsettled row never becomes an automatic loss.
     ensure_slice_seeded(target, settled=settled)
     slice_policy, slice_verdicts = compute_bucket_slice(target, settled=settled)
-    base_pool = list(pool)  # shadow planning strips BOTH ladder and door policy
-    door_pool = list(base_pool)
-    benched_legs = [l for l in door_pool
-                    if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) <= 0.0]
-    benched_drops = [f"{l['match']} [{l['row'].get('bucket')}]" for l in benched_legs]
-    if benched_drops:
-        door_pool = [l for l in door_pool
-                     if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) > 0.0]
-        census["P&L tripwire: bucket benched (VETO streak >= "
-              f"{PNL_BENCH_STREAK} days)"] = sorted(benched_drops)
-        stage_rejections(
-            benched_legs,
-            "tripwire_bucket_benched",
-            f"P&L tripwire bucket bench streak >= {PNL_BENCH_STREAK} days",
-        )
-
-    slice_benched = set(slice_policy.get("bench_buckets") or ())
-    slice_bench_legs = [l for l in door_pool
-                        if str(l["row"].get("bucket") or "") in slice_benched]
-    slice_bench_drops = [f"{l['match']} [{l['row'].get('bucket')}]"
-                         for l in slice_bench_legs]
-    plan_pool = [l for l in door_pool
-                 if str(l["row"].get("bucket") or "") not in slice_benched]
-    if slice_bench_drops:
-        census["SELECTION LADDER: slice bucket benched"] = sorted(slice_bench_drops)
-        stage_rejections(
-            slice_bench_legs,
-            "selection_ladder_bucket_benched",
-            "selection ladder bench_buckets policy vetoed the bucket",
-        )
     gate_labels, gate_status = acca_gate.refresh(target)
     print(f"ACCA PRICE-EVIDENCE GATE: {gate_status}")
-    pool_size = len(plan_pool)
-    plan_pool, price_gate_blocked = acca_price_evidence_gate(plan_pool, gate_labels)
-    log_acca_gate_run(target, gate_status, gate_labels, price_gate_blocked, pool_size=pool_size)
-    if price_gate_blocked:
-        census["ACCA PRICE-EVIDENCE GATE: blocked label"] = sorted(
-            f"{l['match']} [{(l['row'].get('price_evidence') or '').upper()}]"
-            for l in price_gate_blocked)
-        stage_rejections(
-            price_gate_blocked,
-            "acca_price_evidence_gate",
-            "price-evidence label is blocked from accas (dynamic gate, 30-day z <= -2 with hysteresis)",
-        )
+    decision_context = ticket_decision_context(
+        "main", target, now, slate, pool, effective_bank(st, exclude_date=target),
+        bank=st["bank"], past=past,
+        bank_state=dict(bank=st["bank"], open_slips=st.get("open_slips", [])),
+        policy=dict(pnl_weights=pnl_weights, slice_policy=slice_policy,
+                    gate_labels=sorted(gate_labels), gate_status=gate_status,
+                    slate_error=str(slate_error) if slate_error is not None else None))
+    prepared_decision = prepare_ticket_pool(decision_context)
+    base_pool = prepared_decision["base_pool"]
+    plan_pool = prepared_decision["pool"]
+    census.update(prepared_decision["census"])
+    for rejected, rule, detail in prepared_decision["rejections"]:
+        stage_rejections(rejected, rule, detail)
+    log_acca_gate_run(target, gate_status, gate_labels,
+                      prepared_decision["price_gate_blocked"],
+                      pool_size=prepared_decision["gate_pool_size"])
 
     # The shadow plan is a second pure call. It deliberately strips both the
     # slice caps and the door bench/weights, then keeps only diminished-bucket
@@ -5127,12 +5248,13 @@ def cmd_today(args, st, *, settled=None):
             (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(
                 "\n".join(audit_lines) + "\n"
             )
+        if not is_frozen(st, target):
+            write_decision_receipt(decision_context, [])
         return 0
 
     fixture_report: dict[str, list[str]] = {}
-    plan = plan_day(plan_pool, bank_eff, fixture_report=fixture_report,
-                    bucket_weights=pnl_weights,
-                    rank_caps=slice_policy.get("rank_caps") or None)
+    plan = plan_ticket_decision(decision_context, prepared=prepared_decision,
+                                fixture_report=fixture_report)
     if not plan:
         upsert_slice_day(shadow_rows, target, allow_empty=not slip_txt.exists())
         recut_lines = _superseded_no_bet_lines(target, prior_slip, prior_frozen) if args.force else []
@@ -5180,6 +5302,8 @@ def cmd_today(args, st, *, settled=None):
             (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(
                 "\n".join(audit_lines) + "\n"
             )
+        if not is_frozen(st, target):
+            write_decision_receipt(decision_context, [])
         return 0
     if is_frozen(st, target) and args.force:
         # A frozen card is final. --force writes a re-cut report beside it and
@@ -5207,6 +5331,7 @@ def cmd_today(args, st, *, settled=None):
                      and now.hour >= FREEZE_HOUR and not args.force)
     freeze_record = upsert_slip(st, target, plan,
                                 freeze_at=now if should_freeze else None)
+    write_decision_receipt(decision_context, plan, frozen=should_freeze)
     _log_printed_price_boards(target, plan, pool_by_key)   # Task F, append-only
     committed = st["bank"] - bank_eff
     lines = [f"AUTO TICKETS (ROLLING) — {target}", "=" * 62,
@@ -5534,7 +5659,8 @@ def _market_selection(market: str | None) -> str:
     return name
 
 
-def apply_enhancement_timing(legs: list[dict], now, target: str, scores) -> dict:
+def apply_enhancement_timing(legs: list[dict], now, target: str, scores, *,
+                             known_results=None, freeze_floor_at=...) -> dict:
     """Withdraw firing enhancement legs that can no longer be bet.
 
     The enhancement lane had no kickoff guard, so a card drafted at 07:28 SAST
@@ -5548,7 +5674,8 @@ def apply_enhancement_timing(legs: list[dict], now, target: str, scores) -> dict
     """
     firing = [l for l in legs if l.get("verdict") == "fire"]
     kept, drops = live_kickoff_guard(firing, now,
-                                     freeze_floor_at=freeze_floor(target, now))
+                                     freeze_floor_at=(freeze_floor(target, now) if freeze_floor_at is ...
+                                                      else freeze_floor_at))
     kept_ids = {id(l) for l in kept}
     report: dict[str, list[str]] = {}
     for reason, names in drops.items():
@@ -5560,11 +5687,13 @@ def apply_enhancement_timing(legs: list[dict], now, target: str, scores) -> dict
                       "kickoff guard")
         leg["verdict"] = "kickoff_guard"
         leg["withdrawn_reason"] = reason
-    for leg in legs:
+    for index, leg in enumerate(legs):
         if leg.get("verdict") != "fire":
             continue
         probe = dict(leg, pick=_market_selection(leg.get("market")))
-        if enhancement_leg_result(probe, target, scores or {}) in ("win", "loss"):
+        result = (known_results[index] if known_results is not None
+                  else enhancement_leg_result(probe, target, scores or {}))
+        if result in ("win", "loss"):
             leg["verdict"] = "result_known"
             leg["withdrawn_reason"] = "result already known"
             report.setdefault("result already known", []).append(leg.get("match"))
@@ -5929,21 +6058,26 @@ def cmd_enhancement(args, st, *, scores=None) -> int:
                             execution_safe=True)
     if scores is None:
         scores = load_settled_scores()
-    withdrawn = apply_enhancement_timing(legs, now, target, scores)
+    known_results = [enhancement_leg_result(
+        dict(leg, pick=_market_selection(leg.get("market"))), target, scores or {})
+                     if leg.get("verdict") == "fire" else None for leg in legs]
+    bank_eff = effective_bank(st, exclude_date=target)
+    decision_context = ticket_decision_context(
+        "enh", target, now, slate, legs, bank_eff, bank=st["bank"],
+        bank_state=dict(bank=st["bank"], open_slips=st.get("open_slips", [])),
+        known_results=known_results,
+        policy=dict(floors=floors, team_floors=team_floors))
+    prepared_decision = prepare_ticket_pool(decision_context)
+    legs = prepared_decision["legs"]
+    withdrawn = prepared_decision["withdrawn"]
     for reason, names in withdrawn.items():
         print(f"enhancement leg withdrawn ({reason}): {', '.join(dict.fromkeys(str(n) for n in names))}")
-    pool = enhancement_pool(legs)
-    bank_eff = effective_bank(st, exclude_date=target)
+    pool = prepared_decision["pool"]
     should_freeze = (str(target) == now.strftime("%Y-%m-%d")
                      and now.hour >= FREEZE_HOUR and not args.force)
     fixture_report: dict = {}
-    # Shared selector/staking, with the ENH-specific THREE-acca limit and
-    # executable book/source competition. Main keeps MAX_ACCAS=2; inspecting
-    # that default alone does not describe the live enhancement builder.
-    plan = plan_day(pool, bank_eff, stake_frac=ENHANCEMENT_LANE.stake_frac,
-                    max_accas=ENH_MAX_ACCAS, rank=ENHANCEMENT_RANK, enhancements=True,
-                    fixture_report=fixture_report)
-    _carry_lane_evidence(plan, pool)
+    plan = plan_ticket_decision(decision_context, prepared=prepared_decision,
+                                fixture_report=fixture_report)
     if frozen_here:          # --force on a frozen date: supersede, never rewrite
         return _enhancement_recut(st, target, now, slip_txt, legs, plan,
                                   bank_eff, fixture_report, floors)
@@ -5959,6 +6093,7 @@ def cmd_enhancement(args, st, *, scores=None) -> int:
         freeze_record = upsert_slip(st, target, plan,
                                     freeze_at=now if should_freeze else None,
                                     lane=ENHANCEMENT_LANE)
+    write_decision_receipt(decision_context, plan, frozen=should_freeze)
     txt = render_enhancement_tickets(st, target, legs, plan, now,
                                      should_freeze=should_freeze,
                                      freeze_record=freeze_record,

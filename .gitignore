@@ -211,3 +211,7 @@ localdata/prediction_history_keys.json.gz
 # Separate prefix prevents these receipts entering prediction/warehouse globs.
 !localdata/schedule_scoutingstats_????-??.csv.gz
 !localdata/schedule_vitibet_????-??.csv.gz
+
+# Exact live decision receipts and read-only replay report (existing ticket families).
+!localdata/autobets_enh_tickets_20*_decision*.json
+!localdata/replay_parity.json

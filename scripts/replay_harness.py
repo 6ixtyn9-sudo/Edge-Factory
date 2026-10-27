@@ -68,6 +68,7 @@ from __future__ import annotations
 import argparse
 import csv
 import gzip
+import hashlib
 import itertools
 import json
 import math
@@ -321,10 +322,10 @@ def build_universe(archives, settled, unresolved=None, *, faithful=True, census=
 
     ``census`` (optional dict) collects ``{day: guard_drops}`` for the run log.
 
-    ``unresolved=None`` (default, and every shipped number so far) drops legs
-    that never graded, because a replay cannot score a pending result. That is
-    also a flattering assumption: voids and never-settled legs disappear
-    instead of costing money. ``unresolved="loss"`` keeps them and grades them
+    ``unresolved=None`` retains unresolved legs until AFTER selection in
+    faithful mode. Selected unresolved cards are reported pending, never
+    re-paired around a missing outcome. Explicit legacy superset mode keeps
+    its old settled-only pool for reproduction. ``unresolved="loss"`` keeps them and grades them
     as losses, which is the pessimistic bound on every number in this file.
     """
     if archives is not None:
@@ -346,8 +347,8 @@ def build_universe(archives, settled, unresolved=None, *, faithful=True, census=
             census[d] = drops
         if unresolved == "loss":
             pool = [dict(l, result=l["result"] or "loss") for l in pool]
-        else:
-            pool = [l for l in pool if l["result"]]  # settled only
+        elif not faithful:
+            pool = [l for l in pool if l["result"]]  # explicit legacy superset reproduction
         if len(pool) >= at.LEGS_PER_ACCA:
             universe[d] = pool
     return universe
@@ -435,6 +436,17 @@ def card_for_day(pool, spec):
     return at.select_accas(_filtered_pool(pool, spec), **kw)
 
 
+def _graded_acca(acca):
+    results = [l.get("result") for l in acca["legs"]]
+    if "loss" in results:
+        return acca["odds"], False  # same early-loss rule as live settlement
+    if any(r not in ("win", "void") for r in results):
+        raise ValueError("unresolved selected card has no realized growth")
+    odds = (acca["odds"] if "void" not in results else
+            round(math.prod(l["odds"] for l in acca["legs"] if l.get("result") == "win"), 2))
+    return odds, True  # all void: odds 1.0, stake returned
+
+
 def day_growth(plan, bank_pct=100.0):
     """Bank multiplier derived from plan_day's returned production stakes.
 
@@ -442,14 +454,24 @@ def day_growth(plan, bank_pct=100.0):
     engine ships. The harness has no separate sizing formula to drift.
     """
     staked = sum(a["stake_pct"] for a in plan)
-    returned = sum(a["stake_pct"] * a["odds"] for a in plan
-                   if all(l.get("result") == "win" for l in a["legs"]))
+    returned = 0.0
+    for acca in plan:
+        odds, won = _graded_acca(acca)
+        if won:
+            returned += acca["stake_pct"] * odds
     return (bank_pct - staked + returned) / bank_pct
+
+
+class ReplayDays(dict):
+    """Graded cards plus explicit ungraded cards; never re-pair around pending."""
+    def __init__(self):
+        super().__init__()
+        self.pending = {}
 
 
 def replay(universe, spec):
     """Per-day record for a variant, routed through the production planner."""
-    out = {}
+    out = ReplayDays()
     kw = {k: v for k, v in spec.items() if k in ENGINE_KEYS}
     for d in sorted(universe):
         # A 100%-of-capital reference bank keeps growth bank-independent while
@@ -458,10 +480,15 @@ def replay(universe, spec):
         plan = at.plan_day(_filtered_pool(universe[d], spec), bank_pct, **kw)
         if not plan:
             continue
+        try:
+            grades = [_graded_acca(a) for a in plan]
+        except ValueError:
+            out.pending[d] = plan
+            continue  # selected first, explicitly ungraded; no replacement card
         out[d] = {
             "growth": day_growth(plan, bank_pct),
-            "accas": [(a["odds"], all(l.get("result") == "win" for l in a["legs"]))
-                      for a in plan],
+            "accas": grades,
+            "void_legs": sum(l.get("result") == "void" for a in plan for l in a["legs"]),
             "legs": [tuple(l["match"] for l in a["legs"]) for a in plan],
             "stake_pct": [a["stake_pct"] for a in plan],
         }
@@ -487,8 +514,14 @@ def summarise(days):
             bank *= x
             peak = max(peak, bank)
             maxdd = max(maxdd, 1 - bank / peak)
+    realized = dict(realized_mean_log=mean_log, realized_final=final, realized_maxdd=maxdd)
+    if getattr(days, "pending", {}):
+        # Conditional realized growth is available explicitly, never presented
+        # as a completed policy return when selected outcomes are missing.
+        mean_log = final = maxdd = float("nan")
     return {
-        "days": len(g), "accas": len(accas),
+        **realized, "void_legs": sum(d.get("void_legs", 0) for d in days.values()),
+        "days": len(g), "pending_days": len(getattr(days, "pending", {})), "accas": len(accas),
         "hit": wins / len(accas) if accas else 0.0,
         "mean_log": mean_log,
         "final": final,
@@ -521,7 +554,8 @@ def effect_concentration(universe, spec_a, spec_b):
     # — it can keep the leave-one-day-out sign positive while the paired
     # difference is negative (measured 2026-09-09 on rules=!ml-meta avg_p>=55:
     # unpaired +0.0012 "holds", paired on common days -0.0052).
-    days = sorted(set(da) | set(db))
+    days = sorted((set(da) | set(db)) - set(getattr(da, "pending", {}))
+                  - set(getattr(db, "pending", {})))
     la = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
     lb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
     if not days:
@@ -599,7 +633,8 @@ def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
     """Resample DAYS once per iteration and score both variants on the SAME
     days (paired). Returns the distribution of (B - A) mean log growth."""
     da, db = replay(universe, spec_a), replay(universe, spec_b)
-    days = sorted(set(da) | set(db))
+    days = sorted((set(da) | set(db)) - set(getattr(da, "pending", {}))
+                  - set(getattr(db, "pending", {})))
     if not days:
         return None
     # A ruined policy is not made healthy by silently deleting its bankruptcy
@@ -1077,6 +1112,7 @@ def cmd_enh_parity(records, *, since=None, until=None, root=None):
         "LIVE ML order (recomputed)": enh_cards_for(records, floors, supported=True,
                                                     root=root, ml_scores=ml_scores),
     }
+    print("LEGACY APPROXIMATION — settled registry, incomplete decision-time coverage")
     print("ENH PARITY — replay card vs the lane's own ledger")
     print(f"  ML model coverage: {stats['scored']}/{stats['legs']} settled records "
           f"scored, {len(stats['scored_days'])}/{len(stats['days'])} day(s)"
@@ -1349,6 +1385,8 @@ def live_settings():
 def print_variant(universe, spec, label=None, baseline=None):
     s = summarise(replay(universe, spec))
     lbl = label or label_of(spec)
+    if s["pending_days"]:
+        print(f"{lbl}: {s['pending_days']} selected card(s) PENDING — excluded from realized growth, not re-paired")
     if s["ruin"]:
         print(f"{lbl:42s} RUIN on {s['ruin']} day(s) — final 0%, maxDD 100%; "
               "SKIPPED (bankruptcy is not an edge)")
@@ -1369,6 +1407,9 @@ def ab_report(universe, spec_a, spec_b):
     print(f"A/B (paired):  A = {la}   vs   B = {lb}\n")
     sa = print_variant(universe, spec_a, f"A: {la}")
     sb = print_variant(universe, spec_b, f"B: {lb}", baseline=sa)
+    if sa["pending_days"] or sb["pending_days"]:
+        print("A/B SKIPPED: selected pending cards prevent a complete realized comparison")
+        return
     if sa["ruin"] or sb["ruin"]:
         print("\nA/B SKIPPED: at least one arm ruins the bank on the observed path.")
         return
@@ -1439,6 +1480,8 @@ def leg_bands(universe, floor=None, volume_pool=None):
             continue
         sat_days += 1
         for l in floored:
+            if l.get("result") not in ("win", "loss"):
+                continue  # resolved-leg statistic, after eligibility/saturation
             name = next(n for hi, n in edges if l["prob"] < hi)
             bands[name][0] += 1
             if l["result"] == "win":
@@ -1518,7 +1561,6 @@ def cmd_parity(archives, settled, *, since=None, until=None, faithful=True):
     rows = []
     for d in scope:
         pool, _drops = live_pool(by_day.get(d) or [], settled, d, faithful=faithful)
-        pool = [l for l in pool if l["result"]]
         if len(pool) < at.LEGS_PER_ACCA:
             unbuildable += 1
             rows.append((d, "LEDGER-ONLY", None, cards[d]))
@@ -1544,6 +1586,7 @@ def cmd_parity(archives, settled, *, since=None, until=None, faithful=True):
         rows.append((d, "DIFF", got, want, sorted(missing), sorted(extra),
                      absent))
 
+    print("LEGACY APPROXIMATION — fixture-pair comparison, not full execution/stake parity")
     print(f"PARITY ({'faithful' if faithful else 'SUPERSET'} pool, real build instants)")
     print(f"  days compared {len(scope)}   MATCH {match}   DIFF {diff}   "
           f"LEDGER-ONLY {unbuildable}")
@@ -1627,8 +1670,8 @@ def cmd_slate(archives, settled, day, *, faithful=True):
     print("  ledger card (what was actually built):")
     for i, acca in enumerate(cards, 1):
         print(f"     ACCA #{i}: {(' + '.join(sorted(acca))) or 'empty'}")
-    plan = at.plan_day([l for l in pool if l["result"]], 100.0)
-    print("  faithful replay at live settings:")
+    plan = at.plan_day(pool, 100.0)
+    print("  approximate replay at live settings (selection before grading):")
     if not plan:
         print("     NO BET")
     for i, a in enumerate(plan, 1):
@@ -1672,6 +1715,9 @@ def cmd_kelly(universe, spec=None):
     curves = {f: replay(universe, _cell(f)) for f in grid}
     stats = {f: summarise(days) for f, days in curves.items()}
     reference = curves[at.STAKE_FRAC]
+    if reference.pending:
+        print("Stake curve unavailable: selected cards are PENDING, not zero-return days")
+        return 1
     if not reference:
         print("no bet-days")
         return
@@ -1745,6 +1791,8 @@ def slot_table(universe, floor=None, max_slots=12, min_pool=None):
         n_days += 1
         ranked = ranked[:max_slots]
         for i, leg in enumerate(ranked, 1):
+            if leg.get("result") not in ("win", "loss"):
+                continue  # do not promote another leg into this rank slot
             slots[i][0] += 1
             if leg["result"] == "win":
                 slots[i][1] += 1
@@ -1752,6 +1800,8 @@ def slot_table(universe, floor=None, max_slots=12, min_pool=None):
         for j in range(0, len(ranked) - 1, 2):
             a, b = ranked[j], ranked[j + 1]
             idx = j // 2 + 1
+            if any(l.get("result") not in ("win", "loss") for l in (a, b)):
+                continue
             accas[idx][0] += 1
             if a["result"] == "win" and b["result"] == "win":
                 accas[idx][1] += 1
@@ -1805,6 +1855,7 @@ def rule_family(rule):
 
 def _leg_stats(legs, seed=2026):
     """n, hit rate, flat ROI and calibration gap with bootstrap deciles."""
+    legs = [l for l in legs if l.get("result") in ("win", "loss")]
     if not legs:
         return None
     rnd = random.Random(seed)
@@ -3098,7 +3149,7 @@ def holdout_window(is_u, oos_u, specs, min_days=20, min_bets=40, top=10):
     viable = []
     for sp in specs:
         t = arm_stats(is_u, sp)
-        if t["days"] >= min_days and t["accas"] >= min_bets:
+        if not t["pending_days"] and t["days"] >= min_days and t["accas"] >= min_bets:
             viable.append(sp)
     if not viable:
         return {"viable": 0, "chosen": None}
@@ -3327,6 +3378,9 @@ def cmd_target(universe, spec, capital, target=1_000_000.0):
     spec = dict(spec or {})
     live = summarise(replay(universe, {}))
     arm = summarise(replay(universe, spec))
+    if live["pending_days"] or arm["pending_days"]:
+        print("Projection unavailable: selected cards are PENDING, not zero-return days")
+        return 1
     bs = paired_bootstrap(universe, {}, spec)
     print("=" * 74)
     print(f"CAPITAL PROJECTION — variant: {label_of(spec)}")
@@ -3677,6 +3731,166 @@ def cmd_rules_split(archives, settled, min_legs=10):
     return out
 
 
+def _ledger_ticket_core(plan, lane):
+    """Compare fields actually retained in financial history; no guessed book."""
+    cards = []
+    for acca in plan:
+        legs = []
+        for leg in acca["legs"]:
+            market = leg.get("market") or (at.selection_market(leg) if lane == "enh" else "1x2")
+            if not market:
+                raise ValueError("ledger market identity unavailable")
+            legs.append((str(leg["match"]), market, str(leg["pick"]).upper(), float(leg["odds"]),
+                         str(leg.get("price_book") or ""), str(leg.get("price_source") or "")))
+        # Settlement legitimately reduces compound odds when a void drops out;
+        # compare the original booked quote via the retained leg prices.
+        original_odds = (round(math.prod(float(l["odds"]) for l in acca["legs"]), 2)
+                         if any(l.get("result") == "void" for l in acca["legs"])
+                         else float(acca["odds"]))
+        cards.append((sorted(legs), original_odds, float(acca["stake_pct"])))
+    return sorted(cards)
+
+
+def decision_parity_report(root=None):
+    """Read-only current-code replay of actual decision receipts, both lanes.
+
+    Admission outputs are observed live facts, not reconstructed from today's
+    registries. Missing legacy receipts remain missing; no result resolver,
+    state repair, policy refresh, provider call, training or settlement runs.
+    """
+    base = (root or at.ROOT) / "localdata"
+    report = dict(schema=1, boundary="execution_safe_admission_to_ticket",
+                  caveat="Replays captured admitted candidates and policy outputs, not provider acquisition or cohort training. Hashes detect corruption, not authenticity.",
+                  ledger_comparison="fixture/market/selection/book/source/price/pairing/stake; unknown legacy identity is not invented",
+                  lanes={})
+    for lane, prefix, state_file in (("main", "auto_tickets", "auto_tickets_state.json"),
+                                      ("enh", "autobets_enh_tickets", "enhancement_tickets_state.json")):
+        lane_report = dict(receipts=[], missing_receipt_days=[], state_error=None,
+                           receipt_conflicts=sorted(p.name for p in base.glob(f"{prefix}_*_decision_cache_conflict.json")))
+        report["lanes"][lane] = lane_report
+        try:
+            state = json.loads((base / state_file).read_text())
+            if not isinstance(state, dict) or any(
+                not isinstance(state.get(key, []), list)
+                or any(not isinstance(row, dict) for row in state.get(key, []))
+                for key in ("history", "open_slips")):
+                raise ValueError("invalid financial state structure")
+        except (OSError, ValueError) as exc:
+            state = {}
+            lane_report["state_error"] = str(exc)
+        days = {str(r.get("date")) for r in state.get("history", [])}
+        days.update(str(r.get("date")) for r in state.get("open_slips", []))
+        seen = set()
+        for path in sorted(base.glob(f"{prefix}_????-??-??_decision.json")):
+            item = dict(file=path.name, status="INVALID", ledger="UNAVAILABLE", settlement="UNAVAILABLE")
+            lane_report["receipts"].append(item)
+            try:
+                payload = json.loads(path.read_text())
+                digest = payload.pop("sha256")
+                if digest != at._decision_digest(payload):
+                    raise ValueError("receipt hash mismatch")
+                context = payload["context"]
+                day = context["date"]
+                if (payload["schema"] != 1 or context["lane"] != lane
+                        or path.name != f"{prefix}_{day}_decision.json"
+                        or payload["boundary"] != report["boundary"]
+                        or payload["status"] not in ("frozen", "draft", "no_bet")):
+                    raise ValueError("receipt identity/schema/status mismatch")
+                when = datetime.fromisoformat(context["build_at"])
+                if payload["status"] == "no_bet" and payload["plan"]:
+                    raise ValueError("no-bet receipt contains a ticket")
+                if payload["status"] in ("draft", "frozen") and not payload["plan"]:
+                    raise ValueError("ticket receipt contains no plan")
+                if when.tzinfo is None or not math.isfinite(context["bank_eff"]) or context["bank_eff"] < 0:
+                    raise ValueError("unproven build time or bank")
+                if (context.get("bank_total") is not None and
+                        (not math.isfinite(context["bank_total"]) or context["bank_total"] < context["bank_eff"])):
+                    raise ValueError("invalid total/free bank context")
+                prepared = at.prepare_ticket_pool(context)
+                plan = at.plan_ticket_decision(context, prepared=prepared)
+                actual = at.ticket_card_identity(plan, prepared["pool"])
+                expected = at.ticket_card_identity(payload["plan"], prepared["pool"])
+                # Validate expected plan AND its separately retained complete
+                # execution identity. A changed market/book at equal odds matters.
+                same = (at._decision_digest(actual) == at._decision_digest(expected)
+                        == at._decision_digest(payload["card_identity"]))
+                item.update(date=day, status="MATCH" if same else "DIFF",
+                            decision_status=payload["status"], accas=len(plan),
+                            engine_changed=payload.get("engine_sha256") != hashlib.sha256(Path(at.__file__).read_bytes()).hexdigest(),
+                            bank_total=context.get("bank_total"), free_bank=context["bank_eff"],
+                            committed_excluding_target=(context["bank_total"] - context["bank_eff"]
+                                                       if context.get("bank_total") is not None else None))
+                snapshot = context.get("bank_state")
+                item["bank_reconciliation"] = "UNAVAILABLE"
+                if snapshot is not None:
+                    slip_totals_match = all(abs(float(slip["staked_pct"]) - sum(
+                        float(a["stake_pct"]) for a in slip["accas"])) <= .0002
+                        for slip in snapshot.get("open_slips", []))
+                    item["bank_reconciliation"] = ("MATCH" if slip_totals_match
+                        and snapshot["bank"] == context["bank_total"]
+                        and abs(at.effective_bank(snapshot, exclude_date=day) - context["bank_eff"]) <= .0002
+                        else "DIFF")
+                seen.add(day)
+                if payload["status"] != "frozen":
+                    item["ledger"] = "NOT_COMMITTED"
+                    continue
+                # Only independently retained frozen financial positions count.
+                if day not in (state.get(at.FROZEN_BOOK_KEY) or {}):
+                    item["ledger"] = "MISSING_FREEZE"
+                    continue
+                item["freeze_time"] = ("MATCH" if state[at.FROZEN_BOOK_KEY][day].get("frozen_at")
+                                       == context["build_at"] else "DIFF")
+                history = [h for h in state.get("history", []) if h.get("date") == day]
+                settled = [a for h in history for a in h.get("accas", [])]
+                opened = [a for h in state.get("open_slips", []) if h.get("date") == day
+                          for a in h.get("accas", [])]
+                try:
+                    item["ledger"] = ("MATCH" if _ledger_ticket_core(settled + opened, lane)
+                                      == _ledger_ticket_core(payload["plan"], lane) else "DIFF")
+                except (KeyError, TypeError, ValueError):
+                    item["ledger"] = "INCOMPLETE_IDENTITY"
+                # Reconcile retained payouts, not a guessed historical equity
+                # chain: settlement ordering and legacy closes remain untouched.
+                item["open_accas"] = len(opened)
+                if settled:
+                    stake = sum(a["stake_pct"] for a in settled)
+                    returned = sum(a["returned_pct"] for a in settled)
+                    totals_stake = sum(h["staked_pct"] for h in history)
+                    totals_returned = sum(h["returned_pct"] for h in history)
+                    try:
+                        grades = [_graded_acca(a) for a in settled]
+                        expected_return = sum(a["stake_pct"] * odds if won else 0.
+                                              for a, (odds, won) in zip(settled, grades))
+                        outcomes_match = all(a.get("won") is won for a, (_, won) in zip(settled, grades))
+                        item["settlement"] = ("MATCH" if outcomes_match
+                                               and abs(stake - totals_stake) <= 0.0002
+                                               and abs(returned - totals_returned) <= 0.0002
+                                               and abs(expected_return - returned) <= 0.0002 else "DIFF")
+                    except ValueError:
+                        item["settlement"] = "INCOMPLETE_OUTCOME"
+                    item["settled_net"] = returned - stake
+                elif opened:
+                    item["settlement"] = "PENDING"
+            except (OSError, KeyError, TypeError, ValueError, IndexError, OverflowError, AttributeError, StopIteration) as exc:
+                item.update(status="INVALID", error=f"{type(exc).__name__}: {exc}")
+        lane_report["missing_receipt_days"] = sorted(days - seen)
+        lane_report["counts"] = dict(Counter(r["status"] for r in lane_report["receipts"]))
+    bad = any(r["status"] in ("DIFF", "INVALID") or r["ledger"] in ("DIFF", "MISSING_FREEZE")
+              or r["settlement"] == "DIFF" or r.get("bank_reconciliation") == "DIFF"
+              or r.get("freeze_time") == "DIFF"
+              for lane in report["lanes"].values() for r in lane["receipts"])
+    bad = bad or any(lane["receipt_conflicts"] for lane in report["lanes"].values())
+    count = sum(len(lane["receipts"]) for lane in report["lanes"].values())
+    incomplete = any(lane["missing_receipt_days"] or lane["state_error"]
+                     or any(r["ledger"] in ("UNAVAILABLE", "INCOMPLETE_IDENTITY")
+                            or r.get("bank_reconciliation") == "UNAVAILABLE"
+                            or r["settlement"] == "INCOMPLETE_OUTCOME"
+                            for r in lane["receipts"]) for lane in report["lanes"].values())
+    report["status"] = ("FAIL" if bad else "INSUFFICIENT_EVIDENCE" if not count
+                        else "PARTIAL" if incomplete else "PASS")
+    return report
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--variant", action="append", metavar="SPEC",
@@ -3794,7 +4008,14 @@ def main():
     ap.add_argument("--volume-pool", type=int)
     ap.add_argument("--gate-mode", choices=("off", "pool", "acca"))
     ap.add_argument("--no-fallback", action="store_true")
+    ap.add_argument("--decision-parity", action="store_true",
+                    help="read-only full-ticket replay of captured live decisions; JSON report")
     args = ap.parse_args()
+
+    if args.decision_parity:
+        report = decision_parity_report()
+        print(json.dumps(report, indent=2, sort_keys=True, allow_nan=False))
+        return 1 if report["status"] == "FAIL" else 0
 
     settled = at.load_settled()
     archives = at.load_archived_picks()
@@ -3833,6 +4054,13 @@ def main():
     if args.until:
         universe = {d: pool for d, pool in universe.items() if d <= args.until}
 
+    unresolved_count = sum(l.get("result") not in ("win", "loss", "void")
+                           for pool in universe.values() for l in pool)
+    if unresolved_count:
+        print(f"COVERAGE: {unresolved_count} unresolved admitted candidates retained until selection; "
+              "selected pending cards are excluded from realized growth, never re-paired. "
+              "Leg/rank descriptive tables use resolved outcomes only.")
+
     if args.kickoff_contract:
         return cmd_kickoff_contract(universe,
                                     since=args.since, until=args.until)
@@ -3853,7 +4081,7 @@ def main():
     engine_status()
     live_settings()
     print("=" * 74)
-    print(f"REPLAY UNIVERSE: {len(universe)} bet-days with settled playable legs")
+    print(f"REPLAY UNIVERSE: {len(universe)} candidate-days (selection precedes result grading)")
     if faithful:
         dropped = sum(len(v) for drops in guard_census.values()
                       for v in drops.values())

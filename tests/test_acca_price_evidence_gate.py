@@ -196,12 +196,13 @@ def test_refresh_write_false_does_not_touch_state(tmp_path):
 def test_live_path_wires_the_dynamic_gate_before_plan_day():
     src = (ROOT / "scripts" / "auto_tickets.py").read_text()
     assert "gate_labels, gate_status = acca_gate.refresh(target)" in src
-    assert "acca_price_evidence_gate(plan_pool, gate_labels)" in src
+    assert "prepared_decision = prepare_ticket_pool(decision_context)" in src
+    assert 'acca_price_evidence_gate(pool, set(policy["gate_labels"]))' in src
     assert '"ACCA PRICE-EVIDENCE GATE: blocked label"' in src
     assert 'print(f"ACCA PRICE-EVIDENCE GATE: {gate_status}")' in src
     i_bench = src.index("selection_ladder_bucket_benched")
-    i_gate = src.index("acca_price_evidence_gate(plan_pool, gate_labels)")
-    i_plan = src.index("plan = plan_day(plan_pool, bank_eff")
+    i_gate = src.index('acca_price_evidence_gate(pool, set(policy["gate_labels"]))')
+    i_plan = src.index('plan = plan_day(prepared["pool"], context["bank_eff"]')
     assert i_bench < i_gate < i_plan
 
 
