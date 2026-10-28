@@ -1350,3 +1350,24 @@ def test_verified_regulation_label_is_scoped_to_observed_fixture_and_review_time
     after=cc.collect_observations(con,start='2026-06-13',as_of='2026-10-30')[3]
     assert after[key]['ft'] == (1,1)
     assert cc._remine_key(absent) not in after
+
+
+def test_fit_support_diagnostics_are_descriptive_and_outside_model_hash():
+    import hashlib
+    from edgefactory.enh_registry import enhancement_ml_probability
+    profile=cc.enhancement_cohort(connection(ml_observations()),edge(),as_of='2026-10-20',selection='home',fit_ml=True)
+    model=deepcopy(profile['ml_model'])
+    diag=profile['ml_fit_adequacy']
+    assert diag['n']==100 and diag['classes']==2 and diag['min_class_count']==20
+    assert diag['mean_rows_per_class']==50
+    assert sum(diag['class_counts'].values())==model['n']
+    assert diag['served_dimensions']==len(model['coef'][0])
+    unsigned={k:v for k,v in model.items() if k!='model_key'}
+    assert model['model_key']==hashlib.sha256(json.dumps(unsigned,sort_keys=True,allow_nan=False).encode()).hexdigest()
+    pick=with_synthetic_ml_inputs(dict(parent(edge()),avg_p=80.,statistical_profile=profile))
+    before=enhancement_ml_probability(pick,'match_over_25')
+    profile['ml_fit_adequacy']['min_class_count']=999  # diagnostic is not a fit or serve gate
+    assert enhancement_ml_probability(pick,'match_over_25')==before
+    assert profile['ml_model']==model
+    plain=cc.enhancement_cohort(connection(ml_observations()),edge(),as_of='2026-10-20',selection='home')
+    assert 'ml_fit_adequacy' not in plain
