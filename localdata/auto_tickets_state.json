@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 283.0761,
+  "bank": 247.6916,
   "cycle_base": 203.9865280000001,
   "open_slips": [
     {
@@ -43,53 +43,12 @@
           "stake_pct": 35.3845,
           "results": [
             null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Venezia vs Inter",
-              "pick": "AWAY",
-              "prob": 0.6978978407685723,
-              "odds": 1.36,
-              "result": null,
-              "market": "1x2",
-              "price_book": "betexplorer_best",
-              "price_source": "betexplorer_odds",
-              "fixture_key": [
-                "2026-10-28",
-                "Venezia",
-                "Inter"
-              ]
-            },
-            {
-              "match": "Genemuiden vs FC Dordrecht",
-              "pick": "AWAY",
-              "prob": 0.6877521085441878,
-              "odds": 1.35,
-              "result": null,
-              "market": "1x2",
-              "price_book": "betexplorer_best",
-              "price_source": "betexplorer_odds",
-              "fixture_key": [
-                "2026-10-28",
-                "Genemuiden",
-                "FC Dordrecht"
-              ]
-            }
-          ],
-          "odds": 1.84,
-          "stake_pct": 35.3845,
-          "results": [
-            null,
-            null
+            "win"
           ],
           "won": null
         }
       ],
-      "staked_pct": 70.769
+      "staked_pct": 35.3845
     }
   ],
   "history": [
@@ -1483,6 +1442,51 @@
       ],
       "bank_pct": 283.0761,
       "close_pct": 283.076
+    },
+    {
+      "date": "2026-10-28",
+      "staked_pct": 35.3845,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.84,
+          "won": false,
+          "stake_pct": 35.3845,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Venezia vs Inter",
+              "pick": "AWAY",
+              "odds": 1.36,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-28",
+                "Venezia",
+                "Inter"
+              ]
+            },
+            {
+              "match": "Genemuiden vs FC Dordrecht",
+              "pick": "AWAY",
+              "odds": 1.35,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-28",
+                "Genemuiden",
+                "FC Dordrecht"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 247.6916,
+      "close_pct": 247.6915
     }
   ],
   "events": [
