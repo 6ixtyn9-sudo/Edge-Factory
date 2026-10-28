@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from edgefactory.phase5_shadow import append_capture_attempt, append_shadow_rows
+from edgefactory.util import ticket_receipt_path, ticket_receipt_bytes, ticket_receipt_files, encode_ticket_receipt
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOW = ROOT / ".github" / "workflows" / "daily.yml"
@@ -496,8 +497,10 @@ def test_cached_untracked_ticket_decision_survives_existing_restore(tmp_path):
     blob = _decision_receipt_blob()
     path.write_bytes(blob)
     _persistence_module().restore_committed_localdata(repo)
-    assert path.read_bytes() == blob
-    assert _git(repo, 'check-ignore', '--no-index', '-q', str(path.relative_to(repo)), check=False).returncode == 1
+    compact = ticket_receipt_path(repo / 'localdata', path.name)
+    assert not path.exists() and ticket_receipt_bytes(compact) == blob
+    assert _git(repo, 'check-ignore', '--no-index', '-q', str(compact.relative_to(repo)), check=False).returncode == 1
+    assert _git(repo, 'check-ignore', '--no-index', '-q', str(path.relative_to(repo)), check=False).returncode == 0
 
 
 def test_cached_frozen_receipt_replaces_draft_only_for_independently_retained_freeze(tmp_path):
@@ -508,15 +511,19 @@ def test_cached_frozen_receipt_replaces_draft_only_for_independently_retained_fr
     relative = 'localdata/auto_tickets_2026-10-27_decision.json'
     path = repo / relative
     path.write_bytes(_decision_receipt_blob('draft'))
-    _git(repo, 'add', relative)
+    _git(repo, 'add', '-f', relative)
     _git(repo, 'commit', '-qm', 'draft audit')
     frozen = _decision_receipt_blob()
     path.write_bytes(frozen)
     state = dict(frozen_by_date={'2026-10-27': {'frozen_at': '2026-10-27T09:00:00+02:00'}})
-    assert module._retain_ticket_decisions(repo, {module.MAIN_STATE: json.dumps(state).encode()}) == {relative: frozen}
+    canonical = ticket_receipt_path(repo / 'localdata', path.name)
+    destination = str(canonical.relative_to(repo))
+    assert module._retain_ticket_decisions(repo, {module.MAIN_STATE: json.dumps(state).encode()}) == {
+        destination: encode_ticket_receipt(canonical, frozen)}
     # The audit receipt itself can NEVER authorize finance or a freeze.
-    assert module._retain_ticket_decisions(repo, {module.MAIN_STATE: b'{}'}) == {}
-    assert path.with_name(path.stem + '_cache_conflict.json').read_bytes() == frozen
+    assert module._retain_ticket_decisions(repo, {module.MAIN_STATE: b'{}'}) == {
+        destination: encode_ticket_receipt(canonical, _decision_receipt_blob('draft'))}
+    assert [ticket_receipt_bytes(p) for p in ticket_receipt_files(repo / 'localdata','auto_tickets',conflicts=True)] == [frozen]
 
 
 def test_divergent_frozen_decisions_are_quarantined_not_auto_merged(tmp_path):
@@ -527,13 +534,14 @@ def test_divergent_frozen_decisions_are_quarantined_not_auto_merged(tmp_path):
     path = repo / relative
     committed = _decision_receipt_blob()
     path.write_bytes(committed)
-    _git(repo, 'add', relative)
+    _git(repo, 'add', '-f', relative)
     _git(repo, 'commit', '-qm', 'frozen audit')
     cached = _decision_receipt_blob(unrecognized_extra='different retained evidence')
     path.write_bytes(cached)
     _persistence_module().restore_committed_localdata(repo)
-    assert path.read_bytes() == committed
-    assert path.with_name(path.stem + '_cache_conflict.json').read_bytes() == cached
+    assert not path.exists()
+    assert ticket_receipt_bytes(ticket_receipt_path(repo / 'localdata', path.name)) == committed
+    assert [ticket_receipt_bytes(p) for p in ticket_receipt_files(repo / 'localdata','auto_tickets',conflicts=True)] == [cached]
 
 
 def test_operator_applied_decision_report_step_reuses_existing_artifacts_and_persistence(tmp_path):
@@ -550,5 +558,138 @@ def test_operator_applied_decision_report_step_reuses_existing_artifacts_and_per
     repo = tmp_path / 'repo'
     repo.mkdir()
     _seed_repo(repo)
-    for relative in ('localdata/autobets_enh_tickets_2026-10-27_decision.json', 'localdata/replay_parity.json'):
+    for relative in ('localdata/phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-10-27_decision.json.gz', 'localdata/replay_parity.json'):
         assert _git(repo, 'check-ignore', '--no-index', '-q', relative, check=False).returncode == 1
+
+
+@pytest.mark.parametrize('committed_gzip', [False, True])
+@pytest.mark.parametrize('candidate_status', ['identical', 'divergent_frozen', 'draft', 'invalid'])
+def test_cross_format_cached_receipts_cannot_bypass_committed_freeze(tmp_path, committed_gzip, candidate_status):
+    from edgefactory.util import write_ticket_receipt
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    base = repo / 'localdata'
+    name = 'auto_tickets_2026-10-27_decision.json'
+    canonical = ticket_receipt_path(base, name)
+    legacy = base / name
+    committed_path, cached_path = (canonical, legacy) if committed_gzip else (legacy, canonical)
+    committed = _decision_receipt_blob()
+    write_ticket_receipt(committed_path, committed)
+    # Legacy files were tracked before the storage migration.
+    _git(repo, 'add', '-f', str(committed_path.relative_to(repo)))
+    financial = base / 'auto_tickets_state.json'
+    financial_raw = json.dumps(dict(bank=123, history=[], open_slips=[], frozen_by_date={}), indent=2).encode()
+    financial.write_bytes(financial_raw)
+    _git(repo, 'add', str(financial.relative_to(repo)))
+    _git(repo, 'commit', '-qm', 'committed frozen evidence and bank')
+    cached = {
+        'identical': committed,
+        'divergent_frozen': _decision_receipt_blob(other='cached, not authoritative'),
+        'draft': _decision_receipt_blob(status='draft'),
+        'invalid': b'{broken',
+    }[candidate_status]
+    write_ticket_receipt(cached_path, cached)
+    _persistence_module().restore_committed_localdata(repo)
+    assert not legacy.exists()
+    assert ticket_receipt_bytes(canonical) == committed
+    assert financial.read_bytes() == financial_raw
+    conflicts = ticket_receipt_files(base, 'auto_tickets', conflicts=True)
+    if candidate_status in ('invalid', 'divergent_frozen'):
+        assert cached in [ticket_receipt_bytes(p) for p in conflicts]
+    else:
+        assert not conflicts
+    snapshot = {p: p.read_bytes() for p in base.rglob('*') if p.is_file()}
+    _persistence_module().restore_committed_localdata(repo)
+    assert snapshot == {p: p.read_bytes() for p in base.rglob('*') if p.is_file()}
+
+
+@pytest.mark.parametrize('committed_gzip', [False, True])
+@pytest.mark.parametrize('authorized', [False, True])
+def test_cross_format_draft_upgrade_still_requires_independent_financial_freeze(tmp_path, committed_gzip, authorized):
+    from edgefactory.util import write_ticket_receipt
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    base = repo / 'localdata'
+    name = 'auto_tickets_2026-10-27_decision.json'
+    canonical, legacy = ticket_receipt_path(base, name), base / name
+    head_path, cache_path = (canonical, legacy) if committed_gzip else (legacy, canonical)
+    draft, frozen = _decision_receipt_blob(status='draft'), _decision_receipt_blob()
+    write_ticket_receipt(head_path, draft)
+    _git(repo, 'add', '-f', str(head_path.relative_to(repo)))
+    _git(repo, 'commit', '-qm', 'committed draft')
+    write_ticket_receipt(cache_path, frozen)
+    finance = {'localdata/auto_tickets_state.json': json.dumps(dict(
+        frozen_by_date={'2026-10-27': {'frozen_at': '2026-10-27T09:00:00+02:00'}})).encode()} if authorized else {}
+    retained = _persistence_module()._retain_ticket_decisions(repo, finance)
+    assert ticket_receipt_bytes(canonical, raw=retained[str(canonical.relative_to(repo))]) == (frozen if authorized else draft)
+    assert bool(ticket_receipt_files(base, 'auto_tickets', conflicts=True)) is not authorized
+
+
+def test_compressed_evidence_is_covered_by_existing_cache_clean_and_artifact_paths(tmp_path):
+    from fnmatch import fnmatch
+    from edgefactory.util import write_ticket_receipt
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    path = ticket_receipt_path(repo / 'localdata', 'autobets_enh_tickets_2026-10-27_decision.json')
+    # Complete real hash-checked receipt; its lane must match its ENH filename.
+    payload = json.loads(_decision_receipt_blob())
+    payload['context']['lane'] = 'enh'
+    payload.pop('sha256')
+    import hashlib
+    payload['sha256'] = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+    original = json.dumps(payload).encode()
+    write_ticket_receipt(path, original)
+    _persistence_module().restore_committed_localdata(repo)
+    assert ticket_receipt_bytes(path) == original
+    relative = path.relative_to(repo).as_posix()
+    assert _git(repo, 'check-ignore', '--no-index', '-q', relative, check=False).returncode == 1
+    import yaml
+    workflow = yaml.safe_load(WORKFLOW.read_text())
+    steps = workflow['jobs']['pipeline']['steps'] if 'pipeline' in workflow['jobs'] else next(iter(workflow['jobs'].values()))['steps']
+    report_step = next(s for s in steps if s.get('with', {}).get('name') == 'EdgeFactory-Reports')
+    assert any(fnmatch(relative, pattern) for pattern in report_step['with']['path'].splitlines())
+    cache_steps = [s for s in steps if 'actions/cache' in s.get('uses', '')]
+    assert any(any(fnmatch(relative, pattern.rstrip('/') + '/**') for pattern in s.get('with', {}).get('path', '').splitlines()) for s in cache_steps)
+
+
+@pytest.mark.parametrize('committed_gzip', [False, True])
+def test_corrupt_gzip_cache_is_quarantined_byte_exactly(tmp_path, committed_gzip):
+    from edgefactory.util import write_ticket_receipt
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    base = repo / 'localdata'
+    name = 'auto_tickets_2026-10-27_decision.json'
+    canonical = ticket_receipt_path(base, name)
+    head = canonical if committed_gzip else base / name
+    original = _decision_receipt_blob()
+    write_ticket_receipt(head, original)
+    _git(repo, 'add', '-f', str(head.relative_to(repo)))
+    _git(repo, 'commit', '-qm', 'committed receipt')
+    canonical.parent.mkdir(parents=True, exist_ok=True)
+    damaged = b'not a valid gzip stream'
+    canonical.write_bytes(damaged)
+    _persistence_module().restore_committed_localdata(repo)
+    assert ticket_receipt_bytes(canonical) == original
+    assert [ticket_receipt_bytes(p) for p in ticket_receipt_files(base, 'auto_tickets', conflicts=True)] == [damaged]
+
+
+def test_divergent_untracked_format_aliases_remain_visible_as_a_conflict(tmp_path):
+    from edgefactory.util import write_ticket_receipt
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    base = repo / 'localdata'
+    name = 'auto_tickets_2026-10-27_decision.json'
+    first, second = _decision_receipt_blob(first=True), _decision_receipt_blob(second=True)
+    (base / name).write_bytes(first)
+    canonical = ticket_receipt_path(base, name)
+    write_ticket_receipt(canonical, second)
+    _persistence_module().restore_committed_localdata(repo)
+    assert ticket_receipt_bytes(canonical) in (first, second)
+    conflicts = ticket_receipt_files(base, 'auto_tickets', conflicts=True)
+    assert conflicts
+    assert {ticket_receipt_bytes(canonical), *(ticket_receipt_bytes(p) for p in conflicts)} == {first, second}
