@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 50,
@@ -29,7 +29,7 @@
         "selection_unmapped": 78
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-29' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -169,20 +169,20 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 36,
+      "coherence_excluded_rows": 24,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 36
+        "withheld_mixed_events_one_x_two": 24
       },
-      "coherence_withheld_fixtures": 6,
+      "coherence_withheld_fixtures": 4,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 17666
+        "out_of_window": 18108
       },
       "pa_matched": 0,
-      "pa_raw": 962,
-      "pa_scored": 17666,
+      "pa_raw": 989,
+      "pa_scored": 18108,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -230,56 +230,69 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 7,
+        "board_fixtures": 5,
         "board_league_count": 5,
         "board_leagues": {
-          "argentina_-_primera_division": 33,
-          "ireland_-_division_1": 14,
-          "portugal_-_league_cup": 1,
-          "spain_-_copa_del_rey": 20,
-          "venezuela_-_primera_division": 132
+          "afc_-_champions_league": 58,
+          "colombia_-_primera_a": 5,
+          "ukrainian_cup": 131,
+          "venezuela_-_primera": 1,
+          "venezuela_-_primera_division": 5
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 11,
+        "board_priced_rows": 17,
         "board_rows": 200,
-        "board_team_count": 12,
+        "board_team_count": 9,
         "board_team_names": {
-          "Academia Puerto Cabello": 12,
-          "Argentinos Juniors": 33,
-          "Caracas": 132,
-          "Independiente Rivadavia": 33,
-          "Longford": 14,
-          "Maritimo": 1,
-          "Puerto Cabello": 120,
-          "Rayo Vallecano": 2,
-          "Recreativo Huelva": 20,
-          "Sporting Lisbon": 1,
-          "Uni College Dublin": 14,
-          "Vallecano": 18
+          "Atletico Junior": 5,
+          "Boyaca Chico FC": 5,
+          "Buriram United": 58,
+          "Deportivo Tachira": 6,
+          "Fc Kharkiv": 131,
+          "Gamba Osaka": 58,
+          "Mayak Sarny": 131,
+          "Monagas": 5,
+          "Monagas SC": 1
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_moneyline": 6,
+          "unknown_market:2nd_half_moneyline": 3,
+          "unknown_market:exact_total_goals": 16,
+          "unknown_market:halftime_fulltime": 9,
+          "unknown_market:match_result_total_goals": 9,
+          "unknown_market:team_clean_sheet": 4,
+          "unsupported_market:correct_score": 78,
+          "unsupported_market:double_chance": 6,
+          "unsupported_market:team_total_exact": 10,
+          "unsupported_market:team_total_goals": 14
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 11
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 17
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 2,
+      "sa_scored": 17,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

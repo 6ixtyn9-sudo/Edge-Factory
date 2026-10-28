@@ -1,16 +1,6 @@
 {
-  "attempted": 12,
+  "attempted": 23,
   "attempted_fixtures": [
-    {
-      "avg_p": 60.64815167078816,
-      "away": "Bologna",
-      "date": "2026-10-28",
-      "home": "AC Milan",
-      "league": "Serie A",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6333
-    },
     {
       "avg_p": 89.19273272148341,
       "away": "Hertha BSC",
@@ -52,16 +42,6 @@
       "w_score": 0.7595
     },
     {
-      "avg_p": 82.2598556357579,
-      "away": "Real Betis",
-      "date": "2026-10-28",
-      "home": "Navalcarnero",
-      "league": "Copa Del Rey",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.7595
-    },
-    {
       "avg_p": 82.04047217537942,
       "away": "Roma W",
       "date": "2026-10-28",
@@ -77,26 +57,6 @@
       "date": "2026-10-28",
       "home": "Bayer 04 Leverkusen",
       "league": "DFB Pokal",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
-    },
-    {
-      "avg_p": 78.09015087620654,
-      "away": "SL Benfica W",
-      "date": "2026-10-28",
-      "home": "Arsenal W",
-      "league": "UEFA Women's Champions League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
-    },
-    {
-      "avg_p": 76.15578341428315,
-      "away": "Eemdijk",
-      "date": "2026-10-28",
-      "home": "Quick Boys",
-      "league": "KNVB Beker",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7595
@@ -120,37 +80,147 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 0.7595
-    }
-  ],
-  "be_429": 0,
-  "be_cached": 0,
-  "be_cooling_down": false,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 36,
-  "captured_at": "2026-10-27T22:17:01.036867+00:00",
-  "date": "2026-10-28",
-  "deferred_fixtures": 24,
-  "errors": [],
-  "fixtures_with_rows": 9,
-  "market_budget_stop": false,
-  "market_requests": 45,
-  "match_detail": {
-    "bookmakers": 151,
-    "challenge_pages": 0,
-    "fixtures": 9,
-    "market_rows": 372,
-    "markets": 54,
-    "named_rows": 372,
-    "standings_rows": 0,
-    "with_h2h": 0,
-    "with_last_results": 0,
-    "with_standings": 0
-  },
-  "max_fixtures": 12,
-  "network_attempted": 12,
-  "quoted_fixtures": [
+    },
+    {
+      "avg_p": 74.72872388126626,
+      "away": "SC Heerenveen",
+      "date": "2026-10-28",
+      "home": "Excelsior Maassluis",
+      "league": "KNVB Beker",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 73.41509433962263,
+      "away": "Chapecoense",
+      "date": "2026-10-28",
+      "home": "Bragantino",
+      "league": "Serie A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 70.89921877441331,
+      "away": "Dundee United",
+      "date": "2026-10-28",
+      "home": "Celtic",
+      "league": "Scottish Premiership",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5359
+    },
+    {
+      "avg_p": 70.25339043540329,
+      "away": "Pohang Steelers",
+      "date": "2026-10-28",
+      "home": "Kashima Antlers",
+      "league": "AFC Champions League Elite",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 69.78978407685723,
+      "away": "Inter",
+      "date": "2026-10-28",
+      "home": "Venezia",
+      "league": "Serie A",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 69.16644186673861,
+      "away": "TOP Oss",
+      "date": "2026-10-28",
+      "home": "PEC Zwolle",
+      "league": "KNVB Beker",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 69.07947911989224,
+      "away": "K\u00f8benhavn U19",
+      "date": "2026-10-28",
+      "home": "Dinamo Tbilisi U19",
+      "league": "UEFA Youth League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 68.77521085441877,
+      "away": "FC Dordrecht",
+      "date": "2026-10-28",
+      "home": "Genemuiden",
+      "league": "KNVB Beker",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 61.91017438213524,
+      "away": "VfL Wolfsburg",
+      "date": "2026-10-28",
+      "home": "SC Freiburg",
+      "league": "DFB Pokal",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5359
+    },
+    {
+      "avg_p": 60.48145168922116,
+      "away": "FC Cincinnati",
+      "date": "2026-10-28",
+      "home": "Inter Miami CF",
+      "league": "MLS",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5359
+    },
+    {
+      "avg_p": 56.51612973511376,
+      "away": "VfB Stuttgart",
+      "date": "2026-10-28",
+      "home": "SC Paderborn 07",
+      "league": "DFB Pokal",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5359
+    },
+    {
+      "avg_p": 82.2598556357579,
+      "away": "Real Betis",
+      "date": "2026-10-28",
+      "home": "Navalcarnero",
+      "league": "Copa Del Rey",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 78.09015087620654,
+      "away": "SL Benfica W",
+      "date": "2026-10-28",
+      "home": "Arsenal W",
+      "league": "UEFA Women's Champions League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 76.15578341428315,
+      "away": "Eemdijk",
+      "date": "2026-10-28",
+      "home": "Quick Boys",
+      "league": "KNVB Beker",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7595
+    },
     {
       "avg_p": 60.64815167078816,
       "away": "Bologna",
@@ -160,7 +230,37 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6333
-    },
+    }
+  ],
+  "be_429": 2,
+  "be_cached": 12,
+  "be_cooling_down": true,
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "cache_only": 12,
+  "candidate_fixtures": 36,
+  "captured_at": "2026-10-28T01:14:41.536002+00:00",
+  "date": "2026-10-28",
+  "deferred_fixtures": 13,
+  "errors": [],
+  "fixtures_with_rows": 18,
+  "market_budget_stop": false,
+  "market_requests": 43,
+  "match_detail": {
+    "bookmakers": 285,
+    "challenge_pages": 0,
+    "fixtures": 18,
+    "market_rows": 737,
+    "markets": 105,
+    "named_rows": 737,
+    "standings_rows": 0,
+    "with_h2h": 0,
+    "with_last_results": 0,
+    "with_standings": 0
+  },
+  "max_fixtures": 12,
+  "network_attempted": 11,
+  "quoted_fixtures": [
     {
       "avg_p": 88.24742268041238,
       "away": "NAC Breda",
@@ -182,41 +282,11 @@
       "w_score": 0.7595
     },
     {
-      "avg_p": 82.2598556357579,
-      "away": "Real Betis",
-      "date": "2026-10-28",
-      "home": "Navalcarnero",
-      "league": "Copa Del Rey",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.7595
-    },
-    {
       "avg_p": 81.26391982182628,
       "away": "N\u00fcrnberg",
       "date": "2026-10-28",
       "home": "Bayer 04 Leverkusen",
       "league": "DFB Pokal",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
-    },
-    {
-      "avg_p": 78.09015087620654,
-      "away": "SL Benfica W",
-      "date": "2026-10-28",
-      "home": "Arsenal W",
-      "league": "UEFA Women's Champions League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
-    },
-    {
-      "avg_p": 76.15578341428315,
-      "away": "Eemdijk",
-      "date": "2026-10-28",
-      "home": "Quick Boys",
-      "league": "KNVB Beker",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7595
@@ -240,10 +310,140 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 0.7595
+    },
+    {
+      "avg_p": 74.72872388126626,
+      "away": "SC Heerenveen",
+      "date": "2026-10-28",
+      "home": "Excelsior Maassluis",
+      "league": "KNVB Beker",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 73.41509433962263,
+      "away": "Chapecoense",
+      "date": "2026-10-28",
+      "home": "Bragantino",
+      "league": "Serie A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 70.89921877441331,
+      "away": "Dundee United",
+      "date": "2026-10-28",
+      "home": "Celtic",
+      "league": "Scottish Premiership",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5359
+    },
+    {
+      "avg_p": 70.25339043540329,
+      "away": "Pohang Steelers",
+      "date": "2026-10-28",
+      "home": "Kashima Antlers",
+      "league": "AFC Champions League Elite",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 69.78978407685723,
+      "away": "Inter",
+      "date": "2026-10-28",
+      "home": "Venezia",
+      "league": "Serie A",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 68.77521085441877,
+      "away": "FC Dordrecht",
+      "date": "2026-10-28",
+      "home": "Genemuiden",
+      "league": "KNVB Beker",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 61.91017438213524,
+      "away": "VfL Wolfsburg",
+      "date": "2026-10-28",
+      "home": "SC Freiburg",
+      "league": "DFB Pokal",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5359
+    },
+    {
+      "avg_p": 60.48145168922116,
+      "away": "FC Cincinnati",
+      "date": "2026-10-28",
+      "home": "Inter Miami CF",
+      "league": "MLS",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5359
+    },
+    {
+      "avg_p": 56.51612973511376,
+      "away": "VfB Stuttgart",
+      "date": "2026-10-28",
+      "home": "SC Paderborn 07",
+      "league": "DFB Pokal",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5359
+    },
+    {
+      "avg_p": 82.2598556357579,
+      "away": "Real Betis",
+      "date": "2026-10-28",
+      "home": "Navalcarnero",
+      "league": "Copa Del Rey",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 78.09015087620654,
+      "away": "SL Benfica W",
+      "date": "2026-10-28",
+      "home": "Arsenal W",
+      "league": "UEFA Women's Champions League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 76.15578341428315,
+      "away": "Eemdijk",
+      "date": "2026-10-28",
+      "home": "Quick Boys",
+      "league": "KNVB Beker",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7595
+    },
+    {
+      "avg_p": 60.64815167078816,
+      "away": "Bologna",
+      "date": "2026-10-28",
+      "home": "AC Milan",
+      "league": "Serie A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6333
     }
   ],
-  "requests": 68,
-  "rows": 27,
+  "requests": 65,
+  "rows": 54,
   "schema": 1,
   "status": "ok"
 }
