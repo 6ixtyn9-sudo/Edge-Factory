@@ -2546,6 +2546,58 @@
       "source_cache_key": "localdata-v2-39897962348",
       "verification_basis": "Published Git financial snapshot; cache artifact download unavailable. Cache must match this exact financial hash.",
       "reason": "Supersede obsolete October 23 draft only; identical bank and settled history, no other-date positions or locks changed."
+    },
+    "pending_cached_freeze": {
+      "status": "approved",
+      "date": "2026-10-28",
+      "source_run_id": "40647275279",
+      "source_head": "6047e60474c67984d573baa50a0ddd05a3c614a4",
+      "frozen_minute": "2026-10-28T10:13",
+      "card": [
+        [
+          [
+            "Excelsior Maassluis vs SC Heerenveen",
+            "over",
+            "match_over_25",
+            1.4
+          ],
+          [
+            "Fulham vs Crystal Palace",
+            "under",
+            "match_under_35",
+            1.5
+          ]
+        ],
+        [
+          [
+            "Genoa vs Juventus",
+            "over",
+            "match_over_15",
+            1.36
+          ],
+          [
+            "Genemuiden vs FC Dordrecht",
+            "over",
+            "match_over_25",
+            1.36
+          ]
+        ],
+        [
+          [
+            "Aberdeen vs Falkirk FC",
+            "under",
+            "match_under_35",
+            1.4
+          ],
+          [
+            "Arsenal W vs SL Benfica W",
+            "under",
+            "match_under_45",
+            1.4
+          ]
+        ]
+      ],
+      "reason": "Operator-authorized recovery of the saved frozen card after receipt-relocation rebase conflict; no bank/history edits or recut."
     }
   },
   "enh_floor_table": {

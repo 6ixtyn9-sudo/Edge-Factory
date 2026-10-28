@@ -23,7 +23,8 @@ from typing import Any
 # The workflow invokes this script directly without PYTHONPATH.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from edgefactory.util import (ticket_receipt_files, ticket_receipt_path, ticket_receipt_bytes,
-                              compact_ticket_receipts, write_ticket_receipt, encode_ticket_receipt)
+                              compact_ticket_receipts, write_ticket_receipt, encode_ticket_receipt,
+                              read_ticket_receipt, freeze_timestamp_matches)
 
 APPEND_ONLY_JSONL_IDS = {
     "localdata/phase5_shadow/rows.jsonl": "row_id",
@@ -365,6 +366,108 @@ def _reviewed_financial_projection(repo, state):
     return projected
 
 
+def _approved_cached_freeze(repo, relative, head, cache):
+    """Recover ONLY a HEAD-authorized unpublished freeze, not arbitrary cache.
+
+    This explicit one-shot approval is financial authority. Receipt hashes and
+    run provenance corroborate its exact card; they never authorize a bank or
+    history change. All ordinary unapproved cache conflicts still fail closed.
+    """
+    approval = (head.get("integrity_recovery") or {}).get("pending_cached_freeze")
+    if not approval or approval.get("status") != "approved":
+        return None
+    day = approval["date"]
+    head_locks, cache_locks = head.get("frozen_by_date") or {}, cache.get("frozen_by_date") or {}
+    if day in head_locks:
+        return None
+    if day not in cache_locks:
+        raise EvidenceMergeError(f"approved recovery requires the saved freeze for {day}; "
+                                 "cache is missing/stale, refusing to rebuild")
+    try:
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        import copy
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from auto_tickets import effective_bank, ticket_card_identity
+        lane = "main" if relative == MAIN_STATE else "enh"
+        prefix = "auto_tickets" if lane == "main" else "autobets_enh_tickets"
+        lock = cache_locks[day]
+        stamp = datetime.fromisoformat(lock["frozen_at"])
+        if (lock.get("final") is not True or stamp.utcoffset() is None
+                or stamp.astimezone(ZoneInfo("Africa/Johannesburg")).strftime("%Y-%m-%dT%H:%M")
+                != approval["frozen_minute"]
+                or day in (head.get("superseded_by_date") or {})
+                or (repo / "localdata" / f"{prefix}_{day}.frozen").exists()
+                or b"FROZEN AT " in (_head_blob(repo, f"localdata/{prefix}_{day}.txt") or b"")):
+            raise ValueError("freeze lock is outside the approved recovery")
+        if {d: v for d, v in cache_locks.items() if d != day} != head_locks:
+            raise ValueError("other freeze locks changed")
+        for field in ("base_pct", "bank", "cycle_base", "history", "events", "superseded_by_date",
+                      "unplaced_enhancement_resets", "settled_enhancement_reconciliations"):
+            if cache.get(field) != head.get(field):
+                raise ValueError(f"unapproved financial change: {field}")
+        outside = lambda state: [s for s in state.get("open_slips", []) if s.get("date") != day]
+        if outside(cache) != outside(head):
+            raise ValueError("other open positions changed")
+        slips = [s for s in cache.get("open_slips", []) if s.get("date") == day]
+        if len(slips) != 1 or not slips[0].get("accas"):
+            raise ValueError("missing or duplicate approved frozen slip")
+        plan = slips[0]["accas"]
+        inventory = [[[l["match"], l["pick"], l["market"], l["odds"]]
+                      for l in a["legs"]] for a in plan]
+        if inventory != approval["card"]:
+            raise ValueError("card differs from the explicitly approved run output")
+        free = effective_bank(head, exclude_date=day)
+        expected = round(free * .25 / len(plan), 4)
+        if (not math.isfinite(free) or free <= 0
+                or any(not math.isfinite(float(a["stake_pct"])) or a["stake_pct"] <= 0
+                       or abs(a["stake_pct"] - expected) > .0002
+                       or abs(a["odds"] - round(math.prod(l["odds"] for l in a["legs"]), 2)) > .0001
+                       for a in plan)
+                or not math.isfinite(slips[0]["staked_pct"])
+                or abs(slips[0]["staked_pct"] - sum(a["stake_pct"] for a in plan)) > .0002):
+            raise ValueError("frozen stakes do not reconcile to the unchanged bank/day cap")
+        receipts = []
+        for path in ticket_receipt_files(repo / "localdata", prefix):
+            if path.name.removesuffix(".gz") != f"{prefix}_{day}_decision.json":
+                continue
+            payload = read_ticket_receipt(path)
+            digest = payload.pop("sha256")
+            if hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                                         allow_nan=False).encode()).hexdigest() != digest:
+                raise ValueError("recovery receipt hash mismatch")
+            if payload.get("status") != "frozen":
+                continue  # An older draft alias is not the recovered freeze.
+            context, provenance = payload["context"], payload["execution_provenance"]
+            identity = ticket_card_identity(plan)
+            equivalent = lambda a, b: json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+            if (payload.get("schema") != 1 or context["lane"] != lane or context["date"] != day
+                    or str(provenance.get("run_id")) != str(approval["source_run_id"])
+                    or provenance.get("checkout_head_at_capture") != approval["source_head"]
+                    or not freeze_timestamp_matches(lock["frozen_at"], context["build_at"])
+                    or context["bank_total"] != head["bank"] or abs(context["bank_eff"] - free) > .0002
+                    or not equivalent(identity, ticket_card_identity(payload["plan"]))
+                    or not equivalent(identity, payload["card_identity"])):
+                raise ValueError("frozen receipt does not corroborate the approved state/run")
+            receipts.append(digest)
+        if not receipts or len(set(receipts)) != 1:
+            raise ValueError("missing or divergent frozen recovery receipts")
+        text = (repo / "localdata" / f"{prefix}_{day}.txt").read_text()
+        footer = f"FROZEN AT {stamp.astimezone(ZoneInfo('Africa/Johannesburg')):%H:%M} - FINAL"
+        if footer not in text or any(not any(l["match"] in line and f"@ {l['odds']:.2f}" in line
+                                            for line in text.splitlines()) for a in plan for l in a["legs"]):
+            raise ValueError("saved frozen text does not match the recovered positions")
+        retained = copy.deepcopy(head)
+        retained.update(open_slips=copy.deepcopy(cache["open_slips"]), frozen_by_date=copy.deepcopy(cache_locks))
+        retained["integrity_recovery"]["pending_cached_freeze"].update(
+            status="recovered", receipt_sha256=receipts[0], recovered_financial_sha256=_financial_fingerprint(retained))
+        print(f"PHASE5_PERSISTENCE validated_approved_cached_freeze lane={lane} date={day} "
+              f"source_run={approval['source_run_id']}; bank/history unchanged")
+        return json.dumps(retained, indent=2).encode()
+    except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
+        raise EvidenceMergeError(f"approved cached freeze recovery refused: {exc}") from exc
+
+
 def _retain_financial_state(repo, relative=ENH_STATE):
     """Cache is never allowed to reset/truncate durable ticket finance.
 
@@ -377,6 +480,7 @@ def _retain_financial_state(repo, relative=ENH_STATE):
     head = json.loads(blob)
     path = repo / relative
     if not path.exists():
+        _approved_cached_freeze(repo, relative, head, {})  # Pending recovery must not silently rebuild.
         return json.dumps(_reviewed_financial_projection(repo, head), indent=2).encode()
     cache = json.loads(path.read_bytes())
     head = _reviewed_financial_projection(repo, head)
@@ -387,6 +491,9 @@ def _retain_financial_state(repo, relative=ENH_STATE):
         bank = state.get("bank")
         if isinstance(bank, bool) or not isinstance(bank, (int, float)) or not math.isfinite(bank):
             raise EvidenceMergeError("non-finite enhancement bank")
+    approved = _approved_cached_freeze(repo, relative, head, cache)
+    if approved is not None:
+        return approved
     # A committed correction is not append-only (e.g. replacing a mistakenly
     # settled draft with the actually placed ticket). Only an explicit HEAD
     # receipt binding BOTH exact financial snapshots can supersede that cache.
@@ -549,7 +656,7 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
                         state_blob = _run(repo, "show", f"HEAD:{state_path}").stdout
                     state = json.loads(state_blob)
                     freeze = (state.get("frozen_by_date") or {}).get(day) or {}
-                    if freeze.get("frozen_at") != candidate["context"]["build_at"]:
+                    if not freeze_timestamp_matches(freeze.get("frozen_at"), candidate["context"]["build_at"]):
                         raise ValueError("cached receipt is not the independently retained financial freeze")
                 if canonical in retained:
                     previous = json.loads(ticket_receipt_bytes(repo / canonical, raw=retained[canonical]))
@@ -579,6 +686,19 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     # Validate BOTH lanes before checkout/clean mutates any restored evidence.
     financial_blobs = {relative: _retain_financial_state(repo, relative)
                        for relative in (ENH_STATE, MAIN_STATE)}
+    # Save original human cards before checkout, only after BOTH lanes passed
+    # the explicit recovery checks. Never replace a committed frozen card.
+    recovered_cards = {}
+    for relative, blob in financial_blobs.items():
+        if blob is None:
+            continue
+        state = json.loads(blob)
+        record = (state.get("integrity_recovery") or {}).get("pending_cached_freeze") or {}
+        committed = json.loads(_head_blob(repo, relative) or b"{}")
+        if record.get("status") == "recovered" and record["date"] not in (committed.get("frozen_by_date") or {}):
+            prefix = "auto_tickets" if relative == MAIN_STATE else "autobets_enh_tickets"
+            card = f"localdata/{prefix}_{record['date']}.txt"
+            recovered_cards[card] = (repo / card).read_bytes()
     decision_blobs = _retain_ticket_decisions(repo, financial_blobs)
     try:
         merge_counts = merge_cached_phase5_evidence(repo)
@@ -601,6 +721,8 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
             )
         restored.append(relative)
 
+    for relative, blob in recovered_cards.items():
+        _atomic_write(repo / relative, blob)
     for relative, blob in decision_blobs.items():
         _atomic_write(repo / relative, blob)
 

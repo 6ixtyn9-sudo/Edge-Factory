@@ -984,3 +984,19 @@ def compact_ticket_receipts(localdata):
             source.unlink()
             moved += 1
     return moved
+
+
+def freeze_timestamp_matches(frozen_at, build_at):
+    """Freeze records store seconds; captured build times may retain microseconds.
+
+    Both must be timezone-aware. Never treat a different second (or missing
+    timestamp) as the same freeze, and keep fractional legacy locks exact.
+    """
+    try:
+        frozen = datetime.fromisoformat(frozen_at)
+        built = datetime.fromisoformat(build_at)
+        return (frozen.utcoffset() is not None and built.utcoffset() is not None
+                and (frozen == built or (frozen.microsecond == 0
+                                        and frozen == built.replace(microsecond=0))))
+    except (TypeError, ValueError):
+        return False
