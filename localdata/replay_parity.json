@@ -42,7 +42,9 @@
       "state_error": null
     },
     "main": {
-      "counts": {},
+      "counts": {
+        "MATCH": 1
+      },
       "missing_receipt_days": [
         "2026-08-27",
         "2026-08-28",
@@ -105,7 +107,22 @@
         "2026-10-27"
       ],
       "receipt_conflicts": [],
-      "receipts": [],
+      "receipts": [
+        {
+          "accas": 2,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 358.4663350000001,
+          "committed_excluding_target": 0.0,
+          "date": "2026-10-28",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "file": "auto_tickets_2026-10-28_decision.json",
+          "free_bank": 358.4663350000001,
+          "ledger": "NOT_COMMITTED",
+          "settlement": "UNAVAILABLE",
+          "status": "MATCH"
+        }
+      ],
       "state_error": null
     }
   },

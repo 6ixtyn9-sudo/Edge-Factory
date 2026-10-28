@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 358.4663350000001,
   "cycle_base": 203.9865280000001,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-10-28",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Bragantino vs Chapecoense",
+              "pick": "HOME",
+              "prob": 0.7341509433962262,
+              "odds": 1.31,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-28",
+                "Bragantino",
+                "Chapecoense"
+              ]
+            },
+            {
+              "match": "SC Freiburg vs VfL Wolfsburg",
+              "pick": "HOME",
+              "prob": 0.6191017438213524,
+              "odds": 1.53,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-10-28",
+                "SC Freiburg",
+                "VfL Wolfsburg"
+              ]
+            }
+          ],
+          "odds": 2.0,
+          "stake_pct": 44.8083
+        },
+        {
+          "legs": [
+            {
+              "match": "Venezia vs Inter",
+              "pick": "AWAY",
+              "prob": 0.6978978407685723,
+              "odds": 1.36,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-28",
+                "Venezia",
+                "Inter"
+              ]
+            },
+            {
+              "match": "Genemuiden vs FC Dordrecht",
+              "pick": "AWAY",
+              "prob": 0.6877521085441878,
+              "odds": 1.35,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-28",
+                "Genemuiden",
+                "FC Dordrecht"
+              ]
+            }
+          ],
+          "odds": 1.84,
+          "stake_pct": 44.8083
+        }
+      ],
+      "staked_pct": 89.6166
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
