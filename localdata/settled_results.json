@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_at": "2026-10-28T03:04:40",
+ "generated_at": "2026-10-28T06:05:21",
  "window_days": 90,
  "rows": [
   {
@@ -15125,6 +15125,15 @@
   },
   {
    "date": "2026-08-01",
+   "home": "Gold Coast U23",
+   "away": "Gold Coast Knights U23",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-01",
    "home": "Gold Coast United",
    "away": "Gold Coast Knights",
    "hs": 1,
@@ -15139,15 +15148,6 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-01",
-   "home": "Gold Coast W",
-   "away": "Gold Coast Knights W",
-   "hs": 0,
-   "gs": 1,
-   "outcome": "away",
    "src": "betexplorer_settled"
   },
   {
@@ -33224,11 +33224,11 @@
   },
   {
    "date": "2026-08-02",
-   "home": "Rockdale Ilinden",
-   "away": "Manly Utd",
+   "home": "Rockdale Ilinden U20",
+   "away": "Manly Utd U20",
    "hs": 1,
-   "gs": 1,
-   "outcome": "draw",
+   "gs": 0,
+   "outcome": "home",
    "src": "betexplorer_settled"
   },
   {
@@ -60557,21 +60557,21 @@
   },
   {
    "date": "2026-08-08",
-   "home": "Eastern Suburbs",
-   "away": "Wynnum Wolves",
-   "hs": 0,
-   "gs": 0,
-   "outcome": "draw",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-08",
    "home": "Eastern Suburbs (NZL)",
    "away": "Fencibles United",
    "hs": 4,
    "gs": 1,
    "outcome": "home",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-08-08",
+   "home": "Eastern Suburbs U23",
+   "away": "Wynnum Wolves U23",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
+   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-08",
@@ -67920,7 +67920,7 @@
   {
    "date": "2026-08-08",
    "home": "Mjallby AIF",
-   "away": "Elfsborg",
+   "away": "Elfsborg W",
    "hs": 0,
    "gs": 1,
    "outcome": "away",
@@ -71718,20 +71718,20 @@
   {
    "date": "2026-08-08",
    "home": "SD Raiders",
-   "away": "WS Wanderers U21",
-   "hs": 3,
-   "gs": 0,
-   "outcome": "home",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-08",
-   "home": "SD Raiders",
    "away": "WS Wanderers Youth",
    "hs": 3,
    "gs": 0,
    "outcome": "home",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-08-08",
+   "home": "SD Raiders U20",
+   "away": "WS Wanderers U20",
+   "hs": 2,
+   "gs": 0,
+   "outcome": "home",
+   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-08",
@@ -106620,15 +106620,6 @@
   {
    "date": "2026-08-14",
    "home": "Galatasaray",
-   "away": "Corum",
-   "hs": 2,
-   "gs": 2,
-   "outcome": "draw",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-14",
-   "home": "Galatasaray",
    "away": "Corumspor",
    "hs": 2,
    "gs": 2,
@@ -106661,6 +106652,15 @@
    "gs": 2,
    "outcome": "draw",
    "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-08-14",
+   "home": "Galatasaray U19",
+   "away": "Corum U19",
+   "hs": 9,
+   "gs": 1,
+   "outcome": "home",
+   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-14",
@@ -193208,10 +193208,10 @@
   },
   {
    "date": "2026-08-22",
-   "home": "UNSW U20",
-   "away": "Manly Utd U20",
-   "hs": 2,
-   "gs": 3,
+   "home": "UNSW",
+   "away": "Manly Utd",
+   "hs": 0,
+   "gs": 2,
    "outcome": "away",
    "src": "betexplorer_settled"
   },
@@ -243320,21 +243320,21 @@
   },
   {
    "date": "2026-08-29",
-   "home": "Gaziantep",
-   "away": "Rizespor",
-   "hs": 1,
-   "gs": 2,
-   "outcome": "away",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-08-29",
    "home": "Gaziantep FK",
    "away": "Rizespor",
    "hs": 1,
    "gs": 2,
    "outcome": "away",
    "src": "statarea_settled"
+  },
+  {
+   "date": "2026-08-29",
+   "home": "Gaziantep U19",
+   "away": "Rizespor U19",
+   "hs": 3,
+   "gs": 2,
+   "outcome": "home",
+   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-29",
@@ -274343,10 +274343,10 @@
   },
   {
    "date": "2026-08-30",
-   "home": "Sydney Utd",
-   "away": "St George Saints",
-   "hs": 6,
-   "gs": 0,
+   "home": "Sydney Utd U20",
+   "away": "St George Saints U20",
+   "hs": 8,
+   "gs": 4,
    "outcome": "home",
    "src": "betexplorer_settled"
   },
@@ -277296,6 +277296,15 @@
   {
    "date": "2026-08-31",
    "home": "Besiktas",
+   "away": "Corum",
+   "hs": 6,
+   "gs": 2,
+   "outcome": "home",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-31",
+   "home": "Besiktas",
    "away": "Corumspor",
    "hs": 6,
    "gs": 2,
@@ -277319,15 +277328,6 @@
    "gs": 2,
    "outcome": "home",
    "src": "forebet_settled"
-  },
-  {
-   "date": "2026-08-31",
-   "home": "Besiktas U19",
-   "away": "Corum U19",
-   "hs": 2,
-   "gs": 1,
-   "outcome": "home",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-31",
@@ -541463,9 +541463,9 @@
   },
   {
    "date": "2026-10-21",
-   "home": "Guadalajara-Chivas (w)",
-   "away": "Necaxa (w)",
-   "hs": 7,
+   "home": "Guadalajara-Chivas",
+   "away": "Necaxa",
+   "hs": 1,
    "gs": 0,
    "outcome": "home",
    "src": "statarea_settled"
@@ -565709,6 +565709,15 @@
   },
   {
    "date": "2026-10-27",
+   "home": "Cucuta",
+   "away": "Rionegro FC",
+   "hs": 0,
+   "gs": 2,
+   "outcome": "away",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-10-27",
    "home": "C\u00facuta Deportivo",
    "away": "Rionegro \u00c1guilas",
    "hs": 0,
@@ -565742,6 +565751,24 @@
    "gs": 3,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-27",
+   "home": "Deportivo Tachir",
+   "away": "Monagas SC",
+   "hs": 2,
+   "gs": 0,
+   "outcome": "home",
+   "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-27",
+   "home": "Deportivo T\u00e1chira",
+   "away": "Monagas",
+   "hs": 2,
+   "gs": 0,
+   "outcome": "home",
+   "src": "scoutingstats_settled"
   },
   {
    "date": "2026-10-27",
@@ -566321,6 +566348,15 @@
   },
   {
    "date": "2026-10-27",
+   "home": "Libertad",
+   "away": "Independiente F.B.C.",
+   "hs": 3,
+   "gs": 1,
+   "outcome": "home",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-10-27",
    "home": "Livyi Bereh",
    "away": "Veres Rivne",
    "hs": 0,
@@ -566660,6 +566696,15 @@
    "gs": 2,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-10-27",
+   "home": "Penarol",
+   "away": "Montevideo City Torque",
+   "hs": 0,
+   "gs": 2,
+   "outcome": "away",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-10-27",
@@ -569366,6 +569411,13 @@
    "date": "2026-10-27",
    "home": "Larne",
    "away": "Limavady United",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-10-27",
+   "home": "Southport",
+   "away": "Macclesfield",
    "disposition": "POSTPONED",
    "src": "source_status:scoutingstats"
   },
