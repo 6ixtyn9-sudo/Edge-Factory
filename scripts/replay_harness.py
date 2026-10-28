@@ -76,7 +76,7 @@ import random
 import re
 import sys
 import unicodedata
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import date, datetime
 from pathlib import Path
 
@@ -786,15 +786,11 @@ def _slate_rows(root, day):
     key = (str(root or at.ROOT), str(day))
     if key not in _SLATE_CACHE:
         base = (root or at.ROOT) / "localdata"
-        rows: list = []
-        for name in (f"picks_morning_{day}.json", f"picks_{day}.json"):
-            try:
-                data = json.loads((base / name).read_text())
-            except (OSError, ValueError):
-                continue
-            if isinstance(data, list) and data:
-                rows = data
-                break
+        # Share the archive loader's morning-authority / late-addition rule.
+        # Do NOT splice later ENH models into an earlier parent. This is still
+        # an archive approximation, not proof of the freeze-time generation.
+        from audit_recent_picks import load_archived_picks_with_receipt
+        rows, _ = load_archived_picks_with_receipt(day, day, localdata=base)
         _SLATE_CACHE[key] = rows
     return _SLATE_CACHE[key]
 
@@ -832,17 +828,25 @@ def enh_ml_probability(root, day, rec):
     return enhancement_ml_probability(row, rec.get("market"))
 
 
+def _enh_score_key(rec):
+    context = rec.get("price_context") or {}
+    return (str(rec.get("date") or "")[:10], str(context.get("contract_id") or ""),
+            str(rec.get("market") or ""), _fold_name(str(rec.get("home") or "")),
+            _fold_name(str(rec.get("away") or "")))
+
+
 def enh_ml_coverage(records, root=None, since=None):
     """``(scores, stats)``: the live ML score per settled record, and its coverage.
 
-    ``scores`` is keyed by ``(day, contract_id, market)`` -- the identity a
+    ``scores`` is keyed by ``(day, contract_id, market, home, away)`` -- the identity a
     registry record and a card leg share. A leg with no model data is simply
     absent, because the live lane leaves ``ml_rank_probability`` unset in the
     same case and ranks it in the cohort group.
     """
-    scores: dict[tuple[str, str, str], float] = {}
+    scores, archive_rows = {}, {}
     stats = {"legs": 0, "scored": 0, "days": set(), "scored_days": set(),
-             "first_day": None, "last_day": None}
+             "first_day": None, "last_day": None, "schemas": Counter(), "provenance": [],
+             "decision_time_status": "UNPROVEN_ARCHIVE; use decision receipts for matched evaluation"}
     for rec in records:
         day = str(rec.get("date") or "")[:10]
         if not day or (since and day < since):
@@ -854,9 +858,21 @@ def enh_ml_coverage(records, root=None, since=None):
             continue
         stats["scored"] += 1
         stats["scored_days"].add(day)
-        key = (day, str((rec.get("price_context") or {}).get("contract_id") or ""),
-               str(rec.get("market") or ""))
-        scores[key] = score
+        row = archived_parent(root, day, rec) or {}
+        model = (row.get("statistical_profile") or {}).get("ml_model") or {}
+        schema = model.get("schema") or "unavailable"
+        stats["schemas"][schema] += 1
+        if day not in archive_rows:
+            from audit_recent_picks import _load_archive_rows
+            base = (root or at.ROOT) / "localdata"
+            archive_rows[day] = [(name, _load_archive_rows(base / name, day)) for name in
+                                (f"picks_morning_{day}.json", f"picks_{day}.json")]
+        source = next((name for name, rows in archive_rows[day] if row in rows), None)
+        stats["provenance"].append(dict(date=day, home=rec.get("home"), away=rec.get("away"),
+            market=rec.get("market"), schema=schema, model_key=model.get("model_key"),
+            source_archive=source, built_at_utc=row.get("built_at_utc"),
+            decision_time_status="UNPROVEN_ARCHIVE"))
+        scores[_enh_score_key(rec)] = score
     if stats["scored_days"]:
         stats["first_day"] = min(stats["scored_days"])
         stats["last_day"] = max(stats["scored_days"])
@@ -936,9 +952,7 @@ def enh_day_plans(records, floors, *, stake_frac=None, stake_mode=None,
                 rank_prob = evidence["rate"]
             ml_score = None
             if ml_scores is not None:
-                ml_score = ml_scores.get((day, str((rec.get("price_context") or {})
-                                                   .get("contract_id") or ""),
-                                          str(rec["market"])))
+                ml_score = ml_scores.get(_enh_score_key(rec))
             pool.append({"match": rec.get("match") or f"{home} vs {away}",
                          "pick": rec["market"], "prob": float(rank_prob),
                          "odds": rec["price"], "hit": bool(rec["hit"]),
@@ -1104,8 +1118,8 @@ def cmd_enh_parity(records, *, since=None, until=None, root=None):
     floors = _root_floors(records)
     ml_scores, stats = enh_ml_coverage(records, root=root)
     # Both arms run the LIVE eligibility (supported admission); the only
-    # difference between them is the ordering input, so a card change can only
-    # come from the ML selector.
+    # input change is ordering, but ML also engages capacity rescue. This is
+    # a legacy approximation, not an isolated causal test of model quality.
     arms = {
         "cohort order (pre-ML basis)": enh_cards_for(records, floors, supported=True,
                                                      root=root),
@@ -1113,6 +1127,9 @@ def cmd_enh_parity(records, *, since=None, until=None, root=None):
                                                     root=root, ml_scores=ml_scores),
     }
     print("LEGACY APPROXIMATION — settled registry, incomplete decision-time coverage")
+    print("  model schemas: " + json.dumps(dict(stats['schemas']), sort_keys=True))
+    print("  archive provenance: " + json.dumps(stats['provenance'], sort_keys=True))
+    print("  UNPROVEN_ARCHIVE: no deployed-model or causal attribution; use --decision-parity")
     print("ENH PARITY — replay card vs the lane's own ledger")
     print(f"  ML model coverage: {stats['scored']}/{stats['legs']} settled records "
           f"scored, {len(stats['scored_days'])}/{len(stats['days'])} day(s)"
@@ -1256,7 +1273,12 @@ def cmd_enhancements(args):
         print("ML ENH ordering (LIVE selector, recomputed from the archived slate)")
         print(f"  coverage: {ml_stats['scored']}/{ml_stats['legs']} settled records scored, "
               f"{len(ml_stats['scored_days'])}/{len(ml_stats['days'])} day(s) — {span}")
-        if not ml_stats["scored"]:
+        print("  model schemas: " + json.dumps(dict(ml_stats['schemas']), sort_keys=True))
+        print("  archive provenance: " + json.dumps(ml_stats['provenance'], sort_keys=True))
+        print("  UNPROVEN_ARCHIVE: reconstructed scores are not verified deployed scores.")
+        if len(ml_stats["schemas"]) > 1:
+            print("  MIXED SCHEMAS: pooled ML delta suppressed. Use same-receipt --decision-parity.")
+        elif not ml_stats["scored"]:
             print("  no archived model on any slate in scope: the ML arm cannot be")
             print("  replayed, and every number above is the pre-ML (cohort) basis.")
         else:
@@ -1285,11 +1307,10 @@ def cmd_enhancements(args):
                        if v["bets"] != (base["_days_detail"].get(d) or {}).get("bets")
                        or (v["bets"] and v["hits"] != (base["_days_detail"].get(d) or {}).get("hits"))]
             if changed:
-                print(f"  days whose card or result moved: {', '.join(sorted(changed))}")
+                print(f"  days whose aggregate bet/hit counts moved: {', '.join(sorted(changed))}")
             else:
-                print("  no day's card or result moved: the ML order agrees with the")
-                print("  cohort order on every scored day (ML ~ cohort by construction —")
-                print("  a single-feature logistic on the same avg_p).")
+                print("  aggregate bet/hit counts did not change; that does not establish identical cards.")
+                print("  No structural equivalence or deployed-model uplift is inferred.")
             if len(ml_stats["scored_days"]) < 20:
                 print(f"  CAVEAT: {len(ml_stats['scored_days'])} scored day(s) is a parity")
                 print("  check, NOT an A/B. The ML arm cannot be judged on this sample:")
@@ -3751,6 +3772,131 @@ def _ledger_ticket_core(plan, lane):
     return sorted(cards)
 
 
+def _comparison_leg_key(leg):
+    # No fuzzy name/date join: a missing counterfactual result stays missing.
+    return (str(leg.get("match") or ""), leg.get("market") or at.selection_market(leg),
+            str(leg.get("pick") or "").lower())
+
+
+def enh_decision_comparison(context, prepared, *, history=(), allow_outcomes=False):
+    """Same captured pool/policy, flipped ordering. Read-only, not a causal trial.
+
+    No result resolver or guessed independent joint probability. Only exact
+    known ledger outcomes can grade counterfactual legs; an unselected market
+    with no retained outcome is unavailable, not a loss or zero return.
+    """
+    import copy
+    observations = defaultdict(set)
+    if allow_outcomes:
+        for row in history:
+            if row.get("date") == context["date"]:
+                for acca in row.get("accas", []):
+                    for leg in acca.get("legs", []):
+                        observations[_comparison_leg_key(leg)].add(leg.get("result"))
+    known = {k: next(iter(v)) for k, v in observations.items()
+             if len(v) == 1 and next(iter(v)) in ("win", "loss", "void")}
+    pool = prepared["pool"]
+    scored = [(at.finite_probability(l.get("ml_rank_probability")),
+               at.finite_probability(l.get("prob"))) for l in pool]
+    paired = [(m, c) for m, c in scored if m is not None and c is not None]
+    schemas, models = Counter(), {}
+    for leg in pool:
+        if at.finite_probability(leg.get("ml_rank_probability")) is not None:
+            model = ((leg.get("row") or {}).get("statistical_profile") or {}).get("ml_model") or {}
+            schema = leg.get("ml_model_schema") or model.get("schema") or "unavailable"
+            schemas[schema] += 1
+            key = leg.get("ml_model_key") or model.get("model_key")
+            if key:
+                profile = (leg.get("row") or {}).get("statistical_profile") or {}
+                models[key] = dict(schema=schema, fit_adequacy=profile.get("ml_fit_adequacy"))
+    result = dict(status="UNSETTLED_OR_UNPROVEN — selection comparison only",
+        caveat="Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
+        pool_legs=len(pool), scored_legs=sum(m is not None for m, _ in scored),
+        schemas=dict(schemas), models=models, paired_estimates=len(paired),
+        mean_absolute_disagreement=(sum(abs(m-c) for m,c in paired)/len(paired) if paired else None),
+        model_below_cohort=sum(m<c for m,c in paired), arms={})
+    selections = {}
+    for label, enabled in (("ml_on", True), ("ml_off", False)):
+        alternate = copy.deepcopy(context)
+        alternate["options"]["ml_enabled"] = enabled
+        trace = {}
+        plan = at.plan_ticket_decision(alternate, prepared=prepared, fixture_report=trace)
+        legs = [l for a in plan for l in a["legs"]]
+        selections[label] = {tuple(x) for a in at.ticket_card_identity(plan) for x in a[0]}
+        payouts = []
+        details = []
+        for acca in plan:
+            outcomes = [known.get(_comparison_leg_key(l)) for l in acca["legs"]]
+            graded = copy.deepcopy(acca)
+            for leg, outcome in zip(graded["legs"], outcomes):
+                leg["result"] = outcome
+            try:
+                odds, won = _graded_acca(graded)
+                returned = round(acca["stake_pct"] * odds, 4) if won else 0.
+            except ValueError:
+                returned = None
+            payouts.append(returned)
+            details.append(dict(odds=acca["odds"], stake=acca["stake_pct"],
+                legs=[dict(match=l["match"], market=l.get("market"), pick=l.get("pick"),
+                           odds=l["odds"], cohort=at.finite_probability(l.get("prob")),
+                           model=at.finite_probability(l.get("ml_rank_probability")), result=r)
+                      for l,r in zip(acca["legs"], outcomes)], returned=returned))
+        complete = bool(plan) and all(p is not None for p in payouts)
+        result["arms"][label] = dict(accas=details, card_identity=at.ticket_card_identity(plan),
+            total_stake=sum(a["stake_pct"] for a in plan),
+            mean_acca_odds=sum(a["odds"] for a in plan)/len(plan) if plan else None,
+            resolved_legs=sum(_comparison_leg_key(l) in known for l in legs), selected_legs=len(legs),
+            returned=sum(payouts) if complete else None,
+            outcome_status="RESOLVED" if complete else "INCOMPLETE_OUTCOMES" if allow_outcomes else "UNSETTLED_OR_UNPROVEN",
+            selector_trace=trace)
+    # Full execution identity includes quotes/books, not merely match names.
+    result["execution_leg_symmetric_difference"] = len(selections["ml_on"] ^ selections["ml_off"])
+    result["removed_from_ml_off"] = len(selections["ml_off"] - selections["ml_on"])
+    result["added_to_ml_on"] = len(selections["ml_on"] - selections["ml_off"])
+    result["card_identical"] = (result["arms"]["ml_on"]["card_identity"]
+                                == result["arms"]["ml_off"]["card_identity"])
+    if allow_outcomes:
+        result["status"] = ("RESOLVED" if all(a["outcome_status"] == "RESOLVED"
+                            for a in result["arms"].values()) else "INCOMPLETE_OUTCOMES")
+    return result
+
+
+def _attributed_ml_scores(history):
+    """Fixture-balanced descriptive scores, split by retained schema.
+
+    No sample-size threshold is a claim of calibration or significance. Missing
+    legacy attribution is counted, never reconstructed from today's models.
+    """
+    groups = defaultdict(lambda: defaultdict(list))
+    eligible = missing = 0
+    for row in history:
+        for acca in row.get("accas", []):
+            for leg in acca.get("legs", []):
+                if leg.get("result") not in ("win", "loss"):
+                    continue
+                eligible += 1
+                m = at.finite_probability(leg.get("ml_rank_probability"))
+                c = at.finite_probability(leg.get("prob"))
+                if m is None or c is None or not leg.get("ml_model_key") or not leg.get("ml_model_schema"):
+                    missing += 1
+                    continue
+                y = int(leg["result"] == "win")
+                values = []
+                for probability in (m, c):
+                    p = min(1-1e-15, max(1e-15, probability))
+                    values.extend(((probability-y)**2, -y*math.log(p)-(1-y)*math.log(1-p)))
+                groups[leg["ml_model_schema"]][(row["date"], str(leg.get("match")))].append(values)
+    summary = {}
+    for schema, fixtures in groups.items():
+        per_fixture = [[sum(v[i] for v in records)/len(records) for i in range(4)]
+                       for records in fixtures.values()]
+        means = [sum(v[i] for v in per_fixture)/len(per_fixture) for i in range(4)]
+        summary[schema] = dict(records=sum(len(v) for v in fixtures.values()), fixtures=len(fixtures),
+            model_brier=means[0], model_log_loss=means[1], cohort_brier=means[2], cohort_log_loss=means[3])
+    return dict(eligible_binary_legs=eligible, missing_attribution=missing, by_schema=summary,
+        caveat="Fixture-balanced descriptive scores on booked legs, not independent records or selection uplift; log probabilities clipped at 1e-15. No significance claim.")
+
+
 def decision_parity_report(root=None):
     """Read-only current-code replay of actual decision receipts, both lanes.
 
@@ -3816,6 +3962,7 @@ def decision_parity_report(root=None):
                         == at._decision_digest(payload["card_identity"]))
                 item.update(date=day, status="MATCH" if same else "DIFF",
                             decision_status=payload["status"], accas=len(plan),
+                            execution_provenance=payload.get("execution_provenance"),
                             engine_changed=payload.get("engine_sha256") != hashlib.sha256(Path(at.__file__).read_bytes()).hexdigest(),
                             bank_total=context.get("bank_total"), free_bank=context["bank_eff"],
                             committed_excluding_target=(context["bank_total"] - context["bank_eff"]
@@ -3830,6 +3977,8 @@ def decision_parity_report(root=None):
                         and snapshot["bank"] == context["bank_total"]
                         and abs(at.effective_bank(snapshot, exclude_date=day) - context["bank_eff"]) <= .0002
                         else "DIFF")
+                if lane == "enh":
+                    item["ml_comparison"] = enh_decision_comparison(context, prepared)
                 seen.add(day)
                 if payload["status"] != "frozen":
                     item["ledger"] = "NOT_COMMITTED"
@@ -3849,6 +3998,9 @@ def decision_parity_report(root=None):
                                       == _ledger_ticket_core(payload["plan"], lane) else "DIFF")
                 except (KeyError, TypeError, ValueError):
                     item["ledger"] = "INCOMPLETE_IDENTITY"
+                if lane == "enh" and same and item["ledger"] == "MATCH" and item["freeze_time"] == "MATCH":
+                    item["ml_comparison"] = enh_decision_comparison(
+                        context, prepared, history=history, allow_outcomes=True)
                 # Reconcile retained payouts, not a guessed historical equity
                 # chain: settlement ordering and legacy closes remain untouched.
                 item["open_accas"] = len(opened)
@@ -3873,6 +4025,8 @@ def decision_parity_report(root=None):
                     item["settlement"] = "PENDING"
             except (OSError, KeyError, TypeError, ValueError, IndexError, OverflowError, AttributeError, StopIteration) as exc:
                 item.update(status="INVALID", error=f"{type(exc).__name__}: {exc}")
+        if lane == "enh":
+            lane_report["attributed_scores"] = _attributed_ml_scores(state.get("history", []))
         lane_report["missing_receipt_days"] = sorted(days - seen)
         lane_report["counts"] = dict(Counter(r["status"] for r in lane_report["receipts"]))
     bad = any(r["status"] in ("DIFF", "INVALID") or r["ledger"] in ("DIFF", "MISSING_FREEZE")

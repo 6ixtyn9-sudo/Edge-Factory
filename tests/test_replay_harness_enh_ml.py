@@ -137,8 +137,8 @@ def test_coverage_is_keyed_by_day_contract_and_market(monkeypatch):
                _record("C vs D", "match_over_25", 1.7, contract="pfc_" + "d" * 24)]
     scores, stats = h.enh_ml_coverage(records, root=ROOT)
 
-    assert scores[("2026-10-25", "pfc_" + "c" * 24, "home_over_15")] == 0.6
-    assert ("2026-10-25", "pfc_" + "d" * 24, "match_over_25") not in scores
+    assert scores[h._enh_score_key(records[0])] == 0.6
+    assert h._enh_score_key(records[1]) not in scores
     assert (stats["legs"], stats["scored"]) == (2, 1)
     assert stats["scored_days"] == {"2026-10-25"}
     assert (stats["first_day"], stats["last_day"]) == ("2026-10-25", "2026-10-25")
@@ -230,7 +230,7 @@ def test_the_ml_arm_engages_the_selector(monkeypatch):
     records = [_record("A vs B", "match_over_15", 1.50, cohort=0.80),
                _record("C vs D", "match_over_25", 1.60, cohort=0.75)]
     floors = {"match_over_15": 1.30, "match_over_25": 1.30}
-    scores = {("2026-10-25", "pfc_" + "a" * 24, "match_over_15"): 0.2}
+    scores = {h._enh_score_key(records[0]): 0.2}
 
     h.enh_day_plans(records, floors, ml_scores=scores, root=ROOT)
     assert calls and calls[0]["enhancements"] is True
@@ -273,3 +273,127 @@ def test_the_shipped_selector_recomputes_on_the_real_archived_slate():
             if enh_registry.enhancement_ml_probability(parent, market) is not None:
                 scored += 1
     assert scored > 0, "the retained model must still score the 2026-10-25 slate"
+
+
+def test_coverage_cannot_overwrite_another_fixture_on_the_same_contract(monkeypatch):
+    rows = [_parent('A vs B','match_over_25'), _parent('C vs D','match_over_25')]
+    for row in rows:
+        row['statistical_profile']['ml_model'].update(schema='enh_score_logit_v2',model_key=row['home'])
+    monkeypatch.setattr(h,'_slate_rows',lambda root,day:rows)
+    monkeypatch.setattr(enh_registry,'enhancement_ml_probability',lambda row,market: .2 if row['home']=='A' else .8)
+    records=[_record('A vs B','match_over_25',1.5), _record('C vs D','match_over_25',1.5)]
+    scores,stats=h.enh_ml_coverage(records,root=ROOT)
+    assert scores[h._enh_score_key(records[0])] == .2
+    assert scores[h._enh_score_key(records[1])] == .8
+    assert stats['schemas']=={'enh_score_logit_v2':2}
+    assert all(p['decision_time_status']=='UNPROVEN_ARCHIVE' for p in stats['provenance'])
+    assert [p['model_key'] for p in stats['provenance']] == ['A','C']
+
+
+def test_shared_archive_resolution_keeps_morning_and_late_additions_without_enrichment(tmp_path):
+    import json
+    base=tmp_path/'localdata';base.mkdir()
+    morning=dict(_parent('A vs B','match_over_25'),built_at_utc='2026-10-25T05:00:00Z')
+    later=dict(morning,built_at_utc='2026-10-25T20:00:00Z',recommended_enhancement='match_over_25')
+    addition=_parent('C vs D','match_over_25')
+    (base/'picks_morning_2026-10-25.json').write_text(json.dumps([morning]))
+    (base/'picks_2026-10-25.json').write_text(json.dumps([later,addition]))
+    rows=h._slate_rows(tmp_path,'2026-10-25')
+    assert rows == [morning,addition]
+    assert 'recommended_enhancement' not in rows[0]  # no later model/evidence laundering
+
+
+def _comparison_context():
+    pool=[_pool_leg('A vs B','match_over_25',.9,1.4,.2),
+          _pool_leg('C vs D','match_over_25',.89,1.4,.21),
+          _pool_leg('E vs F','match_over_25',.7,1.4,.9),
+          _pool_leg('G vs H','match_over_25',.69,1.4,.91)]
+    for leg in pool:
+        leg.update(ml_model_schema='enh_score_logit_v2',ml_model_key='key')
+    options=at.ticket_planner_options('enh');options['max_accas']=1
+    return dict(lane='enh',date='2026-10-25',bank_eff=80.,options=options),dict(pool=pool)
+
+
+def test_same_receipt_comparison_is_read_only_and_does_not_guess_counterfactual_results():
+    import copy
+    context,prepared=_comparison_context()
+    before=copy.deepcopy((context,prepared))
+    plan=at.plan_ticket_decision(context,prepared=prepared)
+    history=[dict(date=context['date'],accas=[dict(plan[0],legs=[dict(l,result='win') for l in plan[0]['legs']])])]
+    report=h.enh_decision_comparison(context,prepared,history=history,allow_outcomes=True)
+    on,off=report['arms']['ml_on'],report['arms']['ml_off']
+    assert on['total_stake']==off['total_stake']==10.
+    assert report['removed_from_ml_off']==report['added_to_ml_on']==2
+    assert report['execution_leg_symmetric_difference']==4
+    assert on['returned']==19.6 and off['returned'] is None
+    assert off['resolved_legs']==0 and report['status']=='INCOMPLETE_OUTCOMES'
+    assert 'No joint expected return' in report['caveat']
+    assert report['schemas']=={'enh_score_logit_v2':4}
+    assert (context,prepared)==before
+    draft=h.enh_decision_comparison(context,prepared,history=history)
+    assert draft['arms']['ml_on']['returned'] is None  # no draft money attribution
+
+
+def test_counterfactual_void_and_early_loss_use_existing_grading_rules():
+    context,prepared=_comparison_context()
+    plan=at.plan_ticket_decision(context,prepared=prepared)
+    legs=plan[0]['legs']
+    history=[dict(date=context['date'],accas=[dict(legs=[dict(legs[0],result='win'),dict(legs[1],result='void')])])]
+    result=h.enh_decision_comparison(context,prepared,history=history,allow_outcomes=True)
+    assert result['arms']['ml_on']['returned']==14.
+    history[0]['accas'][0]['legs']=[dict(legs[0],result='loss')]
+    result=h.enh_decision_comparison(context,prepared,history=history,allow_outcomes=True)
+    assert result['arms']['ml_on']['returned']==0.
+    assert result['arms']['ml_off']['returned'] is None
+
+
+def test_descriptive_scoring_reports_schema_fixture_and_missing_denominators():
+    common=dict(match='A vs B',result='win',prob=.7,ml_rank_probability=.8,
+                ml_model_key='k',ml_model_schema='enh_score_logit_v2')
+    rows=[dict(date='2026-10-25',accas=[dict(legs=[common,dict(common,market='btts_yes'),
+         dict(match='C vs D',result='loss')])])]
+    report=h._attributed_ml_scores(rows)
+    assert report['eligible_binary_legs']==3 and report['missing_attribution']==1
+    scores=report['by_schema']['enh_score_logit_v2']
+    assert scores['records']==2 and scores['fixtures']==1
+    assert scores['model_brier']==pytest.approx(.04)
+    assert scores['cohort_brier']==pytest.approx(.09)
+    assert 'No significance claim' in report['caveat']
+
+
+def test_mixed_schema_legacy_report_suppresses_pooled_delta(monkeypatch,capsys):
+    from types import SimpleNamespace
+    records=[_record('A vs B','match_over_25',1.5)]
+    monkeypatch.setattr(h,'enh_records',lambda:records)
+    monkeypatch.setattr(h,'enh_day_growth',lambda *a,**kw:{})
+    summary=dict(days=0,bets=0,hits=0,rate=0,mean_log_growth=0,no_bet_days=0,
+                 firing_days=0,no_bet_freq=0,_days_detail={})
+    monkeypatch.setattr(h,'enh_arm',lambda *a,**kw:dict(summary))
+    stats=dict(first_day='2026-10-25',last_day='2026-10-26',scored=2,legs=2,
+               scored_days={'2026-10-25','2026-10-26'},days={'2026-10-25','2026-10-26'},
+               schemas={'enh_score_logit_v1':1,'enh_score_logit_v2':1},provenance=[])
+    monkeypatch.setattr(h,'enh_ml_coverage',lambda *a,**kw:({},stats))
+    assert h.cmd_enhancements(SimpleNamespace(ab=None,enh_ml=True,root=ROOT))==0
+    output=capsys.readouterr().out
+    assert 'MIXED SCHEMAS: pooled ML delta suppressed' in output
+    assert 'vs supported cohort ordering:' not in output
+    assert 'single-feature logistic on the same avg_p' not in output
+
+
+def test_capacity_rescue_is_visible_in_same_pool_comparison():
+    slots=[('A','X'),('B','X'),('A','Y'),('C','Y'),('B','Z'),('D','Z'),('E','W'),('F','W')]
+    rates=dict(A=.7,B=.7,C=.9,D=.89,E=.85,F=.84)
+    pool=[]
+    for name,book in slots:
+        leg=_pool_leg(f'{name} vs Opponent','match_over_25',rates[name],2.,{'A':.95,'B':.94}.get(name))
+        leg['cohort_evidence']=_evidence(book=book)
+        leg.update(price_book=book,price_source='pinnapi_odds')
+        pool.append(leg)
+    context=dict(lane='enh',date='2026-10-25',bank_eff=100.,options=at.ticket_planner_options('enh'))
+    report=h.enh_decision_comparison(context,dict(pool=pool))
+    on,off=report['arms']['ml_on'],report['arms']['ml_off']
+    assert len(on['accas'])==len(off['accas'])==3
+    assert on['selector_trace']['capacity_rescue_checked'] is True
+    assert on['selector_trace']['capacity_rescue_changed'] is True
+    assert off['selector_trace']['capacity_rescue_checked'] is False
+    assert off['selector_trace']['capacity_rescue_changed'] is False
