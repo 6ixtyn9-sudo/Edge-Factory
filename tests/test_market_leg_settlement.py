@@ -354,3 +354,32 @@ def test_main_cli_runs_verified_regrade_before_settlement(monkeypatch):
     monkeypatch.setattr(sys, 'argv', ['auto_tickets.py', '--settle'])
     assert at.main() == 0
     assert calls == ['regrade', 'settle']
+
+
+def test_settled_enh_evidence_is_retained_not_rederived_or_aliased():
+    import copy
+    leg = dict(_over_leg(), prob=.66, cohort_evidence={'rate': .66, 'n': 308},
+               ml_rank_probability=.67, ml_model_key='retained-key', ml_model_schema='enh_score_logit_v2',
+               ranking_basis='model', floor=1.3, floor_basis='inherited', league='Cup', shadow=False)
+    st = _state([copy.deepcopy(leg)])
+    # Exercise the real history writer, not just its helper.
+    acca = st['open_slips'][0]['accas'][0]
+    acca.update(won=True, returned_pct=round(acca['stake_pct']*acca['odds'],4))
+    acca['legs'][0]['result'] = 'win'
+    at._record_acca_settlement(st, DAY, acca)
+    stored = st['history'][0]['accas'][0]['legs'][0]
+    for key in ('prob','cohort_evidence','ml_rank_probability','ml_model_key','ml_model_schema',
+                'ranking_basis','floor','floor_basis','league','shadow'):
+        assert stored[key] == leg[key]
+    acca['legs'][0]['cohort_evidence']['n'] = 999
+    assert stored['cohort_evidence']['n'] == 308
+    facts=[dict(date=DAY,home='Molde',away='Fredrikstad',hs=0,gs=0,outcome='draw')]
+    at.regrade_verified_settlements(st,verified=facts)
+    once=copy.deepcopy(st)
+    assert at.regrade_verified_settlements(st,verified=facts)==[] and st==once
+    assert st['history'][0]['accas'][0]['legs'][0]['ml_model_key']=='retained-key'
+
+
+def test_legacy_settled_leg_shape_is_unchanged():
+    assert at._settled_leg_record({'match':'A vs B','pick':'home','odds':1.5},'loss') == {
+        'match':'A vs B','pick':'home','odds':1.5,'result':'loss'}

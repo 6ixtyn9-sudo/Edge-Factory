@@ -181,8 +181,14 @@ def test_concurrent_append_conflict_is_unioned_rebased_and_pushed(tmp_path):
     _git(concurrent, "commit", "-qm", "concurrent forward capture")
     _git(concurrent, "push", "-q", "origin", "main")
 
+    executed = _git(repo, "rev-parse", "HEAD").stdout.strip()
     result = _persistence_module().persist_localdata(repo, run_id="runner-capture")
     assert result["status"] == "pushed"
+    message = _git(repo, "log", "-1", "--format=%B").stdout
+    assert f"pre_persist_head={executed}" in message
+    assert "verified_results_sha256=" in message
+    assert "earlier subprocess revisions not inferred" in message
+    assert _git(repo, "rev-parse", "HEAD").stdout.strip() != executed
 
     remote_rows = _git(repo, "show", f"origin/main:{LEDGER}").stdout
     assert remote_rows.count("Seed Home FC") == 1

@@ -204,6 +204,9 @@ def test_rebuild_reprices_fresh_all_market_slate_and_persists_no_plan(setup, reb
     monkeypatch.setattr(history, 'check', lambda root: checks.append(root))
 
     def build(argv, **kwargs):
+        if argv == ['git', 'rev-parse', 'HEAD']:
+            # Additive receipt provenance is a local read, not another rebuild.
+            return SimpleNamespace(returncode=0, stdout='a' * 40 + '\n')
         calls.append(argv)
         assert argv[-2:] == ['--date', DAY]
         assert kwargs['check'] is True

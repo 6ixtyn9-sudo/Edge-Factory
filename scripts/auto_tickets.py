@@ -3442,6 +3442,9 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
     ml_ranking = (enhancements and rank == "prob" and rank_caps is None
                   and (os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1' if ml_enabled is None else ml_enabled)
                   and any(finite_probability(l.get('ml_rank_probability')) is not None for l in pool))
+    if fixture_report is not None and enhancements:
+        fixture_report.update(ml_ranking_active=bool(ml_ranking), capacity_rescue_checked=False,
+                              capacity_rescue_changed=False)
     if ml_ranking:
         # Separate estimands: scored legs first, ordered only against other
         # model scores; cohort-only legs retain their baseline order behind
@@ -3578,6 +3581,9 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
             # not by an invented joint probability or worst-case return.
             chosen = min(candidates, key=pair_order)
             if ml_ranking and remaining in (2, 3):
+                if fixture_report is not None:
+                    fixture_report["capacity_rescue_checked"] = True
+                original_chosen = chosen
                 # ENH builds up to THREE accas; MAX_ACCAS=2 is Main's default.
                 # Keep the original recipe choice whenever it cannot reduce
                 # achievable capacity. Exact flag-off/no-score recipes stay
@@ -3594,6 +3600,8 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
                                 break
                         else:
                             chosen = min(best, key=pair_order)
+                if fixture_report is not None and chosen != original_chosen:
+                    fixture_report["capacity_rescue_changed"] = True
             accas.append(chosen)
             used.update(_fixture_key(leg) for leg in chosen)
     else:
@@ -3837,10 +3845,19 @@ def plan_ticket_decision(context, *, prepared=None, fixture_report=None):
         policy = context["policy"]
         options.update(bucket_weights=policy["pnl_weights"],
                        rank_caps=policy["slice_policy"].get("rank_caps") or None)
+    trace = (fixture_report if fixture_report is not None else
+             {} if context["lane"] == "enh" else None)
     plan = plan_day(prepared["pool"], context["bank_eff"],
-                    fixture_report=fixture_report, **options)
+                    fixture_report=trace, **options)
     if context["lane"] == "enh":
         _carry_lane_evidence(plan, prepared["pool"])
+        # Retain the actual policy used, not a later environment flag.
+        active = trace.get("ml_ranking_active", False)
+        for acca in plan:
+            for leg in acca["legs"]:
+                leg["ml_ordering_active"] = bool(active)
+                leg["ranking_basis"] = ("model" if active and finite_probability(
+                    leg.get("ml_rank_probability")) is not None else "cohort")
     else:
         # Keep execution identity on FUTURE frozen/settled legs too, not just
         # in the replay receipt. Prices, selections and stakes are unchanged.
@@ -3892,6 +3909,27 @@ def _decision_digest(payload):
                                      allow_nan=False).encode()).hexdigest()
 
 
+def ticket_execution_provenance():
+    """Observed checkout/config at receipt capture, not inferred from event SHA."""
+    repo = Path(__file__).resolve().parent.parent
+    try:
+        proc = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo,
+                              capture_output=True, text=True, timeout=5)
+        head = proc.stdout.strip() if proc.returncode == 0 else None
+    except (OSError, subprocess.TimeoutExpired):
+        head = None
+    hashes = {}
+    for name in ("Config/verified_results.json", "src/edgefactory/consensus_contracts.py",
+                 "src/edgefactory/enh_registry.py"):
+        try:
+            hashes[name] = hashlib.sha256((repo / name).read_bytes()).hexdigest()
+        except OSError:
+            hashes[name] = None
+    return dict(checkout_head_at_capture=head, file_sha256=hashes,
+                event_sha=os.environ.get("GITHUB_SHA"), run_id=os.environ.get("GITHUB_RUN_ID"),
+                scope="checkout/files at receipt capture; not proof of earlier subprocess revisions")
+
+
 def write_decision_receipt(context, plan, *, frozen=False):
     """Audit only; never replace frozen evidence or repair a financial state.
 
@@ -3905,7 +3943,7 @@ def write_decision_receipt(context, plan, *, frozen=False):
             if old.get("status") == "frozen":
                 return
         prepared = prepare_ticket_pool(context)
-        payload = dict(schema=1, engine_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        payload = dict(schema=1, execution_provenance=ticket_execution_provenance(), engine_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                        boundary="execution_safe_admission_to_ticket",
                        status="frozen" if frozen and plan else "draft" if plan else "no_bet",
                        context=context, plan=plan,
@@ -3960,9 +3998,13 @@ def _settled_leg_record(leg, result):
            "odds": leg.get("odds"), "result": result}
     if leg.get("label"):
         rec["label"] = leg.get("label")
-    for key in ("market", "price_book", "price_source", "price_at", "price_provenance", "fixture_key"):
+    keys = ["market", "price_book", "price_source", "price_at", "price_provenance", "fixture_key"]
+    if any(k in leg for k in ("cohort_evidence", "ml_rank_probability", "ml_model_key")):
+        keys += ["prob", "cohort_evidence", "ml_rank_probability", "ml_model_key", "ml_model_schema",
+                 "ranking_basis", "ml_ordering_active", "floor", "floor_basis", "league", "shadow", "price_kickoff"]
+    for key in keys:
         if key in leg:
-            rec[key] = leg[key]
+            rec[key] = copy.deepcopy(leg[key])
     return rec
 
 
@@ -5576,6 +5618,8 @@ def enhancement_legs(slate: list[dict], *, registry_root: Path | None = None,
                                     if evidence is not None else None),
             "ml_model_key": (((pick.get('statistical_profile') or {}).get('ml_model') or {})
                              .get('model_key')),
+            "ml_model_schema": (((pick.get('statistical_profile') or {}).get('ml_model') or {})
+                                .get('schema')),
             "price": price,
             "price_book": pick.get("enhancement_price_book"),
             "price_source": pick.get("enhancement_price_source"),
@@ -5717,6 +5761,7 @@ def enhancement_pool(legs: list[dict]) -> list[dict]:
             "prob": float(prob),
             "ml_rank_probability": leg.get("ml_rank_probability"),
             "ml_model_key": leg.get("ml_model_key"),
+            "ml_model_schema": leg.get("ml_model_schema"),
             "odds": leg.get("price"),
             "row": leg.get("row") or {},
             "cohort_evidence": leg.get("cohort_evidence"),
@@ -5763,7 +5808,7 @@ def _carry_lane_evidence(plan: list[dict], pool: list[dict]) -> None:
                 meta = by_key.get((str(leg.get("match")), str(leg.get("pick")), leg.get("odds")))
             if not meta:
                 continue
-            for key in ("cohort_evidence", "ml_rank_probability", "ml_model_key",
+            for key in ("prob", "cohort_evidence", "ml_rank_probability", "ml_model_key", "ml_model_schema",
                         "market", "label", "floor", "floor_basis", "league",
                         "price_book", "price_source", "price_at", "price_kickoff",
                         "price_provenance", "shadow"):
@@ -5874,6 +5919,17 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
                     detail = f" @ {l['odds']:.2f} (parent cohort {rate:.0%}, n={evidence['n']}; not fixture probability)"
                 else:
                     detail = f" @ {l['odds']:.2f} (realized evidence unavailable)"
+                basis = l.get("ranking_basis")
+                score = finite_probability(l.get("ml_rank_probability"))
+                if basis == "model" and score is not None:
+                    detail += (f" (rank: model {score:.3f} [{l.get('ml_model_schema') or 'schema unavailable'} "
+                               f"{str(l.get('ml_model_key') or 'key unavailable')[:12]}]; ordering only)")
+                elif basis == "cohort":
+                    detail += (" (rank: cohort in unscored group; scored candidates rank first)"
+                               if l.get("ml_ordering_active") else
+                               " (rank: cohort; model ordering not used)")
+                else:
+                    detail += " (ranking provenance unavailable)"
                 lines.append(f"   {str(l.get('match')):46s} {l.get('label')}{detail}")
             lines.append("")
     else:
@@ -5898,6 +5954,18 @@ def render_enhancement_tickets(st: dict, target: str, legs: list[dict],
         if eligible >= LEGS_PER_ACCA:
             lines.append("No complete same-book/source acca on distinct fixtures; no joint probability estimated.")
         lines.append("")
+    if plan:
+        model_legs = [l for a in plan for l in a["legs"] if l.get("ranking_basis") == "model"]
+        if model_legs:
+            schemas = sorted({l.get("ml_model_schema") or "schema unavailable" for l in model_legs})
+            keys = {l["ml_model_key"] for l in model_legs if l.get("ml_model_key")}
+            lines.append(f"ML-ACTIVE on card: {', '.join(schemas)}; retained model keys={len(keys)}; ordering only, not admission evidence")
+        elif any(l.get("ml_ordering_active") for a in plan for l in a["legs"]):
+            lines.append("ML-ACTIVE pool policy; card uses only cohort-key legs from the unscored group")
+        elif all(l.get("ranking_basis") == "cohort" for a in plan for l in a["legs"]):
+            lines.append("ML-INACTIVE on card (cohort ordering)")
+        else:
+            lines.append("ML ordering on card: provenance unavailable (legacy record)")
     # Deploy line, footer — identical to main slip.
     if plan:   # a no-bet card states no deployment
         day_staked = sum(a["stake_pct"] for a in plan)
