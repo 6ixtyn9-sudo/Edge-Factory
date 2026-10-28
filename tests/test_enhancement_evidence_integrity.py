@@ -458,10 +458,12 @@ def test_live_enh_cohort_cannot_count_disposition_or_unseparated_period(status, 
     rows[0]['status'] = status
     con = connection(rows)
     recipe = edge()
-    # The shared collector's default/main contract population is unchanged.
+    # All regulation-time markets now exclude known AET/PEN aggregates;
+    # terminal-disposition exclusion remains the stricter ENH contract.
     _, obs, ambiguous, resolved, _ = cc.collect_observations(
         con, start='2026-06-13', as_of='2026-10-20')
-    assert len(list(cc.contract_rows(obs, ambiguous, resolved, recipe))) == 30
+    from edgefactory.settlement import non_regulation_status
+    assert len(list(cc.contract_rows(obs, ambiguous, resolved, recipe))) == (29 if non_regulation_status(status) else 30)
     monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
     # This is the production caller, not an audit-only resolver. With one
     # disputed label removed, 29 cannot manufacture the existing N30 gate.
@@ -1332,3 +1334,19 @@ def test_redteam_live_optional_forecast_failure_cannot_remove_parent_or_cohort(t
         profile = pt.fetch_match_cohort(con, 'home', 80., 1, pick=picks[0])
     assert profile['n'] == 200 and profile['ml_status'] == 'input_unavailable'
     assert 'ml_model' not in profile
+
+
+def test_verified_regulation_label_is_scoped_to_observed_fixture_and_review_time(monkeypatch):
+    import edgefactory.settlement as settlement
+    rows = observations(2)
+    rows[0].update(date='2026-10-27',home='RSD Alcalá',away='Las Palmas',hs=1,gs=3,status='AET')
+    fact = dict(date='2026-10-27',home='RSD Alcalá',away='Las Palmas',hs=1,gs=1,outcome='draw',verified_at='2026-10-29')
+    absent = dict(date='2026-10-26',home='Never Observed',away='Another Fixture',hs=0,gs=0,outcome='draw')
+    monkeypatch.setattr(settlement,'load_verified_results',lambda:[fact,absent])
+    con=connection(rows)
+    before=cc.collect_observations(con,start='2026-06-13',as_of='2026-10-28')[3]
+    key=cc._remine_key(rows[0])
+    assert key not in before
+    after=cc.collect_observations(con,start='2026-06-13',as_of='2026-10-30')[3]
+    assert after[key]['ft'] == (1,1)
+    assert cc._remine_key(absent) not in after

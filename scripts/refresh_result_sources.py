@@ -38,7 +38,7 @@ RESULT_SOURCES = (
     # prosoccer's yesterday page fills final scores as matches settle
     "prosoccer",
 )
-SCORE_FIELDS = ("hs", "gs", "ht_hs", "ht_gs")
+SCORE_FIELDS = ("hs", "gs", "ht_hs", "ht_gs", "regulation_hs", "regulation_gs", "score_period")
 
 sys.path.insert(0, str(ROOT / "src"))
 from edgefactory.settlement import terminal_event_disposition  # noqa: E402
