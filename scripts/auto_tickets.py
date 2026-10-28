@@ -106,7 +106,8 @@ from edgefactory.assay import grade as assay_grade                  # noqa: E402
 from edgefactory.assay import wilson_lb                              # noqa: E402
 from edgefactory.config import GATES                                 # noqa: E402
 from edgefactory.enh_registry import check_enhancement_hit           # noqa: E402
-from edgefactory.util import finite_probability, pick_probability_pct
+from edgefactory.util import (finite_probability, pick_probability_pct, ticket_receipt_path,
+                              read_ticket_receipt, write_ticket_receipt, compact_ticket_receipts)
 from edgefactory import acca_gate                                    # noqa: E402
 from edgefactory import price_sources as psrc                        # noqa: E402
 
@@ -3901,7 +3902,7 @@ def ticket_card_identity(plan, pool=None):
 
 def decision_receipt_path(target, lane="main"):
     prefix = "auto_tickets" if lane == "main" else "autobets_enh_tickets"
-    return LOCALDATA / f"{prefix}_{target}_decision.json"
+    return ticket_receipt_path(LOCALDATA, f"{prefix}_{target}_decision.json")
 
 
 def _decision_digest(payload):
@@ -3937,9 +3938,10 @@ def write_decision_receipt(context, plan, *, frozen=False):
     for a frozen date. A failure is explicit but cannot cancel a live ticket.
     """
     try:
+        compact_ticket_receipts(LOCALDATA)
         path = decision_receipt_path(context["date"], context["lane"])
         if path.exists():
-            old = json.loads(path.read_text())
+            old = read_ticket_receipt(path)
             if old.get("status") == "frozen":
                 return
         prepared = prepare_ticket_pool(context)
@@ -3949,10 +3951,7 @@ def write_decision_receipt(context, plan, *, frozen=False):
                        context=context, plan=plan,
                        card_identity=ticket_card_identity(plan, prepared["pool"]))
         payload["sha256"] = _decision_digest(payload)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False))
-        tmp.replace(path)
+        write_ticket_receipt(path, json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False))
     except Exception as exc:
         print(f"::warning::DECISION RECEIPT NOT PERSISTED: {type(exc).__name__}: {exc}", file=sys.stderr)
 

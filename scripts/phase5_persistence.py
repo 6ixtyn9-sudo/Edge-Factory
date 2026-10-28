@@ -20,6 +20,11 @@ import time
 from pathlib import Path
 from typing import Any
 
+# The workflow invokes this script directly without PYTHONPATH.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+from edgefactory.util import (ticket_receipt_files, ticket_receipt_path, ticket_receipt_bytes,
+                              compact_ticket_receipts, write_ticket_receipt, encode_ticket_receipt)
+
 APPEND_ONLY_JSONL_IDS = {
     "localdata/phase5_shadow/rows.jsonl": "row_id",
     "localdata/phase5_shadow/attempts.jsonl": "attempt_id",
@@ -500,43 +505,70 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
     receipts are retained as an artifact-visible conflict, never auto-merged.
     """
     retained = {}
-    for pattern in ("auto_tickets_????-??-??_decision.json",
-                    "autobets_enh_tickets_????-??-??_decision.json"):
-        for path in (repo / "localdata").glob(pattern):
+    for prefix in ("auto_tickets", "autobets_enh_tickets"):
+        for path in ticket_receipt_files(repo / "localdata", prefix):
             relative = path.relative_to(repo).as_posix()
             cached = path.read_bytes()
-            head_result = _run(repo, "show", f"HEAD:{relative}")
-            head_blob = head_result.stdout if head_result.returncode == 0 else None
+            # Resolve both layouts by logical receipt name, not storage suffix.
+            name = path.name.removesuffix(".gz")
+            canonical = ticket_receipt_path(repo / "localdata", name).relative_to(repo).as_posix()
+            legacy = "localdata/" + name
+            head_blob, head_relative = None, relative
+            for alternative in dict.fromkeys((canonical, legacy)):
+                result = _run(repo, "show", f"HEAD:{alternative}")
+                if result.returncode == 0:
+                    head_blob, head_relative = result.stdout, alternative
+                    break
             try:
-                candidate = json.loads(cached)
+                # Seed the canonical destination with HEAD, even when HEAD is
+                # legacy JSON and an untracked gzip alias survives git clean.
+                # An authorized cached freeze below may upgrade only a draft.
+                if head_blob is not None:
+                    head_raw = ticket_receipt_bytes(repo / head_relative, raw=head_blob)
+                    retained.setdefault(canonical, encode_ticket_receipt(repo / canonical, head_raw))
+                candidate = json.loads(ticket_receipt_bytes(path))
                 digest = candidate.pop("sha256")
                 encoded = json.dumps(candidate, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
                 if hashlib.sha256(encoded).hexdigest() != digest:
                     raise ValueError("cached decision receipt hash mismatch")
-                if head_blob is None:
-                    retained[relative] = cached
-                    continue
-                head = json.loads(head_blob)
-                if candidate["status"] != "frozen" or head.get("sha256") == digest:
-                    continue
-                if head.get("status") == "frozen":
-                    raise ValueError("divergent frozen decision receipts")
-                lane = candidate["context"]["lane"]
-                day = candidate["context"]["date"]
-                state_path = MAIN_STATE if lane == "main" else ENH_STATE
-                state_blob = financial_blobs.get(state_path)
-                if state_blob is None:
-                    state_blob = _run(repo, "show", f"HEAD:{state_path}").stdout
-                state = json.loads(state_blob)
-                freeze = (state.get("frozen_by_date") or {}).get(day) or {}
-                if freeze.get("frozen_at") != candidate["context"]["build_at"]:
-                    raise ValueError("cached receipt is not the independently retained financial freeze")
-                retained[relative] = cached
-            except (ValueError, KeyError, TypeError, AttributeError) as exc:
+                expected_lane = "main" if prefix == "auto_tickets" else "enh"
+                if (candidate["context"]["lane"] != expected_lane
+                        or name != f"{prefix}_{candidate['context']['date']}_decision.json"):
+                    raise ValueError("cached receipt filename/context mismatch")
+                if head_blob is not None:
+                    head = json.loads(head_raw)
+                    if candidate["status"] != "frozen" or head.get("sha256") == digest:
+                        continue
+                    if head.get("status") == "frozen":
+                        raise ValueError("divergent frozen decision receipts")
+                    lane = candidate["context"]["lane"]
+                    day = candidate["context"]["date"]
+                    state_path = MAIN_STATE if lane == "main" else ENH_STATE
+                    state_blob = financial_blobs.get(state_path)
+                    if state_blob is None:
+                        state_blob = _run(repo, "show", f"HEAD:{state_path}").stdout
+                    state = json.loads(state_blob)
+                    freeze = (state.get("frozen_by_date") or {}).get(day) or {}
+                    if freeze.get("frozen_at") != candidate["context"]["build_at"]:
+                        raise ValueError("cached receipt is not the independently retained financial freeze")
+                if canonical in retained:
+                    previous = json.loads(ticket_receipt_bytes(repo / canonical, raw=retained[canonical]))
+                    if previous.get("status") == "frozen":
+                        if candidate.get("status") != "frozen":
+                            continue
+                        if previous.get("sha256") != digest:
+                            raise ValueError("divergent cached frozen decision receipts")
+                retained[canonical] = encode_ticket_receipt(repo / canonical, ticket_receipt_bytes(path))
+            except (OSError, EOFError, ValueError, KeyError, TypeError, AttributeError) as exc:
                 # Keep HEAD authoritative and the differing cache bytes visible
                 # to the report/artifact, without modifying bank or history.
-                conflict = path.with_name(path.stem + "_cache_conflict.json")
-                conflict.write_bytes(cached)
+                try:
+                    evidence = ticket_receipt_bytes(path)
+                except (OSError, EOFError, ValueError):
+                    evidence = cached  # retain even malformed gzip bytes
+                conflict = ticket_receipt_path(repo / "localdata", name.removesuffix(".json")
+                    + f"_cache_conflict_{hashlib.sha256(evidence).hexdigest()}.json")
+                write_ticket_receipt(conflict, evidence)
                 print(f"::warning::Ticket decision receipt conflict: {relative}: {exc}")
     return retained
 
@@ -582,7 +614,9 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     )
     if clean.returncode != 0:
         raise RuntimeError(f"git clean failed: {_decode_output(clean.stderr)}")
+    compacted = compact_ticket_receipts(repo / "localdata")
     return {
+        "compacted_ticket_receipts": compacted,
         "phase5_ledgers": merge_counts,
         "restored_tracked_files": len(restored),
         "clean_output": _decode_output(clean.stdout),
