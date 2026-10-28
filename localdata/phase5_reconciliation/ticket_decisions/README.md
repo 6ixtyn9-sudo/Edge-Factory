@@ -45,3 +45,38 @@ freeze-lock, ENH and persistence tests **219 passed**. Coverage includes legacy
 read/migration, gzip corruption, atomic-write failure, identical/conflicting
 format aliases, both cache/HEAD format directions, freeze authority and artifact
 coverage. No betting-policy, financial-record or workflow-dispatch changes.
+
+## Unpublished frozen run 40647275279
+
+That run saved `localdata-v2-40647275279` before its Git publication failed
+against the receipt relocation. The existing workflow already restores the
+newest `localdata-v2-` cache. No artifact download, new script or YAML edit is
+needed. Recovery is **pending**, not a claim that those files reached Git.
+
+The committed lane states carry a one-shot `integrity_recovery.pending_cached_freeze`
+approval: 28 October only, source run/checkout, original freeze minute and exact
+logged card. This HEAD approval—not a cached approval or receipt—is authority
+to restore that unpublished freeze. Restore requires unchanged reviewed bank,
+ledger, other positions and other locks; the original 25%-free-bank stakes;
+and a matching hash-valid frozen receipt with that run/checkout provenance.
+It keeps the saved text card byte-for-byte and losslessly compacts the receipt.
+Both lanes validate before checkout/clean. Missing/stale cache or any mismatch
+stops restoration rather than rebuilding the cards. A recovered approval records
+the receipt/financial hashes; subsequent committed freezes retain normal protection.
+
+After the patch is merged, the operator can start a **normal run from updated
+main** using the existing workflow. Do **not** select `recover_and_rebuild` for
+this: that separate mode invalidates an approved unplaced ENH ticket. No workflow
+has been dispatched as part of this patch, and no bank/history values have been
+edited. The queued recovery still needs to run and publish successfully.
+
+Freeze locks deliberately record whole seconds, whereas decision contexts may
+retain microseconds. Restore and replay now compare aware instants at that lock's
+precision, never across different seconds. This fixes a reproducible mismatch;
+it does **not** establish the cause of this run's uninspected parity failure or
+turn historical PARTIAL evidence into a PASS.
+
+Recovery validation: **4,797 passed, 1 skipped** overall; persistence/replay
+**169 passed**, including absent cache, unknown cached approval/stakes, changed
+history/bank/card, wrong source, receipt corruption, legacy locks, cross-lane
+atomic validation, lossless old-layout recovery and idempotent committed restore.

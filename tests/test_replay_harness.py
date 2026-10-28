@@ -1071,3 +1071,30 @@ def test_failed_compaction_does_not_delete_original(tmp_path, monkeypatch):
     with pytest.raises(OSError, match='simulated disk error'):
         compact_ticket_receipts(tmp_path)
     assert source.read_bytes() == original
+
+
+@pytest.mark.parametrize('build,expected',[
+ ('2026-10-28T10:13:23.123456+02:00',True),
+ ('2026-10-28T08:13:23.123456+00:00',True),
+ ('2026-10-28T10:13:24.000001+02:00',False),
+ ('2026-10-28T10:13:23',False),(None,False),('bad',False)])
+def test_freeze_precision_matches_only_the_same_aware_second(build,expected):
+    from edgefactory.util import freeze_timestamp_matches
+    assert freeze_timestamp_matches('2026-10-28T10:13:23+02:00',build) is expected
+    assert not freeze_timestamp_matches('2026-10-28T10:13:23.999999+02:00',build)
+
+
+def test_real_microsecond_build_time_and_seconds_freeze_record_have_parity(tmp_path,monkeypatch):
+    import json
+    localdata,context,_,state=_retained_decision(tmp_path,monkeypatch)
+    path=at.decision_receipt_path(context['date'])
+    payload=at.read_ticket_receipt(path);payload.pop('sha256')
+    stamp=payload['context']['build_at']
+    from datetime import datetime
+    parsed=datetime.fromisoformat(stamp)
+    payload['context']['build_at']=parsed.replace(microsecond=123456).isoformat()
+    state['frozen_by_date'][context['date']]['frozen_at']=parsed.replace(microsecond=0).isoformat()
+    payload['sha256']=at._decision_digest(payload)
+    at.write_ticket_receipt(path,json.dumps(payload))
+    (localdata/'auto_tickets_state.json').write_text(json.dumps(state))
+    assert rh.decision_parity_report(tmp_path)['status']=='PASS'
