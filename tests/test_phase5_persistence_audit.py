@@ -693,3 +693,130 @@ def test_divergent_untracked_format_aliases_remain_visible_as_a_conflict(tmp_pat
     conflicts = ticket_receipt_files(base, 'auto_tickets', conflicts=True)
     assert conflicts
     assert {ticket_receipt_bytes(canonical), *(ticket_receipt_bytes(p) for p in conflicts)} == {first, second}
+
+
+def _approved_freeze_fixture(repo, *, lane='main', seed=True):
+    import copy
+    import auto_tickets as at
+    if seed:
+        _seed_repo(repo)
+    module = _persistence_module()
+    relative = module.MAIN_STATE if lane == 'main' else module.ENH_STATE
+    prefix = 'auto_tickets' if lane == 'main' else 'autobets_enh_tickets'
+    day, stamp = '2026-10-28', '2026-10-28T10:13:23+02:00'
+    plan = [{'legs':[dict(match='Alpha vs Beta',pick='over',market='match_over_25',odds=1.4),
+                     dict(match='Gamma vs Delta',pick='under',market='match_under_35',odds=1.5)],
+             'odds':2.1,'stake_pct':25.}]
+    head = dict(base_pct=100., bank=100., cycle_base=100., history=[],events=[],
+                open_slips=[],frozen_by_date={},integrity_recovery={'pending_cached_freeze':dict(
+                 status='approved',date=day,source_run_id='40647275279',source_head='abc',
+                 frozen_minute='2026-10-28T10:13',card=[[[l['match'],l['pick'],l['market'],l['odds']]
+                                                     for l in a['legs']] for a in plan])})
+    (repo/relative).write_text(json.dumps(head))
+    card = repo/'localdata'/f'{prefix}_{day}.txt'
+    card.write_text('OLD DRAFT')
+    _git(repo,'add',relative,str(card.relative_to(repo)))
+    _git(repo,'commit','-qm','explicit approved freeze recovery, unchanged money')
+    cache=copy.deepcopy(head)
+    cache['open_slips']=[dict(date=day,accas=plan,staked_pct=25.)]
+    cache['frozen_by_date']={day:dict(frozen_at=stamp,final=True,lock_source='state')}
+    (repo/relative).write_text(json.dumps(cache))
+    context=dict(lane=lane,date=day,build_at='2026-10-28T10:13:23.123456+02:00',bank_total=100.,bank_eff=100.)
+    payload=dict(schema=1,status='frozen',context=context,plan=plan,card_identity=at.ticket_card_identity(plan),
+                 execution_provenance=dict(run_id='40647275279',checkout_head_at_capture='abc'))
+    payload['sha256']=at._decision_digest(payload)
+    legacy=repo/'localdata'/f'{prefix}_{day}_decision.json'
+    legacy.write_text(json.dumps(payload))
+    text='ENHANCEMENT TICKETS\nAlpha vs Beta @ 1.40\nGamma vs Delta @ 1.50\nFROZEN AT 10:13 - FINAL\n'
+    card.write_text(text)
+    return module,relative,head,cache,legacy,card,text
+
+
+@pytest.mark.parametrize('lane',['main','enh'])
+def test_approved_freeze_recovers_from_existing_cache_without_recut_or_history_change(tmp_path,lane):
+    repo=tmp_path/'repo';repo.mkdir()
+    module,relative,head,cache,legacy,card,text=_approved_freeze_fixture(repo,lane=lane)
+    expected=json.loads(legacy.read_text())
+    module.restore_committed_localdata(repo)
+    recovered=json.loads((repo/relative).read_text())
+    for field in ('bank','base_pct','cycle_base','history','events'):
+        assert recovered[field]==head[field]
+    assert recovered['open_slips']==cache['open_slips']
+    assert recovered['frozen_by_date']==cache['frozen_by_date']
+    assert recovered['integrity_recovery']['pending_cached_freeze']['status']=='recovered'
+    assert card.read_text()==text
+    assert not legacy.exists()
+    canonical=ticket_receipt_path(repo/'localdata',legacy.name)
+    assert json.loads(ticket_receipt_bytes(canonical))==expected
+    assert not ticket_receipt_files(repo/'localdata','auto_tickets' if lane=='main' else 'autobets_enh_tickets',conflicts=True)
+    # Commit the recovery, then a normal restore is a read/reprint, not a recut.
+    _git(repo,'add','-A','localdata');_git(repo,'commit','-qm','recovered original freeze')
+    before=(repo/relative).read_bytes(),card.read_bytes(),canonical.read_bytes()
+    module.restore_committed_localdata(repo)
+    assert before==((repo/relative).read_bytes(),card.read_bytes(),canonical.read_bytes())
+
+
+@pytest.mark.parametrize('damage',['no_approval','bank','history','other_lock','other_position','stake','card',
+                                    'receipt_hash','source_run','source_head','second','text','missing_receipt',
+                                    'missing_lock','missing_state','bad_total','acca_price','legacy_lock',
+                                    'committed_frozen_text','lane','date','context_bank','context_free'])
+def test_approved_freeze_recovery_refuses_unknown_changes_before_any_checkout(tmp_path,damage):
+    import auto_tickets as at
+    repo=tmp_path/'repo';repo.mkdir()
+    module,relative,head,cache,receipt,card,text=_approved_freeze_fixture(repo)
+    if damage=='no_approval':
+        head['integrity_recovery'].clear();(repo/relative).write_text(json.dumps(head))
+        _git(repo,'add',relative);_git(repo,'commit','-qm','no recovery authorization')
+    if damage=='committed_frozen_text':
+        card.write_text('FROZEN AT 07:00 - FINAL');_git(repo,'add',str(card.relative_to(repo)))
+        _git(repo,'commit','-qm','existing committed frozen text')
+        card.write_text(text)
+    if damage=='missing_lock': cache['frozen_by_date'].clear()
+    if damage=='legacy_lock': (repo/'localdata'/'auto_tickets_2026-10-28.frozen').write_text('existing freeze')
+    if damage=='bad_total': cache['open_slips'][0]['staked_pct']=float('nan')
+    if damage=='acca_price': cache['open_slips'][0]['accas'][0]['odds']=100.
+    if damage=='bank': cache['bank']+=1
+    if damage=='history': cache['history']=[dict(date='2026-10-27',staked_pct=1.,returned_pct=0.,accas=[])]
+    if damage=='other_lock': cache['frozen_by_date']['2026-10-27']={}
+    if damage=='other_position': cache['open_slips'].append(dict(date='2026-10-29',accas=[]))
+    if damage=='stake': cache['open_slips'][0]['accas'][0]['stake_pct']+=1
+    if damage=='card': cache['open_slips'][0]['accas'][0]['legs'][0]['match']='Other vs Club'
+    if damage in ('receipt_hash','source_run','source_head','second','lane','date','context_bank','context_free'):
+        payload=json.loads(receipt.read_text());payload.pop('sha256')
+        if damage=='source_run': payload['execution_provenance']['run_id']='wrong'
+        if damage=='source_head': payload['execution_provenance']['checkout_head_at_capture']='wrong'
+        if damage=='second': payload['context']['build_at']='2026-10-28T10:13:24.123456+02:00'
+        if damage=='lane': payload['context']['lane']='enh'
+        if damage=='date': payload['context']['date']='2026-10-29'
+        if damage=='context_bank': payload['context']['bank_total']+=1
+        if damage=='context_free': payload['context']['bank_eff']+=1
+        payload['sha256']='broken' if damage=='receipt_hash' else at._decision_digest(payload)
+        receipt.write_text(json.dumps(payload))
+    if damage=='text': card.write_text('different draft')
+    if damage=='missing_receipt': receipt.unlink()
+    (repo/relative).write_text(json.dumps(cache))
+    if damage=='missing_state': (repo/relative).unlink()
+    before={p:p.read_bytes() for p in (repo/'localdata').rglob('*') if p.is_file()}
+    with pytest.raises(module.EvidenceMergeError): module.restore_committed_localdata(repo)
+    assert before=={p:p.read_bytes() for p in (repo/'localdata').rglob('*') if p.is_file()}
+
+
+
+def test_both_recovery_lanes_validate_before_changing_any_file(tmp_path):
+    repo=tmp_path/'repo';repo.mkdir()
+    module,*_=_approved_freeze_fixture(repo,lane='enh')
+    _,relative,_,cache,*_=_approved_freeze_fixture(repo,lane='main',seed=False)
+    cache['bank']+=1
+    (repo/relative).write_text(json.dumps(cache))
+    before={p:p.read_bytes() for p in (repo/'localdata').rglob('*') if p.is_file()}
+    with pytest.raises(module.EvidenceMergeError,match='unapproved financial change'):
+        module.restore_committed_localdata(repo)
+    assert before=={p:p.read_bytes() for p in (repo/'localdata').rglob('*') if p.is_file()}
+
+
+def test_current_run_recovery_approvals_do_not_change_any_committed_financial_field():
+    module=_persistence_module()
+    for relative in (module.MAIN_STATE,module.ENH_STATE):
+        committed=json.loads(_git(ROOT,'show',f'HEAD:{relative}').stdout)
+        working=json.loads((ROOT/relative).read_text())
+        assert module._financial_fingerprint(committed)==module._financial_fingerprint(working)

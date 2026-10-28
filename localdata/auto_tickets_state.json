@@ -1609,5 +1609,45 @@
       "frozen_at": "2026-10-03T09:15:03+02:00",
       "audit_slip": "localdata/auto_tickets_2026-10-03.txt"
     }
+  },
+  "integrity_recovery": {
+    "pending_cached_freeze": {
+      "status": "approved",
+      "date": "2026-10-28",
+      "source_run_id": "40647275279",
+      "source_head": "6047e60474c67984d573baa50a0ddd05a3c614a4",
+      "frozen_minute": "2026-10-28T09:51",
+      "card": [
+        [
+          [
+            "Bragantino vs Chapecoense",
+            "HOME",
+            "1x2",
+            1.31
+          ],
+          [
+            "SC Freiburg vs VfL Wolfsburg",
+            "HOME",
+            "1x2",
+            1.53
+          ]
+        ],
+        [
+          [
+            "Venezia vs Inter",
+            "AWAY",
+            "1x2",
+            1.36
+          ],
+          [
+            "Genemuiden vs FC Dordrecht",
+            "AWAY",
+            "1x2",
+            1.35
+          ]
+        ]
+      ],
+      "reason": "Operator-authorized recovery of the saved frozen card after receipt-relocation rebase conflict; no bank/history edits or recut."
+    }
   }
 }
