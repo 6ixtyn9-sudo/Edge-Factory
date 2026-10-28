@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-10-28",
+ "generated_at": "2026-10-29",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -4824,11 +4824,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 332,
+   "hits": 335,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 326.31466135768784,
+   "inv_price_sum": 328.35739073013855,
    "multi_n": 103,
-   "n": 502,
+   "n": 505,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -5575,9 +5575,12 @@
     "2026-10-25|Legia Warszawa vs Lech Pozna\u0144|match_over_25@v1",
     "2026-10-25|Sydney FC vs Adelaide United|match_over_25@v1",
     "2026-10-25|Molde FK vs Fredrikstad FK|match_over_25@v1",
-    "2026-10-26|Santa Clara vs Benfica|match_over_25@v1"
+    "2026-10-26|Santa Clara vs Benfica|match_over_25@v1",
+    "2026-10-28|AC Milan vs Bologna|match_over_25@v1",
+    "2026-10-28|Arsenal W vs SL Benfica W|match_over_25@v1",
+    "2026-10-28|Quick Boys vs Eemdijk|match_over_25@v1"
    ],
-   "profit": 10.667,
+   "profit": 12.157,
    "records": [
     {
      "away": "Spartak Varna",
@@ -13104,6 +13107,93 @@
      "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
      "source": "theoddsapi",
      "stated": null
+    },
+    {
+     "away": "Bologna",
+     "away_key": "bologna",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6333,
+     "date": "2026-10-28",
+     "hit": true,
+     "home": "AC Milan",
+     "home_key": "milan",
+     "league": "Serie A",
+     "match": "AC Milan vs Bologna",
+     "multi_source": false,
+     "price": 1.8,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-10-27T22:17:36.467457+00:00",
+      "contract_id": "pfc_444d408c4ccd3a4bf4fb020c",
+      "decision_at": "2026-10-28T00:21:58+02:00",
+      "kickoff": "2026-10-28T17:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.8,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-28T22:31:48.101717+00:00",
+     "rule": "pfc_444d408c4ccd3a4bf4fb020c",
+     "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "SL Benfica W",
+     "away_key": "slbenficaw",
+     "bucket": "WATCHLIST_UNKNOWN_CTX",
+     "cohort_rate": 0.6603,
+     "date": "2026-10-28",
+     "hit": true,
+     "home": "Arsenal W",
+     "home_key": "arsenalw",
+     "league": "UEFA Women's Champions League",
+     "match": "Arsenal W vs SL Benfica W",
+     "multi_source": false,
+     "price": 1.33,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-10-27T22:20:23.458132+00:00",
+      "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+      "decision_at": "2026-10-28T00:21:58+02:00",
+      "kickoff": "2026-10-28T20:00:00+00:00",
+      "league": "UEFA Women's Champions League",
+      "price": 1.33,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-28T22:31:48.114056+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "Eemdijk",
+     "away_key": "eemdijk",
+     "bucket": "WATCHLIST_UNKNOWN_CTX",
+     "cohort_rate": 0.6603,
+     "date": "2026-10-28",
+     "hit": true,
+     "home": "Quick Boys",
+     "home_key": "quickboys",
+     "league": "KNVB Beker",
+     "match": "Quick Boys vs Eemdijk",
+     "multi_source": false,
+     "price": 1.36,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-10-27T22:20:54.978877+00:00",
+      "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+      "decision_at": "2026-10-28T00:21:58+02:00",
+      "kickoff": "2026-10-28T19:00:00+00:00",
+      "league": "KNVB Beker",
+      "price": 1.36,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-28T22:31:48.124587+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "betexplorer",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -14175,9 +14265,9 @@
   },
   "match_under_35@v1": {
    "hits": 4,
-   "inv_price_sum": 4.698085965297393,
+   "inv_price_sum": 5.412371679583107,
    "multi_n": 0,
-   "n": 9,
+   "n": 10,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -14187,9 +14277,10 @@
     "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|match_under_35@v1",
     "2026-10-24|Necaxa vs Ju\u00e1rez|match_under_35@v1",
     "2026-10-25|Barcelona vs Real Madrid|match_under_35@v1",
-    "2026-10-26|Be\u015fikta\u015f vs Ba\u015fak\u015fehir|match_under_35@v1"
+    "2026-10-26|Be\u015fikta\u015f vs Ba\u015fak\u015fehir|match_under_35@v1",
+    "2026-10-28|AC Milan vs Bologna|match_under_35@v1"
    ],
-   "profit": 0.9,
+   "profit": -0.1,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -14451,6 +14542,35 @@
      "rule": "pfc_b011652ec3e473fbc0afbb6a",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "Bologna",
+     "away_key": "bologna",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6014,
+     "date": "2026-10-28",
+     "hit": false,
+     "home": "AC Milan",
+     "home_key": "milan",
+     "league": "Serie A",
+     "match": "AC Milan vs Bologna",
+     "multi_source": false,
+     "price": 1.4,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-10-27T22:17:36.467457+00:00",
+      "contract_id": "pfc_444d408c4ccd3a4bf4fb020c",
+      "decision_at": "2026-10-28T00:21:58+02:00",
+      "kickoff": "2026-10-28T17:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.4,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-28T22:31:48.095877+00:00",
+     "rule": "pfc_444d408c4ccd3a4bf4fb020c",
+     "source": "betexplorer",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -14458,10 +14578,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 15,
-   "inv_price_sum": 10.24440352150021,
+   "hits": 17,
+   "inv_price_sum": 11.667909093941953,
    "multi_n": 0,
-   "n": 18,
+   "n": 20,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -14480,9 +14600,11 @@
     "2026-10-25|Wellington Phoenix vs Central Coast Mariners|match_under_45@v1",
     "2026-10-25|Colorado Rapids vs Vancouver Whitecaps|match_under_45@v1",
     "2026-10-25|Sydney FC vs Adelaide United|match_under_45@v1",
-    "2026-10-27|Levadia vs Tammeka|match_under_45@v1"
+    "2026-10-27|Levadia vs Tammeka|match_under_45@v1",
+    "2026-10-28|Arsenal W vs SL Benfica W|match_under_45@v1",
+    "2026-10-28|Quick Boys vs Eemdijk|match_under_45@v1"
    ],
-   "profit": 8.601,
+   "profit": 9.411,
    "records": [
     {
      "away": "Atlante",
@@ -14960,6 +15082,64 @@
       "source": "betexplorer"
      },
      "recorded_at": "2026-10-27T22:30:20.388695+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "SL Benfica W",
+     "away_key": "slbenficaw",
+     "bucket": "WATCHLIST_UNKNOWN_CTX",
+     "cohort_rate": 0.7222,
+     "date": "2026-10-28",
+     "hit": true,
+     "home": "Arsenal W",
+     "home_key": "arsenalw",
+     "league": "UEFA Women's Champions League",
+     "match": "Arsenal W vs SL Benfica W",
+     "multi_source": false,
+     "price": 1.4,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-10-27T22:20:23.458132+00:00",
+      "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+      "decision_at": "2026-10-28T00:21:58+02:00",
+      "kickoff": "2026-10-28T20:00:00+00:00",
+      "league": "UEFA Women's Champions League",
+      "price": 1.4,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-28T22:31:48.108872+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "Eemdijk",
+     "away_key": "eemdijk",
+     "bucket": "WATCHLIST_UNKNOWN_CTX",
+     "cohort_rate": 0.7222,
+     "date": "2026-10-28",
+     "hit": true,
+     "home": "Quick Boys",
+     "home_key": "quickboys",
+     "league": "KNVB Beker",
+     "match": "Quick Boys vs Eemdijk",
+     "multi_source": false,
+     "price": 1.41,
+     "price_context": {
+      "book": "BetMGM.us",
+      "captured_at": "2026-10-27T22:20:54.978877+00:00",
+      "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+      "decision_at": "2026-10-28T00:21:58+02:00",
+      "kickoff": "2026-10-28T19:00:00+00:00",
+      "league": "KNVB Beker",
+      "price": 1.41,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-28T22:31:48.119087+00:00",
      "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
      "source": "betexplorer",
      "stated": null

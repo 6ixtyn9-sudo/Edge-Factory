@@ -4,13 +4,22 @@
   "lanes": {
     "enh": {
       "attributed_scores": {
-        "by_schema": {},
+        "by_schema": {
+          "enh_score_logit_v2": {
+            "cohort_brier": 0.15322549833333332,
+            "cohort_log_loss": 0.4870444318820311,
+            "fixtures": 6,
+            "model_brier": 0.15803481675302888,
+            "model_log_loss": 0.502230150941907,
+            "records": 6
+          }
+        },
         "caveat": "Fixture-balanced descriptive scores on booked legs, not independent records or selection uplift; log probabilities clipped at 1e-15. No significance claim.",
-        "eligible_binary_legs": 56,
+        "eligible_binary_legs": 62,
         "missing_attribution": 56
       },
       "counts": {
-        "MATCH": 1
+        "MATCH": 2
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -118,7 +127,7 @@
                         "model": 0.769159051272581,
                         "odds": 1.36,
                         "pick": "over",
-                        "result": null
+                        "result": "win"
                       },
                       {
                         "cohort": 0.7233,
@@ -127,11 +136,11 @@
                         "model": 0.7524306095046803,
                         "odds": 1.4,
                         "pick": "under",
-                        "result": null
+                        "result": "win"
                       }
                     ],
                     "odds": 1.9,
-                    "returned": null,
+                    "returned": 4.7321,
                     "stake": 2.4906
                   }
                 ],
@@ -205,7 +214,7 @@
                 ],
                 "mean_acca_odds": 1.97,
                 "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
+                "resolved_legs": 2,
                 "returned": null,
                 "selected_legs": 6,
                 "selector_trace": {
@@ -227,7 +236,7 @@
                         "model": 0.7753596529251252,
                         "odds": 1.4,
                         "pick": "over",
-                        "result": null
+                        "result": "loss"
                       },
                       {
                         "cohort": 0.6468,
@@ -236,11 +245,11 @@
                         "model": 0.6761078387052527,
                         "odds": 1.5,
                         "pick": "under",
-                        "result": null
+                        "result": "win"
                       }
                     ],
                     "odds": 2.1,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 2.4907
                   },
                   {
@@ -252,7 +261,7 @@
                         "model": 0.769159051272581,
                         "odds": 1.36,
                         "pick": "over",
-                        "result": null
+                        "result": "win"
                       },
                       {
                         "cohort": 0.6541,
@@ -261,11 +270,11 @@
                         "model": 0.7383862933757485,
                         "odds": 1.36,
                         "pick": "over",
-                        "result": null
+                        "result": "win"
                       }
                     ],
                     "odds": 1.85,
-                    "returned": null,
+                    "returned": 4.6078,
                     "stake": 2.4907
                   },
                   {
@@ -277,7 +286,7 @@
                         "model": 0.7568944698849054,
                         "odds": 1.4,
                         "pick": "under",
-                        "result": null
+                        "result": "win"
                       },
                       {
                         "cohort": 0.7233,
@@ -286,11 +295,11 @@
                         "model": 0.7524306095046803,
                         "odds": 1.4,
                         "pick": "under",
-                        "result": null
+                        "result": "win"
                       }
                     ],
                     "odds": 1.96,
-                    "returned": null,
+                    "returned": 4.8816,
                     "stake": 2.4906
                   }
                 ],
@@ -363,9 +372,9 @@
                   ]
                 ],
                 "mean_acca_odds": 1.97,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 6,
+                "returned": 9.4894,
                 "selected_legs": 6,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -643,8 +652,234 @@
             "scored_legs": 60,
             "status": "INCOMPLETE_OUTCOMES"
           },
-          "open_accas": 3,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": 2.0174000000000003,
+          "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 1,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 31.905270999999995,
+          "committed_excluding_target": 0.0,
+          "date": "2026-10-29",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "4c4bbb917c2c0adf823af8849722a4afd5f385d8",
+            "event_sha": "4c4bbb917c2c0adf823af8849722a4afd5f385d8",
+            "file_sha256": {
+              "Config/verified_results.json": "13156c199bb5fb4ff35fc6ef0c5ac7afb0094dd2250c895f472142cfeeb9b21e",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
+            },
+            "run_id": "40776489773",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-10-29_decision.json.gz",
+          "free_bank": 31.905270999999995,
+          "ledger": "NOT_COMMITTED",
+          "ml_comparison": {
+            "added_to_ml_on": 1,
+            "arms": {
+              "ml_off": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7253,
+                        "market": "match_under_45",
+                        "match": "Kozakken Boys vs FC Utrecht",
+                        "model": 0.6160586468797342,
+                        "odds": 1.3,
+                        "pick": "under",
+                        "result": null
+                      },
+                      {
+                        "cohort": 0.6481,
+                        "market": "match_over_25",
+                        "match": "Varea vs FC Andorra",
+                        "model": 0.47523840341833584,
+                        "odds": 1.75,
+                        "pick": "over",
+                        "result": null
+                      }
+                    ],
+                    "odds": 2.27,
+                    "returned": null,
+                    "stake": 3.9882
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Kozakken Boys vs FC Utrecht",
+                        "match_under_45",
+                        "UNDER",
+                        1.3,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Varea vs FC Andorra",
+                        "match_over_25",
+                        "OVER",
+                        1.75,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.27,
+                    3.9882
+                  ]
+                ],
+                "mean_acca_odds": 2.27,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 2,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": false
+                },
+                "total_stake": 3.9882
+              },
+              "ml_on": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.6481,
+                        "market": "match_over_25",
+                        "match": "Kozakken Boys vs FC Utrecht",
+                        "model": 0.8052791107803831,
+                        "odds": 1.4,
+                        "pick": "over",
+                        "result": null
+                      },
+                      {
+                        "cohort": 0.6481,
+                        "market": "match_over_25",
+                        "match": "Varea vs FC Andorra",
+                        "model": 0.47523840341833584,
+                        "odds": 1.75,
+                        "pick": "over",
+                        "result": null
+                      }
+                    ],
+                    "odds": 2.45,
+                    "returned": null,
+                    "stake": 3.9882
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Kozakken Boys vs FC Utrecht",
+                        "match_over_25",
+                        "OVER",
+                        1.4,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Varea vs FC Andorra",
+                        "match_over_25",
+                        "OVER",
+                        1.75,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.45,
+                    3.9882
+                  ]
+                ],
+                "mean_acca_odds": 2.45,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 2,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": true,
+                  "dropped": [],
+                  "ml_ranking_active": true
+                },
+                "total_stake": 3.9882
+              }
+            },
+            "card_identical": false,
+            "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
+            "execution_leg_symmetric_difference": 2,
+            "mean_absolute_disagreement": 0.15107560354083413,
+            "model_below_cohort": 5,
+            "models": {
+              "bd8a307f8ef3a88365667657b11f3e6adbebc8225ca7e3a865874c19dd339b4c": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 6,
+                    "0:1": 36,
+                    "0:11": 1,
+                    "0:2": 45,
+                    "0:3": 26,
+                    "0:4": 20,
+                    "0:5": 16,
+                    "0:6": 6,
+                    "0:7": 4,
+                    "0:8": 3,
+                    "0:9": 1,
+                    "1:0": 3,
+                    "1:1": 22,
+                    "1:2": 38,
+                    "1:3": 17,
+                    "1:4": 14,
+                    "1:5": 11,
+                    "1:6": 3,
+                    "1:7": 1,
+                    "1:9": 1,
+                    "2:0": 2,
+                    "2:1": 6,
+                    "2:2": 11,
+                    "2:3": 5,
+                    "2:4": 8,
+                    "2:5": 5,
+                    "3:0": 1,
+                    "3:1": 1,
+                    "3:3": 2,
+                    "3:4": 1,
+                    "3:5": 2,
+                    "3:6": 2,
+                    "4:0": 1,
+                    "4:2": 1,
+                    "4:3": 1,
+                    "5:2": 1
+                  },
+                  "classes": 36,
+                  "mean_rows_per_class": 9.0,
+                  "min_class_count": 1,
+                  "n": 324,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2052
+                },
+                "schema": "enh_score_logit_v2"
+              }
+            },
+            "paired_estimates": 8,
+            "pool_legs": 8,
+            "removed_from_ml_off": 1,
+            "schemas": {
+              "enh_score_logit_v2": 8
+            },
+            "scored_legs": 8,
+            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+          },
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],
@@ -741,8 +976,9 @@
           "free_bank": 283.0761,
           "freeze_time": "MATCH",
           "ledger": "MATCH",
-          "open_accas": 2,
-          "settlement": "PENDING",
+          "open_accas": 1,
+          "settled_net": -35.3845,
+          "settlement": "MATCH",
           "status": "MATCH"
         }
       ],
