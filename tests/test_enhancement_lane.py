@@ -1308,7 +1308,7 @@ def test_real_enh_builder_retains_alternatives_and_replays_with_captured_ml(_tmp
     state = at.fresh_state()
     assert at.cmd_enhancement(_args(), state, scores={}) == 0
     receipt = at.decision_receipt_path(DAY, 'enh')
-    payload = json.loads(receipt.read_text())
+    payload = at.read_ticket_receipt(receipt)
     assert payload['status'] == 'frozen'
     context = payload['context']
     assert len(context['slate']) == 7
@@ -1341,7 +1341,7 @@ def test_enh_no_bet_is_a_receipt_not_a_freeze(_tmp_lane):
     state = at.fresh_state()
     before = json.dumps(state, sort_keys=True)
     at.cmd_enhancement(_args(), state, scores={})
-    receipt = json.loads(at.decision_receipt_path(DAY, 'enh').read_text())
+    receipt = at.read_ticket_receipt(at.decision_receipt_path(DAY, 'enh'))
     assert receipt['status'] == 'no_bet' and receipt['plan'] == []
     assert json.dumps(state, sort_keys=True) == before
 

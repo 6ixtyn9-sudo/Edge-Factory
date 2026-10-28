@@ -875,3 +875,112 @@ def heal_ledger_labels(ledger: list) -> int:
             p["display_rule"] = derived
             healed += 1
     return healed
+
+
+# Audit receipts live under an already retained/uploaded evidence directory,
+# not beside the human-facing daily cards. Legacy root JSON remains readable.
+TICKET_RECEIPT_SUBDIR = "phase5_reconciliation/ticket_decisions"
+
+
+def ticket_receipt_path(localdata, name):
+    from pathlib import Path
+    return Path(localdata) / TICKET_RECEIPT_SUBDIR / (name.removesuffix(".gz") + ".gz")
+
+
+def ticket_receipt_files(localdata, prefix, *, conflicts=False):
+    from pathlib import Path
+    base = Path(localdata)
+    pattern = (f"{prefix}_????-??-??_decision_cache_conflict*.json" if conflicts else
+               f"{prefix}_????-??-??_decision.json")
+    return sorted([*base.glob(pattern),
+                   *(base / TICKET_RECEIPT_SUBDIR).glob(pattern + ".gz")])
+
+
+def ticket_receipt_bytes(path, *, raw=None):
+    import gzip
+    import zlib
+    raw = path.read_bytes() if raw is None else raw
+    try:
+        return gzip.decompress(raw) if path.suffix == ".gz" else raw
+    except (OSError, EOFError, zlib.error) as exc:
+        raise ValueError("invalid compressed ticket receipt") from exc
+
+
+def read_ticket_receipt(path):
+    import json
+    return json.loads(ticket_receipt_bytes(path))
+
+
+def encode_ticket_receipt(path, raw):
+    """Stable gzip header, original JSON bytes intact."""
+    import gzip
+    import io
+    if isinstance(raw, str):
+        raw = raw.encode("utf-8")
+    stored = raw
+    if path.suffix == ".gz":
+        stream = io.BytesIO()
+        with gzip.GzipFile(filename="", mode="wb", fileobj=stream, mtime=0) as handle:
+            handle.write(raw)
+        stored = stream.getvalue()
+        if gzip.decompress(stored) != raw:
+            raise ValueError("ticket receipt compression roundtrip failed")
+    return stored
+
+
+def write_ticket_receipt(path, raw):
+    """Atomically install a lossless receipt; never leave a partial final file."""
+    import os
+    stored = encode_ticket_receipt(path, raw)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + ".tmp")
+    with temporary.open("wb") as handle:
+        handle.write(stored)
+        handle.flush()
+        os.fsync(handle.fileno())
+    temporary.replace(path)
+
+
+def compact_ticket_receipts(localdata):
+    """Relocate legacy receipts without editing their payloads or hashes.
+
+    Canonical evidence wins on layout collisions. Different legacy evidence
+    is retained separately, not silently overwritten. Frozen/invalid collisions
+    are visible to parity as conflicts; disposable draft collisions are archived.
+    """
+    import hashlib
+    import json
+    from pathlib import Path
+    moved = 0
+    for prefix in ("auto_tickets", "autobets_enh_tickets"):
+        for source in sorted(Path(localdata).glob(f"{prefix}_????-??-??_decision*.json")):
+            raw = source.read_bytes()
+            target = ticket_receipt_path(localdata, source.name)
+            try:
+                current = ticket_receipt_bytes(target) if target.exists() else None
+            except ValueError as exc:
+                print(f"::warning::Cannot compact {source}: {exc}; both copies retained")
+                continue
+            if current is not None and current != raw:
+                try:
+                    same = json.loads(current) == json.loads(raw)
+                except (ValueError, TypeError):
+                    same = False
+                if not same:
+                    try:
+                        frozen = json.loads(raw).get("status") == "frozen"
+                    except (ValueError, AttributeError):
+                        frozen = True
+                    suffix = "cache_conflict" if frozen else "superseded_draft"
+                    target = ticket_receipt_path(localdata,
+                        source.stem + f"_{suffix}_{hashlib.sha256(raw).hexdigest()}.json")
+                    write_ticket_receipt(target, raw)
+            elif not target.exists():
+                write_ticket_receipt(target, raw)
+            # Only remove the root copy after a successful durable write/read.
+            # Semantically identical JSON may differ in whitespace; its payload
+            # and internal digest are unchanged, and canonical bytes are retained.
+            ticket_receipt_bytes(target)
+            source.unlink()
+            moved += 1
+    return moved
