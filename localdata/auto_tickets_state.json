@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 358.4663350000001,
+  "bank": 283.0761,
   "cycle_base": 203.9865280000001,
   "open_slips": [
     {
@@ -40,7 +40,12 @@
             }
           ],
           "odds": 2.0,
-          "stake_pct": 44.8083
+          "stake_pct": 35.3845,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -76,10 +81,15 @@
             }
           ],
           "odds": 1.84,
-          "stake_pct": 44.8083
+          "stake_pct": 35.3845,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
-      "staked_pct": 89.6166
+      "staked_pct": 70.769
     }
   ],
   "history": [
@@ -1408,13 +1418,13 @@
     {
       "date": "2026-10-27",
       "staked_pct": 72.4906,
-      "returned_pct": 140.9942,
+      "returned_pct": 65.604,
       "accas": [
         {
           "odds": 2.08,
-          "won": true,
+          "won": false,
           "stake_pct": 36.2453,
-          "returned_pct": 75.3902,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "AS Roma vs Cagliari",
@@ -1431,7 +1441,7 @@
               "match": "RSD Alcal\u00e1 vs Las Palmas",
               "pick": "AWAY",
               "odds": 1.55,
-              "result": "win",
+              "result": "loss",
               "fixture_key": [
                 "2026-10-27",
                 "RSD Alcal\u00e1",
@@ -1471,8 +1481,8 @@
           ]
         }
       ],
-      "bank_pct": 358.4663,
-      "close_pct": 358.4662
+      "bank_pct": 283.0761,
+      "close_pct": 283.076
     }
   ],
   "events": [
@@ -1599,6 +1609,11 @@
       "frozen_at": "2026-10-27T09:24:53+02:00",
       "final": true,
       "lock_source": "state"
+    },
+    "2026-10-28": {
+      "frozen_at": "2026-10-28T09:51:36+02:00",
+      "final": true,
+      "lock_source": "state"
     }
   },
   "superseded_by_date": {
@@ -1612,7 +1627,7 @@
   },
   "integrity_recovery": {
     "pending_cached_freeze": {
-      "status": "approved",
+      "status": "recovered",
       "date": "2026-10-28",
       "source_run_id": "40647275279",
       "source_head": "6047e60474c67984d573baa50a0ddd05a3c614a4",
@@ -1647,7 +1662,9 @@
           ]
         ]
       ],
-      "reason": "Operator-authorized recovery of the saved frozen card after receipt-relocation rebase conflict; no bank/history edits or recut."
+      "reason": "Operator-authorized recovery of the saved frozen card after receipt-relocation rebase conflict; no bank/history edits or recut.",
+      "receipt_sha256": "8b5fac286b55b09901f6b7a804a05f0faf6d0ad0226bb3ffb561cf2b90814f2a",
+      "recovered_financial_sha256": "6695adeeae47172e3e53bb747ce4792fdc49c8a206b67cc4a4bc5ba9c6ea31aa"
     }
   }
 }

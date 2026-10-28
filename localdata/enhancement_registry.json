@@ -3865,10 +3865,10 @@
    "status_since": "2026-10-21"
   },
   "home_under_35@v1": {
-   "hits": 1,
-   "inv_price_sum": 0.6802721088435374,
+   "hits": 2,
+   "inv_price_sum": 1.0562119584675975,
    "multi_n": 0,
-   "n": 1,
+   "n": 2,
    "processed": [
     "2026-08-13|Ilves vs HNK Rijeka|home_under_35@v1",
     "2026-08-13|NSI Runavik vs FC Lugano|home_under_35@v1",
@@ -3944,9 +3944,10 @@
     "2026-10-11|Cagliari vs Juventus|home_under_35@v1",
     "2026-10-11|Svitavy vs Vysoke Myto|home_under_35@v1",
     "2026-10-10|Brusque vs Paysandu|home_under_35@v1",
-    "2026-10-23|Dynamo Kyiv vs Kudrivka|home_under_35@v1"
+    "2026-10-23|Dynamo Kyiv vs Kudrivka|home_under_35@v1",
+    "2026-10-21|Guadalajara vs Necaxa|home_under_35@v1"
    ],
-   "profit": 0.47,
+   "profit": 2.13,
    "records": [
     {
      "away": "Kudrivka",
@@ -3976,6 +3977,25 @@
      "rule": "pfc_234f16641d9893e8ec2a01f0",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Necaxa",
+     "away_key": "necaxa",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.8334,
+     "date": "2026-10-21",
+     "hit": true,
+     "home": "Guadalajara",
+     "home_key": "guadalajara",
+     "league": "Liga MX",
+     "match": "Guadalajara vs Necaxa",
+     "multi_source": false,
+     "price": 2.66,
+     "price_context": {},
+     "recorded_at": "2026-10-28T09:26:49.695223+00:00",
+     "rule": "pfc_439097cb9bb700e9996c0b07",
+     "source": "oddspapi",
+     "stated": 0.8376
     }
    ],
    "records_truncated": false,

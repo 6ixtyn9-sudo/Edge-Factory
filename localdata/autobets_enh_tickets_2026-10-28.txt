@@ -1,17 +1,20 @@
 ENHANCEMENT TICKETS (ROLLING) — 2026-10-28
 ==============================================================
-PERFORMANCE: total bank 40.3% of capital (x0.40) = free bank 40.3% + committed 0.0% · next take-profit notification at 200.0%
-[ACCA #1] @1.90 — stake 3.4% of capital (8.3% of free bank) [SKIPPED_VETO parent]
-   Excelsior Maassluis vs SC Heerenveen           Match Over 2.5 Goals @ 1.40 (parent cohort 66%, n=318; not fixture probability)
-   Quick Boys vs Eemdijk                          Match Under 4.5 Goals @ 1.36 (parent cohort 72%, n=936; not fixture probability)
+PERFORMANCE: total bank 29.9% of capital (x0.30) = free bank 29.9% + committed 0.0% · next take-profit notification at 200.0%
+[ACCA #1] @2.10 — stake 2.5% of capital (8.3% of free bank) [SKIPPED_VETO parent]
+   Excelsior Maassluis vs SC Heerenveen           Match Over 2.5 Goals @ 1.40 (parent cohort 65%, n=318; not fixture probability) (rank: model 0.775 [enh_score_logit_v2 69dcf38e811a]; ordering only)
+   Fulham vs Crystal Palace                       Match Under 3.5 Goals @ 1.50 (parent cohort 65%, n=773; not fixture probability) (rank: model 0.676 [enh_score_logit_v2 afce7e0180e6]; ordering only)
 
-[ACCA #2] @1.90 — stake 3.4% of capital (8.3% of free bank) [SKIPPED_VETO parent]
-   Genoa vs Juventus                              Match Over 1.5 Goals @ 1.36 (parent cohort 79%, n=271; not fixture probability)
-   Aberdeen vs Falkirk FC                         Match Under 3.5 Goals @ 1.40 (parent cohort 65%, n=773; not fixture probability)
+[ACCA #2] @1.85 — stake 2.5% of capital (8.3% of free bank)
+   Genoa vs Juventus                              Match Over 1.5 Goals @ 1.36 (parent cohort 79%, n=271; not fixture probability) (rank: model 0.769 [enh_score_logit_v2 3e1cf7bc529c]; ordering only)
+   Genemuiden vs FC Dordrecht                     Match Over 2.5 Goals @ 1.36 (parent cohort 65%, n=318; not fixture probability) (rank: model 0.738 [enh_score_logit_v2 69dcf38e811a]; ordering only)
 
-[ACCA #3] @1.90 — stake 3.4% of capital (8.3% of free bank)
-   Genemuiden vs FC Dordrecht                     Match Over 2.5 Goals @ 1.36 (parent cohort 66%, n=318; not fixture probability)
-   Arsenal W vs SL Benfica W                      Match Under 4.5 Goals @ 1.40 (parent cohort 72%, n=936; not fixture probability)
+[ACCA #3] @1.96 — stake 2.5% of capital (8.3% of free bank) [SKIPPED_VETO parent]
+   Aberdeen vs Falkirk FC                         Match Under 3.5 Goals @ 1.40 (parent cohort 65%, n=773; not fixture probability) (rank: model 0.757 [enh_score_logit_v2 afce7e0180e6]; ordering only)
+   Arsenal W vs SL Benfica W                      Match Under 4.5 Goals @ 1.40 (parent cohort 72%, n=936; not fixture probability) (rank: model 0.752 [enh_score_logit_v2 d811bb388f1f]; ordering only)
 
-deploying 25.0% of free bank today = 10.1% of capital · take-profit NOTIFICATION at +100% per cycle (performance-based; you act on it).
+ML-ACTIVE on card: enh_score_logit_v2; retained model keys=4; ordering only, not admission evidence
+deploying 25.0% of free bank today = 7.5% of capital · take-profit NOTIFICATION at +100% per cycle (performance-based; you act on it).
 All figures are percentages of capital. Round to your bookmaker's minimum stake. Bet only what you can afford to lose.
+
+FROZEN AT 10:13 - FINAL
