@@ -237,3 +237,64 @@ def test_reconciled_date_requires_one_frozen_position_per_added_acca(settlement_
     install(head, cache)
     with pytest.raises(persistence.EvidenceMergeError, match='reconciled date'):
         persistence.restore_committed_localdata(repo)
+
+
+@pytest.mark.parametrize('relative', [persistence.MAIN_STATE, persistence.ENH_STATE])
+@pytest.mark.parametrize('cache_corrected', [False, True])
+def test_HEAD_verified_regulation_regrade_survives_cache_restore(tmp_path, relative, cache_corrected):
+    import copy
+    from scripts import auto_tickets as at
+    def git(*args):
+        subprocess.run(['git', *args], cwd=tmp_path, check=True, capture_output=True)
+    git('init', '-q')
+    git('config', 'user.name', 'Test')
+    git('config', 'user.email', 'test@example.invalid')
+    day = '2026-10-27'
+    fact = dict(date=day,home='RSD Alcalá',away='Las Palmas',hs=1,gs=1,outcome='draw',score_period='regulation')
+    head = dict(bank=40., base_pct=100.,cycle_base=100.,events=[],open_slips=[],
+                frozen_by_date={day:dict(final=True,frozen_at=day+'T09:30:00+02:00')},
+                history=[dict(date=day,staked_pct=4.,returned_pct=9.8,bank_pct=40.,close_pct=40.,accas=[
+                    dict(odds=2.45,stake_pct=4.,won=True,returned_pct=9.8,legs=[
+                        dict(match='RSD Alcalá vs Las Palmas',pick='AWAY',odds=1.55,result='win'),
+                        dict(match='AS Roma vs Cagliari',pick='HOME',odds=1.33,result='win')])])])
+    config = tmp_path / 'Config/verified_results.json'
+    config.parent.mkdir()
+    config.write_text(json.dumps(dict(rows=[fact])))
+    path = tmp_path / relative
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(json.dumps(head))
+    git('add', '.')
+    git('commit', '-qm', 'reviewed regulation result and original financial state')
+    cache = copy.deepcopy(head)
+    if cache_corrected:
+        at.regrade_verified_settlements(cache, verified=[fact])
+    path.write_text(json.dumps(cache))
+    restored = json.loads(persistence._retain_financial_state(tmp_path, relative))
+    assert restored['bank'] == pytest.approx(30.2)
+    assert restored['history'][0]['returned_pct'] == 0.
+    assert restored['frozen_by_date'] == head['frozen_by_date']
+    # A cached approval is NOT authority. Unknown bank/stake changes still fail.
+    cache['bank'] += 1.
+    path.write_text(json.dumps(cache))
+    with pytest.raises(persistence.EvidenceMergeError):
+        persistence._retain_financial_state(tmp_path, relative)
+
+
+def test_plain_script_finance_projection_works_without_root_PYTHONPATH(tmp_path):
+    import os
+    from pathlib import Path
+    # Run the real script-module import layout in a child interpreter, isolated
+    # from pytest's extra sys.path entries and in a non-repository cwd.
+    script = Path(persistence.__file__).resolve()
+    code = "import sys;sys.path.insert(0,sys.argv[1]);import phase5_persistence as p;from pathlib import Path;print(p._reviewed_financial_projection(Path(sys.argv[2]), {'bank':100,'history':[]}))"
+    config = tmp_path/'Config/verified_results.json'
+    config.parent.mkdir()
+    config.write_text(json.dumps({'rows': []}))
+    for args in [('init','-q'),('config','user.name','Test'),('config','user.email','test@example.invalid'),('add','.'),('commit','-qm','reviewed facts')]:
+        subprocess.run(['git',*args],cwd=tmp_path,check=True,capture_output=True)
+    import sys
+    env = dict(os.environ)
+    env.pop('PYTHONPATH',None)
+    result = subprocess.run([sys.executable,'-c',code,str(script.parent),str(tmp_path)],cwd=tmp_path,env=env,text=True,capture_output=True)
+    assert result.returncode == 0, result.stderr
+    assert "'bank': 100" in result.stdout

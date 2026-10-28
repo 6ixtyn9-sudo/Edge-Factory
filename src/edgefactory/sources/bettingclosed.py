@@ -18,7 +18,7 @@ MARKETS = ("1x2", "under-over", "gol-nogol")
 _ROW = re.compile(r'(?=<tr class="rowincontri)')
 _TEAMS = re.compile(r'<a href="/prediction/\d+/[^"]*">(?:<span[^>]*>[^<]*</span>)?\s*'
                     r"([^<]+?)\s*-\s*([^<]+?)\s*<span")
-_RESULT = re.compile(r'class="resultMt">([^<]*)<')
+_RESULT = re.compile(r'class="resultMt"[^>]*>(.*?)</td>', re.S)
 _PRED = re.compile(r'class="predMt"><a[^>]*>([^<]+)</a>')
 _PRED_FREE = re.compile(r'class="predMt">([^<]+)<')
 _ODD = re.compile(r'class="oddPredBook">([^<]*)<')
@@ -56,14 +56,21 @@ def fetch_day(date: str) -> list[dict]:
             home, away = t.group(1).strip(), t.group(2).strip()
             key = (home, away)
             res = _RESULT.search(chunk)
-            hs, gs = _parse_score(res.group(1) if res else "")
+            from edgefactory.settlement import result_period_status
+            import html as html_module
+            result_html = html_module.unescape(res.group(1)) if res else ""
+            result_text = re.sub(r"<[^>]+>", " ", result_html)
+            hs, gs = _parse_score(result_text)
+            status = result_period_status(result_html)
             pred = _PRED.search(chunk) or _PRED_FREE.search(chunk)
             odd = _ODD.search(chunk)
             tip = _ODDS_TIP.search(chunk)
             row = merged.setdefault(key, {
                 "date": date, "home": home, "away": away,
-                "hs": hs, "gs": gs,
+                "hs": hs, "gs": gs, "status": status,
             })
+            if status:
+                row["status"] = status
             if row["hs"] is None and hs is not None:
                 row["hs"], row["gs"] = hs, gs
             if tip and "odd1" not in row:
@@ -83,7 +90,7 @@ def fetch_day(date: str) -> list[dict]:
     return list(merged.values())
 
 
-COLUMNS = ["date", "home", "away", "hs", "gs",
+COLUMNS = ["date", "home", "away", "hs", "gs", "status",
            "odd1", "oddx", "odd2", "odd_under", "odd_over",
            "pick_1x2", "odd_pick_1x2", "pick_ou", "odd_pick_ou",
            "pick_btts", "odd_pick_btts"]

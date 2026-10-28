@@ -148,6 +148,11 @@ def main(argv=None):
             print(f"no {args.lane} lane state yet — nothing to report")
         return 0
     if not args.no_settle:
+        corrections = at.regrade_verified_settlements(st)
+        if corrections:
+            for line in corrections:
+                print(line)
+            at.save_state(st, lane)
         for line in at.settle_open_slips(st, at.load_settled(), lane=lane):
             print(line)
 
