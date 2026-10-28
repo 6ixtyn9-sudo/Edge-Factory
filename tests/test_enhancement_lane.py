@@ -1344,3 +1344,33 @@ def test_enh_no_bet_is_a_receipt_not_a_freeze(_tmp_lane):
     receipt = json.loads(at.decision_receipt_path(DAY, 'enh').read_text())
     assert receipt['status'] == 'no_bet' and receipt['plan'] == []
     assert json.dumps(state, sort_keys=True) == before
+
+
+def test_card_reports_retained_ranking_policy_not_current_environment(_tmp_lane, monkeypatch):
+    _registry(_tmp_lane)
+    _board(_tmp_lane,_distinct(2))
+    legs,plan=_legs_and_plan(_tmp_lane)
+    for a in plan:
+        for l in a['legs']:
+            l.update(ranking_basis='model',ml_rank_probability=.8123,
+                     ml_model_schema='enh_score_logit_v2',ml_model_key='a'*64)
+    before=at.ticket_card_identity(plan)
+    monkeypatch.setenv('EDGE_FACTORY_ENH_ML','0')
+    text=at.render_enhancement_tickets(at.fresh_state(),DAY,legs,plan,_now(),
+         should_freeze=False,freeze_record=None,bank_eff=100.,root=_tmp_lane.parent)
+    assert 'rank: model 0.812 [enh_score_logit_v2 aaaaaaaaaaaa]' in text
+    assert 'ML-ACTIVE on card' in text and 'not fixture probability' in text
+    assert at.ticket_card_identity(plan)==before
+    for a in plan:
+        for l in a['legs']: l['ranking_basis']='cohort'
+    text=at.render_enhancement_tickets(at.fresh_state(),DAY,legs,plan,_now(),
+         should_freeze=False,freeze_record=None,bank_eff=100.,root=_tmp_lane.parent)
+    assert 'ML-INACTIVE on card' in text and 'rank: cohort' in text
+    assert at.ticket_card_identity(plan)==before
+    for a in plan:
+        for l in a['legs']: l['ml_ordering_active']=True
+    text=at.render_enhancement_tickets(at.fresh_state(),DAY,legs,plan,_now(),
+         should_freeze=False,freeze_record=None,bank_eff=100.,root=_tmp_lane.parent)
+    assert 'ML-ACTIVE pool policy' in text and 'cohort in unscored group' in text
+    assert 'ML-INACTIVE' not in text
+    assert at.ticket_card_identity(plan)==before

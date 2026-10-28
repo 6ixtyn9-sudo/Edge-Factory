@@ -740,6 +740,16 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
                 payload['model_key'] = hashlib.sha256(json.dumps(
                     payload, sort_keys=True, allow_nan=False).encode()).hexdigest()
                 result.update(ml_model=payload, ml_status='fitted')
+                counts = Counter(r[2] for r in training)
+                # Descriptors only, OUTSIDE the signed payload: no new gate,
+                # model-key change, or claim that n/K is events per predictor.
+                result['ml_fit_adequacy'] = dict(
+                    n=len(training), classes=len(counts),
+                    served_dimensions=len(model.coef_[0]),
+                    stored_coefficients=sum(len(c) for c in model.coef_),
+                    min_class_count=min(counts.values()), class_counts=dict(sorted(counts.items())),
+                    mean_rows_per_class=len(training) / len(counts),
+                    assessment='descriptive_only_not_validation')
             except (ImportError, ValueError, TypeError, AttributeError, ArithmeticError, Warning):
                 # Optional learner/API failure must not erase measured evidence.
                 result['ml_status'] = 'fit_unavailable'

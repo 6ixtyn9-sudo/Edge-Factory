@@ -712,6 +712,15 @@ def persist_localdata(
 ) -> dict[str, Any]:
     """Commit, rebase with safe JSONL unions, and push without force."""
     repo = Path(repo)
+    # Capture BEFORE commit/pull/rebase. This identifies this persistence
+    # invocation, not the revision used by every earlier pipeline subprocess.
+    revision = _run(repo, "rev-parse", "HEAD")
+    pre_persist_head = _decode_output(revision.stdout) if revision.returncode == 0 else "unavailable"
+    verified_path = repo / "Config" / "verified_results.json"
+    try:
+        verified_sha = hashlib.sha256(verified_path.read_bytes()).hexdigest()
+    except OSError:
+        verified_sha = "unavailable"
     # Raw candidate ledgers can exceed GitHub's per-blob limit in one day.
     # Keep working copies for the cache + dedicated 30-day artifact, including
     # files tracked by older revisions. Do not delete or truncate evidence.
@@ -726,7 +735,10 @@ def persist_localdata(
         return {"status": "no_changes"}
 
     run_id = run_id or os.environ.get("GITHUB_RUN_ID", "local")
-    commit = _run(repo, "commit", "-m", f"chore: persist pipeline state (run {run_id})")
+    commit = _run(repo, "commit", "-m", f"chore: persist pipeline state (run {run_id})",
+                  "-m", f"pre_persist_head={pre_persist_head}\nverified_results_sha256={verified_sha}\n"
+                        f"event_sha={os.environ.get('GITHUB_SHA', 'unavailable')}\n"
+                        "scope=persistence invocation; earlier subprocess revisions not inferred")
     if commit.returncode != 0:
         reason = _decode_output(commit.stderr) or _decode_output(commit.stdout)
         _warn_not_persisted(f"git commit failed: {reason}")
