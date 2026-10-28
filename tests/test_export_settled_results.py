@@ -118,3 +118,31 @@ def test_inbound_dispositions_drop_nonterminal_and_merge_warehouse_wins():
     assert by_home["Junior"]["src"] == "overlay"
     assert "Too" not in by_home
     assert carried == 1
+
+
+def test_period_veto_survives_overlay_export_and_old_inbound_aggregate(tmp_path):
+    import json
+    from edgefactory.settlement import load_period_holds
+    con = _con()
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-10-27','Cup Club','Away Club',1,3,'away')")
+    con.execute('CREATE TABLE vitibet(date VARCHAR,home VARCHAR,away VARCHAR,status VARCHAR)')
+    con.execute("INSERT INTO vitibet VALUES ('2026-10-27','Cup Club','Away Club','AET')")
+    holds = []
+    assert export_mod.build_overlay_rows(con, '2026-10-01', period_holds=holds) == []
+    path = tmp_path / 'settled_results.json'
+    path.write_text(json.dumps(dict(rows=[], period_holds=holds)))
+    reread = load_period_holds(path)
+    rows, carried = export_mod.merge_overlay_rows([], [_row('2026-10-27', 'Cup Club', 'Away Club', 1, 3, 'away')], '2026-10-01', period_holds=reread)
+    assert rows == [] and carried == 0
+
+
+def test_export_preserves_explicit_90_minute_score_and_period_metadata():
+    con = _con()
+    con.execute('ALTER TABLE forebet_settled ADD COLUMN status VARCHAR')
+    con.execute('ALTER TABLE forebet_settled ADD COLUMN regulation_hs INT')
+    con.execute('ALTER TABLE forebet_settled ADD COLUMN regulation_gs INT')
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-10-27','Cup Club','Away Club',1,3,'away','AET',1,1)")
+    rows = export_mod.build_overlay_rows(con, '2026-10-01')
+    assert (rows[0]['hs'], rows[0]['gs'], rows[0]['outcome']) == (1, 1, 'draw')
+    assert rows[0]['status'] == 'AET'
+    assert export_mod.merge_overlay_rows(rows, [], '2026-10-01')[0] == rows

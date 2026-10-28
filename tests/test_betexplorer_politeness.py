@@ -172,3 +172,20 @@ def test_request_counts_track_every_attempt_for_the_receipt(monkeypatch):
     be.reset_fetch_count()
     assert be.request_stats() == {"requests": 0, "market_requests": 0,
                                   "market_budget_stop": False}
+
+
+@pytest.mark.parametrize('marker', ['aet', 'pen.', '<abbr title="After extra time">ET</abbr>'])
+def test_result_period_marker_survives_live_and_archive_parsers(marker):
+    from scripts import backfill_betexplorer as archive
+    from edgefactory.settlement import regulation_score
+    page = f'''
+    <tr data-dt="27,10,2026,20,0">
+      <td class="table-main__tt"><a href="/football/spain/copa/alcala-las-palmas/ABC12345/">RSD Alcala - Las Palmas</a></td>
+      <td class="table-main__result"><a><strong>1:3</strong></a> {marker}</td>
+      <td class="table-main__partial">(0:0, 1:1, 0:2)</td>
+    </tr>'''
+    for parser in (be.parse_results_page, archive.parse_results_page):
+        rows = parser(page)
+        assert len(rows) == 1 and rows[0]['status'] == 'AET'
+        assert str(rows[0]['hs']) == '1' and str(rows[0]['gs']) == '3'
+        assert regulation_score(rows[0]) is None  # never invent regulation from partials
