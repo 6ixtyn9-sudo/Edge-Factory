@@ -84,7 +84,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from edgefactory.util import ticket_receipt_files, read_ticket_receipt
+from edgefactory.util import ticket_receipt_files, read_ticket_receipt, freeze_timestamp_matches
 
 import auto_tickets as at  # the live engine — guards, floors, constants  # noqa: E402
 
@@ -3998,8 +3998,9 @@ def decision_parity_report(root=None):
                 if day not in (state.get(at.FROZEN_BOOK_KEY) or {}):
                     item["ledger"] = "MISSING_FREEZE"
                     continue
-                item["freeze_time"] = ("MATCH" if state[at.FROZEN_BOOK_KEY][day].get("frozen_at")
-                                       == context["build_at"] else "DIFF")
+                item["freeze_time"] = ("MATCH" if freeze_timestamp_matches(
+                    state[at.FROZEN_BOOK_KEY][day].get("frozen_at"), context["build_at"])
+                    else "DIFF")
                 history = [h for h in state.get("history", []) if h.get("date") == day]
                 settled = [a for h in history for a in h.get("accas", [])]
                 opened = [a for h in state.get("open_slips", []) if h.get("date") == day
