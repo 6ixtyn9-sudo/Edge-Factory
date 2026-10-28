@@ -84,6 +84,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from edgefactory.util import ticket_receipt_files, read_ticket_receipt
+
 import auto_tickets as at  # the live engine — guards, floors, constants  # noqa: E402
 
 LOCALDATA = ROOT / "localdata"
@@ -3912,7 +3914,7 @@ def decision_parity_report(root=None):
     for lane, prefix, state_file in (("main", "auto_tickets", "auto_tickets_state.json"),
                                       ("enh", "autobets_enh_tickets", "enhancement_tickets_state.json")):
         lane_report = dict(receipts=[], missing_receipt_days=[], state_error=None,
-                           receipt_conflicts=sorted(p.name for p in base.glob(f"{prefix}_*_decision_cache_conflict.json")))
+                           receipt_conflicts=[str(p.relative_to(base)) for p in ticket_receipt_files(base, prefix, conflicts=True)])
         report["lanes"][lane] = lane_report
         try:
             state = json.loads((base / state_file).read_text())
@@ -3926,22 +3928,31 @@ def decision_parity_report(root=None):
             lane_report["state_error"] = str(exc)
         days = {str(r.get("date")) for r in state.get("history", [])}
         days.update(str(r.get("date")) for r in state.get("open_slips", []))
-        seen = set()
-        for path in sorted(base.glob(f"{prefix}_????-??-??_decision.json")):
-            item = dict(file=path.name, status="INVALID", ledger="UNAVAILABLE", settlement="UNAVAILABLE")
+        seen, storage_digests = set(), {}
+        lane_report["duplicate_storage_copies"] = []
+        for path in ticket_receipt_files(base, prefix):
+            item = dict(file=str(path.relative_to(base)), status="INVALID", ledger="UNAVAILABLE", settlement="UNAVAILABLE")
             lane_report["receipts"].append(item)
             try:
-                payload = json.loads(path.read_text())
+                payload = read_ticket_receipt(path)
                 digest = payload.pop("sha256")
                 if digest != at._decision_digest(payload):
                     raise ValueError("receipt hash mismatch")
                 context = payload["context"]
                 day = context["date"]
                 if (payload["schema"] != 1 or context["lane"] != lane
-                        or path.name != f"{prefix}_{day}_decision.json"
+                        or path.name.removesuffix(".gz") != f"{prefix}_{day}_decision.json"
                         or payload["boundary"] != report["boundary"]
                         or payload["status"] not in ("frozen", "draft", "no_bet")):
                     raise ValueError("receipt identity/schema/status mismatch")
+                logical_name = path.name.removesuffix(".gz")
+                if logical_name in storage_digests:
+                    if storage_digests[logical_name] != digest:
+                        raise ValueError("conflicting plain/compressed receipt copies")
+                    lane_report["duplicate_storage_copies"].append(item["file"])
+                    lane_report["receipts"].pop()  # identical evidence, not a second decision
+                    continue
+                storage_digests[logical_name] = digest
                 when = datetime.fromisoformat(context["build_at"])
                 if payload["status"] == "no_bet" and payload["plan"]:
                     raise ValueError("no-bet receipt contains a ticket")
@@ -4023,7 +4034,7 @@ def decision_parity_report(root=None):
                     item["settled_net"] = returned - stake
                 elif opened:
                     item["settlement"] = "PENDING"
-            except (OSError, KeyError, TypeError, ValueError, IndexError, OverflowError, AttributeError, StopIteration) as exc:
+            except (OSError, EOFError, KeyError, TypeError, ValueError, IndexError, OverflowError, AttributeError, StopIteration) as exc:
                 item.update(status="INVALID", error=f"{type(exc).__name__}: {exc}")
         if lane == "enh":
             lane_report["attributed_scores"] = _attributed_ml_scores(state.get("history", []))

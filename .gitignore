@@ -215,3 +215,8 @@ localdata/prediction_history_keys.json.gz
 # Exact live decision receipts and read-only replay report (existing ticket families).
 !localdata/autobets_enh_tickets_20*_decision*.json
 !localdata/replay_parity.json
+
+# Large decision snapshots are compressed under the existing audit directory.
+# Read legacy root copies, but never publish them back into the daily listing.
+localdata/auto_tickets_????-??-??_decision*.json
+localdata/autobets_enh_tickets_????-??-??_decision*.json

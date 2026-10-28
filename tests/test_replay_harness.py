@@ -750,14 +750,14 @@ def test_exact_receipt_replay_is_read_only_and_captures_free_bank(tmp_path, monk
     monkeypatch.setattr(at.acca_gate, "refresh", forbidden)
     monkeypatch.setattr(at, "MAX_ACCAS", 99)
     monkeypatch.setattr(at, "STAKE_FRAC", .99)
-    before = {p: p.read_bytes() for p in localdata.iterdir()}
+    before = {p: p.read_bytes() for p in localdata.rglob("*") if p.is_file()}
     report = rh.decision_parity_report(tmp_path)
     assert report["status"] == "PASS"
     item = report["lanes"]["main"]["receipts"][0]
     assert (item["status"], item["ledger"], item["bank_reconciliation"]) == ("MATCH",) * 3
     assert item["committed_excluding_target"] == 20
     assert sum(a["stake_pct"] for a in plan) == 20
-    assert before == {p: p.read_bytes() for p in localdata.iterdir()}
+    assert before == {p: p.read_bytes() for p in localdata.rglob("*") if p.is_file()}
 
 
 @pytest.mark.parametrize("field,value", [
@@ -779,7 +779,7 @@ def test_parity_red_team_corruption_never_passes(tmp_path, monkeypatch, change):
     import json
     localdata, context, plan, state = _retained_decision(tmp_path, monkeypatch)
     receipt = at.decision_receipt_path(context["date"])
-    payload = json.loads(receipt.read_text())
+    payload = at.read_ticket_receipt(receipt)
     if change == "stake":
         state["open_slips"][0]["accas"][0]["stake_pct"] += 1
     elif change == "pairing":
@@ -796,7 +796,7 @@ def test_parity_red_team_corruption_never_passes(tmp_path, monkeypatch, change):
     if change != "hash":
         payload.pop("sha256")
         payload["sha256"] = at._decision_digest(payload)
-    receipt.write_text(json.dumps(payload))
+    at.write_ticket_receipt(receipt, json.dumps(payload))
     (localdata / "auto_tickets_state.json").write_text(json.dumps(state))
     assert rh.decision_parity_report(tmp_path)["status"] == "FAIL"
 
@@ -929,7 +929,7 @@ def test_void_quote_identity_and_partial_settlement_reconcile_separately(tmp_pat
 @pytest.mark.parametrize('raw', ['[]', 'null', '{}', '{"sha256":"broken"}'])
 def test_malformed_receipts_do_not_crash_or_pass(tmp_path, monkeypatch, raw):
     _, context, _, _ = _retained_decision(tmp_path, monkeypatch)
-    at.decision_receipt_path(context['date']).write_text(raw)
+    at.write_ticket_receipt(at.decision_receipt_path(context['date']), raw)
     report = rh.decision_parity_report(tmp_path)
     assert report['status'] == 'FAIL'
     assert report['lanes']['main']['receipts'][0]['status'] == 'INVALID'
@@ -984,3 +984,90 @@ def test_consistent_payout_totals_cannot_hide_contradictory_settled_outcomes(tmp
     report = rh.decision_parity_report(tmp_path)
     assert report['status'] == 'FAIL'
     assert report['lanes']['main']['receipts'][0]['settlement'] == 'DIFF'
+
+
+def test_legacy_receipt_replay_and_frozen_lossless_migration(tmp_path, monkeypatch):
+    import json
+    from edgefactory.util import compact_ticket_receipts, ticket_receipt_bytes
+    localdata, context, plan, state = _retained_decision(tmp_path, monkeypatch)
+    compressed = at.decision_receipt_path(context['date'])
+    payload = at.read_ticket_receipt(compressed)
+    original = (json.dumps(payload, ensure_ascii=False, indent=2) + '\n').encode()
+    legacy = localdata / compressed.name.removesuffix('.gz')
+    legacy.write_bytes(original)
+    compressed.unlink()
+    before = {p: p.read_bytes() for p in localdata.rglob('*') if p.is_file()}
+    assert rh.decision_parity_report(tmp_path)['status'] == 'PASS'
+    assert before == {p: p.read_bytes() for p in localdata.rglob('*') if p.is_file()}
+    # A fresh write must migrate, not overwrite, an existing frozen receipt.
+    at.write_decision_receipt(context, [])
+    assert not legacy.exists()
+    assert ticket_receipt_bytes(compressed) == original
+    assert compact_ticket_receipts(localdata) == 0
+    assert at.read_ticket_receipt(compressed)['sha256'] == payload['sha256']
+    assert rh.decision_parity_report(tmp_path)['status'] == 'PASS'
+    binary = compressed.read_bytes()
+    at.write_decision_receipt(context, plan, frozen=True)
+    assert compressed.read_bytes() == binary
+
+
+@pytest.mark.parametrize('damage', ['not_gzip', 'truncated', 'bad_deflate'])
+def test_damaged_compressed_receipt_is_invalid_not_a_replay_crash(tmp_path, monkeypatch, damage):
+    _, context, _, _ = _retained_decision(tmp_path, monkeypatch)
+    path = at.decision_receipt_path(context['date'])
+    original = path.read_bytes()
+    damaged = {'not_gzip': b'not gzip', 'truncated': original[:-8],
+               'bad_deflate': original[:10] + b'\x07' + original[11:]}[damage]
+    path.write_bytes(damaged)
+    report = rh.decision_parity_report(tmp_path)
+    assert report['status'] == 'FAIL'
+    assert report['lanes']['main']['receipts'][0]['status'] == 'INVALID'
+    assert path.read_bytes() == damaged
+
+
+@pytest.mark.parametrize('different', [False, True])
+def test_plain_and_compressed_aliases_cannot_hide_conflicting_evidence(tmp_path, monkeypatch, different):
+    import json
+    localdata, context, _, _ = _retained_decision(tmp_path, monkeypatch)
+    path = at.decision_receipt_path(context['date'])
+    payload = at.read_ticket_receipt(path)
+    if different:
+        payload['extra_evidence'] = 'different but independently hash-valid'
+        payload.pop('sha256')
+        payload['sha256'] = at._decision_digest(payload)
+    (localdata / path.name.removesuffix('.gz')).write_text(json.dumps(payload))
+    report = rh.decision_parity_report(tmp_path)
+    assert report['status'] == ('FAIL' if different else 'PASS')
+    lane = report['lanes']['main']
+    if different:
+        assert any('conflicting plain/compressed' in r.get('error', '') for r in lane['receipts'])
+    else:
+        assert len(lane['receipts']) == 1 and len(lane['duplicate_storage_copies']) == 1
+
+
+def test_compaction_is_deterministic_lossless_and_preserves_invalid_evidence(tmp_path):
+    from edgefactory.util import (compact_ticket_receipts, ticket_receipt_path,
+                                  ticket_receipt_bytes, encode_ticket_receipt)
+    for prefix, raw in [('auto_tickets', b'{not valid JSON'),
+                        ('autobets_enh_tickets', ' {"text":"Alcalá", "status":"frozen"}\n'.encode())]:
+        legacy = tmp_path / f'{prefix}_2026-10-28_decision.json'
+        legacy.write_bytes(raw)
+        target = ticket_receipt_path(tmp_path, legacy.name)
+        assert compact_ticket_receipts(tmp_path) == 1
+        assert not legacy.exists() and ticket_receipt_bytes(target) == raw
+        assert target.read_bytes() == encode_ticket_receipt(target, raw)
+        assert encode_ticket_receipt(target, raw) == encode_ticket_receipt(target, raw)
+        assert compact_ticket_receipts(tmp_path) == 0
+
+
+def test_failed_compaction_does_not_delete_original(tmp_path, monkeypatch):
+    from edgefactory.util import compact_ticket_receipts
+    source = tmp_path / 'auto_tickets_2026-10-28_decision.json'
+    original = b'{"status":"frozen"}'
+    source.write_bytes(original)
+    def failed_replace(*args, **kwargs):
+        raise OSError('simulated disk error')
+    monkeypatch.setattr(Path, 'replace', failed_replace)
+    with pytest.raises(OSError, match='simulated disk error'):
+        compact_ticket_receipts(tmp_path)
+    assert source.read_bytes() == original

@@ -317,7 +317,7 @@ def test_real_main_builder_records_replayable_freeze_not_force_or_reprint(lane, 
     state = _run()
     receipt = at.decision_receipt_path(DAY)
     assert receipt.exists()
-    payload = json.loads(receipt.read_text())
+    payload = at.read_ticket_receipt(receipt)
     assert payload["status"] == "frozen"
     assert payload["context"]["bank_state"]["bank"] == state["bank"]
     context = payload["context"]
@@ -341,6 +341,6 @@ def test_main_no_bet_records_empty_decision_without_financial_change(lane, monke
     state = at.fresh_state()
     before = json.dumps(state, sort_keys=True)
     at.cmd_today(SimpleNamespace(date=DAY, force=False), state, settled={})
-    receipt = json.loads(at.decision_receipt_path(DAY).read_text())
+    receipt = at.read_ticket_receipt(at.decision_receipt_path(DAY))
     assert receipt["status"] == "no_bet" and receipt["plan"] == []
     assert json.dumps(state, sort_keys=True) == before
