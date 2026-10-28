@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-28T06:58:11",
+  "generated_at": "2026-10-28T12:13:09",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 40.348665000000004,
-  "multiple": 0.40348665000000006,
+  "bank_pct": 29.8879,
+  "multiple": 0.298879,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
   "bet_days": 14,
   "accas": {
-    "wins": 11,
-    "losses": 20
+    "wins": 10,
+    "losses": 21
   },
   "open_slips": [
     {
       "date": "2026-10-28",
-      "staked_pct": 10.0872
+      "staked_pct": 7.472
     }
   ],
   "events": [],
@@ -764,19 +764,19 @@
     {
       "date": "2026-10-27",
       "staked_pct": 4.2697,
-      "returned_pct": 10.4608,
+      "returned_pct": 0.0,
       "accas": [
         {
           "odds": 2.45,
-          "won": true,
+          "won": false,
           "stake_pct": 4.2697,
-          "returned_pct": 10.4608,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "RSD Alcal\u00e1 vs Las Palmas",
               "pick": "over",
               "odds": 1.68,
-              "result": "win",
+              "result": "loss",
               "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "BetMGM.us",
@@ -1114,8 +1114,8 @@
           ]
         }
       ],
-      "bank_pct": 40.3487,
-      "close_pct": 34.1673
+      "bank_pct": 29.8879,
+      "close_pct": 23.7065
     }
   ]
 }

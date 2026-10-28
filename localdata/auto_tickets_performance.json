@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-28T06:47:25",
+  "generated_at": "2026-10-28T11:52:28",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 358.4663350000001,
-  "multiple": 3.584663350000001,
+  "bank_pct": 283.0761,
+  "multiple": 2.830761,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
   "bet_days": 59,
   "accas": {
-    "wins": 73,
-    "losses": 48
+    "wins": 72,
+    "losses": 49
   },
   "open_slips": [
     {
       "date": "2026-10-28",
-      "staked_pct": 89.6166
+      "staked_pct": 70.769
     }
   ],
   "events": [
@@ -1353,13 +1353,13 @@
     {
       "date": "2026-10-27",
       "staked_pct": 72.4906,
-      "returned_pct": 140.9942,
+      "returned_pct": 65.604,
       "accas": [
         {
           "odds": 2.08,
-          "won": true,
+          "won": false,
           "stake_pct": 36.2453,
-          "returned_pct": 75.3902,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "AS Roma vs Cagliari",
@@ -1376,7 +1376,7 @@
               "match": "RSD Alcal\u00e1 vs Las Palmas",
               "pick": "AWAY",
               "odds": 1.55,
-              "result": "win",
+              "result": "loss",
               "fixture_key": [
                 "2026-10-27",
                 "RSD Alcal\u00e1",
@@ -1416,8 +1416,8 @@
           ]
         }
       ],
-      "bank_pct": 358.4663,
-      "close_pct": 358.4662
+      "bank_pct": 283.0761,
+      "close_pct": 283.076
     }
   ]
 }
