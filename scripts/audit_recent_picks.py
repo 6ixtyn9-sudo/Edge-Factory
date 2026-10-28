@@ -411,22 +411,9 @@ def load_settled_overlay(path: Path | None = None) -> list[dict[str, Any]]:
         rows = payload.get("rows") or []
     except Exception:
         return []
-    out: list[dict[str, Any]] = []
-    for r in rows:
-        try:
-            out.append(
-                {
-                    "date": str(r["date"])[:10],
-                    "home": str(r["home"]),
-                    "away": str(r["away"]),
-                    "hs": int(r["hs"]),
-                    "gs": int(r["gs"]),
-                    "outcome": str(r["outcome"]),
-                }
-            )
-        except (KeyError, TypeError, ValueError):
-            continue
-    return out
+    from edgefactory.settlement import filter_regulation_rows
+    valid = [r for r in rows if isinstance(r, dict) and all(r.get(k) for k in ("date", "home", "away"))]
+    return filter_regulation_rows(valid)[0]
 
 
 def _verified_event_dispositions_path() -> Path:
@@ -592,68 +579,28 @@ def load_results_index(warehouse_path: Path) -> tuple[dict[tuple[str, str, str],
     if not active:
         return {}, {}
 
-    nh9, na9 = norm_team_sql("home", 9), norm_team_sql("away", 9)
-    nh14, na14 = norm_team_sql("home", 14), norm_team_sql("away", 14)
-
-    union_sql = " UNION ALL ".join(
-        f"SELECT {prio} AS prio, date, home, away, "
-        f"{nh9} AS hkey, {na9} AS akey, "
-        f"{nh14} AS hkey14, {na14} AS akey14, "
-        f"hs, gs, outcome FROM {name} "
-        f"WHERE hs IS NOT NULL AND gs IS NOT NULL"
-        for prio, name in active
-    )
-    sql = f"""
-    WITH all_results AS (
-      {union_sql}
-    ), ranked AS (
-      SELECT *,
-             ROW_NUMBER() OVER (PARTITION BY date, hkey, akey, hkey14, akey14 ORDER BY prio) AS rn
-      FROM all_results
-    )
-    SELECT date, hkey, akey, hkey14, akey14, hs, gs, outcome, home, away
-    FROM ranked
-    WHERE rn = 1
-    """
-    rows = con.execute(sql).fetchall()
+    from edgefactory.settlement import warehouse_regulation_rows, filter_regulation_rows, load_period_holds
+    warehouse_rows, period_holds = warehouse_regulation_rows(con)
+    con.close()
+    donors = [dict(r, origin="warehouse") for r in warehouse_rows]
+    donors += [dict(r, origin="overlay") for r in load_settled_overlay()]
+    donors, _ = filter_regulation_rows(donors, period_holds + load_period_holds(_settled_overlay_path()))
     index: dict[tuple[str, str, str], dict[str, Any]] = {}
     results_by_date: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    known_pairs: dict[str, set[tuple[str, str]]] = defaultdict(set)
-
-    for day, hkey, akey, hkey14, akey14, hs, gs, outcome, home, away in rows:
-        entry = {
-            "hs": int(hs), "gs": int(gs), "outcome": str(outcome),
-            "home": str(home), "away": str(away), "origin": "warehouse",
-        }
-        d = str(day)[:10]
-        # 9-char key (legacy)
-        index[(d, str(hkey), str(akey))] = entry
-        # 14-char key (disambiguation)
-        if str(hkey14) != str(hkey) or str(akey14) != str(akey):
-            index[(d, str(hkey14), str(akey14))] = entry
-
-        results_by_date[d].append(entry)
-        known_pairs[d].add((entry["home"].lower(), entry["away"].lower()))
-
-    # Addendum 21: shared settled-results overlay (bot-persisted facts). The
-    # warehouse wins on conflict; the overlay only fills rows this machine
-    # never captured itself, so cloud and laptop settle the same fixtures.
-    for o in load_settled_overlay():
-        entry = {
-            "hs": o["hs"], "gs": o["gs"], "outcome": o["outcome"],
-            "home": o["home"], "away": o["away"], "origin": "overlay",
-        }
-        d = o["date"]
-        h9, a9 = norm_team(o["home"]), norm_team(o["away"])
-        if (d, h9, a9) not in index:
-            index[(d, h9, a9)] = entry
-        h14, a14 = norm_team(o["home"], 14), norm_team(o["away"], 14)
+    seen = set()
+    for r in donors:
+        d, home, away = r["date"], str(r["home"]), str(r["away"])
+        h9, a9 = norm_team(home), norm_team(away)
+        h14, a14 = norm_team(home, 14), norm_team(away, 14)
+        sig = (d, h9, a9, h14, a14)
+        if sig in seen:
+            continue
+        seen.add(sig)
+        entry = {k: r[k] for k in ("hs", "gs", "outcome", "home", "away", "origin")}
+        index[(d, h9, a9)] = entry
         if (h14, a14) != (h9, a9):
-            index.setdefault((d, h14, a14), entry)
-        pair = (entry["home"].lower(), entry["away"].lower())
-        if pair not in known_pairs[d]:
-            known_pairs[d].add(pair)
-            results_by_date[d].append(entry)
+            index[(d, h14, a14)] = entry
+        results_by_date[d].append(entry)
 
     # Operator-verified scores outrank every donor and the overlay. A human
     # confirmed the score, so competing donor spellings must not re-open the

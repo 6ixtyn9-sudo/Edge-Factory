@@ -1953,10 +1953,11 @@ class _SettledOutcomes(Mapping):
     cache: a later invocation must observe newly landed results.
     """
 
-    def __init__(self, outcomes, entries, scores):
+    def __init__(self, outcomes, entries, scores, period_blocks=()):
         self._outcomes = outcomes
         self.entries = entries
         self.scores = scores
+        self.period_blocks = list(period_blocks)
         self._by_date = {}
         for position, (key, outcome) in enumerate(outcomes.items()):
             self._by_date.setdefault(key[0], []).append((position, key, outcome))
@@ -2000,67 +2001,38 @@ def _collect_settled_facts() -> tuple[_SettledOutcomes, dict, dict]:
     scores: dict = {}
     EMPTY_KEY_TIERS_DROPPED.clear()
     EMPTY_KEY_FIXTURES.clear()
+    from edgefactory.settlement import (warehouse_regulation_rows, filter_regulation_rows,
+                                        regulation_fixture_key)
+    donors, period_holds = [], []
     wh = LOCALDATA / "warehouse.duckdb"
     if wh.exists():
+        con = None
         try:
             import duckdb
-        except Exception:
-            duckdb = None
-        if duckdb is not None:
-            con = None
-            try:
-                con = duckdb.connect(str(wh), read_only=True)
-                tables = {row[0] for row in con.execute("SHOW TABLES").fetchall()}
-                for _prio, name in _SETTLED_SOURCES:
-                    if name not in tables:
-                        continue
-                    try:
-                        rows = con.execute(
-                            f"SELECT date, home, away, outcome, hs, gs FROM {name} "
-                            "WHERE hs IS NOT NULL AND gs IS NOT NULL"
-                        ).fetchall()
-                    except Exception:
-                        continue
-                    for day, home, away, outcome, hs, gs in rows:
-                        d = str(day)[:10]
-                        pair = _goal_pair(hs, gs)
-                        for hk, ak in _result_write_keys(home, away):
-                            key_to.setdefault((d, hk, ak), str(outcome))
-                            # A half or non-numeric score must not CLAIM the
-                            # key: setdefault() would store None and every
-                            # later donor with the real score would be
-                            # ignored, hiding a settleable market leg behind a
-                            # broken row from the highest-priority table.
-                            if pair is not None:
-                                scores.setdefault((d, hk, ak), pair)
-                        entries.setdefault(d, []).append(
-                            {"home": str(home), "away": str(away), "outcome": str(outcome)}
-                        )
-            except Exception:
-                pass
-            finally:
-                if con is not None:
-                    con.close()
+            con = duckdb.connect(str(wh), read_only=True)
+            donors, period_holds = warehouse_regulation_rows(con)
+        except Exception as exc:
+            print(f"settlement_regulation_read_warning={type(exc).__name__}", file=sys.stderr)
+        finally:
+            if con is not None:
+                con.close()
     try:
         data = json.loads((LOCALDATA / "settled_results.json").read_text())
-    except Exception:
-        data = None
-    if data:
-        seen_sigs: set[tuple] = set()
-        for r in data.get("rows", []):
-            d = str(r.get("date") or "")[:10]
-            home, away = r.get("home"), r.get("away")
-            pair = _goal_pair(r.get("hs"), r.get("gs"))
-            for hk, ak in _result_write_keys(home, away):
-                key_to.setdefault((d, hk, ak), r.get("outcome"))
-                if pair is not None:
-                    scores.setdefault((d, hk, ak), pair)
-            sig = (d, str(home or "").lower(), str(away or "").lower())
-            if sig not in seen_sigs:
-                seen_sigs.add(sig)
-                entries.setdefault(d, []).append(
-                    {"home": str(home), "away": str(away), "outcome": str(r.get("outcome"))}
-                )
+        donors.extend(r for r in data.get("rows", []) if isinstance(r, dict))
+        from edgefactory.settlement import load_period_holds
+        period_holds.extend(load_period_holds(LOCALDATA / "settled_results.json"))
+    except (OSError, ValueError, TypeError, AttributeError):
+        pass
+    donors, period_holds = filter_regulation_rows(donors, period_holds)
+    for r in donors:
+        d = str(r["date"])[:10]
+        home, away = r.get("home"), r.get("away")
+        for hk, ak in _result_write_keys(home, away):
+            key_to.setdefault((d, hk, ak), r["outcome"])
+            scores.setdefault((d, hk, ak), (r["hs"], r["gs"]))
+        entries.setdefault(d, []).append({"home": str(home), "away": str(away), "outcome": r["outcome"]})
+    resolved_periods = {regulation_fixture_key(r) for r in donors}
+    period_blocks = [r for r in period_holds if regulation_fixture_key(r) not in resolved_periods]
     # Operator-verified scores outrank every donor and the overlay. Overwrite
     # the verified key AND every key written by an alias-matching donor before
     # purging those entries from the alias scan. Purging entries alone is not
@@ -2069,6 +2041,9 @@ def _collect_settled_facts() -> tuple[_SettledOutcomes, dict, dict]:
     from edgefactory.settlement import load_verified_results
     for v in load_verified_results():
         d = v["date"]
+        period_blocks = [r for r in period_blocks if not (r["date"] == d
+                         and _same_club_names(r["home"], v["home"])
+                         and _same_club_names(r["away"], v["away"]))]
         alias_entries = _alias_candidate_entries(
             {"date": d, "home": v["home"], "away": v["away"]}, entries
         )
@@ -2112,7 +2087,8 @@ def _collect_settled_facts() -> tuple[_SettledOutcomes, dict, dict]:
     if EMPTY_KEY_FIXTURES:
         print(f"settlement_nameless_fixture={len(EMPTY_KEY_FIXTURES)}",
               file=sys.stderr)
-    outcomes = _SettledOutcomes(key_to, entries, scores)
+    outcomes = _SettledOutcomes(key_to, entries, scores, period_blocks)
+    print(f"settlement_regulation_period_holds={len(period_blocks)}", file=sys.stderr)
     print(f"settlement_facts status=ready keys={len(outcomes)} dates={len(entries)} "
           f"seconds={time.perf_counter() - started:.1f}", file=sys.stderr, flush=True)
     return outcomes, entries, scores
@@ -4414,7 +4390,13 @@ def _verified_leg_result(leg: dict, day: str, verified: list):
         if not (_same_club_names(row.get("home"), home)
                 and _same_club_names(row.get("away"), away)):
             continue
-        hs, gs = row.get("hs"), row.get("gs")
+        from edgefactory.settlement import regulation_score
+        pair = regulation_score(row)
+        if pair is None:
+            continue
+        hs, gs = pair
+        if str(row.get("outcome") or "") != ("home" if hs > gs else "away" if hs < gs else "draw"):
+            continue
         if market_graded_selection(leg):
             market = leg.get("market") or selection_market(leg)
             hit = check_enhancement_hit(market, str(leg.get("pick") or ""), hs, gs)
@@ -4455,8 +4437,9 @@ def regrade_verified_settlements(st: dict, *, verified=None) -> list[str]:
         day = str(row.get("date") or "")[:10]
         row_shift = 0.0
         for acca in row.get("accas") or []:
+            corrected_legs = copy.deepcopy(acca.get("legs") or [])
             results, touched = [], False
-            for leg in acca.get("legs") or []:
+            for leg in corrected_legs:
                 result = leg.get("result")
                 corrected = _verified_leg_result(leg, day, verified)
                 if corrected is not None and corrected != result:
@@ -4469,11 +4452,12 @@ def regrade_verified_settlements(st: dict, *, verified=None) -> list[str]:
                 results.append(result)
             if not touched:
                 continue
-            if any(result not in ("win", "loss") for result in results):
+            if "loss" not in results and any(result not in ("win", "loss") for result in results):
                 lines.append(
                     f"regrade_verified_held {day} acca @{acca.get('odds')}: "
                     "a leg is void or pending, day left exactly as booked")
                 continue
+            acca["legs"] = corrected_legs
             won = all(result == "win" for result in results)
             old_delta = (float(acca.get("returned_pct") or 0.0)
                          - float(acca.get("stake_pct") or 0.0))
@@ -4493,6 +4477,8 @@ def regrade_verified_settlements(st: dict, *, verified=None) -> list[str]:
         if row_shift or shift:
             if isinstance(row.get("bank_pct"), (int, float)):
                 row["bank_pct"] = round(float(row["bank_pct"]) + shift + row_shift, 4)
+            if isinstance(row.get("close_pct"), (int, float)):
+                row["close_pct"] = round(float(row["close_pct"]) + shift + row_shift, 4)
         shift += row_shift
 
     if not lines:
@@ -4624,7 +4610,15 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None,
                                 run_hits += 1
                                 lines.append(_compat_line("matched", record))
                         break
-                if p is None:
+                home, away = _leg_fixture_names(l)
+                period_uncertain = any(
+                    abs((date.fromisoformat(str(b["date"])[:10]) - date.fromisoformat(str(slip["date"])[:10])).days) <= 2
+                    and _same_club_names(home, b["home"]) and _same_club_names(away, b["away"])
+                    for b in getattr(settled, "period_blocks", ()))
+                if period_uncertain:
+                    r = "conflict"
+                    conflicts.append(f"{l['match']} (regulation-time score unproven)")
+                elif p is None:
                     r = None
                     if market_leg:
                         # An enhancement leg: its market is the bet, so the
@@ -6252,6 +6246,12 @@ def main():
     if not st and (wants_today or args.settle):
         st = fresh_state()   # first production run starts a fresh walk-forward at 100%
         save_state(st)
+    if args.regrade_verified or args.settle or wants_today:
+        lines = regrade_verified_settlements(st)
+        if lines:
+            for line in lines:
+                print(line)
+            save_state(st)
     if args.settle or wants_today:
         settled = load_settled()
         for line in settle_open_slips(st, settled):

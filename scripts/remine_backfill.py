@@ -255,6 +255,7 @@ def _merge_betexplorer_rows(day: str, incoming: list[dict[str, Any]]) -> dict[st
             reader = csv.DictReader(handle)
             fieldnames = list(reader.fieldnames or fieldnames)
             existing_rows = [dict(row) for row in reader]
+    fieldnames = list(dict.fromkeys([*fieldnames, "status", "score_period", "regulation_hs", "regulation_gs"]))
     counts: Counter[str] = Counter()
     by_key: dict[tuple[str, str, str, str], dict[str, str]] = {}
     # Never rewrite away a committed duplicate: it remains visible for audit,

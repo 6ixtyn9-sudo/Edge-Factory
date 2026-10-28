@@ -142,8 +142,8 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
                          regulation_only=False, include_form_names=False):
     """Collect once; ENH can exclude disputed event status/score periods.
 
-    Default contract mining/main semantics are unchanged. Missing status on a
-    legacy score is not a verified period, but is not invented as a disposition.
+    Known non-regulation aggregates are excluded for Main and ENH alike.
+    Missing legacy status is not invented as proof of a period or disposition.
     """
     coverage, source_rows = {}, {}
     for source in (*REMINE_SOURCES, "betexplorer"):
@@ -175,6 +175,12 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
                 hash_basis="sorted_query_rows_in_exclusive_mining_window")
 
 
+    from edgefactory.settlement import load_verified_results, non_regulation_status
+    reviewed = [v for v in load_verified_results()
+                if str(start) <= v["date"] < str(as_of)
+                and str(v.get("verified_at") or v["date"])[:10] <= str(as_of)[:10]]
+    reviewed_keys = {_remine_key(v) for v in reviewed}
+    observed_squads = defaultdict(set)
     scores = defaultdict(lambda: defaultdict(set))
     form_names = defaultdict(set)
     # Only self-scoring donors. In particular do NOT use results_donor or
@@ -187,16 +193,12 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
             key = _remine_key(row)
             if key is None or str(row.get("result_source") or source) == "forebet":
                 continue
-            if regulation_only:
-                status = str(row.get("status") or "").strip().upper()
-                # A score-shaped value is not proof of a played regulation
-                # result. Keep contradictory status/period evidence out of
-                # live ENH rates, regardless of donor or row order. No cash
-                # void, guessed 90-minute score or alias override is inferred.
-                if (terminal_event_disposition(status) or status in {
-                        "AET", "PEN", "PENS", "PENALTIES", "AFTER EXTRA TIME",
-                        "AFTER EXTRA-TIME", "AFTER PENALTIES"}):
-                    blocked.add(key)
+            if key in reviewed_keys:
+                observed_squads[key].add((squad_markers(row.get("home")), squad_markers(row.get("away"))))
+            status = str(row.get("status") or "").strip().upper()
+            if (non_regulation_status(status) or non_regulation_status(row.get("score_period"))
+                    or (regulation_only and terminal_event_disposition(status))):
+                blocked.add(key)
             for period, prefix in (("ft", ""), ("ht", "ht_")):
                 if regulation_only and any(isinstance(row.get(prefix + f), bool)
                                            for f in ("hs", "gs")):
@@ -209,6 +211,14 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
     resolved = {key: {period: next(iter(values)) for period, values in periods.items()
                       if len(values) == 1} for key, periods in scores.items()
                 if key not in blocked}
+    # Reviewed regulation facts fix training labels too, without manufacturing
+    # votes or making a correction known before its review/as-of date.
+    for verified in reviewed:
+        key = _remine_key(verified)
+        if (key is not None and observed_squads.get(key) == {
+                (squad_markers(verified["home"]), squad_markers(verified["away"]))}):
+            resolved.setdefault(key, {})["ft"] = (verified["hs"], verified["gs"])
+            form_names[key].add((verified["home"], verified["away"]))
     if include_form_names:
         for key, result in resolved.items():
             names = sorted(form_names[key])

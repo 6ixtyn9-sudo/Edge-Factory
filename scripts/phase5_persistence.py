@@ -336,6 +336,30 @@ def _settlement_step(newer, older):
     return len(settled), drafted
 
 
+def _reviewed_financial_projection(repo, state):
+    reviewed = _head_blob(repo, "Config/verified_results.json")
+    if not reviewed:
+        return state
+    try:
+        facts = json.loads(reviewed).get("rows", [])
+        if not isinstance(facts, list) or any(not isinstance(r, dict) for r in facts):
+            return state
+    except (ValueError, AttributeError):
+        return state
+    import copy
+    # Works for the workflow's plain `python scripts/phase5_persistence.py`
+    # invocation as well as package imports; no PYTHONPATH/root assumption.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from auto_tickets import regrade_verified_settlements
+    projected = copy.deepcopy(state)
+    lines = regrade_verified_settlements(projected, verified=facts)
+    if lines:
+        print("PHASE5_PERSISTENCE applied_HEAD_verified_regulation_correction")
+        for line in lines:
+            print(line)
+    return projected
+
+
 def _retain_financial_state(repo, relative=ENH_STATE):
     """Cache is never allowed to reset/truncate durable ticket finance.
 
@@ -348,8 +372,11 @@ def _retain_financial_state(repo, relative=ENH_STATE):
     head = json.loads(blob)
     path = repo / relative
     if not path.exists():
-        return blob
+        return json.dumps(_reviewed_financial_projection(repo, head), indent=2).encode()
     cache = json.loads(path.read_bytes())
+    head = _reviewed_financial_projection(repo, head)
+    cache = _reviewed_financial_projection(repo, cache)
+    blob = json.dumps(head, indent=2).encode()
     hrows, crows = _financial_rows(head), _financial_rows(cache)
     for state in (head, cache):
         bank = state.get("bank")

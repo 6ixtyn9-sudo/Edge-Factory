@@ -57,43 +57,20 @@ SETTLED_SOURCES = [
 STATUS_SOURCES = ("forebet", "vitibet", "scoutingstats")
 
 
-def build_overlay_rows(con, window_start: str) -> list[dict]:
-    """Priority-deduped settled rows on/after window_start (facts only)."""
-    from edgefactory.util import norm_team_sql
-
-    tables = {row[0] for row in con.execute("SHOW TABLES").fetchall()}
-    active = [(prio, name) for prio, name in SETTLED_SOURCES if name in tables]
-    if not active:
-        return []
-    nh, na = norm_team_sql("home", 14), norm_team_sql("away", 14)
-    union_sql = " UNION ALL ".join(
-        f"SELECT {prio} AS prio, '{name}' AS src, date, home, away, "
-        f"{nh} AS hk, {na} AS ak, hs, gs, outcome FROM {name} "
-        "WHERE hs IS NOT NULL AND gs IS NOT NULL "
-        f"AND substr(CAST(date AS VARCHAR), 1, 10) >= '{window_start}'"
-        for prio, name in active
-    )
-    sql = (
-        f"WITH allr AS ({union_sql}), ranked AS ("
-        " SELECT *, ROW_NUMBER() OVER ("
-        "   PARTITION BY substr(CAST(date AS VARCHAR), 1, 10), hk, ak"
-        "   ORDER BY prio) AS rn FROM allr)"
-        " SELECT substr(CAST(date AS VARCHAR), 1, 10) AS day, home, away,"
-        "        hs, gs, outcome, src"
-        " FROM ranked WHERE rn = 1 ORDER BY day, home, away"
-    )
-    return [
-        {
-            "date": str(day),
-            "home": str(home),
-            "away": str(away),
-            "hs": int(hs),
-            "gs": int(gs),
-            "outcome": str(outcome),
-            "src": str(src),
-        }
-        for day, home, away, hs, gs, outcome, src in con.execute(sql).fetchall()
-    ]
+def build_overlay_rows(con, window_start: str, *, period_holds=None) -> list[dict]:
+    """Priority-deduped regulation scores; preserve observed period evidence."""
+    from edgefactory.settlement import warehouse_regulation_rows, REGULATION_FIELDS
+    from edgefactory.util import norm_team
+    candidates, holds = warehouse_regulation_rows(con, start=window_start)
+    if period_holds is not None:
+        period_holds.extend(holds)
+    rows = {}
+    for r in candidates:
+        key = (r["date"], norm_team(r["home"], 14), norm_team(r["away"], 14))
+        entry = {k: r[k] for k in ("date", "home", "away", "hs", "gs", "outcome", "src")}
+        entry.update({k: r[k] for k in REGULATION_FIELDS if r.get(k) not in (None, "")})
+        rows.setdefault(key, entry)
+    return sorted(rows.values(), key=lambda r: (r["date"], r["home"], r["away"]))
 
 
 def load_inbound_rows(path: Path) -> list[dict]:
@@ -104,26 +81,12 @@ def load_inbound_rows(path: Path) -> list[dict]:
         rows = payload.get("rows") or []
     except Exception:
         return []
-    out = []
-    for r in rows:
-        try:
-            out.append(
-                {
-                    "date": str(r["date"])[:10],
-                    "home": str(r["home"]),
-                    "away": str(r["away"]),
-                    "hs": int(r["hs"]),
-                    "gs": int(r["gs"]),
-                    "outcome": str(r["outcome"]),
-                    "src": str(r.get("src") or "overlay"),
-                }
-            )
-        except (KeyError, TypeError, ValueError):
-            continue
-    return out
+    from edgefactory.settlement import filter_regulation_rows
+    valid = [r for r in rows if isinstance(r, dict) and all(r.get(k) for k in ("date", "home", "away"))]
+    return filter_regulation_rows(valid)[0]
 
 
-def merge_overlay_rows(warehouse_rows: list[dict], inbound_rows: list[dict], window_start: str) -> tuple[list[dict], int]:
+def merge_overlay_rows(warehouse_rows: list[dict], inbound_rows: list[dict], window_start: str, *, period_holds=()) -> tuple[list[dict], int]:
     """Union with dedup by (date, norm14 pair). Warehouse wins on conflict —
     this machine's freshest memory outranks the last shared snapshot. Inbound
     rows outside the rolling window are dropped (keeps the shared file
@@ -133,6 +96,10 @@ def merge_overlay_rows(warehouse_rows: list[dict], inbound_rows: list[dict], win
     def key(r: dict) -> tuple:
         return (r["date"], norm_team(r["home"], 14), norm_team(r["away"], 14))
 
+    from edgefactory.settlement import filter_regulation_rows
+    _, all_holds = filter_regulation_rows(warehouse_rows + inbound_rows, period_holds)
+    warehouse_rows, _ = filter_regulation_rows(warehouse_rows, all_holds)
+    inbound_rows, _ = filter_regulation_rows(inbound_rows, all_holds)
     merged: dict[tuple, dict] = {}
     inbound_only: set[tuple] = set()
     for r in inbound_rows:
@@ -293,13 +260,17 @@ def main() -> int:
 
     con = duckdb.connect(str(wh), read_only=True)
     window_start = (date.today() - timedelta(days=WINDOW_DAYS)).isoformat()
-    wh_rows = build_overlay_rows(con, window_start)
+    wh_holds = []
+    wh_rows = build_overlay_rows(con, window_start, period_holds=wh_holds)
     wh_disp = build_overlay_dispositions(con, window_start)
     con.close()
     # Convergence loop: carry other machines' facts forward (inbound file came
     # down via git pull), then this machine's freshest memory overwrites dupes.
     inbound = load_inbound_rows(OUT_FILE)
-    rows, carried = merge_overlay_rows(wh_rows, inbound, window_start)
+    from edgefactory.settlement import load_period_holds, filter_regulation_rows
+    _, period_holds = filter_regulation_rows([], wh_holds + load_period_holds(OUT_FILE))
+    period_holds = [r for r in period_holds if r["date"] >= window_start]
+    rows, carried = merge_overlay_rows(wh_rows, inbound, window_start, period_holds=period_holds)
     inbound_disp = load_inbound_dispositions(OUT_FILE)
     dispositions, carried_disp = merge_overlay_dispositions(wh_disp, inbound_disp, window_start)
     payload = {
@@ -307,6 +278,7 @@ def main() -> int:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "window_days": WINDOW_DAYS,
         "rows": rows,
+        "period_holds": period_holds,
         "dispositions": dispositions,
     }
     LOCALDATA.mkdir(parents=True, exist_ok=True)

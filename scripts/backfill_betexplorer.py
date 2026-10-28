@@ -63,7 +63,7 @@ except Exception:  # pragma: no cover - fallback for standalone script checks
 
 RESULT_COLUMNS = [
     "date", "kickoff", "country", "league", "home", "away", "hs", "gs",
-    "ht_hs", "ht_gs", "match_url", "event_id", "fetched_at",
+    "ht_hs", "ht_gs", "match_url", "event_id", "fetched_at", "status",
 ]
 
 ODDS_COLUMNS = [
@@ -262,6 +262,9 @@ def parse_results_page(page: str) -> list[dict]:
         match_date = date(yyyy, mm, dd).isoformat()
         rel_url = html.unescape(link.group(1))
         full_url = rel_url if rel_url.startswith("http") else BASE + rel_url
+        from edgefactory.settlement import result_period_status
+        result_cell = re.search(r'class="table-main__result"[^>]*>(.*?)</td>', token, re.S)
+        period_status = result_period_status(html.unescape(result_cell.group(1))) if result_cell else ""
         partial = re.search(r'class="table-main__partial"[^>]*>\s*\((\d+)\s*:\s*(\d+)\s*,', token, re.S)
         out.append({
             "date": match_date,
@@ -277,6 +280,7 @@ def parse_results_page(page: str) -> list[dict]:
             "match_url": full_url,
             "event_id": parse_event_id(full_url),
             "fetched_at": now_iso(),
+            "status": period_status,
         })
     return out
 

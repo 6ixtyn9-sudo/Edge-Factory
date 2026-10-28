@@ -280,3 +280,77 @@ def test_a_half_score_never_claims_the_key(tmp_path, monkeypatch):
     outcomes, _entries, scores = at._collect_settled_facts()
     assert scores[(DAY, "molde", "fredrikstad")] == (3, 1)
     assert at.enhancement_leg_result(_over_leg(), DAY, scores) == "win"
+
+
+@pytest.mark.parametrize('market,pick', [('1x2', 'AWAY'), ('match_over_25', 'over')])
+def test_unseparated_period_never_settles_or_times_out_as_a_void(tmp_path, monkeypatch, market, pick):
+    import json
+    import copy
+    from edgefactory import settlement
+    monkeypatch.setattr(settlement, 'load_verified_results', lambda: [])
+    (tmp_path / 'settled_results.json').write_text(json.dumps(dict(rows=[
+        dict(date=DAY,home='Cup Club',away='Away Club',hs=1,gs=3,outcome='away')],
+        period_holds=[dict(date=DAY,home='Cup Club',away='Away Club',status='AET')])))
+    facts = at.load_settled()
+    assert not facts and facts.period_blocks
+    leg = dict(match='Cup Club vs Away Club', market=market, pick=pick, odds=1.55)
+    st = _state([leg])
+    class Later(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 11, 15, 12, tzinfo=tz or at.TZ)
+    monkeypatch.setattr(at, 'datetime', Later)
+    before = copy.deepcopy(st)
+    lines = at.settle_open_slips(st, facts, archives=[])
+    assert st['bank'] == before['bank'] and not st['history']
+    assert st['open_slips'] and any('regulation-time score unproven' in line for line in lines)
+
+
+@pytest.mark.parametrize('market,pick', [('1x2', 'AWAY'), ('match_over_25', 'over')])
+def test_operator_regulation_result_regrades_oct27_both_lanes_idempotently(market, pick):
+    import copy
+    day = '2026-10-27'
+    verified = [dict(date=day,home='RSD Alcalá',away='Las Palmas',hs=1,gs=1,outcome='draw',score_period='regulation')]
+    acca = dict(odds=2.45, stake_pct=4., returned_pct=9.8, won=True, legs=[
+        dict(match='RSD Alcalá vs Las Palmas', market=market, pick=pick, odds=1.68, result='win'),
+        dict(match='Levadia vs Tammeka', market='match_under_45', pick='under', odds=1.46, result='win')])
+    state = dict(bank=40., history=[dict(date=day,staked_pct=4.,returned_pct=9.8,bank_pct=40.,close_pct=34.,accas=[acca]),
+                                   dict(date='2026-10-28',staked_pct=0.,returned_pct=0.,bank_pct=40.,close_pct=34.,accas=[])],
+                 open_slips=[dict(date='2026-10-28',staked_pct=3.,accas=[])], frozen_by_date={day: {'final': True}})
+    frozen, opened = copy.deepcopy(state['frozen_by_date']), copy.deepcopy(state['open_slips'])
+    lines = at.regrade_verified_settlements(state, verified=verified)
+    assert state['bank'] == pytest.approx(30.2)
+    assert state['history'][0]['accas'][0]['won'] is False
+    assert state['history'][0]['returned_pct'] == 0.
+    assert state['history'][0]['accas'][0]['legs'][0]['result'] == 'loss'
+    assert state['history'][1]['close_pct'] == pytest.approx(24.2)
+    assert state['open_slips'] == opened and state['frozen_by_date'] == frozen
+    before = copy.deepcopy(state)
+    assert at.regrade_verified_settlements(state, verified=verified) == []
+    assert state == before and lines
+
+
+def test_pending_verified_regrade_does_not_consume_a_later_applicable_correction():
+    st = _settled_state()
+    leg = st['history'][-1]['accas'][2]['legs'][0]
+    leg['result'] = None
+    original_wrong = st['history'][-1]['accas'][2]['legs'][1]['result']
+    at.regrade_verified_settlements(st, verified=VERIFIED)
+    assert st['history'][-1]['accas'][2]['legs'][1]['result'] == original_wrong
+    leg['result'] = 'win'
+    at.regrade_verified_settlements(st, verified=VERIFIED)
+    assert st['history'][-1]['accas'][2]['won'] is True
+
+
+def test_main_cli_runs_verified_regrade_before_settlement(monkeypatch):
+    calls = []
+    st = dict(bank=100., history=[], open_slips=[])
+    monkeypatch.setattr(at, 'load_state', lambda *a: st)
+    monkeypatch.setattr(at, 'regrade_verified_settlements', lambda state: calls.append('regrade') or [])
+    monkeypatch.setattr(at, 'load_settled', lambda: {})
+    monkeypatch.setattr(at, 'settle_open_slips', lambda *a, **k: calls.append('settle') or [])
+    monkeypatch.setattr(at, 'print_status', lambda *a: None)
+    monkeypatch.setattr(at, 'save_state', lambda *a: None)
+    monkeypatch.setattr(sys, 'argv', ['auto_tickets.py', '--settle'])
+    assert at.main() == 0
+    assert calls == ['regrade', 'settle']

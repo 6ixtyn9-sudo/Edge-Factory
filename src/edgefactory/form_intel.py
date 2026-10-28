@@ -82,12 +82,11 @@ def goal_market_hit(hs: int, gs: int, market: str) -> bool | None:
 
 
 def _result_row(raw: Mapping[str, Any], *, source: str) -> dict | None:
-    try:
-        hs, gs = int(raw.get("hs")), int(raw.get("gs"))
-    except (TypeError, ValueError):
+    from .settlement import regulation_score
+    pair = regulation_score(raw)
+    if pair is None:
         return None
-    if hs < 0 or gs < 0:
-        return None
+    hs, gs = pair
     day = str(raw.get("date") or "")[:10]
     home, away = str(raw.get("home") or ""), str(raw.get("away") or "")
     if len(day) != 10 or not norm_team(home) or not norm_team(away):
@@ -249,20 +248,28 @@ def load_archive(localdata: str | Path) -> ResultsArchive:
     bucket is kept.
     """
     root = Path(localdata)
+    from .settlement import (filter_regulation_rows, load_period_holds,
+                             load_verified_results, regulation_fixture_key)
+    candidates, holds = [], []
     rows: dict[tuple[str, str, str], dict] = {}
     for path in sorted(root.glob(RESULTS_GLOB)):
         with gzip.open(path, "rt", encoding="utf-8", errors="replace") as fh:
-            for raw in csv.DictReader(fh):
-                row = _result_row(raw, source=path.name)
-                if row is not None:
-                    rows.setdefault(_row_key(row), row)
+            candidates.extend(dict(raw, _form_source=path.name) for raw in csv.DictReader(fh))
     settled = root / SETTLED_RESULTS
     if settled.exists():
         doc = json.loads(settled.read_text(encoding="utf-8"))
-        for raw in doc.get("rows") or []:
-            row = _settled_row(raw)
-            if row is not None:
-                rows.setdefault(_row_key(row), row)
+        candidates.extend(dict(raw, _form_source="settled_results") for raw in doc.get("rows") or [])
+        holds.extend(load_period_holds(settled))
+    reviewed = {regulation_fixture_key(r): r for r in load_verified_results()}
+    for raw in candidates:
+        fact = reviewed.get(regulation_fixture_key(raw))
+        if fact:
+            raw.update(hs=fact["hs"], gs=fact["gs"], score_period="regulation")
+    candidates, _ = filter_regulation_rows(candidates, holds)
+    for raw in candidates:
+        row = _result_row(raw, source=raw["_form_source"])
+        if row is not None:
+            rows.setdefault(_row_key(row), row)
     all_rows = sorted(rows.values(), key=_row_key)
     names = [r["home"] for r in all_rows] + [r["away"] for r in all_rows]
     return ResultsArchive(all_rows, trunc=truncation_key_map(names))

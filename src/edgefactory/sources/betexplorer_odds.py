@@ -286,6 +286,9 @@ def parse_results_page(page: str) -> list[dict]:
             token,
             re.S,
         )
+        from edgefactory.settlement import result_period_status
+        result_cell = re.search(r'class="table-main__result"[^>]*>(.*?)</td>', token, re.S)
+        period_status = result_period_status(html.unescape(result_cell.group(1))) if result_cell else ""
         dd, mm, yyyy, hh, minute = [int(x) for x in dt.groups()]
         event_id = link.group(1).rstrip("/").split("/")[-1]
         rel_url = html.unescape(link.group(1))
@@ -303,6 +306,7 @@ def parse_results_page(page: str) -> list[dict]:
             "gs": score.group(2) if score else "",
             "ht_hs": "",
             "ht_gs": "",
+            "status": period_status,
             "match_url": full_url,
             "event_id": event_id,
         })
