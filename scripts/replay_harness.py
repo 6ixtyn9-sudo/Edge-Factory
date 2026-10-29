@@ -241,10 +241,26 @@ def slate_generation(faithful: bool = True) -> dict:
         for r in rows:
             r.setdefault("_archive_day", m.group(1))
         by_day.setdefault(m.group(1), []).extend(rows)
+    # Test fallback eligibility against the MORNING dates, not the growing
+    # output: once a fallback date was inserted, the old check discarded all
+    # but its first row and made older archive days artificially unbuildable.
+    morning_days = set(by_day)
     for r in at.load_archived_picks():
         day = str(r.get("date") or r.get("_archive_day") or "")[:10]
-        if day and day not in by_day:
+        if day and day not in morning_days:
             by_day.setdefault(day, []).append(r)
+    # The flattened legacy reader has no row to carry a valid empty date.
+    # Preserve explicit empty regular snapshots as flat/no-bet calendar days,
+    # but never turn a corrupt/missing capture into an observed empty slate.
+    for path in sorted(LOCALDATA.glob("picks_*.json")):
+        match = at.PICK_RE.match(path.name)
+        if not match or match.group(1) in by_day:
+            continue
+        try:
+            if json.loads(path.read_text()) == []:
+                by_day[match.group(1)] = []
+        except (OSError, ValueError):
+            continue
     return by_day
 
 

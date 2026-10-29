@@ -1098,3 +1098,72 @@ def test_real_microsecond_build_time_and_seconds_freeze_record_have_parity(tmp_p
     at.write_ticket_receipt(path,json.dumps(payload))
     (localdata/'auto_tickets_state.json').write_text(json.dumps(state))
     assert rh.decision_parity_report(tmp_path)['status']=='PASS'
+
+
+@pytest.mark.parametrize("pairing,indices", [
+    ("consecutive", [(0,1),(2,3)]),
+    ("barbell", [(0,3),(1,2)]),
+    ("split", [(0,2),(1,3)]),
+])
+def test_all_three_four_leg_pairings_use_shared_planner_and_unchanged_staking(pairing,indices):
+    pool=[_leg(i,.80-i*.03,1.4+i*.1) for i in range(4)]
+    plan=at.plan_day(pool,100.,pairing=pairing,max_accas=2,legs_per_acca=2)
+    assert [[l['match'] for l in a['legs']] for a in plan]==[
+        [pool[i]['match'],pool[j]['match']] for i,j in indices]
+    assert len(plan)==2
+    assert [a['stake_pct'] for a in plan]==[12.5,12.5]
+    assert sum(a['stake_pct'] for a in plan)==25.
+    assert at.PAIRING=='barbell' and at.MAX_ACCAS==2 and at.STAKE_FRAC==.25
+
+
+def test_split_research_pairing_is_exhaustive_without_duplicate_or_missing_legs():
+    from itertools import combinations
+    legs=list(range(4))
+    actual={frozenset(frozenset(p) for p in at.pair_legs(legs,kind,2))
+            for kind in ('consecutive','barbell','split')}
+    expected=set()
+    for pair in combinations(legs,2):
+        expected.add(frozenset((frozenset(pair),frozenset(set(legs)-set(pair)))))
+    assert actual==expected and len(actual)==3
+    assert at.pair_legs([],"split",2)==[]
+    assert at.pair_legs([0],"split",2)==[]
+    assert at.pair_legs([0,1,2,3,4],"split",2)==[[0,2],[1,3]]
+    assert at.pair_legs(list(range(6)),"split",2)==[[0,3],[1,4],[2,5]]
+
+
+
+def test_faithful_archive_fallback_keeps_entire_days_not_only_the_first_row(tmp_path,monkeypatch):
+    import json
+    morning=dict(_leg('morning',.75,1.5),date='2026-09-02')
+    (tmp_path/'picks_morning_2026-09-02.json').write_text(json.dumps([morning]))
+    old=[dict(_leg(i,.70-i*.01,1.4),date='2026-09-01') for i in range(8)]
+    later=[dict(_leg('regular-only-'+str(i),.60,1.6),date='2026-09-03') for i in range(4)]
+    replacement=dict(_leg('rescored',.95,1.3),date='2026-09-02')
+    monkeypatch.setattr(rh,'LOCALDATA',tmp_path)
+    monkeypatch.setattr(at,'load_archived_picks',lambda:old+[replacement]+later)
+    days=rh.slate_generation(faithful=True)
+    assert days['2026-09-01']==old
+    assert days['2026-09-03']==later
+    assert [r['match'] for r in days['2026-09-02']]==[morning['match']]
+    assert len(days['2026-09-01'])==8
+    # Explicit legacy mode continues to use the complete regular archive.
+    legacy=rh.slate_generation(faithful=False)
+    assert legacy['2026-09-01']==old
+    assert legacy['2026-09-02']==[replacement]
+
+
+def test_empty_morning_capture_stays_authoritative_over_regular_rows(tmp_path,monkeypatch):
+    (tmp_path/'picks_morning_2026-09-01.json').write_text('[]')
+    rows=[dict(_leg(i,.7,1.4),date='2026-09-01') for i in range(4)]
+    monkeypatch.setattr(rh,'LOCALDATA',tmp_path)
+    monkeypatch.setattr(at,'load_archived_picks',lambda:rows)
+    assert rh.slate_generation(True)['2026-09-01']==[]
+
+
+
+def test_entire_archive_keeps_explicit_empty_days_but_not_corrupt_captures(tmp_path,monkeypatch):
+    (tmp_path/'picks_2026-06-18.json').write_text('[]')
+    (tmp_path/'picks_2026-06-19.json').write_text('{broken')
+    monkeypatch.setattr(rh,'LOCALDATA',tmp_path)
+    monkeypatch.setattr(at,'load_archived_picks',lambda:[])
+    assert rh.slate_generation(True)=={'2026-06-18':[]}

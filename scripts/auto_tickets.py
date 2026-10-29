@@ -3405,13 +3405,19 @@ def dedup_fixture_legs(ranked_pool) -> tuple[list, list]:
 
 
 def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
-    """Group ranked legs into accas. "consecutive" = live (1+2, 3+4, 5+6);
-    "barbell" pairs strongest with weakest (1+6, 2+5, 3+4) to equalise acca
-    odds — an A/B candidate only."""
+    """Group ranked legs; live default remains PAIRING, unchanged by research.
+
+    For four legs, consecutive=(1+2,3+4), barbell=(1+4,2+3), and the
+    research-only split=(1+3,2+4) exhaust the three distinct two-double cards.
+    Split generalises to pairing the first half with the second half.
+    """
     k = LEGS_PER_ACCA if legs_per_acca is None else legs_per_acca
     if pairing == "barbell" and k == 2:
         n = len(legs) - len(legs) % 2
         return [[legs[i], legs[n - 1 - i]] for i in range(n // 2)]
+    if pairing == "split" and k == 2:
+        n = len(legs) - len(legs) % 2
+        return [[legs[i], legs[i + n // 2]] for i in range(n // 2)]
     accas = [legs[i:i + k] for i in range(0, len(legs), k)]
     return [a for a in accas if len(a) == k]
 
