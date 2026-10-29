@@ -14,53 +14,55 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 6,
+    "ledger_entries": 30,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
       "reason": "free_listing_present_zero_matches",
       "resolved_pairs": 0
     },
-    "retained_pairs": 8,
+    "retained_pairs": 5,
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "caen|larochevf",
+        "fixture": "flinttownunited|holywell",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "brighton|kaunozalgiris",
+        "fixture": "cska1948sofia|spartakvarna",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "sttruiden|iberia1999",
+        "fixture": "villarreal|espanyol",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "benfica|celtic",
+        "fixture": "melgar|comerciantes",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [
+          "melgararequipa|comerciantes"
+        ],
+        "retained_pairs_sharing_a_key": 1
+      },
+      {
+        "fixture": "ammanford|haverfordwestcounty",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "atalanta|pafos",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "bournemouth|sturmgraz",
+        "fixture": "casapia|sportinglisbon",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -70,16 +72,15 @@
     "usable_snapshots": 0
   },
   "preflight": {
-    "allowance_by_key": {
-      "88739ee5": 76
-    },
+    "allowance_by_key": {},
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=76 [pools=2 cap=90 reserve=20 spent=1 month=2026-10] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=0 [pools=2 cap=90 reserve=20 spent=8 month=2026-10] -> unattributed_quota",
     "month": "2026-10",
     "month_spend_by_key": {
-      "5b6ed40a": 1
+      "5b6ed40a": 1,
+      "88739ee5": 7
     },
     "need_h2h": 0,
     "need_listing": 0,
@@ -90,8 +91,8 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 76,
-    "verdict": "approved"
+    "spendable": 0,
+    "verdict": "unattributed_quota"
   },
   "provenance": {
     "api": "https://football-prediction-api.p.rapidapi.com/api/v2/head-to-head/:id",
@@ -99,7 +100,7 @@
     "point_in_time": "as_of is the capture instant; provider publishes no per-row history timestamp"
   },
   "role": "silent pre-kickoff H2H context capture for the dormant context vocabulary; NOT a price, NOT a vote, NOT a registered rule",
-  "run_date": "2026-10-15",
+  "run_date": "2026-10-30",
   "schema": 1,
   "snapshots": [],
   "source": "boggio_h2h",

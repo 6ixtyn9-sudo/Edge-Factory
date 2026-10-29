@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-29T21:49:08",
+  "generated_at": "2026-10-30T00:58:11",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 283.0761,
-  "multiple": 2.830761,
+  "bank_pct": 313.152925,
+  "multiple": 3.13152925,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 60,
+  "bet_days": 61,
   "accas": {
-    "wins": 73,
+    "wins": 74,
     "losses": 50
   },
-  "open_slips": [
-    {
-      "date": "2026-10-29",
-      "staked_pct": 35.3845
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -1499,6 +1494,51 @@
       ],
       "bank_pct": 283.0761,
       "close_pct": 283.076
+    },
+    {
+      "date": "2026-10-29",
+      "staked_pct": 35.3845,
+      "returned_pct": 65.4613,
+      "accas": [
+        {
+          "odds": 1.85,
+          "won": true,
+          "stake_pct": 35.3845,
+          "returned_pct": 65.4613,
+          "legs": [
+            {
+              "match": "Guijuelo vs Sporting Gij\u00f3n",
+              "pick": "AWAY",
+              "odds": 1.39,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-29",
+                "Guijuelo",
+                "Sporting Gij\u00f3n"
+              ]
+            },
+            {
+              "match": "Kozakken Boys vs FC Utrecht",
+              "pick": "AWAY",
+              "odds": 1.33,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-29",
+                "Kozakken Boys",
+                "FC Utrecht"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 313.1529,
+      "close_pct": 313.1528
     }
   ]
 }

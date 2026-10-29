@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-29T22:08:13",
+  "generated_at": "2026-10-30T01:18:32",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 31.905270999999995,
-  "multiple": 0.31905270999999996,
+  "bank_pct": 27.917070999999996,
+  "multiple": 0.27917071,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 15,
+  "bet_days": 16,
   "accas": {
     "wins": 12,
-    "losses": 22
+    "losses": 23
   },
-  "open_slips": [
-    {
-      "date": "2026-10-29",
-      "staked_pct": 3.9882
-    }
-  ],
+  "open_slips": [],
   "events": [],
   "history": [
     {
@@ -2488,6 +2483,507 @@
       ],
       "bank_pct": 31.9053,
       "close_pct": 25.7239
+    },
+    {
+      "date": "2026-10-29",
+      "staked_pct": 3.9882,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.45,
+          "won": false,
+          "stake_pct": 3.9882,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Kozakken Boys vs FC Utrecht",
+              "pick": "over",
+              "odds": 1.4,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-28T22:20:22.185633+00:00",
+              "price_provenance": {
+                "away": "Utrecht",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-10-28T22:20:22.185633+00:00",
+                "data_dt": [
+                  29,
+                  10,
+                  2026,
+                  18,
+                  45
+                ],
+                "decision_cutoff_utc": "2026-10-29T07:00:00+00:00",
+                "decision_day": "2026-10-29",
+                "home": "Kozakken Boys",
+                "kickoff_utc": "2026-10-29T17:45:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-29.json",
+                "ledger_sha256": "c61f1e508a6a86620ea6995469c35e01995530926fe9a6fe27a8f3a4faf5d422",
+                "market": "ou_2.5",
+                "price": 1.4,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-28T14:13",
+                      "2026-10-28T14:13"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      1.4,
+                      2.88
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 6,
+                  "row_sha256": "2c176da32b254be968013bfadd01da71e1fbd3f4af65ee9b7581a76c74042407"
+                },
+                "raw_kickoff": "18:45",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-29T17:45:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "FC Utrecht",
+                      "csv_data_row": 4120,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "4cf788a95756d1ec2b634001bb1bab63f005f32cfd8c1f3470f579dcc7e45e7d",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Kozakken Boys",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-29T17:45:00+00:00",
+                      "league": "KNVB Beker",
+                      "observed_at_utc": "2026-10-28T22:02:32+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "1522a4b2f7f9728753fcc7f1e67520967f99354f34cffcaf033185b37d436d3a",
+                      "schedule_row": {
+                        "away": "FC Utrecht",
+                        "captured_at": "2026-10-28T22:02:32+00:00",
+                        "country": "Netherlands",
+                        "date": "2026-10-29",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Kozakken Boys",
+                        "hs": "",
+                        "kickoff": "2026-10-29T17:45:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "KNVB Beker",
+                        "odd1": "7.0",
+                        "odd2": "1.33",
+                        "odd_gg": "1.66",
+                        "odd_ng": "2.1",
+                        "odd_o15": "1.11",
+                        "odd_o25": "1.4",
+                        "odd_o35": "2.0",
+                        "odd_u15": "6.5",
+                        "odd_u25": "2.87",
+                        "odd_u35": "1.72",
+                        "oddx": "4.75",
+                        "p1": "12.948532076839433",
+                        "p2": "67.97752808988764",
+                        "p_gg": "55.851063829787236",
+                        "p_ng": "44.148936170212764",
+                        "p_o15": "85.41392904073587",
+                        "p_o25": "67.21311475409837",
+                        "p_o35": "46.23655913978495",
+                        "px": "19.073939833272927",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "17:45"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Utrecht",
+                      "csv_data_row": 16302,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "ed7c3147003de9c2367984429373fba63516bae04baec5b1541fafd9df22447e",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Kozakken Boys",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-29T17:45:00+00:00",
+                      "league": "Netherlands: KNVB Beker",
+                      "observed_at_utc": "2026-10-28T22:02:03+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "6df118538e2f89658389778e015aeb3392ddca9c15e01375bcabecaf929ee21c",
+                      "schedule_row": {
+                        "away": "Utrecht",
+                        "captured_at": "2026-10-28T22:02:03+00:00",
+                        "date": "2026-10-29",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Kozakken Boys",
+                        "hs": "",
+                        "index": "",
+                        "kickoff": "2026-10-29T18:45:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Netherlands: KNVB Beker",
+                        "p1": "",
+                        "p2": "",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "",
+                        "schedule_history": "[{\"away\": \"Utrecht\", \"captured_at\": \"2026-10-27T22:01:54+00:00\", \"date\": \"2026-10-29\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Kozakken Boys\", \"kickoff\": \"2026-10-29T18:45:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Utrecht",
+                      "csv_data_row": 16302,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "ed7c3147003de9c2367984429373fba63516bae04baec5b1541fafd9df22447e",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Kozakken Boys",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-29T17:45:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-10-27T22:01:54+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "13d1b2fcccd2a645fdcb5cb67c52f1a28a2f7b591d46dcb8c4e918e2081ef713",
+                      "schedule_row": {
+                        "away": "Utrecht",
+                        "captured_at": "2026-10-27T22:01:54+00:00",
+                        "date": "2026-10-29",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Kozakken Boys",
+                        "kickoff": "2026-10-29T18:45:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-10-29",
+                "Kozakken Boys",
+                "FC Utrecht"
+              ],
+              "prob": 0.6481,
+              "cohort_evidence": {
+                "rate": 0.6481,
+                "n": 324,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-29",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 210,
+                "cohort_lower_bound": 0.5946899178918934,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "away",
+                  "league": "KNVB Beker",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.4,
+                  "captured_at": "2026-10-28T22:20:22.185633+00:00",
+                  "decision_at": "2026-10-29T09:11:10+02:00",
+                  "kickoff": "2026-10-29T17:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8052791107803831,
+              "ml_model_key": "bd8a307f8ef3a88365667657b11f3e6adbebc8225ca7e3a865874c19dd339b4c",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.710163035724796,
+              "floor_basis": "inherited",
+              "league": "KNVB Beker",
+              "shadow": false,
+              "price_kickoff": "2026-10-29T17:45:00+00:00"
+            },
+            {
+              "match": "Varea vs FC Andorra",
+              "pick": "over",
+              "odds": 1.75,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-28T22:16:41.202365+00:00",
+              "price_provenance": {
+                "away": "Andorra",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-10-28T22:16:41.202365+00:00",
+                "data_dt": [
+                  29,
+                  10,
+                  2026,
+                  20,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-10-29T07:00:00+00:00",
+                "decision_day": "2026-10-29",
+                "home": "Varea",
+                "kickoff_utc": "2026-10-29T19:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-29.json",
+                "ledger_sha256": "c61f1e508a6a86620ea6995469c35e01995530926fe9a6fe27a8f3a4faf5d422",
+                "market": "ou_2.5",
+                "price": 1.75,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-28T20:18",
+                      "2026-10-28T20:18"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      1.75,
+                      2.05
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 8,
+                  "row_sha256": "bf6130455d78b5d6584e808dd508481ced69d055fcec1b71f118db321276039c"
+                },
+                "raw_kickoff": "20:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-29T19:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Andorra CF",
+                      "csv_data_row": 22135,
+                      "file": "theoddsapi_odds_2026-10.csv.gz",
+                      "file_sha256": "b6cf634c4e324edfbc90f8490ec8ddd5e892134de53dfb9aeea6d8131f1e0be8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "CD Varea",
+                      "kickoff_origin": "provider_commence_time",
+                      "kickoff_utc": "2026-10-29T19:00:00+00:00",
+                      "league": "Copa Del Rey",
+                      "observed_at_utc": "2026-10-29T04:17:25.365419+00:00",
+                      "provider_commence_time": "2026-10-29T19:00:00Z",
+                      "provider_event_id": "a6a55164954255f8623b95b35386ee77",
+                      "row_sha256": "78fecd15fc684a0d5e7b430dce8aee65928ed5621cd2b16e540624c80fd62c6c",
+                      "source": "theoddsapi"
+                    },
+                    {
+                      "away": "FC Andorra",
+                      "csv_data_row": 4157,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "4cf788a95756d1ec2b634001bb1bab63f005f32cfd8c1f3470f579dcc7e45e7d",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Varea",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-29T19:00:00+00:00",
+                      "league": "Copa Del Rey",
+                      "observed_at_utc": "2026-10-28T22:02:32+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "9ebe256f6dfb529681bcc99217026b1e60233d2a8bffb68aaa9e3f42d91098f1",
+                      "schedule_row": {
+                        "away": "FC Andorra",
+                        "captured_at": "2026-10-28T22:02:32+00:00",
+                        "country": "Spain",
+                        "date": "2026-10-29",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Varea",
+                        "hs": "",
+                        "kickoff": "2026-10-29T19:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Copa Del Rey",
+                        "odd1": "19.0",
+                        "odd2": "1.14",
+                        "odd_gg": "3.0",
+                        "odd_ng": "1.36",
+                        "odd_o15": "1.22",
+                        "odd_o25": "1.75",
+                        "odd_o35": "2.75",
+                        "odd_u15": "4.0",
+                        "odd_u25": "2.05",
+                        "odd_u35": "1.4",
+                        "oddx": "6.25",
+                        "p1": "4.83322613250023",
+                        "p2": "80.46494532757512",
+                        "p_gg": "31.19266055045872",
+                        "p_ng": "68.80733944954129",
+                        "p_o15": "76.62835249042146",
+                        "p_o25": "53.94736842105263",
+                        "p_o35": "33.734939759036145",
+                        "px": "14.701828539924655",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "19:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "FC Andorra",
+                      "csv_data_row": 16391,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "ed7c3147003de9c2367984429373fba63516bae04baec5b1541fafd9df22447e",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Varea",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-29T19:00:00+00:00",
+                      "league": "Spain: Copa del Rey",
+                      "observed_at_utc": "2026-10-28T22:02:03+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "b59d900569e3d9bc3f0a2895915209ea59e066d584a9d12b0f24d2f4c997c15f",
+                      "schedule_row": {
+                        "away": "FC Andorra",
+                        "captured_at": "2026-10-28T22:02:03+00:00",
+                        "date": "2026-10-29",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Varea",
+                        "hs": "",
+                        "index": "",
+                        "kickoff": "2026-10-29T20:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Spain: Copa del Rey",
+                        "p1": "",
+                        "p2": "",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "",
+                        "schedule_history": "[{\"away\": \"FC Andorra\", \"captured_at\": \"2026-10-27T22:01:54+00:00\", \"date\": \"2026-10-29\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Varea\", \"kickoff\": \"2026-10-29T20:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "FC Andorra",
+                      "csv_data_row": 16391,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "ed7c3147003de9c2367984429373fba63516bae04baec5b1541fafd9df22447e",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Varea",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-29T19:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-10-27T22:01:54+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "e8fb8e28f8baa991571c71e7eb76f1cc9ca08d3bdd7838b40cf03f433b33aab1",
+                      "schedule_row": {
+                        "away": "FC Andorra",
+                        "captured_at": "2026-10-27T22:01:54+00:00",
+                        "date": "2026-10-29",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Varea",
+                        "kickoff": "2026-10-29T20:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-10-29",
+                "Varea",
+                "FC Andorra"
+              ],
+              "prob": 0.6481,
+              "cohort_evidence": {
+                "rate": 0.6481,
+                "n": 324,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-29",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 210,
+                "cohort_lower_bound": 0.5946899178918934,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "away",
+                  "league": "Copa Del Rey",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.75,
+                  "captured_at": "2026-10-28T22:16:41.202365+00:00",
+                  "decision_at": "2026-10-29T09:11:10+02:00",
+                  "kickoff": "2026-10-29T19:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.47523840341833584,
+              "ml_model_key": "bd8a307f8ef3a88365667657b11f3e6adbebc8225ca7e3a865874c19dd339b4c",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.710163035724796,
+              "floor_basis": "market",
+              "league": "Copa Del Rey",
+              "shadow": true,
+              "price_kickoff": "2026-10-29T19:00:00+00:00"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 27.9171,
+      "close_pct": 21.7357
     }
   ]
 }

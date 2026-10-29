@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 31.905270999999995,
+  "bank": 27.917070999999996,
   "cycle_base": 100.0,
   "history": [
     {
@@ -2471,54 +2471,28 @@
       ],
       "bank_pct": 31.9053,
       "close_pct": 25.7239
-    }
-  ],
-  "events": [],
-  "open_slips": [
+    },
     {
       "date": "2026-10-29",
+      "staked_pct": 3.9882,
+      "returned_pct": 0.0,
       "accas": [
         {
+          "odds": 2.45,
+          "won": false,
+          "stake_pct": 3.9882,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "Kozakken Boys vs FC Utrecht",
               "pick": "over",
-              "prob": 0.6481,
               "odds": 1.4,
-              "result": null,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "bet365.us",
               "price_source": "betexplorer",
-              "cohort_evidence": {
-                "rate": 0.6481,
-                "n": 324,
-                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
-                "as_of_exclusive": "2026-10-29",
-                "market": "match_over_25",
-                "basis": "cohort_payout_bound",
-                "cohort_min_hits": 210,
-                "cohort_lower_bound": 0.5946899178918934,
-                "price_context": {
-                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
-                  "selection": "away",
-                  "league": "KNVB Beker",
-                  "book": "bet365.us",
-                  "source": "betexplorer",
-                  "price": 1.4,
-                  "captured_at": "2026-10-28T22:20:22.185633+00:00",
-                  "decision_at": "2026-10-29T09:11:10+02:00",
-                  "kickoff": "2026-10-29T17:45:00+00:00"
-                }
-              },
-              "ml_rank_probability": 0.8052791107803831,
-              "ml_model_key": "bd8a307f8ef3a88365667657b11f3e6adbebc8225ca7e3a865874c19dd339b4c",
-              "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
-              "floor": 1.710163035724796,
-              "floor_basis": "inherited",
-              "league": "KNVB Beker",
               "price_at": "2026-10-28T22:20:22.185633+00:00",
-              "price_kickoff": "2026-10-29T17:45:00+00:00",
               "price_provenance": {
                 "away": "Utrecht",
                 "bookmaker": "bet365.us",
@@ -2705,24 +2679,12 @@
                 "selection": "over",
                 "site_best": true
               },
-              "shadow": false,
-              "ml_ordering_active": true,
-              "ranking_basis": "model",
               "fixture_key": [
                 "2026-10-29",
                 "Kozakken Boys",
                 "FC Utrecht"
-              ]
-            },
-            {
-              "match": "Varea vs FC Andorra",
-              "pick": "over",
+              ],
               "prob": 0.6481,
-              "odds": 1.75,
-              "result": null,
-              "market": "match_over_25",
-              "price_book": "bet365.us",
-              "price_source": "betexplorer",
               "cohort_evidence": {
                 "rate": 0.6481,
                 "n": 324,
@@ -2735,24 +2697,36 @@
                 "price_context": {
                   "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
                   "selection": "away",
-                  "league": "Copa Del Rey",
+                  "league": "KNVB Beker",
                   "book": "bet365.us",
                   "source": "betexplorer",
-                  "price": 1.75,
-                  "captured_at": "2026-10-28T22:16:41.202365+00:00",
+                  "price": 1.4,
+                  "captured_at": "2026-10-28T22:20:22.185633+00:00",
                   "decision_at": "2026-10-29T09:11:10+02:00",
-                  "kickoff": "2026-10-29T19:00:00+00:00"
+                  "kickoff": "2026-10-29T17:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.47523840341833584,
+              "ml_rank_probability": 0.8052791107803831,
               "ml_model_key": "bd8a307f8ef3a88365667657b11f3e6adbebc8225ca7e3a865874c19dd339b4c",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
               "floor": 1.710163035724796,
-              "floor_basis": "market",
-              "league": "Copa Del Rey",
+              "floor_basis": "inherited",
+              "league": "KNVB Beker",
+              "shadow": false,
+              "price_kickoff": "2026-10-29T17:45:00+00:00"
+            },
+            {
+              "match": "Varea vs FC Andorra",
+              "pick": "over",
+              "odds": 1.75,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
               "price_at": "2026-10-28T22:16:41.202365+00:00",
-              "price_kickoff": "2026-10-29T19:00:00+00:00",
               "price_provenance": {
                 "away": "Andorra",
                 "bookmaker": "bet365.us",
@@ -2955,28 +2929,53 @@
                 "selection": "over",
                 "site_best": true
               },
-              "shadow": true,
-              "ml_ordering_active": true,
-              "ranking_basis": "model",
               "fixture_key": [
                 "2026-10-29",
                 "Varea",
                 "FC Andorra"
-              ]
+              ],
+              "prob": 0.6481,
+              "cohort_evidence": {
+                "rate": 0.6481,
+                "n": 324,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-29",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 210,
+                "cohort_lower_bound": 0.5946899178918934,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "away",
+                  "league": "Copa Del Rey",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.75,
+                  "captured_at": "2026-10-28T22:16:41.202365+00:00",
+                  "decision_at": "2026-10-29T09:11:10+02:00",
+                  "kickoff": "2026-10-29T19:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.47523840341833584,
+              "ml_model_key": "bd8a307f8ef3a88365667657b11f3e6adbebc8225ca7e3a865874c19dd339b4c",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.710163035724796,
+              "floor_basis": "market",
+              "league": "Copa Del Rey",
+              "shadow": true,
+              "price_kickoff": "2026-10-29T19:00:00+00:00"
             }
-          ],
-          "odds": 2.45,
-          "stake_pct": 3.9882,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         }
       ],
-      "staked_pct": 3.9882
+      "bank_pct": 27.9171,
+      "close_pct": 21.7357
     }
   ],
+  "events": [],
+  "open_slips": [],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,
