@@ -157,13 +157,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -175,18 +170,18 @@
       },
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 16193
       },
       "pa_matched": 0,
-      "pa_raw": 881,
+      "pa_raw": 16193,
       "pa_scored": 16193,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -232,27 +227,31 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 6,
-        "board_league_count": 2,
+        "board_fixtures": 7,
+        "board_league_count": 3,
         "board_leagues": {
-          "chile_-_primera_division": 2,
-          "usa_-_major_league_soccer": 198
+          "concacaf_-_central_american_cup": 13,
+          "mexico_-_liga_mx": 73,
+          "usa_-_major_league_soccer": 114
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 10,
+        "board_team_count": 13,
         "board_team_names": {
-          "Atlanta Utd": 132,
-          "Audax Italiano": 2,
-          "CF Montr\u00e9al": 30,
-          "Charlotte FC": 30,
-          "FC Cincinnati": 36,
-          "Inter Miami": 5,
-          "Inter Miami CF": 31,
-          "NYCFC": 3,
-          "New York City": 129,
-          "Universidad Catolica": 2
+          "CF America": 50,
+          "COL Rapids": 1,
+          "Cartagins": 13,
+          "Club America": 23,
+          "HOU Dynamo": 7,
+          "Houston Dynamo": 57,
+          "Olimpia CD": 13,
+          "SJ Earthquakes": 1,
+          "San Diego FC": 49,
+          "Seattle Sounders": 64,
+          "Tijuana": 50,
+          "Tijuana Caliente": 23,
+          "Vancouver Whitecaps": 49
         },
         "board_truncated": false,
         "card_fixture_count": 0,
