@@ -24,7 +24,6 @@
   ],
   "ambiguous_result_picks": 1,
   "archived_pick_dates": [
-    "2026-09-30",
     "2026-10-01",
     "2026-10-02",
     "2026-10-03",
@@ -53,30 +52,31 @@
     "2026-10-26",
     "2026-10-27",
     "2026-10-28",
-    "2026-10-29"
+    "2026-10-29",
+    "2026-10-30"
   ],
-  "archived_pick_rows": 1037,
+  "archived_pick_rows": 1046,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.668831,
-      "priced_picks": 154,
-      "roi": 0.049537,
-      "settled_picks": 154,
-      "wins": 103
+      "hit_rate": 0.666667,
+      "priced_picks": 156,
+      "roi": 0.044992,
+      "settled_picks": 156,
+      "wins": 104
     },
     "CERTIFIED_CLEAN": {
-      "hit_rate": 0.597403,
+      "hit_rate": 0.61039,
       "priced_picks": 77,
-      "roi": -0.019608,
+      "roi": -0.002335,
       "settled_picks": 77,
-      "wins": 46
+      "wins": 47
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.671845,
-      "priced_picks": 461,
-      "roi": 0.017709,
-      "settled_picks": 515,
-      "wins": 346
+      "hit_rate": 0.675,
+      "priced_picks": 466,
+      "roi": 0.019612,
+      "settled_picks": 520,
+      "wins": 351
     },
     "WATCHLIST_NO_ODDS": {
       "hit_rate": 0.625,
@@ -86,18 +86,18 @@
       "wins": 45
     },
     "WATCHLIST_SUSPECT_PRICE": {
-      "hit_rate": 0.605263,
+      "hit_rate": 0.615385,
       "priced_picks": 10,
       "roi": -0.068,
-      "settled_picks": 76,
-      "wins": 46
+      "settled_picks": 78,
+      "wins": 48
     },
     "WATCHLIST_UNCORROBORATED_PRICE": {
-      "hit_rate": 0.652174,
-      "priced_picks": 69,
-      "roi": -0.033913,
-      "settled_picks": 69,
-      "wins": 45
+      "hit_rate": 0.641791,
+      "priced_picks": 67,
+      "roi": -0.047015,
+      "settled_picks": 67,
+      "wins": 43
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.833333,
@@ -109,15 +109,15 @@
   },
   "by_event_disposition": {
     "CANCELLED": 1,
-    "POSTPONED": 7
+    "POSTPONED": 6
   },
   "by_odds_match_method": {
     "alias_fuzzy": {
-      "hit_rate": 0.642202,
+      "hit_rate": 0.651786,
       "priced_picks": 23,
       "roi": -0.042609,
-      "settled_picks": 109,
-      "wins": 70
+      "settled_picks": 112,
+      "wins": 73
     },
     "alias_time": {
       "hit_rate": 0.5,
@@ -127,18 +127,18 @@
       "wins": 1
     },
     "betexplorer": {
-      "hit_rate": 0.6,
-      "priced_picks": 15,
-      "roi": -0.093333,
-      "settled_picks": 15,
-      "wins": 9
+      "hit_rate": 0.615385,
+      "priced_picks": 13,
+      "roi": -0.073846,
+      "settled_picks": 13,
+      "wins": 8
     },
     "exact": {
-      "hit_rate": 0.66759,
-      "priced_picks": 722,
-      "roi": 0.020644,
-      "settled_picks": 722,
-      "wins": 482
+      "hit_rate": 0.66941,
+      "priced_picks": 729,
+      "roi": 0.021057,
+      "settled_picks": 729,
+      "wins": 488
     },
     "fallback": {
       "hit_rate": 0.52381,
@@ -148,27 +148,27 @@
       "wins": 11
     },
     "none": {
-      "hit_rate": 0.641509,
+      "hit_rate": 0.638095,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 106,
-      "wins": 68
+      "settled_picks": 105,
+      "wins": 67
     }
   },
   "by_odds_source": {
     "UNKNOWN": {
-      "hit_rate": 0.645833,
+      "hit_rate": 0.649485,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 192,
-      "wins": 124
+      "settled_picks": 194,
+      "wins": 126
     },
     "betexplorer_odds": {
-      "hit_rate": 0.767606,
-      "priced_picks": 142,
-      "roi": 0.02838,
-      "settled_picks": 142,
-      "wins": 109
+      "hit_rate": 0.777027,
+      "priced_picks": 148,
+      "roi": 0.035811,
+      "settled_picks": 148,
+      "wins": 115
     },
     "boggio": {
       "hit_rate": 1.0,
@@ -185,18 +185,18 @@
       "wins": 5
     },
     "pinnapi_odds": {
-      "hit_rate": 0.606509,
-      "priced_picks": 338,
-      "roi": -0.006551,
-      "settled_picks": 338,
-      "wins": 205
+      "hit_rate": 0.60767,
+      "priced_picks": 339,
+      "roi": -0.005276,
+      "settled_picks": 339,
+      "wins": 206
     },
     "scoutingstats_odds": {
-      "hit_rate": 0.666667,
-      "priced_picks": 123,
-      "roi": -0.029187,
-      "settled_picks": 123,
-      "wins": 82
+      "hit_rate": 0.661157,
+      "priced_picks": 121,
+      "roi": -0.036364,
+      "settled_picks": 121,
+      "wins": 80
     },
     "sharpapi_odds": {
       "hit_rate": 1.0,
@@ -229,25 +229,25 @@
       "wins": 2
     },
     "BETEXPLORER_RESCUE": {
-      "hit_rate": 0.6,
-      "priced_picks": 15,
-      "roi": -0.093333,
-      "settled_picks": 15,
-      "wins": 9
+      "hit_rate": 0.615385,
+      "priced_picks": 13,
+      "roi": -0.073846,
+      "settled_picks": 13,
+      "wins": 8
     },
     "NAMED_BOOKMAKER_PRICE": {
-      "hit_rate": 0.66611,
-      "priced_picks": 599,
-      "roi": 0.029102,
-      "settled_picks": 599,
-      "wins": 399
+      "hit_rate": 0.669408,
+      "priced_picks": 608,
+      "roi": 0.030736,
+      "settled_picks": 608,
+      "wins": 407
     },
     "SCOUTINGSTATS_SOLE": {
-      "hit_rate": 0.666667,
-      "priced_picks": 123,
-      "roi": -0.029187,
-      "settled_picks": 123,
-      "wins": 82
+      "hit_rate": 0.661157,
+      "priced_picks": 121,
+      "roi": -0.036364,
+      "settled_picks": 121,
+      "wins": 80
     },
     "SOURCE_FALLBACK": {
       "hit_rate": 0.52381,
@@ -257,47 +257,47 @@
       "wins": 11
     },
     "SUSPECT_ALIAS_FUZZY": {
-      "hit_rate": 0.642202,
+      "hit_rate": 0.651786,
       "priced_picks": 23,
       "roi": -0.042609,
-      "settled_picks": 109,
-      "wins": 70
+      "settled_picks": 112,
+      "wins": 73
     },
     "UNMATCHED": {
-      "hit_rate": 0.641509,
+      "hit_rate": 0.638095,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 106,
-      "wins": 68
+      "settled_picks": 105,
+      "wins": 67
     }
   },
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.659751,
-      "priced_picks": 618,
-      "roi": 0.024278,
-      "settled_picks": 723,
+      "hit_rate": 0.662551,
+      "priced_picks": 625,
+      "roi": 0.026719,
+      "settled_picks": 729,
       "suspect_price_captures": 0,
-      "wins": 477
+      "wins": 483
     },
     "alias_fuzzy": {
-      "avg_suspect_price": 1.56039,
-      "hit_rate": 0.642202,
+      "avg_suspect_price": 1.580097,
+      "hit_rate": 0.651786,
       "priced_picks": 23,
       "roi": -0.042609,
-      "settled_picks": 109,
-      "suspect_price_captures": 109,
-      "wins": 70
+      "settled_picks": 112,
+      "suspect_price_captures": 112,
+      "wins": 73
     },
     "scoutingstats_sole_source": {
       "avg_suspect_price": null,
-      "hit_rate": 0.666667,
-      "priced_picks": 123,
-      "roi": -0.029187,
-      "settled_picks": 123,
+      "hit_rate": 0.661157,
+      "priced_picks": 121,
+      "roi": -0.036364,
+      "settled_picks": 121,
       "suspect_price_captures": 0,
-      "wins": 82
+      "wins": 80
     },
     "source_fallback_not_execution_eligible": {
       "avg_suspect_price": null,
@@ -320,11 +320,11 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=60": {
-      "hit_rate": 0.566667,
-      "priced_picks": 35,
-      "roi": -0.164,
-      "settled_picks": 60,
-      "wins": 34
+      "hit_rate": 0.559322,
+      "priced_picks": 34,
+      "roi": -0.177059,
+      "settled_picks": 59,
+      "wins": 33
     },
     "2way-unanimous avg_p>=70": {
       "hit_rate": 0.791667,
@@ -334,11 +334,11 @@
       "wins": 19
     },
     "ml-meta avg_p>=55": {
-      "hit_rate": 0.715385,
-      "priced_picks": 104,
-      "roi": 0.176309,
-      "settled_picks": 130,
-      "wins": 93
+      "hit_rate": 0.716535,
+      "priced_picks": 101,
+      "roi": 0.180654,
+      "settled_picks": 127,
+      "wins": 91
     },
     "ml-meta avg_p>=60": {
       "hit_rate": 0.605442,
@@ -348,11 +348,11 @@
       "wins": 89
     },
     "ml-meta avg_p>=65": {
-      "hit_rate": 0.8,
+      "hit_rate": 0.785714,
       "priced_picks": 9,
       "roi": -0.045556,
-      "settled_picks": 15,
-      "wins": 12
+      "settled_picks": 14,
+      "wins": 11
     },
     "ml-meta avg_p>=80": {
       "hit_rate": 1.0,
@@ -488,10 +488,10 @@
       "wins": 20
     },
     "pfc_b011652ec3e473fbc0afbb6a": {
-      "hit_rate": 0.777778,
-      "priced_picks": 7,
-      "roi": 0.495714,
-      "settled_picks": 9,
+      "hit_rate": 0.7,
+      "priced_picks": 8,
+      "roi": 0.30875,
+      "settled_picks": 10,
       "wins": 7
     },
     "pfc_c8cbcf76ea758fd6de596ae1": {
@@ -509,11 +509,11 @@
       "wins": 5
     },
     "pfc_fdade2e70df4d4bb78a8cd6e": {
-      "hit_rate": 0.816667,
-      "priced_picks": 45,
-      "roi": -0.019762,
-      "settled_picks": 60,
-      "wins": 49
+      "hit_rate": 0.84507,
+      "priced_picks": 53,
+      "roi": 0.025777,
+      "settled_picks": 71,
+      "wins": 60
     },
     "unanimous[betclan+statarea+vitibet] avg_p>=65": {
       "hit_rate": 1.0,
@@ -579,9 +579,9 @@
       "wins": 5
     }
   },
-  "eligible_prior_picks": 1000,
+  "eligible_prior_picks": 1006,
   "empty_regular_ledger_dates": [],
-  "end": "2026-10-29",
+  "end": "2026-10-30",
   "enhancement_registry": {
     "away_over_05": "PAPER",
     "away_over_15": "PAPER",
@@ -646,16 +646,16 @@
         "settled": 13
       },
       "away_under_35": {
-        "hit_rate": 0.970874,
-        "hits": 100,
+        "hit_rate": 0.97,
+        "hits": 97,
         "price_note": "",
         "price_source_class": "priced",
         "priced_hits": 1,
         "priced_n": 1,
         "priced_roi": 0.435,
-        "recommended": 103,
+        "recommended": 100,
         "registry_processed": 305,
-        "settled": 103
+        "settled": 100
       },
       "btts_no": {
         "hit_rate": 0.375,
@@ -730,16 +730,16 @@
         "settled": 1
       },
       "home_under_35": {
-        "hit_rate": 0.964286,
-        "hits": 27,
+        "hit_rate": 0.962963,
+        "hits": 26,
         "price_note": "",
         "price_source_class": "priced",
         "priced_hits": 1,
         "priced_n": 1,
         "priced_roi": 1.66,
-        "recommended": 28,
+        "recommended": 27,
         "registry_processed": 76,
-        "settled": 28
+        "settled": 27
       },
       "match_over_15": {
         "hit_rate": 0.851852,
@@ -754,16 +754,16 @@
         "settled": 27
       },
       "match_over_25": {
-        "hit_rate": 0.625551,
+        "hit_rate": 0.622807,
         "hits": 142,
         "price_note": "",
         "price_source_class": "priced",
         "priced_hits": 118,
-        "priced_n": 182,
-        "priced_roi": 0.038115,
-        "recommended": 227,
-        "registry_processed": 749,
-        "settled": 227
+        "priced_n": 183,
+        "priced_roi": 0.027962,
+        "recommended": 228,
+        "registry_processed": 751,
+        "settled": 228
       },
       "match_over_35": {
         "hit_rate": 0.777778,
@@ -810,23 +810,23 @@
         "priced_n": 6,
         "priced_roi": 0.276667,
         "recommended": 10,
-        "registry_processed": 20,
+        "registry_processed": 21,
         "settled": 10
       }
     },
-    "hit_rate": 0.763419,
-    "total_hits": 384,
-    "total_recommended": 503
+    "hit_rate": 0.76,
+    "total_hits": 380,
+    "total_recommended": 500
   },
   "event_notes_audit": {
     "by_engine": {
       "hybrid_cohort": {
-        "brier": 0.164062,
-        "delta": 0.02734,
-        "hits": 1135,
-        "mean_promised": 0.629869,
-        "n": 1727,
-        "realized": 0.657209
+        "brier": 0.163779,
+        "delta": 0.025764,
+        "hits": 1119,
+        "mean_promised": 0.629388,
+        "n": 1708,
+        "realized": 0.655152
       },
       "model": {
         "brier": 0.168706,
@@ -856,28 +856,28 @@
           "realized": 0.8
         },
         "away_under_15": {
-          "brier": 0.195757,
-          "delta": -0.081362,
-          "hits": 31,
-          "mean_promised": 0.770251,
-          "n": 45,
-          "realized": 0.688889
+          "brier": 0.190514,
+          "delta": -0.073688,
+          "hits": 29,
+          "mean_promised": 0.764165,
+          "n": 42,
+          "realized": 0.690476
         },
         "away_under_25": {
-          "brier": 0.058643,
-          "delta": 0.039295,
-          "hits": 201,
-          "mean_promised": 0.895589,
-          "n": 215,
-          "realized": 0.934884
+          "brier": 0.05931,
+          "delta": 0.03834,
+          "hits": 198,
+          "mean_promised": 0.895622,
+          "n": 212,
+          "realized": 0.933962
         },
         "away_under_35": {
-          "brier": 0.014866,
-          "delta": 0.025104,
-          "hits": 207,
-          "mean_promised": 0.96061,
-          "n": 210,
-          "realized": 0.985714
+          "brier": 0.015065,
+          "delta": 0.024974,
+          "hits": 204,
+          "mean_promised": 0.960533,
+          "n": 207,
+          "realized": 0.985507
         },
         "btts_no": {
           "brier": 0.253144,
@@ -920,20 +920,20 @@
           "realized": 0.818182
         },
         "home_under_25": {
-          "brier": 0.082444,
-          "delta": 0.037245,
-          "hits": 64,
-          "mean_promised": 0.877041,
-          "n": 70,
-          "realized": 0.914286
+          "brier": 0.083433,
+          "delta": 0.036058,
+          "hits": 63,
+          "mean_promised": 0.876986,
+          "n": 69,
+          "realized": 0.913043
         },
         "home_under_35": {
-          "brier": 0.047047,
-          "delta": -0.02315,
-          "hits": 75,
-          "mean_promised": 0.972517,
-          "n": 79,
-          "realized": 0.949367
+          "brier": 0.047625,
+          "delta": -0.024011,
+          "hits": 74,
+          "mean_promised": 0.972729,
+          "n": 78,
+          "realized": 0.948718
         },
         "match_over_15": {
           "brier": 0.170117,
@@ -944,12 +944,12 @@
           "realized": 0.785714
         },
         "match_over_25": {
-          "brier": 0.251706,
-          "delta": 0.082713,
-          "hits": 232,
-          "mean_promised": 0.500201,
-          "n": 398,
-          "realized": 0.582915
+          "brier": 0.251171,
+          "delta": 0.079037,
+          "hits": 228,
+          "mean_promised": 0.501116,
+          "n": 393,
+          "realized": 0.580153
         },
         "match_over_35": {
           "brier": 0.267826,
@@ -960,12 +960,12 @@
           "realized": 0.524194
         },
         "match_over_45": {
-          "brier": 0.173759,
-          "delta": -0.022186,
-          "hits": 53,
-          "mean_promised": 0.240293,
-          "n": 243,
-          "realized": 0.218107
+          "brier": 0.170643,
+          "delta": -0.028018,
+          "hits": 51,
+          "mean_promised": 0.240518,
+          "n": 240,
+          "realized": 0.2125
         },
         "match_under_25": {
           "brier": 0.242527,
@@ -1111,31 +1111,31 @@
         "realized": 0.8
       },
       "away_under_15": {
-        "brier": 0.191712,
-        "delta": -0.077453,
-        "hits": 32,
-        "mean_promised": 0.773105,
-        "n": 46,
-        "notes": 52,
-        "realized": 0.695652
+        "brier": 0.186309,
+        "delta": -0.069685,
+        "hits": 30,
+        "mean_promised": 0.767359,
+        "n": 43,
+        "notes": 49,
+        "realized": 0.697674
       },
       "away_under_25": {
-        "brier": 0.063838,
-        "delta": 0.032805,
-        "hits": 206,
-        "mean_promised": 0.895123,
-        "n": 222,
-        "notes": 231,
-        "realized": 0.927928
+        "brier": 0.064554,
+        "delta": 0.031792,
+        "hits": 203,
+        "mean_promised": 0.895148,
+        "n": 219,
+        "notes": 228,
+        "realized": 0.926941
       },
       "away_under_35": {
-        "brier": 0.018171,
-        "delta": 0.023011,
-        "hits": 221,
-        "mean_promised": 0.959211,
-        "n": 225,
-        "notes": 225,
-        "realized": 0.982222
+        "brier": 0.018401,
+        "delta": 0.022862,
+        "hits": 218,
+        "mean_promised": 0.95912,
+        "n": 222,
+        "notes": 222,
+        "realized": 0.981982
       },
       "btts_no": {
         "brier": 0.252474,
@@ -1183,22 +1183,22 @@
         "realized": 0.818182
       },
       "home_under_25": {
-        "brier": 0.089971,
-        "delta": 0.027307,
-        "hits": 66,
-        "mean_promised": 0.876802,
-        "n": 73,
-        "notes": 88,
-        "realized": 0.90411
+        "brier": 0.091024,
+        "delta": 0.026032,
+        "hits": 65,
+        "mean_promised": 0.876746,
+        "n": 72,
+        "notes": 87,
+        "realized": 0.902778
       },
       "home_under_35": {
-        "brier": 0.05146,
-        "delta": -0.023835,
-        "hits": 86,
-        "mean_promised": 0.96889,
-        "n": 91,
-        "notes": 92,
-        "realized": 0.945055
+        "brier": 0.05201,
+        "delta": -0.024589,
+        "hits": 85,
+        "mean_promised": 0.969034,
+        "n": 90,
+        "notes": 91,
+        "realized": 0.944444
       },
       "match_over_15": {
         "brier": 0.160763,
@@ -1210,13 +1210,13 @@
         "realized": 0.8
       },
       "match_over_25": {
-        "brier": 0.252895,
-        "delta": 0.096292,
-        "hits": 249,
-        "mean_promised": 0.496565,
-        "n": 420,
-        "notes": 470,
-        "realized": 0.592857
+        "brier": 0.252403,
+        "delta": 0.092974,
+        "hits": 245,
+        "mean_promised": 0.497387,
+        "n": 415,
+        "notes": 467,
+        "realized": 0.590361
       },
       "match_over_35": {
         "brier": 0.269825,
@@ -1228,13 +1228,13 @@
         "realized": 0.53125
       },
       "match_over_45": {
-        "brier": 0.170693,
-        "delta": -0.026826,
-        "hits": 53,
-        "mean_promised": 0.239678,
-        "n": 249,
-        "notes": 250,
-        "realized": 0.212851
+        "brier": 0.167616,
+        "delta": -0.032572,
+        "hits": 51,
+        "mean_promised": 0.239889,
+        "n": 246,
+        "notes": 247,
+        "realized": 0.207317
       },
       "match_under_25": {
         "brier": 0.242527,
@@ -1260,29 +1260,29 @@
         "hits": 4,
         "mean_promised": 0.80424,
         "n": 6,
-        "notes": 23,
+        "notes": 24,
         "realized": 0.666667
       }
     },
     "definition": "plain-market: a note hits iff its market lands in the final score (selection-independent for match totals and BTTS; the 1X2 selection only picks the team for team totals and the double-chance leg)",
     "promised_buckets": [
       {
-        "brier": 0.205432,
+        "brier": 0.196838,
         "bucket": "0.1-0.2",
-        "delta": 0.082012,
-        "hits": 15,
-        "mean_promised": 0.190715,
-        "n": 55,
-        "realized": 0.272727
+        "delta": 0.068378,
+        "hits": 14,
+        "mean_promised": 0.190881,
+        "n": 54,
+        "realized": 0.259259
       },
       {
-        "brier": 0.158759,
+        "brier": 0.157119,
         "bucket": "0.2-0.3",
-        "delta": -0.048367,
-        "hits": 34,
-        "mean_promised": 0.243769,
-        "n": 174,
-        "realized": 0.195402
+        "delta": -0.051922,
+        "hits": 33,
+        "mean_promised": 0.243782,
+        "n": 172,
+        "realized": 0.19186
       },
       {
         "brier": 0.25338,
@@ -1294,13 +1294,13 @@
         "realized": 0.45045
       },
       {
-        "brier": 0.258405,
+        "brier": 0.25798,
         "bucket": "0.4-0.5",
-        "delta": 0.114787,
-        "hits": 237,
-        "mean_promised": 0.448158,
-        "n": 421,
-        "realized": 0.562945
+        "delta": 0.1117,
+        "hits": 233,
+        "mean_promised": 0.448396,
+        "n": 416,
+        "realized": 0.560096
       },
       {
         "brier": 0.250521,
@@ -1330,38 +1330,38 @@
         "realized": 0.702703
       },
       {
-        "brier": 0.103558,
+        "brier": 0.102505,
         "bucket": "0.8-0.9",
-        "delta": 0.017718,
-        "hits": 271,
-        "mean_promised": 0.862152,
-        "n": 308,
-        "realized": 0.87987
+        "delta": 0.01908,
+        "hits": 267,
+        "mean_promised": 0.862108,
+        "n": 303,
+        "realized": 0.881188
       },
       {
-        "brier": 0.03876,
+        "brier": 0.039234,
         "bucket": "0.9-1.0",
-        "delta": 0.011814,
-        "hits": 426,
-        "mean_promised": 0.947646,
-        "n": 444,
-        "realized": 0.959459
+        "delta": 0.011192,
+        "hits": 420,
+        "mean_promised": 0.947712,
+        "n": 438,
+        "realized": 0.958904
       }
     ],
-    "promised_missing": 185,
-    "scored": 1994,
-    "total_notes": 1994,
+    "promised_missing": 188,
+    "scored": 1978,
+    "total_notes": 1978,
     "unscorable": {}
   },
   "include_same_day": false,
   "late_additions_on_rewritten_ledgers": 105,
-  "morning_baseline_rows": 906,
+  "morning_baseline_rows": 915,
   "overall": {
-    "hit_rate": 0.657436,
-    "priced_picks": 783,
-    "roi": 0.014309,
-    "settled_picks": 975,
-    "wins": 641
+    "hit_rate": 0.659878,
+    "priced_picks": 788,
+    "roi": 0.015342,
+    "settled_picks": 982,
+    "wins": 648
   },
   "pending_result_picks": 16,
   "population_definitions": {
@@ -1535,7 +1535,7 @@
     "archive_receipt": {
       "empty_regular_ledger_dates": [],
       "late_additions_on_rewritten_ledgers": 105,
-      "morning_baseline_rows": 906,
+      "morning_baseline_rows": 915,
       "name_variant_duplicates_skipped": 0,
       "regular_only_rows": 0,
       "unsafe_regular_ledger_dates": [
@@ -1568,10 +1568,10 @@
       ],
       "verified_late_additions": 133
     },
-    "end": "2026-10-29",
-    "history_start": "2026-09-30",
+    "end": "2026-10-30",
+    "history_start": "2026-10-01",
     "include_same_day": false,
-    "recent_start": "2026-09-30",
+    "recent_start": "2026-10-01",
     "rules": {
       "2way-unanimous avg_p>=60": {
         "activated_as_of": null,
@@ -1627,11 +1627,11 @@
               "wins": 4
             },
             "SCOUTINGSTATS_SOLE": {
-              "hit_rate": 0.611111,
-              "priced_picks": 18,
-              "roi": -0.088333,
-              "settled_picks": 18,
-              "wins": 11
+              "hit_rate": 0.588235,
+              "priced_picks": 17,
+              "roi": -0.11,
+              "settled_picks": 17,
+              "wins": 10
             },
             "SOURCE_FALLBACK": {
               "hit_rate": 0.5,
@@ -1671,11 +1671,11 @@
               "wins": 2
             },
             "scoutingstats_sole_source": {
-              "hit_rate": 0.611111,
-              "priced_picks": 18,
-              "roi": -0.088333,
-              "settled_picks": 18,
-              "wins": 11
+              "hit_rate": 0.588235,
+              "priced_picks": 17,
+              "roi": -0.11,
+              "settled_picks": 17,
+              "wins": 10
             },
             "source_fallback_not_execution_eligible": {
               "hit_rate": 1.0,
@@ -1685,17 +1685,17 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
-          "first_observed_pick": "2026-09-30",
-          "hit_rate": 0.566667,
+          "end": "2026-10-30",
+          "first_observed_pick": "2026-10-01",
+          "hit_rate": 0.559322,
           "last_observed_pick": "2026-10-05",
           "missing_archive_dates": [],
-          "priced_picks": 35,
-          "pricing_coverage": 0.5833333333333334,
-          "roi": -0.164,
-          "settled_picks": 60,
-          "start": "2026-09-30",
-          "wins": 34
+          "priced_picks": 34,
+          "pricing_coverage": 0.576271186440678,
+          "roi": -0.177059,
+          "settled_picks": 59,
+          "start": "2026-10-01",
+          "wins": 33
         },
         "registry_status": null,
         "since_activation": null,
@@ -1792,7 +1792,7 @@
               "wins": 3
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-06",
           "hit_rate": 0.791667,
           "last_observed_pick": "2026-10-11",
@@ -1801,7 +1801,7 @@
           "pricing_coverage": 0.7083333333333334,
           "roi": 0.037647,
           "settled_picks": 24,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 19
         },
         "registry_status": null,
@@ -1855,11 +1855,11 @@
               "wins": 1
             },
             "BETEXPLORER_RESCUE": {
-              "hit_rate": 0.6,
-              "priced_picks": 5,
-              "roi": -0.094,
-              "settled_picks": 5,
-              "wins": 3
+              "hit_rate": 0.666667,
+              "priced_picks": 3,
+              "roi": -0.01,
+              "settled_picks": 3,
+              "wins": 2
             },
             "NAMED_BOOKMAKER_PRICE": {
               "hit_rate": 0.807018,
@@ -1869,11 +1869,11 @@
               "wins": 46
             },
             "SCOUTINGSTATS_SOLE": {
-              "hit_rate": 0.741935,
-              "priced_picks": 31,
-              "roi": 0.151935,
-              "settled_picks": 31,
-              "wins": 23
+              "hit_rate": 0.733333,
+              "priced_picks": 30,
+              "roi": 0.139333,
+              "settled_picks": 30,
+              "wins": 22
             },
             "SOURCE_FALLBACK": {
               "hit_rate": 0.333333,
@@ -1899,11 +1899,11 @@
           },
           "by_price_quarantine_reason": {
             "NONE": {
-              "hit_rate": 0.722222,
-              "priced_picks": 64,
-              "roi": 0.238377,
-              "settled_picks": 90,
-              "wins": 65
+              "hit_rate": 0.727273,
+              "priced_picks": 62,
+              "roi": 0.253163,
+              "settled_picks": 88,
+              "wins": 64
             },
             "alias_fuzzy": {
               "hit_rate": 0.75,
@@ -1913,11 +1913,11 @@
               "wins": 3
             },
             "scoutingstats_sole_source": {
-              "hit_rate": 0.741935,
-              "priced_picks": 31,
-              "roi": 0.151935,
-              "settled_picks": 31,
-              "wins": 23
+              "hit_rate": 0.733333,
+              "priced_picks": 30,
+              "roi": 0.139333,
+              "settled_picks": 30,
+              "wins": 22
             },
             "source_fallback_not_execution_eligible": {
               "hit_rate": 0.4,
@@ -1927,17 +1927,17 @@
               "wins": 2
             }
           },
-          "end": "2026-10-29",
-          "first_observed_pick": "2026-09-30",
-          "hit_rate": 0.715385,
+          "end": "2026-10-30",
+          "first_observed_pick": "2026-10-01",
+          "hit_rate": 0.716535,
           "last_observed_pick": "2026-10-12",
           "missing_archive_dates": [],
-          "priced_picks": 104,
-          "pricing_coverage": 0.8,
-          "roi": 0.176309,
-          "settled_picks": 130,
-          "start": "2026-09-30",
-          "wins": 93
+          "priced_picks": 101,
+          "pricing_coverage": 0.7952755905511811,
+          "roi": 0.180654,
+          "settled_picks": 127,
+          "start": "2026-10-01",
+          "wins": 91
         },
         "registry_status": null,
         "since_activation": null,
@@ -2062,7 +2062,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-02",
           "hit_rate": 0.605442,
           "last_observed_pick": "2026-10-18",
@@ -2071,7 +2071,7 @@
           "pricing_coverage": 0.891156462585034,
           "roi": -0.041585,
           "settled_picks": 147,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 89
         },
         "registry_status": null,
@@ -2146,20 +2146,20 @@
               "wins": 1
             },
             "UNMATCHED": {
-              "hit_rate": 0.833333,
+              "hit_rate": 0.8,
               "priced_picks": 0,
               "roi": null,
-              "settled_picks": 6,
-              "wins": 5
+              "settled_picks": 5,
+              "wins": 4
             }
           },
           "by_price_quarantine_reason": {
             "NONE": {
-              "hit_rate": 0.818182,
+              "hit_rate": 0.8,
               "priced_picks": 5,
               "roi": -0.056,
-              "settled_picks": 11,
-              "wins": 9
+              "settled_picks": 10,
+              "wins": 8
             },
             "scoutingstats_sole_source": {
               "hit_rate": 0.666667,
@@ -2176,17 +2176,17 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
-          "first_observed_pick": "2026-09-30",
-          "hit_rate": 0.8,
+          "end": "2026-10-30",
+          "first_observed_pick": "2026-10-01",
+          "hit_rate": 0.785714,
           "last_observed_pick": "2026-10-11",
           "missing_archive_dates": [],
           "priced_picks": 9,
-          "pricing_coverage": 0.6,
+          "pricing_coverage": 0.6428571428571429,
           "roi": -0.045556,
-          "settled_picks": 15,
-          "start": "2026-09-30",
-          "wins": 12
+          "settled_picks": 14,
+          "start": "2026-10-01",
+          "wins": 11
         },
         "registry_status": null,
         "since_activation": null,
@@ -2276,7 +2276,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-01",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-10",
@@ -2285,7 +2285,7 @@
           "pricing_coverage": 0.8333333333333334,
           "roi": 0.086,
           "settled_picks": 6,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 6
         },
         "registry_status": null,
@@ -2349,7 +2349,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -2358,13 +2358,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -2381,7 +2381,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -2468,7 +2468,7 @@
               "wins": 3
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 0.75,
           "last_observed_pick": "2026-10-22",
@@ -2477,13 +2477,13 @@
           "pricing_coverage": 1.0,
           "roi": 0.5525,
           "settled_picks": 4,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 3
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -2516,7 +2516,7 @@
               "wins": 3
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 0.75,
           "last_observed_pick": "2026-10-22",
@@ -2587,7 +2587,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -2596,13 +2596,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -2619,7 +2619,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -2706,7 +2706,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 0.5,
           "last_observed_pick": "2026-10-22",
@@ -2715,13 +2715,13 @@
           "pricing_coverage": 1.0,
           "roi": 0.165,
           "settled_picks": 2,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 1
         },
-        "registry_status": "certified",
+        "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -2754,7 +2754,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 0.5,
           "last_observed_pick": "2026-10-22",
@@ -2848,7 +2848,7 @@
               "wins": 3
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.75,
           "last_observed_pick": "2026-10-20",
@@ -2857,13 +2857,13 @@
           "pricing_coverage": 1.0,
           "roi": 0.0973,
           "settled_picks": 4,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 3
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -2903,7 +2903,7 @@
               "wins": 3
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.75,
           "last_observed_pick": "2026-10-20",
@@ -2918,20 +2918,20 @@
         "since_activation_unavailable_reason": null
       },
       "pfc_144c01b1aa366b88f9c4083a": {
-        "activated_as_of": "2026-10-26",
+        "activated_as_of": "2026-10-30",
         "historical_validation": {
           "metrics": {
-            "avg_odds": 1.668,
-            "hit": 0.6074,
-            "n": 242,
-            "n_priced": 242,
-            "roi": 0.0123,
-            "wilson_lb": 0.5447,
-            "wins": 147
+            "avg_odds": 1.677,
+            "hit": 0.6,
+            "n": 240,
+            "n_priced": 240,
+            "roi": 0.0041,
+            "wilson_lb": 0.5369,
+            "wins": 144
           },
           "mining_window": {
-            "as_of_exclusive": "2026-10-26",
-            "split": "2026-09-28",
+            "as_of_exclusive": "2026-10-30",
+            "split": "2026-10-02",
             "start": "2026-06-13"
           },
           "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
@@ -2974,7 +2974,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -2983,25 +2983,20 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
-        "registry_status": "candidate",
+        "registry_status": "certified",
         "since_activation": {
-          "archive_days_available": 3,
-          "archive_days_expected": 3,
+          "archive_days_available": 0,
+          "archive_days_expected": 0,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
-            "unsafe_regular_ledger_dates": [
-              "2026-10-26",
-              "2026-10-27",
-              "2026-10-28",
-              "2026-10-29"
-            ]
+            "unsafe_regular_ledger_dates": []
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -3010,7 +3005,7 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-10-26",
+          "start": "2026-10-30",
           "wins": 0
         },
         "since_activation_unavailable_reason": null
@@ -3088,7 +3083,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.0,
           "last_observed_pick": "2026-10-20",
@@ -3097,13 +3092,13 @@
           "pricing_coverage": 0.0,
           "roi": null,
           "settled_picks": 1,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -3136,7 +3131,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.0,
           "last_observed_pick": "2026-10-20",
@@ -3244,7 +3239,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-22",
           "hit_rate": 0.6,
           "last_observed_pick": "2026-10-27",
@@ -3253,13 +3248,13 @@
           "pricing_coverage": 0.5,
           "roi": 0.13346,
           "settled_picks": 20,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 12
         },
         "registry_status": "certified",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -3313,7 +3308,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-22",
           "hit_rate": 0.6,
           "last_observed_pick": "2026-10-27",
@@ -3384,7 +3379,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -3393,13 +3388,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -3416,7 +3411,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -3487,7 +3482,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -3496,13 +3491,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -3519,7 +3514,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -3627,7 +3622,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.818182,
           "last_observed_pick": "2026-10-24",
@@ -3636,13 +3631,13 @@
           "pricing_coverage": 0.45454545454545453,
           "roi": 0.34634,
           "settled_picks": 11,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 9
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -3696,7 +3691,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.818182,
           "last_observed_pick": "2026-10-24",
@@ -3811,7 +3806,7 @@
               "wins": 4
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-23",
           "hit_rate": 0.619048,
           "last_observed_pick": "2026-10-25",
@@ -3820,13 +3815,13 @@
           "pricing_coverage": 0.9404761904761905,
           "roi": -0.020471,
           "settled_picks": 84,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 52
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 6,
-          "archive_days_expected": 6,
+          "archive_days_available": 7,
+          "archive_days_expected": 7,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -3885,7 +3880,7 @@
               "wins": 4
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-23",
           "hit_rate": 0.619048,
           "last_observed_pick": "2026-10-25",
@@ -3986,7 +3981,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.5,
           "last_observed_pick": "2026-10-20",
@@ -3995,13 +3990,13 @@
           "pricing_coverage": 0.5,
           "roi": -1.0,
           "settled_picks": 2,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 1
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -4048,7 +4043,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.5,
           "last_observed_pick": "2026-10-20",
@@ -4119,7 +4114,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4128,13 +4123,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -4151,7 +4146,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4238,7 +4233,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-20",
@@ -4247,13 +4242,13 @@
           "pricing_coverage": 0.0,
           "roi": null,
           "settled_picks": 1,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 1
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -4286,7 +4281,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-20",
@@ -4357,7 +4352,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4366,13 +4361,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 1,
-          "archive_days_expected": 1,
+          "archive_days_available": 2,
+          "archive_days_expected": 2,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -4382,7 +4377,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4469,7 +4464,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.0,
           "last_observed_pick": "2026-10-20",
@@ -4478,13 +4473,13 @@
           "pricing_coverage": 1.0,
           "roi": -1.0,
           "settled_picks": 1,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -4517,7 +4512,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.0,
           "last_observed_pick": "2026-10-20",
@@ -4588,7 +4583,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4597,13 +4592,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -4620,7 +4615,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4691,7 +4686,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4700,13 +4695,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -4723,7 +4718,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4794,7 +4789,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4803,13 +4798,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -4826,7 +4821,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -4941,7 +4936,7 @@
               "wins": 18
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.607287,
           "last_observed_pick": "2026-10-24",
@@ -4950,13 +4945,13 @@
           "pricing_coverage": 0.7935222672064778,
           "roi": -0.050777,
           "settled_picks": 247,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 150
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -5017,7 +5012,7 @@
               "wins": 18
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.607287,
           "last_observed_pick": "2026-10-24",
@@ -5118,7 +5113,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-26",
           "hit_rate": 0.666667,
           "last_observed_pick": "2026-10-28",
@@ -5127,13 +5122,13 @@
           "pricing_coverage": 0.6666666666666666,
           "roi": -0.0327,
           "settled_picks": 3,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 2
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 3,
-          "archive_days_expected": 3,
+          "archive_days_available": 4,
+          "archive_days_expected": 4,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -5175,7 +5170,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-26",
           "hit_rate": 0.666667,
           "last_observed_pick": "2026-10-28",
@@ -5262,7 +5257,7 @@
               "wins": 4
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 0.571429,
           "last_observed_pick": "2026-10-22",
@@ -5271,13 +5266,13 @@
           "pricing_coverage": 1.0,
           "roi": 0.111429,
           "settled_picks": 7,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 4
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -5310,7 +5305,7 @@
               "wins": 4
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 0.571429,
           "last_observed_pick": "2026-10-22",
@@ -5418,7 +5413,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.5,
           "last_observed_pick": "2026-10-20",
@@ -5427,13 +5422,13 @@
           "pricing_coverage": 0.5,
           "roi": 0.9,
           "settled_picks": 4,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 2
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -5487,7 +5482,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 0.5,
           "last_observed_pick": "2026-10-20",
@@ -5558,7 +5553,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -5567,13 +5562,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -5590,7 +5585,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -5661,7 +5656,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -5670,13 +5665,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -5693,7 +5688,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -5780,7 +5775,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-21",
@@ -5789,13 +5784,13 @@
           "pricing_coverage": 1.0,
           "roi": 0.44,
           "settled_picks": 1,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 1
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -5828,7 +5823,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-21",
@@ -5899,7 +5894,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -5908,13 +5903,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -5931,7 +5926,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6032,7 +6027,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-25",
           "hit_rate": 0.666667,
           "last_observed_pick": "2026-10-26",
@@ -6041,13 +6036,13 @@
           "pricing_coverage": 0.8888888888888888,
           "roi": 0.148537,
           "settled_picks": 9,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 6
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 4,
-          "archive_days_expected": 4,
+          "archive_days_available": 5,
+          "archive_days_expected": 5,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -6090,7 +6085,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-25",
           "hit_rate": 0.666667,
           "last_observed_pick": "2026-10-26",
@@ -6161,7 +6156,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6170,13 +6165,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -6193,7 +6188,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6287,7 +6282,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-22",
           "hit_rate": 0.333333,
           "last_observed_pick": "2026-10-23",
@@ -6296,13 +6291,13 @@
           "pricing_coverage": 0.6666666666666666,
           "roi": -0.3452,
           "settled_picks": 3,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 1
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 8,
-          "archive_days_expected": 8,
+          "archive_days_available": 9,
+          "archive_days_expected": 9,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -6342,7 +6337,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-22",
           "hit_rate": 0.333333,
           "last_observed_pick": "2026-10-23",
@@ -6413,7 +6408,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6422,13 +6417,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -6445,7 +6440,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6516,7 +6511,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6525,13 +6520,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -6548,7 +6543,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6619,7 +6614,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6628,13 +6623,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -6651,7 +6646,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6766,7 +6761,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-23",
           "hit_rate": 0.526316,
           "last_observed_pick": "2026-10-28",
@@ -6775,13 +6770,13 @@
           "pricing_coverage": 0.9473684210526315,
           "roi": -0.049333,
           "settled_picks": 38,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 20
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 2,
-          "archive_days_expected": 2,
+          "archive_days_available": 3,
+          "archive_days_expected": 3,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -6822,7 +6817,7 @@
               "wins": 2
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-27",
           "hit_rate": 0.586207,
           "last_observed_pick": "2026-10-28",
@@ -6893,7 +6888,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6902,13 +6897,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 5,
-          "archive_days_expected": 5,
+          "archive_days_available": 6,
+          "archive_days_expected": 6,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -6922,7 +6917,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -6993,7 +6988,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7002,13 +6997,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -7025,7 +7020,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7096,7 +7091,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7105,13 +7100,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 8,
-          "archive_days_expected": 8,
+          "archive_days_available": 9,
+          "archive_days_expected": 9,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -7128,7 +7123,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7199,7 +7194,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7208,13 +7203,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 1,
-          "archive_days_expected": 1,
+          "archive_days_available": 2,
+          "archive_days_expected": 2,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -7224,7 +7219,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7295,7 +7290,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7304,13 +7299,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 1,
-          "archive_days_expected": 1,
+          "archive_days_available": 2,
+          "archive_days_expected": 2,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -7320,7 +7315,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7391,7 +7386,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7400,13 +7395,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 2,
-          "archive_days_expected": 2,
+          "archive_days_available": 3,
+          "archive_days_expected": 3,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -7417,7 +7412,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7488,7 +7483,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7497,13 +7492,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 5,
-          "archive_days_expected": 5,
+          "archive_days_available": 6,
+          "archive_days_expected": 6,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -7517,7 +7512,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7588,7 +7583,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7597,13 +7592,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -7620,7 +7615,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7635,20 +7630,20 @@
         "since_activation_unavailable_reason": null
       },
       "pfc_a7ba6711aeb15b9804a94f06": {
-        "activated_as_of": "2026-10-28",
+        "activated_as_of": "2026-10-30",
         "historical_validation": {
           "metrics": {
-            "avg_odds": 1.611,
-            "hit": 0.6546,
-            "n": 359,
-            "n_priced": 359,
-            "roi": 0.0009,
-            "wilson_lb": 0.604,
-            "wins": 235
+            "avg_odds": 1.624,
+            "hit": 0.6497,
+            "n": 354,
+            "n_priced": 354,
+            "roi": 0.0031,
+            "wilson_lb": 0.5987,
+            "wins": 230
           },
           "mining_window": {
-            "as_of_exclusive": "2026-10-28",
-            "split": "2026-09-30",
+            "as_of_exclusive": "2026-10-30",
+            "split": "2026-10-02",
             "start": "2026-06-13"
           },
           "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
@@ -7691,7 +7686,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7700,23 +7695,20 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
-        "registry_status": "candidate",
+        "registry_status": "certified",
         "since_activation": {
-          "archive_days_available": 1,
-          "archive_days_expected": 1,
+          "archive_days_available": 0,
+          "archive_days_expected": 0,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
-            "unsafe_regular_ledger_dates": [
-              "2026-10-28",
-              "2026-10-29"
-            ]
+            "unsafe_regular_ledger_dates": []
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7725,7 +7717,7 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-10-28",
+          "start": "2026-10-30",
           "wins": 0
         },
         "since_activation_unavailable_reason": null
@@ -7787,7 +7779,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7796,13 +7788,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 5,
-          "archive_days_expected": 5,
+          "archive_days_available": 6,
+          "archive_days_expected": 6,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -7816,7 +7808,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7887,7 +7879,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7896,13 +7888,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -7919,7 +7911,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7934,20 +7926,20 @@
         "since_activation_unavailable_reason": null
       },
       "pfc_adb24b31e9ca43c42506156a": {
-        "activated_as_of": "2026-10-26",
+        "activated_as_of": "2026-10-30",
         "historical_validation": {
           "metrics": {
-            "avg_odds": 1.668,
-            "hit": 0.6074,
-            "n": 242,
-            "n_priced": 242,
-            "roi": 0.0123,
-            "wilson_lb": 0.5447,
-            "wins": 147
+            "avg_odds": 1.677,
+            "hit": 0.6,
+            "n": 240,
+            "n_priced": 240,
+            "roi": 0.0041,
+            "wilson_lb": 0.5369,
+            "wins": 144
           },
           "mining_window": {
-            "as_of_exclusive": "2026-10-26",
-            "split": "2026-09-28",
+            "as_of_exclusive": "2026-10-30",
+            "split": "2026-10-02",
             "start": "2026-06-13"
           },
           "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
@@ -7990,7 +7982,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -7999,25 +7991,20 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
-        "registry_status": "candidate",
+        "registry_status": "certified",
         "since_activation": {
-          "archive_days_available": 3,
-          "archive_days_expected": 3,
+          "archive_days_available": 0,
+          "archive_days_expected": 0,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
-            "unsafe_regular_ledger_dates": [
-              "2026-10-26",
-              "2026-10-27",
-              "2026-10-28",
-              "2026-10-29"
-            ]
+            "unsafe_regular_ledger_dates": []
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8026,26 +8013,26 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-10-26",
+          "start": "2026-10-30",
           "wins": 0
         },
         "since_activation_unavailable_reason": null
       },
       "pfc_afdf26c0a105a0f5e6ffff27": {
-        "activated_as_of": "2026-10-26",
+        "activated_as_of": "2026-10-30",
         "historical_validation": {
           "metrics": {
-            "avg_odds": 1.668,
-            "hit": 0.6074,
-            "n": 242,
-            "n_priced": 242,
-            "roi": 0.0123,
-            "wilson_lb": 0.5447,
-            "wins": 147
+            "avg_odds": 1.677,
+            "hit": 0.6,
+            "n": 240,
+            "n_priced": 240,
+            "roi": 0.0041,
+            "wilson_lb": 0.5369,
+            "wins": 144
           },
           "mining_window": {
-            "as_of_exclusive": "2026-10-26",
-            "split": "2026-09-28",
+            "as_of_exclusive": "2026-10-30",
+            "split": "2026-10-02",
             "start": "2026-06-13"
           },
           "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
@@ -8088,7 +8075,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8097,25 +8084,20 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
-        "registry_status": "candidate",
+        "registry_status": "certified",
         "since_activation": {
-          "archive_days_available": 3,
-          "archive_days_expected": 3,
+          "archive_days_available": 0,
+          "archive_days_expected": 0,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
-            "unsafe_regular_ledger_dates": [
-              "2026-10-26",
-              "2026-10-27",
-              "2026-10-28",
-              "2026-10-29"
-            ]
+            "unsafe_regular_ledger_dates": []
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8124,7 +8106,7 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-10-26",
+          "start": "2026-10-30",
           "wins": 0
         },
         "since_activation_unavailable_reason": null
@@ -8186,10 +8168,10 @@
           },
           "by_price_evidence": {
             "NAMED_BOOKMAKER_PRICE": {
-              "hit_rate": 0.714286,
-              "priced_picks": 7,
-              "roi": 0.495714,
-              "settled_picks": 7,
+              "hit_rate": 0.625,
+              "priced_picks": 8,
+              "roi": 0.30875,
+              "settled_picks": 8,
               "wins": 5
             },
             "UNMATCHED": {
@@ -8202,29 +8184,29 @@
           },
           "by_price_quarantine_reason": {
             "NONE": {
-              "hit_rate": 0.777778,
-              "priced_picks": 7,
-              "roi": 0.495714,
-              "settled_picks": 9,
+              "hit_rate": 0.7,
+              "priced_picks": 8,
+              "roi": 0.30875,
+              "settled_picks": 10,
               "wins": 7
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
-          "hit_rate": 0.777778,
-          "last_observed_pick": "2026-10-26",
+          "hit_rate": 0.7,
+          "last_observed_pick": "2026-10-29",
           "missing_archive_dates": [],
-          "priced_picks": 7,
-          "pricing_coverage": 0.7777777777777778,
-          "roi": 0.495714,
-          "settled_picks": 9,
-          "start": "2026-09-30",
+          "priced_picks": 8,
+          "pricing_coverage": 0.8,
+          "roi": 0.30875,
+          "settled_picks": 10,
+          "start": "2026-10-01",
           "wins": 7
         },
         "registry_status": "certified",
         "since_activation": {
-          "archive_days_available": 2,
-          "archive_days_expected": 2,
+          "archive_days_available": 3,
+          "archive_days_expected": 3,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -8233,17 +8215,33 @@
               "2026-10-29"
             ]
           },
-          "by_price_evidence": {},
-          "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
-          "first_observed_pick": null,
-          "hit_rate": null,
-          "last_observed_pick": null,
+          "by_price_evidence": {
+            "NAMED_BOOKMAKER_PRICE": {
+              "hit_rate": 0.0,
+              "priced_picks": 1,
+              "roi": -1.0,
+              "settled_picks": 1,
+              "wins": 0
+            }
+          },
+          "by_price_quarantine_reason": {
+            "NONE": {
+              "hit_rate": 0.0,
+              "priced_picks": 1,
+              "roi": -1.0,
+              "settled_picks": 1,
+              "wins": 0
+            }
+          },
+          "end": "2026-10-30",
+          "first_observed_pick": "2026-10-29",
+          "hit_rate": 0.0,
+          "last_observed_pick": "2026-10-29",
           "missing_archive_dates": [],
-          "priced_picks": 0,
-          "pricing_coverage": null,
-          "roi": null,
-          "settled_picks": 0,
+          "priced_picks": 1,
+          "pricing_coverage": 1.0,
+          "roi": -1.0,
+          "settled_picks": 1,
           "start": "2026-10-27",
           "wins": 0
         },
@@ -8306,7 +8304,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8315,13 +8313,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 1,
-          "archive_days_expected": 1,
+          "archive_days_available": 2,
+          "archive_days_expected": 2,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -8331,7 +8329,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8402,7 +8400,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8411,13 +8409,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -8434,7 +8432,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8449,20 +8447,20 @@
         "since_activation_unavailable_reason": null
       },
       "pfc_b9aa429be62178cc76b1ca8d": {
-        "activated_as_of": "2026-10-26",
+        "activated_as_of": "2026-10-30",
         "historical_validation": {
           "metrics": {
-            "avg_odds": 1.668,
-            "hit": 0.6074,
-            "n": 242,
-            "n_priced": 242,
-            "roi": 0.0123,
-            "wilson_lb": 0.5447,
-            "wins": 147
+            "avg_odds": 1.677,
+            "hit": 0.6,
+            "n": 240,
+            "n_priced": 240,
+            "roi": 0.0041,
+            "wilson_lb": 0.5369,
+            "wins": 144
           },
           "mining_window": {
-            "as_of_exclusive": "2026-10-26",
-            "split": "2026-09-28",
+            "as_of_exclusive": "2026-10-30",
+            "split": "2026-10-02",
             "start": "2026-06-13"
           },
           "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
@@ -8505,7 +8503,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8514,25 +8512,20 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
-        "registry_status": "candidate",
+        "registry_status": "certified",
         "since_activation": {
-          "archive_days_available": 3,
-          "archive_days_expected": 3,
+          "archive_days_available": 0,
+          "archive_days_expected": 0,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
-            "unsafe_regular_ledger_dates": [
-              "2026-10-26",
-              "2026-10-27",
-              "2026-10-28",
-              "2026-10-29"
-            ]
+            "unsafe_regular_ledger_dates": []
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8541,7 +8534,7 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-10-26",
+          "start": "2026-10-30",
           "wins": 0
         },
         "since_activation_unavailable_reason": null
@@ -8603,7 +8596,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8612,13 +8605,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 4,
-          "archive_days_expected": 4,
+          "archive_days_available": 5,
+          "archive_days_expected": 5,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -8631,7 +8624,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8702,7 +8695,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8711,13 +8704,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 8,
-          "archive_days_expected": 8,
+          "archive_days_available": 9,
+          "archive_days_expected": 9,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -8734,7 +8727,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8821,7 +8814,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-20",
@@ -8830,13 +8823,13 @@
           "pricing_coverage": 0.0,
           "roi": null,
           "settled_picks": 1,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 1
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -8869,7 +8862,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-20",
@@ -8940,7 +8933,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -8949,13 +8942,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -8972,7 +8965,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9043,7 +9036,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9052,13 +9045,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -9075,7 +9068,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9146,7 +9139,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9155,13 +9148,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -9178,7 +9171,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9279,7 +9272,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 0.384615,
           "last_observed_pick": "2026-10-21",
@@ -9288,13 +9281,13 @@
           "pricing_coverage": 0.9230769230769231,
           "roi": -0.173658,
           "settled_picks": 13,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 5
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 8,
-          "archive_days_expected": 8,
+          "archive_days_available": 9,
+          "archive_days_expected": 9,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -9341,7 +9334,7 @@
               "wins": 0
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-21",
           "hit_rate": 0.384615,
           "last_observed_pick": "2026-10-21",
@@ -9412,7 +9405,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9421,13 +9414,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -9444,7 +9437,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9515,7 +9508,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9524,13 +9517,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -9547,7 +9540,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9618,7 +9611,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9627,13 +9620,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 1,
-          "archive_days_expected": 1,
+          "archive_days_available": 2,
+          "archive_days_expected": 2,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -9643,7 +9636,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9714,7 +9707,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9723,13 +9716,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -9746,7 +9739,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9817,7 +9810,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9826,13 +9819,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -9849,7 +9842,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9920,7 +9913,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -9929,13 +9922,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -9952,7 +9945,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -10023,7 +10016,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -10032,13 +10025,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "benched",
         "since_activation": {
-          "archive_days_available": 9,
-          "archive_days_expected": 9,
+          "archive_days_available": 10,
+          "archive_days_expected": 10,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -10055,7 +10048,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -10126,7 +10119,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -10135,13 +10128,13 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
         "registry_status": "candidate",
         "since_activation": {
-          "archive_days_available": 8,
-          "archive_days_expected": 8,
+          "archive_days_available": 9,
+          "archive_days_expected": 9,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -10158,7 +10151,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -10173,20 +10166,20 @@
         "since_activation_unavailable_reason": null
       },
       "pfc_fc7adf360790baec2b1ce044": {
-        "activated_as_of": "2026-10-26",
+        "activated_as_of": "2026-10-30",
         "historical_validation": {
           "metrics": {
-            "avg_odds": 1.668,
-            "hit": 0.6074,
-            "n": 242,
-            "n_priced": 242,
-            "roi": 0.0123,
-            "wilson_lb": 0.5447,
-            "wins": 147
+            "avg_odds": 1.677,
+            "hit": 0.6,
+            "n": 240,
+            "n_priced": 240,
+            "roi": 0.0041,
+            "wilson_lb": 0.5369,
+            "wins": 144
           },
           "mining_window": {
-            "as_of_exclusive": "2026-10-26",
-            "split": "2026-09-28",
+            "as_of_exclusive": "2026-10-30",
+            "split": "2026-10-02",
             "start": "2026-06-13"
           },
           "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
@@ -10229,7 +10222,7 @@
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -10238,25 +10231,20 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 0
         },
-        "registry_status": "candidate",
+        "registry_status": "certified",
         "since_activation": {
-          "archive_days_available": 3,
-          "archive_days_expected": 3,
+          "archive_days_available": 0,
+          "archive_days_expected": 0,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
-            "unsafe_regular_ledger_dates": [
-              "2026-10-26",
-              "2026-10-27",
-              "2026-10-28",
-              "2026-10-29"
-            ]
+            "unsafe_regular_ledger_dates": []
           },
           "by_price_evidence": {},
           "by_price_quarantine_reason": {},
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": null,
           "hit_rate": null,
           "last_observed_pick": null,
@@ -10265,7 +10253,7 @@
           "pricing_coverage": null,
           "roi": null,
           "settled_picks": 0,
-          "start": "2026-10-26",
+          "start": "2026-10-30",
           "wins": 0
         },
         "since_activation_unavailable_reason": null
@@ -10327,11 +10315,11 @@
           },
           "by_price_evidence": {
             "NAMED_BOOKMAKER_PRICE": {
-              "hit_rate": 0.857143,
-              "priced_picks": 35,
-              "roi": 0.09002,
-              "settled_picks": 35,
-              "wins": 30
+              "hit_rate": 0.883721,
+              "priced_picks": 43,
+              "roi": 0.125726,
+              "settled_picks": 43,
+              "wins": 38
             },
             "SCOUTINGSTATS_SOLE": {
               "hit_rate": 0.5,
@@ -10341,27 +10329,27 @@
               "wins": 5
             },
             "SUSPECT_ALIAS_FUZZY": {
-              "hit_rate": 0.933333,
+              "hit_rate": 0.944444,
               "priced_picks": 0,
               "roi": null,
-              "settled_picks": 15,
-              "wins": 14
+              "settled_picks": 18,
+              "wins": 17
             }
           },
           "by_price_quarantine_reason": {
             "NONE": {
-              "hit_rate": 0.857143,
-              "priced_picks": 35,
-              "roi": 0.09002,
-              "settled_picks": 35,
-              "wins": 30
+              "hit_rate": 0.883721,
+              "priced_picks": 43,
+              "roi": 0.125726,
+              "settled_picks": 43,
+              "wins": 38
             },
             "alias_fuzzy": {
-              "hit_rate": 0.933333,
+              "hit_rate": 0.944444,
               "priced_picks": 0,
               "roi": null,
-              "settled_picks": 15,
-              "wins": 14
+              "settled_picks": 18,
+              "wins": 17
             },
             "scoutingstats_sole_source": {
               "hit_rate": 0.5,
@@ -10371,22 +10359,22 @@
               "wins": 5
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-25",
-          "hit_rate": 0.816667,
-          "last_observed_pick": "2026-10-28",
+          "hit_rate": 0.84507,
+          "last_observed_pick": "2026-10-29",
           "missing_archive_dates": [],
-          "priced_picks": 45,
-          "pricing_coverage": 0.75,
-          "roi": -0.019762,
-          "settled_picks": 60,
-          "start": "2026-09-30",
-          "wins": 49
+          "priced_picks": 53,
+          "pricing_coverage": 0.7464788732394366,
+          "roi": 0.025777,
+          "settled_picks": 71,
+          "start": "2026-10-01",
+          "wins": 60
         },
         "registry_status": "certified",
         "since_activation": {
-          "archive_days_available": 4,
-          "archive_days_expected": 4,
+          "archive_days_available": 5,
+          "archive_days_expected": 5,
           "archive_receipt": {
             "empty_regular_ledger_dates": [],
             "unsafe_regular_ledger_dates": [
@@ -10399,11 +10387,11 @@
           },
           "by_price_evidence": {
             "NAMED_BOOKMAKER_PRICE": {
-              "hit_rate": 0.857143,
-              "priced_picks": 35,
-              "roi": 0.09002,
-              "settled_picks": 35,
-              "wins": 30
+              "hit_rate": 0.883721,
+              "priced_picks": 43,
+              "roi": 0.125726,
+              "settled_picks": 43,
+              "wins": 38
             },
             "SCOUTINGSTATS_SOLE": {
               "hit_rate": 0.5,
@@ -10413,27 +10401,27 @@
               "wins": 5
             },
             "SUSPECT_ALIAS_FUZZY": {
-              "hit_rate": 0.933333,
+              "hit_rate": 0.944444,
               "priced_picks": 0,
               "roi": null,
-              "settled_picks": 15,
-              "wins": 14
+              "settled_picks": 18,
+              "wins": 17
             }
           },
           "by_price_quarantine_reason": {
             "NONE": {
-              "hit_rate": 0.857143,
-              "priced_picks": 35,
-              "roi": 0.09002,
-              "settled_picks": 35,
-              "wins": 30
+              "hit_rate": 0.883721,
+              "priced_picks": 43,
+              "roi": 0.125726,
+              "settled_picks": 43,
+              "wins": 38
             },
             "alias_fuzzy": {
-              "hit_rate": 0.933333,
+              "hit_rate": 0.944444,
               "priced_picks": 0,
               "roi": null,
-              "settled_picks": 15,
-              "wins": 14
+              "settled_picks": 18,
+              "wins": 17
             },
             "scoutingstats_sole_source": {
               "hit_rate": 0.5,
@@ -10443,17 +10431,17 @@
               "wins": 5
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-25",
-          "hit_rate": 0.816667,
-          "last_observed_pick": "2026-10-28",
+          "hit_rate": 0.84507,
+          "last_observed_pick": "2026-10-29",
           "missing_archive_dates": [],
-          "priced_picks": 45,
-          "pricing_coverage": 0.75,
-          "roi": -0.019762,
-          "settled_picks": 60,
+          "priced_picks": 53,
+          "pricing_coverage": 0.7464788732394366,
+          "roi": 0.025777,
+          "settled_picks": 71,
           "start": "2026-10-25",
-          "wins": 49
+          "wins": 60
         },
         "since_activation_unavailable_reason": null
       },
@@ -10527,7 +10515,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-20",
@@ -10536,7 +10524,7 @@
           "pricing_coverage": 1.0,
           "roi": 0.5,
           "settled_picks": 2,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 2
         },
         "registry_status": null,
@@ -10634,7 +10622,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-10",
           "hit_rate": 0.941176,
           "last_observed_pick": "2026-10-19",
@@ -10643,7 +10631,7 @@
           "pricing_coverage": 0.7647058823529411,
           "roi": 0.3409,
           "settled_picks": 17,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 16
         },
         "registry_status": null,
@@ -10706,7 +10694,7 @@
               "wins": 2
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-18",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-20",
@@ -10715,7 +10703,7 @@
           "pricing_coverage": 1.0,
           "roi": 0.18,
           "settled_picks": 2,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 2
         },
         "registry_status": null,
@@ -10785,7 +10773,7 @@
               "wins": 3
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-18",
           "hit_rate": 0.6,
           "last_observed_pick": "2026-10-20",
@@ -10794,7 +10782,7 @@
           "pricing_coverage": 0.8,
           "roi": -0.335125,
           "settled_picks": 5,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 3
         },
         "registry_status": null,
@@ -10857,7 +10845,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-20",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-20",
@@ -10866,7 +10854,7 @@
           "pricing_coverage": 1.0,
           "roi": 0.15,
           "settled_picks": 1,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 1
         },
         "registry_status": null,
@@ -10929,7 +10917,7 @@
               "wins": 9
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-11",
           "hit_rate": 0.692308,
           "last_observed_pick": "2026-10-18",
@@ -10938,7 +10926,7 @@
           "pricing_coverage": 1.0,
           "roi": -0.035815,
           "settled_picks": 13,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 9
         },
         "registry_status": null,
@@ -11001,7 +10989,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-18",
           "hit_rate": 0.5,
           "last_observed_pick": "2026-10-18",
@@ -11010,7 +10998,7 @@
           "pricing_coverage": 1.0,
           "roi": -0.025,
           "settled_picks": 2,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 1
         },
         "registry_status": null,
@@ -11108,7 +11096,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-11",
           "hit_rate": 0.904762,
           "last_observed_pick": "2026-10-21",
@@ -11117,7 +11105,7 @@
           "pricing_coverage": 0.7619047619047619,
           "roi": 0.17175,
           "settled_picks": 21,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 19
         },
         "registry_status": null,
@@ -11194,7 +11182,7 @@
               "wins": 1
             }
           },
-          "end": "2026-10-29",
+          "end": "2026-10-30",
           "first_observed_pick": "2026-10-12",
           "hit_rate": 1.0,
           "last_observed_pick": "2026-10-17",
@@ -11203,7 +11191,7 @@
           "pricing_coverage": 1.0,
           "roi": 0.3925,
           "settled_picks": 5,
-          "start": "2026-09-30",
+          "start": "2026-10-01",
           "wins": 5
         },
         "registry_status": null,
@@ -11211,321 +11199,19 @@
         "since_activation_unavailable_reason": "activation date unavailable"
       }
     },
-    "same_day_cutoff": "2026-10-29"
+    "same_day_cutoff": "2026-10-30"
   },
-  "same_day_cutoff": "2026-10-29",
-  "same_day_excluded": 11,
+  "same_day_cutoff": "2026-10-30",
+  "same_day_excluded": 14,
   "secondary_stats": {
-    "btts_total": 891,
-    "btts_wins": 480,
-    "over25_total": 891,
-    "over25_wins": 543,
-    "team_o15_total": 887,
-    "team_o15_wins": 571
+    "btts_total": 898,
+    "btts_wins": 483,
+    "over25_total": 898,
+    "over25_wins": 549,
+    "team_o15_total": 894,
+    "team_o15_wins": 577
   },
   "settled_ledger": [
-    {
-      "avg_p": 56.2,
-      "date": "2026-09-30",
-      "gs": 1,
-      "hs": 0,
-      "market": "1x2",
-      "match": "Defensor Sporting vs Plaza Colonia",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9619140602792852,
-          "raw_promised": 0.9819252640129975
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.8767743308323639,
-          "raw_promised": 0.9228269699431356
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 1.5 Goals",
-          "market": "away_under_15",
-          "promised": 0.8263636269293257,
-          "raw_promised": 0.7528432168968319
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.41704185481721606,
-          "raw_promised": 0.5487408610885459
-        }
-      ],
-      "odds": 1.7,
-      "odds_match_method": "betexplorer",
-      "odds_source": "betexplorer_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.10099999999999999,
-        "away_o15_hit": true,
-        "btts_expected": 0.45399999999999996,
-        "btts_hit": true,
-        "home_o15_expected": 0.813,
-        "home_o15_hit": false,
-        "over25_expected": 0.6559999999999999,
-        "over25_hit": false,
-        "top_scores": []
-      },
-      "price_evidence": "BETEXPLORER_RESCUE",
-      "price_quarantine_reason": "NONE",
-      "selection": "home",
-      "suspect_price": null,
-      "won": false
-    },
-    {
-      "avg_p": 59.1,
-      "date": "2026-09-30",
-      "gs": 2,
-      "hs": 4,
-      "market": "1x2",
-      "match": "Enyimba vs Shooting Stars",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9697143276227138,
-          "raw_promised": 0.9898878044174328
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9019523128478995,
-          "raw_promised": 0.9493274273990712
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Away Team Under 1.5 Goals",
-          "market": "away_under_15",
-          "promised": 0.8717616336003022,
-          "raw_promised": 0.7942022267432378
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4195847767824477,
-          "raw_promised": 0.5520868206673363
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.18175642967051373,
-          "raw_promised": 0.17653711001297998
-        }
-      ],
-      "odds": 1.56,
-      "odds_match_method": "betexplorer",
-      "odds_source": "betexplorer_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.10300000000000001,
-        "away_o15_hit": false,
-        "btts_expected": 0.43700000000000006,
-        "btts_hit": false,
-        "home_o15_expected": 0.828,
-        "home_o15_hit": true,
-        "over25_expected": 0.6559999999999999,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "BETEXPLORER_RESCUE",
-      "price_quarantine_reason": "NONE",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 65.1,
-      "date": "2026-09-30",
-      "gs": 1,
-      "hs": 2,
-      "market": "1x2",
-      "match": "Cerro Porteno vs Rubio Nu",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9661795735487939,
-          "raw_promised": 0.9862795149968092
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9009845858375175,
-          "raw_promised": 0.9483088704530951
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 1.5 Goals",
-          "market": "away_under_15",
-          "promised": 0.8682487884492661,
-          "raw_promised": 0.7910019144862795
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4486266610367262,
-          "raw_promised": 0.5902999361837907
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.22581598324425817,
-          "raw_promised": 0.21933144895587764
-        }
-      ],
-      "odds": null,
-      "odds_match_method": "none",
-      "odds_source": "UNKNOWN",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.105,
-        "away_o15_hit": true,
-        "btts_expected": 0.396,
-        "btts_hit": false,
-        "home_o15_expected": 0.85,
-        "home_o15_hit": true,
-        "over25_expected": 0.6729999999999999,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "UNMATCHED",
-      "price_quarantine_reason": "NONE",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 74.5,
-      "date": "2026-09-30",
-      "gs": 5,
-      "hs": 0,
-      "market": "1x2",
-      "match": "Eritrea vs South Africa",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 3.5 Goals",
-          "market": "home_under_35",
-          "promised": 0.9559869689665347,
-          "raw_promised": 0.959103592605511
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 2.5 Goals",
-          "market": "home_under_25",
-          "promised": 0.8808268883376156,
-          "raw_promised": 0.9132949657016626
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4303429081593177,
-          "raw_promised": 0.5662422974072783
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.2593780950031536,
-          "raw_promised": 0.25192979073992766
-        }
-      ],
-      "odds": 1.28,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.8759999999999999,
-        "away_o15_hit": true,
-        "btts_expected": 0.335,
-        "btts_hit": true,
-        "home_o15_expected": 0.047,
-        "home_o15_hit": true,
-        "over25_expected": 0.759,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "away",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 59.3,
-      "date": "2026-09-30",
-      "gs": 0,
-      "hs": 3,
-      "market": "1x2",
-      "match": "Lithuania vs Andorra",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4260266547111885,
-          "raw_promised": 0.5605630002181726
-        }
-      ],
-      "odds": 1.53,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.10300000000000001,
-        "away_o15_hit": true,
-        "btts_expected": 0.43700000000000006,
-        "btts_hit": true,
-        "home_o15_expected": 0.828,
-        "home_o15_hit": true,
-        "over25_expected": 0.6559999999999999,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
     {
       "avg_p": 75.0,
       "date": "2026-10-01",
@@ -55196,6 +54882,35 @@
       "won": true
     },
     {
+      "avg_p": 75.34358047016275,
+      "date": "2026-10-28",
+      "gs": 1,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Covadonga vs Real Valladolid",
+      "notes_audit": [],
+      "odds": 1.22,
+      "odds_match_method": "exact",
+      "odds_source": "betexplorer_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.767,
+        "away_o15_hit": false,
+        "btts_expected": 0.47600000000000003,
+        "btts_hit": true,
+        "home_o15_expected": 0.155,
+        "home_o15_hit": true,
+        "over25_expected": 0.659,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
       "avg_p": 70.89921877441331,
       "date": "2026-10-28",
       "gs": 2,
@@ -55953,134 +55668,479 @@
       "selection": "home",
       "suspect_price": null,
       "won": true
+    },
+    {
+      "avg_p": 68.90003582945181,
+      "date": "2026-10-29",
+      "gs": 3,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Guijuelo vs Sporting Gij\u00f3n",
+      "notes_audit": [],
+      "odds": 1.39,
+      "odds_match_method": "exact",
+      "odds_source": "betexplorer_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.759,
+        "away_o15_hit": true,
+        "btts_expected": 0.47200000000000003,
+        "btts_hit": false,
+        "home_o15_expected": 0.154,
+        "home_o15_hit": true,
+        "over25_expected": 0.648,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 68.0,
+      "date": "2026-10-29",
+      "gs": 2,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Inter Miami vs FC Cincinnati",
+      "notes_audit": [],
+      "odds": 1.57,
+      "odds_match_method": "exact",
+      "odds_source": "betexplorer_odds",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.252,
+        "away_o15_hit": false,
+        "btts_expected": 0.531,
+        "btts_hit": true,
+        "home_o15_expected": 0.619,
+        "home_o15_hit": true,
+        "over25_expected": 0.5920000000000001,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 67.97752808988764,
+      "date": "2026-10-29",
+      "gs": 1,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Kozakken Boys vs FC Utrecht",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": null,
+          "raw_promised": null
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Under 4.5 Goals",
+          "market": "match_under_45",
+          "promised": null,
+          "raw_promised": null
+        }
+      ],
+      "odds": 1.33,
+      "odds_match_method": "exact",
+      "odds_source": "betexplorer_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.759,
+        "away_o15_hit": false,
+        "btts_expected": 0.47200000000000003,
+        "btts_hit": true,
+        "home_o15_expected": 0.154,
+        "home_o15_hit": true,
+        "over25_expected": 0.648,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 80.46494532757512,
+      "date": "2026-10-29",
+      "gs": 3,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Varea vs FC Andorra",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": null,
+          "raw_promised": null
+        }
+      ],
+      "odds": 1.16,
+      "odds_match_method": "exact",
+      "odds_source": "betexplorer_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.759,
+        "away_o15_hit": true,
+        "btts_expected": 0.47200000000000003,
+        "btts_hit": true,
+        "home_o15_expected": 0.154,
+        "home_o15_hit": true,
+        "over25_expected": 0.648,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 75.39129648059351,
+      "date": "2026-10-29",
+      "gs": 3,
+      "hs": 5,
+      "market": "1x2",
+      "match": "Al Nassr vs Al Kholood",
+      "notes_audit": [],
+      "odds": 1.21,
+      "odds_match_method": "exact",
+      "odds_source": "betexplorer_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.196,
+        "away_o15_hit": false,
+        "btts_expected": 0.508,
+        "btts_hit": true,
+        "home_o15_expected": 0.75,
+        "home_o15_hit": true,
+        "over25_expected": 0.662,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 73.95082270290257,
+      "date": "2026-10-29",
+      "gs": 0,
+      "hs": 3,
+      "market": "1x2",
+      "match": "Cienciano vs Atl\u00e9tico Grau",
+      "notes_audit": [],
+      "odds": 1.23,
+      "odds_match_method": "exact",
+      "odds_source": "betexplorer_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.196,
+        "away_o15_hit": true,
+        "btts_expected": 0.508,
+        "btts_hit": false,
+        "home_o15_expected": 0.75,
+        "home_o15_hit": true,
+        "over25_expected": 0.662,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 69.7687074829932,
+      "date": "2026-10-29",
+      "gs": 6,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Al Riyadh vs Al-Qadsiah",
+      "notes_audit": [],
+      "odds": 1.29,
+      "odds_match_method": "exact",
+      "odds_source": "betexplorer_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.759,
+        "away_o15_hit": true,
+        "btts_expected": 0.47200000000000003,
+        "btts_hit": true,
+        "home_o15_expected": 0.154,
+        "home_o15_hit": true,
+        "over25_expected": 0.648,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 66.55954631379963,
+      "date": "2026-10-29",
+      "gs": 1,
+      "hs": 3,
+      "market": "1x2",
+      "match": "Minnesota United vs Sporting KC",
+      "notes_audit": [],
+      "odds": null,
+      "odds_match_method": "alias_fuzzy",
+      "odds_source": "UNKNOWN",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.196,
+        "away_o15_hit": true,
+        "btts_expected": 0.508,
+        "btts_hit": true,
+        "home_o15_expected": 0.75,
+        "home_o15_hit": true,
+        "over25_expected": 0.662,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SUSPECT_ALIAS_FUZZY",
+      "price_quarantine_reason": "alias_fuzzy",
+      "selection": "home",
+      "suspect_price": 1.4184,
+      "won": true
+    },
+    {
+      "avg_p": 66.44023021039722,
+      "date": "2026-10-29",
+      "gs": 1,
+      "hs": 4,
+      "market": "1x2",
+      "match": "Vancouver Whitecaps vs San Diego",
+      "notes_audit": [],
+      "odds": 1.4255,
+      "odds_match_method": "exact",
+      "odds_source": "pinnapi_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.196,
+        "away_o15_hit": true,
+        "btts_expected": 0.508,
+        "btts_hit": true,
+        "home_o15_expected": 0.75,
+        "home_o15_hit": true,
+        "over25_expected": 0.662,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "NAMED_BOOKMAKER_PRICE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 92.10701072004555,
+      "date": "2026-10-29",
+      "gs": 8,
+      "hs": 0,
+      "market": "1x2",
+      "match": "K\u00f8ge vs Barcelona W",
+      "notes_audit": [],
+      "odds": null,
+      "odds_match_method": "alias_fuzzy",
+      "odds_source": "UNKNOWN",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.759,
+        "away_o15_hit": true,
+        "btts_expected": 0.47200000000000003,
+        "btts_hit": true,
+        "home_o15_expected": 0.154,
+        "home_o15_hit": true,
+        "over25_expected": 0.648,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SUSPECT_ALIAS_FUZZY",
+      "price_quarantine_reason": "alias_fuzzy",
+      "selection": "away",
+      "suspect_price": 4.23,
+      "won": true
+    },
+    {
+      "avg_p": 74.92217542574619,
+      "date": "2026-10-29",
+      "gs": 0,
+      "hs": 3,
+      "market": "1x2",
+      "match": "RKAV Volendam vs ROHDA Raalte",
+      "notes_audit": [],
+      "odds": null,
+      "odds_match_method": "alias_fuzzy",
+      "odds_source": "UNKNOWN",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.196,
+        "away_o15_hit": true,
+        "btts_expected": 0.508,
+        "btts_hit": false,
+        "home_o15_expected": 0.75,
+        "home_o15_hit": true,
+        "over25_expected": 0.662,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SUSPECT_ALIAS_FUZZY",
+      "price_quarantine_reason": "alias_fuzzy",
+      "selection": "home",
+      "suspect_price": 1.24,
+      "won": true
     }
   ],
   "settled_via_overlay_picks": 3,
-  "start": "2026-09-30",
+  "start": "2026-10-01",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.195945,
-      "mae": 1.481213,
-      "mean_actual": 3.167213,
-      "mean_promised": 3.363158,
-      "n": 915
+      "bias": -0.186215,
+      "mae": 1.485868,
+      "mean_actual": 3.177874,
+      "mean_promised": 3.364089,
+      "n": 922
     },
     "by_metric": {
       "away_o15": {
-        "brier": 0.200972,
-        "delta": 0.010121,
-        "hits": 311,
-        "mean_promised": 0.329769,
-        "n": 915,
-        "realized": 0.339891
+        "brier": 0.201512,
+        "delta": 0.009496,
+        "hits": 315,
+        "mean_promised": 0.332153,
+        "n": 922,
+        "realized": 0.341649
       },
       "btts": {
-        "brier": 0.255544,
-        "delta": 0.063564,
-        "hits": 493,
-        "mean_promised": 0.475234,
-        "n": 915,
-        "realized": 0.538798
+        "brier": 0.255413,
+        "delta": 0.062162,
+        "hits": 496,
+        "mean_promised": 0.475799,
+        "n": 922,
+        "realized": 0.537961
       },
       "home_o15": {
-        "brier": 0.230413,
-        "delta": -0.05468,
-        "hits": 488,
-        "mean_promised": 0.588013,
-        "n": 915,
-        "realized": 0.533333
+        "brier": 0.228507,
+        "delta": -0.053102,
+        "hits": 491,
+        "mean_promised": 0.58564,
+        "n": 922,
+        "realized": 0.532538
       },
       "over25": {
-        "brier": 0.241797,
-        "delta": -0.044701,
-        "hits": 556,
-        "mean_promised": 0.652351,
-        "n": 915,
-        "realized": 0.60765
+        "brier": 0.241323,
+        "delta": -0.042627,
+        "hits": 562,
+        "mean_promised": 0.652171,
+        "n": 922,
+        "realized": 0.609544
       }
     },
     "definition": "each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) \u2014 calibration, not a direction call; the retired exact-score field remains in machine history only",
     "promised_buckets": [
       {
-        "brier": 0.187869,
+        "brier": 0.188967,
         "bucket": "0.0-0.1",
-        "delta": 0.131412,
+        "delta": 0.132467,
         "hits": 37,
-        "mean_promised": 0.086235,
-        "n": 170,
-        "realized": 0.217647
+        "mean_promised": 0.086467,
+        "n": 169,
+        "realized": 0.218935
       },
       {
-        "brier": 0.149772,
+        "brier": 0.147072,
         "bucket": "0.1-0.2",
-        "delta": 0.060175,
+        "delta": 0.054691,
         "hits": 61,
-        "mean_promised": 0.118187,
-        "n": 342,
-        "realized": 0.178363
+        "mean_promised": 0.120095,
+        "n": 349,
+        "realized": 0.174785
       },
       {
-        "brier": 0.197985,
+        "brier": 0.199207,
         "bucket": "0.2-0.3",
-        "delta": 0.034637,
-        "hits": 80,
-        "mean_promised": 0.236549,
-        "n": 295,
-        "realized": 0.271186
+        "delta": 0.037047,
+        "hits": 81,
+        "mean_promised": 0.236601,
+        "n": 296,
+        "realized": 0.273649
       },
       {
-        "brier": 0.250802,
+        "brier": 0.250981,
         "bucket": "0.3-0.4",
-        "delta": 0.084885,
-        "hits": 61,
-        "mean_promised": 0.353964,
-        "n": 139,
-        "realized": 0.438849
+        "delta": 0.084161,
+        "hits": 60,
+        "mean_promised": 0.353796,
+        "n": 137,
+        "realized": 0.437956
       },
       {
-        "brier": 0.257,
+        "brier": 0.256812,
         "bucket": "0.4-0.5",
-        "delta": 0.081151,
+        "delta": 0.077441,
         "hits": 236,
-        "mean_promised": 0.422047,
-        "n": 469,
-        "realized": 0.503198
+        "mean_promised": 0.422559,
+        "n": 472,
+        "realized": 0.5
       },
       {
-        "brier": 0.243809,
+        "brier": 0.243718,
         "bucket": "0.5-0.6",
-        "delta": 0.024809,
-        "hits": 497,
-        "mean_promised": 0.558525,
-        "n": 852,
-        "realized": 0.583333
+        "delta": 0.026163,
+        "hits": 502,
+        "mean_promised": 0.558237,
+        "n": 859,
+        "realized": 0.5844
       },
       {
-        "brier": 0.246247,
+        "brier": 0.245292,
         "bucket": "0.6-0.7",
-        "delta": -0.057759,
-        "hits": 415,
-        "mean_promised": 0.648927,
-        "n": 702,
-        "realized": 0.591168
+        "delta": -0.054555,
+        "hits": 422,
+        "mean_promised": 0.648921,
+        "n": 710,
+        "realized": 0.594366
       },
       {
-        "brier": 0.209059,
+        "brier": 0.207165,
         "bucket": "0.7-0.8",
-        "delta": -0.042329,
-        "hits": 157,
-        "mean_promised": 0.749536,
-        "n": 222,
-        "realized": 0.707207
+        "delta": -0.038578,
+        "hits": 165,
+        "mean_promised": 0.749784,
+        "n": 232,
+        "realized": 0.711207
       },
       {
-        "brier": 0.276628,
+        "brier": 0.278157,
         "bucket": "0.8-0.9",
-        "delta": -0.215024,
-        "hits": 262,
-        "mean_promised": 0.847874,
-        "n": 414,
-        "realized": 0.63285
+        "delta": -0.217176,
+        "hits": 258,
+        "mean_promised": 0.847983,
+        "n": 409,
+        "realized": 0.630807
       },
       {
         "brier": 0.205454,
@@ -56426,13 +56486,13 @@
         "z_vs_implied": -1.462
       },
       "CAUTION|1.50-2.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.602941,
-        "implied_hit_rate": 0.614642,
-        "priced_picks": 68,
-        "roi": -0.018406,
-        "settled_picks": 68,
+        "hit_rate": 0.594203,
+        "implied_hit_rate": 0.614965,
+        "priced_picks": 69,
+        "roi": -0.032632,
+        "settled_picks": 69,
         "wins": 41,
-        "z_vs_implied": -0.199
+        "z_vs_implied": -0.355
       },
       "CAUTION|1.50-2.00|SOURCE_FALLBACK": {
         "hit_rate": 1.0,
@@ -56480,13 +56540,13 @@
         "z_vs_implied": 0.672
       },
       "CAUTION|<1.50|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.757576,
-        "implied_hit_rate": 0.714639,
-        "priced_picks": 66,
-        "roi": 0.056944,
-        "settled_picks": 66,
-        "wins": 50,
-        "z_vs_implied": 0.774
+        "hit_rate": 0.761194,
+        "implied_hit_rate": 0.714711,
+        "priced_picks": 67,
+        "roi": 0.061915,
+        "settled_picks": 67,
+        "wins": 51,
+        "z_vs_implied": 0.844
       },
       "CAUTION|>=3.00|NAMED_BOOKMAKER_PRICE": {
         "hit_rate": 0.0,
@@ -56507,13 +56567,13 @@
         "z_vs_implied": 0.721
       },
       "CERTIFIED_CLEAN|1.50-2.00|BETEXPLORER_RESCUE": {
-        "hit_rate": 0.5,
-        "implied_hit_rate": 0.593519,
-        "priced_picks": 2,
-        "roi": -0.165,
-        "settled_picks": 2,
+        "hit_rate": 1.0,
+        "implied_hit_rate": 0.598802,
+        "priced_picks": 1,
+        "roi": 0.67,
+        "settled_picks": 1,
         "wins": 1,
-        "z_vs_implied": -0.269
+        "z_vs_implied": 0.819
       },
       "CERTIFIED_CLEAN|1.50-2.00|NAMED_BOOKMAKER_PRICE": {
         "hit_rate": 0.575758,
@@ -56561,13 +56621,13 @@
         "z_vs_implied": 0.663
       },
       "CERTIFIED_CLEAN|<1.50|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.777778,
-        "implied_hit_rate": 0.772406,
-        "priced_picks": 18,
-        "roi": -0.005156,
-        "settled_picks": 18,
-        "wins": 14,
-        "z_vs_implied": 0.055
+        "hit_rate": 0.789474,
+        "implied_hit_rate": 0.771326,
+        "priced_picks": 19,
+        "roi": 0.012484,
+        "settled_picks": 19,
+        "wins": 15,
+        "z_vs_implied": 0.191
       },
       "CERTIFIED_CLEAN|>=3.00|NAMED_BOOKMAKER_PRICE": {
         "hit_rate": 0.0,
@@ -56579,13 +56639,13 @@
         "z_vs_implied": -0.774
       },
       "SKIPPED_VETO|1.50-2.00|BETEXPLORER_RESCUE": {
-        "hit_rate": 0.666667,
-        "implied_hit_rate": 0.629953,
-        "priced_picks": 3,
-        "roi": 0.03,
-        "settled_picks": 3,
-        "wins": 2,
-        "z_vs_implied": 0.132
+        "hit_rate": 0.5,
+        "implied_hit_rate": 0.624416,
+        "priced_picks": 2,
+        "roi": -0.235,
+        "settled_picks": 2,
+        "wins": 1,
+        "z_vs_implied": -0.364
       },
       "SKIPPED_VETO|1.50-2.00|NAMED_BOOKMAKER_PRICE": {
         "hit_rate": 0.590164,
@@ -56660,13 +56720,13 @@
         "z_vs_implied": -0.222
       },
       "SKIPPED_VETO|<1.50|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.806667,
-        "implied_hit_rate": 0.789009,
-        "priced_picks": 150,
-        "roi": 0.024281,
-        "settled_picks": 150,
-        "wins": 121,
-        "z_vs_implied": 0.54
+        "hit_rate": 0.814103,
+        "implied_hit_rate": 0.789418,
+        "priced_picks": 156,
+        "roi": 0.03319,
+        "settled_picks": 156,
+        "wins": 127,
+        "z_vs_implied": 0.77
       },
       "SKIPPED_VETO|<1.50|SCOUTINGSTATS_SOLE": {
         "hit_rate": 0.727273,
@@ -56714,21 +56774,21 @@
         "z_vs_implied": -0.651
       },
       "SKIPPED_VETO|unpriced|SUSPECT_ALIAS_FUZZY": {
-        "hit_rate": 0.8,
+        "hit_rate": 0.809524,
         "implied_hit_rate": null,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 20,
-        "wins": 16,
+        "settled_picks": 21,
+        "wins": 17,
         "z_vs_implied": null
       },
       "SKIPPED_VETO|unpriced|UNMATCHED": {
-        "hit_rate": 0.676471,
+        "hit_rate": 0.666667,
         "implied_hit_rate": null,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 34,
-        "wins": 23,
+        "settled_picks": 33,
+        "wins": 22,
         "z_vs_implied": null
       },
       "WATCHLIST_NO_ODDS|unpriced|UNMATCHED": {
@@ -56768,22 +56828,22 @@
         "z_vs_implied": -0.424
       },
       "WATCHLIST_SUSPECT_PRICE|unpriced|SUSPECT_ALIAS_FUZZY": {
-        "hit_rate": 0.606061,
+        "hit_rate": 0.617647,
         "implied_hit_rate": null,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 66,
-        "wins": 40,
+        "settled_picks": 68,
+        "wins": 42,
         "z_vs_implied": null
       },
       "WATCHLIST_UNCORROBORATED_PRICE|1.50-2.00|SCOUTINGSTATS_SOLE": {
-        "hit_rate": 0.6,
-        "implied_hit_rate": 0.61592,
-        "priced_picks": 30,
-        "roi": -0.032,
-        "settled_picks": 30,
-        "wins": 18,
-        "z_vs_implied": -0.18
+        "hit_rate": 0.586207,
+        "implied_hit_rate": 0.614621,
+        "priced_picks": 29,
+        "roi": -0.051379,
+        "settled_picks": 29,
+        "wins": 17,
+        "z_vs_implied": -0.315
       },
       "WATCHLIST_UNCORROBORATED_PRICE|2.00-3.00|SCOUTINGSTATS_SOLE": {
         "hit_rate": 0.0,
@@ -56795,13 +56855,13 @@
         "z_vs_implied": -0.953
       },
       "WATCHLIST_UNCORROBORATED_PRICE|<1.50|SCOUTINGSTATS_SOLE": {
-        "hit_rate": 0.702703,
-        "implied_hit_rate": 0.772567,
-        "priced_picks": 37,
-        "roi": -0.085946,
-        "settled_picks": 37,
-        "wins": 26,
-        "z_vs_implied": -1.031
+        "hit_rate": 0.694444,
+        "implied_hit_rate": 0.772326,
+        "priced_picks": 36,
+        "roi": -0.096111,
+        "settled_picks": 36,
+        "wins": 25,
+        "z_vs_implied": -1.134
       },
       "WATCHLIST_UNCORROBORATED_PRICE|>=3.00|SCOUTINGSTATS_SOLE": {
         "hit_rate": 1.0,
@@ -56824,13 +56884,13 @@
     },
     "band_x_evidence": {
       "1.50-2.00|BETEXPLORER_RESCUE": {
-        "hit_rate": 0.666667,
-        "implied_hit_rate": 0.629953,
-        "priced_picks": 3,
-        "roi": 0.03,
-        "settled_picks": 3,
-        "wins": 2,
-        "z_vs_implied": 0.132
+        "hit_rate": 0.5,
+        "implied_hit_rate": 0.624416,
+        "priced_picks": 2,
+        "roi": -0.235,
+        "settled_picks": 2,
+        "wins": 1,
+        "z_vs_implied": -0.364
       },
       "1.50-2.00|NAMED_BOOKMAKER_PRICE": {
         "hit_rate": 0.590164,
@@ -56905,13 +56965,13 @@
         "z_vs_implied": -0.222
       },
       "<1.50|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.806667,
-        "implied_hit_rate": 0.789009,
-        "priced_picks": 150,
-        "roi": 0.024281,
-        "settled_picks": 150,
-        "wins": 121,
-        "z_vs_implied": 0.54
+        "hit_rate": 0.814103,
+        "implied_hit_rate": 0.789418,
+        "priced_picks": 156,
+        "roi": 0.03319,
+        "settled_picks": 156,
+        "wins": 127,
+        "z_vs_implied": 0.77
       },
       "<1.50|SCOUTINGSTATS_SOLE": {
         "hit_rate": 0.727273,
@@ -56959,31 +57019,31 @@
         "z_vs_implied": -0.651
       },
       "unpriced|SUSPECT_ALIAS_FUZZY": {
-        "hit_rate": 0.8,
+        "hit_rate": 0.809524,
         "implied_hit_rate": null,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 20,
-        "wins": 16,
+        "settled_picks": 21,
+        "wins": 17,
         "z_vs_implied": null
       },
       "unpriced|UNMATCHED": {
-        "hit_rate": 0.676471,
+        "hit_rate": 0.666667,
         "implied_hit_rate": null,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 34,
-        "wins": 23,
+        "settled_picks": 33,
+        "wins": 22,
         "z_vs_implied": null
       }
     },
     "by_odds_band": {
       "1.50-2.00": {
-        "hit_rate": 0.595349,
-        "priced_picks": 215,
-        "roi": 0.002007,
-        "settled_picks": 215,
-        "wins": 128
+        "hit_rate": 0.593458,
+        "priced_picks": 214,
+        "roi": -0.0006,
+        "settled_picks": 214,
+        "wins": 127
       },
       "2.00-3.00": {
         "hit_rate": 0.510204,
@@ -56993,11 +57053,11 @@
         "wins": 25
       },
       "<1.50": {
-        "hit_rate": 0.792746,
-        "priced_picks": 193,
-        "roi": 0.006902,
-        "settled_picks": 193,
-        "wins": 153
+        "hit_rate": 0.798995,
+        "priced_picks": 199,
+        "roi": 0.01441,
+        "settled_picks": 199,
+        "wins": 159
       },
       ">=3.00": {
         "hit_rate": 0.25,
@@ -57016,18 +57076,18 @@
     },
     "by_price_evidence": {
       "BETEXPLORER_RESCUE": {
-        "hit_rate": 0.714286,
-        "priced_picks": 7,
-        "roi": -0.041429,
-        "settled_picks": 7,
-        "wins": 5
+        "hit_rate": 0.666667,
+        "priced_picks": 6,
+        "roi": -0.141667,
+        "settled_picks": 6,
+        "wins": 4
       },
       "NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.665789,
-        "priced_picks": 380,
-        "roi": 0.02922,
-        "settled_picks": 380,
-        "wins": 253
+        "hit_rate": 0.670984,
+        "priced_picks": 386,
+        "roi": 0.032744,
+        "settled_picks": 386,
+        "wins": 259
       },
       "SCOUTINGSTATS_SOLE": {
         "hit_rate": 0.685185,
@@ -57044,18 +57104,18 @@
         "wins": 4
       },
       "SUSPECT_ALIAS_FUZZY": {
-        "hit_rate": 0.727273,
+        "hit_rate": 0.735294,
         "priced_picks": 13,
         "roi": -0.023077,
-        "settled_picks": 33,
-        "wins": 24
+        "settled_picks": 34,
+        "wins": 25
       },
       "UNMATCHED": {
-        "hit_rate": 0.676471,
+        "hit_rate": 0.666667,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 34,
-        "wins": 23
+        "settled_picks": 33,
+        "wins": 22
       }
     },
     "by_veto_reason": {
@@ -57074,11 +57134,11 @@
         "wins": 39
       },
       "context VETO in ['league', 'niche']": {
-        "hit_rate": 0.642857,
-        "priced_picks": 21,
-        "roi": -0.1665,
-        "settled_picks": 28,
-        "wins": 18
+        "hit_rate": 0.666667,
+        "priced_picks": 22,
+        "roi": -0.139591,
+        "settled_picks": 30,
+        "wins": 20
       },
       "context VETO in ['league', 'odds_band', 'niche']": {
         "hit_rate": 0.333333,
@@ -57137,11 +57197,11 @@
         "wins": 39
       },
       "context VETO in ['niche']": {
-        "hit_rate": 0.742857,
-        "priced_picks": 32,
-        "roi": 0.019738,
-        "settled_picks": 35,
-        "wins": 26
+        "hit_rate": 0.756757,
+        "priced_picks": 34,
+        "roi": 0.031518,
+        "settled_picks": 37,
+        "wins": 28
       },
       "context VETO in ['odds_band', 'niche']": {
         "hit_rate": 0.5,
@@ -57186,11 +57246,11 @@
         "wins": 6
       },
       "context VETO in ['team_a']": {
-        "hit_rate": 0.765957,
-        "priced_picks": 39,
-        "roi": 0.196431,
-        "settled_picks": 47,
-        "wins": 36
+        "hit_rate": 0.76087,
+        "priced_picks": 38,
+        "roi": 0.186863,
+        "settled_picks": 46,
+        "wins": 35
       },
       "context VETO in ['team_h', 'competition_type']": {
         "hit_rate": 0.846154,
@@ -57235,11 +57295,11 @@
         "wins": 12
       },
       "context VETO in ['team_h']": {
-        "hit_rate": 0.684211,
+        "hit_rate": 0.675676,
         "priced_picks": 27,
         "roi": 0.068889,
-        "settled_picks": 38,
-        "wins": 26
+        "settled_picks": 37,
+        "wins": 25
       },
       "short-odds away favourite 1.02": {
         "hit_rate": 1.0,
@@ -57278,10 +57338,10 @@
       },
       "short-odds away favourite 1.16": {
         "hit_rate": 1.0,
-        "priced_picks": 1,
+        "priced_picks": 2,
         "roi": 0.16,
-        "settled_picks": 1,
-        "wins": 1
+        "settled_picks": 2,
+        "wins": 2
       },
       "short-odds away favourite 1.17": {
         "hit_rate": 1.0,
@@ -57299,10 +57359,10 @@
       },
       "short-odds away favourite 1.22": {
         "hit_rate": 1.0,
-        "priced_picks": 1,
+        "priced_picks": 2,
         "roi": 0.22,
-        "settled_picks": 1,
-        "wins": 1
+        "settled_picks": 2,
+        "wins": 2
       },
       "short-odds away favourite 1.24": {
         "hit_rate": 0.0,
@@ -57338,6 +57398,13 @@
         "roi": 0.28,
         "settled_picks": 1,
         "wins": 1
+      },
+      "short-odds away favourite 1.29": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.29,
+        "settled_picks": 1,
+        "wins": 1
       }
     },
     "contrast_band_x_evidence": {
@@ -57351,13 +57418,13 @@
         "z_vs_implied": -1.462
       },
       "1.50-2.00|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.602941,
-        "implied_hit_rate": 0.614642,
-        "priced_picks": 68,
-        "roi": -0.018406,
-        "settled_picks": 68,
+        "hit_rate": 0.594203,
+        "implied_hit_rate": 0.614965,
+        "priced_picks": 69,
+        "roi": -0.032632,
+        "settled_picks": 69,
         "wins": 41,
-        "z_vs_implied": -0.199
+        "z_vs_implied": -0.355
       },
       "1.50-2.00|SOURCE_FALLBACK": {
         "hit_rate": 1.0,
@@ -57405,13 +57472,13 @@
         "z_vs_implied": 0.672
       },
       "<1.50|NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.757576,
-        "implied_hit_rate": 0.714639,
-        "priced_picks": 66,
-        "roi": 0.056944,
-        "settled_picks": 66,
-        "wins": 50,
-        "z_vs_implied": 0.774
+        "hit_rate": 0.761194,
+        "implied_hit_rate": 0.714711,
+        "priced_picks": 67,
+        "roi": 0.061915,
+        "settled_picks": 67,
+        "wins": 51,
+        "z_vs_implied": 0.844
       },
       ">=3.00|NAMED_BOOKMAKER_PRICE": {
         "hit_rate": 0.0,
@@ -57440,11 +57507,11 @@
         "wins": 2
       },
       "NAMED_BOOKMAKER_PRICE": {
-        "hit_rate": 0.678082,
-        "priced_picks": 146,
-        "roi": 0.05806,
-        "settled_picks": 146,
-        "wins": 99
+        "hit_rate": 0.675676,
+        "priced_picks": 148,
+        "roi": 0.053153,
+        "settled_picks": 148,
+        "wins": 100
       },
       "SOURCE_FALLBACK": {
         "hit_rate": 0.5,
@@ -57456,11 +57523,11 @@
     },
     "focus_bucket": "SKIPPED_VETO",
     "overall": {
-      "hit_rate": 0.671845,
-      "priced_picks": 461,
-      "roi": 0.017709,
-      "settled_picks": 515,
-      "wins": 346
+      "hit_rate": 0.675,
+      "priced_picks": 466,
+      "roi": 0.019612,
+      "settled_picks": 520,
+      "wins": 351
     },
     "soft_evidence_labels": [
       "SCOUTINGSTATS_SOLE",
@@ -57476,11 +57543,11 @@
       "wins": 88
     },
     "trusted_evidence_only": {
-      "hit_rate": 0.666667,
-      "priced_picks": 387,
-      "roi": 0.027942,
-      "settled_picks": 387,
-      "wins": 258
+      "hit_rate": 0.670918,
+      "priced_picks": 392,
+      "roi": 0.030074,
+      "settled_picks": 392,
+      "wins": 263
     }
   },
   "voided_event_examples": [
@@ -57605,26 +57672,6 @@
       "rule": "pfc_fdade2e70df4d4bb78a8cd6e"
     },
     {
-      "away": "Real Valladolid",
-      "away_key_candidates": [
-        "valladoli"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-10-28",
-      "disposition": "POSTPONED",
-      "home": "Covadonga",
-      "home_key_candidates": [
-        "covadonga"
-      ],
-      "league": "Copa Del Rey",
-      "match": "Covadonga vs Real Valladolid",
-      "odds": 1.22,
-      "origin": "source_status:scoutingstats",
-      "pick": "away",
-      "reason": "void_event",
-      "rule": "pfc_fdade2e70df4d4bb78a8cd6e"
-    },
-    {
       "away": "Celta de Vigo",
       "away_key_candidates": [
         "celtadevi"
@@ -57645,5 +57692,5 @@
       "rule": "pfc_fdade2e70df4d4bb78a8cd6e"
     }
   ],
-  "voided_event_picks": 8
+  "voided_event_picks": 7
 }

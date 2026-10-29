@@ -6,20 +6,20 @@
       "attributed_scores": {
         "by_schema": {
           "enh_score_logit_v2": {
-            "cohort_brier": 0.15322549833333332,
-            "cohort_log_loss": 0.4870444318820311,
-            "fixtures": 6,
-            "model_brier": 0.15803481675302888,
-            "model_log_loss": 0.502230150941907,
-            "records": 6
+            "cohort_brier": 0.18290252624999997,
+            "cohort_log_loss": 0.5500481374369064,
+            "fixtures": 8,
+            "model_brier": 0.23400726000304437,
+            "model_log_loss": 0.6741884609589678,
+            "records": 8
           }
         },
         "caveat": "Fixture-balanced descriptive scores on booked legs, not independent records or selection uplift; log probabilities clipped at 1e-15. No significance claim.",
-        "eligible_binary_legs": 62,
+        "eligible_binary_legs": 64,
         "missing_attribution": 56
       },
       "counts": {
-        "MATCH": 2
+        "MATCH": 3
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -703,7 +703,7 @@
                         "model": 0.47523840341833584,
                         "odds": 1.75,
                         "pick": "over",
-                        "result": null
+                        "result": "win"
                       }
                     ],
                     "odds": 2.27,
@@ -737,7 +737,7 @@
                 ],
                 "mean_acca_odds": 2.27,
                 "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
+                "resolved_legs": 1,
                 "returned": null,
                 "selected_legs": 2,
                 "selector_trace": {
@@ -759,7 +759,7 @@
                         "model": 0.8052791107803831,
                         "odds": 1.4,
                         "pick": "over",
-                        "result": null
+                        "result": "loss"
                       },
                       {
                         "cohort": 0.6481,
@@ -768,11 +768,11 @@
                         "model": 0.47523840341833584,
                         "odds": 1.75,
                         "pick": "over",
-                        "result": null
+                        "result": "win"
                       }
                     ],
                     "odds": 2.45,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 3.9882
                   }
                 ],
@@ -801,9 +801,9 @@
                   ]
                 ],
                 "mean_acca_odds": 2.45,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 2,
+                "returned": 0.0,
                 "selected_legs": 2,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -880,8 +880,139 @@
             "scored_legs": 14,
             "status": "INCOMPLETE_OUTCOMES"
           },
-          "open_accas": 1,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": -3.9882,
+          "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 0,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 27.917070999999996,
+          "committed_excluding_target": 0.0,
+          "date": "2026-10-30",
+          "decision_status": "no_bet",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "d516d097b8891cdf63d5b7e31773d831c56bb596",
+            "event_sha": "d516d097b8891cdf63d5b7e31773d831c56bb596",
+            "file_sha256": {
+              "Config/verified_results.json": "13156c199bb5fb4ff35fc6ef0c5ac7afb0094dd2250c895f472142cfeeb9b21e",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
+            },
+            "run_id": "40962384018",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-10-30_decision.json.gz",
+          "free_bank": 27.917070999999996,
+          "ledger": "NOT_COMMITTED",
+          "ml_comparison": {
+            "added_to_ml_on": 0,
+            "arms": {
+              "ml_off": {
+                "accas": [],
+                "card_identity": [],
+                "mean_acca_odds": null,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 0,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": false
+                },
+                "total_stake": 0
+              },
+              "ml_on": {
+                "accas": [],
+                "card_identity": [],
+                "mean_acca_odds": null,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 0,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": true
+                },
+                "total_stake": 0
+              }
+            },
+            "card_identical": true,
+            "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
+            "execution_leg_symmetric_difference": 0,
+            "mean_absolute_disagreement": 0.1453584129708852,
+            "model_below_cohort": 2,
+            "models": {
+              "92e25d9f031c56d6577839f5bb84bb6e5e7d7394848d65013d8846fa405c3f90": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 20,
+                    "0:1": 14,
+                    "0:2": 10,
+                    "0:3": 2,
+                    "1:0": 106,
+                    "1:1": 60,
+                    "1:2": 18,
+                    "1:3": 6,
+                    "1:4": 1,
+                    "1:5": 1,
+                    "2:0": 112,
+                    "2:1": 92,
+                    "2:2": 43,
+                    "2:3": 11,
+                    "2:4": 3,
+                    "3:0": 78,
+                    "3:1": 68,
+                    "3:2": 38,
+                    "3:3": 4,
+                    "3:4": 2,
+                    "4:0": 60,
+                    "4:1": 44,
+                    "4:2": 13,
+                    "4:3": 6,
+                    "4:4": 1,
+                    "5:0": 46,
+                    "5:1": 29,
+                    "5:2": 11,
+                    "5:3": 5,
+                    "6:0": 13,
+                    "6:1": 9,
+                    "6:2": 8,
+                    "7:0": 5,
+                    "7:1": 2,
+                    "7:2": 4,
+                    "8:0": 3,
+                    "8:1": 2,
+                    "9:0": 2,
+                    "9:1": 1
+                  },
+                  "classes": 39,
+                  "mean_rows_per_class": 24.435897435897434,
+                  "min_class_count": 1,
+                  "n": 953,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2223
+                },
+                "schema": "enh_score_logit_v2"
+              }
+            },
+            "paired_estimates": 4,
+            "pool_legs": 4,
+            "removed_from_ml_off": 0,
+            "schemas": {
+              "enh_score_logit_v2": 4
+            },
+            "scored_legs": 4,
+            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+          },
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],
@@ -1006,8 +1137,9 @@
           "free_bank": 283.0761,
           "freeze_time": "MATCH",
           "ledger": "MATCH",
-          "open_accas": 1,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": 30.07679999999999,
+          "settlement": "MATCH",
           "status": "MATCH"
         }
       ],
