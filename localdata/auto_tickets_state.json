@@ -40,7 +40,12 @@
             }
           ],
           "odds": 1.85,
-          "stake_pct": 35.3845
+          "stake_pct": 35.3845,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 35.3845
@@ -1647,6 +1652,11 @@
     },
     "2026-10-28": {
       "frozen_at": "2026-10-28T09:51:36+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-10-29": {
+      "frozen_at": "2026-10-29T09:32:54+02:00",
       "final": true,
       "lock_source": "state"
     }

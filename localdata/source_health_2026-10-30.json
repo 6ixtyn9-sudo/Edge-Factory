@@ -225,55 +225,58 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 7,
-        "board_league_count": 3,
+        "board_fixtures": 2,
+        "board_league_count": 2,
         "board_leagues": {
-          "concacaf_-_central_american_cup": 13,
-          "mexico_-_liga_mx": 73,
-          "usa_-_major_league_soccer": 114
+          "australian_championship": 130,
+          "azerbaijan_-_cup": 70
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 0,
+        "board_priced_rows": 15,
         "board_rows": 200,
-        "board_team_count": 13,
+        "board_team_count": 4,
         "board_team_names": {
-          "CF America": 50,
-          "COL Rapids": 1,
-          "Cartagins": 13,
-          "Club America": 23,
-          "HOU Dynamo": 7,
-          "Houston Dynamo": 57,
-          "Olimpia CD": 13,
-          "SJ Earthquakes": 1,
-          "San Diego FC": 49,
-          "Seattle Sounders": 64,
-          "Tijuana": 50,
-          "Tijuana Caliente": 23,
-          "Vancouver Whitecaps": 49
+          "Canberra FC": 130,
+          "Cebrayil FK": 70,
+          "Khankhedi": 70,
+          "South Melbourne": 130
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_moneyline": 6,
+          "unknown_market:1st_half_total_goals": 1,
+          "unknown_market:2nd_half_total_goals": 1,
+          "unknown_market:both_halves_goal_scored": 4,
+          "unknown_market:exact_total_goals": 16,
+          "unknown_market:first_team_to_score": 3,
+          "unknown_market:halftime_fulltime": 9,
+          "unknown_selection:canberra_fc": 1,
+          "unsupported_market:correct_score": 139,
+          "unsupported_market:double_chance": 3
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 200
-        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 15
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 2,
+      "sa_scored": 15,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
