@@ -2506,12 +2506,12 @@
                   "source": "betexplorer",
                   "price": 1.4,
                   "captured_at": "2026-10-28T22:20:22.185633+00:00",
-                  "decision_at": "2026-10-29T06:14:31+02:00",
+                  "decision_at": "2026-10-29T09:11:10+02:00",
                   "kickoff": "2026-10-29T17:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.8052790870906091,
-              "ml_model_key": "c5c3c2d6085b311b5a7118b567c36ee6bf0d5393071eb9e00bf57a8cc957bd5b",
+              "ml_rank_probability": 0.8052791107803831,
+              "ml_model_key": "bd8a307f8ef3a88365667657b11f3e6adbebc8225ca7e3a865874c19dd339b4c",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.710163035724796,
@@ -2588,7 +2588,7 @@
                       "away": "FC Utrecht",
                       "csv_data_row": 4120,
                       "file": "scoutingstats_2026-10.csv.gz",
-                      "file_sha256": "fa015c100eb2ef35f749b0f4ffda05e7bedd6bdd525317734507e0896f4e0d4b",
+                      "file_sha256": "4cf788a95756d1ec2b634001bb1bab63f005f32cfd8c1f3470f579dcc7e45e7d",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Kozakken Boys",
                       "kickoff_origin": "provider_explicit_offset",
@@ -2639,7 +2639,7 @@
                       "away": "Utrecht",
                       "csv_data_row": 16302,
                       "file": "vitibet_2026-10.csv.gz",
-                      "file_sha256": "f006be37f884826d99de1d46ad08eb7b72d3c0edf4d242f7f833a3a9802fa056",
+                      "file_sha256": "ed7c3147003de9c2367984429373fba63516bae04baec5b1541fafd9df22447e",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Kozakken Boys",
                       "kickoff_origin": "provider_explicit_offset",
@@ -2678,7 +2678,7 @@
                       "csv_data_row": 16302,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-10.csv.gz",
-                      "file_sha256": "f006be37f884826d99de1d46ad08eb7b72d3c0edf4d242f7f833a3a9802fa056",
+                      "file_sha256": "ed7c3147003de9c2367984429373fba63516bae04baec5b1541fafd9df22447e",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Kozakken Boys",
                       "kickoff_origin": "provider_explicit_offset",
@@ -2740,12 +2740,12 @@
                   "source": "betexplorer",
                   "price": 1.75,
                   "captured_at": "2026-10-28T22:16:41.202365+00:00",
-                  "decision_at": "2026-10-29T06:14:31+02:00",
+                  "decision_at": "2026-10-29T09:11:10+02:00",
                   "kickoff": "2026-10-29T19:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.4752387640693645,
-              "ml_model_key": "c5c3c2d6085b311b5a7118b567c36ee6bf0d5393071eb9e00bf57a8cc957bd5b",
+              "ml_rank_probability": 0.47523840341833584,
+              "ml_model_key": "bd8a307f8ef3a88365667657b11f3e6adbebc8225ca7e3a865874c19dd339b4c",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.710163035724796,
@@ -2819,10 +2819,26 @@
                   "status": "corroborated",
                   "witnesses": [
                     {
+                      "away": "Andorra CF",
+                      "csv_data_row": 22135,
+                      "file": "theoddsapi_odds_2026-10.csv.gz",
+                      "file_sha256": "b6cf634c4e324edfbc90f8490ec8ddd5e892134de53dfb9aeea6d8131f1e0be8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "CD Varea",
+                      "kickoff_origin": "provider_commence_time",
+                      "kickoff_utc": "2026-10-29T19:00:00+00:00",
+                      "league": "Copa Del Rey",
+                      "observed_at_utc": "2026-10-29T04:17:25.365419+00:00",
+                      "provider_commence_time": "2026-10-29T19:00:00Z",
+                      "provider_event_id": "a6a55164954255f8623b95b35386ee77",
+                      "row_sha256": "78fecd15fc684a0d5e7b430dce8aee65928ed5621cd2b16e540624c80fd62c6c",
+                      "source": "theoddsapi"
+                    },
+                    {
                       "away": "FC Andorra",
                       "csv_data_row": 4157,
                       "file": "scoutingstats_2026-10.csv.gz",
-                      "file_sha256": "fa015c100eb2ef35f749b0f4ffda05e7bedd6bdd525317734507e0896f4e0d4b",
+                      "file_sha256": "4cf788a95756d1ec2b634001bb1bab63f005f32cfd8c1f3470f579dcc7e45e7d",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Varea",
                       "kickoff_origin": "provider_explicit_offset",
@@ -2873,7 +2889,7 @@
                       "away": "FC Andorra",
                       "csv_data_row": 16391,
                       "file": "vitibet_2026-10.csv.gz",
-                      "file_sha256": "f006be37f884826d99de1d46ad08eb7b72d3c0edf4d242f7f833a3a9802fa056",
+                      "file_sha256": "ed7c3147003de9c2367984429373fba63516bae04baec5b1541fafd9df22447e",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Varea",
                       "kickoff_origin": "provider_explicit_offset",
@@ -2912,7 +2928,7 @@
                       "csv_data_row": 16391,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-10.csv.gz",
-                      "file_sha256": "f006be37f884826d99de1d46ad08eb7b72d3c0edf4d242f7f833a3a9802fa056",
+                      "file_sha256": "ed7c3147003de9c2367984429373fba63516bae04baec5b1541fafd9df22447e",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Varea",
                       "kickoff_origin": "provider_explicit_offset",
@@ -2950,7 +2966,12 @@
             }
           ],
           "odds": 2.45,
-          "stake_pct": 3.9882
+          "stake_pct": 3.9882,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 3.9882
@@ -3029,6 +3050,11 @@
     },
     "2026-10-28": {
       "frozen_at": "2026-10-28T10:13:23+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-10-29": {
+      "frozen_at": "2026-10-29T09:48:49+02:00",
       "final": true,
       "lock_source": "state"
     }
