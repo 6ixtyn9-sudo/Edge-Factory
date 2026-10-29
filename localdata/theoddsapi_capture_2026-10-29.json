@@ -1,15 +1,96 @@
 {
-  "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "added": 57,
+  "attempted": 9,
+  "attempted_fixtures": [
+    {
+      "away": "Barcelona W",
+      "date": "2026-10-29",
+      "home": "K\u00f8ge",
+      "kickoff": "2026-10-29T20:00:00Z",
+      "league": "UEFA Women's Champions League"
+    },
+    {
+      "away": "FC Andorra",
+      "date": "2026-10-29",
+      "home": "Varea",
+      "kickoff": "2026-10-29T19:00:00Z",
+      "league": "Copa Del Rey"
+    },
+    {
+      "away": "ROHDA Raalte",
+      "date": "2026-10-29",
+      "home": "RKAV Volendam",
+      "kickoff": "2026-10-29T19:00:00Z",
+      "league": "KNVB Beker"
+    },
+    {
+      "away": "Atl\u00e9tico Grau",
+      "date": "2026-10-29",
+      "home": "Cienciano",
+      "kickoff": "2026-10-29T00:00:00Z",
+      "league": "Primera Division"
+    },
+    {
+      "away": "Sporting Gij\u00f3n",
+      "date": "2026-10-29",
+      "home": "Guijuelo",
+      "kickoff": "2026-10-29T19:00:00Z",
+      "league": "Copa Del Rey"
+    },
+    {
+      "away": "FC Cincinnati",
+      "date": "2026-10-29",
+      "home": "Inter Miami",
+      "kickoff": "2026-10-29T00:30:00+01:00",
+      "league": "United States: Major League Soccer"
+    },
+    {
+      "away": "FC Utrecht",
+      "date": "2026-10-29",
+      "home": "Kozakken Boys",
+      "kickoff": "2026-10-29T17:45:00Z",
+      "league": "KNVB Beker"
+    },
+    {
+      "away": "Sporting KC",
+      "date": "2026-10-29",
+      "home": "Minnesota United",
+      "kickoff": "2026-10-29T00:30:00Z",
+      "league": "Major League Soccer"
+    },
+    {
+      "away": "San Diego",
+      "date": "2026-10-29",
+      "home": "Vancouver Whitecaps",
+      "kickoff": "2026-10-29T02:30:00Z",
+      "league": "Major League Soccer"
+    }
+  ],
   "candidate_fixtures": 11,
-  "captured_at": "2026-10-29T01:17:49+00:00",
+  "captured_at": "2026-10-29T04:17:25+00:00",
   "date": "2026-10-29",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 9
+  },
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 2,
   "kickoff_mismatch_detail": {},
-  "quoted_fixtures": [],
+  "quoted_fixtures": [
+    {
+      "away": "Andorra CF",
+      "date": "2026-10-29",
+      "home": "CD Varea",
+      "kickoff": "2026-10-29T19:00:00Z",
+      "league": "Copa Del Rey"
+    },
+    {
+      "away": "Sporting Gij\u00f3n",
+      "date": "2026-10-29",
+      "home": "Guijuelo",
+      "kickoff": "2026-10-29T19:00:00Z",
+      "league": "Copa Del Rey"
+    }
+  ],
   "requested_markets": [
     "h2h",
     "totals",
@@ -19,26 +100,31 @@
   "requested_total_points": [
     "2.5"
   ],
-  "rows": 0,
+  "rows": 57,
   "schema": 1,
   "skip_reasons": {
-    "priced": 2,
-    "retry_cooldown": 9
+    "priced": 2
   },
   "skipped": [
-    "K\u00f8ge|Barcelona W (retry cooldown (6h after failed attempt))",
-    "Varea|FC Andorra (retry cooldown (6h after failed attempt))",
     "Al Nassr|Al Kholood (priced)",
-    "RKAV Volendam|ROHDA Raalte (retry cooldown (6h after failed attempt))",
-    "Cienciano|Atl\u00e9tico Grau (retry cooldown (6h after failed attempt))",
-    "Al Riyadh|Al-Qadsiah (priced)",
-    "Guijuelo|Sporting Gij\u00f3n (retry cooldown (6h after failed attempt))",
-    "Inter Miami|FC Cincinnati (retry cooldown (6h after failed attempt))",
-    "Kozakken Boys|FC Utrecht (retry cooldown (6h after failed attempt))",
-    "Minnesota United|Sporting KC (retry cooldown (6h after failed attempt))",
-    "Vancouver Whitecaps|San Diego (retry cooldown (6h after failed attempt))"
+    "Al Riyadh|Al-Qadsiah (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "ok",
+  "unmatched": [
+    "K\u00f8ge vs Barcelona W (league not covered: UEFA Women's Champions League)",
+    "RKAV Volendam vs ROHDA Raalte (league not covered: KNVB Beker)",
+    "Inter Miami vs FC Cincinnati (league not covered: United States: Major League Soccer)",
+    "Kozakken Boys vs FC Utrecht (league not covered: KNVB Beker)",
+    "Minnesota United vs Sporting KC (league not covered: Major League Soccer)",
+    "Vancouver Whitecaps vs San Diego (league not covered: Major League Soccer)",
+    "Cienciano vs Atl\u00e9tico Grau (no event in soccer_argentina_primera_division)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: KNVB Beker": 2,
+    "league not covered: Major League Soccer": 2,
+    "league not covered: UEFA Women's Champions League": 1,
+    "league not covered: United States: Major League Soccer": 1,
+    "no event in soccer_argentina_primera_division": 1
+  }
 }
