@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-29T00:50:24",
+  "generated_at": "2026-10-29T03:54:08",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 247.6916,
-  "multiple": 2.476916,
+  "bank_pct": 283.0761,
+  "multiple": 2.830761,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
   "bet_days": 60,
   "accas": {
-    "wins": 72,
+    "wins": 73,
     "losses": 50
   },
-  "open_slips": [
-    {
-      "date": "2026-10-28",
-      "staked_pct": 35.3845
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -1421,8 +1416,8 @@
     },
     {
       "date": "2026-10-28",
-      "staked_pct": 35.3845,
-      "returned_pct": 0.0,
+      "staked_pct": 70.769,
+      "returned_pct": 70.769,
       "accas": [
         {
           "odds": 1.84,
@@ -1459,10 +1454,46 @@
               ]
             }
           ]
+        },
+        {
+          "odds": 2.0,
+          "won": true,
+          "stake_pct": 35.3845,
+          "returned_pct": 70.769,
+          "legs": [
+            {
+              "match": "Bragantino vs Chapecoense",
+              "pick": "HOME",
+              "odds": 1.31,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-28",
+                "Bragantino",
+                "Chapecoense"
+              ]
+            },
+            {
+              "match": "SC Freiburg vs VfL Wolfsburg",
+              "pick": "HOME",
+              "odds": 1.53,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-10-28",
+                "SC Freiburg",
+                "VfL Wolfsburg"
+              ]
+            }
+          ]
         }
       ],
-      "bank_pct": 247.6916,
-      "close_pct": 247.6915
+      "bank_pct": 283.0761,
+      "close_pct": 283.076
     }
   ]
 }
