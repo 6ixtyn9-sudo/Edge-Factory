@@ -43,7 +43,7 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 6,
+      "be_matched": 0,
       "be_raw": 27,
       "be_usable": 27,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
@@ -52,10 +52,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 6,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 11,
-        "no_pick_for_fixture": 10
+        "fixture_key_miss": 27
       },
       "reason": null,
       "status": "cache_only"
@@ -180,12 +179,11 @@
       "coherence_withheld_fixtures": 4,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 3,
+      "join_matched_rows": 1,
       "join_miss_counts": {
-        "fixture_key_miss": 18087,
-        "no_pick_for_fixture": 18
+        "fixture_key_miss": 18107
       },
-      "pa_matched": 3,
+      "pa_matched": 1,
       "pa_raw": 18108,
       "pa_scored": 18108,
       "reason": null,
@@ -335,11 +333,11 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 43,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "no_pick_for_fixture": 98
+        "fixture_key_miss": 141
       },
-      "oa_matched": 4,
+      "oa_matched": 0,
       "oa_raw": 141,
       "oa_usable": 141,
       "reason": null,
