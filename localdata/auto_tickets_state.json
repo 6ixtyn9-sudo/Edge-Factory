@@ -1,56 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 247.6916,
+  "bank": 283.0761,
   "cycle_base": 203.9865280000001,
-  "open_slips": [
-    {
-      "date": "2026-10-28",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Bragantino vs Chapecoense",
-              "pick": "HOME",
-              "prob": 0.7341509433962262,
-              "odds": 1.31,
-              "result": null,
-              "market": "1x2",
-              "price_book": "betexplorer_best",
-              "price_source": "betexplorer_odds",
-              "fixture_key": [
-                "2026-10-28",
-                "Bragantino",
-                "Chapecoense"
-              ]
-            },
-            {
-              "match": "SC Freiburg vs VfL Wolfsburg",
-              "pick": "HOME",
-              "prob": 0.6191017438213524,
-              "odds": 1.53,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "theoddsapi",
-              "fixture_key": [
-                "2026-10-28",
-                "SC Freiburg",
-                "VfL Wolfsburg"
-              ]
-            }
-          ],
-          "odds": 2.0,
-          "stake_pct": 35.3845,
-          "results": [
-            null,
-            "win"
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 35.3845
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -1445,8 +1397,8 @@
     },
     {
       "date": "2026-10-28",
-      "staked_pct": 35.3845,
-      "returned_pct": 0.0,
+      "staked_pct": 70.769,
+      "returned_pct": 70.769,
       "accas": [
         {
           "odds": 1.84,
@@ -1483,10 +1435,46 @@
               ]
             }
           ]
+        },
+        {
+          "odds": 2.0,
+          "won": true,
+          "stake_pct": 35.3845,
+          "returned_pct": 70.769,
+          "legs": [
+            {
+              "match": "Bragantino vs Chapecoense",
+              "pick": "HOME",
+              "odds": 1.31,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-28",
+                "Bragantino",
+                "Chapecoense"
+              ]
+            },
+            {
+              "match": "SC Freiburg vs VfL Wolfsburg",
+              "pick": "HOME",
+              "odds": 1.53,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-10-28",
+                "SC Freiburg",
+                "VfL Wolfsburg"
+              ]
+            }
+          ]
         }
       ],
-      "bank_pct": 247.6916,
-      "close_pct": 247.6915
+      "bank_pct": 283.0761,
+      "close_pct": 283.076
     }
   ],
   "events": [

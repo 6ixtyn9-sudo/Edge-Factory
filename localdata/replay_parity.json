@@ -666,14 +666,14 @@
           "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "4c4bbb917c2c0adf823af8849722a4afd5f385d8",
-            "event_sha": "4c4bbb917c2c0adf823af8849722a4afd5f385d8",
+            "checkout_head_at_capture": "3fa5b99d454f57f2f5bbfc86867e468606b17ef1",
+            "event_sha": "3fa5b99d454f57f2f5bbfc86867e468606b17ef1",
             "file_sha256": {
               "Config/verified_results.json": "13156c199bb5fb4ff35fc6ef0c5ac7afb0094dd2250c895f472142cfeeb9b21e",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "40776489773",
+            "run_id": "40797670188",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-10-29_decision.json.gz",
@@ -690,7 +690,7 @@
                         "cohort": 0.7253,
                         "market": "match_under_45",
                         "match": "Kozakken Boys vs FC Utrecht",
-                        "model": 0.6160586468797342,
+                        "model": 0.6160586701832134,
                         "odds": 1.3,
                         "pick": "under",
                         "result": null
@@ -699,7 +699,7 @@
                         "cohort": 0.6481,
                         "market": "match_over_25",
                         "match": "Varea vs FC Andorra",
-                        "model": 0.47523840341833584,
+                        "model": 0.4752387640693645,
                         "odds": 1.75,
                         "pick": "over",
                         "result": null
@@ -755,7 +755,7 @@
                         "cohort": 0.6481,
                         "market": "match_over_25",
                         "match": "Kozakken Boys vs FC Utrecht",
-                        "model": 0.8052791107803831,
+                        "model": 0.8052790870906091,
                         "odds": 1.4,
                         "pick": "over",
                         "result": null
@@ -764,7 +764,7 @@
                         "cohort": 0.6481,
                         "market": "match_over_25",
                         "match": "Varea vs FC Andorra",
-                        "model": 0.47523840341833584,
+                        "model": 0.4752387640693645,
                         "odds": 1.75,
                         "pick": "over",
                         "result": null
@@ -816,10 +816,10 @@
             "card_identical": false,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 2,
-            "mean_absolute_disagreement": 0.15107560354083413,
+            "mean_absolute_disagreement": 0.1510754535871634,
             "model_below_cohort": 5,
             "models": {
-              "bd8a307f8ef3a88365667657b11f3e6adbebc8225ca7e3a865874c19dd339b4c": {
+              "c5c3c2d6085b311b5a7118b567c36ee6bf0d5393071eb9e00bf57a8cc957bd5b": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -976,8 +976,8 @@
           "free_bank": 283.0761,
           "freeze_time": "MATCH",
           "ledger": "MATCH",
-          "open_accas": 1,
-          "settled_net": -35.3845,
+          "open_accas": 0,
+          "settled_net": 0.0,
           "settlement": "MATCH",
           "status": "MATCH"
         }
