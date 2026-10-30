@@ -886,22 +886,22 @@
           "status": "MATCH"
         },
         {
-          "accas": 0,
+          "accas": 3,
           "bank_reconciliation": "MATCH",
           "bank_total": 27.917070999999996,
           "committed_excluding_target": 0.0,
           "date": "2026-10-30",
-          "decision_status": "no_bet",
+          "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "d516d097b8891cdf63d5b7e31773d831c56bb596",
-            "event_sha": "d516d097b8891cdf63d5b7e31773d831c56bb596",
+            "checkout_head_at_capture": "cb00c85cf6cd1da0e25cd5bfbe9223628e3c73c0",
+            "event_sha": "cb00c85cf6cd1da0e25cd5bfbe9223628e3c73c0",
             "file_sha256": {
               "Config/verified_results.json": "13156c199bb5fb4ff35fc6ef0c5ac7afb0094dd2250c895f472142cfeeb9b21e",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "40962384018",
+            "run_id": "40983166928",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-10-30_decision.json.gz",
@@ -911,45 +911,381 @@
             "added_to_ml_on": 0,
             "arms": {
               "ml_off": {
-                "accas": [],
-                "card_identity": [],
-                "mean_acca_odds": null,
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.723,
+                        "market": "match_under_45",
+                        "match": "Crici\u00fama vs Ponte Preta",
+                        "model": 0.947445237918086,
+                        "odds": 1.36,
+                        "pick": "under",
+                        "result": null
+                      },
+                      {
+                        "cohort": 0.6474,
+                        "market": "match_over_25",
+                        "match": "Casa Pia vs Sporting CP",
+                        "model": 0.5502277380034266,
+                        "odds": 1.57,
+                        "pick": "over",
+                        "result": null
+                      }
+                    ],
+                    "odds": 2.14,
+                    "returned": null,
+                    "stake": 2.3264
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.6621,
+                        "market": "match_over_25",
+                        "match": "CSKA 1948 Sofia vs Spartak Varna",
+                        "model": 0.5716806847045396,
+                        "odds": 1.7,
+                        "pick": "over",
+                        "result": null
+                      },
+                      {
+                        "cohort": 0.6621,
+                        "market": "match_over_25",
+                        "match": "Villarreal vs Espanyol",
+                        "model": 0.7809529473115553,
+                        "odds": 1.5,
+                        "pick": "over",
+                        "result": null
+                      }
+                    ],
+                    "odds": 2.55,
+                    "returned": null,
+                    "stake": 2.3264
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.6621,
+                        "market": "match_over_25",
+                        "match": "Larne vs Portadown",
+                        "model": 0.5926006759493118,
+                        "odds": 1.54,
+                        "pick": "over",
+                        "result": null
+                      },
+                      {
+                        "cohort": 0.6474,
+                        "market": "match_over_25",
+                        "match": "Ammanford vs Haverfordwest County",
+                        "model": 0.3371225223355872,
+                        "odds": 1.7,
+                        "pick": "over",
+                        "result": null
+                      }
+                    ],
+                    "odds": 2.62,
+                    "returned": null,
+                    "stake": 2.3264
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Ammanford vs Haverfordwest County",
+                        "match_over_25",
+                        "OVER",
+                        1.7,
+                        "Stake.com",
+                        "betexplorer"
+                      ],
+                      [
+                        "Larne vs Portadown",
+                        "match_over_25",
+                        "OVER",
+                        1.54,
+                        "Stake.com",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.62,
+                    2.3264
+                  ],
+                  [
+                    [
+                      [
+                        "CSKA 1948 Sofia vs Spartak Varna",
+                        "match_over_25",
+                        "OVER",
+                        1.7,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Villarreal vs Espanyol",
+                        "match_over_25",
+                        "OVER",
+                        1.5,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.55,
+                    2.3264
+                  ],
+                  [
+                    [
+                      [
+                        "Casa Pia vs Sporting CP",
+                        "match_over_25",
+                        "OVER",
+                        1.57,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Crici\u00fama vs Ponte Preta",
+                        "match_under_45",
+                        "UNDER",
+                        1.36,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.14,
+                    2.3264
+                  ]
+                ],
+                "mean_acca_odds": 2.436666666666667,
                 "outcome_status": "UNSETTLED_OR_UNPROVEN",
                 "resolved_legs": 0,
                 "returned": null,
-                "selected_legs": 0,
+                "selected_legs": 6,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
                   "capacity_rescue_checked": false,
                   "dropped": [],
                   "ml_ranking_active": false
                 },
-                "total_stake": 0
+                "total_stake": 6.9792000000000005
               },
               "ml_on": {
-                "accas": [],
-                "card_identity": [],
-                "mean_acca_odds": null,
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.723,
+                        "market": "match_under_45",
+                        "match": "Crici\u00fama vs Ponte Preta",
+                        "model": 0.947445237918086,
+                        "odds": 1.36,
+                        "pick": "under",
+                        "result": null
+                      },
+                      {
+                        "cohort": 0.6474,
+                        "market": "match_over_25",
+                        "match": "Casa Pia vs Sporting CP",
+                        "model": 0.5502277380034266,
+                        "odds": 1.57,
+                        "pick": "over",
+                        "result": null
+                      }
+                    ],
+                    "odds": 2.14,
+                    "returned": null,
+                    "stake": 2.3264
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.6621,
+                        "market": "match_over_25",
+                        "match": "Villarreal vs Espanyol",
+                        "model": 0.7809529473115553,
+                        "odds": 1.5,
+                        "pick": "over",
+                        "result": null
+                      },
+                      {
+                        "cohort": 0.6621,
+                        "market": "match_over_25",
+                        "match": "CSKA 1948 Sofia vs Spartak Varna",
+                        "model": 0.5716806847045396,
+                        "odds": 1.7,
+                        "pick": "over",
+                        "result": null
+                      }
+                    ],
+                    "odds": 2.55,
+                    "returned": null,
+                    "stake": 2.3264
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.6621,
+                        "market": "match_over_25",
+                        "match": "Larne vs Portadown",
+                        "model": 0.5926006759493118,
+                        "odds": 1.54,
+                        "pick": "over",
+                        "result": null
+                      },
+                      {
+                        "cohort": 0.6474,
+                        "market": "match_over_25",
+                        "match": "Ammanford vs Haverfordwest County",
+                        "model": 0.3371225223355872,
+                        "odds": 1.7,
+                        "pick": "over",
+                        "result": null
+                      }
+                    ],
+                    "odds": 2.62,
+                    "returned": null,
+                    "stake": 2.3264
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Ammanford vs Haverfordwest County",
+                        "match_over_25",
+                        "OVER",
+                        1.7,
+                        "Stake.com",
+                        "betexplorer"
+                      ],
+                      [
+                        "Larne vs Portadown",
+                        "match_over_25",
+                        "OVER",
+                        1.54,
+                        "Stake.com",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.62,
+                    2.3264
+                  ],
+                  [
+                    [
+                      [
+                        "CSKA 1948 Sofia vs Spartak Varna",
+                        "match_over_25",
+                        "OVER",
+                        1.7,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Villarreal vs Espanyol",
+                        "match_over_25",
+                        "OVER",
+                        1.5,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.55,
+                    2.3264
+                  ],
+                  [
+                    [
+                      [
+                        "Casa Pia vs Sporting CP",
+                        "match_over_25",
+                        "OVER",
+                        1.57,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Crici\u00fama vs Ponte Preta",
+                        "match_under_45",
+                        "UNDER",
+                        1.36,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.14,
+                    2.3264
+                  ]
+                ],
+                "mean_acca_odds": 2.436666666666667,
                 "outcome_status": "UNSETTLED_OR_UNPROVEN",
                 "resolved_legs": 0,
                 "returned": null,
-                "selected_legs": 0,
+                "selected_legs": 6,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
-                  "capacity_rescue_checked": false,
+                  "capacity_rescue_checked": true,
                   "dropped": [],
                   "ml_ranking_active": true
                 },
-                "total_stake": 0
+                "total_stake": 6.9792000000000005
               }
             },
             "card_identical": true,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 0,
-            "mean_absolute_disagreement": 0.1453584129708852,
-            "model_below_cohort": 2,
+            "mean_absolute_disagreement": 0.1329600548873042,
+            "model_below_cohort": 12,
             "models": {
-              "92e25d9f031c56d6577839f5bb84bb6e5e7d7394848d65013d8846fa405c3f90": {
+              "d35fb8e40e84025825a2832d33d89f7729e7691014c1a57b6bff173bb5c0ce82": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 6,
+                    "0:1": 38,
+                    "0:11": 1,
+                    "0:2": 45,
+                    "0:3": 27,
+                    "0:4": 20,
+                    "0:5": 16,
+                    "0:6": 7,
+                    "0:7": 4,
+                    "0:8": 4,
+                    "0:9": 1,
+                    "1:0": 3,
+                    "1:1": 22,
+                    "1:2": 38,
+                    "1:3": 17,
+                    "1:4": 14,
+                    "1:5": 11,
+                    "1:6": 3,
+                    "1:7": 1,
+                    "1:9": 1,
+                    "2:0": 2,
+                    "2:1": 6,
+                    "2:2": 11,
+                    "2:3": 5,
+                    "2:4": 8,
+                    "2:5": 5,
+                    "3:0": 1,
+                    "3:1": 1,
+                    "3:3": 2,
+                    "3:4": 1,
+                    "3:5": 2,
+                    "3:6": 2,
+                    "4:0": 1,
+                    "4:2": 1,
+                    "4:3": 1,
+                    "5:2": 1
+                  },
+                  "classes": 36,
+                  "mean_rows_per_class": 9.13888888888889,
+                  "min_class_count": 1,
+                  "n": 329,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2052
+                },
+                "schema": "enh_score_logit_v2"
+              },
+              "f68ce7693c0f5cbd81ab0cc0e91d369bbd8b9e2dbc798d1cafcb03ea22fa0457": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -1003,13 +1339,13 @@
                 "schema": "enh_score_logit_v2"
               }
             },
-            "paired_estimates": 4,
-            "pool_legs": 4,
+            "paired_estimates": 17,
+            "pool_legs": 17,
             "removed_from_ml_off": 0,
             "schemas": {
-              "enh_score_logit_v2": 4
+              "enh_score_logit_v2": 17
             },
-            "scored_legs": 4,
+            "scored_legs": 17,
             "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
           },
           "settlement": "UNAVAILABLE",
