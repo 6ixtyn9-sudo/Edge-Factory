@@ -62,9 +62,9 @@
 ## By bucket
 
 - `CAUTION`: n=181, two_prices=169, avg_raw=-0.004082, avg_ip=0.001575, beat_rate=0.142012
-- `CERTIFIED_CLEAN`: n=96, two_prices=94, avg_raw=-0.002863, avg_ip=-0.00126, beat_rate=0.042553
+- `CERTIFIED_CLEAN`: n=97, two_prices=95, avg_raw=-0.002833, avg_ip=-0.001246, beat_rate=0.042105
 - `SKIPPED_VETO`: n=625, two_prices=537, avg_raw=-0.003621, avg_ip=0.000177, beat_rate=0.070764
 - `WATCHLIST_NO_ODDS`: n=83, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
-- `WATCHLIST_SUSPECT_PRICE`: n=91, two_prices=73, avg_raw=-0.002192, avg_ip=0.000204, beat_rate=0.123288
+- `WATCHLIST_SUSPECT_PRICE`: n=90, two_prices=72, avg_raw=-0.002222, avg_ip=0.000207, beat_rate=0.125
 - `WATCHLIST_UNCORROBORATED_PRICE`: n=66, two_prices=63, avg_raw=-0.004444, avg_ip=0.001685, beat_rate=0.079365
 - `WATCHLIST_UNKNOWN_CTX`: n=15, two_prices=15, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
