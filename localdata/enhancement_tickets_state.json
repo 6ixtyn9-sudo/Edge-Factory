@@ -3007,12 +3007,12 @@
                   "source": "betexplorer",
                   "price": 1.36,
                   "captured_at": "2026-10-29T22:19:55.312785+00:00",
-                  "decision_at": "2026-10-30T03:13:58+02:00",
+                  "decision_at": "2026-10-30T06:14:45+02:00",
                   "kickoff": "2026-10-30T22:30:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.947445237918086,
-              "ml_model_key": "f68ce7693c0f5cbd81ab0cc0e91d369bbd8b9e2dbc798d1cafcb03ea22fa0457",
+              "ml_rank_probability": 0.947445237232714,
+              "ml_model_key": "92e25d9f031c56d6577839f5bb84bb6e5e7d7394848d65013d8846fa405c3f90",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Under 4.5 Goals",
               "floor": null,
@@ -3087,9 +3087,9 @@
                   "witnesses": [
                     {
                       "away": "Ponte Preta",
-                      "csv_data_row": 4194,
+                      "csv_data_row": 4203,
                       "file": "scoutingstats_2026-10.csv.gz",
-                      "file_sha256": "4a808fa0fc2c19389db26cfcaca9c8060881ecec46f09a80cf0d411a29db343d",
+                      "file_sha256": "32a33ffdb06955b053899aa5a679c4c899628eb95abfb62d9ec19c8d08a88fab",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Crici\u00fama",
                       "kickoff_origin": "provider_explicit_offset",
@@ -3218,21 +3218,21 @@
             {
               "match": "Casa Pia vs Sporting CP",
               "pick": "over",
-              "prob": 0.6474,
+              "prob": 0.6455,
               "odds": 1.57,
               "result": null,
               "market": "match_over_25",
               "price_book": "bet365.us",
               "price_source": "betexplorer",
               "cohort_evidence": {
-                "rate": 0.6474,
-                "n": 329,
+                "rate": 0.6455,
+                "n": 330,
                 "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
                 "as_of_exclusive": "2026-10-30",
                 "market": "match_over_25",
                 "basis": "cohort_payout_bound",
                 "cohort_min_hits": 213,
-                "cohort_lower_bound": 0.5943590733112498,
+                "cohort_lower_bound": 0.5924382502996556,
                 "price_context": {
                   "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
                   "selection": "away",
@@ -3241,12 +3241,12 @@
                   "source": "betexplorer",
                   "price": 1.57,
                   "captured_at": "2026-10-30T01:11:19.950464+00:00",
-                  "decision_at": "2026-10-30T03:13:58+02:00",
+                  "decision_at": "2026-10-30T06:14:45+02:00",
                   "kickoff": "2026-10-30T20:15:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.5502277380034266,
-              "ml_model_key": "d35fb8e40e84025825a2832d33d89f7729e7691014c1a57b6bff173bb5c0ce82",
+              "ml_rank_probability": 0.5360913625146225,
+              "ml_model_key": "8232c7cd1a39cb90a300982f921705b9117514b447b0ccb6fd5c90de91c5f1eb",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7116508347155293,
@@ -3321,9 +3321,9 @@
                   "witnesses": [
                     {
                       "away": "Sporting CP",
-                      "csv_data_row": 4186,
+                      "csv_data_row": 4195,
                       "file": "scoutingstats_2026-10.csv.gz",
-                      "file_sha256": "4a808fa0fc2c19389db26cfcaca9c8060881ecec46f09a80cf0d411a29db343d",
+                      "file_sha256": "32a33ffdb06955b053899aa5a679c4c899628eb95abfb62d9ec19c8d08a88fab",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Casa Pia",
                       "kickoff_origin": "provider_explicit_offset",
@@ -3481,12 +3481,12 @@
                   "source": "betexplorer",
                   "price": 1.5,
                   "captured_at": "2026-10-30T01:12:23.287187+00:00",
-                  "decision_at": "2026-10-30T03:13:58+02:00",
+                  "decision_at": "2026-10-30T06:14:45+02:00",
                   "kickoff": "2026-10-30T20:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.7809529473115553,
-              "ml_model_key": "f68ce7693c0f5cbd81ab0cc0e91d369bbd8b9e2dbc798d1cafcb03ea22fa0457",
+              "ml_rank_probability": 0.7809529610682514,
+              "ml_model_key": "92e25d9f031c56d6577839f5bb84bb6e5e7d7394848d65013d8846fa405c3f90",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7116508347155293,
@@ -3561,9 +3561,9 @@
                   "witnesses": [
                     {
                       "away": "Espanyol",
-                      "csv_data_row": 4271,
+                      "csv_data_row": 4280,
                       "file": "scoutingstats_2026-10.csv.gz",
-                      "file_sha256": "4a808fa0fc2c19389db26cfcaca9c8060881ecec46f09a80cf0d411a29db343d",
+                      "file_sha256": "32a33ffdb06955b053899aa5a679c4c899628eb95abfb62d9ec19c8d08a88fab",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Villarreal",
                       "kickoff_origin": "provider_explicit_offset",
@@ -3715,12 +3715,12 @@
                   "source": "betexplorer",
                   "price": 1.7,
                   "captured_at": "2026-10-30T01:12:54.422221+00:00",
-                  "decision_at": "2026-10-30T03:13:58+02:00",
+                  "decision_at": "2026-10-30T06:14:45+02:00",
                   "kickoff": "2026-10-30T15:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.5716806847045396,
-              "ml_model_key": "f68ce7693c0f5cbd81ab0cc0e91d369bbd8b9e2dbc798d1cafcb03ea22fa0457",
+              "ml_rank_probability": 0.5716807099452559,
+              "ml_model_key": "92e25d9f031c56d6577839f5bb84bb6e5e7d7394848d65013d8846fa405c3f90",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7116508347155293,
@@ -3795,9 +3795,9 @@
                   "witnesses": [
                     {
                       "away": "Spartak Varna",
-                      "csv_data_row": 4185,
+                      "csv_data_row": 4194,
                       "file": "scoutingstats_2026-10.csv.gz",
-                      "file_sha256": "4a808fa0fc2c19389db26cfcaca9c8060881ecec46f09a80cf0d411a29db343d",
+                      "file_sha256": "32a33ffdb06955b053899aa5a679c4c899628eb95abfb62d9ec19c8d08a88fab",
                       "fixture_identity_origin": "provider_participants",
                       "home": "CSKA 1948 Sofia",
                       "kickoff_origin": "provider_explicit_offset",
@@ -3890,12 +3890,12 @@
                   "source": "betexplorer",
                   "price": 1.54,
                   "captured_at": "2026-10-30T01:10:18.017574+00:00",
-                  "decision_at": "2026-10-30T03:13:58+02:00",
+                  "decision_at": "2026-10-30T06:14:45+02:00",
                   "kickoff": "2026-10-30T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.5926006759493118,
-              "ml_model_key": "f68ce7693c0f5cbd81ab0cc0e91d369bbd8b9e2dbc798d1cafcb03ea22fa0457",
+              "ml_rank_probability": 0.5926006974536789,
+              "ml_model_key": "92e25d9f031c56d6577839f5bb84bb6e5e7d7394848d65013d8846fa405c3f90",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7116508347155293,
@@ -3970,9 +3970,9 @@
                   "witnesses": [
                     {
                       "away": "Portadown",
-                      "csv_data_row": 4228,
+                      "csv_data_row": 4237,
                       "file": "scoutingstats_2026-10.csv.gz",
-                      "file_sha256": "4a808fa0fc2c19389db26cfcaca9c8060881ecec46f09a80cf0d411a29db343d",
+                      "file_sha256": "32a33ffdb06955b053899aa5a679c4c899628eb95abfb62d9ec19c8d08a88fab",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Larne",
                       "kickoff_origin": "provider_explicit_offset",
@@ -4101,21 +4101,21 @@
             {
               "match": "Ammanford vs Haverfordwest County",
               "pick": "over",
-              "prob": 0.6474,
+              "prob": 0.6455,
               "odds": 1.7,
               "result": null,
               "market": "match_over_25",
               "price_book": "Stake.com",
               "price_source": "betexplorer",
               "cohort_evidence": {
-                "rate": 0.6474,
-                "n": 329,
+                "rate": 0.6455,
+                "n": 330,
                 "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
                 "as_of_exclusive": "2026-10-30",
                 "market": "match_over_25",
                 "basis": "cohort_payout_bound",
                 "cohort_min_hits": 213,
-                "cohort_lower_bound": 0.5943590733112498,
+                "cohort_lower_bound": 0.5924382502996556,
                 "price_context": {
                   "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
                   "selection": "away",
@@ -4124,12 +4124,12 @@
                   "source": "betexplorer",
                   "price": 1.7,
                   "captured_at": "2026-10-30T01:11:51.799641+00:00",
-                  "decision_at": "2026-10-30T03:13:58+02:00",
+                  "decision_at": "2026-10-30T06:14:45+02:00",
                   "kickoff": "2026-10-30T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.3371225223355872,
-              "ml_model_key": "d35fb8e40e84025825a2832d33d89f7729e7691014c1a57b6bff173bb5c0ce82",
+              "ml_rank_probability": 0.33236615925066015,
+              "ml_model_key": "8232c7cd1a39cb90a300982f921705b9117514b447b0ccb6fd5c90de91c5f1eb",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7116508347155293,
@@ -4204,9 +4204,9 @@
                   "witnesses": [
                     {
                       "away": "Haverfordwest County",
-                      "csv_data_row": 4174,
+                      "csv_data_row": 4183,
                       "file": "scoutingstats_2026-10.csv.gz",
-                      "file_sha256": "4a808fa0fc2c19389db26cfcaca9c8060881ecec46f09a80cf0d411a29db343d",
+                      "file_sha256": "32a33ffdb06955b053899aa5a679c4c899628eb95abfb62d9ec19c8d08a88fab",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Ammanford",
                       "kickoff_origin": "provider_explicit_offset",
