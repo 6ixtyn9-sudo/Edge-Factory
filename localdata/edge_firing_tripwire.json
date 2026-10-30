@@ -2,14 +2,15 @@
   "ceilings": [],
   "edge_silent_days": 14,
   "edges": [],
-  "generated_at": "2026-10-30T21:41:55",
+  "generated_at": "2026-10-31T00:51:31",
   "ignored_non_operational_rules": [
     "pfc_144c01b1aa366b88f9c4083a",
     "pfc_1607fec83282d02c5254c2bf",
+    "pfc_73b036a8ee8dd5a4dea48134",
+    "pfc_92ab281aa7c2173e7502ba49",
     "pfc_a7ba6711aeb15b9804a94f06",
     "pfc_adb24b31e9ca43c42506156a",
     "pfc_afdf26c0a105a0f5e6ffff27",
-    "pfc_b011652ec3e473fbc0afbb6a",
     "pfc_b9aa429be62178cc76b1ca8d",
     "pfc_fc7adf360790baec2b1ce044",
     "pfc_fdade2e70df4d4bb78a8cd6e"
@@ -35,7 +36,7 @@
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-10-30",
+      "newest_date": "2026-10-31",
       "newest_file": "scoutingstats_2026-10.csv.gz",
       "retired": null,
       "role": "voter_and_price",
@@ -43,15 +44,15 @@
     },
     {
       "name": "vitibet",
-      "newest_date": "2026-10-31",
-      "newest_file": "vitibet_2026-10.csv.gz",
+      "newest_date": "2026-11-01",
+      "newest_file": "vitibet_2026-11.csv.gz",
       "retired": null,
       "role": "thin_voter",
       "stale": false
     },
     {
       "name": "zulubet",
-      "newest_date": "2026-10-30",
+      "newest_date": "2026-10-31",
       "newest_file": "zulubet_2026-10.csv.gz",
       "retired": null,
       "role": "core_voter",
@@ -75,7 +76,7 @@
     },
     {
       "name": "afootballreport",
-      "newest_date": "2026-10-30",
+      "newest_date": "2026-10-31",
       "newest_file": "afootballreport_2026-10.csv.gz",
       "retired": null,
       "role": "research",
@@ -83,7 +84,7 @@
     },
     {
       "name": "betclan",
-      "newest_date": "2026-10-30",
+      "newest_date": "2026-10-31",
       "newest_file": "betclan_2026-10.csv.gz",
       "retired": null,
       "role": "partial_voter",
@@ -99,7 +100,7 @@
     },
     {
       "name": "bettingclosed",
-      "newest_date": "2026-10-30",
+      "newest_date": "2026-10-31",
       "newest_file": "bettingclosed_2026-10.csv.gz",
       "retired": null,
       "role": "confirmation_results",
@@ -107,7 +108,7 @@
     },
     {
       "name": "bzzoiro",
-      "newest_date": "2026-11-05",
+      "newest_date": "2026-11-06",
       "newest_file": "bzzoiro_2026-10.csv.gz",
       "retired": null,
       "role": "model_voter",

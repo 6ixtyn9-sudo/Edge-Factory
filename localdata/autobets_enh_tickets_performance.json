@@ -1,21 +1,25 @@
 {
-  "generated_at": "2026-10-30T21:56:58",
+  "generated_at": "2026-10-31T01:06:48",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 27.917070999999996,
-  "multiple": 0.27917071,
+  "bank_pct": 23.264270999999997,
+  "multiple": 0.23264270999999997,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 16,
+  "bet_days": 17,
   "accas": {
     "wins": 12,
-    "losses": 23
+    "losses": 25
   },
   "open_slips": [
     {
       "date": "2026-10-30",
-      "staked_pct": 6.9792
+      "staked_pct": 2.3264
+    },
+    {
+      "date": "2026-10-31",
+      "staked_pct": 2.6172
     }
   ],
   "events": [],
@@ -2989,6 +2993,837 @@
       ],
       "bank_pct": 27.9171,
       "close_pct": 21.7357
+    },
+    {
+      "date": "2026-10-30",
+      "staked_pct": 4.6528,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.55,
+          "won": false,
+          "stake_pct": 2.3264,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Villarreal vs Espanyol",
+              "pick": "over",
+              "odds": 1.5,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-30T01:12:23.287187+00:00",
+              "price_provenance": {
+                "away": "Espanyol",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-10-30T01:12:23.287187+00:00",
+                "data_dt": [
+                  30,
+                  10,
+                  2026,
+                  21,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-10-30T07:00:00+00:00",
+                "decision_day": "2026-10-30",
+                "home": "Villarreal",
+                "kickoff_utc": "2026-10-30T20:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-30.json",
+                "ledger_sha256": "d82be1eed17359247c98cf3624cc3ca831af5a99722806a35b7c6a676c437e26",
+                "market": "ou_2.5",
+                "price": 1.5,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-26T13:43",
+                      "2026-10-26T13:43"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      1.5,
+                      2.63
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 11,
+                  "row_sha256": "79e601001323152bd3152a1f47ec4d1540da401f8e2a6508baa517224bc3944d"
+                },
+                "raw_kickoff": "21:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-30T20:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Espanyol",
+                      "csv_data_row": 4280,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "d5d5ad7c9f1a7e2966dd682c52da0041896c5496ba8b65ca47d4847340e0a9f8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Villarreal",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T20:00:00+00:00",
+                      "league": "La Liga",
+                      "observed_at_utc": "2026-10-29T22:02:36+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "bd821d6baabad87ac3f1bed02503cfd1fddcd30e325b30ef675c6f319480f09d",
+                      "schedule_row": {
+                        "away": "Espanyol",
+                        "captured_at": "2026-10-29T22:02:36+00:00",
+                        "country": "Spain",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Villarreal",
+                        "hs": "",
+                        "kickoff": "2026-10-30T20:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "La Liga",
+                        "odd1": "1.42",
+                        "odd2": "6.25",
+                        "odd_gg": "1.66",
+                        "odd_ng": "2.1",
+                        "odd_o15": "1.14",
+                        "odd_o25": "1.5",
+                        "odd_o35": "2.2",
+                        "odd_u15": "5.5",
+                        "odd_u25": "2.62",
+                        "odd_u35": "1.66",
+                        "oddx": "5.0",
+                        "p1": "66.1717722232663",
+                        "p2": "15.034767900770532",
+                        "p_gg": "55.851063829787236",
+                        "p_ng": "44.148936170212764",
+                        "p_o15": "82.83132530120481",
+                        "p_o25": "63.59223300970874",
+                        "p_o35": "43.005181347150256",
+                        "px": "18.793459875963165",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "20:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Espanyol",
+                      "csv_data_row": 16788,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "324975ec8bce259ede5ae306bebb6e6a3daea4e5fa73f0cc30c71e1434de6106",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Villarreal",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T20:00:00+00:00",
+                      "league": "Spain: La Liga",
+                      "observed_at_utc": "2026-10-29T22:02:07+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "f07159f2f6b3ed40b9b10b1992863de2e14f6422815522ef5be2840b65691314",
+                      "schedule_row": {
+                        "away": "Espanyol",
+                        "captured_at": "2026-10-29T22:02:07+00:00",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Villarreal",
+                        "hs": "",
+                        "index": "2.49",
+                        "kickoff": "2026-10-30T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Spain: La Liga",
+                        "p1": "64.0",
+                        "p2": "13.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "23.0",
+                        "schedule_history": "[{\"away\": \"Espanyol\", \"captured_at\": \"2026-10-28T22:02:05+00:00\", \"date\": \"2026-10-30\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Villarreal\", \"kickoff\": \"2026-10-30T21:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Espanyol",
+                      "csv_data_row": 16788,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "324975ec8bce259ede5ae306bebb6e6a3daea4e5fa73f0cc30c71e1434de6106",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Villarreal",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T20:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-10-28T22:02:05+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "f9aafc0f6361de54b7c5a6d781295a69826c14ef2c9bea046c712496b6b56abb",
+                      "schedule_row": {
+                        "away": "Espanyol",
+                        "captured_at": "2026-10-28T22:02:05+00:00",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Villarreal",
+                        "kickoff": "2026-10-30T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-10-30",
+                "Villarreal",
+                "Espanyol"
+              ],
+              "prob": 0.6621,
+              "cohort_evidence": {
+                "rate": 0.6621,
+                "n": 953,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-30",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 631,
+                "cohort_lower_bound": 0.6314923053193622,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "home",
+                  "league": "La Liga",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.5,
+                  "captured_at": "2026-10-30T01:12:23.287187+00:00",
+                  "decision_at": "2026-10-30T09:13:28+02:00",
+                  "kickoff": "2026-10-30T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.780952950385934,
+              "ml_model_key": "4c83c1c533e8435e261cc841c9ae549c1beeccc60282c3c0075264cd61d78f28",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.7116508347155293,
+              "floor_basis": "market",
+              "league": "La Liga",
+              "shadow": false,
+              "price_kickoff": "2026-10-30T20:00:00+00:00"
+            },
+            {
+              "match": "CSKA 1948 Sofia vs Spartak Varna",
+              "pick": "over",
+              "odds": 1.7,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-30T01:12:54.422221+00:00",
+              "price_provenance": {
+                "away": "Spartak Varna",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-10-30T01:12:54.422221+00:00",
+                "data_dt": [
+                  30,
+                  10,
+                  2026,
+                  16,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-10-30T07:00:00+00:00",
+                "decision_day": "2026-10-30",
+                "home": "CSKA 1948 Sofia",
+                "kickoff_utc": "2026-10-30T15:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-30.json",
+                "ledger_sha256": "d82be1eed17359247c98cf3624cc3ca831af5a99722806a35b7c6a676c437e26",
+                "market": "ou_2.5",
+                "price": 1.7,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-28T05:28",
+                      "2026-10-28T05:28"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      null,
+                      null
+                    ],
+                    "odds": [
+                      1.7,
+                      2.1
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 8,
+                  "row_sha256": "033986c1b2c985b91cbd3e122662757c621b1c18d2a7762aee7244ce31324346"
+                },
+                "raw_kickoff": "16:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-30T15:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Spartak Varna",
+                      "csv_data_row": 4194,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "d5d5ad7c9f1a7e2966dd682c52da0041896c5496ba8b65ca47d4847340e0a9f8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "CSKA 1948 Sofia",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T15:00:00+00:00",
+                      "league": "First League",
+                      "observed_at_utc": "2026-10-29T22:02:36+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "4513e41393217be15344e72d55da9f71ad0f9d28725a1ce96282a99a6f085334",
+                      "schedule_row": {
+                        "away": "Spartak Varna",
+                        "captured_at": "2026-10-29T22:02:36+00:00",
+                        "country": "Bulgaria",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "CSKA 1948 Sofia",
+                        "hs": "",
+                        "kickoff": "2026-10-30T15:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "First League",
+                        "odd1": "1.44",
+                        "odd2": "7.5",
+                        "odd_gg": "1.83",
+                        "odd_ng": "1.83",
+                        "odd_o15": "1.2",
+                        "odd_o25": "1.7",
+                        "odd_o35": "2.62",
+                        "odd_u15": "4.33",
+                        "odd_u25": "2.1",
+                        "odd_u35": "1.44",
+                        "oddx": "4.2",
+                        "p1": "65.0907040135351",
+                        "p2": "12.52937306137795",
+                        "p_gg": "50.0",
+                        "p_ng": "50.0",
+                        "p_o15": "78.30018083182641",
+                        "p_o25": "55.26315789473685",
+                        "p_o35": "35.4679802955665",
+                        "px": "22.37992292508694",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "15:00"
+                      },
+                      "source": "scoutingstats"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-10-30",
+                "CSKA 1948 Sofia",
+                "Spartak Varna"
+              ],
+              "prob": 0.6621,
+              "cohort_evidence": {
+                "rate": 0.6621,
+                "n": 953,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-30",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 631,
+                "cohort_lower_bound": 0.6314923053193622,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "home",
+                  "league": "First League",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.7,
+                  "captured_at": "2026-10-30T01:12:54.422221+00:00",
+                  "decision_at": "2026-10-30T09:13:28+02:00",
+                  "kickoff": "2026-10-30T15:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.5716806903463594,
+              "ml_model_key": "4c83c1c533e8435e261cc841c9ae549c1beeccc60282c3c0075264cd61d78f28",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.7116508347155293,
+              "floor_basis": "market",
+              "league": "First League",
+              "shadow": false,
+              "price_kickoff": "2026-10-30T15:00:00+00:00"
+            }
+          ]
+        },
+        {
+          "odds": 2.62,
+          "won": false,
+          "stake_pct": 2.3264,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Larne vs Portadown",
+              "pick": "over",
+              "odds": 1.54,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "Stake.com",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-30T01:10:18.017574+00:00",
+              "price_provenance": {
+                "away": "Portadown",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-10-30T01:10:18.017574+00:00",
+                "data_dt": [
+                  30,
+                  10,
+                  2026,
+                  20,
+                  45
+                ],
+                "decision_cutoff_utc": "2026-10-30T07:00:00+00:00",
+                "decision_day": "2026-10-30",
+                "home": "Larne",
+                "kickoff_utc": "2026-10-30T19:45:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-30.json",
+                "ledger_sha256": "d82be1eed17359247c98cf3624cc3ca831af5a99722806a35b7c6a676c437e26",
+                "market": "ou_2.5",
+                "price": 1.54,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1103",
+                    "created": [
+                      "2026-10-29T10:36",
+                      "2026-10-29T10:36"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      null,
+                      null
+                    ],
+                    "odds": [
+                      1.54,
+                      2.27
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 3,
+                  "row_sha256": "33312219357bb3cafb7453996ac440456222bc6589405b812ab20ecf38800779"
+                },
+                "raw_kickoff": "20:45",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-30T19:45:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Portadown",
+                      "csv_data_row": 4237,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "d5d5ad7c9f1a7e2966dd682c52da0041896c5496ba8b65ca47d4847340e0a9f8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Larne",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T19:45:00+00:00",
+                      "league": "Premiership",
+                      "observed_at_utc": "2026-10-29T22:02:36+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "cb67a24ef5b21b3d5cbe5607549968dc203f1d78a2a35f3ff7bbcc4c44a6adc6",
+                      "schedule_row": {
+                        "away": "Portadown",
+                        "captured_at": "2026-10-29T22:02:36+00:00",
+                        "country": "Northern Ireland",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Larne",
+                        "hs": "",
+                        "kickoff": "2026-10-30T19:45:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Premiership",
+                        "odd1": "1.27",
+                        "odd2": "7.5",
+                        "odd_gg": "2.0",
+                        "odd_ng": "1.72",
+                        "odd_o15": "1.16",
+                        "odd_o25": "1.53",
+                        "odd_o35": "2.25",
+                        "odd_u15": "4.5",
+                        "odd_u25": "2.37",
+                        "odd_u35": "1.57",
+                        "oddx": "5.5",
+                        "p1": "71.41950113378685",
+                        "p2": "12.090702947845806",
+                        "p_gg": "46.23655913978495",
+                        "p_ng": "53.76344086021506",
+                        "p_o15": "79.5053003533569",
+                        "p_o25": "60.769230769230774",
+                        "p_o35": "41.09947643979058",
+                        "px": "16.48979591836735",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "19:45"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Portadown",
+                      "csv_data_row": 16611,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "324975ec8bce259ede5ae306bebb6e6a3daea4e5fa73f0cc30c71e1434de6106",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Larne",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T19:45:00+00:00",
+                      "league": "Northern Ireland: Premiership",
+                      "observed_at_utc": "2026-10-29T22:02:07+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "7607c4fda9479668e602589eed48e64fbc93e9a73dece306e4d52abf62f555c4",
+                      "schedule_row": {
+                        "away": "Portadown",
+                        "captured_at": "2026-10-29T22:02:07+00:00",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Larne",
+                        "hs": "",
+                        "index": "2.64",
+                        "kickoff": "2026-10-30T20:45:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Northern Ireland: Premiership",
+                        "p1": "66.0",
+                        "p2": "12.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "22.0",
+                        "schedule_history": "[{\"away\": \"Portadown\", \"captured_at\": \"2026-10-28T22:02:05+00:00\", \"date\": \"2026-10-30\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Larne\", \"kickoff\": \"2026-10-30T20:45:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Portadown",
+                      "csv_data_row": 16611,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "324975ec8bce259ede5ae306bebb6e6a3daea4e5fa73f0cc30c71e1434de6106",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Larne",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T19:45:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-10-28T22:02:05+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "26bc1514b1291737beb07846aaf047bc995573227caeaf66793f8ef7366c8c8d",
+                      "schedule_row": {
+                        "away": "Portadown",
+                        "captured_at": "2026-10-28T22:02:05+00:00",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Larne",
+                        "kickoff": "2026-10-30T20:45:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-10-30",
+                "Larne",
+                "Portadown"
+              ],
+              "prob": 0.6621,
+              "cohort_evidence": {
+                "rate": 0.6621,
+                "n": 953,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-30",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 631,
+                "cohort_lower_bound": 0.6314923053193622,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "home",
+                  "league": "Premiership",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.54,
+                  "captured_at": "2026-10-30T01:10:18.017574+00:00",
+                  "decision_at": "2026-10-30T09:13:28+02:00",
+                  "kickoff": "2026-10-30T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.5926006807550566,
+              "ml_model_key": "4c83c1c533e8435e261cc841c9ae549c1beeccc60282c3c0075264cd61d78f28",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.7116508347155293,
+              "floor_basis": "market",
+              "league": "Premiership",
+              "shadow": true,
+              "price_kickoff": "2026-10-30T19:45:00+00:00"
+            },
+            {
+              "match": "Ammanford vs Haverfordwest County",
+              "pick": "over",
+              "odds": 1.7,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "Stake.com",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-30T01:11:51.799641+00:00",
+              "price_provenance": {
+                "away": "Haverfordwest",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-10-30T01:11:51.799641+00:00",
+                "data_dt": [
+                  30,
+                  10,
+                  2026,
+                  20,
+                  45
+                ],
+                "decision_cutoff_utc": "2026-10-30T07:00:00+00:00",
+                "decision_day": "2026-10-30",
+                "home": "Ammanford",
+                "kickoff_utc": "2026-10-30T19:45:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-30.json",
+                "ledger_sha256": "d82be1eed17359247c98cf3624cc3ca831af5a99722806a35b7c6a676c437e26",
+                "market": "ou_2.5",
+                "price": 1.7,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1103",
+                    "created": [
+                      "2026-10-27T21:43",
+                      "2026-10-27T21:43"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      1.7,
+                      1.99
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 3,
+                  "row_sha256": "7a213f245597cc01838e5ec44ccd778d8fc4c691190e48547fd267f377316654"
+                },
+                "raw_kickoff": "20:45",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-30T19:45:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Haverfordwest County",
+                      "csv_data_row": 4183,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "d5d5ad7c9f1a7e2966dd682c52da0041896c5496ba8b65ca47d4847340e0a9f8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Ammanford",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T19:45:00+00:00",
+                      "league": "Premier League",
+                      "observed_at_utc": "2026-10-29T22:02:36+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "ce26b10a1a3007e3417815235a0776ad032ed472377f4360e9d1be12ab7e466d",
+                      "schedule_row": {
+                        "away": "Haverfordwest County",
+                        "captured_at": "2026-10-29T22:02:36+00:00",
+                        "country": "Wales",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Ammanford",
+                        "hs": "",
+                        "kickoff": "2026-10-30T19:45:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Premier League",
+                        "odd1": "7.0",
+                        "odd2": "1.33",
+                        "odd_gg": "2.1",
+                        "odd_ng": "1.66",
+                        "odd_o15": "1.22",
+                        "odd_o25": "1.72",
+                        "odd_o35": "2.75",
+                        "odd_u15": "4.0",
+                        "odd_u25": "2.07",
+                        "odd_u35": "1.4",
+                        "oddx": "4.75",
+                        "p1": "12.948532076839433",
+                        "p2": "67.97752808988764",
+                        "p_gg": "44.148936170212764",
+                        "p_ng": "55.851063829787236",
+                        "p_o15": "76.62835249042146",
+                        "p_o25": "54.61741424802111",
+                        "p_o35": "33.734939759036145",
+                        "px": "19.073939833272927",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "19:45"
+                      },
+                      "source": "scoutingstats"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-10-30",
+                "Ammanford",
+                "Haverfordwest County"
+              ],
+              "prob": 0.6455,
+              "cohort_evidence": {
+                "rate": 0.6455,
+                "n": 330,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-30",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 213,
+                "cohort_lower_bound": 0.5924382502996556,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "away",
+                  "league": "Premier League",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.7,
+                  "captured_at": "2026-10-30T01:11:51.799641+00:00",
+                  "decision_at": "2026-10-30T09:13:28+02:00",
+                  "kickoff": "2026-10-30T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.33236615917855294,
+              "ml_model_key": "1fbfb0973620a2989a53eced72e2bed1b5d023d2afbbf0a24da0f2a9cedb8b2e",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.7116508347155293,
+              "floor_basis": "market",
+              "league": "Premier League",
+              "shadow": true,
+              "price_kickoff": "2026-10-30T19:45:00+00:00"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 23.2643,
+      "close_pct": 17.0829
     }
   ]
 }

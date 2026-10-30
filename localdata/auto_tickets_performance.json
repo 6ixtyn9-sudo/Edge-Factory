@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-30T21:41:41",
+  "generated_at": "2026-10-31T00:51:03",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 313.152925,
-  "multiple": 3.13152925,
+  "bank_pct": 274.008825,
+  "multiple": 2.74008825,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 61,
+  "bet_days": 62,
   "accas": {
     "wins": 74,
-    "losses": 50
+    "losses": 51
   },
-  "open_slips": [
-    {
-      "date": "2026-10-30",
-      "staked_pct": 39.1441
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -1544,6 +1539,51 @@
       ],
       "bank_pct": 313.1529,
       "close_pct": 313.1528
+    },
+    {
+      "date": "2026-10-30",
+      "staked_pct": 39.1441,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.89,
+          "won": false,
+          "stake_pct": 39.1441,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Casa Pia vs Sporting CP",
+              "pick": "AWAY",
+              "odds": 1.31,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-30",
+                "Casa Pia",
+                "Sporting CP"
+              ]
+            },
+            {
+              "match": "Villarreal vs Espanyol",
+              "pick": "HOME",
+              "odds": 1.44,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-10-30",
+                "Villarreal",
+                "Espanyol"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 274.0088,
+      "close_pct": 274.0087
     }
   ]
 }
