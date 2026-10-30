@@ -894,14 +894,14 @@
           "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "cb00c85cf6cd1da0e25cd5bfbe9223628e3c73c0",
-            "event_sha": "cb00c85cf6cd1da0e25cd5bfbe9223628e3c73c0",
+            "checkout_head_at_capture": "b5543201074799aa5cb629aff3fefdce0d11eee3",
+            "event_sha": "b5543201074799aa5cb629aff3fefdce0d11eee3",
             "file_sha256": {
               "Config/verified_results.json": "13156c199bb5fb4ff35fc6ef0c5ac7afb0094dd2250c895f472142cfeeb9b21e",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "40983166928",
+            "run_id": "41000418747",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-10-30_decision.json.gz",
@@ -918,16 +918,16 @@
                         "cohort": 0.723,
                         "market": "match_under_45",
                         "match": "Crici\u00fama vs Ponte Preta",
-                        "model": 0.947445237918086,
+                        "model": 0.947445237232714,
                         "odds": 1.36,
                         "pick": "under",
                         "result": null
                       },
                       {
-                        "cohort": 0.6474,
+                        "cohort": 0.6455,
                         "market": "match_over_25",
                         "match": "Casa Pia vs Sporting CP",
-                        "model": 0.5502277380034266,
+                        "model": 0.5360913625146225,
                         "odds": 1.57,
                         "pick": "over",
                         "result": null
@@ -943,7 +943,7 @@
                         "cohort": 0.6621,
                         "market": "match_over_25",
                         "match": "CSKA 1948 Sofia vs Spartak Varna",
-                        "model": 0.5716806847045396,
+                        "model": 0.5716807099452559,
                         "odds": 1.7,
                         "pick": "over",
                         "result": null
@@ -952,7 +952,7 @@
                         "cohort": 0.6621,
                         "market": "match_over_25",
                         "match": "Villarreal vs Espanyol",
-                        "model": 0.7809529473115553,
+                        "model": 0.7809529610682514,
                         "odds": 1.5,
                         "pick": "over",
                         "result": null
@@ -968,16 +968,16 @@
                         "cohort": 0.6621,
                         "market": "match_over_25",
                         "match": "Larne vs Portadown",
-                        "model": 0.5926006759493118,
+                        "model": 0.5926006974536789,
                         "odds": 1.54,
                         "pick": "over",
                         "result": null
                       },
                       {
-                        "cohort": 0.6474,
+                        "cohort": 0.6455,
                         "market": "match_over_25",
                         "match": "Ammanford vs Haverfordwest County",
-                        "model": 0.3371225223355872,
+                        "model": 0.33236615925066015,
                         "odds": 1.7,
                         "pick": "over",
                         "result": null
@@ -1077,16 +1077,16 @@
                         "cohort": 0.723,
                         "market": "match_under_45",
                         "match": "Crici\u00fama vs Ponte Preta",
-                        "model": 0.947445237918086,
+                        "model": 0.947445237232714,
                         "odds": 1.36,
                         "pick": "under",
                         "result": null
                       },
                       {
-                        "cohort": 0.6474,
+                        "cohort": 0.6455,
                         "market": "match_over_25",
                         "match": "Casa Pia vs Sporting CP",
-                        "model": 0.5502277380034266,
+                        "model": 0.5360913625146225,
                         "odds": 1.57,
                         "pick": "over",
                         "result": null
@@ -1102,7 +1102,7 @@
                         "cohort": 0.6621,
                         "market": "match_over_25",
                         "match": "Villarreal vs Espanyol",
-                        "model": 0.7809529473115553,
+                        "model": 0.7809529610682514,
                         "odds": 1.5,
                         "pick": "over",
                         "result": null
@@ -1111,7 +1111,7 @@
                         "cohort": 0.6621,
                         "market": "match_over_25",
                         "match": "CSKA 1948 Sofia vs Spartak Varna",
-                        "model": 0.5716806847045396,
+                        "model": 0.5716807099452559,
                         "odds": 1.7,
                         "pick": "over",
                         "result": null
@@ -1127,16 +1127,16 @@
                         "cohort": 0.6621,
                         "market": "match_over_25",
                         "match": "Larne vs Portadown",
-                        "model": 0.5926006759493118,
+                        "model": 0.5926006974536789,
                         "odds": 1.54,
                         "pick": "over",
                         "result": null
                       },
                       {
-                        "cohort": 0.6474,
+                        "cohort": 0.6455,
                         "market": "match_over_25",
                         "match": "Ammanford vs Haverfordwest County",
-                        "model": 0.3371225223355872,
+                        "model": 0.33236615925066015,
                         "odds": 1.7,
                         "pick": "over",
                         "result": null
@@ -1232,15 +1232,15 @@
             "card_identical": true,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 0,
-            "mean_absolute_disagreement": 0.1329600548873042,
+            "mean_absolute_disagreement": 0.13545544731176362,
             "model_below_cohort": 12,
             "models": {
-              "d35fb8e40e84025825a2832d33d89f7729e7691014c1a57b6bff173bb5c0ce82": {
+              "8232c7cd1a39cb90a300982f921705b9117514b447b0ccb6fd5c90de91c5f1eb": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
                     "0:0": 6,
-                    "0:1": 38,
+                    "0:1": 39,
                     "0:11": 1,
                     "0:2": 45,
                     "0:3": 27,
@@ -1277,15 +1277,15 @@
                     "5:2": 1
                   },
                   "classes": 36,
-                  "mean_rows_per_class": 9.13888888888889,
+                  "mean_rows_per_class": 9.166666666666666,
                   "min_class_count": 1,
-                  "n": 329,
+                  "n": 330,
                   "served_dimensions": 57,
                   "stored_coefficients": 2052
                 },
                 "schema": "enh_score_logit_v2"
               },
-              "f68ce7693c0f5cbd81ab0cc0e91d369bbd8b9e2dbc798d1cafcb03ea22fa0457": {
+              "92e25d9f031c56d6577839f5bb84bb6e5e7d7394848d65013d8846fa405c3f90": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -1356,7 +1356,7 @@
     },
     "main": {
       "counts": {
-        "MATCH": 2
+        "MATCH": 3
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -1476,6 +1476,31 @@
           "open_accas": 0,
           "settled_net": 30.07679999999999,
           "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 1,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 313.152925,
+          "committed_excluding_target": 0.0,
+          "date": "2026-10-30",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "b5543201074799aa5cb629aff3fefdce0d11eee3",
+            "event_sha": "b5543201074799aa5cb629aff3fefdce0d11eee3",
+            "file_sha256": {
+              "Config/verified_results.json": "13156c199bb5fb4ff35fc6ef0c5ac7afb0094dd2250c895f472142cfeeb9b21e",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
+            },
+            "run_id": "41000418747",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-10-30_decision.json.gz",
+          "free_bank": 313.152925,
+          "ledger": "NOT_COMMITTED",
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],
