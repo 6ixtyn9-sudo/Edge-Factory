@@ -1363,14 +1363,14 @@
           "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "80049e77001bc937014e8911203b5a4adc0a796d",
-            "event_sha": "80049e77001bc937014e8911203b5a4adc0a796d",
+            "checkout_head_at_capture": "c5dcf8b61bc51cc39a81099e69e05ed59f2553e5",
+            "event_sha": "c5dcf8b61bc51cc39a81099e69e05ed59f2553e5",
             "file_sha256": {
               "Config/verified_results.json": "13156c199bb5fb4ff35fc6ef0c5ac7afb0094dd2250c895f472142cfeeb9b21e",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "41135073982",
+            "run_id": "41153125476",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-10-31_decision.json.gz",
@@ -1384,19 +1384,19 @@
                   {
                     "legs": [
                       {
-                        "cohort": 0.6584,
+                        "cohort": 0.6587,
                         "market": "match_over_25",
                         "match": "Porto vs Estoril",
-                        "model": 0.6479289932333104,
+                        "model": 0.6493789541487028,
                         "odds": 1.62,
                         "pick": "over",
                         "result": null
                       },
                       {
-                        "cohort": 0.6584,
+                        "cohort": 0.6587,
                         "market": "match_over_25",
                         "match": "Middlesbrough vs Charlton Athletic",
-                        "model": 0.5587360244022038,
+                        "model": 0.5567971854471427,
                         "odds": 1.36,
                         "pick": "over",
                         "result": null
@@ -1449,19 +1449,19 @@
                   {
                     "legs": [
                       {
-                        "cohort": 0.6584,
+                        "cohort": 0.6587,
                         "market": "match_over_25",
                         "match": "Porto vs Estoril",
-                        "model": 0.6479289932333104,
+                        "model": 0.6493789541487028,
                         "odds": 1.62,
                         "pick": "over",
                         "result": null
                       },
                       {
-                        "cohort": 0.6584,
+                        "cohort": 0.6587,
                         "market": "match_over_25",
                         "match": "Middlesbrough vs Charlton Athletic",
-                        "model": 0.5587360244022038,
+                        "model": 0.5567971854471427,
                         "odds": 1.36,
                         "pick": "over",
                         "result": null
@@ -1513,10 +1513,10 @@
             "card_identical": true,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 0,
-            "mean_absolute_disagreement": 0.0327692489744662,
+            "mean_absolute_disagreement": 0.03246648802668714,
             "model_below_cohort": 12,
             "models": {
-              "bf2b85d0b15b7f1a7fcc02a210da14d419e04f64ec08b051148a08edc90d8e03": {
+              "59ae5c092611a53dcd14bde221f4ecfb73044730f8d63f24b8677b13cda7a4b9": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -1524,13 +1524,13 @@
                     "0:1": 15,
                     "0:2": 10,
                     "0:3": 2,
-                    "1:0": 108,
+                    "1:0": 107,
                     "1:1": 61,
                     "1:2": 18,
                     "1:3": 6,
                     "1:4": 1,
                     "1:5": 1,
-                    "2:0": 115,
+                    "2:0": 116,
                     "2:1": 92,
                     "2:2": 43,
                     "2:3": 11,
@@ -1550,7 +1550,7 @@
                     "5:2": 11,
                     "5:3": 5,
                     "6:0": 13,
-                    "6:1": 10,
+                    "6:1": 11,
                     "6:2": 8,
                     "7:0": 5,
                     "7:1": 2,
@@ -1561,9 +1561,9 @@
                     "9:1": 1
                   },
                   "classes": 39,
-                  "mean_rows_per_class": 24.692307692307693,
+                  "mean_rows_per_class": 24.71794871794872,
                   "min_class_count": 1,
-                  "n": 963,
+                  "n": 964,
                   "served_dimensions": 57,
                   "stored_coefficients": 2223
                 },
