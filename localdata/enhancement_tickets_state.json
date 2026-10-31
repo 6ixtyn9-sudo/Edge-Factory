@@ -4323,7 +4323,7 @@
                   "source": "theoddsapi",
                   "price": 1.62,
                   "captured_at": "2026-10-30T22:20:26.689148+00:00",
-                  "decision_at": "2026-10-31T06:17:52+02:00",
+                  "decision_at": "2026-10-31T09:17:49+02:00",
                   "kickoff": "2026-10-31T20:30:00+00:00"
                 }
               },
@@ -4372,7 +4372,7 @@
                   "source": "theoddsapi",
                   "price": 1.36,
                   "captured_at": "2026-10-30T22:20:26.948981+00:00",
-                  "decision_at": "2026-10-31T06:17:52+02:00",
+                  "decision_at": "2026-10-31T09:17:49+02:00",
                   "kickoff": "2026-10-31T15:00:00+00:00"
                 }
               },
@@ -4397,7 +4397,12 @@
             }
           ],
           "odds": 2.2,
-          "stake_pct": 2.6172
+          "stake_pct": 2.6172,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 2.6172
@@ -4486,6 +4491,11 @@
     },
     "2026-10-30": {
       "frozen_at": "2026-10-30T09:58:45+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-10-31": {
+      "frozen_at": "2026-10-31T10:10:27+02:00",
       "final": true,
       "lock_source": "state"
     }

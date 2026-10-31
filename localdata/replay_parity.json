@@ -1360,22 +1360,23 @@
           "bank_total": 23.264270999999997,
           "committed_excluding_target": 2.3263999999999996,
           "date": "2026-10-31",
-          "decision_status": "draft",
+          "decision_status": "frozen",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "9e4707324c1765442c9dafc131d8471764cb1e2f",
-            "event_sha": "9e4707324c1765442c9dafc131d8471764cb1e2f",
+            "checkout_head_at_capture": "73037ad05882805312f8d71ce7098edc7b6f1a56",
+            "event_sha": "73037ad05882805312f8d71ce7098edc7b6f1a56",
             "file_sha256": {
               "Config/verified_results.json": "13156c199bb5fb4ff35fc6ef0c5ac7afb0094dd2250c895f472142cfeeb9b21e",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "41166705569",
+            "run_id": "41178819175",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-10-31_decision.json.gz",
           "free_bank": 20.937870999999998,
-          "ledger": "NOT_COMMITTED",
+          "freeze_time": "MATCH",
+          "ledger": "MATCH",
           "ml_comparison": {
             "added_to_ml_on": 0,
             "arms": {
@@ -1432,7 +1433,7 @@
                   ]
                 ],
                 "mean_acca_odds": 2.2,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "outcome_status": "INCOMPLETE_OUTCOMES",
                 "resolved_legs": 0,
                 "returned": null,
                 "selected_legs": 2,
@@ -1497,7 +1498,7 @@
                   ]
                 ],
                 "mean_acca_odds": 2.2,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "outcome_status": "INCOMPLETE_OUTCOMES",
                 "resolved_legs": 0,
                 "returned": null,
                 "selected_legs": 2,
@@ -1577,9 +1578,10 @@
               "enh_score_logit_v2": 12
             },
             "scored_legs": 12,
-            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+            "status": "INCOMPLETE_OUTCOMES"
           },
-          "settlement": "UNAVAILABLE",
+          "open_accas": 1,
+          "settlement": "PENDING",
           "status": "MATCH"
         }
       ],
@@ -1743,23 +1745,25 @@
           "bank_total": 274.008825,
           "committed_excluding_target": 0.0,
           "date": "2026-10-31",
-          "decision_status": "draft",
+          "decision_status": "frozen",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "9e4707324c1765442c9dafc131d8471764cb1e2f",
-            "event_sha": "9e4707324c1765442c9dafc131d8471764cb1e2f",
+            "checkout_head_at_capture": "73037ad05882805312f8d71ce7098edc7b6f1a56",
+            "event_sha": "73037ad05882805312f8d71ce7098edc7b6f1a56",
             "file_sha256": {
               "Config/verified_results.json": "13156c199bb5fb4ff35fc6ef0c5ac7afb0094dd2250c895f472142cfeeb9b21e",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "41166705569",
+            "run_id": "41178819175",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-10-31_decision.json.gz",
           "free_bank": 274.008825,
-          "ledger": "NOT_COMMITTED",
-          "settlement": "UNAVAILABLE",
+          "freeze_time": "MATCH",
+          "ledger": "MATCH",
+          "open_accas": 2,
+          "settlement": "PENDING",
           "status": "MATCH"
         }
       ],
