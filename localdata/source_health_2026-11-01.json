@@ -157,13 +157,8 @@
       "status": "absent"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -175,18 +170,18 @@
       },
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 24756
       },
       "pa_matched": 0,
-      "pa_raw": 1387,
+      "pa_raw": 24756,
       "pa_scored": 24756,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {

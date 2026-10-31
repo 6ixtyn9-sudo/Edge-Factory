@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 274.008825,
   "cycle_base": 203.9865280000001,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-10-31",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Acassuso vs Club Ferro Carril Oeste",
+              "pick": "AWAY",
+              "prob": 0.7537072856221791,
+              "odds": 1.3268,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-10-31",
+                "Acassuso",
+                "Club Ferro Carril Oeste"
+              ]
+            },
+            {
+              "match": "FC Bayern M\u00fcnchen vs Borussia Dortmund",
+              "pick": "HOME",
+              "prob": 0.7094760733875544,
+              "odds": 1.3401,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-10-31",
+                "FC Bayern M\u00fcnchen",
+                "Borussia Dortmund"
+              ]
+            }
+          ],
+          "odds": 1.78,
+          "stake_pct": 34.2511
+        },
+        {
+          "legs": [
+            {
+              "match": "Real Betis vs M\u00e1laga",
+              "pick": "HOME",
+              "prob": 0.7242255908106582,
+              "odds": 1.3436,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-10-31",
+                "Real Betis",
+                "M\u00e1laga"
+              ]
+            },
+            {
+              "match": "Godoy Cruz vs Almirante Brown",
+              "pick": "HOME",
+              "prob": 0.713094474479978,
+              "odds": 1.4149,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-10-31",
+                "Godoy Cruz",
+                "Almirante Brown"
+              ]
+            }
+          ],
+          "odds": 1.9,
+          "stake_pct": 34.2511
+        }
+      ],
+      "staked_pct": 68.5022
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
