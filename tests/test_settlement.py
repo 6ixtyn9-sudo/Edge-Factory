@@ -138,3 +138,27 @@ def test_python_and_raw_sql_agree_on_regulation_score(row):
         con.execute('INSERT INTO donor VALUES (?,?,?,?,?,?)', [row.get(f) for f in fields])
         pair = con.execute('SELECT '+','.join(regulation_sql_goals(set(fields)))+' FROM donor').fetchone()
         assert (None if pair == (None,None) else pair) == regulation_score(row)
+
+
+@pytest.mark.parametrize('label', ['Postp.', 'Postponed', 'Cancelled', 'Abandoned'])
+def test_bettingclosed_preserves_terminal_event_not_placeholder_score(monkeypatch, label):
+    from edgefactory.sources import bettingclosed as bc
+    html = f'''<tr class="rowincontri"><td><a href="/prediction/1/cup-club">Cup Club - Away Club <span></span></a></td>
+    <td class="resultMt">0-0 <span>{label}</span></td><td class="predMt">2</td></tr>'''
+    monkeypatch.setattr(bc, 'get', lambda url: html)
+    row = bc.fetch_day('2026-10-28')[0]
+    assert row['status'] == terminal_event_disposition(label)
+    assert row['hs'] is row['gs'] is None
+    assert regulation_score(row) is None
+
+
+def test_bettingclosed_later_market_cannot_resurrect_postponed_placeholder(monkeypatch):
+    from edgefactory.sources import bettingclosed as bc
+    def html(cell):
+        return f'''<tr class="rowincontri"><td><a href="/prediction/1/cup-club">Cup Club - Away Club <span></span></a></td>
+        <td class="resultMt">{cell}</td><td class="predMt">2</td></tr>'''
+    pages = iter([html('Postponed'), html('0-0'), html('0-0')])
+    monkeypatch.setattr(bc, 'get', lambda url: next(pages))
+    row = bc.fetch_day('2026-10-28')[0]
+    assert row['status'] == 'POSTPONED'
+    assert row['hs'] is row['gs'] is None

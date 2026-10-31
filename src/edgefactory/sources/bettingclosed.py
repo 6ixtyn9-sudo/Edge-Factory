@@ -61,7 +61,12 @@ def fetch_day(date: str) -> list[dict]:
             result_html = html_module.unescape(res.group(1)) if res else ""
             result_text = re.sub(r"<[^>]+>", " ", result_html)
             hs, gs = _parse_score(result_text)
-            status = result_period_status(result_html)
+            from edgefactory.settlement import terminal_event_disposition
+            status = terminal_event_disposition(result_html) or result_period_status(result_html)
+            # A postponed/cancelled result cell may contain a 0-0 placeholder.
+            # Preserve the event fact, never export that placeholder as a score.
+            if terminal_event_disposition(status):
+                hs, gs = None, None
             pred = _PRED.search(chunk) or _PRED_FREE.search(chunk)
             odd = _ODD.search(chunk)
             tip = _ODDS_TIP.search(chunk)
@@ -69,9 +74,11 @@ def fetch_day(date: str) -> list[dict]:
                 "date": date, "home": home, "away": away,
                 "hs": hs, "gs": gs, "status": status,
             })
-            if status:
+            if status and not terminal_event_disposition(row["status"]):
                 row["status"] = status
-            if row["hs"] is None and hs is not None:
+            if terminal_event_disposition(row["status"]):
+                row["hs"], row["gs"] = None, None
+            elif row["hs"] is None and hs is not None:
                 row["hs"], row["gs"] = hs, gs
             if tip and "odd1" not in row:
                 row.update(odd1=_f(tip.group(1)), oddx=_f(tip.group(2)),

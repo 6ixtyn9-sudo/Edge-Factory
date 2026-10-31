@@ -146,3 +146,35 @@ def test_export_preserves_explicit_90_minute_score_and_period_metadata():
     assert (rows[0]['hs'], rows[0]['gs'], rows[0]['outcome']) == (1, 1, 'draw')
     assert rows[0]['status'] == 'AET'
     assert export_mod.merge_overlay_rows(rows, [], '2026-10-01')[0] == rows
+
+
+def test_bettingclosed_postponement_survives_refresh_warehouse_export_and_audit(tmp_path, monkeypatch):
+    """Existing path end-to-end: no score or financial void is fabricated."""
+    from edgefactory import warehouse
+    from edgefactory.sources import bettingclosed as bc
+    from edgefactory.util import norm_team
+    from scripts import refresh_result_sources as refresh
+    from scripts import audit_recent_picks as audit
+
+    day = '2026-10-28'
+    html = '''<tr class="rowincontri"><td><a href="/prediction/1/cup-club">Navalcarnero - Real Betis <span></span></a></td>
+    <td class="resultMt"><abbr title="Postponed">Postp.</abbr></td><td class="predMt">2</td></tr>'''
+    monkeypatch.setattr(bc, 'get', lambda url: html)
+    receipt = refresh.refresh_source('bettingclosed', day, localdata=tmp_path)
+    assert receipt['terminal_status'] == 1 and receipt['scored'] == 0
+    monkeypatch.setattr(warehouse, 'LOCALDATA', tmp_path)
+    con = warehouse.connect(str(tmp_path / "warehouse.duckdb"))
+    assert con.execute('SELECT count(*) FROM bettingclosed_settled').fetchone()[0] == 0
+    dispositions = export_mod.build_overlay_dispositions(con, day)
+    assert len(dispositions) == 1
+    assert dispositions[0]['disposition'] == 'POSTPONED'
+    assert dispositions[0]['src'] == 'source_status:bettingclosed'
+    con.close()
+    # The audit consumes the same raw source status, including when the shared
+    # overlay or reviewed config is not yet present on another machine.
+    monkeypatch.setattr(audit, 'LOCALDATA', tmp_path)
+    monkeypatch.setattr(audit, 'ROOT', tmp_path)
+    monkeypatch.setattr(audit, 'load_verified_event_dispositions', lambda: [])
+    index = audit.load_event_disposition_index(tmp_path / 'warehouse.duckdb')
+    entry = index[(day, norm_team('Navalcarnero'), norm_team('Real Betis'))]
+    assert entry['disposition'] == 'POSTPONED'
