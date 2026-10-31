@@ -86,10 +86,10 @@
       "wins": 45
     },
     "WATCHLIST_SUSPECT_PRICE": {
-      "hit_rate": 0.626506,
+      "hit_rate": 0.619048,
       "priced_picks": 10,
       "roi": -0.068,
-      "settled_picks": 83,
+      "settled_picks": 84,
       "wins": 52
     },
     "WATCHLIST_UNCORROBORATED_PRICE": {
@@ -113,10 +113,10 @@
   },
   "by_odds_match_method": {
     "alias_fuzzy": {
-      "hit_rate": 0.65812,
+      "hit_rate": 0.652542,
       "priced_picks": 23,
       "roi": -0.042609,
-      "settled_picks": 117,
+      "settled_picks": 118,
       "wins": 77
     },
     "alias_time": {
@@ -157,10 +157,10 @@
   },
   "by_odds_source": {
     "UNKNOWN": {
-      "hit_rate": 0.651515,
+      "hit_rate": 0.648241,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 198,
+      "settled_picks": 199,
       "wins": 129
     },
     "betexplorer_odds": {
@@ -257,10 +257,10 @@
       "wins": 11
     },
     "SUSPECT_ALIAS_FUZZY": {
-      "hit_rate": 0.65812,
+      "hit_rate": 0.652542,
       "priced_picks": 23,
       "roi": -0.042609,
-      "settled_picks": 117,
+      "settled_picks": 118,
       "wins": 77
     },
     "UNMATCHED": {
@@ -282,12 +282,12 @@
       "wins": 481
     },
     "alias_fuzzy": {
-      "avg_suspect_price": 1.567503,
-      "hit_rate": 0.65812,
+      "avg_suspect_price": 1.565658,
+      "hit_rate": 0.652542,
       "priced_picks": 23,
       "roi": -0.042609,
-      "settled_picks": 117,
-      "suspect_price_captures": 117,
+      "settled_picks": 118,
+      "suspect_price_captures": 118,
       "wins": 77
     },
     "scoutingstats_sole_source": {
@@ -509,10 +509,10 @@
       "wins": 5
     },
     "pfc_fdade2e70df4d4bb78a8cd6e": {
-      "hit_rate": 0.841463,
+      "hit_rate": 0.831325,
       "priced_picks": 59,
       "roi": 0.026124,
-      "settled_picks": 82,
+      "settled_picks": 83,
       "wins": 69
     },
     "unanimous[betclan+statarea+vitibet] avg_p>=65": {
@@ -1357,13 +1357,13 @@
   "late_additions_on_rewritten_ledgers": 105,
   "morning_baseline_rows": 933,
   "overall": {
-    "hit_rate": 0.66157,
+    "hit_rate": 0.660896,
     "priced_picks": 783,
     "roi": 0.016366,
-    "settled_picks": 981,
+    "settled_picks": 982,
     "wins": 649
   },
-  "pending_result_picks": 18,
+  "pending_result_picks": 17,
   "population_definitions": {
     "enhancement_hit_rate": "hits / settled recommended enhancements",
     "enhancement_priced_roi": "priced enhancement P&L / priced_n",
@@ -10495,10 +10495,10 @@
               "wins": 5
             },
             "SUSPECT_ALIAS_FUZZY": {
-              "hit_rate": 0.913043,
+              "hit_rate": 0.875,
               "priced_picks": 0,
               "roi": null,
-              "settled_picks": 23,
+              "settled_picks": 24,
               "wins": 21
             }
           },
@@ -10511,10 +10511,10 @@
               "wins": 43
             },
             "alias_fuzzy": {
-              "hit_rate": 0.913043,
+              "hit_rate": 0.875,
               "priced_picks": 0,
               "roi": null,
-              "settled_picks": 23,
+              "settled_picks": 24,
               "wins": 21
             },
             "scoutingstats_sole_source": {
@@ -10527,13 +10527,13 @@
           },
           "end": "2026-10-31",
           "first_observed_pick": "2026-10-25",
-          "hit_rate": 0.841463,
+          "hit_rate": 0.831325,
           "last_observed_pick": "2026-10-30",
           "missing_archive_dates": [],
           "priced_picks": 59,
-          "pricing_coverage": 0.7195121951219512,
+          "pricing_coverage": 0.7108433734939759,
           "roi": 0.026124,
-          "settled_picks": 82,
+          "settled_picks": 83,
           "start": "2026-10-02",
           "wins": 69
         },
@@ -10569,10 +10569,10 @@
               "wins": 5
             },
             "SUSPECT_ALIAS_FUZZY": {
-              "hit_rate": 0.913043,
+              "hit_rate": 0.875,
               "priced_picks": 0,
               "roi": null,
-              "settled_picks": 23,
+              "settled_picks": 24,
               "wins": 21
             }
           },
@@ -10585,10 +10585,10 @@
               "wins": 43
             },
             "alias_fuzzy": {
-              "hit_rate": 0.913043,
+              "hit_rate": 0.875,
               "priced_picks": 0,
               "roi": null,
-              "settled_picks": 23,
+              "settled_picks": 24,
               "wins": 21
             },
             "scoutingstats_sole_source": {
@@ -10601,13 +10601,13 @@
           },
           "end": "2026-10-31",
           "first_observed_pick": "2026-10-25",
-          "hit_rate": 0.841463,
+          "hit_rate": 0.831325,
           "last_observed_pick": "2026-10-30",
           "missing_archive_dates": [],
           "priced_picks": 59,
-          "pricing_coverage": 0.7195121951219512,
+          "pricing_coverage": 0.7108433734939759,
           "roi": 0.026124,
-          "settled_picks": 82,
+          "settled_picks": 83,
           "start": "2026-10-25",
           "wins": 69
         },
@@ -11381,11 +11381,11 @@
   "same_day_cutoff": "2026-10-31",
   "same_day_excluded": 31,
   "secondary_stats": {
-    "btts_total": 897,
-    "btts_wins": 479,
-    "over25_total": 897,
+    "btts_total": 898,
+    "btts_wins": 480,
+    "over25_total": 898,
     "over25_wins": 545,
-    "team_o15_total": 893,
+    "team_o15_total": 894,
     "team_o15_wins": 576
   },
   "settled_ledger": [
@@ -55701,6 +55701,35 @@
       "won": false
     },
     {
+      "avg_p": 66.11313868613139,
+      "date": "2026-10-30",
+      "gs": 1,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Tampa Bay Rowdies vs Miami FC II",
+      "notes_audit": [],
+      "odds": null,
+      "odds_match_method": "alias_fuzzy",
+      "odds_source": "UNKNOWN",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.196,
+        "away_o15_hit": true,
+        "btts_expected": 0.506,
+        "btts_hit": true,
+        "home_o15_expected": 0.75,
+        "home_o15_hit": false,
+        "over25_expected": 0.662,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SUSPECT_ALIAS_FUZZY",
+      "price_quarantine_reason": "alias_fuzzy",
+      "selection": "home",
+      "suspect_price": 1.3497,
+      "won": false
+    },
+    {
       "avg_p": 65.0907040135351,
       "date": "2026-10-30",
       "gs": 1,
@@ -55763,44 +55792,44 @@
   "start": "2026-10-02",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.179577,
-      "mae": 1.493062,
-      "mean_actual": 3.179153,
-      "mean_promised": 3.35873,
-      "n": 921
+      "bias": -0.180976,
+      "mae": 1.493037,
+      "mean_actual": 3.177874,
+      "mean_promised": 3.35885,
+      "n": 922
     },
     "by_metric": {
       "away_o15": {
-        "brier": 0.201112,
-        "delta": 0.007216,
+        "brier": 0.200936,
+        "delta": 0.006996,
         "hits": 313,
-        "mean_promised": 0.332632,
-        "n": 921,
-        "realized": 0.339848
+        "mean_promised": 0.332484,
+        "n": 922,
+        "realized": 0.339479
       },
       "btts": {
-        "brier": 0.255123,
-        "delta": 0.057163,
-        "hits": 492,
-        "mean_promised": 0.477039,
-        "n": 921,
-        "realized": 0.534202
+        "brier": 0.255111,
+        "delta": 0.057637,
+        "hits": 493,
+        "mean_promised": 0.47707,
+        "n": 922,
+        "realized": 0.534707
       },
       "home_o15": {
-        "brier": 0.226087,
-        "delta": -0.053891,
+        "brier": 0.226452,
+        "delta": -0.054646,
         "hits": 489,
-        "mean_promised": 0.584836,
-        "n": 921,
-        "realized": 0.530945
+        "mean_promised": 0.585015,
+        "n": 922,
+        "realized": 0.530369
       },
       "over25": {
-        "brier": 0.241898,
-        "delta": -0.045231,
+        "brier": 0.242111,
+        "delta": -0.0459,
         "hits": 558,
-        "mean_promised": 0.651094,
-        "n": 921,
-        "realized": 0.605863
+        "mean_promised": 0.651106,
+        "n": 922,
+        "realized": 0.605206
       }
     },
     "definition": "each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) \u2014 calibration, not a direction call; the retired exact-score field remains in machine history only",
@@ -55815,13 +55844,13 @@
         "realized": 0.222222
       },
       {
-        "brier": 0.141501,
+        "brier": 0.141211,
         "bucket": "0.1-0.2",
-        "delta": 0.044209,
+        "delta": 0.043532,
         "hits": 59,
-        "mean_promised": 0.122458,
-        "n": 354,
-        "realized": 0.166667
+        "mean_promised": 0.122665,
+        "n": 355,
+        "realized": 0.166197
       },
       {
         "brier": 0.19875,
@@ -55853,29 +55882,29 @@
       {
         "brier": 0.243973,
         "bucket": "0.5-0.6",
-        "delta": 0.022753,
-        "hits": 505,
-        "mean_promised": 0.557707,
-        "n": 870,
-        "realized": 0.58046
+        "delta": 0.023294,
+        "hits": 506,
+        "mean_promised": 0.557648,
+        "n": 871,
+        "realized": 0.580941
       },
       {
-        "brier": 0.246769,
+        "brier": 0.247036,
         "bucket": "0.6-0.7",
-        "delta": -0.059457,
+        "delta": -0.060297,
         "hits": 422,
-        "mean_promised": 0.648842,
-        "n": 716,
-        "realized": 0.589385
+        "mean_promised": 0.648861,
+        "n": 717,
+        "realized": 0.588563
       },
       {
-        "brier": 0.208181,
+        "brier": 0.20967,
         "bucket": "0.7-0.8",
-        "delta": -0.040713,
+        "delta": -0.043693,
         "hits": 168,
-        "mean_promised": 0.749574,
-        "n": 237,
-        "realized": 0.708861
+        "mean_promised": 0.749576,
+        "n": 238,
+        "realized": 0.705882
       },
       {
         "brier": 0.276859,
@@ -56205,28 +56234,9 @@
       "pick": "away",
       "reason": "pending_or_unmatched_result",
       "rule": "pfc_fdade2e70df4d4bb78a8cd6e"
-    },
-    {
-      "away": "Miami FC II",
-      "away_key_candidates": [
-        "miami",
-        "miamiiib"
-      ],
-      "bucket": "WATCHLIST_SUSPECT_PRICE",
-      "date": "2026-10-30",
-      "home": "Tampa Bay Rowdies",
-      "home_key_candidates": [
-        "tampabayr"
-      ],
-      "league": "USL Championship",
-      "match": "Tampa Bay Rowdies vs Miami FC II",
-      "odds": null,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_fdade2e70df4d4bb78a8cd6e"
     }
   ],
-  "unmatched_result_picks": 18,
+  "unmatched_result_picks": 17,
   "unsafe_regular_ledger_dates": [
     "2026-10-02",
     "2026-10-03",
@@ -56584,11 +56594,11 @@
         "z_vs_implied": -0.424
       },
       "WATCHLIST_SUSPECT_PRICE|unpriced|SUSPECT_ALIAS_FUZZY": {
-        "hit_rate": 0.630137,
+        "hit_rate": 0.621622,
         "implied_hit_rate": null,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 73,
+        "settled_picks": 74,
         "wins": 46,
         "z_vs_implied": null
       },
