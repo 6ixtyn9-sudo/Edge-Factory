@@ -54,7 +54,7 @@ SETTLED_SOURCES = [
 ]
 
 # Same raw status tables as audit_recent_picks.load_event_disposition_index.
-STATUS_SOURCES = ("forebet", "vitibet", "scoutingstats")
+STATUS_SOURCES = ("forebet", "vitibet", "scoutingstats", "bettingclosed")
 
 
 def build_overlay_rows(con, window_start: str, *, period_holds=None) -> list[dict]:
