@@ -100,8 +100,10 @@ SELECTION_KEYS = {"floor", "rank", "pairing", "max_accas", "min_accas",
                   # owning any selection logic of its own.
                   "rank_caps"}
 SIZING_KEYS = {"stake_frac", "stake_mode", "stake_per_acca", "weights"}
-ENGINE_KEYS = SELECTION_KEYS | SIZING_KEYS
-FLOAT_KEYS = {"floor", "volume_min", "stake_frac", "stake_per_acca", "min_prob"}
+PLAN_KEYS = {"min_prob", "addon_floor", "addon_ceiling", "addon_min_prob", "addon_rank", "model_min_prob"}
+ENGINE_KEYS = SELECTION_KEYS | SIZING_KEYS | PLAN_KEYS
+FLOAT_KEYS = {"floor", "volume_min", "stake_frac", "stake_per_acca", "min_prob",
+              "addon_floor", "addon_ceiling", "addon_min_prob"}
 INT_KEYS = {"max_accas", "min_accas", "legs_per_acca", "volume_pool", "saturated_accas"}
 BOOL_KEYS = {"fallback"}
 
@@ -906,7 +908,11 @@ def enh_day_plans(records, floors, *, stake_frac=None, stake_mode=None,
     ``derived=True`` gates each day by the floors derived from the records
     before it (slice-aware), instead of a static table.
 
-    ``ml_scores`` (from :func:`enh_ml_coverage`) supplies the LIVE ML ordering
+    This descriptive archive path retains its historical no-model-floor
+    recipe; current policy parity is checked through retained decision
+    contexts, including their captured model_min_prob, not these defaults.
+
+    ``ml_scores`` (from :func:`enh_ml_coverage`) supplies explicit ML ordering
     input. When a leg has a score it is attached as ``ml_rank_probability`` and
     ``select_accas``' ML branch orders it ahead of the unscored cohort group --
     the same rule the shipped card uses. Passing None replays the pre-ML lane
@@ -972,7 +978,8 @@ def enh_day_plans(records, floors, *, stake_frac=None, stake_mode=None,
                            # select_accas' ML ordering lives behind
                            # enhancements=True; an ML arm must engage it or the
                            # arm would be a silent no-op.
-                           enhancements=supported or ml_scores is not None)
+                           enhancements=supported or ml_scores is not None,
+                           ml_enabled=ml_scores is not None)
         if not plan:
             continue                                   # MIN_ACCAS: NO BET
         out[day] = (plan, pool)
@@ -3780,12 +3787,12 @@ def _comparison_leg_key(leg):
             str(leg.get("pick") or "").lower())
 
 
-def enh_decision_comparison(context, prepared, *, history=(), allow_outcomes=False):
+def enh_decision_comparison(context, prepared, *, history=(), allow_outcomes=False, settled=None):
     """Same captured pool/policy, flipped ordering. Read-only, not a causal trial.
 
-    No result resolver or guessed independent joint probability. Only exact
-    known ledger outcomes can grade counterfactual legs; an unselected market
-    with no retained outcome is unavailable, not a loss or zero return.
+    Retained ledger outcomes stay authoritative. Unselected markets use the
+    existing shared score resolver, when supplied, never a new scoring rule.
+    Missing/conflicting scores stay unavailable; no timer-generated voids.
     """
     import copy
     observations = defaultdict(set)
@@ -3828,7 +3835,25 @@ def enh_decision_comparison(context, prepared, *, history=(), allow_outcomes=Fal
         payouts = []
         details = []
         for acca in plan:
-            outcomes = [known.get(_comparison_leg_key(l)) for l in acca["legs"]]
+            outcomes, sources, reasons = [], [], []
+            for leg in acca["legs"]:
+                key = _comparison_leg_key(leg)
+                outcome = known.get(key)
+                source = "retained_ledger" if outcome is not None else None
+                ledger_conflict = key in observations and observations[key] != {None} and outcome is None
+                reason = "ledger_outcome_conflict" if ledger_conflict else None
+                if (allow_outcomes and outcome is None and not ledger_conflict
+                        and settled is not None):
+                    outcome = at.enhancement_leg_result(
+                        leg, context["date"], settled.scores, settled.entries)
+                    if outcome in ("win", "loss"):
+                        source = "shared_settlement_facts"
+                    else:
+                        reason = "result_identity_conflict" if outcome == "conflict" else "missing_final_score"
+                        outcome = None
+                outcomes.append(outcome)
+                sources.append(source)
+                reasons.append(None if outcome is not None else reason or "no_retained_outcome")
             graded = copy.deepcopy(acca)
             for leg, outcome in zip(graded["legs"], outcomes):
                 leg["result"] = outcome
@@ -3841,13 +3866,14 @@ def enh_decision_comparison(context, prepared, *, history=(), allow_outcomes=Fal
             details.append(dict(odds=acca["odds"], stake=acca["stake_pct"],
                 legs=[dict(match=l["match"], market=l.get("market"), pick=l.get("pick"),
                            odds=l["odds"], cohort=at.finite_probability(l.get("prob")),
-                           model=at.finite_probability(l.get("ml_rank_probability")), result=r)
-                      for l,r in zip(acca["legs"], outcomes)], returned=returned))
+                           model=at.finite_probability(l.get("ml_rank_probability")), result=r,
+                           outcome_source=source, unresolved_reason=reason)
+                      for l,r,source,reason in zip(acca["legs"], outcomes, sources, reasons)], returned=returned))
         complete = bool(plan) and all(p is not None for p in payouts)
         result["arms"][label] = dict(accas=details, card_identity=at.ticket_card_identity(plan),
             total_stake=sum(a["stake_pct"] for a in plan),
             mean_acca_odds=sum(a["odds"] for a in plan)/len(plan) if plan else None,
-            resolved_legs=sum(_comparison_leg_key(l) in known for l in legs), selected_legs=len(legs),
+            resolved_legs=sum(l["result"] is not None for a in details for l in a["legs"]), selected_legs=len(legs),
             returned=sum(payouts) if complete else None,
             outcome_status="RESOLVED" if complete else "INCOMPLETE_OUTCOMES" if allow_outcomes else "UNSETTLED_OR_UNPROVEN",
             selector_trace=trace)
@@ -3903,14 +3929,16 @@ def decision_parity_report(root=None):
     """Read-only current-code replay of actual decision receipts, both lanes.
 
     Admission outputs are observed live facts, not reconstructed from today's
-    registries. Missing legacy receipts remain missing; no result resolver,
-    state repair, policy refresh, provider call, training or settlement runs.
+    registries. Missing legacy receipts remain missing. Shared saved result
+    facts may grade counterfactuals; no state repair, policy refresh, provider
+    call, training or financial settlement runs.
     """
     base = (root or at.ROOT) / "localdata"
     report = dict(schema=1, boundary="execution_safe_admission_to_ticket",
                   caveat="Replays captured admitted candidates and policy outputs, not provider acquisition or cohort training. Hashes detect corruption, not authenticity.",
                   ledger_comparison="fixture/market/selection/book/source/price/pairing/stake; unknown legacy identity is not invented",
                   lanes={})
+    settled_facts = None  # lazy, shared across valid frozen ENH receipts
     for lane, prefix, state_file in (("main", "auto_tickets", "auto_tickets_state.json"),
                                       ("enh", "autobets_enh_tickets", "enhancement_tickets_state.json")):
         lane_report = dict(receipts=[], missing_receipt_days=[], state_error=None,
@@ -4011,8 +4039,11 @@ def decision_parity_report(root=None):
                 except (KeyError, TypeError, ValueError):
                     item["ledger"] = "INCOMPLETE_IDENTITY"
                 if lane == "enh" and same and item["ledger"] == "MATCH" and item["freeze_time"] == "MATCH":
+                    if settled_facts is None:
+                        settled_facts = at.load_settled(root=root) if root is not None else at.load_settled()
                     item["ml_comparison"] = enh_decision_comparison(
-                        context, prepared, history=history, allow_outcomes=True)
+                        context, prepared, history=history, allow_outcomes=True,
+                        settled=settled_facts)
                 # Reconcile retained payouts, not a guessed historical equity
                 # chain: settlement ordering and legacy closes remain untouched.
                 item["open_accas"] = len(opened)

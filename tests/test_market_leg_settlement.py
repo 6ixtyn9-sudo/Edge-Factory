@@ -383,3 +383,40 @@ def test_settled_enh_evidence_is_retained_not_rederived_or_aliased():
 def test_legacy_settled_leg_shape_is_unchanged():
     assert at._settled_leg_record({'match':'A vs B','pick':'home','odds':1.5},'loss') == {
         'match':'A vs B','pick':'home','odds':1.5,'result':'loss'}
+
+
+def test_shared_results_root_isolated_and_verified_score_reaches_market_resolver(tmp_path):
+    import json
+    (tmp_path / 'localdata').mkdir()
+    (tmp_path / 'Config').mkdir()
+    (tmp_path / 'Config' / 'verified_results.json').write_text(json.dumps({'rows': [
+        dict(date='2026-10-30', home='Casa Pia', away='Sporting CP',
+             hs=0, gs=2, outcome='away', score_period='regulation')]}))
+    facts = at.load_settled(root=tmp_path)
+    leg = dict(match='Casa Pia vs Sporting CP', market='match_over_25', pick='over')
+    assert at.enhancement_leg_result(leg, '2026-10-30', facts.scores, facts.entries) == 'loss'
+    assert at.enhancement_leg_result(leg, '2026-10-29', {}, {}) is None
+
+
+def test_verified_missing_score_unblocks_existing_financial_settler_in_memory(tmp_path, monkeypatch):
+    import json
+    day = '2026-10-30'
+    (tmp_path / 'localdata').mkdir()
+    (tmp_path / 'Config').mkdir()
+    (tmp_path / 'Config' / 'verified_results.json').write_text(json.dumps({'rows': [
+        dict(date=day, home='Casa Pia', away='Sporting CP', hs=0, gs=2,
+             outcome='away', score_period='regulation')]}))
+    facts = at.load_settled(root=tmp_path)
+    saved = []
+    monkeypatch.setattr(at, 'save_state', lambda state, lane: saved.append((state, lane)))
+    state = _state([_over_leg('Casa Pia vs Sporting CP'), _over_leg('Pending Club vs Other Club')])
+    state['open_slips'][0]['date'] = day
+    at.record_freeze(state, day, datetime.fromisoformat(day + 'T09:00:00+02:00'))
+    before = {p: p.read_bytes() for p in tmp_path.rglob('*') if p.is_file()}
+    at.settle_open_slips(state, facts, archives=[])
+    assert state['open_slips'] == []
+    assert state['history'][0]['accas'][0]['won'] is False
+    assert state['history'][0]['accas'][0]['legs'][0]['result'] == 'loss'
+    assert state['bank'] == pytest.approx(100.0 - 3.288)
+    assert saved == [(state, None)]
+    assert before == {p: p.read_bytes() for p in tmp_path.rglob('*') if p.is_file()}

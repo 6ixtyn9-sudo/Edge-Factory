@@ -39,7 +39,9 @@ import replay_harness as h  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
-def _clean_cache():
+def _clean_cache(monkeypatch):
+    # These are explicit ML-on and captured pre-floor recipe regressions.
+    monkeypatch.setenv("EDGE_FACTORY_ENH_ML", "1")
     h._SLATE_CACHE.clear()
     yield
     h._SLATE_CACHE.clear()
@@ -310,7 +312,7 @@ def _comparison_context():
           _pool_leg('G vs H','match_over_25',.69,1.4,.91)]
     for leg in pool:
         leg.update(ml_model_schema='enh_score_logit_v2',ml_model_key='key')
-    options=at.ticket_planner_options('enh');options['max_accas']=1
+    options=at.ticket_planner_options('enh');options.update(max_accas=1, model_min_prob=0., ml_enabled=True)
     return dict(lane='enh',date='2026-10-25',bank_eff=80.,options=options),dict(pool=pool)
 
 
@@ -390,6 +392,7 @@ def test_capacity_rescue_is_visible_in_same_pool_comparison():
         leg.update(price_book=book,price_source='pinnapi_odds')
         pool.append(leg)
     context=dict(lane='enh',date='2026-10-25',bank_eff=100.,options=at.ticket_planner_options('enh'))
+    context['options']['model_min_prob'] = 0.  # captured pre-floor capacity recipe
     report=h.enh_decision_comparison(context,dict(pool=pool))
     on,off=report['arms']['ml_on'],report['arms']['ml_off']
     assert len(on['accas'])==len(off['accas'])==3
@@ -397,3 +400,55 @@ def test_capacity_rescue_is_visible_in_same_pool_comparison():
     assert on['selector_trace']['capacity_rescue_changed'] is True
     assert off['selector_trace']['capacity_rescue_checked'] is False
     assert off['selector_trace']['capacity_rescue_changed'] is False
+
+
+def test_counterfactual_uses_shared_scores_without_changing_saved_decision():
+    import copy
+    context, prepared = _comparison_context()
+    before = copy.deepcopy((context, prepared))
+    # Cohort-only A/B and C/D are absent from the actual ML ticket's history.
+    facts = at._SettledOutcomes({}, {}, {
+        (context['date'], hk, ak): score
+        for home, away, score in [('A', 'B', (2, 1)), ('C', 'D', (0, 1))]
+        for hk, ak in at._result_write_keys(home, away)
+    })
+    report = h.enh_decision_comparison(context, prepared, allow_outcomes=True, settled=facts)
+    off = report['arms']['ml_off']
+    assert off['returned'] == 0.0
+    assert off['resolved_legs'] == 2
+    assert [l['result'] for l in off['accas'][0]['legs']] == ['win', 'loss']
+    assert {l['outcome_source'] for l in off['accas'][0]['legs']} == {'shared_settlement_facts'}
+    assert (context, prepared) == before
+    # A draft must not acquire returns merely because final scores now exist.
+    draft = h.enh_decision_comparison(context, prepared, settled=facts)
+    assert draft['arms']['ml_off']['returned'] is None
+
+
+def test_shared_score_fallback_preserves_ledger_conflicts_and_missing_results():
+    context, prepared = _comparison_context()
+    leg = prepared['pool'][0]
+    history = [dict(date=context['date'], accas=[dict(legs=[
+        dict(leg, result='win'), dict(leg, result='loss')])])]
+    facts = at._SettledOutcomes({}, {}, {
+        (context['date'], hk, ak): (3, 0) for hk, ak in at._result_write_keys('A', 'B')})
+    report = h.enh_decision_comparison(context, prepared, history=history,
+                                      allow_outcomes=True, settled=facts)
+    legs = report['arms']['ml_off']['accas'][0]['legs']
+    assert [l['result'] for l in legs] == [None, None]
+    assert legs[0]['unresolved_reason'] == 'ledger_outcome_conflict'
+    assert legs[1]['unresolved_reason'] == 'missing_final_score'
+    assert report['arms']['ml_off']['returned'] is None
+
+
+def test_early_loss_ledger_unknown_leg_can_use_later_shared_score():
+    context, prepared = _comparison_context()
+    leg = prepared['pool'][0]
+    history = [dict(date=context['date'], accas=[dict(legs=[dict(leg, result=None)])])]
+    facts = at._SettledOutcomes({}, {}, {
+        (context['date'], hk, ak): (3, 0) for hk, ak in at._result_write_keys('A', 'B')})
+    report = h.enh_decision_comparison(context, prepared, history=history,
+                                      allow_outcomes=True, settled=facts)
+    resolved = report['arms']['ml_off']['accas'][0]['legs'][0]
+    assert resolved['result'] == 'win'
+    assert resolved['outcome_source'] == 'shared_settlement_facts'
+    assert history[0]['accas'][0]['legs'][0]['result'] is None

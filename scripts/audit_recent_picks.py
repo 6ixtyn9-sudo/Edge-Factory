@@ -506,7 +506,7 @@ def load_event_disposition_index(
             raise FileNotFoundError
         con = duckdb.connect(str(warehouse_path), read_only=True)
         tables = {row[0] for row in con.execute("SHOW TABLES").fetchall()}
-        source_tables = ("forebet", "vitibet", "scoutingstats")
+        source_tables = ("forebet", "vitibet", "scoutingstats", "bettingclosed")
         for source in source_tables:
             if source not in tables:
                 continue

@@ -600,6 +600,7 @@ def test_enh_ml_unavailable_is_explicit_and_keeps_measured_baseline(rows):
 
 
 def test_enh_ml_changes_complete_live_pair_not_admission_staking_or_main(monkeypatch):
+    monkeypatch.setenv("EDGE_FACTORY_ENH_ML", "1")  # explicit ML-ordering experiment
     from edgefactory.enh_registry import enhancement_ml_probability as score
     recipe = edge()
     cohort = cc.enhancement_cohort(connection(ml_observations()), recipe,
@@ -1007,6 +1008,7 @@ def rich_pick(recipe, probability, name='Live Alpha'):
 
 
 def test_enh_v2_unused_goal_forecasts_now_change_live_scores_and_complete_pair(monkeypatch):
+    monkeypatch.setenv("EDGE_FACTORY_ENH_ML", "1")  # explicit ML-ordering experiment
     from edgefactory.enh_registry import enhancement_ml_probability as score
     recipe, cache = edge(), {}
     monkeypatch.setattr(pt, 'load_post_forebet_registry', lambda: {'edges': [recipe]})
