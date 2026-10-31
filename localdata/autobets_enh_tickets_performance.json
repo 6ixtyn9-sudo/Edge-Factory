@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-10-31T22:15:15",
+  "generated_at": "2026-11-01T00:58:35",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 20.937870999999998,
-  "multiple": 0.20937870999999997,
+  "bank_pct": 24.078511,
+  "multiple": 0.24078511,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 17,
+  "bet_days": 18,
   "accas": {
-    "wins": 12,
+    "wins": 13,
     "losses": 26
   },
   "open_slips": [
     {
-      "date": "2026-10-31",
-      "staked_pct": 2.6172
+      "date": "2026-11-01",
+      "staked_pct": 6.0196
     }
   ],
   "events": [],
@@ -4296,6 +4296,121 @@
       ],
       "bank_pct": 20.9379,
       "close_pct": 14.7565
+    },
+    {
+      "date": "2026-10-31",
+      "staked_pct": 2.6172,
+      "returned_pct": 5.7578,
+      "accas": [
+        {
+          "odds": 2.2,
+          "won": true,
+          "stake_pct": 2.6172,
+          "returned_pct": 5.7578,
+          "legs": [
+            {
+              "match": "Porto vs Estoril",
+              "pick": "over",
+              "odds": 1.62,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "William Hill",
+              "price_source": "theoddsapi",
+              "price_at": "2026-10-30T22:20:26.689148+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-10-31",
+                "Porto",
+                "Estoril"
+              ],
+              "prob": 0.6587,
+              "cohort_evidence": {
+                "rate": 0.6587,
+                "n": 964,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-31",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 635,
+                "cohort_lower_bound": 0.6282058259740787,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "home",
+                  "league": "Liga Portugal",
+                  "book": "William Hill",
+                  "source": "theoddsapi",
+                  "price": 1.62,
+                  "captured_at": "2026-10-30T22:20:26.689148+00:00",
+                  "decision_at": "2026-10-31T09:17:49+02:00",
+                  "kickoff": "2026-10-31T20:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6493789541487028,
+              "ml_model_key": "59ae5c092611a53dcd14bde221f4ecfb73044730f8d63f24b8677b13cda7a4b9",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.7150102666466913,
+              "floor_basis": "inherited",
+              "league": "Liga Portugal",
+              "shadow": false,
+              "price_kickoff": "2026-10-31T20:30:00Z"
+            },
+            {
+              "match": "Middlesbrough vs Charlton Athletic",
+              "pick": "over",
+              "odds": 1.36,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "William Hill",
+              "price_source": "theoddsapi",
+              "price_at": "2026-10-30T22:20:26.948981+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-10-31",
+                "Middlesbrough",
+                "Charlton Athletic"
+              ],
+              "prob": 0.6587,
+              "cohort_evidence": {
+                "rate": 0.6587,
+                "n": 964,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-31",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 635,
+                "cohort_lower_bound": 0.6282058259740787,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "home",
+                  "league": "Championship",
+                  "book": "William Hill",
+                  "source": "theoddsapi",
+                  "price": 1.36,
+                  "captured_at": "2026-10-30T22:20:26.948981+00:00",
+                  "decision_at": "2026-10-31T09:17:49+02:00",
+                  "kickoff": "2026-10-31T15:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.5567971854471427,
+              "ml_model_key": "59ae5c092611a53dcd14bde221f4ecfb73044730f8d63f24b8677b13cda7a4b9",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.7150102666466913,
+              "floor_basis": "inherited",
+              "league": "Championship",
+              "shadow": false,
+              "price_kickoff": "2026-10-31T15:00:00Z"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 24.0785,
+      "close_pct": 17.8971
     }
   ]
 }

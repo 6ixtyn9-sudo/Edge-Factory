@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-10-31",
+ "generated_at": "2026-11-01",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -4824,11 +4824,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 336,
+   "hits": 338,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 330.3783991334999,
+   "inv_price_sum": 331.7218230733145,
    "multi_n": 103,
-   "n": 508,
+   "n": 510,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -5581,9 +5581,11 @@
     "2026-10-28|Quick Boys vs Eemdijk|match_over_25@v1",
     "2026-10-29|Kozakken Boys vs FC Utrecht|match_over_25@v1",
     "2026-10-29|Varea vs FC Andorra|match_over_25@v1",
-    "2026-10-30|Crici\u00fama vs Ponte Preta|match_over_25@v1"
+    "2026-10-30|Crici\u00fama vs Ponte Preta|match_over_25@v1",
+    "2026-10-31|Middlesbrough vs Charlton Athletic|match_over_25@v1",
+    "2026-10-31|Porto vs Estoril|match_over_25@v1"
    ],
-   "profit": 10.907,
+   "profit": 11.907,
    "records": [
     {
      "away": "Spartak Varna",
@@ -13283,6 +13285,64 @@
      "recorded_at": "2026-10-31T01:39:17.476508+00:00",
      "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
      "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "Charlton Athletic",
+     "away_key": "charltonathletic",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.6584,
+     "date": "2026-10-31",
+     "hit": true,
+     "home": "Middlesbrough",
+     "home_key": "middlesbrough",
+     "league": "Championship",
+     "match": "Middlesbrough vs Charlton Athletic",
+     "multi_source": false,
+     "price": 1.37,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-10-30T22:20:26.948981+00:00",
+      "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+      "decision_at": "2026-10-31T00:20:42+02:00",
+      "kickoff": "2026-10-31T15:00:00+00:00",
+      "league": "Championship",
+      "price": 1.37,
+      "selection": "home",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-10-31T22:33:39.534222+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Estoril",
+     "away_key": "estoril",
+     "bucket": "WATCHLIST_UNKNOWN_CTX",
+     "cohort_rate": 0.6584,
+     "date": "2026-10-31",
+     "hit": true,
+     "home": "Porto",
+     "home_key": "porto",
+     "league": "Liga Portugal",
+     "match": "Porto vs Estoril",
+     "multi_source": false,
+     "price": 1.63,
+     "price_context": {
+      "book": "GTbets",
+      "captured_at": "2026-10-30T22:20:26.689148+00:00",
+      "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+      "decision_at": "2026-10-31T00:20:42+02:00",
+      "kickoff": "2026-10-31T20:30:00+00:00",
+      "league": "Liga Portugal",
+      "price": 1.63,
+      "selection": "home",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-10-31T22:33:39.540449+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "theoddsapi",
      "stated": null
     }
    ],
