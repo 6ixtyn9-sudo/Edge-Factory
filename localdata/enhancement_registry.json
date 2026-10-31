@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-10-30",
+ "generated_at": "2026-10-31",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -4826,9 +4826,9 @@
   "match_over_25@v1": {
    "hits": 336,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 329.6431050158528,
+   "inv_price_sum": 330.3783991334999,
    "multi_n": 103,
-   "n": 507,
+   "n": 508,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -5580,9 +5580,10 @@
     "2026-10-28|Arsenal W vs SL Benfica W|match_over_25@v1",
     "2026-10-28|Quick Boys vs Eemdijk|match_over_25@v1",
     "2026-10-29|Kozakken Boys vs FC Utrecht|match_over_25@v1",
-    "2026-10-29|Varea vs FC Andorra|match_over_25@v1"
+    "2026-10-29|Varea vs FC Andorra|match_over_25@v1",
+    "2026-10-30|Crici\u00fama vs Ponte Preta|match_over_25@v1"
    ],
-   "profit": 11.907,
+   "profit": 10.907,
    "records": [
     {
      "away": "Spartak Varna",
@@ -13254,6 +13255,35 @@
      "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "Ponte Preta",
+     "away_key": "pontepreta",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.6621,
+     "date": "2026-10-30",
+     "hit": false,
+     "home": "Crici\u00fama",
+     "home_key": "criciuma",
+     "league": "Serie B",
+     "match": "Crici\u00fama vs Ponte Preta",
+     "multi_source": false,
+     "price": 1.36,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-10-29T22:19:55.312785+00:00",
+      "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+      "decision_at": "2026-10-30T00:20:12+02:00",
+      "kickoff": "2026-10-30T22:30:00+00:00",
+      "league": "Serie B",
+      "price": 1.36,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-31T01:39:17.476508+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "betexplorer",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -14638,10 +14668,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 18,
-   "inv_price_sum": 12.437139863172721,
+   "hits": 19,
+   "inv_price_sum": 13.172433980819779,
    "multi_n": 0,
-   "n": 21,
+   "n": 22,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -14663,9 +14693,10 @@
     "2026-10-27|Levadia vs Tammeka|match_under_45@v1",
     "2026-10-28|Arsenal W vs SL Benfica W|match_under_45@v1",
     "2026-10-28|Quick Boys vs Eemdijk|match_under_45@v1",
-    "2026-10-29|Kozakken Boys vs FC Utrecht|match_under_45@v1"
+    "2026-10-29|Kozakken Boys vs FC Utrecht|match_under_45@v1",
+    "2026-10-30|Crici\u00fama vs Ponte Preta|match_under_45@v1"
    ],
-   "profit": 9.711,
+   "profit": 10.071,
    "records": [
     {
      "away": "Atlante",
@@ -15230,6 +15261,35 @@
       "source": "betexplorer"
      },
      "recorded_at": "2026-10-29T22:34:18.616349+00:00",
+     "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
+     "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "Ponte Preta",
+     "away_key": "pontepreta",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.723,
+     "date": "2026-10-30",
+     "hit": true,
+     "home": "Crici\u00fama",
+     "home_key": "criciuma",
+     "league": "Serie B",
+     "match": "Crici\u00fama vs Ponte Preta",
+     "multi_source": false,
+     "price": 1.36,
+     "price_context": {
+      "book": "bet365.us",
+      "captured_at": "2026-10-29T22:19:55.312785+00:00",
+      "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+      "decision_at": "2026-10-30T00:20:12+02:00",
+      "kickoff": "2026-10-30T22:30:00+00:00",
+      "league": "Serie B",
+      "price": 1.36,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-10-31T01:39:17.469123+00:00",
      "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
      "source": "betexplorer",
      "stated": null
