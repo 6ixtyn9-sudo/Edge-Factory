@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-10-31T21:54:30",
+  "generated_at": "2026-11-01T00:47:08",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 274.0088,
-  "multiple": 2.740088,
+  "bank_pct": 270.58369,
+  "multiple": 2.7058369,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 62,
+  "bet_days": 63,
   "accas": {
-    "wins": 74,
-    "losses": 51
+    "wins": 75,
+    "losses": 52
   },
-  "open_slips": [
-    {
-      "date": "2026-10-31",
-      "staked_pct": 68.5022
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -1589,6 +1584,87 @@
       ],
       "bank_pct": 274.0088,
       "close_pct": 274.0087
+    },
+    {
+      "date": "2026-10-31",
+      "staked_pct": 68.5022,
+      "returned_pct": 65.0771,
+      "accas": [
+        {
+          "odds": 1.78,
+          "won": false,
+          "stake_pct": 34.2511,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Acassuso vs Club Ferro Carril Oeste",
+              "pick": "AWAY",
+              "odds": 1.3268,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-10-31",
+                "Acassuso",
+                "Club Ferro Carril Oeste"
+              ]
+            },
+            {
+              "match": "FC Bayern M\u00fcnchen vs Borussia Dortmund",
+              "pick": "HOME",
+              "odds": 1.3401,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-10-31",
+                "FC Bayern M\u00fcnchen",
+                "Borussia Dortmund"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 1.9,
+          "won": true,
+          "stake_pct": 34.2511,
+          "returned_pct": 65.0771,
+          "legs": [
+            {
+              "match": "Real Betis vs M\u00e1laga",
+              "pick": "HOME",
+              "odds": 1.3436,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-10-31",
+                "Real Betis",
+                "M\u00e1laga"
+              ]
+            },
+            {
+              "match": "Godoy Cruz vs Almirante Brown",
+              "pick": "HOME",
+              "odds": 1.4149,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-10-31",
+                "Godoy Cruz",
+                "Almirante Brown"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 270.5837,
+      "close_pct": 270.5836
     }
   ]
 }
