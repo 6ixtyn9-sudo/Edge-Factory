@@ -960,7 +960,7 @@ def test_captured_no_freeze_floor_does_not_fall_back_to_current_clock_policy(mon
     monkeypatch.setattr(at, 'FREEZE_HOUR', 25)
     now = at.datetime.fromisoformat('2026-10-27T08:00:00+02:00')
     legs = [dict(match=f'T{i} vs O{i}', market='btts_yes', price=1.8, probability=.8,
-                 verdict='fire', row=dict(date='2026-10-27', home=f'T{i}', away=f'O{i}',
+                 verdict='fire', ml_rank_probability=.8, row=dict(date='2026-10-27', home=f'T{i}', away=f'O{i}',
                                           kickoff='2026-10-27T08:30:00+02:00')) for i in range(2)]
     context = at.ticket_decision_context('enh', '2026-10-27', now, [], legs, 100.,
                                          known_results=[None, None])

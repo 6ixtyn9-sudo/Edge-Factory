@@ -61,6 +61,8 @@ recollection.
 | `tests/test_betexplorer_match_detail.py` | the wrapper receipt carries the row-refusal census per the 2026-10-12 round-2 ruling: a refused row is a dropped price, and the receipt must name how many were refused and why (the 2026-10-12 Forge vs York United receipt lost rows with no trace) | OPERATOR-RELAYED |
 | `src/edgefactory/enh_pricing.py` | operator directive 2026-10-12: the retained BetExplorer detail prices the enhancement board and the registry floor, not EV, decides what is a bet; the reader's slot names (`ou_<line>`, `btts`, `dc`) are the ones `MARKET_PRICE_MAP` looks up, which the round-trip test pins against the capture's own ledger | `docs/operator/BETEXPLORER-LICENSING.md` |
 
+| `scripts/auto_tickets.py` | operator selection 2026-10-31: widened-window fully graded controlled recipes; Main probability-ranked doubles without add-ons or an added probability floor; ENH cohort ranking, max three doubles, stored model probability at least 60%; preserve independent safeguards, stakes and frozen cards; retrospective comparison, not a validated optimum | OPERATOR-RELAYED |
+
 ## What this does not catch
 
 It catches a claim about the **outside world** stated without backing. It

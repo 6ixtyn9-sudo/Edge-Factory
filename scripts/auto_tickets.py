@@ -15,13 +15,15 @@ TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
   LEGS      all playable-bucket picks with a verified execution price; the
             explicit price_push_eligible safety bit is a data-integrity gate,
             not an edge/bucket filter.
-  ORDER     highest stated probability first (ties by odds).
+  ORDER     Main: highest stated probability first (ties by odds).
+            ENH: cohort-ranked; stored model probability must be >=60%.
   DEDUP     one match, one leg: after ranking, same-fixture duplicates
             (date + folded side-pair incl. '&'->'and') are dropped and the
             highest-stated twin survives (2026-09-22 Dagenham-and/& incident;
             upstream ledger identity untouched — the guard protects the card).
-  ACCAS     2 legs each, barbell pairs of the top 6 (1+6, 2+5, 3+4), up to
-            2 accas per day (MAX_ACCAS=2; revert = 3). Pairing = barbell.
+  ACCAS     Main: up to two barbell doubles, leg odds >=1.30, no add-ons.
+            ENH: up to three independent doubles. No fixture reuse or
+            stake redistribution. Captured old recipes remain replayable.
   STAKE     1/4 of the free bank per day (STAKE_FRAC=0.25), split across the
             accas built: per_acca mode gives each acca 1/8 (STAKE_FRAC /
             MAX_ACCAS), capped at 1/4 in total. The sizing history below is
@@ -204,7 +206,7 @@ STAKE_FRAC = 1.0 / 4.0     # ARMED 2026-09-09 with PAIRING=barbell, MAX_ACCAS=2.
                            # ridden legs beat the close only 12.3%. Revert = 1.0/10.0.
 STAKE_MODE = "per_acca"     # "per_day" preserves the validated fixed day risk;
                            # "per_acca" risks a fixed fraction per ticket while
-                           # capping the day's total at STAKE_FRAC. Research only.
+                           # capping the day's total at STAKE_FRAC; unused stakes stay free.
 STAKE_PER_ACCA = None      # None -> STAKE_FRAC / MAX_ACCAS
 STAKE_WEIGHTS = None       # None -> equal; e.g. "3,2,1" changes sizing, never selection
 MAX_ACCAS = 2              # ARMED 2026-09-09 (barbell x2). Revert = 3.
@@ -215,6 +217,17 @@ MAX_LEGS = MAX_ACCAS * LEGS_PER_ACCA
 PAIRING = "barbell"        # ARMED 2026-09-09. Revert = "consecutive".
 MIN_LEG_ODDS = 1.30        # min odds per leg, both lanes (operator 2026-10-14: 1.20 -> 1.30; was 2026-09-02..04 band evidence; the
                            # replay harness A/Bs this knob — never inline the number)
+# Operator-confirmed selection rule (2026-10-31): widened-window completed ROI.
+# Historical ROI comparisons are retrospective, not a validated optimum. Old receipts
+# retain their captured options; optional add-ons are disabled for new cards.
+MAIN_RANK = "prob"
+MAIN_MIN_PROB = 0.0
+MAIN_ADDON_FLOOR = None
+MAIN_ADDON_CEILING = None
+MAIN_ADDON_MIN_PROB = 0.65
+MAIN_ADDON_RANK = "ev"
+ENH_MODEL_MIN_PROB = 0.60
+ENH_ML_DEFAULT = "0"       # cohort ordering; stored model scores still gate eligibility
 VOLUME_POOL = 12           # pool >= this -> volume regime (saturated day)
 VOLUME_MIN_PROB = 0.65     # stated-prob threshold used by the volume regime
 GATE_MODE = "off"          # how the volume regime bites on saturated days:
@@ -1718,6 +1731,7 @@ def build_rejection_ledger(
     *,
     day: str | None,
     selected=(),
+    floor: float | None = None,
     staged: dict[tuple[str, str], tuple[str, str]] | None = None,
     default_rule: tuple[str, str] = (
         "stake_ladder_not_selected",
@@ -1743,7 +1757,7 @@ def build_rejection_ledger(
         key = _fixture_selection_key(row)
         if key in selected_keys:
             continue
-        reason = playable_leg_rejection(row, day=day, execution_safe=True)
+        reason = playable_leg_rejection(row, day=day, floor=floor, execution_safe=True)
         if reason is None:
             reason = staged.get(key, default_rule)
         try:
@@ -1983,7 +1997,7 @@ class _SettledOutcomes(Mapping):
             yield key, outcome
 
 
-def _collect_settled_facts() -> tuple[_SettledOutcomes, dict, dict]:
+def _collect_settled_facts(*, root=None) -> tuple[_SettledOutcomes, dict, dict]:
     """(key_to_outcome, entries_by_date, scores_by_key) from the same donors.
 
     key_to_outcome is the exact-lookup map (warehouse wins on conflict, then
@@ -2005,7 +2019,8 @@ def _collect_settled_facts() -> tuple[_SettledOutcomes, dict, dict]:
     from edgefactory.settlement import (warehouse_regulation_rows, filter_regulation_rows,
                                         regulation_fixture_key)
     donors, period_holds = [], []
-    wh = LOCALDATA / "warehouse.duckdb"
+    localdata = Path(root) / "localdata" if root is not None else LOCALDATA
+    wh = localdata / "warehouse.duckdb"
     if wh.exists():
         con = None
         try:
@@ -2018,10 +2033,10 @@ def _collect_settled_facts() -> tuple[_SettledOutcomes, dict, dict]:
             if con is not None:
                 con.close()
     try:
-        data = json.loads((LOCALDATA / "settled_results.json").read_text())
+        data = json.loads((localdata / "settled_results.json").read_text())
         donors.extend(r for r in data.get("rows", []) if isinstance(r, dict))
         from edgefactory.settlement import load_period_holds
-        period_holds.extend(load_period_holds(LOCALDATA / "settled_results.json"))
+        period_holds.extend(load_period_holds(localdata / "settled_results.json"))
     except (OSError, ValueError, TypeError, AttributeError):
         pass
     donors, period_holds = filter_regulation_rows(donors, period_holds)
@@ -2040,7 +2055,9 @@ def _collect_settled_facts() -> tuple[_SettledOutcomes, dict, dict]:
     # enough: an alternate spelling may have populated a distinct exact key
     # in key_to, which pick_result consults before the alias-conflict scan.
     from edgefactory.settlement import load_verified_results
-    for v in load_verified_results():
+    verified = (load_verified_results(Path(root) / "Config" / "verified_results.json")
+                if root is not None else load_verified_results())
+    for v in verified:
         d = v["date"]
         period_blocks = [r for r in period_blocks if not (r["date"] == d
                          and _same_club_names(r["home"], v["home"])
@@ -2355,13 +2372,14 @@ def _report_narrow_key_supersession(count: int, detail: list) -> None:
 _SUPERSEDED_DETAIL_PRINTED = False
 
 
-def load_settled():
+def load_settled(*, root=None):
     """Settled outcomes: warehouse donors first, shared overlay fills gaps.
 
     Keeps auto-ticket grading on the same result facts as the audit instead
     of overlay-only, so BetExplorer-settled fixtures grade here too.
     """
-    return _collect_settled_facts()[0]
+    return (_collect_settled_facts(root=root) if root is not None
+            else _collect_settled_facts())[0]
 
 
 def load_settled_entries():
@@ -3441,7 +3459,7 @@ def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
     pool = rank_legs([l for l in pool if l["odds"] >= floor], rank,
                      rank_caps=rank_caps)
     ml_ranking = (enhancements and rank == "prob" and rank_caps is None
-                  and (os.environ.get('EDGE_FACTORY_ENH_ML', '1') == '1' if ml_enabled is None else ml_enabled)
+                  and (os.environ.get('EDGE_FACTORY_ENH_ML', ENH_ML_DEFAULT) == '1' if ml_enabled is None else ml_enabled)
                   and any(finite_probability(l.get('ml_rank_probability')) is not None for l in pool))
     if fixture_report is not None and enhancements:
         fixture_report.update(ml_ranking_active=bool(ml_ranking), capacity_rescue_checked=False,
@@ -3643,8 +3661,27 @@ def _stake_weights(weights, n):
     return parsed
 
 
+def _main_pool_floor():
+    return (MIN_LEG_ODDS if MAIN_ADDON_FLOOR is None
+            else min(MIN_LEG_ODDS, MAIN_ADDON_FLOOR))
+
+
+def _model_probability_floor(value):
+    value = float(value)
+    if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+        raise ValueError("model probability floor must be a finite fraction in [0, 1]")
+    return value
+
+
+def _passes_model_probability_floor(leg, minimum):
+    score = finite_probability(leg.get("ml_rank_probability"))
+    return not minimum or (score is not None and score >= minimum)
+
+
 def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
-             stake_per_acca=None, weights=None, bucket_weights=None, **overrides):
+             stake_per_acca=None, weights=None, bucket_weights=None,
+             min_prob=0.0, addon_floor=None, addon_ceiling=None,
+             addon_min_prob=0.0, addon_rank="ev", model_min_prob=0.0, **overrides):
     """Select a card and size it in one production/replay code path.
 
     ``per_day`` (live default) deploys STAKE_FRAC across however many accas
@@ -3659,7 +3696,37 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
     afterwards acca weight = min over its legs' bucket weights, and a
     demoted (0.5) acca is staked at half. Empty/None means all doors open —
     the replay harness passes nothing and therefore replays true to history.
+
+    Optional min_prob filters before base selection. Optional add-on bounds
+    append one unused ranked candidate per double AFTER sizing; no extra
+    candidate means the double and stake survive unchanged. Old receipts
+    omit these options and therefore retain their original decisions.
     """
+    # Optional settings preserve legacy receipts and explicit experiments.
+    # Missing model scores fail a mandatory model floor; never impute zero.
+    model_min_prob = _model_probability_floor(model_min_prob)
+    if model_min_prob and not overrides.get("enhancements", False):
+        raise ValueError("model probability floor requires the enhancement lane")
+    if model_min_prob:
+        pool = [l for l in pool if _passes_model_probability_floor(l, model_min_prob)]
+    min_prob, addon_min_prob = float(min_prob), float(addon_min_prob)
+    if any(not math.isfinite(p) or not 0.0 <= p <= 1.0
+           for p in (min_prob, addon_min_prob)):
+        raise ValueError("probability floors must be finite fractions in [0, 1]")
+    adding = addon_floor is not None or addon_ceiling is not None
+    if adding:
+        if addon_floor is None or addon_ceiling is None:
+            raise ValueError("both add-on price bounds are required")
+        addon_floor, addon_ceiling = float(addon_floor), float(addon_ceiling)
+        if (not math.isfinite(addon_floor) or not math.isfinite(addon_ceiling)
+                or not 1.0 < addon_floor < addon_ceiling):
+            raise ValueError("invalid add-on price band")
+        if addon_rank not in ("ev", "prob"):
+            raise ValueError("add-on rank must be 'ev' or 'prob'")
+        if (overrides.get("enhancements", False)
+                or overrides.get("legs_per_acca", LEGS_PER_ACCA) != 2):
+            raise ValueError("add-ons require Main base doubles")
+    pool = [l for l in pool if l["prob"] >= min_prob]
     stake_frac = STAKE_FRAC if stake_frac is None else float(stake_frac)
     stake_mode = STAKE_MODE if stake_mode is None else stake_mode
     weights = STAKE_WEIGHTS if weights is None else weights
@@ -3733,13 +3800,35 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
         if aw < 1.0:
             acca["bench_weight"] = aw
         plan.append(acca)
+    if adding:
+        # Reserve ALL base fixtures before assigning extras. Each double may
+        # receive one extra, never a fixture already used elsewhere on the card.
+        # Selection uses only admitted candidates/probabilities/prices, not results.
+        # Use admitted base legs, not rendered legs: rendered legs omit
+        # row.date, which would otherwise let a dated alternative quote evade
+        # the same-fixture guard.
+        used = {_fixture_key(l) for a in accas for l in a}
+        candidates = [l for l in pool
+                      if addon_floor <= l["odds"] < addon_ceiling
+                      and l["prob"] >= addon_min_prob
+                      and _fixture_key(l) not in used]
+        candidates, _ = dedup_fixture_legs(rank_legs(
+            candidates, addon_rank, rank_caps=overrides.get("rank_caps")))
+        for acca in plan:
+            extra = next((l for l in candidates if _fixture_key(l) not in used), None)
+            if extra is None:
+                continue  # preserve the original double AND its original stake
+            acca["legs"].append({k: extra.get(k) for k in
+                                 ("match", "pick", "prob", "odds", "result")})
+            acca["odds"] = round(math.prod(l["odds"] for l in acca["legs"]), 2)
+            used.add(_fixture_key(extra))
     return plan
 
 
 # Decision-time replay uses the SAME gates and planner, with captured policy
 # outputs instead of recomputing historical policies from today's registries.
 def ticket_planner_options(lane="main") -> dict:
-    return dict(floor=MIN_LEG_ODDS, rank=ENHANCEMENT_RANK if lane == "enh" else "prob",
+    options = dict(floor=MIN_LEG_ODDS, rank=ENHANCEMENT_RANK if lane == "enh" else MAIN_RANK,
                 pairing=PAIRING, max_accas=ENH_MAX_ACCAS if lane == "enh" else MAX_ACCAS,
                 min_accas=MIN_ACCAS, legs_per_acca=LEGS_PER_ACCA,
                 volume_pool=VOLUME_POOL, volume_min=VOLUME_MIN_PROB,
@@ -3750,7 +3839,14 @@ def ticket_planner_options(lane="main") -> dict:
                                 else (ENHANCEMENT_LANE.stake_frac if lane == "enh" else STAKE_FRAC)
                                 / MAX_ACCAS), weights=STAKE_WEIGHTS,
                 enhancements=lane == "enh",
-                ml_enabled=os.environ.get("EDGE_FACTORY_ENH_ML", "1") == "1")
+                ml_enabled=os.environ.get("EDGE_FACTORY_ENH_ML", ENH_ML_DEFAULT) == "1")
+    if lane == "main":
+        options.update(min_prob=MAIN_MIN_PROB, addon_floor=MAIN_ADDON_FLOOR,
+                       addon_ceiling=MAIN_ADDON_CEILING,
+                       addon_min_prob=MAIN_ADDON_MIN_PROB, addon_rank=MAIN_ADDON_RANK)
+    if lane == "enh":
+        options["model_min_prob"] = ENH_MODEL_MIN_PROB
+    return options
 
 
 def ticket_decision_context(lane, target, now, slate, pool, bank_eff, *,
@@ -3781,6 +3877,13 @@ def prepare_ticket_pool(context):
             pool, now, target, {}, known_results=context["known_results"],
             freeze_floor_at=(datetime.fromisoformat(context["freeze_floor"])
                              if context.get("freeze_floor") else None))
+        minimum = _model_probability_floor(context["options"].get("model_min_prob", 0.0))
+        if minimum:
+            for leg in pool:
+                if leg.get("verdict") == "fire" and not _passes_model_probability_floor(leg, minimum):
+                    leg["verdict"] = "below_model_probability_floor"
+                    leg["withdrawn_reason"] = f"stored model probability unavailable or below {minimum:.0%}"
+                    withdrawn.setdefault(leg["withdrawn_reason"], []).append(leg.get("match"))
         return dict(legs=pool, pool=enhancement_pool(pool), withdrawn=withdrawn)
     if context["lane"] != "main":
         raise ValueError("unknown ticket lane")
@@ -3812,6 +3915,10 @@ def prepare_ticket_pool(context):
            "fixture already appeared on an earlier slate and has kicked off",
            "fixture already on an earlier day's slate (kicked off)")
     pool = [l for l in pool if not previous(l)]
+    min_prob = context["options"].get("min_prob", 0.0)
+    reject([l for l in pool if l["prob"] < min_prob], "main_probability_floor",
+           f"stated probability below {min_prob:.0%}")
+    pool = [l for l in pool if l["prob"] >= min_prob]
     base_pool = list(pool)
     policy = context["policy"]
     pnl_weights = policy["pnl_weights"]
@@ -5091,6 +5198,7 @@ def cmd_today(args, st, *, settled=None):
             ledger = build_rejection_ledger(
                 slate,
                 day=target,
+                floor=_main_pool_floor(),
                 default_rule=(
                     "superseded_card_locked",
                     "write-once card is already superseded; non-force rerun cannot create replacement legs",
@@ -5133,6 +5241,7 @@ def cmd_today(args, st, *, settled=None):
         ledger = build_rejection_ledger(
             slate,
             day=target,
+            floor=_main_pool_floor(),
             selected=selected,
             default_rule=(
                 "frozen_card_not_selected",
@@ -5177,7 +5286,10 @@ def cmd_today(args, st, *, settled=None):
     # the slate BEFORE any selection/guard runs. A ledger failure is reported
     # on stderr and ignored — it must never change the pool or the card.
     shadow_run = _shadow_record_scored(target, slate)
-    pool = playable_legs(slate, day=target, settled=settled, execution_safe=True)
+    # Admit the sub-floor add-on band through the SAME execution-price gates;
+    # plan_day still builds its base doubles at MIN_LEG_ODDS, never at 1.20.
+    pool = playable_legs(slate, day=target, settled=settled,
+                         floor=_main_pool_floor(), execution_safe=True)
     total_in = len(pool)
     census: dict[str, list[str]] = {}
     staged_rejections: dict[tuple[str, str], tuple[str, str]] = {}
@@ -5224,7 +5336,7 @@ def cmd_today(args, st, *, settled=None):
     base_pool_by_key = {_leg_key(l): l for l in base_pool}
     if diminished and len(base_pool) >= LEGS_PER_ACCA:
         pure_shadow_plan = plan_day(list(base_pool), bank_eff,
-                                    fixture_report={})
+                                    fixture_report={}, **ticket_planner_options("main"))
 
     census_lines = format_skip_census(total_in, len(plan_pool), census)
     if not any(census.values()):
@@ -5245,6 +5357,7 @@ def cmd_today(args, st, *, settled=None):
         ledger = build_rejection_ledger(
             slate,
             day=target,
+            floor=_main_pool_floor(),
             staged=staged_rejections,
             default_rule=(
                 "stake_ladder_minimum_legs",
@@ -5302,6 +5415,7 @@ def cmd_today(args, st, *, settled=None):
         ledger = build_rejection_ledger(
             slate,
             day=target,
+            floor=_main_pool_floor(),
             staged=staged_rejections,
             default_rule=(
                 "stake_ladder_no_executable_acca",
@@ -5382,6 +5496,7 @@ def cmd_today(args, st, *, settled=None):
     ledger = build_rejection_ledger(
         slate,
         day=target,
+        floor=_main_pool_floor(),
         selected=selected_legs,
         staged=staged_rejections,
     )

@@ -71,6 +71,9 @@ class _PinnedDatetime(datetime):
 
 @pytest.fixture(autouse=True)
 def _tmp_lane(tmp_path, monkeypatch):
+    # Lifecycle fixtures supply a qualifying synthetic score; real inference
+    # and missing-score rejection are independently covered in recipe tests.
+    monkeypatch.setattr(reg, "enhancement_ml_probability", lambda row, market: .8)
     """Every test writes lane state and the artifact into a temp dir."""
     monkeypatch.setattr(at, "datetime", _PinnedDatetime)
     localdata = tmp_path / "localdata"
@@ -1263,6 +1266,8 @@ def test_deployment_footer_reports_actual_partial_plan_not_budget(tmp_path, _tmp
 
 
 def test_live_enhancement_command_uses_three_slot_ml_capacity_repair(_tmp_lane, monkeypatch):
+    # Explicit captured pre-score-floor recipe exercises unscored capacity rescue.
+    monkeypatch.setattr(at, 'ENH_MODEL_MIN_PROB', 0.)
     # Real command -> execution-safe admission -> pool -> selector -> staking
     # -> evidence carry -> draft. Only ML inference is a controlled seam;
     # this is not a production-model fit or production coverage claim.
