@@ -1,22 +1,18 @@
 {
-  "generated_at": "2026-10-31T12:45:30",
+  "generated_at": "2026-10-31T15:59:11",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 23.264270999999997,
-  "multiple": 0.23264270999999997,
+  "bank_pct": 20.937870999999998,
+  "multiple": 0.20937870999999997,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
   "bet_days": 17,
   "accas": {
     "wins": 12,
-    "losses": 25
+    "losses": 26
   },
   "open_slips": [
-    {
-      "date": "2026-10-30",
-      "staked_pct": 2.3264
-    },
     {
       "date": "2026-10-31",
       "staked_pct": 2.6172
@@ -2996,7 +2992,7 @@
     },
     {
       "date": "2026-10-30",
-      "staked_pct": 4.6528,
+      "staked_pct": 6.9792,
       "returned_pct": 0.0,
       "accas": [
         {
@@ -3820,10 +3816,486 @@
               "price_kickoff": "2026-10-30T19:45:00+00:00"
             }
           ]
+        },
+        {
+          "odds": 2.14,
+          "won": false,
+          "stake_pct": 2.3264,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Crici\u00fama vs Ponte Preta",
+              "pick": "under",
+              "odds": 1.36,
+              "result": "win",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-29T22:19:55.312785+00:00",
+              "price_provenance": {
+                "away": "Ponte Preta",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-10-29T22:19:55.312785+00:00",
+                "data_dt": [
+                  30,
+                  10,
+                  2026,
+                  23,
+                  30
+                ],
+                "decision_cutoff_utc": "2026-10-30T07:00:00+00:00",
+                "decision_day": "2026-10-30",
+                "home": "Criciuma",
+                "kickoff_utc": "2026-10-30T22:30:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-30.json",
+                "ledger_sha256": "d82be1eed17359247c98cf3624cc3ca831af5a99722806a35b7c6a676c437e26",
+                "market": "ou_4.5",
+                "price": 1.36,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-27T07:20",
+                      "2026-10-27T07:20"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      3.0,
+                      1.36
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 14,
+                  "row_sha256": "f3126663890e13f853150769f63d1c79f09024bf55be9a1ce2c6c997659f251c"
+                },
+                "raw_kickoff": "23:30",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-30T22:30:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Ponte Preta",
+                      "csv_data_row": 4203,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "d5d5ad7c9f1a7e2966dd682c52da0041896c5496ba8b65ca47d4847340e0a9f8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Crici\u00fama",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T22:30:00+00:00",
+                      "league": "Serie B",
+                      "observed_at_utc": "2026-10-29T22:02:36+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "de988e7928111d5a2207714fd996fd783a44bf32591659f8dfd31ff601df212b",
+                      "schedule_row": {
+                        "away": "Ponte Preta",
+                        "captured_at": "2026-10-29T22:02:36+00:00",
+                        "country": "Brazil",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Crici\u00fama",
+                        "hs": "",
+                        "kickoff": "2026-10-30T22:30:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Serie B",
+                        "odd1": "1.07",
+                        "odd2": "26.0",
+                        "odd_gg": "3.0",
+                        "odd_ng": "1.36",
+                        "odd_o15": "1.1",
+                        "odd_o25": "1.36",
+                        "odd_o35": "1.83",
+                        "odd_u15": "7.0",
+                        "odd_u25": "3.1",
+                        "odd_u35": "1.83",
+                        "oddx": "11.0",
+                        "p1": "87.82805004232904",
+                        "p2": "3.6214843382560438",
+                        "p_gg": "31.19266055045872",
+                        "p_ng": "68.80733944954129",
+                        "p_o15": "86.41975308641976",
+                        "p_o25": "69.5067264573991",
+                        "p_o35": "50.0",
+                        "px": "8.550465619414918",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "22:30"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Ponte Preta",
+                      "csv_data_row": 16495,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "324975ec8bce259ede5ae306bebb6e6a3daea4e5fa73f0cc30c71e1434de6106",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Criciuma",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T22:30:00+00:00",
+                      "league": "Brazil: Serie B",
+                      "observed_at_utc": "2026-10-29T22:02:07+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "04b5c27ce9ca85e273ba13084d1f13be5a1d81a70b14d06c7015f2bc201883c1",
+                      "schedule_row": {
+                        "away": "Ponte Preta",
+                        "captured_at": "2026-10-29T22:02:07+00:00",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Criciuma",
+                        "hs": "",
+                        "index": "3.85",
+                        "kickoff": "2026-10-30T23:30:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Brazil: Serie B",
+                        "p1": "77.0",
+                        "p2": "6.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "17.0",
+                        "schedule_history": "[{\"away\": \"Ponte Preta\", \"captured_at\": \"2026-10-28T22:02:05+00:00\", \"date\": \"2026-10-30\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Criciuma\", \"kickoff\": \"2026-10-30T23:30:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "1"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Ponte Preta",
+                      "csv_data_row": 16495,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "324975ec8bce259ede5ae306bebb6e6a3daea4e5fa73f0cc30c71e1434de6106",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Criciuma",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T22:30:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-10-28T22:02:05+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "3389878fea1c2e4ff8025c064b360b476f9de55dab804b9fea15a6a610ff7c5f",
+                      "schedule_row": {
+                        "away": "Ponte Preta",
+                        "captured_at": "2026-10-28T22:02:05+00:00",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Criciuma",
+                        "kickoff": "2026-10-30T23:30:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-10-30",
+                "Crici\u00fama",
+                "Ponte Preta"
+              ],
+              "prob": 0.723,
+              "cohort_evidence": {
+                "rate": 0.723,
+                "n": 953,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-30",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 689,
+                "cohort_lower_bound": 0.6937146133585056,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "home",
+                  "league": "Serie B",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.36,
+                  "captured_at": "2026-10-29T22:19:55.312785+00:00",
+                  "decision_at": "2026-10-30T09:13:28+02:00",
+                  "kickoff": "2026-10-30T22:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.9474452377648245,
+              "ml_model_key": "4c83c1c533e8435e261cc841c9ae549c1beeccc60282c3c0075264cd61d78f28",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Serie B",
+              "shadow": false,
+              "price_kickoff": "2026-10-30T22:30:00+00:00"
+            },
+            {
+              "match": "Casa Pia vs Sporting CP",
+              "pick": "over",
+              "odds": 1.57,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-10-30T01:11:19.950464+00:00",
+              "price_provenance": {
+                "away": "Sporting CP",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-10-30T01:11:19.950464+00:00",
+                "data_dt": [
+                  30,
+                  10,
+                  2026,
+                  21,
+                  15
+                ],
+                "decision_cutoff_utc": "2026-10-30T07:00:00+00:00",
+                "decision_day": "2026-10-30",
+                "home": "Casa Pia",
+                "kickoff_utc": "2026-10-30T20:15:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-10-30.json",
+                "ledger_sha256": "d82be1eed17359247c98cf3624cc3ca831af5a99722806a35b7c6a676c437e26",
+                "market": "ou_2.5",
+                "price": 1.57,
+                "quote_evidence": {
+                  "column_index": 0,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-26T22:53",
+                      "2026-10-26T22:53"
+                    ],
+                    "line": "2.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      1.57,
+                      2.35
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 9,
+                  "row_sha256": "709bee3eff147687a9978665fa3c9a49cb706de1c1cadd0924e124be20333089"
+                },
+                "raw_kickoff": "21:15",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-10-30T20:15:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Sporting CP",
+                      "csv_data_row": 4195,
+                      "file": "scoutingstats_2026-10.csv.gz",
+                      "file_sha256": "d5d5ad7c9f1a7e2966dd682c52da0041896c5496ba8b65ca47d4847340e0a9f8",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Casa Pia",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T20:15:00+00:00",
+                      "league": "Liga Portugal",
+                      "observed_at_utc": "2026-10-29T22:02:36+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "6c74e6df68f3026392903f3f26e17d657ce44b91f79d6137e56b6bd6f28ff649",
+                      "schedule_row": {
+                        "away": "Sporting CP",
+                        "captured_at": "2026-10-29T22:02:36+00:00",
+                        "country": "Portugal",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Casa Pia",
+                        "hs": "",
+                        "kickoff": "2026-10-30T20:15:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Liga Portugal",
+                        "odd1": "9.0",
+                        "odd2": "1.3",
+                        "odd_gg": "1.95",
+                        "odd_ng": "1.8",
+                        "odd_o15": "1.16",
+                        "odd_o25": "1.57",
+                        "odd_o35": "2.37",
+                        "odd_u15": "5.0",
+                        "odd_u25": "2.35",
+                        "odd_u35": "1.53",
+                        "oddx": "5.0",
+                        "p1": "10.284180320281402",
+                        "p2": "71.20244376562066",
+                        "p_gg": "48.00000000000001",
+                        "p_ng": "52.0",
+                        "p_o15": "81.16883116883116",
+                        "p_o25": "59.94897959183674",
+                        "p_o35": "39.23076923076923",
+                        "px": "18.513375914097935",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "20:15"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Sporting CP",
+                      "csv_data_row": 16485,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "324975ec8bce259ede5ae306bebb6e6a3daea4e5fa73f0cc30c71e1434de6106",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Casa Pia AC",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T20:15:00+00:00",
+                      "league": "Portugal: Primeira Liga",
+                      "observed_at_utc": "2026-10-29T22:02:07+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "c648999fe77828802ad81c621e98813b5dbc988830a7bd55da856295216cb7d0",
+                      "schedule_row": {
+                        "away": "Sporting CP",
+                        "captured_at": "2026-10-29T22:02:07+00:00",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Casa Pia AC",
+                        "hs": "",
+                        "index": "-2.08",
+                        "kickoff": "2026-10-30T21:15:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Portugal: Primeira Liga",
+                        "p1": "16.0",
+                        "p2": "60.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "24.0",
+                        "schedule_history": "[{\"away\": \"Sporting CP\", \"captured_at\": \"2026-10-28T22:02:05+00:00\", \"date\": \"2026-10-30\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Casa Pia AC\", \"kickoff\": \"2026-10-30T21:15:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "2"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Sporting CP",
+                      "csv_data_row": 16485,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-10.csv.gz",
+                      "file_sha256": "324975ec8bce259ede5ae306bebb6e6a3daea4e5fa73f0cc30c71e1434de6106",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Casa Pia AC",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-10-30T20:15:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-10-28T22:02:05+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "385f077d065632aa656cda3b9507d8de94d1c48e675ea0c93651307a1e40d323",
+                      "schedule_row": {
+                        "away": "Sporting CP",
+                        "captured_at": "2026-10-28T22:02:05+00:00",
+                        "date": "2026-10-30",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Casa Pia AC",
+                        "kickoff": "2026-10-30T21:15:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "over",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-10-30",
+                "Casa Pia",
+                "Sporting CP"
+              ],
+              "prob": 0.6455,
+              "cohort_evidence": {
+                "rate": 0.6455,
+                "n": 330,
+                "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                "as_of_exclusive": "2026-10-30",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 213,
+                "cohort_lower_bound": 0.5924382502996556,
+                "price_context": {
+                  "contract_id": "pfc_fdade2e70df4d4bb78a8cd6e",
+                  "selection": "away",
+                  "league": "Liga Portugal",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.57,
+                  "captured_at": "2026-10-30T01:11:19.950464+00:00",
+                  "decision_at": "2026-10-30T09:13:28+02:00",
+                  "kickoff": "2026-10-30T20:15:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.5360913625966679,
+              "ml_model_key": "1fbfb0973620a2989a53eced72e2bed1b5d023d2afbbf0a24da0f2a9cedb8b2e",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "model",
+              "ml_ordering_active": true,
+              "floor": 1.7116508347155293,
+              "floor_basis": "inherited",
+              "league": "Liga Portugal",
+              "shadow": false,
+              "price_kickoff": "2026-10-30T20:15:00+00:00"
+            }
+          ]
         }
       ],
-      "bank_pct": 23.2643,
-      "close_pct": 17.0829
+      "bank_pct": 20.9379,
+      "close_pct": 14.7565
     }
   ]
 }
