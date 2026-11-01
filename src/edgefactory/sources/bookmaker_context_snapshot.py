@@ -1030,6 +1030,51 @@ def _loader_timezone(value):
     return True
 
 
+# Soccer-relevant codes from deployed feeds-1NY2OSz0.js's status enum. These
+# describe source lifecycle only: never infer status from a clock or score.
+_LOADER_STATUS = {
+    0: ("not_started", "pre_match"), 1: ("first_period", "live"),
+    2: ("second_period", "live"), 6: ("first_half", "live"),
+    7: ("second_half", "live"), 20: ("started", "live"),
+    22: ("match_about_to_start", "pre_match"), 30: ("pause", "live"),
+    31: ("halftime", "live"), 32: ("awaiting_extra_time", "live"),
+    33: ("extra_time_halftime", "live"), 34: ("awaiting_penalties", "live"),
+    40: ("overtime", "live"), 41: ("first_extra", "live"),
+    42: ("second_extra", "live"), 50: ("penalties", "live"),
+    60: ("postponed", "inactive"), 61: ("start_delayed", "inactive"),
+    70: ("cancelled", "inactive"), 80: ("interrupted", "inactive"),
+    81: ("suspended", "inactive"), 90: ("abandoned", "inactive"),
+    91: ("walkover", "inactive"), 99: ("only_result", "finished"),
+    100: ("ended", "finished"), 110: ("after_extra_time", "finished"),
+    120: ("after_penalties", "finished"),
+}
+# A finite diagnostic vocabulary, not a claimed period-to-regulation mapping.
+_LOADER_PERIOD_KEYS = frozenset({"ft", "ht", "ot", "ap", "p1", "p2", "p3", "p4"})
+
+
+def _loader_protocol_fields(match):
+    tag = match.get("_doc")
+    # Classify exact literals, never export arbitrary tags. The original
+    # client_match_document_tag check specifically describes the sh_match
+    # fallback adapter; it is NOT an admission requirement for a native match.
+    doc = ("match" if tag == "match" else "sh_match" if tag == "sh_match" else "unrecognized")
+    status = match.get("status")
+    code = status.get("_id") if isinstance(status, dict) else None
+    label, lifecycle = (_LOADER_STATUS.get(code, ("unrecognized", "unresolved"))
+                        if type(code) is int else ("unrecognized", "unresolved"))
+    if any(match.get(k) is True for k in
+           ("postponed", "cancelled", "canceled", "walkover", "tobeannounced", "removed", "decidedbyfa")):
+        lifecycle = "inactive"
+    periods = match.get("periods")
+    periods = periods if isinstance(periods, dict) else {}
+    # Fixed known spellings can be inspected even when the provider uses upper
+    # case. Unknown keys/values stay private. Never guess what p1 means.
+    recognized = sorted({k.lower() for k in periods if k.lower() in _LOADER_PERIOD_KEYS})
+    return {"document_tag_class": doc, "source_status_name": label,
+            "source_lifecycle": lifecycle, "recognized_period_keys": recognized,
+            "unrecognized_period_key_count": sum(k.lower() not in _LOADER_PERIOD_KEYS for k in periods)}
+
+
 def _loader_match_checks(match, envelope):
     """Private projection plus public checks; never return the projection publicly.
 
@@ -1038,7 +1083,8 @@ def _loader_match_checks(match, envelope):
     and an ft key alone is not authority to use a score for regulation markets.
     """
     projection = {}
-    checks = {"client_match_document_tag": match.get("_doc") == "sh_match",
+    checks = {**_loader_protocol_fields(match),
+              "client_match_document_tag": match.get("_doc") == "sh_match",
               "soccer_sport_id": type(match.get("_sid")) is int and match["_sid"] == 1}
     dt = match.get("_dt")
     dt = dt if isinstance(dt, dict) else {}
@@ -1130,7 +1176,85 @@ def _validate_loader_matches(candidates, requested_id, limit_reached):
             "independent_fixture_corroboration": False}
 
 
-def _inspect_loader_payload_evidence(state, source_url):
+def _extract_loader_fixture_candidate(candidates, requested_id, limit_reached, *,
+                                      source_url, observed_at_utc=None, page_errors=False):
+    """One normalized numeric-identity/UTC fixture candidate, never stats/admission.
+
+    No raw state, names, arbitrary strings, credentials or provider URLs are exported.
+    Selected numeric IDs and computed UTC timestamps are intentional public
+    fields, separately from the value-free shape/evidence receipt. All copies
+    must agree; at least one complete sibling envelope must bind the domains.
+    """
+    report = _validate_loader_matches(candidates, requested_id, limit_reached)
+    selected = [(m, e) for m, e in candidates
+                if _loader_positive_id(m.get("_id")) and str(m["_id"]) == requested_id]
+    reasons = []
+    if not selected:
+        reasons.append("requested_event_not_found")
+    if page_errors:
+        reasons.append("page_loader_errors")
+    if limit_reached:
+        reasons.append("candidate_scan_truncated")
+    if any(v in {"conflicting", "incomplete"} for v in report["cross_copy_consistency"].values()):
+        reasons.append("candidate_identity_or_kickoff_incomplete_or_conflicting")
+    checks = report["candidate_checks"]
+    if any(c["document_tag_class"] == "unrecognized" or not c["soccer_sport_id"] for c in checks):
+        reasons.append("unsupported_document_or_sport")
+    required = ("home_team_id_supported", "away_team_id_supported", "home_team_uid_supported",
+                "away_team_uid_supported", "home_team_name_present", "away_team_name_present",
+                "team_ids_distinct", "team_uids_distinct", "team_names_distinct",
+                "kickoff_epoch_seconds_supported", "kickoff_timezone_recognized")
+    if any(not all(c[k] for k in required) for c in checks):
+        reasons.append("candidate_team_or_timestamp_invalid")
+    if any(any(b["agreement"] == "conflicting" for b in c["sibling_metadata_checks"].values()) for c in checks):
+        reasons.append("sibling_metadata_conflict")
+    if not any(all(b["agreement"] == "equal" for b in c["sibling_metadata_checks"].values()) for c in checks):
+        reasons.append("complete_sibling_binding_missing")
+    states = {(c["source_status_name"], c["source_lifecycle"]) for c in checks}
+    if len(states) != 1 or any(c["source_lifecycle"] == "unresolved" for c in checks):
+        reasons.append("candidate_status_unknown_or_conflicting")
+    holds = ["independent_fixture_corroboration_required", "freshness_not_verified",
+             "wall_clock_format_not_verified", "collection_permission_unresolved",
+             "historical_form_not_extracted", "standings_not_extracted",
+             "regulation_results_not_verified", "production_admission_not_implemented"]
+    if reasons:
+        return {"status": "fixture_candidate_held", "candidate_fixture_count": 0,
+                "fixture": None, "pre_match_candidate": False, "hold_reasons": reasons + holds}
+    match = selected[0][0]
+    status_name, lifecycle = next(iter(states))
+    kickoff = datetime.fromtimestamp(match["_dt"]["uts"], UTC)
+    observed = (parse_zoned_timestamp(observed_at_utc) if isinstance(observed_at_utc, str)
+                and len(observed_at_utc) <= 128 else None)
+    upcoming = observed is not None and kickoff > observed
+    if lifecycle != "pre_match":
+        holds.insert(0, "source_status_not_pre_match")
+    if observed is None:
+        holds.insert(0, "observation_time_unavailable")
+    elif not upcoming:
+        holds.insert(0, "kickoff_not_after_observation")
+    # updated_uts is a source timestamp, NOT query hydration/capture time.
+    # The historical fallback's boolean false stays unavailable, never epoch 0.
+    updates = [m.get("updated_uts") for m, _ in selected]
+    update = updates[0] if all(_loader_epoch_seconds(v) for v in updates) and len(set(updates)) == 1 else None
+    age = (int(observed.timestamp()) - update) if observed is not None and update is not None else None
+    if age is not None and age < 0:
+        holds.insert(0, "source_update_after_observation")
+    fixture = {"event_id": requested_id, "source_url": source_url,
+               "kickoff_utc": kickoff.isoformat(),
+               "observed_at_utc": observed.astimezone(UTC).isoformat() if observed else None,
+               "source_status": status_name, "source_lifecycle": lifecycle,
+               "source_update_age_seconds": age,
+               "home": {"team_id": str(match["teams"]["home"]["_id"]),
+                        "team_uid": str(match["teams"]["home"]["uid"])},
+               "away": {"team_id": str(match["teams"]["away"]["_id"]),
+                        "team_uid": str(match["teams"]["away"]["uid"])},
+               **{k: str(match[k]) for k in _LOADER_MATCH_BINDINGS}}
+    return {"status": "extracted_unadmitted_fixture_candidate", "candidate_fixture_count": 1,
+            "fixture": fixture, "pre_match_candidate": bool(lifecycle == "pre_match" and upcoming
+                and (age is None or age >= 0)), "hold_reasons": holds}
+
+
+def _inspect_loader_payload_evidence(state, source_url, *, candidate_sink=None, observed_at_utc=None):
     """Locate embedded candidates, excluding runtime credentials and query keys.
 
     Private loader state stays inside this call. Opaque ancestry is made explicit
@@ -1171,6 +1295,11 @@ def _inspect_loader_payload_evidence(state, source_url):
                 else:
                     truncated = True
             pending.append((value, child_path, depth + 1))
+    if candidate_sink is not None:
+        candidate_sink.update(_extract_loader_fixture_candidate(
+            candidates, requested_id, candidate_limit_reached, source_url=source_url,
+            observed_at_utc=observed_at_utc,
+            page_errors=state.get("errors") not in (None, _LOADER_UNDEFINED)))
     return {"status": "candidate_shape_and_field_syntax_only", "sections": sections,
             "section_limit_reached": truncated,
             "match_candidate_validation": _validate_loader_matches(
@@ -1181,12 +1310,14 @@ def _inspect_loader_payload_evidence(state, source_url):
             "collection_permission_verified": False}
 
 
-def inspect_native_loader_state(body: bytes, source_url: str) -> dict:
+def inspect_native_loader_state(body: bytes, source_url: str, *, observed_at_utc=None) -> dict:
     """Capture/decode supported embedded loader data, exporting a safe validation receipt.
 
-    Not a StatsHub payload adapter. Decoded loader/config data is local to this
-    call, never returned, persisted, executed or used to construct requests.
-    Candidate payload shapes/field syntax are not a verified native record schema.
+    Not a statistics/admission adapter. Raw loader/config data stays local,
+    never persisted, executed or used to construct requests. Only value-free
+    evidence and a bounded normalized fixture candidate may be returned.
+    Selected numeric identities and computed UTC timestamps are not raw state;
+    candidate extraction is not independent fixture or native statistics proof.
     """
     validate_context_url(source_url)
     if not isinstance(body, bytes) or len(body) > _NATIVE_LIMIT:
@@ -1255,8 +1386,11 @@ def inspect_native_loader_state(body: bytes, source_url: str) -> dict:
         else:
             return result
         summary = _summarize_loader_state(state)
-        return {**result, **summary,
-                "payload_evidence": _inspect_loader_payload_evidence(state, source_url),
+        candidate = {}
+        evidence = _inspect_loader_payload_evidence(
+            state, source_url, candidate_sink=candidate, observed_at_utc=observed_at_utc)
+        return {**result, **summary, "fixture_candidate": candidate,
+                "payload_evidence": evidence,
                 "status": "decoded_supported_loader_state",
                 "decoded_loader_state_count": 1}
     except _LoaderReject as error:
