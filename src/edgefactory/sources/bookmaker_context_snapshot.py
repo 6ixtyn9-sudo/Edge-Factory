@@ -10,10 +10,11 @@ from __future__ import annotations
 import hashlib
 import html
 import json
+import math
 import re
 from datetime import UTC, datetime
 from html.parser import HTMLParser
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 from edgefactory.identity import (
     canonical_league_key,
@@ -593,17 +594,24 @@ class _DataLoadingHTML(HTMLParser):
         self.current = None
         self.nodes = 0
         self.unsupported_assets = 0
+        self.inert_depth = 0
 
     def handle_starttag(self, tag, attrs):
         self.nodes += 1
         if self.nodes > 40000:
             raise ValueError("discovery node limit")
         attrs = dict(attrs)
+        if tag in {"template", "noscript"}:
+            self.inert_depth += 1
         if tag == "script":
             if len(self.scripts) >= 64 or self.current is not None:
                 raise ValueError("discovery script limit or nesting")
             self.current = {"json": (attrs.get("type") or "").strip().lower()
-                            in {"application/json", "application/ld+json"}, "text": ""}
+                            in {"application/json", "application/ld+json"}, "text": "",
+                            "loader_json": (attrs.get("type") or "").strip().lower() == "application/json",
+                            "loader_executable": (attrs.get("type") or "").strip().lower()
+                            in {"", "module", "application/javascript", "text/javascript"},
+                            "loader_eligible": "src" not in attrs and not self.inert_depth}
             self.scripts.append(self.current)
         value = attrs.get("src") if tag == "script" else attrs.get("href") if (
             tag == "link" and "modulepreload" in (attrs.get("rel") or "").split()) else None
@@ -623,6 +631,8 @@ class _DataLoadingHTML(HTMLParser):
             self.current["text"] += data
 
     def handle_endtag(self, tag):
+        if tag in {"template", "noscript"}:
+            self.inert_depth = max(0, self.inert_depth - 1)
         if tag == "script":
             self.current = None
 
@@ -689,4 +699,243 @@ def inspect_native_data_loading(body: bytes, source_url: str, *, is_script: bool
             result["embedded_json_shapes"].append(shape)
     except (ValueError, UnicodeError, RecursionError, AssertionError):
         return {**result, "status": "unsupported_or_malformed_static_payload", "script_asset_urls": []}
+    if not is_script:
+        result["loader_state"] = inspect_native_loader_state(body, source_url)
     return result
+
+
+# React Router's documented StreamTransfer framing and vendored turbo-stream v2
+# JSON reference format. This deliberately supports only the JSON-valued subset:
+# https://github.com/remix-run/react-router/tree/4e6ff03752ac96d0de3e8052d9d9ba3037e45b6d/packages/react-router/vendor/turbo-stream-v2
+# No JavaScript evaluation, constructors, plugins, promises, cycles or HTTP replay.
+_LOADER_MAX_BYTES = 512 * 1024
+_LOADER_MAX_NODES = 40000
+_LOADER_UNDEFINED = object()
+_LOADER_ENQUEUE = re.compile(
+    r"window\s*\.\s*__reactRouterContext\s*\.\s*streamController\s*\.\s*enqueue\s*\(")
+_LOADER_KNOWN_ORIGINS = frozenset({
+    "https://widgets.fn.sportradar.com", "https://sh.fn.sportradar.com",
+    "https://lmt.fn.sportradar.com", "https://mud.sportradar.com",
+})
+
+
+class _LoaderReject(ValueError):
+    """Fixed diagnostic enum only; never constructed from source text."""
+
+
+def _loader_pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise _LoaderReject("duplicate_json_keys")
+        result[key] = value
+    return result
+
+
+def _loader_constant(_):
+    raise _LoaderReject("nonfinite_json")
+
+
+def _loader_json(text):
+    return json.loads(text, object_pairs_hook=_loader_pairs, parse_constant=_loader_constant)
+
+
+def _check_loader_tree(value):
+    stack = [(value, 0)]
+    nodes = 0
+    while stack:
+        node, depth = stack.pop()
+        nodes += 1
+        if nodes > _LOADER_MAX_NODES or depth > 64:
+            raise _LoaderReject("loader_structure_limit")
+        if isinstance(node, float) and not math.isfinite(node):
+            raise _LoaderReject("nonfinite_json")
+        children = node.values() if isinstance(node, dict) else node if isinstance(node, list) else ()
+        stack.extend((child, depth + 1) for child in children)
+
+
+def _unpack_loader_v2(values):
+    """Bounded memoized graph decoder; references are never copied exponentially."""
+    if not isinstance(values, list) or not values or len(values) > 20000:
+        raise _LoaderReject("unsupported_reference_graph")
+    memo, active = {}, set()
+    edges = 0
+
+    def resolve(index, depth=0):
+        nonlocal edges
+        edges += 1
+        if edges > 100000 or depth > 64:
+            raise _LoaderReject("loader_structure_limit")
+        if type(index) is not int:
+            raise _LoaderReject("invalid_reference")
+        if index == -5:
+            return None
+        if index == -7:
+            return _LOADER_UNDEFINED
+        if not 0 <= index < len(values):
+            raise _LoaderReject("invalid_reference")
+        if index in active:
+            raise _LoaderReject("cyclic_reference_graph")
+        if index in memo:
+            return memo[index]
+        active.add(index)
+        node = values[index]
+        if isinstance(node, dict):
+            result = {}
+            for key, ref in node.items():
+                if re.fullmatch(r"_(?:0|[1-9]\d{0,5})", key) is None:
+                    raise _LoaderReject("unsupported_reference_graph")
+                name = resolve(int(key[1:]), depth + 1)
+                if not isinstance(name, str) or name in result:
+                    raise _LoaderReject("invalid_reference_key")
+                result[name] = resolve(ref, depth + 1)
+        elif isinstance(node, list):
+            if node and isinstance(node[0], str):
+                raise _LoaderReject("unsupported_tagged_or_deferred_value")
+            result = [resolve(ref, depth + 1) for ref in node]
+        else:
+            result = node
+        active.remove(index)
+        memo[index] = result
+        return result
+
+    return resolve(0)
+
+
+def _summarize_loader_state(state):
+    if not isinstance(state, dict) or not isinstance(state.get("loaderData"), dict):
+        raise _LoaderReject("loader_state_structure_unresolved")
+    loaders = state["loaderData"]
+    root = loaders.get("root")
+    context = root.get("cctx") if isinstance(root, dict) else None
+    context = context if isinstance(context, dict) else {}
+    origin = None
+    base = context.get("fishnetUrl")
+    if isinstance(base, str) and len(base) <= 256 and not any(ord(c) <= 32 for c in base):
+        try:
+            parsed = urlsplit(base)
+        except ValueError:
+            parsed = urlsplit("")
+        # Exact known public origins only; never export userinfo, paths or queries.
+        candidate = "https://" + (parsed.netloc or "")
+        if (candidate in _LOADER_KNOWN_ORIGINS and parsed.scheme == "https"
+                and parsed.path in {"", "/"} and not parsed.query and not parsed.fragment):
+            origin = candidate
+    token = context.get("fishnetToken")
+    alias = context.get("fishnetClientAlias")
+    token_present = (isinstance(token, str) and 0 < len(token) <= 8192
+                     and all(33 <= ord(c) <= 126 for c in token))
+    alias_valid = isinstance(alias, str) and re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", alias) is not None
+    brand_bound = context.get("clientId") == "sportpesa"
+    language_bound = context.get("language") == "en"
+    counts = dict.fromkeys(("doc0_data_envelopes", "match", "teams", "results", "standings", "tables", "queries"), 0)
+    stack, seen = [(loaders, 0)], set()
+    nodes = 0
+    while stack:
+        node, depth = stack.pop()
+        nodes += 1
+        if nodes > 100000 or depth > 64:
+            raise _LoaderReject("loader_structure_limit")
+        if not isinstance(node, (dict, list)) or id(node) in seen:
+            continue
+        seen.add(id(node))
+        if isinstance(node, dict):
+            for key in counts:
+                if key != "doc0_data_envelopes" and key in node:
+                    counts[key] += 1
+            doc = node.get("doc")
+            if isinstance(doc, list) and doc and isinstance(doc[0], dict) and "data" in doc[0]:
+                counts["doc0_data_envelopes"] += 1
+            stack.extend((child, depth + 1) for child in node.values())
+        else:
+            stack.extend((child, depth + 1) for child in node)
+    return {"loader_route_count": len(loaders), "root_context_present": bool(context),
+            "page_loader_errors_present": state.get("errors") not in (None, _LOADER_UNDEFINED),
+            "feed_config": {"feed_origin": origin,
+                "client_brand_bound": brand_bound, "language_bound": language_bound,
+                "client_alias_has_supported_syntax": bool(alias_valid),
+                "token_present_nonempty_text": token_present,
+                "syntactically_complete": bool(origin and alias_valid and token_present and brand_bound and language_bound)},
+            "payload_structure_counts": counts}
+
+
+def inspect_native_loader_state(body: bytes, source_url: str) -> dict:
+    """Capture/decode supported embedded loader data, exporting a safe validation receipt.
+
+    Not a StatsHub payload adapter. Decoded loader/config data is local to this
+    call, never returned, persisted, executed or used to construct requests.
+    No current native HTML fixture exists: format compatibility needs field proof.
+    """
+    validate_context_url(source_url)
+    if not isinstance(body, bytes) or len(body) > _NATIVE_LIMIT:
+        raise ValueError("invalid native loader bytes")
+    result = {"evidence_kind": "native_embedded_loader_state_inspection",
+              "status": "no_supported_transfer_found", "serialization_format": None,
+              "transfer_chunk_count": 0, "decoded_loader_state_count": 0,
+              "decoded_context_row_count": 0, "admitted_rows": 0,
+              "api_requests_made": 0, "javascript_executed": False,
+              "fixture_binding_status": "not_verified", "kickoff_utc": None,
+              "field_validation_status": "native_loader_fixture_not_available"}
+    try:
+        parser = _DataLoadingHTML(source_url)
+        parser.feed(body.decode("utf-8"))
+        parser.close()
+        if parser.current is not None:
+            raise _LoaderReject("incomplete_html_script")
+        chunks, direct = [], []
+        closed = False
+        for script in parser.scripts:
+            if not script["loader_eligible"]:
+                continue
+            text = script["text"].strip()
+            if script["loader_json"]:
+                if len(text.encode("utf-8")) > _LOADER_MAX_BYTES:
+                    raise _LoaderReject("loader_byte_limit")
+                data = _loader_json(text)
+                _check_loader_tree(data)
+                if isinstance(data, dict) and "loaderData" in data:
+                    direct.append(data)
+            elif script["loader_executable"] and _LOADER_ENQUEUE.search(text):
+                while text:
+                    call = _LOADER_ENQUEUE.match(text)
+                    if call is None or closed:
+                        raise _LoaderReject("unsupported_transfer_script")
+                    tail = text[call.end():].lstrip()
+                    value, end = json.JSONDecoder().raw_decode(tail)
+                    if not isinstance(value, str):
+                        raise _LoaderReject("transfer_argument_not_json_string")
+                    tail = tail[end:].lstrip()
+                    ending = re.match(r"\)\s*;", tail)
+                    if ending is None:
+                        raise _LoaderReject("unsupported_transfer_script")
+                    chunks.append(value)
+                    if len(chunks) > 64 or sum(len(c.encode("utf-8")) for c in chunks) > _LOADER_MAX_BYTES:
+                        raise _LoaderReject("loader_byte_limit")
+                    text = tail[ending.end():].strip()
+            elif script["loader_executable"] and re.fullmatch(
+                    r"window\.__reactRouterContext\.streamController\.close\(\);", text):
+                if closed:
+                    raise _LoaderReject("ambiguous_loader_state")
+                closed = True
+        result["transfer_chunk_count"] = len(chunks)
+        if len(direct) > 1 or (direct and chunks):
+            raise _LoaderReject("ambiguous_loader_state")
+        if chunks:
+            if not closed:
+                raise _LoaderReject("incomplete_loader_stream")
+            result["serialization_format"] = "react_router_turbo_stream_v2_json_subset"
+            data = _loader_json("".join(chunks))  # Reject deferred/multiple frames, never stitch promises.
+            _check_loader_tree(data)
+            state = _unpack_loader_v2(data)
+        elif direct:
+            result["serialization_format"] = "application_json_loader_data"
+            state = direct[0]
+        else:
+            return result
+        summary = _summarize_loader_state(state)
+        return {**result, **summary, "status": "decoded_supported_loader_state",
+                "decoded_loader_state_count": 1}
+    except _LoaderReject as error:
+        return {**result, "status": str(error)}
+    except (ValueError, UnicodeError, RecursionError, AssertionError):
+        return {**result, "status": "invalid_or_unsupported_loader_serialization"}
