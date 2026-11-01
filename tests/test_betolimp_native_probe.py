@@ -613,3 +613,85 @@ def test_priority_never_bypasses_asset_safety_validation(probe,transport):
     r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_discovery=True)
     assert [str(q.url) for q in requests]==[DISCOVERY_URL,ASSET]
     assert 'SECRET' not in json.dumps(r) and 'evil.example' not in json.dumps(r)
+
+
+def test_native_loader_mode_one_get_no_assets_or_api_and_no_secret_output(probe,transport,capsys):
+    payload={'loaderData':{'root':{'cctx':{
+        'clientId':'sportpesa','language':'en','fishnetUrl':'https://widgets.fn.sportradar.com/',
+        'fishnetClientAlias':'sportpesa','fishnetToken':'DO_NOT_PRINT'}}}}
+    body=('<script src="'+ASSET+'"></script><script type="application/json">'+json.dumps(payload)+'</script>').encode()
+    requests,settings=transport(lambda q: response(body=body))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_loader=True)
+    assert len(requests)==r['network_requests']==r['requested_url_count']==1
+    assert r['mode']=='native_embedded_loader_diagnostic_only'
+    assert r['context_status']=='embedded_loader_decoding_not_stats_or_api_validation'
+    receipt=r['receipts'][0]
+    assert receipt['loader_state']['decoded_loader_state_count']==1
+    assert receipt['loader_state']['feed_config']['syntactically_complete']
+    assert receipt['body_sha256']==hashlib.sha256(body).hexdigest()
+    assert receipt['decoded_context_row_count']==r['admitted_rows']==r['writes']==0
+    assert 'production_admission_not_implemented' in receipt['hold_reasons']
+    assert 'DO_NOT_PRINT' not in json.dumps(r)
+    assert len(settings)==1 and settings[0]['trust_env'] is False
+    assert probe.main(['--native-source','sportpesa-statshub','--native-url',DISCOVERY_URL,'--native-loader'])==0
+    output=json.loads(capsys.readouterr().out)
+    assert output['receipts'][0]['loader_state']['decoded_loader_state_count']==1
+
+
+def test_loader_decoding_does_not_silently_change_default_native_receipt(probe,transport):
+    requests,_=transport(lambda q: response())
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub')
+    assert len(requests)==1 and 'loader_state' not in r['receipts'][0]
+
+
+@pytest.mark.parametrize('status',[302,401,403,429,500])
+def test_loader_never_decodes_denials_or_redirects(probe,transport,monkeypatch,status):
+    def forbidden(*args,**kwargs):raise AssertionError('unusable transport must not decode loader')
+    monkeypatch.setattr(probe,'inspect_native_loader_state',forbidden)
+    requests,_=transport(lambda q: response(status))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_loader=True)
+    assert len(requests)==1 and not r['transport_ok']
+    assert 'loader_state' not in r['receipts'][0]
+
+
+@pytest.mark.parametrize('kind',['challenge','json','partial','compressed'])
+def test_loader_never_decodes_unusable_native_bodies(probe,transport,monkeypatch,kind):
+    def forbidden(*args,**kwargs):raise AssertionError('unusable transport must not decode loader')
+    monkeypatch.setattr(probe,'inspect_native_loader_state',forbidden)
+    headers={'content-type':'application/json'} if kind=='json' else (
+        {'content-encoding':'gzip'} if kind=='compressed' else {})
+    body=b'verify you are human' if kind=='challenge' else (
+        b'x'*(probe.MAX_NATIVE_BYTES+1) if kind=='partial' else HTML)
+    requests,_=transport(lambda q: response(body=body,headers=headers))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_loader=True)
+    assert len(requests)==1 and not r['transport_ok']
+    assert 'loader_state' not in r['receipts'][0]
+
+
+def test_loader_mode_preflight_guards_make_no_network_request(probe,transport):
+    requests,_=transport(lambda q: response())
+    with pytest.raises(ValueError):probe.native_probe([URL],native_loader=True)
+    with pytest.raises(ValueError):probe.native_probe([DISCOVERY_URL,DISCOVERY_URL+'/statistics'],
+                                                      'sportpesa-statshub',native_loader=True)
+    for flag in ('native_context','native_discovery'):
+        with pytest.raises(ValueError):probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',
+                                                         native_loader=True,**{flag:True})
+    for args in (['--input','missing','--native-loader'],
+                 ['--native-url',URL,'--native-loader'],
+                 ['--native-source','sportpesa-statshub','--native-url',DISCOVERY_URL,
+                  '--native-loader','--native-discovery'],
+                 ['--native-source','sportpesa-statshub','--native-url',DISCOVERY_URL,
+                  '--native-loader','--card','missing']):
+        with pytest.raises(SystemExit) as error:probe.main(args)
+        assert error.value.code==2
+    assert not requests
+
+
+def test_loader_decode_failure_is_not_successful_cli_even_when_http_is_ok(probe,transport,capsys):
+    requests,_=transport(lambda q: response(body=b'<h1>public page without supported loader</h1>'))
+    assert probe.main(['--native-source','sportpesa-statshub','--native-url',DISCOVERY_URL,
+                       '--native-loader'])==1
+    r=json.loads(capsys.readouterr().out)
+    assert len(requests)==1 and r['transport_ok'] and not r['loader_decoding_ok']
+    assert r['receipts'][0]['loader_state']['status']=='no_supported_transfer_found'
+    assert r['admitted_rows']==0
