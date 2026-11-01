@@ -1,15 +1,19 @@
-"""Pure saved-reader bookmaker context decoder and own-card diagnostic.
+"""Pure bookmaker context decoders and own-card diagnostic.
 
 SportPesa-branded Sportradar public match pages only. No HTTP, registration,
 state writer, odds, probabilities or admission path. Shares existing identity
-and timestamp guards. Reader structure is not verified native availability.
+and timestamp guards. Reader and native evidence are never interchangeable.
+Native support is limited to explicitly bound semantic standings tables.
 """
 from __future__ import annotations
 
 import hashlib
 import html
+import json
 import re
 from datetime import UTC, datetime
+from html.parser import HTMLParser
+from urllib.parse import urljoin
 
 from edgefactory.identity import (
     canonical_league_key,
@@ -23,10 +27,13 @@ MAX_CONTEXT_BYTES = 128 * 1024
 MAX_CONTEXT_PAGES = 100
 PREFIX = "https://statshub.sportradar.com/sportpesa/en/"
 MATCH_URL = re.compile(re.escape(PREFIX) + r"match/[1-9]\d{0,11}")
+CONTEXT_URL = re.compile(MATCH_URL.pattern + r"(?:/statistics)?")
 TEAM_URL = re.escape(PREFIX) + r"sport/1/team/([1-9]\d{0,11})\?seasonId=(\d{1,12})&tournamentId=(\d{1,12})"
 TEAM_LINK = re.compile(r"\[([^\[\]]{1,240})\]\((" + TEAM_URL + r")\)")
 MATCH_LINK = re.compile(r"\[([^\[\]]{1,1600})\]\((" + MATCH_URL.pattern + r")\)")
 COLUMNS = ["#", "Team", "P", "W", "D", "L", "GF", "GA", "DIFF", "PTS", "Form"]
+# Both layouts observed: CAF women omits Form, never a numeric core column.
+STANDINGS_LAYOUTS = (COLUMNS, COLUMNS[:-1])
 MONTH_DATE = re.compile(r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}, \d{4}\b")
 HOLDS = (
     "reader_transcription_not_native_response", "collection_permission_unresolved",
@@ -37,8 +44,8 @@ HOLDS = (
 
 
 def validate_context_url(value: str) -> str:
-    """Known ordinary public match route, fixed tenant; no API/private paths."""
-    if not isinstance(value, str) or MATCH_URL.fullmatch(value) is None:
+    """Observed Overview/Statistics routes, fixed tenant; no API/private paths."""
+    if not isinstance(value, str) or CONTEXT_URL.fullmatch(value) is None:
         raise ValueError("not a plain SportPesa-branded public match URL")
     return value
 
@@ -65,6 +72,21 @@ def _team(match: re.Match) -> dict:
             "season_id": match[4], "tournament_id": match[5]}
 
 
+def _standings_values(cells: list[str]) -> dict:
+    """One arithmetic contract shared by reader and native table diagnostics."""
+    if len(cells) not in (10, 11):
+        raise ValueError("wrong standings columns")
+    values = [int(cells[i]) for i in (0, 2, 3, 4, 5, 6, 7, 8, 9)]
+    rank, played, wins, draws, losses, gf, ga, diff, points = values
+    if (not 1 <= rank <= 100 or any(not 0 <= n <= 999 for n in
+            (played, wins, draws, losses, gf, ga)) or not -999 <= points <= 999
+            or played != wins + draws + losses or diff != gf - ga):
+        raise ValueError("inconsistent standings arithmetic")
+    return {"rank": rank, "played": played, "wins": wins, "draws": draws,
+            "losses": losses, "goals_for": gf, "goals_against": ga,
+            "goal_difference": diff, "points": points}
+
+
 def _tables(text: str) -> tuple[list[dict], int]:
     tables, invalid = [], 0
     label, table = None, None
@@ -79,7 +101,8 @@ def _tables(text: str) -> tuple[list[dict], int]:
                 label = (heading[1] if heading else line)[:240]
             continue
         cells = [c.strip() for c in line.strip("|").split("|")]
-        if cells == COLUMNS:
+        if cells in STANDINGS_LAYOUTS:
+            width = len(cells)
             table = {"label": label, "rows": []}
             tables.append(table)
             if len(tables) > 8:
@@ -89,24 +112,15 @@ def _tables(text: str) -> tuple[list[dict], int]:
             continue
         if len(tables) > 8 or len(table["rows"]) >= 40:
             raise ValueError("context table limit")
-        if len(cells) != 11 or TEAM_LINK.fullmatch(cells[1]) is None:
+        if len(cells) != width or TEAM_LINK.fullmatch(cells[1]) is None:
             invalid += 1
             continue
         try:
-            values = [int(cells[i]) for i in (0, 2, 3, 4, 5, 6, 7, 8, 9)]
+            values = _standings_values(cells)
         except ValueError:
             invalid += 1
             continue
-        rank, played, wins, draws, losses, gf, ga, diff, points = values
-        if (not 1 <= rank <= 100 or any(not 0 <= n <= 999 for n in
-                (played, wins, draws, losses, gf, ga)) or not -999 <= points <= 999
-                or played != wins + draws + losses or diff != gf - ga):
-            invalid += 1
-            continue
-        table["rows"].append({**_team(TEAM_LINK.fullmatch(cells[1])),
-                              "rank": rank, "played": played, "wins": wins,
-                              "draws": draws, "losses": losses, "goals_for": gf,
-                              "goals_against": ga, "goal_difference": diff, "points": points})
+        table["rows"].append({**_team(TEAM_LINK.fullmatch(cells[1])), **values})
     return tables, invalid
 
 
@@ -192,7 +206,7 @@ def parse_context_batch(raw: list) -> list[dict]:
     if not isinstance(raw, list) or not 1 <= len(raw) <= MAX_CONTEXT_PAGES:
         raise ValueError("expected one to 100 bounded reader pages")
     pages = [parse_context_excerpt(item) for item in raw]
-    if len({p["source_url"] for p in pages}) != len(pages):
+    if len({p["source_url"].removesuffix("/statistics") for p in pages}) != len(pages):
         raise ValueError("duplicate event snapshots require explicit operator reconciliation")
     return pages
 
@@ -304,3 +318,344 @@ def context_slate_coverage(card: list[dict], pages: list[dict], as_of: datetime)
             "coverage_status": "reader_candidates_only_not_native_or_usable_slate_coverage",
             "pending_native_batches_not_executed": [urls[i:i + 3] for i in range(0, len(urls), 3)],
             "snapshots": pages}
+
+
+# Standard semantic HTML only. No guessed CSS selectors, JS evaluation,
+# hydration-key guesses, widget/API fetches or browser session state.
+_NATIVE_LIMIT = 2 * 1024 * 1024
+_NATIVE_TEAM = re.compile(TEAM_URL)
+_VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link',
+         'meta', 'param', 'source', 'track', 'wbr'}
+_STRUCTURAL = {'a', 'table', 'tr', 'td', 'th', 'caption'}
+_SAFE_LABEL = re.compile(r"[\w .,'’&()+:/|–—-]{1,160}")
+
+
+def _native_label(value: str) -> str | None:
+    label = ' '.join(value.split())
+    if (_SAFE_LABEL.fullmatch(label) is None or 'http' in label.casefold()
+            or any(ord(c) < 32 or 0x202A <= ord(c) <= 0x202E
+                   or 0x2066 <= ord(c) <= 0x2069 for c in label)):
+        return None
+    return label
+
+
+class _NativeContextHTML(HTMLParser):
+    """Bounded semantic shape collector; arbitrary text/attributes never exported."""
+
+    def __init__(self, source_url: str):
+        super().__init__(convert_charrefs=True)
+        self.source_url = source_url
+        self.fixture_url = source_url.removesuffix("/statistics")
+        self.stack = []
+        self.nodes = 0
+        self.counts = dict.fromkeys(('table', 'tr', 'th', 'td', 'a', 'time', 'script'), 0)
+        self.roles = dict.fromkeys(('table', 'row', 'columnheader', 'cell', 'gridcell'), 0)
+        self.script_counts = dict.fromkeys(('inert_json', 'json_ld', 'external', 'inline'), 0)
+        self.canonical = set()
+        self.canonical_conflict = False
+        self.overview = False
+        self.header_teams = {}
+        self.anchor = None
+        self.table = self.row = self.cell = None
+        self.caption = None
+        self.tables = []
+
+    def _public_url(self, value):
+        if not isinstance(value, str) or any(c.isspace() for c in value):
+            return None
+        url = urljoin(self.source_url, value)
+        return url if CONTEXT_URL.fullmatch(url) or _NATIVE_TEAM.fullmatch(url) else None
+
+    def handle_starttag(self, tag, attrs):
+        self.nodes += 1
+        if self.nodes > 40000 or len(self.stack) >= 96:
+            raise ValueError('HTML structure limit')
+        attrs = dict(attrs)
+        if tag in self.counts:
+            self.counts[tag] += 1
+        if attrs.get('role') in self.roles:
+            self.roles[attrs['role']] += 1
+        if tag == 'script':
+            kind = (attrs.get('type') or '').strip().casefold()
+            group = ('inert_json' if kind == 'application/json' else 'json_ld'
+                     if kind == 'application/ld+json' else 'external' if 'src' in attrs else 'inline')
+            self.script_counts[group] += 1
+        style = re.sub(r'\s+', '', attrs.get('style') or '').casefold()
+        hidden = (bool(self.stack and self.stack[-1][1]) or tag in
+                  {'script', 'style', 'template', 'noscript'} or 'hidden' in attrs
+                  or (attrs.get('aria-hidden') or '').casefold() == 'true'
+                  or 'display:none' in style or 'visibility:hidden' in style)
+        if tag not in _VOID:
+            self.stack.append((tag, hidden))
+        if hidden:
+            return
+        if tag == 'link' and 'canonical' in (attrs.get('rel') or '').casefold().split():
+            url = self._public_url(attrs.get('href'))
+            if url in {self.fixture_url, self.fixture_url + "/statistics"}:
+                self.canonical.add(url)
+            else:
+                self.canonical_conflict = True
+        if tag == 'a':
+            if self.anchor is not None:
+                raise ValueError('nested anchor')
+            self.anchor = {'url': self._public_url(attrs.get('href')), 'text': ''}
+        if tag == 'table' and self.overview:
+            if self.table is not None or len(self.tables) >= 8:
+                raise ValueError('native table limit or nesting')
+            self.table = {'caption': None, 'rows': []}
+        if self.table is not None:
+            if tag == 'caption':
+                self.caption = ''
+            if tag == 'tr':
+                if self.row is not None or len(self.table['rows']) >= 41:
+                    raise ValueError('native row limit or nesting')
+                self.row = []
+            if tag in {'td', 'th'}:
+                if self.row is None or self.cell is not None or len(self.row) >= 11:
+                    raise ValueError('native cell limit or nesting')
+                self.cell = {'tag': tag, 'text': '', 'teams': []}
+
+    def handle_data(self, data):
+        if not self.stack or self.stack[-1][1]:
+            return
+        for target, key, limit in ((self.anchor, 'text', 512), (self.cell, 'text', 1024)):
+            if target is not None:
+                target[key] += ' ' + data
+                if len(target[key]) > limit:
+                    raise ValueError('native text limit')
+        if self.caption is not None:
+            self.caption += data
+            if len(self.caption) > 160:
+                raise ValueError('native caption limit')
+
+    def handle_endtag(self, tag):
+        if tag in _VOID:
+            return
+        found = next((i for i in range(len(self.stack) - 1, -1, -1)
+                      if self.stack[i][0] == tag), None)
+        if found is None:
+            if tag in _STRUCTURAL:
+                raise ValueError('unmatched semantic close')
+            return
+        if any(t in _STRUCTURAL for t, _ in self.stack[found + 1:]):
+            raise ValueError('implicitly closed semantic structure')
+        hidden = self.stack[found][1]
+        del self.stack[found:]
+        if hidden:
+            return
+        if tag == 'a' and self.anchor is not None:
+            anchor, self.anchor = self.anchor, None
+            label = _native_label(anchor['text'])
+            match = _NATIVE_TEAM.fullmatch(anchor['url'] or '')
+            if label and match:
+                team = {'names': [label], 'team_url': anchor['url'], 'team_id': match[1],
+                        'season_id': match[2], 'tournament_id': match[3]}
+                if not self.overview:
+                    key = (match[1], match[2], match[3])
+                    previous = self.header_teams.setdefault(key, team)
+                    if label not in previous['names']:
+                        previous['names'].append(label)
+                if self.cell is not None:
+                    self.cell['teams'].append(team)
+            if anchor['url'] == self.fixture_url and label == 'Overview':
+                self.overview = True
+        if tag in {'th', 'td'} and self.cell is not None:
+            self.row.append(self.cell)
+            self.cell = None
+        if tag == 'tr' and self.row is not None:
+            self.table['rows'].append(self.row)
+            self.row = None
+        if tag == 'caption' and self.caption is not None:
+            self.table['caption'] = _native_label(self.caption)
+            self.caption = None
+        if tag == 'table' and self.table is not None:
+            if self.cell is not None or self.row is not None:
+                raise ValueError('unclosed native table row')
+            self.tables.append(self.table)
+            self.table = None
+
+
+def parse_native_context_html(body: bytes, source_url: str) -> dict:
+    """Inspect one complete native response, without reconstructing reader input.
+
+    This supports only strictly checked semantic standings tables with the exact
+    observed columns, canonical event binding, a two-team Overview header and
+    matching provider season/tournament/team IDs. Not site-CSS verification or
+    a complete context adapter. Native dates/results/H2H and admission stay held.
+    """
+    validate_context_url(source_url)
+    if not isinstance(body, bytes) or len(body) > _NATIVE_LIMIT:
+        raise ValueError('invalid native context bytes')
+    result = {'evidence_kind': 'native_html_semantic_inspection',
+              'status': 'no_supported_semantic_tables', 'decoded_context_row_count': 0,
+              'standings_tables': [], 'admitted_rows': 0, 'kickoff_utc': None,
+              'native_results_and_h2h_status': 'not_implemented',
+              'field_validation_status': 'retained_native_fixture_not_available'}
+    parser = _NativeContextHTML(source_url)
+    try:
+        parser.feed(body.decode('utf-8'))
+        parser.close()
+        if parser.table is not None or parser.anchor is not None or parser.row is not None:
+            raise ValueError('incomplete native structure')
+    except (UnicodeError, ValueError, AssertionError, RecursionError):
+        return {**result, 'status': 'unsupported_or_malformed_native_structure'}
+    result['markup_counts'] = parser.counts
+    result['role_counts'] = parser.roles
+    result['script_counts'] = parser.script_counts
+    teams = list(parser.header_teams.values())
+    bound = (bool(parser.canonical) and not parser.canonical_conflict
+             and parser.overview and len(teams) == 2 and teams[0]['team_id'] != teams[1]['team_id']
+             and all(teams[0][k] == teams[1][k] for k in ('season_id', 'tournament_id')))
+    result['fixture_route_and_header_bound'] = bool(bound)
+    supported = [table for table in parser.tables if table['rows'] and
+                 [c['text'].strip() for c in table['rows'][0]] in STANDINGS_LAYOUTS and
+                 all(c['tag'] == 'th' for c in table['rows'][0])]
+    result['supported_semantic_table_count'] = len(supported)
+    if not supported:
+        return result
+    if not bound:
+        return {**result, 'status': 'native_fixture_binding_unresolved'}
+    if len(supported) > 1 and (any(not t['caption'] for t in supported)
+                             or len({t['caption'] for t in supported}) != len(supported)):
+        return {**result, 'status': 'native_table_phase_ambiguous'}
+    tables = []
+    try:
+        for table in supported:
+            rows = []
+            seen = set()
+            for cells in table['rows'][1:]:
+                if len(cells) != len(table['rows'][0]) or len(cells[1]['teams']) != 1:
+                    raise ValueError('unsupported native row')
+                team = cells[1]['teams'][0]
+                if (team['team_id'] in seen or any(team[k] != teams[0][k] for k in ('season_id', 'tournament_id'))):
+                    raise ValueError('unbound or duplicate native team row')
+                seen.add(team['team_id'])
+                rows.append({**team, **_standings_values([c['text'].strip() for c in cells])})
+            tables.append({'phase_label': table['caption'], 'rows': rows,
+                           'contains_both_fixture_teams': {t['team_id'] for t in teams} <= seen})
+        if not any(t['contains_both_fixture_teams'] for t in tables):
+            raise ValueError('incomplete native fixture tables')
+    except (ValueError, TypeError, KeyError):
+        return {**result, 'status': 'native_standings_structure_inconsistent'}
+    return {**result, 'status': 'native_semantic_standings_decoded_diagnostic_only',
+            'standings_tables': tables, 'decoded_context_row_count': sum(len(t['rows']) for t in tables)}
+
+
+# Static evidence only: these names are research leads, not an endpoint registry.
+_DISCOVERY_OPERATIONS = (
+    "match_info_statshub", "stats_match_get", "stats_match_head2head",
+    "stats_team_lastx", "stats_team_nextx", "stats_team_versus",
+    "stats_season_tables", "config_tree_mini", "event_get",
+)
+_DISCOVERY_FIELDS = frozenset({
+    "data", "props", "pageProps", "state", "events", "matches", "teams",
+    "standings", "tables", "results", "home", "away", "seasonId", "tournamentId",
+})
+_SCRIPT_URL = re.compile(r"https://statshub\.sportradar\.com/assets/[A-Za-z0-9_-]{1,160}\.js")
+
+
+def validate_discovery_asset_url(url: str) -> str:
+    """Only fixed-origin static JS; queries, private paths and other tenants excluded."""
+    if not isinstance(url, str) or _SCRIPT_URL.fullmatch(url) is None:
+        raise ValueError("unsupported public script asset")
+    return url
+
+
+class _DataLoadingHTML(HTMLParser):
+    def __init__(self, source_url):
+        super().__init__(convert_charrefs=True)
+        self.source_url = source_url
+        self.scripts = []
+        self.preloads = []
+        self.assets = []
+        self.current = None
+        self.nodes = 0
+        self.unsupported_assets = 0
+
+    def handle_starttag(self, tag, attrs):
+        self.nodes += 1
+        if self.nodes > 40000:
+            raise ValueError("discovery node limit")
+        attrs = dict(attrs)
+        if tag == "script":
+            if len(self.scripts) >= 64 or self.current is not None:
+                raise ValueError("discovery script limit or nesting")
+            self.current = {"json": (attrs.get("type") or "").strip().lower()
+                            in {"application/json", "application/ld+json"}, "text": ""}
+            self.scripts.append(self.current)
+        value = attrs.get("src") if tag == "script" else attrs.get("href") if (
+            tag == "link" and "modulepreload" in (attrs.get("rel") or "").split()) else None
+        if value is not None:
+            target = urljoin(self.source_url, value)
+            if _SCRIPT_URL.fullmatch(target):
+                dest = self.assets if tag == "script" else self.preloads
+                if target not in dest:
+                    dest.append(target)
+            else:
+                self.unsupported_assets += 1
+
+    def handle_data(self, data):
+        if self.current is not None:
+            self.current["text"] += data
+
+    def handle_endtag(self, tag):
+        if tag == "script":
+            self.current = None
+
+
+def inspect_native_data_loading(body: bytes, source_url: str, *, is_script: bool = False) -> dict:
+    """Describe referenced assets/JSON/API markers, without execution or URL replay.
+
+    Never exports script bodies, arbitrary JSON keys/values, request parameters,
+    credentials or signed URLs. A marker is not a verified API endpoint/schema.
+    """
+    (validate_discovery_asset_url if is_script else validate_context_url)(source_url)
+    if not isinstance(body, bytes) or len(body) > _NATIVE_LIMIT:
+        raise ValueError("invalid discovery body")
+    result = {"evidence_kind": "native_static_data_loading_inspection",
+              "status": "inspected_not_api_verified",
+              "coverage_status": "static_references_only_runtime_xhr_not_observed",
+              "script_asset_urls": [],
+              "unsupported_asset_reference_count": 0, "embedded_json_shapes": [],
+              "api_operation_reference_hints": [], "sportradar_host_reference_hints": [],
+              "gismo_reference_present": False,
+              "signed_query_reference_present": False, "javascript_executed": False,
+              "api_requests_made": 0, "admitted_rows": 0}
+    try:
+        text = body.decode("utf-8")
+        if is_script:
+            scripts = [{"json": False, "text": text}]
+        else:
+            parser = _DataLoadingHTML(source_url)
+            parser.feed(text)
+            parser.close()
+            if parser.current is not None:
+                raise ValueError("unclosed script")
+            result["script_asset_urls"] = list(dict.fromkeys(parser.assets + parser.preloads))[:16]
+            result["unsupported_asset_reference_count"] = parser.unsupported_assets
+            scripts = parser.scripts
+        # Only script text, never a link/menu labelled with a supposed endpoint.
+        combined = "\n".join(s["text"] for s in scripts)
+        result["api_operation_reference_hints"] = [op for op in _DISCOVERY_OPERATIONS
+            if re.search(r"\b" + re.escape(op) + r"\b", combined)]
+        result["sportradar_host_reference_hints"] = sorted(set(re.findall(
+            r"https://((?:[A-Za-z0-9-]+\.)*sportradar\.com)(?=[/\s\"'?:]|$)", combined)))[:8]
+        result["gismo_reference_present"] = bool(re.search(r"\bgismo\b", combined))
+        result["signed_query_reference_present"] = bool(re.search(r"[?&]T=", combined))
+        for script in scripts:
+            if not script["json"]:
+                continue
+            try:
+                data = json.loads(script["text"])
+                shape = {"json_type": "object" if isinstance(data, dict) else "array"
+                         if isinstance(data, list) else "scalar"}
+                if isinstance(data, (dict, list)):
+                    shape["entry_count"] = len(data)
+                if isinstance(data, dict):
+                    shape["recognized_root_fields"] = sorted(_DISCOVERY_FIELDS.intersection(data))
+            except (ValueError, RecursionError):
+                shape = {"json_type": "invalid_or_unsupported"}
+            result["embedded_json_shapes"].append(shape)
+    except (ValueError, UnicodeError, RecursionError, AssertionError):
+        return {**result, "status": "unsupported_or_malformed_static_payload", "script_asset_urls": []}
+    return result

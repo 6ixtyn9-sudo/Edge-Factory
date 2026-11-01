@@ -371,3 +371,198 @@ def test_whole_slate_does_not_raise_native_three_url_budget(probe,transport):
     urls=['https://statshub.sportradar.com/sportpesa/en/match/'+str(73346090+i) for i in range(40)]
     with pytest.raises(ValueError): probe.native_probe(urls,'sportpesa-statshub')
     assert not requests
+
+
+@pytest.fixture
+def synthetic_native_table():
+    # Synthetic semantic contract, deliberately not represented as a site capture.
+    spec=importlib.util.spec_from_file_location('semantic_contract_fixture',
+                                              ROOT/'tests/test_bookmaker_native_context.py')
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.document(),module.URL
+
+
+def test_opt_in_native_context_reuses_same_single_get(probe,transport,synthetic_native_table):
+    body,url=synthetic_native_table
+    requests,_=transport(lambda request: response(body=body))
+    result=probe.native_probe([url],'sportpesa-statshub',native_context=True)
+    assert result['network_requests']==len(requests)==1
+    r=result['receipts'][0]
+    assert r['decoded_context_row_count']==r['native_context']['decoded_context_row_count']==2
+    assert r['evidence_kind']=='native_http_response'
+    assert r['native_context']['evidence_kind']=='native_html_semantic_inspection'
+    assert r['body_sha256']==hashlib.sha256(body).hexdigest()
+    assert r['quoted_at'] is r['kickoff_utc'] is None
+    assert result['admitted_rows']==r['admitted_rows']==r['decoded_observation_count']==0
+    assert 'production_admission_not_implemented' in r['hold_reasons']
+    assert 'native_context_decoding_unimplemented' not in r['hold_reasons']
+    assert 'native_results_and_h2h_decoding_unimplemented' in r['hold_reasons']
+    assert 'native_context_field_validation_pending' in r['hold_reasons']
+    assert 'not_slate_coverage' in result['context_status']
+
+
+def test_native_context_is_opt_in_not_silent_contract_change(probe,transport,synthetic_native_table):
+    body,url=synthetic_native_table
+    transport(lambda request: response(body=body))
+    r=probe.native_probe([url],'sportpesa-statshub')['receipts'][0]
+    assert 'native_context' not in r and r['decoded_context_row_count']==0
+
+
+@pytest.mark.parametrize('status',[302,401,403,429,500])
+def test_native_context_never_decodes_denial_or_redirect(probe,transport,monkeypatch,status):
+    def forbidden(*args,**kwargs): raise AssertionError('must not decode failed transport')
+    monkeypatch.setattr(probe,'parse_native_context_html',forbidden)
+    requests,_=transport(lambda request: response(status))
+    urls=list(probe.NATIVE_SOURCE_PAGES['sportpesa-statshub'])
+    r=probe.native_probe(urls,'sportpesa-statshub',native_context=True)
+    assert len(requests)==1 and r['unattempted_urls']==urls[1:]
+    assert 'native_context' not in r['receipts'][0]
+
+
+@pytest.mark.parametrize('kind',['challenge','compressed','partial','json'])
+def test_native_context_does_not_inspect_unusable_bodies(probe,transport,monkeypatch,kind):
+    def forbidden(*args,**kwargs): raise AssertionError('must not inspect unusable body')
+    monkeypatch.setattr(probe,'parse_native_context_html',forbidden)
+    body=b'<h1>Verify you are human</h1>' if kind=='challenge' else HTML
+    headers={'content-encoding':'gzip'} if kind=='compressed' else (
+        {'content-type':'application/json'} if kind=='json' else {})
+    if kind=='partial': body=b'x'*(probe.MAX_NATIVE_BYTES+1)
+    requests,_=transport(lambda request: response(body=body,headers=headers))
+    r=probe.native_probe([probe.NATIVE_SOURCE_PAGES['sportpesa-statshub'][0]],
+                         'sportpesa-statshub',native_context=True)
+    assert len(requests)==1 and not r['transport_ok']
+    assert 'native_context' not in r['receipts'][0]
+
+
+def test_native_context_source_and_cli_guards(probe,transport,capsys):
+    requests,_=transport(lambda request: response())
+    with pytest.raises(ValueError): probe.native_probe([URL],'betolimp',native_context=True)
+    with pytest.raises(SystemExit) as error: probe.main(['--native-url',URL,'--native-context'])
+    assert error.value.code==2 and not requests
+    url=probe.NATIVE_SOURCE_PAGES['sportpesa-statshub'][0]+'/statistics'
+    assert probe.main(['--native-url',url,'--native-source','sportpesa-statshub','--native-context'])==0
+    data=json.loads(capsys.readouterr().out)
+    assert data['receipts'][0]['native_context']['decoded_context_row_count']==0
+    assert data['admitted_rows']==0
+
+
+def test_native_context_three_url_budget_unchanged(probe,transport):
+    requests,_=transport(lambda request: response())
+    urls=['https://statshub.sportradar.com/sportpesa/en/match/'+str(75879092+i) for i in range(4)]
+    with pytest.raises(ValueError): probe.native_probe(urls,'sportpesa-statshub',native_context=True)
+    assert not requests
+
+
+DISCOVERY_URL='https://statshub.sportradar.com/sportpesa/en/match/75879092'
+ASSET='https://statshub.sportradar.com/assets/index-ABC123.js'
+ASSET2='https://statshub.sportradar.com/assets/vendor-DEF456.js'
+
+
+def test_static_discovery_reuses_get_budget_and_never_replays_api(probe,transport):
+    html=(f'<link rel="modulepreload" href="{ASSET2}"><script src="{ASSET}"></script>'
+          '<script type="application/json">{"data":[],"secret":"DO-NOT-PRINT"}</script>')
+    js=b'const route="https://widgets.fn.sportradar.com/gismo/stats_team_lastx/1200717?T=DO-NOT-PRINT";'
+    def handler(request):
+        if str(request.url)==DISCOVERY_URL: return response(body=html.encode())
+        return response(body=js,headers={'content-type':'application/javascript'})
+    requests,settings=transport(handler)
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_discovery=True)
+    assert [str(q.url) for q in requests]==[DISCOVERY_URL,ASSET,ASSET2]
+    assert r['network_requests']==r['requested_url_count']==3 and r['transport_ok']
+    assert r['mode']=='native_static_discovery_diagnostic_only'
+    assert r['admitted_rows']==r['writes']==0
+    assert r['receipts'][0]['data_loading_discovery']['embedded_json_shapes']==[
+        {'json_type':'object','entry_count':2,'recognized_root_fields':['data']}]
+    hint=r['receipts'][1]['data_loading_discovery']
+    assert hint['api_operation_reference_hints']==['stats_team_lastx']
+    assert hint['sportradar_host_reference_hints']==['widgets.fn.sportradar.com']
+    assert hint['coverage_status']=='static_references_only_runtime_xhr_not_observed'
+    assert hint['signed_query_reference_present'] and hint['gismo_reference_present']
+    assert hint['javascript_executed'] is False and hint['api_requests_made']==0
+    assert 'DO-NOT-PRINT' not in json.dumps(r)
+    assert all(s['trust_env'] is False and s['follow_redirects'] is False for s in settings)
+    assert all('cookie' not in q.headers and 'authorization' not in q.headers for q in requests)
+    assert all(x['decoded_context_row_count']==0 for x in r['receipts'])
+
+
+def test_discovery_defaults_do_not_fetch_scripts(probe,transport):
+    requests,_=transport(lambda request: response(body=f'<script src="{ASSET}"></script>'.encode()))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub')
+    assert len(requests)==1 and 'data_loading_discovery' not in r['receipts'][0]
+
+
+@pytest.mark.parametrize('bad',[
+    'https://evil.example/assets/app.js',
+    '//evil.example/assets/app.js',
+    'https://statshub.sportradar.com.evil.example/assets/app.js',
+    '/assets/app.js?T=SECRET', '/assets/app.js#SECRET',
+    '/assets/../../api/app.js', '/api/app.js',
+    'http://statshub.sportradar.com/assets/app.js',
+    '/assets/app.js%3FT%3DSECRET',
+    'https://user:SECRET@statshub.sportradar.com/assets/app.js',
+])
+def test_discovery_does_not_follow_unsafe_script_references(probe,transport,bad):
+    requests,_=transport(lambda request: response(body=f'<script src="{bad}"></script>'.encode()))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_discovery=True)
+    assert len(requests)==1 and r['transport_ok']
+    assert r['receipts'][0]['data_loading_discovery']['script_asset_urls']==[]
+    assert 'SECRET' not in json.dumps(r) and 'evil.example' not in json.dumps(r)
+
+
+def test_discovery_asset_deduplication_cap_and_no_recursive_imports(probe,transport):
+    html=''.join(f'<script src="/assets/app{i}.js"></script>' for i in range(4))
+    html+='<script src="/assets/app0.js"></script>'
+    requests,_=transport(lambda request: response(body=html.encode()) if str(request.url)==DISCOVERY_URL
+                         else response(body=b'import "./secret.js"',headers={'content-type':'text/javascript'}))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_discovery=True)
+    assert len(requests)==3 and r['requested_url_count']==3
+    assert [str(q.url) for q in requests[1:]]==[
+        'https://statshub.sportradar.com/assets/app0.js',
+        'https://statshub.sportradar.com/assets/app1.js']
+
+
+@pytest.mark.parametrize('status',[302,403,429,500])
+def test_discovery_stops_on_asset_failure_without_next_bundle(probe,transport,status):
+    html=f'<script src="{ASSET}"></script><script src="{ASSET2}"></script>'
+    requests,_=transport(lambda q: response(body=html.encode()) if str(q.url)==DISCOVERY_URL else response(status))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_discovery=True)
+    assert len(requests)==2 and not r['transport_ok']
+    assert r['unattempted_urls']==[ASSET2]
+    assert 'data_loading_discovery' not in r['receipts'][1]
+
+
+@pytest.mark.parametrize('kind',['json','compressed','partial','html'])
+def test_discovery_rejects_unusable_asset_bodies(probe,transport,kind):
+    def handler(request):
+        if str(request.url)==DISCOVERY_URL:
+            return response(body=f'<script src="{ASSET}"></script>'.encode())
+        headers={'content-type':'text/javascript'}
+        if kind=='json': headers['content-type']='application/json'
+        if kind=='html': headers['content-type']='text/html'
+        if kind=='compressed': headers['content-encoding']='gzip'
+        return response(body=b'x'*(probe.MAX_NATIVE_BYTES+1) if kind=='partial' else HTML,headers=headers)
+    requests,_=transport(handler)
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_discovery=True)
+    assert len(requests)==2 and not r['transport_ok']
+    assert 'data_loading_discovery' not in r['receipts'][1]
+
+
+def test_static_discovery_source_count_and_cli_guards(probe,transport,capsys):
+    requests,_=transport(lambda request: response())
+    with pytest.raises(ValueError): probe.native_probe([URL],native_discovery=True)
+    with pytest.raises(ValueError): probe.native_probe([DISCOVERY_URL,DISCOVERY_URL+'/statistics'],
+                                                       'sportpesa-statshub',native_discovery=True)
+    with pytest.raises(ValueError): probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',
+                                                       native_discovery=True,native_context=True)
+    for args in (['--input','missing','--native-discovery'],
+                 ['--native-url',URL,'--native-discovery'],
+                 ['--native-url',DISCOVERY_URL,'--native-source','sportpesa-statshub',
+                  '--native-context','--native-discovery']):
+        with pytest.raises(SystemExit) as error: probe.main(args)
+        assert error.value.code==2
+    assert not requests
+    assert probe.main(['--native-url',DISCOVERY_URL,'--native-source','sportpesa-statshub',
+                       '--native-discovery'])==0
+    r=json.loads(capsys.readouterr().out)
+    assert r['context_status']=='static_data_loading_discovery_not_api_verification'
