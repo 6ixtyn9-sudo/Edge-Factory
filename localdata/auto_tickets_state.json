@@ -40,7 +40,12 @@
             }
           ],
           "odds": 1.7,
-          "stake_pct": 33.823
+          "stake_pct": 33.823,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -76,7 +81,12 @@
             }
           ],
           "odds": 1.7,
-          "stake_pct": 33.8229
+          "stake_pct": 33.8229,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 67.6459
@@ -1871,6 +1881,11 @@
       "frozen_at": "2026-10-31T09:49:08+02:00",
       "final": true,
       "lock_source": "state"
+    },
+    "2026-11-01": {
+      "frozen_at": "2026-11-01T09:37:27+02:00",
+      "final": true,
+      "lock_source": "state"
     }
   },
   "superseded_by_date": {
@@ -1884,7 +1899,7 @@
   },
   "integrity_recovery": {
     "pending_cached_freeze": {
-      "status": "approved",
+      "status": "recovered",
       "date": "2026-11-01",
       "source_run_id": "41283007502",
       "source_head": "9289757094c95a7e458a471b3cee0a0e8697cb1c",
@@ -1961,7 +1976,9 @@
           ]
         ]
       ],
-      "verification_basis": "Only the exact card already present in the committed November 1 draft is authorized; any changed cached card remains blocked. Cached Main snapshot unavailable through GitHub API (404)."
+      "verification_basis": "Only the exact card already present in the committed November 1 draft is authorized; any changed cached card remains blocked. Cached Main snapshot unavailable through GitHub API (404).",
+      "receipt_sha256": "97e8e681e40f6d51d7267ba66afb8448591d445e62da4fdadd35b73ee8290001",
+      "recovered_financial_sha256": "449d1f23fe7e495256de772a1da96d9c0e7945f4bfb92fd565871dc17c1b685a"
     }
   }
 }

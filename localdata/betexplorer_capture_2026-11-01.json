@@ -1,5 +1,5 @@
 {
-  "attempted": 24,
+  "attempted": 30,
   "attempted_fixtures": [
     {
       "avg_p": 86.95734061587721,
@@ -102,14 +102,84 @@
       "w_score": 0.557
     },
     {
-      "avg_p": 64.1684923544666,
-      "away": "Boluspor",
+      "avg_p": 60.88920619328282,
+      "away": "CD Nacional",
       "date": "2026-11-01",
-      "home": "Sivasspor",
+      "home": "FC Arouca",
+      "league": "Liga Portugal Betclic",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.557
+    },
+    {
+      "avg_p": 57.0122224343068,
+      "away": "Vasco da Gama",
+      "date": "2026-11-01",
+      "home": "Palmeiras",
+      "league": "Copa do Brasil",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5311
+    },
+    {
+      "avg_p": 52.5731756394205,
+      "away": "Treviso",
+      "date": "2026-11-01",
+      "home": "Cittadella",
+      "league": "Serie C, Girone A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.557
+    },
+    {
+      "avg_p": 52.28887084802375,
+      "away": "Be\u015fikta\u015f JK",
+      "date": "2026-11-01",
+      "home": "Kas\u0131mpa\u015fa",
+      "league": "Trendyol Super Lig",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.557
+    },
+    {
+      "avg_p": 51.4343262284848,
+      "away": "Vis Pesaro",
+      "date": "2026-11-01",
+      "home": "Gubbio",
+      "league": "Serie C, Girone B",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5311
+    },
+    {
+      "avg_p": 49.858721656846996,
+      "away": "Antalyaspor",
+      "date": "2026-11-01",
+      "home": "I\u011fd\u0131r FK",
       "league": "Trendyol 1. Lig",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.557
+    },
+    {
+      "avg_p": 49.50570017539001,
+      "away": "FC Hradec Kr\u00e1lov\u00e9",
+      "date": "2026-11-01",
+      "home": "Mlad\u00e1 Boleslav",
+      "league": "Czech First League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.557
+    },
+    {
+      "avg_p": 47.7982385908727,
+      "away": "Forl\u00ec",
+      "date": "2026-11-01",
+      "home": "Campobasso FC",
+      "league": "Serie C, Girone B",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5311
     },
     {
       "avg_p": 82.27943249083904,
@@ -172,16 +242,6 @@
       "w_score": 0.7595
     },
     {
-      "avg_p": 74.0,
-      "away": "Riga",
-      "date": "2026-11-01",
-      "home": "Ogre United",
-      "league": "Latvia Virsliga",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6134
-    },
-    {
       "avg_p": 73.3689431514689,
       "away": "Venezia",
       "date": "2026-11-01",
@@ -197,16 +257,6 @@
       "date": "2026-11-01",
       "home": "PAOK",
       "league": "Super League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
-    },
-    {
-      "avg_p": 71.82279649284725,
-      "away": "Ansan Greeners",
-      "date": "2026-11-01",
-      "home": "Suwon",
-      "league": "K League 2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7595
@@ -240,6 +290,16 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7595
+    },
+    {
+      "avg_p": 64.1684923544666,
+      "away": "Boluspor",
+      "date": "2026-11-01",
+      "home": "Sivasspor",
+      "league": "Trendyol 1. Lig",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.557
     }
   ],
   "be_429": 2,
@@ -248,28 +308,28 @@
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 22,
-  "candidate_fixtures": 36,
-  "captured_at": "2026-11-01T04:26:19.353895+00:00",
+  "candidate_fixtures": 33,
+  "captured_at": "2026-11-01T09:00:50.020429+00:00",
   "date": "2026-11-01",
-  "deferred_fixtures": 12,
+  "deferred_fixtures": 3,
   "errors": [],
-  "fixtures_with_rows": 19,
+  "fixtures_with_rows": 25,
   "market_budget_stop": false,
-  "market_requests": 4,
+  "market_requests": 37,
   "match_detail": {
-    "bookmakers": 317,
+    "bookmakers": 419,
     "challenge_pages": 0,
-    "fixtures": 21,
-    "market_rows": 782,
-    "markets": 124,
-    "named_rows": 782,
+    "fixtures": 29,
+    "market_rows": 1032,
+    "markets": 168,
+    "named_rows": 1032,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "network_attempted": 2,
+  "network_attempted": 8,
   "quoted_fixtures": [
     {
       "avg_p": 86.95734061587721,
@@ -322,14 +382,84 @@
       "w_score": 0.557
     },
     {
-      "avg_p": 64.1684923544666,
-      "away": "Boluspor",
+      "avg_p": 60.88920619328282,
+      "away": "CD Nacional",
       "date": "2026-11-01",
-      "home": "Sivasspor",
+      "home": "FC Arouca",
+      "league": "Liga Portugal Betclic",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.557
+    },
+    {
+      "avg_p": 57.0122224343068,
+      "away": "Vasco da Gama",
+      "date": "2026-11-01",
+      "home": "Palmeiras",
+      "league": "Copa do Brasil",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5311
+    },
+    {
+      "avg_p": 52.5731756394205,
+      "away": "Treviso",
+      "date": "2026-11-01",
+      "home": "Cittadella",
+      "league": "Serie C, Girone A",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.557
+    },
+    {
+      "avg_p": 52.28887084802375,
+      "away": "Be\u015fikta\u015f JK",
+      "date": "2026-11-01",
+      "home": "Kas\u0131mpa\u015fa",
+      "league": "Trendyol Super Lig",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.557
+    },
+    {
+      "avg_p": 51.4343262284848,
+      "away": "Vis Pesaro",
+      "date": "2026-11-01",
+      "home": "Gubbio",
+      "league": "Serie C, Girone B",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5311
+    },
+    {
+      "avg_p": 49.858721656846996,
+      "away": "Antalyaspor",
+      "date": "2026-11-01",
+      "home": "I\u011fd\u0131r FK",
       "league": "Trendyol 1. Lig",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.557
+    },
+    {
+      "avg_p": 49.50570017539001,
+      "away": "FC Hradec Kr\u00e1lov\u00e9",
+      "date": "2026-11-01",
+      "home": "Mlad\u00e1 Boleslav",
+      "league": "Czech First League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.557
+    },
+    {
+      "avg_p": 47.7982385908727,
+      "away": "Forl\u00ec",
+      "date": "2026-11-01",
+      "home": "Campobasso FC",
+      "league": "Serie C, Girone B",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5311
     },
     {
       "avg_p": 82.27943249083904,
@@ -392,16 +522,6 @@
       "w_score": 0.7595
     },
     {
-      "avg_p": 74.0,
-      "away": "Riga",
-      "date": "2026-11-01",
-      "home": "Ogre United",
-      "league": "Latvia Virsliga",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6134
-    },
-    {
       "avg_p": 73.3689431514689,
       "away": "Venezia",
       "date": "2026-11-01",
@@ -417,16 +537,6 @@
       "date": "2026-11-01",
       "home": "PAOK",
       "league": "Super League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7595
-    },
-    {
-      "avg_p": 71.82279649284725,
-      "away": "Ansan Greeners",
-      "date": "2026-11-01",
-      "home": "Suwon",
-      "league": "K League 2",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7595
@@ -460,10 +570,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7595
+    },
+    {
+      "avg_p": 64.1684923544666,
+      "away": "Boluspor",
+      "date": "2026-11-01",
+      "home": "Sivasspor",
+      "league": "Trendyol 1. Lig",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.557
     }
   ],
-  "requests": 10,
-  "rows": 57,
+  "requests": 56,
+  "rows": 75,
   "schema": 1,
   "status": "ok"
 }
