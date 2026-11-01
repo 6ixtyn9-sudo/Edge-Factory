@@ -2,6 +2,8 @@
 """Bounded manual bookmaker diagnostic. Prints JSON; writes nothing.
 
 --input decodes labelled saved reader excerpts; --card compares them read-only.
+--browser-response-input inspects labelled operator-supplied JSON offline; no token replay.
+Source FT score candidates remain unadmitted; null status is not completion proof.
 --native-url makes ONE ordinary GET per public URL (maximum three; fail-fast).
 --context-input audits every own-card row against labelled saved StatsHub reader pages.
 --native-source defaults to BetOlimp; bookmaker pages are pinned; StatsHub accepts
@@ -50,6 +52,7 @@ from edgefactory.sources.betolimp_snapshot import (
     validate_event_url,
 )
 from edgefactory.sources.bookmaker_context_snapshot import (
+    MAX_CONTEXT_BYTES,
     context_slate_coverage,
     inspect_native_data_loading,
     inspect_native_loader_state,
@@ -391,6 +394,8 @@ def _browser_request_kind(url, resource_type, source_url, fixture):
                     or len(arguments) != 2 or arguments[1] != "20"):
                 return None
             return "history:" + arguments[0]
+        if operation == "stats_match_tableslice":
+            return "table_slice:" + arguments[0] if arguments == [fixture["event_id"]] else None
         if operation == "stats_season_tables":
             if arguments != [fixture["_seasonid"]]:
                 return None
@@ -416,6 +421,11 @@ def _browser_numeric_sample(record):
               "ended_uts", "updated_uts")
     selected = {k: record[k] for k in scalar
                 if type(record.get(k)) is int and abs(record[k]) <= 10**12}
+    if "status" in record and record["status"] is None:
+        selected["status"] = None
+    for flag in ("inlivescore", "tobeannounced", "postponed", "walkover", "retired", "disqualified", "canceled"):
+        if type(record.get(flag)) is bool:
+            selected[flag] = record[flag]
     # A bounded, explicitly named two-level projection; never a generic recursive dump.
     for key in ("time", "_dt", "team", "result", "status"):
         if isinstance(record.get(key), dict):
@@ -434,6 +444,122 @@ def _browser_numeric_sample(record):
     return selected
 
 
+def _browser_history_score_candidates(data, owner_uid, generated):
+    """Observed lastx contract only. Source FT fields are not regulation admission.
+
+    Null status, missing completion times, mixed competitions and season-local
+    team IDs are retained as such. Never interpret inlivescore as lifecycle, use
+    result.winner for regulation, or convert opaque supplier form coefficients.
+    """
+    def positive(value):
+        return type(value) is int and 0 < value < 10**12
+
+    def score(value):
+        return isinstance(value, dict) and all(
+            type(value.get(s)) is int and 0 <= value[s] <= 999 for s in ("home", "away"))
+
+    candidates, conflicts, invalid_events, held = {}, set(), set(), {}
+    for match in data["matches"]:
+        try:
+            if (data["team"].get("_doc") != "uniqueteam" or type(data["team"].get("_sid")) is not int
+                    or data["team"]["_sid"] != 1 or match.get("_doc") != "match" or match.get("_sid") != 1
+                    or type(match.get("_sid")) is not int
+                    or not all(positive(match.get(k)) for k in ("_id", "_rcid", "_tid", "_utid", "_seasonid"))):
+                raise ValueError("identity_unresolved")
+            teams = match["teams"]
+            if (not isinstance(teams, dict) or any(not isinstance(teams.get(s), dict)
+                    or not positive(teams[s].get("_id")) or not positive(teams[s].get("uid"))
+                    or type(teams[s].get("_sid")) is not int or teams[s]["_sid"] != 1
+                    or teams[s].get("virtual") is not False for s in ("home", "away"))
+                    or teams["home"]["uid"] == teams["away"]["uid"]
+                    or teams["home"]["_id"] == teams["away"]["_id"]
+                    or sum(teams[s]["uid"] == owner_uid for s in ("home", "away")) != 1):
+                raise ValueError("team_uid_binding_unresolved")
+            for flag in ("tobeannounced", "postponed", "walkover", "retired", "disqualified", "canceled"):
+                if match.get(flag) is not False:
+                    raise ValueError("exception_flags_unresolved")
+            tournament = data.get("tournaments", {}).get(str(match["_tid"]))
+            unique = data.get("uniquetournaments", {}).get(str(match["_utid"]))
+            if (not isinstance(tournament, dict) or not isinstance(unique, dict)
+                    or any(type(tournament.get(k)) is not int or tournament[k] != match[m]
+                           for k, m in (("_id", "_tid"), ("_tid", "_tid"), ("_utid", "_utid"),
+                                        ("_sid", "_sid"), ("_rcid", "_rcid"), ("seasonid", "_seasonid")))
+                    or any(type(unique.get(k)) is not int or unique[k] != match[m]
+                           for k, m in (("_id", "_utid"), ("_utid", "_utid"), ("_sid", "_sid"),
+                                        ("_rcid", "_rcid"), ("currentseason", "_seasonid")))):
+                raise ValueError("competition_metadata_unresolved")
+            clock = match["time"]
+            if (not isinstance(clock, dict) or type(clock.get("uts")) is not int
+                    or not 0 < clock["uts"] < 4102444800 or clock.get("tz") != "UTC"
+                    or type(clock.get("tzoffset")) is not int or clock["tzoffset"] != 0):
+                raise ValueError("source_clock_unresolved")
+            kickoff = datetime.fromtimestamp(clock["uts"], UTC)
+            if kickoff.strftime("%d/%m/%y") != clock.get("date") or kickoff.strftime("%H:%M") != clock.get("time"):
+                raise ValueError("source_clock_conflict")
+            periods, displayed = match.get("periods"), match.get("result")
+            ft = periods.get("ft") if isinstance(periods, dict) else None
+            if not score(ft) or not score(displayed):
+                raise ValueError("source_score_unresolved")
+            period = displayed.get("period")
+            if period not in ("nt", "ap"):
+                raise ValueError("source_period_unsupported")
+            if period == "nt" and (any(k in periods for k in ("ot", "ap"))
+                                   or any(ft[s] != displayed[s] for s in ("home", "away"))):
+                raise ValueError("source_normal_time_score_conflict")
+            if period == "ap" and (not score(periods.get("ap")) or any(
+                    periods["ap"][s] != displayed[s] for s in ("home", "away"))):
+                raise ValueError("source_penalty_score_conflict")
+            record = {"event_id": str(match["_id"]), "owner_team_uid": str(owner_uid),
+                      "owner_side": next(s for s in ("home", "away") if teams[s]["uid"] == owner_uid),
+                      "kickoff_utc": kickoff.isoformat(),
+                      "teams": {s: {"team_id": str(teams[s]["_id"]), "team_uid": str(teams[s]["uid"])}
+                                for s in ("home", "away")},
+                      "season_id": str(match["_seasonid"]), "tournament_id": str(match["_tid"]),
+                      "unique_tournament_id": str(match["_utid"]),
+                      "source_ft_score": {s: ft[s] for s in ("home", "away")},
+                      "source_display_score": {s: displayed[s] for s in ("home", "away")},
+                      "source_display_period": period, "source_status_is_null": match.get("status", {}) is None,
+                      "source_has_extra_time": "ot" in periods, "source_has_penalties": "ap" in periods,
+                      "kickoff_before_source_generation": kickoff.timestamp() < generated if generated else None,
+                      "completion_verified": False, "regulation_verified": False, "admitted": False}
+            event = record["event_id"]
+            if event in candidates and candidates[event] != record:
+                conflicts.add(event)
+            candidates[event] = record
+        except (KeyError, TypeError, AttributeError, ValueError) as error:
+            # Only fixed reason enums may leave this parser; never source strings.
+            allowed = {"identity_unresolved", "team_uid_binding_unresolved", "exception_flags_unresolved",
+                       "competition_metadata_unresolved", "source_clock_unresolved", "source_clock_conflict",
+                       "source_score_unresolved", "source_period_unsupported", "source_normal_time_score_conflict",
+                       "source_penalty_score_conflict"}
+            reason = str(error) if type(error) is ValueError and str(error) in allowed else "unsupported_record_shape"
+            held[reason] = held.get(reason, 0) + 1
+            if positive(match.get("_id")):
+                invalid_events.add(str(match["_id"]))
+    bindings = {}
+    for record in candidates.values():
+        for team in record["teams"].values():
+            for a, b in (("team_id", "team_uid"), ("team_uid", "team_id")):
+                bindings.setdefault((record["season_id"], a, team[a]), set()).add(team[b])
+    for event, record in candidates.items():
+        if any(len(bindings[(record["season_id"], a, team[a])]) != 1
+               for team in record["teams"].values()
+               for a in ("team_id", "team_uid")):
+            conflicts.add(event)
+    records = sorted((r for event, r in candidates.items() if event not in conflicts | invalid_events),
+                     key=lambda r: (r["kickoff_utc"], r["event_id"]), reverse=True)
+    if conflicts:
+        held["duplicate_event_conflict"] = len(conflicts)
+    return {"source_ft_score_candidates": records, "source_ft_candidate_count": len(records),
+            "held_record_reasons": held, "usable_form_rows": 0, "admitted_rows": 0,
+            "fixture_binding_verified": False, "capture_time_verified": False,
+            "collection_permission_verified": False, "freshness_verified": False,
+            "hold_reasons": ["operator_response_not_independent_capture", "completion_time_unverified",
+                             "freshness_unverified",
+                             "regulation_results_unverified", "target_fixture_binding_unverified",
+                             "historical_sample_completeness_unverified", "production_admission_disabled"]}
+
+
 def _browser_stat_sample(body, kind):
     """Expose actual field samples only; no guessed parser, form or admission."""
     if len(body) > _BROWSER_MAX_BODY:
@@ -443,6 +569,9 @@ def _browser_stat_sample(body, kind):
     if not isinstance(docs, list) or len(docs) != 1 or not isinstance(docs[0], dict):
         return {"status": "unsupported_document_envelope"}
     data = docs[0].get("data")
+    if kind.startswith("table_slice:"):
+        return {"status": "empty_match_table_slice" if data == [] else "unsupported_match_table_slice_shape",
+                "empty_table_slice": data == [], "standings_availability_verified": False}
     if not isinstance(data, dict):
         return {"status": "unsupported_data_envelope"}
     if kind.startswith("history:"):
@@ -455,7 +584,9 @@ def _browser_stat_sample(body, kind):
             return {"status": "unsupported_or_unbound_history_envelope"}
         return {"status": "public_numeric_field_samples_only", "owner_team_uid": team["_id"],
                 "response_match_count": len(matches), "sample_truncated": len(matches) > 20,
-                "matches": [_browser_numeric_sample(m) for m in matches[:20]]}
+                "matches": [_browser_numeric_sample(m) for m in matches[:20]],
+                **_browser_history_score_candidates(data, team["_id"], docs[0].get("_dob")
+                    if type(docs[0].get("_dob")) is int and 0 < docs[0]["_dob"] < 4102444800 else None)}
     tables = data.get("tables")
     if not isinstance(tables, list) or len(tables) > 8:
         return {"status": "unsupported_table_envelope"}
@@ -646,10 +777,56 @@ def browser_context_probe(url, *, install_runtime=False):
     return result
 
 
+def saved_browser_response_dry_run(path):
+    raw = _read_json(path, 4 * MAX_CONTEXT_BYTES)
+    if not isinstance(raw, list) or not 1 <= len(raw) <= 4:
+        raise ValueError("expected one to four labelled saved browser responses")
+    receipts = []
+    for item in raw:
+        if (not isinstance(item, dict) or set(item) != {
+                "evidence_kind", "payload_scope", "source_url", "observed_at_utc", "response"}
+                or item["evidence_kind"] != "operator_supplied_browser_response"
+                or item["payload_scope"] not in {"selected_fields_projection", "full_response"}):
+            raise ValueError("invalid saved browser response label")
+        source_url = validate_context_url(item["source_url"])
+        observed = item["observed_at_utc"]
+        if observed is not None and (not isinstance(observed, str) or len(observed) > 128
+                                     or parse_zoned_timestamp(observed) is None):
+            raise ValueError("invalid response observation timestamp")
+        response = item["response"]
+        query = response.get("queryUrl") if isinstance(response, dict) else None
+        match = re.fullmatch(r"(stats_team_lastx)/([1-9]\d{0,11})/20|(stats_match_tableslice)/([1-9]\d{0,11})", query or "")
+        if match is None:
+            raise ValueError("unsupported saved response query")
+        if match[1]:
+            kind, event = "history:" + match[2], "stats_team_lastx"
+        else:
+            if match[4] != source_url.removesuffix("/statistics").rsplit("/", 1)[-1]:
+                raise ValueError("table slice page event mismatch")
+            kind, event = "table_slice:" + match[4], "stats_match_tableslice"
+        docs = response.get("doc")
+        if (not isinstance(docs, list) or len(docs) != 1 or not isinstance(docs[0], dict)
+                or docs[0].get("event") != event):
+            raise ValueError("saved response event mismatch")
+        sample = _browser_stat_sample(json.dumps(response, allow_nan=False).encode(), kind)
+        generated = docs[0].get("_dob")
+        generated = generated if type(generated) is int and 0 < generated < 4102444800 else None
+        receipts.append({"evidence_kind": item["evidence_kind"], "payload_scope": item["payload_scope"],
+                         "source_url": source_url, "observed_at_utc": observed,
+                         "source_generated_at_utc": datetime.fromtimestamp(generated, UTC).isoformat()
+                         if generated else None, "source_timestamp_is_not_capture_or_completion": True,
+                         "kind": kind.split(":")[0], **sample})
+    return {"mode": "saved_browser_response_diagnostic_only", "source_profile": "sportpesa-statshub",
+            "network_requests": 0, "application_data_writes": 0, "admitted_rows": 0,
+            "usable_form_rows": 0, "whole_slate_coverage_verified": False, "receipts": receipts}
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--input", type=Path, help="saved labelled JSON transcriptions")
+    mode.add_argument("--browser-response-input", type=Path,
+                      help="offline labelled browser response JSON; no request replay, card binding or admission")
     mode.add_argument("--context-input", type=Path, help="labelled StatsHub reader pages; requires --card")
     mode.add_argument("--native-url", action="append", help="exact public URL for selected source; repeat up to 3")
     parser.add_argument("--card", type=Path, help="optional existing card JSON (offline input only)")
@@ -668,6 +845,8 @@ def main(argv=None) -> int:
                         help="explicitly install pinned Playwright/Chromium on a GitHub-hosted Linux runner only")
     parser.add_argument("--as-of", help="zone-bearing cutoff for offline context coverage only")
     args = parser.parse_args(argv)
+    if args.browser_response_input and args.card:
+        parser.error("--browser-response-input does not implement card binding")
     if args.browser_install_runtime and not args.browser_context:
         parser.error("--browser-install-runtime requires --browser-context")
     if args.browser_context and (not args.native_url or len(args.native_url) != 1
@@ -693,6 +872,8 @@ def main(argv=None) -> int:
     try:
         if args.browser_context:
             result = browser_context_probe(args.native_url[0], install_runtime=args.browser_install_runtime)
+        elif args.browser_response_input:
+            result = saved_browser_response_dry_run(args.browser_response_input)
         elif args.context_input:
             as_of = parse_zoned_timestamp(args.as_of) if args.as_of else datetime.now(UTC)
             result = context_dry_run(args.context_input, args.card, as_of)
@@ -701,7 +882,7 @@ def main(argv=None) -> int:
                                    native_discovery=args.native_discovery,
                                    native_loader=args.native_loader) if args.native_url
                       else dry_run(args.input, args.card))
-    except (ValueError, OSError, TypeError, KeyError, IndexError):
+    except (ValueError, OSError, TypeError, KeyError, IndexError, RecursionError, OverflowError):
         # Do not echo untrusted input, file contents, URLs or exception strings.
         status = "invalid_native_input" if args.native_url else "invalid_offline_input"
         print(json.dumps({"status": status, "admitted_rows": 0}), file=sys.stderr)
