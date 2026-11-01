@@ -1,244 +1,146 @@
 {
-  "added": 44106,
-  "attempted": 10,
+  "added": 7804,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Ansan Greeners FC",
-      "fixture_id": "id1000077768046822",
-      "home": "Suwon FC"
-    },
-    {
-      "away": "Central Coast Mariners",
-      "fixture_id": "id1000013672897414",
-      "home": "Melbourne Victory FC"
-    },
-    {
-      "away": "Chicago Fire",
-      "fixture_id": "id1000024266299772",
-      "home": "Colorado Rapids"
-    },
-    {
-      "away": "Herrera FC",
-      "fixture_id": "id1002710276123258",
-      "home": "Veraguas United FC"
-    },
-    {
-      "away": "CD Olimpia Tegucigalpa",
-      "fixture_id": "id1002741475775528",
-      "home": "CD Choloma"
-    },
-    {
-      "away": "CD Hondupino",
-      "fixture_id": "id1004585776192258",
-      "home": "AFFI Academia"
-    },
-    {
-      "away": "Ferrymead Bays",
-      "fixture_id": "id1000059474873400",
-      "home": "Birkenhead United AFC"
-    },
-    {
-      "away": "CS Herediano",
-      "fixture_id": "id1002709272053674",
-      "home": "Sporting FC"
-    },
-    {
-      "away": "Deportivo Coatepeque",
-      "fixture_id": "id1004800076209062",
-      "home": "CSD Sacachispas"
-    },
-    {
-      "away": "Deportiva Venados",
-      "fixture_id": "id1005307074100744",
-      "home": "Irapuato"
+      "away": "Incheon United FC",
+      "fixture_id": "id1000041076045110",
+      "home": "FC Seoul"
     }
   ],
   "budget": {
     "day": "2026-11-01",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 15,
-    "remaining_today": 10,
-    "spent_today": 15
+    "month_spent": 16,
+    "remaining_today": 9,
+    "spent_today": 16
   },
-  "budget_deferred": 37,
-  "captured_at": "2026-11-01T01:14:46+00:00",
+  "budget_deferred": 117,
+  "captured_at": "2026-11-01T04:26:19+00:00",
   "date": "2026-11-01",
   "errors": [],
   "excluded_srl_fixtures": 27,
   "fixtures": 1063,
-  "future_slate_fixtures": 10,
+  "future_slate_fixtures": 9,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 632,
+  "market_census_distinct": 457,
   "markets": {
-    "1x2": 4990,
-    "btts": 2359,
-    "ou_0.5": 1054,
-    "ou_0.75": 74,
-    "ou_1": 401,
-    "ou_1.25": 232,
-    "ou_1.5": 2012,
-    "ou_1.75": 512,
-    "ou_2": 848,
-    "ou_2.25": 784,
-    "ou_2.5": 2907,
-    "ou_2.75": 1164,
-    "ou_3": 1362,
-    "ou_3.25": 1084,
-    "ou_3.5": 2875,
-    "ou_3.75": 786,
-    "ou_4": 731,
-    "ou_4.25": 435,
-    "ou_4.5": 2377,
-    "ou_4.75": 288,
-    "ou_5": 413,
-    "ou_5.25": 227,
-    "ou_5.5": 1411,
-    "ou_5.75": 111,
-    "ou_6": 94,
-    "ou_6.25": 50,
-    "ou_6.5": 413,
-    "ou_6.75": 20,
-    "ou_7": 20,
-    "ou_7.25": 20,
-    "ou_7.5": 117,
-    "ou_7.75": 10,
+    "1x2": 728,
+    "btts": 401,
+    "ou_0.5": 258,
+    "ou_0.75": 34,
+    "ou_1": 92,
+    "ou_1.25": 100,
+    "ou_1.5": 412,
+    "ou_1.75": 110,
+    "ou_2": 200,
+    "ou_2.25": 174,
+    "ou_2.5": 440,
+    "ou_2.75": 232,
+    "ou_3": 262,
+    "ou_3.25": 102,
+    "ou_3.5": 416,
+    "ou_3.75": 100,
+    "ou_4": 138,
+    "ou_4.25": 94,
+    "ou_4.5": 400,
+    "ou_4.75": 94,
+    "ou_5": 42,
+    "ou_5.25": 20,
+    "ou_5.5": 157,
+    "ou_5.75": 10,
+    "ou_6": 10,
+    "ou_6.25": 10,
+    "ou_6.5": 84,
+    "ou_6.75": 5,
+    "ou_7": 5,
+    "ou_7.25": 5,
+    "ou_7.5": 35,
+    "ou_7.75": 5,
     "ou_8": 5,
-    "ou_8.5": 44,
-    "tt_away_0.5": 1868,
-    "tt_away_0.75": 88,
-    "tt_away_1": 138,
-    "tt_away_1.25": 82,
-    "tt_away_1.5": 1790,
-    "tt_away_1.75": 56,
-    "tt_away_2": 84,
-    "tt_away_2.25": 24,
-    "tt_away_2.5": 1415,
-    "tt_away_2.75": 4,
-    "tt_away_3": 23,
-    "tt_away_3.25": 4,
-    "tt_away_3.5": 509,
-    "tt_away_3.75": 2,
-    "tt_away_4": 2,
-    "tt_away_4.5": 67,
-    "tt_away_5.5": 9,
-    "tt_home_0.5": 1365,
-    "tt_home_0.75": 44,
-    "tt_home_1": 158,
-    "tt_home_1.25": 50,
-    "tt_home_1.5": 1884,
-    "tt_home_1.75": 60,
-    "tt_home_2": 154,
-    "tt_home_2.25": 64,
-    "tt_home_2.5": 1956,
-    "tt_home_2.75": 62,
-    "tt_home_3": 94,
-    "tt_home_3.25": 56,
-    "tt_home_3.5": 1061,
-    "tt_home_3.75": 6,
-    "tt_home_4": 38,
-    "tt_home_4.5": 493,
-    "tt_home_5.5": 163,
-    "tt_home_6.5": 3
+    "ou_8.25": 5,
+    "ou_8.5": 13,
+    "tt_away_0.5": 356,
+    "tt_away_0.75": 24,
+    "tt_away_1": 32,
+    "tt_away_1.25": 18,
+    "tt_away_1.5": 356,
+    "tt_away_1.75": 18,
+    "tt_away_2": 24,
+    "tt_away_2.25": 16,
+    "tt_away_2.5": 199,
+    "tt_away_3.5": 56,
+    "tt_away_4.5": 4,
+    "tt_away_5.5": 1,
+    "tt_home_0.5": 330,
+    "tt_home_0.75": 18,
+    "tt_home_1": 26,
+    "tt_home_1.25": 18,
+    "tt_home_1.5": 367,
+    "tt_home_1.75": 24,
+    "tt_home_2": 26,
+    "tt_home_2.25": 18,
+    "tt_home_2.5": 352,
+    "tt_home_2.75": 2,
+    "tt_home_3": 22,
+    "tt_home_3.5": 211,
+    "tt_home_4.5": 84,
+    "tt_home_5.5": 4
   },
-  "markets_source": "fetch",
-  "matched": 10,
+  "markets_source": "cache",
+  "matched": 1,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "alt_line_skipped": 13,
-    "market_id_unknown": 8741,
-    "market_inactive": 1271,
-    "market_unsupported_clean_sheet": 651,
-    "market_unsupported_corners": 6171,
-    "market_unsupported_correct_score": 2593,
-    "market_unsupported_double_chance": 1568,
-    "market_unsupported_draw_no_bet": 1154,
-    "market_unsupported_handicap": 11460,
-    "market_unsupported_odd_even": 2294,
-    "market_unsupported_period": 37816,
-    "market_unsupported_win_to_nil": 1247,
-    "outcome_inactive": 4566
+    "alt_line_skipped": 12,
+    "market_id_unknown": 1737,
+    "market_inactive": 20,
+    "market_unsupported_clean_sheet": 178,
+    "market_unsupported_corners": 1327,
+    "market_unsupported_correct_score": 485,
+    "market_unsupported_double_chance": 211,
+    "market_unsupported_draw_no_bet": 189,
+    "market_unsupported_handicap": 2107,
+    "market_unsupported_odd_even": 448,
+    "market_unsupported_period": 6888,
+    "market_unsupported_win_to_nil": 332,
+    "outcome_inactive": 378
   },
   "parse_skips_classified": {
     "expected": {
-      "alt_line_skipped": 13,
-      "market_inactive": 1271,
-      "outcome_inactive": 4566
+      "alt_line_skipped": 12,
+      "market_inactive": 20,
+      "outcome_inactive": 378
     },
     "loss_or_diagnosis": {
-      "market_id_unknown": 8741,
-      "market_unsupported_clean_sheet": 651,
-      "market_unsupported_corners": 6171,
-      "market_unsupported_correct_score": 2593,
-      "market_unsupported_double_chance": 1568,
-      "market_unsupported_draw_no_bet": 1154,
-      "market_unsupported_handicap": 11460,
-      "market_unsupported_odd_even": 2294,
-      "market_unsupported_period": 37816,
-      "market_unsupported_win_to_nil": 1247
+      "market_id_unknown": 1737,
+      "market_unsupported_clean_sheet": 178,
+      "market_unsupported_corners": 1327,
+      "market_unsupported_correct_score": 485,
+      "market_unsupported_double_chance": 211,
+      "market_unsupported_draw_no_bet": 189,
+      "market_unsupported_handicap": 2107,
+      "market_unsupported_odd_even": 448,
+      "market_unsupported_period": 6888,
+      "market_unsupported_win_to_nil": 332
     }
   },
-  "pending_fixtures": 47,
+  "pending_fixtures": 118,
   "quoted_fixtures": [
     {
-      "away": "Ansan Greeners FC",
-      "fixture_id": "id1000077768046822",
-      "home": "Suwon FC"
-    },
-    {
-      "away": "Central Coast Mariners",
-      "fixture_id": "id1000013672897414",
-      "home": "Melbourne Victory FC"
-    },
-    {
-      "away": "Chicago Fire",
-      "fixture_id": "id1000024266299772",
-      "home": "Colorado Rapids"
-    },
-    {
-      "away": "Herrera FC",
-      "fixture_id": "id1002710276123258",
-      "home": "Veraguas United FC"
-    },
-    {
-      "away": "CD Olimpia Tegucigalpa",
-      "fixture_id": "id1002741475775528",
-      "home": "CD Choloma"
-    },
-    {
-      "away": "CD Hondupino",
-      "fixture_id": "id1004585776192258",
-      "home": "AFFI Academia"
-    },
-    {
-      "away": "Ferrymead Bays",
-      "fixture_id": "id1000059474873400",
-      "home": "Birkenhead United AFC"
-    },
-    {
-      "away": "CS Herediano",
-      "fixture_id": "id1002709272053674",
-      "home": "Sporting FC"
-    },
-    {
-      "away": "Deportivo Coatepeque",
-      "fixture_id": "id1004800076209062",
-      "home": "CSD Sacachispas"
-    },
-    {
-      "away": "Deportiva Venados",
-      "fixture_id": "id1005307074100744",
-      "home": "Irapuato"
+      "away": "Incheon United FC",
+      "fixture_id": "id1000041076045110",
+      "home": "FC Seoul"
     }
   ],
-  "reserved_requests": 10,
-  "rows": 44106,
+  "reserved_requests": 9,
+  "rows": 7804,
   "schema": 1,
-  "slate_candidate_fixtures": 38,
+  "slate_candidate_fixtures": 36,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 2,
-  "slate_provider_overlap_fixtures": 12,
+  "slate_priority_fixtures": 1,
+  "slate_provider_overlap_fixtures": 11,
   "slate_unmatched_fixtures": [
     {
       "away": "Chelsea W",
@@ -289,6 +191,12 @@
       "normalized_pair": "como|venezia"
     },
     {
+      "away": "Ey\u00fcpspor",
+      "home": "Amed SK",
+      "league": "Super Lig",
+      "normalized_pair": "amed|eyupspor"
+    },
+    {
       "away": "Asteras Tripolis",
       "home": "PAOK",
       "league": "Super League",
@@ -337,12 +245,6 @@
       "normalized_pair": "cagliari|lazio"
     },
     {
-      "away": "Ey\u00fcpspor",
-      "home": "Amed",
-      "league": "Turkey S\u00fcper Lig",
-      "normalized_pair": "amed|eyupspor"
-    },
-    {
       "away": "Dunajsk\u00e1 Streda",
       "home": "Bansk\u00e1 Bystrica",
       "league": "Nik\u00e9 Liga",
@@ -353,12 +255,6 @@
       "home": "Ravenna",
       "league": "Serie C, Girone B",
       "normalized_pair": "pineto|ravenna"
-    },
-    {
-      "away": "Gangwon FC",
-      "home": "Ulsan Hyundai FC",
-      "league": "South-Korea K League 1",
-      "normalized_pair": "gangwon|ulsan hyundai"
     },
     {
       "away": "CD Nacional",
