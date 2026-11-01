@@ -566,3 +566,50 @@ def test_static_discovery_source_count_and_cli_guards(probe,transport,capsys):
                        '--native-discovery'])==0
     r=json.loads(capsys.readouterr().out)
     assert r['context_status']=='static_data_loading_discovery_not_api_verification'
+
+
+def test_observed_popup_feed_and_root_selected_before_framework_bundles(probe,transport):
+    # Names observed in the user's native receipt; markup below is synthetic.
+    names=['manifest-f46bc34a','jsx-runtime-u17CrQMm','chunk-KS7C4IRE-CJ2e9hPd',
+           'index-CcCNjyHO','isStageSport-WftrK-5e','cctx-DyJSf39p','log-DevLqv9_',
+           'NoDataError-BWaly07f','sports-BEIbR-MV','root-CxVTlTKo',
+           'preload-helper-HAdMZFT3','index-DL8MAT8M','feeds-1NY2OSz0',
+           'queryClient-CN_BYZue','useQuery-CXsOo-qR','index-DZqNKqyE']
+    html=''.join(f'<script src="/assets/{name}.js"></script>' for name in names)
+    requests,_=transport(lambda q: response(body=html.encode()) if str(q.url)==DISCOVERY_URL else
+                         response(body=b'const name="stats_match_tableslice"',
+                                  headers={'content-type':'application/x-javascript'}))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_discovery=True)
+    assert [str(q.url) for q in requests]==[DISCOVERY_URL,
+        'https://statshub.sportradar.com/assets/feeds-1NY2OSz0.js',
+        'https://statshub.sportradar.com/assets/root-CxVTlTKo.js']
+    assert r['network_requests']==3 and r['transport_ok']
+    d=r['receipts'][0]['data_loading_discovery']
+    assert d['referenced_script_asset_count']==16
+    assert d['asset_selection_policy']=='observed_feeds_root_context_then_reference_order'
+    assert r['receipts'][1]['data_loading_discovery']['api_operation_reference_hints']==['stats_match_tableslice']
+    assert all(x['admitted_rows']==x['decoded_context_row_count']==0 for x in r['receipts'])
+
+
+def test_feed_module_preload_beyond_old_receipt_truncation_is_still_sampled(probe,transport):
+    html=''.join(f'<link rel="modulepreload" href="/assets/vendor{i}.js">' for i in range(20))
+    html+='<link rel="modulepreload" href="/assets/feeds-newHash.js">'
+    html+='<script src="/assets/manifest-current.js"></script>'
+    requests,_=transport(lambda q: response(body=html.encode()) if str(q.url)==DISCOVERY_URL else
+                         response(body=b'export{}',headers={'content-type':'text/javascript'}))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_discovery=True)
+    assert len(requests)==3
+    assert str(requests[1].url)=='https://statshub.sportradar.com/assets/feeds-newHash.js'
+    d=r['receipts'][0]['data_loading_discovery']
+    assert d['referenced_script_asset_count']==22 and len(d['script_asset_urls'])==16
+
+
+def test_priority_never_bypasses_asset_safety_validation(probe,transport):
+    html=(f'<script src="{ASSET}"></script>'
+          '<script src="https://evil.example/assets/feeds-a.js"></script>'
+          '<link rel="modulepreload" href="/assets/root-a.js?T=SECRET">')
+    requests,_=transport(lambda q: response(body=html.encode()) if str(q.url)==DISCOVERY_URL else
+                         response(body=b'export{}',headers={'content-type':'text/javascript'}))
+    r=probe.native_probe([DISCOVERY_URL],'sportpesa-statshub',native_discovery=True)
+    assert [str(q.url) for q in requests]==[DISCOVERY_URL,ASSET]
+    assert 'SECRET' not in json.dumps(r) and 'evil.example' not in json.dumps(r)
