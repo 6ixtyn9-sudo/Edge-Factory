@@ -15,6 +15,7 @@ import re
 from datetime import UTC, datetime
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlsplit
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from edgefactory.identity import (
     canonical_league_key,
@@ -906,6 +907,13 @@ _LOADER_SHAPE_KEYS = _LOADER_SECTIONS | frozenset({
     "FT", "HT", "AP", "AET", "fulltime", "halftime", "regularTime",
     "played", "wins", "draws", "losses", "points", "rank", "rows", "total",
     "goalsFor", "goalsAgainst", "value", "_dob", "_maxage",
+    # Deployed feeds-1NY2OSz0.js Pe/Fe mappings and accessors-BinIIlDn.js
+    # period aliases. Static client evidence, not a retained native fixture.
+    "_doc", "_doctype", "_seasonid", "_sid", "_tid", "_utid", "_rcid",
+    "result", "winner", "uniquetournament", "sport", "realcategory",
+    "ended_uts", "updated_uts", "numberofperiods", "overtimelength", "periodlength",
+    "postponed", "cancelled", "walkover", "tobeannounced", "decidedbyfa",
+    "ft", "ot", "ap",
 })
 _LOADER_PRIVATE_BRANCHES = frozenset({
     "cctx", "errors", "actiondata", "querykey", "queryhash", "meta",
@@ -913,7 +921,7 @@ _LOADER_PRIVATE_BRANCHES = frozenset({
 })
 _LOADER_ID_FIELDS = frozenset({
     "id", "_id", "uid", "matchId", "eventId", "teamId", "seasonId",
-    "tournamentId", "competitionId",
+    "tournamentId", "competitionId", "_seasonid", "_sid", "_tid", "_utid", "_rcid",
 })
 _LOADER_TIME_FIELDS = frozenset({
     "date", "time", "kickoff", "kickoff_utc", "startTime", "updatedAt", "dateiso",
@@ -992,6 +1000,136 @@ def _loader_section_evidence(section, value, requested_id):
             "shape_truncated_or_sampled": bool(truncated or pending)}
 
 
+# Mapping provenance: deployed feeds-1NY2OSz0.js Pe(e) copies these identity
+# domains independently. _id and uid are NOT interchangeable team IDs.
+_LOADER_MATCH_BINDINGS = {
+    "_seasonid": "season", "_sid": "sport", "_tid": "tournament",
+    "_utid": "uniquetournament", "_rcid": "realcategory",
+}
+
+
+def _loader_epoch_seconds(value):
+    # The client multiplies _dt.uts by 1e3. Never divide a millisecond value or
+    # coerce bool/string/float into a timestamp. Bounded diagnostic range only.
+    return type(value) is int and 0 < value < 4102444800
+
+
+def _loader_score_pair(value):
+    return (isinstance(value, dict) and all(
+        type(value.get(side)) is int and 0 <= value[side] <= 999 for side in ("home", "away")))
+
+
+def _loader_timezone(value):
+    if not isinstance(value, str) or re.fullmatch(
+            r"[A-Za-z_+-]{1,32}(?:/[A-Za-z0-9_+-]{1,32}){0,2}", value) is None:
+        return False
+    try:
+        ZoneInfo(value)
+    except (ZoneInfoNotFoundError, ValueError):
+        return False
+    return True
+
+
+def _loader_match_checks(match, envelope):
+    """Private projection plus public checks; never return the projection publicly.
+
+    These validate client-mapped fields, not independent fixture truth. In
+    particular, a valid Unix time is not proof of a current scheduled kickoff,
+    and an ft key alone is not authority to use a score for regulation markets.
+    """
+    projection = {}
+    checks = {"client_match_document_tag": match.get("_doc") == "sh_match",
+              "soccer_sport_id": type(match.get("_sid")) is int and match["_sid"] == 1}
+    dt = match.get("_dt")
+    dt = dt if isinstance(dt, dict) else {}
+    epoch_ok = _loader_epoch_seconds(dt.get("uts"))
+    checks["kickoff_epoch_seconds_supported"] = epoch_ok
+    checks["kickoff_timezone_recognized"] = _loader_timezone(dt.get("tz"))
+    # Date/time string formats have not been established by client evidence.
+    # Do not parse ambiguous dd/mm/yy or infer the browser/runner timezone.
+    checks["wall_clock_crosscheck_status"] = "format_not_established"
+    projection["kickoff"] = dt["uts"] if epoch_ok else None
+    teams = match.get("teams")
+    teams = teams if isinstance(teams, dict) else {}
+    pair = []
+    for side in ("home", "away"):
+        team = teams.get(side)
+        team = team if isinstance(team, dict) else {}
+        ids = tuple(str(team[k]) if _loader_positive_id(team.get(k)) else None
+                    for k in ("_id", "uid"))
+        name = team.get("name")
+        name_ok = (isinstance(name, str) and 0 < len(name.strip()) <= 240
+                   and not any(ord(c) < 32 for c in name))
+        checks[side + "_team_id_supported"] = ids[0] is not None
+        checks[side + "_team_uid_supported"] = ids[1] is not None
+        checks[side + "_team_name_present"] = name_ok
+        pair.append((*ids, name.strip().casefold() if name_ok else None))
+    checks["team_ids_distinct"] = bool(pair[0][0] and pair[1][0] and pair[0][0] != pair[1][0])
+    checks["team_uids_distinct"] = bool(pair[0][1] and pair[1][1] and pair[0][1] != pair[1][1])
+    checks["team_names_distinct"] = bool(pair[0][2] and pair[1][2] and pair[0][2] != pair[1][2])
+    projection["teams"] = tuple(pair) if all(all(v is not None for v in p) for p in pair) else None
+    bindings = {}
+    for identity, sibling in _LOADER_MATCH_BINDINGS.items():
+        value = match.get(identity)
+        metadata = envelope.get(sibling)
+        other = metadata.get("_id") if isinstance(metadata, dict) else None
+        supported = _loader_positive_id(value)
+        bindings[identity] = {"match_id_supported": supported,
+                              "sibling_id_supported": _loader_positive_id(other),
+                              "agreement": ("missing_or_unsupported" if not supported
+                                  or not _loader_positive_id(other) else
+                                  "equal" if str(value) == str(other) else "conflicting")}
+        projection[identity] = str(value) if supported else None
+    checks["sibling_metadata_checks"] = bindings
+    periods = match.get("periods")
+    periods = periods if isinstance(periods, dict) else {}
+    checks["period_checks"] = {
+        "ft_present": "ft" in periods, "ft_numeric_pair": _loader_score_pair(periods.get("ft")),
+        "ot_present": "ot" in periods, "ap_present": "ap" in periods,
+        "other_period_key_count": sum(k not in {"ft", "ot", "ap"} for k in periods),
+        "regulation_score_usable": False,
+    }
+    result = match.get("result")
+    checks["displayed_result_numeric_pair"] = _loader_score_pair(result)
+    checks["displayed_result_marked_ap"] = isinstance(result, dict) and result.get("period") == "ap"
+    status = match.get("status")
+    status_id = status.get("_id") if isinstance(status, dict) else None
+    checks["status_class"] = ({0: "not_started", 100: "ended", 110: "after_extra_time",
+                               120: "after_penalties"}.get(status_id, "unresolved")
+                              if type(status_id) is int else "unresolved")
+    return checks, projection
+
+
+def _validate_loader_matches(candidates, requested_id, limit_reached):
+    reports, projections = [], []
+    nonmatching, unsupported = 0, 0
+    # All located candidates are accounted for, even outside the shape cap.
+    for match, envelope in candidates:
+        if not _loader_positive_id(match.get("_id")):
+            unsupported += 1
+        elif str(match["_id"]) != requested_id:
+            nonmatching += 1
+        else:
+            checks, projection = _loader_match_checks(match, envelope)
+            reports.append(checks)
+            projections.append(projection)
+    consistency = {}
+    for key in ("kickoff", "teams", *_LOADER_MATCH_BINDINGS):
+        values = [p[key] for p in projections]
+        available = [v for v in values if v is not None]
+        consistency[key] = ("conflicting" if len(set(available)) > 1 else
+                            "incomplete" if limit_reached or len(available) != len(values) else
+                            "no_requested_candidates" if not values else
+                            "single_candidate" if len(values) == 1 else "consistent")
+    return {"status": "client_mapped_candidate_checks_not_fixture_binding",
+            "requested_event_candidate_count": len(reports),
+            "other_event_candidate_count": nonmatching,
+            "unsupported_event_id_candidate_count": unsupported,
+            "candidate_limit_reached": limit_reached,
+            "candidate_checks": reports, "cross_copy_consistency": consistency,
+            "independent_fixture_corroboration": False}
+
+
 def _inspect_loader_payload_evidence(state, source_url):
     """Locate embedded candidates, excluding runtime credentials and query keys.
 
@@ -1003,6 +1141,8 @@ def _inspect_loader_payload_evidence(state, source_url):
     loaders = state["loaderData"]
     pending = [(value, ("route",), 0) for value in reversed(list(loaders.values()))]
     seen, sections, visited = set(), [], 0
+    candidates = []
+    candidate_limit_reached = False
     truncated = False
     while pending:
         node, path, depth = pending.pop()
@@ -1019,6 +1159,11 @@ def _inspect_loader_payload_evidence(state, source_url):
             if key.casefold() in _LOADER_PRIVATE_BRANCHES:
                 continue
             child_path = (*path, key if key in _LOADER_SHAPE_KEYS else "opaque")[-12:]
+            if key == "match" and isinstance(value, dict):
+                if len(candidates) < 24:
+                    candidates.append((value, node))
+                else:
+                    candidate_limit_reached = True
             if key in _LOADER_SECTIONS:
                 if len(sections) < 24:
                     sections.append({"location": list(child_path),
@@ -1028,6 +1173,8 @@ def _inspect_loader_payload_evidence(state, source_url):
             pending.append((value, child_path, depth + 1))
     return {"status": "candidate_shape_and_field_syntax_only", "sections": sections,
             "section_limit_reached": truncated,
+            "match_candidate_validation": _validate_loader_matches(
+                candidates, requested_id, candidate_limit_reached),
             "record_schema_verified": False, "fixture_identity_verified": False,
             "team_competition_season_binding_verified": False,
             "regulation_periods_verified": False, "freshness_verified": False,
