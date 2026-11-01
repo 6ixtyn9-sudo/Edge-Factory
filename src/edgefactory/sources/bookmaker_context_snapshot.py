@@ -3,7 +3,8 @@
 SportPesa-branded Sportradar public match pages only. No HTTP, registration,
 state writer, odds, probabilities or admission path. Shares existing identity
 and timestamp guards. Reader and native evidence are never interchangeable.
-Native support is limited to explicitly bound semantic standings tables.
+Native diagnostics support bound fixture/source-score candidates and explicitly
+bound semantic standings tables. None are admitted as usable form or statistics.
 """
 from __future__ import annotations
 
@@ -1310,12 +1311,141 @@ def _inspect_loader_payload_evidence(state, source_url, *, candidate_sink=None, 
             "collection_permission_verified": False}
 
 
+
+def _extract_loader_history(state, fixture_candidate, *, observed_at_utc=None):
+    """Extract bounded source-score rows, never calculate/admit historical form.
+
+    Only the already-supported match/sibling contract is understood. Other feed
+    schemas are not guessed from query keys or array position. UIDs bind teams
+    across seasons; season-specific _id values are checked within a season only.
+    A numeric ended_uts must establish completion before BOTH capture and target
+    kickoff. The fallback's ended_uts=True is not a completion timestamp.
+    Even an explicit periods.ft remains an unverified *source* score here.
+    """
+    holds = ["regulation_results_not_verified", "historical_sample_completeness_unverified",
+             "collection_permission_unresolved", "freshness_not_verified",
+             "production_admission_not_implemented"]
+    result = {"status": "no_supported_embedded_history_rows", "records": [],
+              "candidate_record_count": 0, "held_event_count": 0,
+              "held_reasons": {}, "scan_complete": False, "usable_form_rows": 0,
+              "admitted_rows": 0, "hold_reasons": holds}
+    fixture = fixture_candidate.get("fixture")
+    observed = (parse_zoned_timestamp(observed_at_utc) if isinstance(observed_at_utc, str)
+                and len(observed_at_utc) <= 128 else None)
+    if fixture is None or observed is None:
+        return {**result, "status": "history_fixture_or_observation_unresolved"}
+    kickoff = parse_zoned_timestamp(fixture["kickoff_utc"])
+    cutoff = min(kickoff, observed).timestamp()
+    groups, seen, pending = {}, set(), [(state["loaderData"], 0)]
+    visited = copies = 0
+    while pending:
+        node, depth = pending.pop()
+        visited += 1
+        if visited > 100000 or depth > 64:
+            return {**result, "status": "history_scan_limit"}
+        if not isinstance(node, (dict, list)) or id(node) in seen:
+            continue
+        seen.add(id(node))
+        if isinstance(node, list):
+            pending.extend((v, depth + 1) for v in node)
+            continue
+        match = node.get("match")
+        if isinstance(match, dict) and _loader_positive_id(match.get("_id")):
+            event_id = str(match["_id"])
+            if event_id != fixture["event_id"]:
+                copies += 1
+                if copies > 256:
+                    return {**result, "status": "history_scan_limit"}
+                groups.setdefault(event_id, []).append((match, node))
+        pending.extend((v, depth + 1) for k, v in node.items()
+                       if k.casefold() not in _LOADER_PRIVATE_BRANCHES)
+    records, held = [], {}
+
+    def reject(reason):
+        held[reason] = held.get(reason, 0) + 1
+
+    for event_id, matches in sorted(groups.items()):
+        # Reuse all-copy identity/status checks and SAME-parent five-domain
+        # binding. Never combine sparse parents into a fabricated full record.
+        candidate = _extract_loader_fixture_candidate(
+            matches[:24], event_id, len(matches) > 24,
+            source_url=PREFIX + "match/" + event_id, observed_at_utc=observed_at_utc,
+            page_errors=state.get("errors") not in (None, _LOADER_UNDEFINED))
+        row = candidate["fixture"]
+        if row is None:
+            reject("history_identity_or_binding_unresolved")
+            continue
+        if row["source_status"] != "ended" or row["source_lifecycle"] != "finished":
+            reject("history_not_an_ordinary_finished_match")
+            continue
+        owners = []
+        conflict = False
+        for fixture_side in ("home", "away"):
+            team = fixture[fixture_side]
+            for record_side in ("home", "away"):
+                if row[record_side]["team_uid"] != team["team_uid"]:
+                    continue
+                owners.append({"fixture_side": fixture_side, "record_side": record_side})
+                if (row["_seasonid"] == fixture["_seasonid"]
+                        and row[record_side]["team_id"] != team["team_id"]):
+                    conflict = True
+        if not owners or conflict:
+            reject("history_fixture_team_binding_unresolved")
+            continue
+        starts = parse_zoned_timestamp(row["kickoff_utc"]).timestamp()
+        ends = [m.get("ended_uts") for m, _ in matches]
+        if (not all(_loader_epoch_seconds(v) for v in ends)
+                or len(set(ends)) != 1 or not starts < ends[0] < cutoff):
+            reject("history_completion_not_before_cutoff")
+            continue
+        scores = []
+        for match, _ in matches:
+            periods = match.get("periods")
+            ft = periods.get("ft") if isinstance(periods, dict) else None
+            displayed = match.get("result")
+            if (not _loader_score_pair(ft) or not _loader_score_pair(displayed)
+                    or any(k in periods for k in ("ot", "ap"))
+                    or any(ft[side] != displayed[side] for side in ("home", "away"))):
+                break
+            scores.append((ft["home"], ft["away"]))
+        if len(scores) != len(matches) or len(set(scores)) != 1:
+            reject("history_explicit_ft_score_missing_or_conflicting")
+            continue
+        records.append({**row, "ended_at_utc": datetime.fromtimestamp(ends[0], UTC).isoformat(),
+                        "fixture_team_bindings": owners,
+                        "source_ft_score": dict(zip(("home", "away"), scores[0])),
+                        "regulation_verified": False, "admitted": False})
+    records.sort(key=lambda r: (r["kickoff_utc"], r["event_id"]), reverse=True)
+    return {**result, "status": "extracted_unadmitted_history_score_candidates" if records else
+            "no_supported_embedded_history_rows", "records": records,
+            "candidate_record_count": len(records), "held_event_count": sum(held.values()),
+            "held_reasons": held, "scan_complete": True}
+
+
+def _loader_standings(body, source_url, fixture_candidate):
+    """Reuse semantic rows, but also require the loader's UID/season/UTID binding."""
+    result = parse_native_context_html(body, source_url)
+    if not result["standings_tables"]:
+        return result
+    fixture = fixture_candidate.get("fixture")
+    expected = {fixture[side]["team_uid"] for side in ("home", "away")} if fixture else set()
+    if fixture is None or not all(
+            expected <= {r["team_id"] for r in table["rows"]}
+            and all(r["season_id"] == fixture["_seasonid"]
+                    and r["tournament_id"] == fixture["_utid"] for r in table["rows"])
+            for table in result["standings_tables"]):
+        return {**result, "status": "native_loader_standings_identity_unresolved",
+                "standings_tables": [], "decoded_context_row_count": 0}
+    return {**result, "loader_identity_domains_agree": True,
+            "team_link_identity_domain": "uid", "tournament_link_identity_domain": "_utid",
+            "freshness_verified": False, "collection_permission_verified": False}
+
 def inspect_native_loader_state(body: bytes, source_url: str, *, observed_at_utc=None) -> dict:
     """Capture/decode supported embedded loader data, exporting a safe validation receipt.
 
     Not a statistics/admission adapter. Raw loader/config data stays local,
-    never persisted, executed or used to construct requests. Only value-free
-    evidence and a bounded normalized fixture candidate may be returned.
+    never persisted, executed or used to construct requests. Only allowlisted
+    evidence, fixture identities and unadmitted source-score rows may be returned.
     Selected numeric identities and computed UTC timestamps are not raw state;
     candidate extraction is not independent fixture or native statistics proof.
     """
@@ -1389,7 +1519,14 @@ def inspect_native_loader_state(body: bytes, source_url: str, *, observed_at_utc
         candidate = {}
         evidence = _inspect_loader_payload_evidence(
             state, source_url, candidate_sink=candidate, observed_at_utc=observed_at_utc)
+        history = _extract_loader_history(state, candidate, observed_at_utc=observed_at_utc)
+        # Inspect the SAME response with the existing semantic table decoder;
+        # never execute the app or make follow-up feed requests. Missing tables
+        # do not establish that the supplier has no standings coverage.
+        standings = _loader_standings(body, source_url, candidate)
         return {**result, **summary, "fixture_candidate": candidate,
+                "historical_result_candidates": history,
+                "semantic_standings_candidates": standings,
                 "payload_evidence": evidence,
                 "status": "decoded_supported_loader_state",
                 "decoded_loader_state_count": 1}
