@@ -239,3 +239,78 @@ def test_excessive_reference_graph_depth_is_rejected():
     values.append([])
     r=inspect_native_loader_state(html(enqueue(json.dumps(values))),URL)
     assert r['status']=='loader_structure_limit' and not r['decoded_loader_state_count']
+
+
+# Independently generated with npm turbo-stream@2.4.1 encode. Synthetic, not a
+# native StatsHub capture: undefined, null, nonfinite values, -0 and a sparse slot.
+WIRE_SPECIAL='''[{"_1":2,"_19":-5},"loaderData",{"_3":4},"root",{"_5":6,"_16":17},"cctx",{"_7":8,"_9":10,"_11":12,"_13":8,"_14":15},"clientId","sportpesa","language","en","fishnetUrl","https://widgets.fn.sportradar.com/","fishnetClientAlias","fishnetToken","DO_NOT_PRINT","cache",[-7,-5,-2,-6,-3,-4,-1,18],42,"errors"]\n'''
+
+
+def test_stock_v2_special_values_decode_without_numeric_or_null_substitution():
+    from edgefactory.sources.bookmaker_context_snapshot import (
+        _LOADER_HOLE,
+        _LOADER_NAN,
+        _LOADER_NEGATIVE_INFINITY,
+        _LOADER_POSITIVE_INFINITY,
+        _LOADER_UNDEFINED,
+        _unpack_loader_v2,
+    )
+    state=_unpack_loader_v2(json.loads(WIRE_SPECIAL))
+    cache=state['loaderData']['root']['cache']
+    assert len(cache)==8
+    assert cache[0] is _LOADER_UNDEFINED
+    assert cache[1] is None
+    assert cache[2] is _LOADER_NAN
+    assert cache[3] is _LOADER_POSITIVE_INFINITY
+    assert cache[4] is _LOADER_NEGATIVE_INFINITY
+    assert str(cache[5])=='-0.0'
+    assert cache[6] is _LOADER_HOLE
+    assert cache[7]==42
+    assert len({id(cache[i]) for i in (0,1,2,3,4,6)})==6
+    r=inspect_native_loader_state(html(enqueue(WIRE_SPECIAL)),URL)
+    assert r['decoded_loader_state_count']==1
+    assert r['feed_config']['syntactically_complete']
+    assert r['wire_special_value_counts']=={
+        'undefined':1,'array_hole':1,'nan':1,'negative_infinity':1,
+        'positive_infinity':1,'negative_zero':1}
+    assert_held(r)
+
+
+@pytest.mark.parametrize('ref,reason',[
+    (-1,'array_hole_outside_array'),(-8,'unknown_negative_reference'),
+    (1000000,'reference_out_of_range'),(True,'noninteger_reference'),
+    (1.0,'noninteger_reference'),('DO_NOT_PRINT','noninteger_reference'),
+])
+def test_bad_references_still_rejected_with_value_free_reason(ref,reason):
+    values=json.loads(WIRE)
+    values[0]['_1']=ref
+    r=inspect_native_loader_state(html(enqueue(json.dumps(values))),URL)
+    assert r['status']=='invalid_reference' and r['reference_failure_kind']==reason
+    assert not r['decoded_loader_state_count']
+    assert_held(r)
+
+
+@pytest.mark.parametrize('ref',[-2,-3,-6,-7])
+def test_special_value_cannot_validate_credential_or_origin(ref):
+    values=json.loads(WIRE)
+    values[6]['_9']=ref  # fishnetUrl becomes unavailable, NOT a default host.
+    r=inspect_native_loader_state(html(enqueue(json.dumps(values))),URL)
+    assert r['decoded_loader_state_count']==1
+    assert not r['feed_config']['syntactically_complete']
+    assert r['feed_config']['feed_origin'] is None
+    assert_held(r)
+
+
+def test_only_sparse_array_slots_accept_hole_sentinel():
+    values=json.loads(WIRE_SPECIAL)
+    values[0]['_-1']=2
+    r=inspect_native_loader_state(html(enqueue(json.dumps(values))),URL)
+    assert r['decoded_loader_state_count']==0
+    assert_held(r)
+
+
+def test_literal_nonfinite_json_is_still_rejected_not_repaired():
+    for raw in ('NaN','Infinity','-Infinity','1e999'):
+        body=direct().replace(b'"DO_NOT_PRINT"',raw.encode())
+        r=inspect_native_loader_state(body,URL)
+        assert r['status']=='nonfinite_json' and not r['decoded_loader_state_count']
