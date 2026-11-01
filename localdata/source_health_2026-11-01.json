@@ -42,7 +42,7 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 25,
+      "be_matched": 3,
       "be_raw": 96,
       "be_usable": 96,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
@@ -51,10 +51,10 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 14,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 60,
-        "no_pick_for_fixture": 22
+        "fixture_key_miss": 92,
+        "no_pick_for_fixture": 2
       },
       "reason": null,
       "status": "cache_only"
@@ -151,13 +151,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 717,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 39008,
-        "market_unsupported": 27462,
-        "no_pick_for_fixture": 15684
+        "fixture_key_miss": 55409,
+        "market_unsupported": 27462
       },
-      "op_matched": 5,
+      "op_matched": 0,
       "op_raw": 82871,
       "op_usable": 82871,
       "reason": null,
@@ -178,12 +177,12 @@
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 18,
+      "join_matched_rows": 4,
       "join_miss_counts": {
-        "fixture_key_miss": 24498,
-        "no_pick_for_fixture": 240
+        "fixture_key_miss": 24704,
+        "no_pick_for_fixture": 48
       },
-      "pa_matched": 26,
+      "pa_matched": 5,
       "pa_raw": 24756,
       "pa_scored": 24756,
       "reason": null,
@@ -323,11 +322,11 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 21,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 372
+        "fixture_key_miss": 393
       },
-      "oa_matched": 1,
+      "oa_matched": 0,
       "oa_raw": 393,
       "oa_usable": 393,
       "reason": null,
