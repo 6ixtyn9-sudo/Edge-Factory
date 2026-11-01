@@ -506,3 +506,189 @@ def test_cli_runtime_install_requires_explicit_browser_mode(probe):
     with pytest.raises(SystemExit) as error:
         probe.main(["--native-url", URL, "--browser-install-runtime"])
     assert error.value.code == 2
+
+
+@pytest.fixture
+def supplied_responses():
+    # Exact selected values from the operator's 2026-11-01 JSON in chat.
+    # It is a labelled projection, not server bytes or an independent capture.
+    path = Path(__file__).parent / "fixtures/bookmaker_browser_response_projection_2026-11-01.json"
+    return json.loads(path.read_text())
+
+
+def supplied_history(probe, supplied_responses):
+    payload = supplied_responses[1]["response"]
+    return probe._browser_stat_sample(json.dumps(payload).encode(), "history:1963")
+
+
+def test_supplied_native_projection_proves_twenty_source_records_not_usable_form(probe, supplied_responses):
+    from collections import Counter
+    sample = supplied_history(probe, supplied_responses)
+    assert sample["response_match_count"] == sample["source_ft_candidate_count"] == 20
+    assert not sample["held_record_reasons"] and not sample["sample_truncated"]
+    records = sample["source_ft_score_candidates"]
+    assert Counter(r["unique_tournament_id"] for r in records) == {"325": 12, "384": 6, "373": 2}
+    assert {r["season_id"] for r in records} == {"137706", "137972", "139328"}
+    assert all(r["source_status_is_null"] and r["kickoff_before_source_generation"] for r in records)
+    assert all(not r[k] for r in records for k in ("admitted", "completion_verified", "regulation_verified"))
+    assert not sample["fixture_binding_verified"] and not sample["capture_time_verified"]
+    assert sample["usable_form_rows"] == sample["admitted_rows"] == 0
+    assert all(m["status"] is None and m["inlivescore"] is True for m in sample["matches"])
+
+
+def test_actual_penalty_rows_keep_ft_separate_from_displayed_shootout(probe, supplied_responses):
+    records = {r["event_id"]: r for r in supplied_history(probe, supplied_responses)["source_ft_score_candidates"]}
+    fluminense = records["74781110"]
+    assert fluminense["owner_side"] == "home"
+    assert fluminense["source_ft_score"] == {"home": 0, "away": 1}
+    assert fluminense["source_display_score"] == {"home": 5, "away": 4}
+    assert fluminense["source_has_penalties"] and fluminense["source_display_period"] == "ap"
+    ldu = records["73903158"]
+    assert ldu["source_ft_score"] == {"home": 3, "away": 2}
+    assert ldu["source_display_score"] == {"home": 6, "away": 6}
+    assert "winner" not in fluminense and "wdl" not in fluminense
+    assert not fluminense["regulation_verified"] and not ldu["regulation_verified"]
+
+
+def test_real_uid_survives_competition_local_team_id_changes(probe, supplied_responses):
+    records = supplied_history(probe, supplied_responses)["source_ft_score_candidates"]
+    owner_ids = {(r["season_id"], r["teams"][r["owner_side"]]["team_id"]) for r in records}
+    assert owner_ids == {("137706", "6172"), ("137972", "472186"), ("139328", "88033")}
+    assert all(r["teams"][r["owner_side"]]["team_uid"] == "1963" for r in records)
+
+
+def test_empty_actual_cup_slice_is_not_global_standings_absence(probe, supplied_responses):
+    table = supplied_responses[0]["response"]
+    sample = probe._browser_stat_sample(json.dumps(table).encode(), "table_slice:74303326")
+    assert sample == {"status": "empty_match_table_slice", "empty_table_slice": True,
+                      "standings_availability_verified": False}
+    cup = supplied_responses[1]["response"]["doc"][0]["data"]["tournaments"]["283"]
+    assert cup["seasontype"] == "26" and cup["livetable"] is False
+    table["doc"][0]["data"] = {"token": SECRET}
+    sample = probe._browser_stat_sample(json.dumps(table).encode(), "table_slice:74303326")
+    assert sample["status"] == "unsupported_match_table_slice_shape" and SECRET not in json.dumps(sample)
+
+
+def test_offline_cli_uses_labelled_projection_with_unknown_capture_time(probe, supplied_responses, tmp_path, capsys):
+    path = tmp_path / "responses.json"
+    path.write_text(json.dumps(supplied_responses))
+    assert probe.main(["--browser-response-input", str(path)]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["network_requests"] == result["application_data_writes"] == result["usable_form_rows"] == 0
+    assert result["receipts"][0]["source_generated_at_utc"] == "2026-09-21T22:40:26+00:00"
+    assert result["receipts"][1]["source_generated_at_utc"] == "2026-11-01T13:33:44+00:00"
+    assert all(r["observed_at_utc"] is None and r["source_timestamp_is_not_capture_or_completion"]
+               and r["payload_scope"] == "selected_fields_projection" for r in result["receipts"])
+    assert result["receipts"][1]["source_ft_candidate_count"] == 20
+
+
+@pytest.mark.parametrize("field,value", [
+    ("_sid", True), ("_id", "66887122"), ("_utid", True), ("_seasonid", None),
+    ("time", {"uts": True}), ("teams", {}), ("periods", {}), ("result", {"home": False, "away": 0}),
+    ("canceled", True), ("walkover", True), ("retired", True), ("postponed", True),
+    ("disqualified", True), ("tobeannounced", True), ("time", None),
+])
+def test_bad_native_row_cannot_become_a_source_score_candidate(probe, supplied_responses, field, value):
+    data = supplied_responses[1]["response"]["doc"][0]["data"]
+    data["matches"][0][field] = value
+    sample = supplied_history(probe, supplied_responses)
+    assert sample["source_ft_candidate_count"] == 19 and sample["held_record_reasons"]
+    assert sample["usable_form_rows"] == sample["admitted_rows"] == 0
+
+
+@pytest.mark.parametrize("mutation", ["uid_not_team_id", "owner_sport", "clock", "timezone", "epoch_ms",
+                                      "bool_zero_offset", "metadata", "normal_score", "penalty_score"])
+def test_observed_identity_clock_competition_and_score_guards(probe, supplied_responses, mutation):
+    data = supplied_responses[1]["response"]["doc"][0]["data"]
+    row = data["matches"][0]
+    expected = 19
+    if mutation == "uid_not_team_id":
+        row["teams"]["away"]["uid"] = row["teams"]["away"]["_id"]
+    elif mutation == "owner_sport":
+        data["team"]["_sid"] = 2
+        expected = 0
+    elif mutation == "clock":
+        row["time"]["date"] = "27/10/26"
+    elif mutation == "timezone":
+        row["time"]["tz"] = "Africa/Johannesburg"
+    elif mutation == "epoch_ms":
+        row["time"]["uts"] *= 1000
+    elif mutation == "bool_zero_offset":
+        row["time"]["tzoffset"] = False
+    elif mutation == "metadata":
+        data["tournaments"]["83"]["_utid"] = 373
+        expected = 8
+    elif mutation == "normal_score":
+        row["result"]["home"] = 1
+    else:
+        data["matches"][2]["result"]["home"] = 10
+    sample = supplied_history(probe, supplied_responses)
+    assert sample["source_ft_candidate_count"] == expected
+    assert sample["held_record_reasons"]
+
+
+def test_same_season_identity_conflicts_and_duplicate_copy_conflicts_are_held(probe, supplied_responses):
+    import copy
+    data = supplied_responses[1]["response"]["doc"][0]["data"]
+    data["matches"][0]["teams"]["away"]["_id"] = 111111
+    sample = supplied_history(probe, supplied_responses)
+    assert sample["source_ft_candidate_count"] == 8  # all twelve affected league rows held
+    assert sample["held_record_reasons"]["duplicate_event_conflict"] == 12
+    data["matches"][0]["teams"]["away"]["_id"] = 6172
+    duplicate = copy.deepcopy(data["matches"][0])
+    duplicate["periods"]["ft"]["home"] = duplicate["result"]["home"] = 2
+    data["matches"].append(duplicate)
+    sample = supplied_history(probe, supplied_responses)
+    assert sample["source_ft_candidate_count"] == 19 and sample["sample_truncated"]
+    data["matches"][-1]["periods"] = {}
+    assert supplied_history(probe, supplied_responses)["source_ft_candidate_count"] == 19
+
+
+def test_opaque_supplier_form_values_are_not_exported_or_treated_as_probability(probe, supplied_responses):
+    data = supplied_responses[1]["response"]["doc"][0]["data"]
+    before = supplied_history(probe, supplied_responses)
+    data["matches"][0]["form"] = [{"uniqueteamid": "1963", "form": {
+        "away": {"3": "1.3942312549180107"}}, "token": SECRET}]
+    data["token"] = SECRET
+    after = supplied_history(probe, supplied_responses)
+    assert before == after and SECRET not in json.dumps(after)
+    assert '"probability"' not in json.dumps(after) and '"form"' not in json.dumps(after)
+
+
+@pytest.mark.parametrize("mutation", ["missing_label", "reader_label", "unlabelled_scope", "bad_observed",
+                                      "tokenized_query", "wrong_event", "wrong_page", "mixed_invalid"])
+def test_offline_response_labels_and_query_binding_fail_closed(probe, supplied_responses, tmp_path, capsys, mutation):
+    row = supplied_responses[0]
+    if mutation == "missing_label":
+        del row["evidence_kind"]
+    elif mutation == "reader_label":
+        row["evidence_kind"] = "reader_transcription"
+    elif mutation == "unlabelled_scope":
+        row["payload_scope"] = "native_verbatim"
+    elif mutation == "bad_observed":
+        row["observed_at_utc"] = "2026-11-01T17:00:00"
+    elif mutation == "tokenized_query":
+        row["response"]["queryUrl"] += "?T=" + SECRET
+    elif mutation == "wrong_event":
+        row["response"]["doc"][0]["event"] = "stats_team_lastx"
+    elif mutation == "wrong_page":
+        row["source_url"] = URL.replace("74303326", "75879092")
+    else:
+        supplied_responses.append({"token": SECRET})
+    path = tmp_path / "responses.json"
+    path.write_text(json.dumps(supplied_responses))
+    assert probe.main(["--browser-response-input", str(path)]) == 2
+    output = capsys.readouterr()
+    assert not output.out and json.loads(output.err) == {"status": "invalid_offline_input", "admitted_rows": 0}
+    assert SECRET not in output.err
+
+
+def test_saved_response_mode_does_not_claim_slate_binding(probe):
+    with pytest.raises(SystemExit) as error:
+        probe.main(["--browser-response-input", "unused.json", "--card", "unused-card.json"])
+    assert error.value.code == 2
+
+
+def test_observed_table_slice_route_binds_to_exact_page_event(probe):
+    assert probe._browser_request_kind(FEED + "stats_match_tableslice/74303326", "fetch", URL, FIXTURE) == "table_slice:74303326"
+    assert probe._browser_request_kind(FEED + "stats_match_tableslice/75879092", "fetch", URL, FIXTURE) is None
