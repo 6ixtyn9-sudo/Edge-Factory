@@ -964,3 +964,139 @@ def test_persistence_refuses_missing_part_before_staging_financial_changes(tmp_p
     assert _git(repo, 'rev-parse', 'HEAD').stdout == head
     assert not _git(repo, 'diff', '--cached', '--name-only').stdout
     assert financial.read_text() == '{"bank":123}'
+
+
+def _pin_approved_freeze(repo, module, relative, head, cache, *, keep_card=False):
+    """Synthetic snapshots exercise the same exact-pair approval as the log."""
+    approval = head['integrity_recovery']['pending_cached_freeze']
+    if not keep_card:
+        approval.pop('card')
+    approval['committed_financial_sha256'] = module._financial_fingerprint(head)
+    approval['cached_financial_sha256'] = module._financial_fingerprint(cache)
+    (repo / relative).write_text(json.dumps(head))
+    _git(repo, 'add', relative)
+    _git(repo, 'commit', '-qm', 'explicit exact-snapshot freeze approval')
+    (repo / relative).write_text(json.dumps(cache))
+    return approval
+
+
+@pytest.mark.parametrize('lane', ['main', 'enh'])
+@pytest.mark.parametrize('multipart', [False, True])
+def test_exact_snapshot_approval_recovers_only_original_freeze_without_money_changes(
+        tmp_path, monkeypatch, lane, multipart):
+    import random
+    import auto_tickets as at
+    from edgefactory import util
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    module, relative, head, cache, receipt, card, text = _approved_freeze_fixture(repo, lane=lane)
+    approval = _pin_approved_freeze(repo, module, relative, head, cache)
+    original = receipt.read_bytes()
+    if multipart:
+        payload = json.loads(original)
+        payload.pop('sha256')
+        payload['extra_evidence'] = random.Random(1).randbytes(9000).hex()
+        payload['sha256'] = at._decision_digest(payload)
+        original = json.dumps(payload).encode()
+        _multipart_receipt_limits(monkeypatch)
+        canonical = util.ticket_receipt_path(repo / 'localdata', receipt.name)
+        util.write_ticket_receipt(canonical, original)
+        receipt.unlink()
+        assert list(canonical.parent.glob(canonical.name + '.part-*'))
+    module.restore_committed_localdata(repo)
+    recovered = json.loads((repo / relative).read_bytes())
+    for key in ('base_pct', 'bank', 'cycle_base', 'history', 'events'):
+        assert recovered[key] == head[key]
+    assert recovered['open_slips'] == cache['open_slips']
+    assert recovered['frozen_by_date'] == cache['frozen_by_date']
+    assert module._financial_fingerprint(recovered) == approval['cached_financial_sha256']
+    assert recovered['integrity_recovery']['pending_cached_freeze']['status'] == 'recovered'
+    assert card.read_text() == text
+    prefix = 'auto_tickets' if lane == 'main' else 'autobets_enh_tickets'
+    canonical = util.ticket_receipt_path(repo / 'localdata', f'{prefix}_2026-10-28_decision.json')
+    assert util.ticket_receipt_bytes(canonical) == original
+    _git(repo, 'add', '-A', 'localdata')
+    _git(repo, 'commit', '-qm', 'persist exact original freeze')
+    before = {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
+    module.restore_committed_localdata(repo)
+    assert before == {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
+
+
+@pytest.mark.parametrize('damage', ['unbound', 'before', 'after', 'bad_hash', 'missing_before',
+    'bank', 'history', 'events', 'cycle', 'other_lock', 'other_position', 'stake',
+    'bad_total', 'price', 'receipt_hash', 'source_run', 'source_head', 'receipt_plan',
+    'text', 'missing_receipt', 'committed_frozen_text'])
+def test_exact_snapshot_authority_never_bypasses_independent_recovery_checks(tmp_path, damage):
+    import auto_tickets as at
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    module, relative, head, cache, receipt, card, text = _approved_freeze_fixture(repo)
+    if damage == 'bank': cache['bank'] += 1
+    if damage == 'history': cache['history'] = [dict(date='2026-10-27', staked_pct=1., returned_pct=0., accas=[])]
+    if damage == 'events': cache['events'] = [{'action': 'unknown'}]
+    if damage == 'cycle': cache['cycle_base'] += 1
+    if damage == 'other_lock': cache['frozen_by_date']['2026-10-27'] = {'final': True}
+    if damage == 'other_position': cache['open_slips'].append(dict(date='2026-10-29', accas=[]))
+    if damage == 'stake': cache['open_slips'][0]['accas'][0]['stake_pct'] += 1
+    if damage == 'bad_total': cache['open_slips'][0]['staked_pct'] += 1
+    if damage == 'price': cache['open_slips'][0]['accas'][0]['odds'] += 1
+    # Deliberately authorize the damaged snapshot's hash: the money, card and
+    # evidence checks must STILL refuse it, not trust a fingerprint alone.
+    approval = _pin_approved_freeze(repo, module, relative, head, cache)
+    if damage == 'unbound':
+        approval.pop('cached_financial_sha256')
+        approval.pop('committed_financial_sha256')
+    if damage == 'before': approval['committed_financial_sha256'] = '0' * 64
+    if damage == 'after': approval['cached_financial_sha256'] = '0' * 64
+    if damage == 'bad_hash': approval['cached_financial_sha256'] = True
+    if damage == 'missing_before': approval.pop('committed_financial_sha256')
+    if damage in ('unbound', 'before', 'after', 'bad_hash', 'missing_before'):
+        (repo / relative).write_text(json.dumps(head))
+        _git(repo, 'add', relative)
+        _git(repo, 'commit', '-qm', 'malformed or mismatched approval')
+        (repo / relative).write_text(json.dumps(cache))
+    if damage in ('receipt_hash', 'source_run', 'source_head', 'receipt_plan'):
+        payload = json.loads(receipt.read_text())
+        payload.pop('sha256')
+        if damage == 'source_run': payload['execution_provenance']['run_id'] = 'wrong'
+        if damage == 'source_head': payload['execution_provenance']['checkout_head_at_capture'] = 'wrong'
+        if damage == 'receipt_plan': payload['plan'][0]['legs'][0]['match'] = 'Other vs Club'
+        payload['sha256'] = 'broken' if damage == 'receipt_hash' else at._decision_digest(payload)
+        receipt.write_text(json.dumps(payload))
+    if damage == 'text': card.write_text('wrong card')
+    if damage == 'missing_receipt': receipt.unlink()
+    if damage == 'committed_frozen_text':
+        card.write_text('FROZEN AT 07:00 - FINAL')
+        _git(repo, 'add', str(card.relative_to(repo)))
+        _git(repo, 'commit', '-qm', 'already frozen HEAD text')
+        card.write_text(text)
+    before = {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
+    with pytest.raises(module.EvidenceMergeError):
+        module.restore_committed_localdata(repo)
+    assert before == {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
+
+
+@pytest.mark.parametrize('different_card', [False, True])
+def test_main_card_approval_with_head_pin_accepts_only_the_committed_card(tmp_path, different_card):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    module, relative, head, cache, receipt, card, text = _approved_freeze_fixture(repo)
+    approval = _pin_approved_freeze(repo, module, relative, head, cache, keep_card=True)
+    approval.pop('cached_financial_sha256')
+    (repo / relative).write_text(json.dumps(head))
+    _git(repo, 'add', relative)
+    _git(repo, 'commit', '-qm', 'HEAD-bound literal card approval')
+    if different_card:
+        cache['open_slips'][0]['accas'][0]['legs'][0]['match'] = 'Different vs Opponent'
+    (repo / relative).write_text(json.dumps(cache))
+    before = {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
+    if different_card:
+        with pytest.raises(module.EvidenceMergeError, match='card differs'):
+            module.restore_committed_localdata(repo)
+        assert before == {p: p.read_bytes() for p in (repo / 'localdata').rglob('*') if p.is_file()}
+    else:
+        module.restore_committed_localdata(repo)
+        recovered = json.loads((repo / relative).read_bytes())
+        assert recovered['bank'] == head['bank'] and recovered['history'] == head['history']
+        assert recovered['open_slips'] == cache['open_slips']
+        assert recovered['frozen_by_date'] == cache['frozen_by_date']

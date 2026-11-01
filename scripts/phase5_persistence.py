@@ -391,6 +391,20 @@ def _approved_cached_freeze(repo, relative, head, cache):
         from auto_tickets import effective_bank, ticket_card_identity
         lane = "main" if relative == MAIN_STATE else "enh"
         prefix = "auto_tickets" if lane == "main" else "autobets_enh_tickets"
+        # A published restore failure can identify an exact saved financial
+        # snapshot even when its artifact cannot be downloaded for a literal
+        # card approval. Bind BOTH snapshots; this is not a supersession:
+        # all unchanged-money, lock, receipt and text checks below still apply.
+        import re
+        before_sha = approval.get("committed_financial_sha256")
+        cache_sha = approval.get("cached_financial_sha256")
+        for key, expected, state in (("committed", before_sha, head), ("cached", cache_sha, cache)):
+            if expected is not None and (not isinstance(expected, str)
+                    or not re.fullmatch(r"[0-9a-f]{64}", expected)
+                    or _financial_fingerprint(state) != expected):
+                raise ValueError(f"{key} financial snapshot differs from the explicit approval")
+        if cache_sha is not None and before_sha is None:
+            raise ValueError("cached snapshot approval must also bind the committed snapshot")
         lock = cache_locks[day]
         stamp = datetime.fromisoformat(lock["frozen_at"])
         if (lock.get("final") is not True or stamp.utcoffset() is None
@@ -415,8 +429,11 @@ def _approved_cached_freeze(repo, relative, head, cache):
         plan = slips[0]["accas"]
         inventory = [[[l["match"], l["pick"], l["market"], l["odds"]]
                       for l in a["legs"]] for a in plan]
-        if inventory != approval["card"]:
-            raise ValueError("card differs from the explicitly approved run output")
+        if "card" in approval:
+            if inventory != approval["card"]:
+                raise ValueError("card differs from the explicitly approved run output")
+        elif cache_sha is None or before_sha is None:
+            raise ValueError("recovery requires an explicit card or both exact financial snapshots")
         free = effective_bank(head, exclude_date=day)
         expected = round(free * .25 / len(plan), 4)
         if (not math.isfinite(free) or free <= 0

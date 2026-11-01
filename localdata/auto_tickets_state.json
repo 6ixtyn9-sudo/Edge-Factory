@@ -1884,44 +1884,84 @@
   },
   "integrity_recovery": {
     "pending_cached_freeze": {
-      "status": "recovered",
-      "date": "2026-10-28",
-      "source_run_id": "40647275279",
-      "source_head": "6047e60474c67984d573baa50a0ddd05a3c614a4",
-      "frozen_minute": "2026-10-28T09:51",
+      "status": "approved",
+      "date": "2026-11-01",
+      "source_run_id": "41283007502",
+      "source_head": "9289757094c95a7e458a471b3cee0a0e8697cb1c",
+      "frozen_minute": "2026-11-01T09:37",
+      "committed_financial_sha256": "612604e352776e83c161e19a2311e53f811f5e8495133fa412afb01a7fd69c81",
+      "reason": "Operator requested recovery after run 41287980578 refused the saved freeze from run 41283007502. Retain original frozen evidence only; bank, history, other positions and other locks must remain unchanged.",
+      "previous_recovery": {
+        "status": "recovered",
+        "date": "2026-10-28",
+        "source_run_id": "40647275279",
+        "source_head": "6047e60474c67984d573baa50a0ddd05a3c614a4",
+        "frozen_minute": "2026-10-28T09:51",
+        "card": [
+          [
+            [
+              "Bragantino vs Chapecoense",
+              "HOME",
+              "1x2",
+              1.31
+            ],
+            [
+              "SC Freiburg vs VfL Wolfsburg",
+              "HOME",
+              "1x2",
+              1.53
+            ]
+          ],
+          [
+            [
+              "Venezia vs Inter",
+              "AWAY",
+              "1x2",
+              1.36
+            ],
+            [
+              "Genemuiden vs FC Dordrecht",
+              "AWAY",
+              "1x2",
+              1.35
+            ]
+          ]
+        ],
+        "reason": "Operator-authorized recovery of the saved frozen card after receipt-relocation rebase conflict; no bank/history edits or recut.",
+        "receipt_sha256": "8b5fac286b55b09901f6b7a804a05f0faf6d0ad0226bb3ffb561cf2b90814f2a",
+        "recovered_financial_sha256": "6695adeeae47172e3e53bb747ce4792fdc49c8a206b67cc4a4bc5ba9c6ea31aa"
+      },
       "card": [
         [
           [
-            "Bragantino vs Chapecoense",
+            "Como vs Venezia",
+            "HOME",
+            "1x2",
+            1.3
+          ],
+          [
+            "Trabzonspor vs Gaziantep F.K.",
             "HOME",
             "1x2",
             1.31
-          ],
-          [
-            "SC Freiburg vs VfL Wolfsburg",
-            "HOME",
-            "1x2",
-            1.53
           ]
         ],
         [
           [
-            "Venezia vs Inter",
-            "AWAY",
+            "PAOK vs Asteras Tripolis",
+            "HOME",
             "1x2",
-            1.36
+            1.3
           ],
           [
-            "Genemuiden vs FC Dordrecht",
-            "AWAY",
+            "Djurg\u00e5rden vs Degerfors",
+            "HOME",
             "1x2",
-            1.35
+            1.31
           ]
         ]
       ],
-      "reason": "Operator-authorized recovery of the saved frozen card after receipt-relocation rebase conflict; no bank/history edits or recut.",
-      "receipt_sha256": "8b5fac286b55b09901f6b7a804a05f0faf6d0ad0226bb3ffb561cf2b90814f2a",
-      "recovered_financial_sha256": "6695adeeae47172e3e53bb747ce4792fdc49c8a206b67cc4a4bc5ba9c6ea31aa"
+      "verification_basis": "Only the exact card already present in the committed November 1 draft is authorized; any changed cached card remains blocked. Cached Main snapshot unavailable through GitHub API (404)."
     }
   }
 }
