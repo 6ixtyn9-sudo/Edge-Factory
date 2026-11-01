@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 40,
-  "captured_at": "2026-11-01T04:41:52+00:00",
+  "captured_at": "2026-11-01T09:20:25+00:00",
   "date": "2026-11-01",
   "due_reasons": {},
   "errors": [],
@@ -24,10 +24,10 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 2,
     "kickoff_mismatch": 1,
     "priced": 3,
-    "priced_close_window_not_open": 1,
-    "retry_cooldown": 36
+    "retry_cooldown": 35
   },
   "skipped": [
     "Charlton Athletic W|Chelsea W (retry cooldown (6h after failed attempt))",
@@ -53,13 +53,13 @@
     "Elfsborg|\u00d6rgryte (priced)",
     "\u00c5sane|Haugesund (retry cooldown (6h after failed attempt))",
     "Lazio|Cagliari (retry cooldown (6h after failed attempt))",
-    "Amed|Ey\u00fcpspor (retry cooldown (6h after failed attempt))",
+    "Amed|Ey\u00fcpspor (kickoff already passed)",
     "Bansk\u00e1 Bystrica|Dunajsk\u00e1 Streda (retry cooldown (6h after failed attempt))",
     "Guadalajara|Atlante (retry cooldown (6h after failed attempt))",
     "Ravenna|Pineto (retry cooldown (6h after failed attempt))",
     "Sivasspor|Boluspor (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Ulsan Hyundai FC|Gangwon FC: pick legacy display says 05:00 SAST, captured rows say 07:00 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Ulsan Hyundai FC|Gangwon FC (priced, close window not open)",
+    "Ulsan Hyundai FC|Gangwon FC (kickoff already passed)",
     "FC Arouca|CD Nacional (retry cooldown (6h after failed attempt))",
     "Palmeiras|Vasco da Gama (retry cooldown (6h after failed attempt))",
     "Cittadella|Treviso (retry cooldown (6h after failed attempt))",

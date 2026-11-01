@@ -3,13 +3,13 @@
 ## Overall
 
 - total unique picks: 1209
-- picks with at least two prices: 1001
-- average raw odds delta: -0.00316
+- picks with at least two prices: 1002
+- average raw odds delta: -0.003157
 - average implied-probability delta: 0.000288
-- beat-later-price rate: 0.076923
-- beat-later-price sample: 1001
+- beat-later-price rate: 0.076846
+- beat-later-price sample: 1002
 - unmatched picks: 148
-- picks with fewer than two snapshots: 72
+- picks with fewer than two snapshots: 71
 
 ## By rule
 
@@ -46,7 +46,7 @@
 - `pfc_bdce95a736d6cc8667f7ac31`: n=26, two_prices=25, avg_raw=-0.0012, avg_ip=0.00075, beat_rate=0.04
 - `pfc_c8cbcf76ea758fd6de596ae1`: n=1, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
 - `pfc_d94d447efe0742440e953722`: n=13, two_prices=12, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
-- `pfc_fdade2e70df4d4bb78a8cd6e`: n=142, two_prices=140, avg_raw=0.001429, avg_ip=-0.000806, beat_rate=0.007143
+- `pfc_fdade2e70df4d4bb78a8cd6e`: n=142, two_prices=141, avg_raw=0.001418, avg_ip=-0.0008, beat_rate=0.007092
 - `unanimous[betclan+bzzoiro+statarea+vitibet+zulubet] avg_p>=65`: n=1, two_prices=1, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `unanimous[betclan+bzzoiro+statarea+vitibet] avg_p>=65`: n=1, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
 - `unanimous[betclan+statarea+vitibet] avg_p>=65`: n=2, two_prices=2, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
@@ -66,6 +66,6 @@
 - `CERTIFIED_CLEAN`: n=118, two_prices=116, avg_raw=-0.00232, avg_ip=-0.001021, beat_rate=0.034483
 - `SKIPPED_VETO`: n=643, two_prices=557, avg_raw=-0.003509, avg_ip=0.000182, beat_rate=0.066427
 - `WATCHLIST_NO_ODDS`: n=85, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
-- `WATCHLIST_SUSPECT_PRICE`: n=99, two_prices=79, avg_raw=-0.002025, avg_ip=0.000188, beat_rate=0.113924
+- `WATCHLIST_SUSPECT_PRICE`: n=99, two_prices=80, avg_raw=-0.002, avg_ip=0.000186, beat_rate=0.1125
 - `WATCHLIST_UNCORROBORATED_PRICE`: n=64, two_prices=61, avg_raw=-0.002787, avg_ip=0.000993, beat_rate=0.065574
 - `WATCHLIST_UNKNOWN_CTX`: n=22, two_prices=22, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0

@@ -1655,53 +1655,83 @@
           "bank_total": 24.078511,
           "committed_excluding_target": 0.0,
           "date": "2026-11-01",
-          "decision_status": "draft",
+          "decision_status": "frozen",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "98d1019723dc87ec8623e7fbc64306f59bf36a98",
-            "event_sha": "98d1019723dc87ec8623e7fbc64306f59bf36a98",
+            "checkout_head_at_capture": "9289757094c95a7e458a471b3cee0a0e8697cb1c",
+            "event_sha": "9289757094c95a7e458a471b3cee0a0e8697cb1c",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "41271330127",
+            "run_id": "41283007502",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-01_decision.json.gz",
           "free_bank": 24.078511,
-          "ledger": "NOT_COMMITTED",
+          "freeze_time": "MATCH",
+          "ledger": "MATCH",
           "ml_comparison": {
-            "added_to_ml_on": 3,
+            "added_to_ml_on": 2,
             "arms": {
               "ml_off": {
                 "accas": [
                   {
                     "legs": [
                       {
+                        "cohort": 0.8036,
+                        "market": "match_over_15",
+                        "match": "I\u011fd\u0131r FK vs Antalyaspor",
+                        "model": 0.9273497297849513,
+                        "odds": 1.333,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "missing_final_score"
+                      },
+                      {
+                        "cohort": 0.6127,
+                        "market": "match_under_35",
+                        "match": "Sivasspor vs Boluspor",
+                        "model": 0.712998831475602,
+                        "odds": 1.493,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "missing_final_score"
+                      }
+                    ],
+                    "odds": 1.99,
+                    "returned": null,
+                    "stake": 2.0065
+                  },
+                  {
+                    "legs": [
+                      {
                         "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Young Boys vs Z\u00fcrich",
-                        "model": 0.8056599234569256,
+                        "model": 0.8056599221976892,
                         "odds": 1.63,
                         "outcome_source": null,
                         "pick": "under",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
                       {
                         "cohort": 0.6582,
                         "market": "match_over_25",
-                        "match": "Elfsborg vs \u00d6rgryte",
-                        "model": 0.752291254962098,
-                        "odds": 1.47,
+                        "match": "Lazio vs Cagliari",
+                        "model": 0.7504145731912938,
+                        "odds": 1.75,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
-                    "odds": 2.4,
+                    "odds": 2.85,
                     "returned": null,
                     "stake": 2.0065
                   },
@@ -1711,55 +1741,26 @@
                         "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Brighton W vs Crystal Palace W",
-                        "model": 0.6231152025568917,
+                        "model": 0.623115203115194,
                         "odds": 1.4,
                         "outcome_source": null,
                         "pick": "under",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
-                      {
-                        "cohort": 0.6582,
-                        "market": "match_over_25",
-                        "match": "Lazio vs Cagliari",
-                        "model": 0.750414572827158,
-                        "odds": 1.8,
-                        "outcome_source": null,
-                        "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      }
-                    ],
-                    "odds": 2.52,
-                    "returned": null,
-                    "stake": 2.0065
-                  },
-                  {
-                    "legs": [
                       {
                         "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Como vs Venezia",
-                        "model": 0.8476391653919503,
+                        "model": 0.8476391675113584,
                         "odds": 1.36,
                         "outcome_source": null,
                         "pick": "under",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      },
-                      {
-                        "cohort": 0.7209,
-                        "market": "match_under_45",
-                        "match": "\u00c5sane vs Haugesund",
-                        "model": 0.7626562241052951,
-                        "odds": 1.57,
-                        "outcome_source": null,
-                        "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
-                    "odds": 2.14,
+                    "odds": 1.9,
                     "returned": null,
                     "stake": 2.0065
                   }
@@ -1776,181 +1777,10 @@
                         "betexplorer"
                       ],
                       [
-                        "Lazio vs Cagliari",
-                        "match_over_25",
-                        "OVER",
-                        1.8,
-                        "bet365.us",
-                        "betexplorer"
-                      ]
-                    ],
-                    2.52,
-                    2.0065
-                  ],
-                  [
-                    [
-                      [
                         "Como vs Venezia",
                         "match_under_45",
                         "UNDER",
                         1.36,
-                        "bet365.us",
-                        "betexplorer"
-                      ],
-                      [
-                        "\u00c5sane vs Haugesund",
-                        "match_under_45",
-                        "UNDER",
-                        1.57,
-                        "bet365.us",
-                        "betexplorer"
-                      ]
-                    ],
-                    2.14,
-                    2.0065
-                  ],
-                  [
-                    [
-                      [
-                        "Elfsborg vs \u00d6rgryte",
-                        "match_over_25",
-                        "OVER",
-                        1.47,
-                        "Stake.com",
-                        "betexplorer"
-                      ],
-                      [
-                        "Young Boys vs Z\u00fcrich",
-                        "match_under_45",
-                        "UNDER",
-                        1.63,
-                        "Stake.com",
-                        "betexplorer"
-                      ]
-                    ],
-                    2.4,
-                    2.0065
-                  ]
-                ],
-                "mean_acca_odds": 2.3533333333333335,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
-                "resolved_legs": 0,
-                "returned": null,
-                "selected_legs": 6,
-                "selector_trace": {
-                  "capacity_rescue_changed": false,
-                  "capacity_rescue_checked": false,
-                  "dropped": [],
-                  "ml_ranking_active": false
-                },
-                "total_stake": 6.0195
-              },
-              "ml_on": {
-                "accas": [
-                  {
-                    "legs": [
-                      {
-                        "cohort": 0.7219,
-                        "market": "match_under_45",
-                        "match": "Como vs Venezia",
-                        "model": 0.8476391653919503,
-                        "odds": 1.36,
-                        "outcome_source": null,
-                        "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      },
-                      {
-                        "cohort": 0.6582,
-                        "market": "match_over_25",
-                        "match": "Partizan vs Zemun",
-                        "model": 0.7501814402827867,
-                        "odds": 1.4,
-                        "outcome_source": null,
-                        "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      }
-                    ],
-                    "odds": 1.9,
-                    "returned": null,
-                    "stake": 2.0065
-                  },
-                  {
-                    "legs": [
-                      {
-                        "cohort": 0.7219,
-                        "market": "match_under_45",
-                        "match": "Young Boys vs Z\u00fcrich",
-                        "model": 0.8056599234569256,
-                        "odds": 1.63,
-                        "outcome_source": null,
-                        "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      },
-                      {
-                        "cohort": 0.6582,
-                        "market": "match_over_25",
-                        "match": "Lazio vs Cagliari",
-                        "model": 0.750414572827158,
-                        "odds": 1.75,
-                        "outcome_source": null,
-                        "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      }
-                    ],
-                    "odds": 2.85,
-                    "returned": null,
-                    "stake": 2.0065
-                  },
-                  {
-                    "legs": [
-                      {
-                        "cohort": 0.7209,
-                        "market": "match_under_45",
-                        "match": "\u00c5sane vs Haugesund",
-                        "model": 0.7626562241052951,
-                        "odds": 1.57,
-                        "outcome_source": null,
-                        "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      },
-                      {
-                        "cohort": 0.6582,
-                        "market": "match_over_25",
-                        "match": "Elfsborg vs \u00d6rgryte",
-                        "model": 0.752291254962098,
-                        "odds": 1.5,
-                        "outcome_source": null,
-                        "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      }
-                    ],
-                    "odds": 2.35,
-                    "returned": null,
-                    "stake": 2.0065
-                  }
-                ],
-                "card_identity": [
-                  [
-                    [
-                      [
-                        "Como vs Venezia",
-                        "match_under_45",
-                        "UNDER",
-                        1.36,
-                        "bet365.us",
-                        "betexplorer"
-                      ],
-                      [
-                        "Partizan vs Zemun",
-                        "match_over_25",
-                        "OVER",
-                        1.4,
                         "bet365.us",
                         "betexplorer"
                       ]
@@ -1961,23 +1791,23 @@
                   [
                     [
                       [
-                        "Elfsborg vs \u00d6rgryte",
-                        "match_over_25",
+                        "I\u011fd\u0131r FK vs Antalyaspor",
+                        "match_over_15",
                         "OVER",
-                        1.5,
-                        "bet365.us",
-                        "betexplorer"
+                        1.333,
+                        "kalshi",
+                        "oddspapi"
                       ],
                       [
-                        "\u00c5sane vs Haugesund",
-                        "match_under_45",
+                        "Sivasspor vs Boluspor",
+                        "match_under_35",
                         "UNDER",
-                        1.57,
-                        "bet365.us",
-                        "betexplorer"
+                        1.493,
+                        "kalshi",
+                        "oddspapi"
                       ]
                     ],
-                    2.35,
+                    1.99,
                     2.0065
                   ],
                   [
@@ -2003,8 +1833,179 @@
                     2.0065
                   ]
                 ],
-                "mean_acca_odds": 2.3666666666666667,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "mean_acca_odds": 2.2466666666666666,
+                "outcome_status": "INCOMPLETE_OUTCOMES",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 6,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": false
+                },
+                "total_stake": 6.0195
+              },
+              "ml_on": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.8036,
+                        "market": "match_over_15",
+                        "match": "I\u011fd\u0131r FK vs Antalyaspor",
+                        "model": 0.9273497297849513,
+                        "odds": 1.333,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "missing_final_score"
+                      },
+                      {
+                        "cohort": 0.6127,
+                        "market": "match_under_35",
+                        "match": "Sivasspor vs Boluspor",
+                        "model": 0.712998831475602,
+                        "odds": 1.493,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "missing_final_score"
+                      }
+                    ],
+                    "odds": 1.99,
+                    "returned": null,
+                    "stake": 2.0065
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7219,
+                        "market": "match_under_45",
+                        "match": "Como vs Venezia",
+                        "model": 0.8476391675113584,
+                        "odds": 1.36,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "missing_final_score"
+                      },
+                      {
+                        "cohort": 0.6582,
+                        "market": "match_over_25",
+                        "match": "Elfsborg vs \u00d6rgryte",
+                        "model": 0.7522912543612774,
+                        "odds": 1.5,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "missing_final_score"
+                      }
+                    ],
+                    "odds": 2.04,
+                    "returned": null,
+                    "stake": 2.0065
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7219,
+                        "market": "match_under_45",
+                        "match": "Young Boys vs Z\u00fcrich",
+                        "model": 0.8056599221976892,
+                        "odds": 1.63,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "missing_final_score"
+                      },
+                      {
+                        "cohort": 0.7209,
+                        "market": "match_under_45",
+                        "match": "\u00c5sane vs Haugesund",
+                        "model": 0.7626562150684542,
+                        "odds": 1.57,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "missing_final_score"
+                      }
+                    ],
+                    "odds": 2.56,
+                    "returned": null,
+                    "stake": 2.0065
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Como vs Venezia",
+                        "match_under_45",
+                        "UNDER",
+                        1.36,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Elfsborg vs \u00d6rgryte",
+                        "match_over_25",
+                        "OVER",
+                        1.5,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.04,
+                    2.0065
+                  ],
+                  [
+                    [
+                      [
+                        "I\u011fd\u0131r FK vs Antalyaspor",
+                        "match_over_15",
+                        "OVER",
+                        1.333,
+                        "kalshi",
+                        "oddspapi"
+                      ],
+                      [
+                        "Sivasspor vs Boluspor",
+                        "match_under_35",
+                        "UNDER",
+                        1.493,
+                        "kalshi",
+                        "oddspapi"
+                      ]
+                    ],
+                    1.99,
+                    2.0065
+                  ],
+                  [
+                    [
+                      [
+                        "Young Boys vs Z\u00fcrich",
+                        "match_under_45",
+                        "UNDER",
+                        1.63,
+                        "Stake.com",
+                        "betexplorer"
+                      ],
+                      [
+                        "\u00c5sane vs Haugesund",
+                        "match_under_45",
+                        "UNDER",
+                        1.57,
+                        "Stake.com",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.56,
+                    2.0065
+                  ]
+                ],
+                "mean_acca_odds": 2.1966666666666668,
+                "outcome_status": "INCOMPLETE_OUTCOMES",
                 "resolved_legs": 0,
                 "returned": null,
                 "selected_legs": 6,
@@ -2019,11 +2020,61 @@
             },
             "card_identical": false,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
-            "execution_leg_symmetric_difference": 6,
-            "mean_absolute_disagreement": 0.037420042532541525,
-            "model_below_cohort": 6,
+            "execution_leg_symmetric_difference": 4,
+            "mean_absolute_disagreement": 0.10506611916563671,
+            "model_below_cohort": 168,
             "models": {
-              "1db77443711f6259fc30a9b3f3249be2ddb6e3fc0d2ddd9c6025f3783b1c4f45": {
+              "1ab1ef558f796d8b49d501e8256c994dd13acb7c07f86db9e88dee0246ef02d8": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 28,
+                    "0:1": 28,
+                    "0:2": 11,
+                    "0:3": 6,
+                    "0:4": 3,
+                    "1:0": 52,
+                    "1:1": 62,
+                    "1:2": 27,
+                    "1:3": 11,
+                    "1:4": 7,
+                    "1:5": 2,
+                    "2:0": 47,
+                    "2:1": 56,
+                    "2:2": 34,
+                    "2:3": 8,
+                    "2:4": 4,
+                    "3:0": 20,
+                    "3:1": 36,
+                    "3:2": 27,
+                    "3:3": 4,
+                    "3:4": 1,
+                    "4:0": 15,
+                    "4:1": 16,
+                    "4:2": 9,
+                    "4:3": 5,
+                    "5:0": 8,
+                    "5:1": 6,
+                    "5:2": 4,
+                    "5:3": 1,
+                    "5:4": 1,
+                    "6:0": 3,
+                    "6:1": 4,
+                    "7:0": 1,
+                    "7:1": 1,
+                    "8:0": 1,
+                    "8:1": 1
+                  },
+                  "classes": 36,
+                  "mean_rows_per_class": 15.277777777777779,
+                  "min_class_count": 1,
+                  "n": 550,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2052
+                },
+                "schema": "enh_score_logit_v2"
+              },
+              "31d2b066eb5f297442beecf144ea78af6b87859e92e58fc4c8b69e377eca577b": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -2073,7 +2124,7 @@
                 },
                 "schema": "enh_score_logit_v2"
               },
-              "2656b18c8ff408d252896a2bb43bae07fee2961c8c6b9e0fc276c3370735a48b": {
+              "6feab9874820dd2468b1916ac70e3709b5317d63973efe4b5871c7f167b89cef": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -2125,68 +2176,19 @@
                   "stored_coefficients": 2223
                 },
                 "schema": "enh_score_logit_v2"
-              },
-              "436bf030d483979bd1b0c4360b802f66e97773d36fec7fbf8d2711db19bf3e10": {
-                "fit_adequacy": {
-                  "assessment": "descriptive_only_not_validation",
-                  "class_counts": {
-                    "0:0": 28,
-                    "0:1": 28,
-                    "0:2": 11,
-                    "0:3": 6,
-                    "0:4": 3,
-                    "1:0": 52,
-                    "1:1": 62,
-                    "1:2": 27,
-                    "1:3": 11,
-                    "1:4": 7,
-                    "1:5": 2,
-                    "2:0": 47,
-                    "2:1": 56,
-                    "2:2": 34,
-                    "2:3": 8,
-                    "2:4": 4,
-                    "3:0": 20,
-                    "3:1": 36,
-                    "3:2": 27,
-                    "3:3": 4,
-                    "3:4": 1,
-                    "4:0": 15,
-                    "4:1": 16,
-                    "4:2": 9,
-                    "4:3": 5,
-                    "5:0": 8,
-                    "5:1": 6,
-                    "5:2": 4,
-                    "5:3": 1,
-                    "5:4": 1,
-                    "6:0": 3,
-                    "6:1": 4,
-                    "7:0": 1,
-                    "7:1": 1,
-                    "8:0": 1,
-                    "8:1": 1
-                  },
-                  "classes": 36,
-                  "mean_rows_per_class": 15.277777777777779,
-                  "min_class_count": 1,
-                  "n": 550,
-                  "served_dimensions": 57,
-                  "stored_coefficients": 2052
-                },
-                "schema": "enh_score_logit_v2"
               }
             },
-            "paired_estimates": 233,
-            "pool_legs": 233,
-            "removed_from_ml_off": 3,
+            "paired_estimates": 566,
+            "pool_legs": 566,
+            "removed_from_ml_off": 2,
             "schemas": {
-              "enh_score_logit_v2": 233
+              "enh_score_logit_v2": 566
             },
-            "scored_legs": 233,
-            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+            "scored_legs": 566,
+            "status": "INCOMPLETE_OUTCOMES"
           },
-          "settlement": "UNAVAILABLE",
+          "open_accas": 3,
+          "settlement": "PENDING",
           "status": "MATCH"
         }
       ],
@@ -2378,23 +2380,25 @@
           "bank_total": 270.58369,
           "committed_excluding_target": 0.0,
           "date": "2026-11-01",
-          "decision_status": "draft",
+          "decision_status": "frozen",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "98d1019723dc87ec8623e7fbc64306f59bf36a98",
-            "event_sha": "98d1019723dc87ec8623e7fbc64306f59bf36a98",
+            "checkout_head_at_capture": "9289757094c95a7e458a471b3cee0a0e8697cb1c",
+            "event_sha": "9289757094c95a7e458a471b3cee0a0e8697cb1c",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "41271330127",
+            "run_id": "41283007502",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-11-01_decision.json.gz",
           "free_bank": 270.58369,
-          "ledger": "NOT_COMMITTED",
-          "settlement": "UNAVAILABLE",
+          "freeze_time": "MATCH",
+          "ledger": "MATCH",
+          "open_accas": 2,
+          "settlement": "PENDING",
           "status": "MATCH"
         }
       ],
