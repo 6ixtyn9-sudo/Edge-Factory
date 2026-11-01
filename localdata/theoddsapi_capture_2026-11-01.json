@@ -1,21 +1,11 @@
 {
   "added": 0,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Ey\u00fcpspor",
-      "date": "2026-11-01",
-      "home": "Amed SK",
-      "kickoff": "2026-11-01T10:30:00Z",
-      "league": "Super Lig"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 40,
-  "captured_at": "2026-11-01T01:26:59+00:00",
+  "captured_at": "2026-11-01T04:41:52+00:00",
   "date": "2026-11-01",
-  "due_reasons": {
-    "first_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -37,7 +27,7 @@
     "kickoff_mismatch": 1,
     "priced": 3,
     "priced_close_window_not_open": 1,
-    "retry_cooldown": 35
+    "retry_cooldown": 36
   },
   "skipped": [
     "Charlton Athletic W|Chelsea W (retry cooldown (6h after failed attempt))",
@@ -51,6 +41,7 @@
     "Brighton W|Crystal Palace W (retry cooldown (6h after failed attempt))",
     "Ogre United|Riga (retry cooldown (6h after failed attempt))",
     "Como|Venezia (retry cooldown (6h after failed attempt))",
+    "Amed SK|Ey\u00fcpspor (retry cooldown (6h after failed attempt))",
     "PAOK|Asteras Tripolis (retry cooldown (6h after failed attempt))",
     "Djurg\u00e5rden|Degerfors (priced)",
     "Suwon|Ansan Greeners (retry cooldown (6h after failed attempt))",
@@ -82,11 +73,6 @@
     "Ban\u00edk Ostrava|FC Viktoria Plze\u0148 (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Amed SK vs Ey\u00fcpspor (no event in soccer_denmark_superliga)"
-  ],
-  "unmatched_reasons": {
-    "no event in soccer_denmark_superliga": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }

@@ -156,13 +156,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -174,18 +169,18 @@
       },
       "coherence_withheld_fixtures": 1,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 18387
       },
       "pa_matched": 0,
-      "pa_raw": 1029,
+      "pa_raw": 18387,
       "pa_scored": 18387,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -229,54 +224,65 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 6,
-        "board_league_count": 4,
+        "board_fixtures": 7,
+        "board_league_count": 5,
         "board_leagues": {
-          "argentina_-_primera_division": 171,
-          "mexico_-_liga_mx_women": 23,
-          "venezuela_-_primera": 2,
-          "venezuela_-_primera_division": 4
+          "australia_-_a-league": 71,
+          "australia_-_a-league_women": 48,
+          "australia_-_championship": 49,
+          "japan_-_j1_league": 31,
+          "mexico_-_liga_mx_women": 1
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 187,
+        "board_priced_rows": 2,
         "board_rows": 200,
-        "board_team_count": 11,
+        "board_team_count": 14,
         "board_team_names": {
-          "Caracas": 6,
-          "Club Tijuana (W)": 21,
-          "Cruz Azul (W)": 21,
-          "Cruz Azul [W]": 2,
-          "Estudiantes": 145,
-          "Estudiantes La Plata": 26,
-          "Instituto": 145,
-          "Instituto Cordoba": 26,
-          "Monagas": 4,
-          "Monagas SC": 2,
-          "Tijuana Caliente [W]": 2
+          "Apia Leichhardt Tigers": 49,
+          "Avondale Heights": 49,
+          "Canberra United (W)": 48,
+          "Central Coast Mariners": 71,
+          "Club Necaxa (W)": 1,
+          "Fukuoka": 13,
+          "Jef Utd Chiba": 13,
+          "Kawasaki": 11,
+          "Kawasaki Frontale": 7,
+          "Melbourne Victory": 71,
+          "Santos Laguna (W)": 1,
+          "Western Sydney Wanderers (W)": 48,
+          "Yokohama F Marinos": 7,
+          "Yokohama FM": 11
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_correct_score": 11
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 187
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 2
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 1,
+      "sa_scored": 2,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

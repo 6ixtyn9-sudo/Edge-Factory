@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 270.58369,
   "cycle_base": 203.9865280000001,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-01",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Como vs Venezia",
+              "pick": "HOME",
+              "prob": 0.733689431514689,
+              "odds": 1.3,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-01",
+                "Como",
+                "Venezia"
+              ]
+            },
+            {
+              "match": "Trabzonspor vs Gaziantep F.K.",
+              "pick": "HOME",
+              "prob": 0.7058823529411765,
+              "odds": 1.31,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-01",
+                "Trabzonspor",
+                "Gaziantep F.K."
+              ]
+            }
+          ],
+          "odds": 1.7,
+          "stake_pct": 33.823
+        },
+        {
+          "legs": [
+            {
+              "match": "PAOK vs Asteras Tripolis",
+              "pick": "HOME",
+              "prob": 0.7282022152797503,
+              "odds": 1.3,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-01",
+                "PAOK",
+                "Asteras Tripolis"
+              ]
+            },
+            {
+              "match": "Djurg\u00e5rden vs Degerfors",
+              "pick": "HOME",
+              "prob": 0.7251814839257094,
+              "odds": 1.31,
+              "result": null,
+              "market": "1x2",
+              "price_book": "GTbets",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-01",
+                "Djurg\u00e5rden",
+                "Degerfors"
+              ]
+            }
+          ],
+          "odds": 1.7,
+          "stake_pct": 33.8229
+        }
+      ],
+      "staked_pct": 67.6459
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",

@@ -1658,14 +1658,14 @@
           "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "49b3a99c48ff8b2e2b56767412272797905ed959",
-            "event_sha": "49b3a99c48ff8b2e2b56767412272797905ed959",
+            "checkout_head_at_capture": "98d1019723dc87ec8623e7fbc64306f59bf36a98",
+            "event_sha": "98d1019723dc87ec8623e7fbc64306f59bf36a98",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "41259188964",
+            "run_id": "41271330127",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-01_decision.json.gz",
@@ -1682,7 +1682,7 @@
                         "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Young Boys vs Z\u00fcrich",
-                        "model": 0.8056599221976892,
+                        "model": 0.8056599234569256,
                         "odds": 1.63,
                         "outcome_source": null,
                         "pick": "under",
@@ -1693,7 +1693,7 @@
                         "cohort": 0.6582,
                         "market": "match_over_25",
                         "match": "Elfsborg vs \u00d6rgryte",
-                        "model": 0.7522912543612774,
+                        "model": 0.752291254962098,
                         "odds": 1.47,
                         "outcome_source": null,
                         "pick": "over",
@@ -1711,7 +1711,7 @@
                         "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Brighton W vs Crystal Palace W",
-                        "model": 0.623115203115194,
+                        "model": 0.6231152025568917,
                         "odds": 1.4,
                         "outcome_source": null,
                         "pick": "under",
@@ -1722,7 +1722,7 @@
                         "cohort": 0.6582,
                         "market": "match_over_25",
                         "match": "Lazio vs Cagliari",
-                        "model": 0.7504145731912938,
+                        "model": 0.750414572827158,
                         "odds": 1.8,
                         "outcome_source": null,
                         "pick": "over",
@@ -1740,7 +1740,7 @@
                         "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Como vs Venezia",
-                        "model": 0.8476391675113584,
+                        "model": 0.8476391653919503,
                         "odds": 1.36,
                         "outcome_source": null,
                         "pick": "under",
@@ -1751,7 +1751,7 @@
                         "cohort": 0.7209,
                         "market": "match_under_45",
                         "match": "\u00c5sane vs Haugesund",
-                        "model": 0.7626562150684542,
+                        "model": 0.7626562241052951,
                         "odds": 1.57,
                         "outcome_source": null,
                         "pick": "under",
@@ -1853,7 +1853,7 @@
                         "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Como vs Venezia",
-                        "model": 0.8476391675113584,
+                        "model": 0.8476391653919503,
                         "odds": 1.36,
                         "outcome_source": null,
                         "pick": "under",
@@ -1864,7 +1864,7 @@
                         "cohort": 0.6582,
                         "market": "match_over_25",
                         "match": "Partizan vs Zemun",
-                        "model": 0.7501814393066638,
+                        "model": 0.7501814402827867,
                         "odds": 1.4,
                         "outcome_source": null,
                         "pick": "over",
@@ -1882,7 +1882,7 @@
                         "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Young Boys vs Z\u00fcrich",
-                        "model": 0.8056599221976892,
+                        "model": 0.8056599234569256,
                         "odds": 1.63,
                         "outcome_source": null,
                         "pick": "under",
@@ -1893,7 +1893,7 @@
                         "cohort": 0.6582,
                         "market": "match_over_25",
                         "match": "Lazio vs Cagliari",
-                        "model": 0.7504145731912938,
+                        "model": 0.750414572827158,
                         "odds": 1.75,
                         "outcome_source": null,
                         "pick": "over",
@@ -1911,7 +1911,7 @@
                         "cohort": 0.7209,
                         "market": "match_under_45",
                         "match": "\u00c5sane vs Haugesund",
-                        "model": 0.7626562150684542,
+                        "model": 0.7626562241052951,
                         "odds": 1.57,
                         "outcome_source": null,
                         "pick": "under",
@@ -1922,7 +1922,7 @@
                         "cohort": 0.6582,
                         "market": "match_over_25",
                         "match": "Elfsborg vs \u00d6rgryte",
-                        "model": 0.7522912543612774,
+                        "model": 0.752291254962098,
                         "odds": 1.5,
                         "outcome_source": null,
                         "pick": "over",
@@ -2020,10 +2020,10 @@
             "card_identical": false,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 6,
-            "mean_absolute_disagreement": 0.07852996006481087,
-            "model_below_cohort": 5,
+            "mean_absolute_disagreement": 0.037420042532541525,
+            "model_below_cohort": 6,
             "models": {
-              "31d2b066eb5f297442beecf144ea78af6b87859e92e58fc4c8b69e377eca577b": {
+              "1db77443711f6259fc30a9b3f3249be2ddb6e3fc0d2ddd9c6025f3783b1c4f45": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -2073,7 +2073,7 @@
                 },
                 "schema": "enh_score_logit_v2"
               },
-              "6feab9874820dd2468b1916ac70e3709b5317d63973efe4b5871c7f167b89cef": {
+              "2656b18c8ff408d252896a2bb43bae07fee2961c8c6b9e0fc276c3370735a48b": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -2125,15 +2125,65 @@
                   "stored_coefficients": 2223
                 },
                 "schema": "enh_score_logit_v2"
+              },
+              "436bf030d483979bd1b0c4360b802f66e97773d36fec7fbf8d2711db19bf3e10": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 28,
+                    "0:1": 28,
+                    "0:2": 11,
+                    "0:3": 6,
+                    "0:4": 3,
+                    "1:0": 52,
+                    "1:1": 62,
+                    "1:2": 27,
+                    "1:3": 11,
+                    "1:4": 7,
+                    "1:5": 2,
+                    "2:0": 47,
+                    "2:1": 56,
+                    "2:2": 34,
+                    "2:3": 8,
+                    "2:4": 4,
+                    "3:0": 20,
+                    "3:1": 36,
+                    "3:2": 27,
+                    "3:3": 4,
+                    "3:4": 1,
+                    "4:0": 15,
+                    "4:1": 16,
+                    "4:2": 9,
+                    "4:3": 5,
+                    "5:0": 8,
+                    "5:1": 6,
+                    "5:2": 4,
+                    "5:3": 1,
+                    "5:4": 1,
+                    "6:0": 3,
+                    "6:1": 4,
+                    "7:0": 1,
+                    "7:1": 1,
+                    "8:0": 1,
+                    "8:1": 1
+                  },
+                  "classes": 36,
+                  "mean_rows_per_class": 15.277777777777779,
+                  "min_class_count": 1,
+                  "n": 550,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2052
+                },
+                "schema": "enh_score_logit_v2"
               }
             },
-            "paired_estimates": 22,
-            "pool_legs": 22,
+            "paired_estimates": 233,
+            "pool_legs": 233,
             "removed_from_ml_off": 3,
             "schemas": {
-              "enh_score_logit_v2": 22
+              "enh_score_logit_v2": 233
             },
-            "scored_legs": 22,
+            "scored_legs": 233,
             "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
           },
           "settlement": "UNAVAILABLE",
@@ -2144,7 +2194,7 @@
     },
     "main": {
       "counts": {
-        "MATCH": 4
+        "MATCH": 5
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -2320,6 +2370,31 @@
           "open_accas": 0,
           "settled_net": -3.4251000000000005,
           "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 2,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 270.58369,
+          "committed_excluding_target": 0.0,
+          "date": "2026-11-01",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "98d1019723dc87ec8623e7fbc64306f59bf36a98",
+            "event_sha": "98d1019723dc87ec8623e7fbc64306f59bf36a98",
+            "file_sha256": {
+              "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
+            },
+            "run_id": "41271330127",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-11-01_decision.json.gz",
+          "free_bank": 270.58369,
+          "ledger": "NOT_COMMITTED",
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],
