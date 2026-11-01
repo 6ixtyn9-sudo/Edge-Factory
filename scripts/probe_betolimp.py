@@ -7,7 +7,7 @@
 --native-source defaults to BetOlimp; bookmaker pages are pinned; StatsHub accepts
 ordinary public match URLs on the fixed, observed SportPesa tenant route only.
 SportPesa StatsHub is explicitly third-party supplied, not an independent bookmaker feed.
-No redirects, retries, proxies, cookies, credentials or production admission.
+Default HTTP modes: no redirects, retries, proxies, cookies, credentials or production admission.
 Native responses are transport evidence, NOT executable or decoded quotes.
 --native-loader decodes one StatsHub page: fixture/source-score candidates and supported semantic tables.
 History is limited to the supported match/sibling schema; source ft scores are NOT verified regulation.
@@ -17,6 +17,11 @@ No form aggregates, slate binding or production admission are enabled, and no AP
 This does not enable native H2H/results, whole-slate coverage or production admission.
 No raw native body, scripts, cookies, arbitrary headers or exception details are printed.
 Opt-in context output is limited to bound public team IDs/names and numeric standings.
+--browser-context explicitly loads one public page in a fresh optional Playwright browser.
+Only that page may initiate bounded GET dependencies; no feed replay, clicks or raw output.
+It returns unverified numeric field samples, not admitted history or standings.
+Requires Playwright/Chromium; --browser-install-runtime explicitly installs them
+on a GitHub-hosted Linux runner only, without workflow YAML changes.
 Not used by daily/picks/ENH. Native checks require an allowed network environment.
 """
 from __future__ import annotations
@@ -27,6 +32,7 @@ import json
 import re
 import sys
 import time
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from html.parser import HTMLParser
 from pathlib import Path
@@ -340,6 +346,306 @@ def native_probe(urls: list[str], source: str = "betolimp", *, native_context: b
     return result
 
 
+# This is an optional, isolated Playwright path in the EXISTING manual probe.
+# It is deliberately not imported by production or by the one-GET modes.
+_BROWSER_MAX_REQUESTS = 192
+_BROWSER_MAX_FEEDS = 32
+_BROWSER_MAX_BODY = 2 * 1024 * 1024
+_BROWSER_OPERATIONS = frozenset({
+    "match_info_statshub", "stats_match_get", "stats_match_head2head",
+    "stats_team_lastx", "stats_team_nextx", "stats_team_versus", "stats_season_tables",
+    "config_tree_mini", "event_get", "stats_match_form", "stats_match_tableslice",
+    "stats_team_versusrecent", "stats_team_lastxextended", "stats_uniquetournament_fixtures",
+    "stats_season_teamfixtures", "stats_season_fixtures2", "stats_season_meta",
+    "livescore_season_fixtures",
+})
+
+
+def _browser_request_kind(url, resource_type, source_url, fixture):
+    """Classify browser-initiated reads; never construct/replay a supplier URL."""
+    from urllib.parse import urlsplit
+
+    try:
+        parsed = urlsplit(url)
+        if (parsed.scheme != "https" or parsed.username or parsed.password or parsed.fragment
+                or parsed.port not in (None, 443)):
+            return None
+        if resource_type == "document":
+            return "document" if url == source_url else None
+        if (parsed.hostname == "statshub.sportradar.com" and resource_type in {"script", "stylesheet"}
+                and re.fullmatch(r"/assets/[A-Za-z0-9_@.,-]+\.(js|css)", parsed.path)):
+            return "asset"
+        if (parsed.hostname not in {"sh.fn.sportradar.com", "widgets.fn.sportradar.com"}
+                or resource_type not in {"fetch", "xhr"} or fixture is None):
+            return None
+        # Tenant/language/timezone prefix is selected by the page, not this probe.
+        match = re.fullmatch(r"/(?:[A-Za-z0-9_:/.-]+/)?gismo/([a-z_0-9]+)/([0-9/]+)", parsed.path)
+        if not match or match[1] not in _BROWSER_OPERATIONS:
+            return None
+        operation, arguments = match[1], match[2].split("/")
+        if any(not a or len(a) > 12 for a in arguments):
+            return None
+        # Constrain inspected history/tables to the loader's actual identity domains.
+        if operation == "stats_team_lastx":
+            if (arguments[0] not in {fixture[s]["team_uid"] for s in ("home", "away")}
+                    or len(arguments) != 2 or arguments[1] != "20"):
+                return None
+            return "history:" + arguments[0]
+        if operation == "stats_season_tables":
+            if arguments != [fixture["_seasonid"]]:
+                return None
+            return "standings:" + arguments[0]
+        # These are dependency reads triggered by this page, not crawl targets.
+        return "support"
+    except (ValueError, TypeError, KeyError):
+        return None
+
+
+def _browser_numeric_sample(record):
+    """Exact numeric field projection, NOT an extractor or identity/status binding.
+
+    No strings, URLs, keys outside this literal allowlist, inferred dates/scores,
+    defaults for missing values, or source credentials can reach output.
+    """
+    if not isinstance(record, dict):
+        return {}
+    scalar = ("_id", "_sid", "_seasonid", "_utid", "uid", "pos", "rank", "played", "won",
+              "drawn", "lost", "points", "goalsfor", "goalsagainst", "goalsdiff",
+              "playedTotal", "winTotal", "drawTotal", "lossTotal", "pointsTotal",
+              "goalsForTotal", "goalsAgainstTotal", "goalsDiffTotal", "home", "away", "uts",
+              "ended_uts", "updated_uts")
+    selected = {k: record[k] for k in scalar
+                if type(record.get(k)) is int and abs(record[k]) <= 10**12}
+    # A bounded, explicitly named two-level projection; never a generic recursive dump.
+    for key in ("time", "_dt", "team", "result", "status"):
+        if isinstance(record.get(key), dict):
+            selected[key] = {k: v for k, v in record[key].items()
+                             if k in scalar and type(v) is int and abs(v) <= 10**12}
+    teams = record.get("teams")
+    if isinstance(teams, dict):
+        selected["teams"] = {s: {k: teams[s][k] for k in ("_id", "uid")
+                                if type(teams[s].get(k)) is int and 0 < teams[s][k] <= 10**12}
+                             for s in ("home", "away") if isinstance(teams.get(s), dict)}
+    periods = record.get("periods")
+    if isinstance(periods, dict):
+        selected["periods"] = {p: {s: periods[p][s] for s in ("home", "away")
+                                  if type(periods[p].get(s)) is int and 0 <= periods[p][s] <= 999}
+                               for p in ("ft", "ot", "ap") if isinstance(periods.get(p), dict)}
+    return selected
+
+
+def _browser_stat_sample(body, kind):
+    """Expose actual field samples only; no guessed parser, form or admission."""
+    if len(body) > _BROWSER_MAX_BODY:
+        raise ValueError("browser body limit")
+    payload = json.loads(body)
+    docs = payload.get("doc") if isinstance(payload, dict) else None
+    if not isinstance(docs, list) or len(docs) != 1 or not isinstance(docs[0], dict):
+        return {"status": "unsupported_document_envelope"}
+    data = docs[0].get("data")
+    if not isinstance(data, dict):
+        return {"status": "unsupported_data_envelope"}
+    if kind.startswith("history:"):
+        team = data.get("team")
+        matches = data.get("matches")
+        if (not isinstance(team, dict) or type(team.get("_id")) is not int
+                or str(team["_id"]) != kind.split(":")[1]
+                or not isinstance(matches, list) or len(matches) > 100
+                or any(not isinstance(m, dict) for m in matches)):
+            return {"status": "unsupported_or_unbound_history_envelope"}
+        return {"status": "public_numeric_field_samples_only", "owner_team_uid": team["_id"],
+                "response_match_count": len(matches), "sample_truncated": len(matches) > 20,
+                "matches": [_browser_numeric_sample(m) for m in matches[:20]]}
+    tables = data.get("tables")
+    if not isinstance(tables, list) or len(tables) > 8:
+        return {"status": "unsupported_table_envelope"}
+    selected = []
+    for table in tables:
+        rows = table.get("tablerows") if isinstance(table, dict) else None
+        if (not isinstance(rows, list) or len(rows) > 40
+                or any(not isinstance(r, dict) for r in rows)):
+            return {"status": "unsupported_table_rows"}
+        selected.append({"table": _browser_numeric_sample(table),
+                         "rows": [_browser_numeric_sample(r) for r in rows]})
+    return {"status": "public_numeric_field_samples_only", "tables": selected}
+
+
+def _browser_setup_runtime():
+    """Explicit disposable Actions-runner setup, never production/app-state writes."""
+    import os
+    import subprocess
+
+    if (os.environ.get("GITHUB_ACTIONS") != "true"
+            or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted"
+            or os.environ.get("RUNNER_OS") != "Linux"):
+        return False
+    # Fixed commands only. No source URL, input interpolation, shell, relay,
+    # credentials, package registry override or proxy environment is passed.
+    env = {k: os.environ[k] for k in ("PATH", "HOME", "TMPDIR", "LANG") if k in os.environ}
+    env["DEBIAN_FRONTEND"] = "noninteractive"
+    commands = [([sys.executable, "-m", "pip", "install", "--quiet", "--retries", "0",
+                  "--timeout", "20", "playwright==1.56.0"], 60),
+                ([sys.executable, "-m", "playwright", "install", "--with-deps",
+                  "--only-shell", "chromium"], 120)]
+    try:
+        for command, timeout in commands:
+            subprocess.run(command, check=True, timeout=timeout, env=env,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except (subprocess.SubprocessError, OSError):
+        return False
+    return True
+
+
+@contextmanager
+def _browser_runtime():
+    # Same optional runtime as sources.forebet._playwright_get. No relay/secrets.
+    from playwright.sync_api import Error as PlaywrightError
+    from playwright.sync_api import sync_playwright
+    try:
+        with sync_playwright() as runtime:
+            yield runtime
+    except PlaywrightError:
+        # Playwright errors can embed token-bearing request URLs.
+        raise RuntimeError("browser operation failed") from None
+
+
+def browser_context_probe(url, *, install_runtime=False):
+    """One fresh public page; bounded automatic reads, no clicks/replay/persistence.
+
+    This explicitly authorized mode is NOT the native one-GET contract. It blocks
+    POST, redirects, other documents, popups, service workers and unrelated hosts.
+    Only sanitized field samples are retained. An unsupported shape stays unknown.
+    """
+    import os
+    from types import SimpleNamespace
+
+    validate_context_url(url)
+    started = datetime.now(UTC).isoformat()
+    result = {"mode": "public_browser_context_inspection_only", "source_profile": "sportpesa-statshub",
+              "source_url": url, "request_started_at_utc": started,
+              "transport_ok": False, "status": "browser_runtime_unavailable", "javascript_enabled": False,
+              "network_requests": 0, "page_initiated_feed_requests": 0, "blocked_requests": 0,
+              "request_limit_reached": False, "application_data_writes": 0,
+              "admitted_rows": 0, "usable_form_rows": 0, "regulation_verified": False,
+              "whole_slate_coverage_verified": False, "statistic_samples": [],
+              "sample_policy": "first_completed_response_per_kind_not_cross_copy_validation",
+              "hold_reasons": ["samples_are_not_bound_statistics", "completion_and_regulation_unverified",
+                               "freshness_unverified", "production_admission_disabled"]}
+    result["runtime_preparation_requested"] = install_runtime
+    if install_runtime and not _browser_setup_runtime():
+        result["status"] = "browser_runtime_setup_failed_or_not_hosted_runner"
+        result["request_finished_at_utc"] = datetime.now(UTC).isoformat()
+        return result
+    # Dependency setup does not spend the public-page observation window.
+    started = datetime.now(UTC).isoformat()
+    result["request_started_at_utc"] = started
+    fixture = None
+    document_seen = False
+    document_ok = False
+    fatal = False
+    samples_seen = set()
+    deadline = time.monotonic() + 30
+
+    def route_request(route):
+        nonlocal document_seen, fatal
+        request = route.request
+        kind = _browser_request_kind(request.url, request.resource_type, url, fixture)
+        if (time.monotonic() >= deadline or result["network_requests"] >= _BROWSER_MAX_REQUESTS
+                or (kind not in {None, "asset", "document"}
+                    and result["page_initiated_feed_requests"] >= _BROWSER_MAX_FEEDS)):
+            result["request_limit_reached"] = True
+            fatal = True
+            kind = None
+        if (fatal or request.method != "GET" or request.redirected_from is not None
+                or kind is None or (kind == "document" and document_seen)):
+            result["blocked_requests"] += 1
+            route.abort()
+            return
+        if kind == "document":
+            document_seen = True
+        elif kind != "asset":
+            result["page_initiated_feed_requests"] += 1
+        result["network_requests"] += 1
+        route.continue_()
+
+    def observe_response(response):
+        nonlocal fixture, document_ok, fatal
+        request = response.request
+        kind = _browser_request_kind(response.url, request.resource_type, url, fixture)
+        if kind is None:
+            return
+        # Never print response headers, addresses, exception messages or raw data.
+        if response.status in {401, 403, 429}:
+            result["status"] = "access_denied_not_bypassed"
+            fatal = True
+            return
+        if response.status != 200 or kind in {"asset", "support"} or fatal or kind in samples_seen:
+            return
+        try:
+            length = response.headers.get("content-length")
+            if length is not None and (not length.isdigit() or int(length) > _BROWSER_MAX_BODY):
+                raise ValueError("browser body limit")
+            body = response.body()
+            if len(body) > _BROWSER_MAX_BODY:
+                raise ValueError("browser body limit")
+            if kind == "document":
+                # Playwright has already decompressed this document. Reuse the
+                # existing challenge/loader inspector, NOT its wire-byte claims.
+                document = SimpleNamespace(status_code=response.status,
+                                           headers={"content-type": response.headers.get("content-type", "")})
+                receipt = _native_receipt(document, body, True, loader_url=url, observed_at_utc=started)
+                if not receipt["transport_ok"]:
+                    result["status"] = "page_rejected_not_bypassed"
+                    fatal = True
+                    return
+                loader = receipt.get("loader_state", {})
+                candidate = loader.get("fixture_candidate", {})
+                fixture = candidate.get("fixture")
+                result["fixture_candidate"] = candidate
+                document_ok = True
+            elif kind not in samples_seen:
+                samples_seen.add(kind)
+                result["statistic_samples"].append({"kind": kind.split(":")[0],
+                                                    **_browser_stat_sample(body, kind)})
+        except (ValueError, TypeError, KeyError, IndexError, RecursionError, OSError):
+            # A network/JSON error may contain credentials. Fail closed.
+            result["status"] = "response_inspection_failed"
+            fatal = True
+
+    try:
+        with _browser_runtime() as runtime:
+            # Do not pass application secrets or proxy env to the child browser.
+            env = {k: os.environ[k] for k in ("PATH", "HOME", "TMPDIR", "LANG", "LD_LIBRARY_PATH")
+                   if k in os.environ}
+            browser = runtime.chromium.launch(headless=True, env=env)
+            try:
+                context = browser.new_context(service_workers="block", accept_downloads=False)
+                context.route("**/*", route_request)
+                context.route_web_socket("**/*", lambda connection: connection.close())
+                result["javascript_enabled"] = True
+                page = context.new_page()
+                context.on("page", lambda other: other.close() if other != page else None)
+                page.on("response", observe_response)
+                result["status"] = "browser_page_incomplete"
+                page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                # No clicks, scrolling, extra routes, feed calls or arbitrary sleeps.
+                # Give only this page's normal initial dependency requests time to finish.
+                if not fatal:
+                    page.wait_for_timeout(max(0, min(8000, int((deadline - time.monotonic()) * 1000))))
+                if document_ok and not fatal:
+                    result.update(status="browser_page_observed_not_statistics_validation", transport_ok=True)
+            finally:
+                browser.close()
+    except (ImportError, RuntimeError, OSError, ValueError, TypeError, KeyError, AttributeError):
+        # Missing package/browser, navigation denial, timeout and tool errors
+        # are sanitized. Never retry/fallback to relay, requests or other matches.
+        result["transport_ok"] = False
+        if result["status"] in {"browser_page_incomplete", "browser_page_observed_not_statistics_validation"}:
+            result["status"] = "browser_navigation_failed"
+    result["request_finished_at_utc"] = datetime.now(UTC).isoformat()
+    return result
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
@@ -356,8 +662,18 @@ def main(argv=None) -> int:
                         help="StatsHub only: inspect one page and at most two referenced static JS assets")
     parser.add_argument("--native-loader", action="store_true",
                         help="StatsHub only: decode supported embedded loader JSON from exactly one page")
+    parser.add_argument("--browser-context", action="store_true",
+                        help="StatsHub only: opt-in read-only public-page Playwright inspection; one URL")
+    parser.add_argument("--browser-install-runtime", action="store_true",
+                        help="explicitly install pinned Playwright/Chromium on a GitHub-hosted Linux runner only")
     parser.add_argument("--as-of", help="zone-bearing cutoff for offline context coverage only")
     args = parser.parse_args(argv)
+    if args.browser_install_runtime and not args.browser_context:
+        parser.error("--browser-install-runtime requires --browser-context")
+    if args.browser_context and (not args.native_url or len(args.native_url) != 1
+            or args.native_source != "sportpesa-statshub" or args.native_context
+            or args.native_discovery or args.native_loader):
+        parser.error("--browser-context requires one StatsHub --native-url and excludes other native modes")
     if args.native_loader and (not args.native_url or len(args.native_url) != 1
             or args.native_source != "sportpesa-statshub" or args.native_discovery or args.native_context):
         parser.error("--native-loader requires one StatsHub --native-url and excludes other native modes")
@@ -375,7 +691,9 @@ def main(argv=None) -> int:
     if args.native_url and args.card:
         parser.error("--card is offline-only: use --input or --context-input, not --native-url")
     try:
-        if args.context_input:
+        if args.browser_context:
+            result = browser_context_probe(args.native_url[0], install_runtime=args.browser_install_runtime)
+        elif args.context_input:
             as_of = parse_zoned_timestamp(args.as_of) if args.as_of else datetime.now(UTC)
             result = context_dry_run(args.context_input, args.card, as_of)
         else:
