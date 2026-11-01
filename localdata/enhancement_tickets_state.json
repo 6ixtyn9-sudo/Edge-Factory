@@ -5788,58 +5788,69 @@
       "reason": "Supersede obsolete October 23 draft only; identical bank and settled history, no other-date positions or locks changed."
     },
     "pending_cached_freeze": {
-      "status": "recovered",
-      "date": "2026-10-28",
-      "source_run_id": "40647275279",
-      "source_head": "6047e60474c67984d573baa50a0ddd05a3c614a4",
-      "frozen_minute": "2026-10-28T10:13",
-      "card": [
-        [
+      "status": "approved",
+      "date": "2026-11-01",
+      "source_run_id": "41283007502",
+      "source_head": "9289757094c95a7e458a471b3cee0a0e8697cb1c",
+      "frozen_minute": "2026-11-01T09:40",
+      "committed_financial_sha256": "2f369650b0747d4467d2cb6d94069fb5363b266b1c89948f516b21ade14870c5",
+      "reason": "Operator requested recovery after run 41287980578 refused the saved freeze from run 41283007502. Retain original frozen evidence only; bank, history, other positions and other locks must remain unchanged.",
+      "previous_recovery": {
+        "status": "recovered",
+        "date": "2026-10-28",
+        "source_run_id": "40647275279",
+        "source_head": "6047e60474c67984d573baa50a0ddd05a3c614a4",
+        "frozen_minute": "2026-10-28T10:13",
+        "card": [
           [
-            "Excelsior Maassluis vs SC Heerenveen",
-            "over",
-            "match_over_25",
-            1.4
+            [
+              "Excelsior Maassluis vs SC Heerenveen",
+              "over",
+              "match_over_25",
+              1.4
+            ],
+            [
+              "Fulham vs Crystal Palace",
+              "under",
+              "match_under_35",
+              1.5
+            ]
           ],
           [
-            "Fulham vs Crystal Palace",
-            "under",
-            "match_under_35",
-            1.5
+            [
+              "Genoa vs Juventus",
+              "over",
+              "match_over_15",
+              1.36
+            ],
+            [
+              "Genemuiden vs FC Dordrecht",
+              "over",
+              "match_over_25",
+              1.36
+            ]
+          ],
+          [
+            [
+              "Aberdeen vs Falkirk FC",
+              "under",
+              "match_under_35",
+              1.4
+            ],
+            [
+              "Arsenal W vs SL Benfica W",
+              "under",
+              "match_under_45",
+              1.4
+            ]
           ]
         ],
-        [
-          [
-            "Genoa vs Juventus",
-            "over",
-            "match_over_15",
-            1.36
-          ],
-          [
-            "Genemuiden vs FC Dordrecht",
-            "over",
-            "match_over_25",
-            1.36
-          ]
-        ],
-        [
-          [
-            "Aberdeen vs Falkirk FC",
-            "under",
-            "match_under_35",
-            1.4
-          ],
-          [
-            "Arsenal W vs SL Benfica W",
-            "under",
-            "match_under_45",
-            1.4
-          ]
-        ]
-      ],
-      "reason": "Operator-authorized recovery of the saved frozen card after receipt-relocation rebase conflict; no bank/history edits or recut.",
-      "receipt_sha256": "767355298c9d0ffa89949ea8a17dcb1be07292eda9a959e97cd38bbb42e928c1",
-      "recovered_financial_sha256": "812c80cc4e4a32e38b7aef2f43a810d7d76f47dfcec48f4b9197c787480eb112"
+        "reason": "Operator-authorized recovery of the saved frozen card after receipt-relocation rebase conflict; no bank/history edits or recut.",
+        "receipt_sha256": "767355298c9d0ffa89949ea8a17dcb1be07292eda9a959e97cd38bbb42e928c1",
+        "recovered_financial_sha256": "812c80cc4e4a32e38b7aef2f43a810d7d76f47dfcec48f4b9197c787480eb112"
+      },
+      "cached_financial_sha256": "dd2f9d4f4087fa5460a23e308b2bdc163e38b6385e32023cf1fc9436532ad335",
+      "verification_basis": "Exact committed/cached financial fingerprints in the supplied restore traceback; original cached payload unavailable through GitHub API (404). All existing independent corroboration checks remain mandatory."
     }
   },
   "enh_floor_table": {
