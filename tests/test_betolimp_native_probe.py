@@ -695,3 +695,27 @@ def test_loader_decode_failure_is_not_successful_cli_even_when_http_is_ok(probe,
     assert len(requests)==1 and r['transport_ok'] and not r['loader_decoding_ok']
     assert r['receipts'][0]['loader_state']['status']=='no_supported_transfer_found'
     assert r['admitted_rows']==0
+
+
+def test_loader_payload_evidence_survives_cli_without_values_or_extra_requests(probe,transport,capsys):
+    payload={'loaderData':{'root':{
+        'cctx':{'fishnetToken':'DO_NOT_PRINT'},
+        'cache':{'match':{'id':75879092,'kickoff':'2026-11-01T10:00:00Z',
+                          'results':{'AP':{'home':4,'away':3}}}}}}}
+    body=('<script type="application/json">'+json.dumps(payload)+'</script>').encode()
+    requests,_=transport(lambda q: response(body=body))
+    assert probe.main(['--native-source','sportpesa-statshub','--native-url',DISCOVERY_URL,
+                       '--native-loader'])==0
+    text=capsys.readouterr().out
+    output=json.loads(text)
+    loader=output['receipts'][0]['loader_state']
+    evidence=loader['payload_evidence']
+    assert len(requests)==output['network_requests']==1
+    assert output['loader_decoding_ok'] and output['admitted_rows']==output['writes']==0
+    assert not evidence['fixture_identity_verified'] and not evidence['regulation_periods_verified']
+    match=next(s for s in evidence['sections'] if s['section']=='match')
+    identity=next(f for f in match['shape'] if f['path']==['id'])
+    assert identity['equals_requested_event_id']
+    assert loader['fixture_binding_status']=='not_verified' and loader['kickoff_utc'] is None
+    assert 'DO_NOT_PRINT' not in text and '2026-11-01T10:00:00Z' not in text
+    assert '75879092' not in json.dumps(evidence)
