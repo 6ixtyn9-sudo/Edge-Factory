@@ -1,11 +1,21 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 39,
-  "captured_at": "2026-10-31T22:27:40+00:00",
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Ey\u00fcpspor",
+      "date": "2026-11-01",
+      "home": "Amed SK",
+      "kickoff": "2026-11-01T10:30:00Z",
+      "league": "Super Lig"
+    }
+  ],
+  "candidate_fixtures": 40,
+  "captured_at": "2026-11-01T01:26:59+00:00",
   "date": "2026-11-01",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -72,6 +82,11 @@
     "Ban\u00edk Ostrava|FC Viktoria Plze\u0148 (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Amed SK vs Ey\u00fcpspor (no event in soccer_denmark_superliga)"
+  ],
+  "unmatched_reasons": {
+    "no event in soccer_denmark_superliga": 1
+  }
 }

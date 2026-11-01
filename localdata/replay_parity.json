@@ -1650,7 +1650,7 @@
           "status": "MATCH"
         },
         {
-          "accas": 2,
+          "accas": 3,
           "bank_reconciliation": "MATCH",
           "bank_total": 24.078511,
           "committed_excluding_target": 0.0,
@@ -1658,14 +1658,14 @@
           "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "f40844076a398ee95b325e2f025391b1aceb859a",
-            "event_sha": "f40844076a398ee95b325e2f025391b1aceb859a",
+            "checkout_head_at_capture": "49b3a99c48ff8b2e2b56767412272797905ed959",
+            "event_sha": "49b3a99c48ff8b2e2b56767412272797905ed959",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "14c62892cd4f80c42f72206fa849f2d25205365daa46ca23bfd68f4c7c9ade84"
             },
-            "run_id": "41246144869",
+            "run_id": "41259188964",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-01_decision.json.gz",
@@ -1679,10 +1679,10 @@
                   {
                     "legs": [
                       {
-                        "cohort": 0.723,
+                        "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Young Boys vs Z\u00fcrich",
-                        "model": 0.8105175703978635,
+                        "model": 0.8056599221976892,
                         "odds": 1.63,
                         "outcome_source": null,
                         "pick": "under",
@@ -1690,28 +1690,28 @@
                         "unresolved_reason": "no_retained_outcome"
                       },
                       {
-                        "cohort": 0.723,
-                        "market": "match_under_45",
-                        "match": "Como vs Venezia",
-                        "model": 0.8499523863701037,
-                        "odds": 1.35,
+                        "cohort": 0.6582,
+                        "market": "match_over_25",
+                        "match": "Elfsborg vs \u00d6rgryte",
+                        "model": 0.7522912543612774,
+                        "odds": 1.47,
                         "outcome_source": null,
-                        "pick": "under",
+                        "pick": "over",
                         "result": null,
                         "unresolved_reason": "no_retained_outcome"
                       }
                     ],
-                    "odds": 2.2,
+                    "odds": 2.4,
                     "returned": null,
-                    "stake": 3.0098
+                    "stake": 2.0065
                   },
                   {
                     "legs": [
                       {
-                        "cohort": 0.723,
+                        "cohort": 0.7219,
                         "market": "match_under_45",
                         "match": "Brighton W vs Crystal Palace W",
-                        "model": 0.6212117371367761,
+                        "model": 0.623115203115194,
                         "odds": 1.4,
                         "outcome_source": null,
                         "pick": "under",
@@ -1719,20 +1719,49 @@
                         "unresolved_reason": "no_retained_outcome"
                       },
                       {
-                        "cohort": 0.6572,
+                        "cohort": 0.6582,
                         "market": "match_over_25",
-                        "match": "PAOK vs Asteras Tripolis",
-                        "model": 0.6236163602296219,
-                        "odds": 1.6,
+                        "match": "Lazio vs Cagliari",
+                        "model": 0.7504145731912938,
+                        "odds": 1.8,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
                         "unresolved_reason": "no_retained_outcome"
                       }
                     ],
-                    "odds": 2.24,
+                    "odds": 2.52,
                     "returned": null,
-                    "stake": 3.0098
+                    "stake": 2.0065
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7219,
+                        "market": "match_under_45",
+                        "match": "Como vs Venezia",
+                        "model": 0.8476391675113584,
+                        "odds": 1.36,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.7209,
+                        "market": "match_under_45",
+                        "match": "\u00c5sane vs Haugesund",
+                        "model": 0.7626562150684542,
+                        "odds": 1.57,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 2.14,
+                    "returned": null,
+                    "stake": 2.0065
                   }
                 ],
                 "card_identity": [
@@ -1747,125 +1776,19 @@
                         "betexplorer"
                       ],
                       [
-                        "PAOK vs Asteras Tripolis",
+                        "Lazio vs Cagliari",
                         "match_over_25",
                         "OVER",
-                        1.6,
+                        1.8,
                         "bet365.us",
                         "betexplorer"
                       ]
                     ],
-                    2.24,
-                    3.0098
+                    2.52,
+                    2.0065
                   ],
                   [
                     [
-                      [
-                        "Como vs Venezia",
-                        "match_under_45",
-                        "UNDER",
-                        1.35,
-                        "Stake.com",
-                        "betexplorer"
-                      ],
-                      [
-                        "Young Boys vs Z\u00fcrich",
-                        "match_under_45",
-                        "UNDER",
-                        1.63,
-                        "Stake.com",
-                        "betexplorer"
-                      ]
-                    ],
-                    2.2,
-                    3.0098
-                  ]
-                ],
-                "mean_acca_odds": 2.22,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
-                "resolved_legs": 0,
-                "returned": null,
-                "selected_legs": 4,
-                "selector_trace": {
-                  "capacity_rescue_changed": false,
-                  "capacity_rescue_checked": false,
-                  "dropped": [],
-                  "ml_ranking_active": false
-                },
-                "total_stake": 6.0196
-              },
-              "ml_on": {
-                "accas": [
-                  {
-                    "legs": [
-                      {
-                        "cohort": 0.723,
-                        "market": "match_under_45",
-                        "match": "Como vs Venezia",
-                        "model": 0.8499523863701037,
-                        "odds": 1.36,
-                        "outcome_source": null,
-                        "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      },
-                      {
-                        "cohort": 0.6572,
-                        "market": "match_over_25",
-                        "match": "Brighton W vs Crystal Palace W",
-                        "model": 0.7034260729264638,
-                        "odds": 1.33,
-                        "outcome_source": null,
-                        "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      }
-                    ],
-                    "odds": 1.81,
-                    "returned": null,
-                    "stake": 3.0098
-                  },
-                  {
-                    "legs": [
-                      {
-                        "cohort": 0.723,
-                        "market": "match_under_45",
-                        "match": "Young Boys vs Z\u00fcrich",
-                        "model": 0.8105175703978635,
-                        "odds": 1.63,
-                        "outcome_source": null,
-                        "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      },
-                      {
-                        "cohort": 0.6572,
-                        "market": "match_over_25",
-                        "match": "PAOK vs Asteras Tripolis",
-                        "model": 0.6236163602296219,
-                        "odds": 1.54,
-                        "outcome_source": null,
-                        "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "no_retained_outcome"
-                      }
-                    ],
-                    "odds": 2.51,
-                    "returned": null,
-                    "stake": 3.0098
-                  }
-                ],
-                "card_identity": [
-                  [
-                    [
-                      [
-                        "Brighton W vs Crystal Palace W",
-                        "match_over_25",
-                        "OVER",
-                        1.33,
-                        "bet365.us",
-                        "betexplorer"
-                      ],
                       [
                         "Como vs Venezia",
                         "match_under_45",
@@ -1873,18 +1796,26 @@
                         1.36,
                         "bet365.us",
                         "betexplorer"
+                      ],
+                      [
+                        "\u00c5sane vs Haugesund",
+                        "match_under_45",
+                        "UNDER",
+                        1.57,
+                        "bet365.us",
+                        "betexplorer"
                       ]
                     ],
-                    1.81,
-                    3.0098
+                    2.14,
+                    2.0065
                   ],
                   [
                     [
                       [
-                        "PAOK vs Asteras Tripolis",
+                        "Elfsborg vs \u00d6rgryte",
                         "match_over_25",
                         "OVER",
-                        1.54,
+                        1.47,
                         "Stake.com",
                         "betexplorer"
                       ],
@@ -1897,31 +1828,252 @@
                         "betexplorer"
                       ]
                     ],
-                    2.51,
-                    3.0098
+                    2.4,
+                    2.0065
                   ]
                 ],
-                "mean_acca_odds": 2.16,
+                "mean_acca_odds": 2.3533333333333335,
                 "outcome_status": "UNSETTLED_OR_UNPROVEN",
                 "resolved_legs": 0,
                 "returned": null,
-                "selected_legs": 4,
+                "selected_legs": 6,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": false
+                },
+                "total_stake": 6.0195
+              },
+              "ml_on": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7219,
+                        "market": "match_under_45",
+                        "match": "Como vs Venezia",
+                        "model": 0.8476391675113584,
+                        "odds": 1.36,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.6582,
+                        "market": "match_over_25",
+                        "match": "Partizan vs Zemun",
+                        "model": 0.7501814393066638,
+                        "odds": 1.4,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.9,
+                    "returned": null,
+                    "stake": 2.0065
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7219,
+                        "market": "match_under_45",
+                        "match": "Young Boys vs Z\u00fcrich",
+                        "model": 0.8056599221976892,
+                        "odds": 1.63,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.6582,
+                        "market": "match_over_25",
+                        "match": "Lazio vs Cagliari",
+                        "model": 0.7504145731912938,
+                        "odds": 1.75,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 2.85,
+                    "returned": null,
+                    "stake": 2.0065
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7209,
+                        "market": "match_under_45",
+                        "match": "\u00c5sane vs Haugesund",
+                        "model": 0.7626562150684542,
+                        "odds": 1.57,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.6582,
+                        "market": "match_over_25",
+                        "match": "Elfsborg vs \u00d6rgryte",
+                        "model": 0.7522912543612774,
+                        "odds": 1.5,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 2.35,
+                    "returned": null,
+                    "stake": 2.0065
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Como vs Venezia",
+                        "match_under_45",
+                        "UNDER",
+                        1.36,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Partizan vs Zemun",
+                        "match_over_25",
+                        "OVER",
+                        1.4,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    1.9,
+                    2.0065
+                  ],
+                  [
+                    [
+                      [
+                        "Elfsborg vs \u00d6rgryte",
+                        "match_over_25",
+                        "OVER",
+                        1.5,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "\u00c5sane vs Haugesund",
+                        "match_under_45",
+                        "UNDER",
+                        1.57,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.35,
+                    2.0065
+                  ],
+                  [
+                    [
+                      [
+                        "Lazio vs Cagliari",
+                        "match_over_25",
+                        "OVER",
+                        1.75,
+                        "Stake.com",
+                        "betexplorer"
+                      ],
+                      [
+                        "Young Boys vs Z\u00fcrich",
+                        "match_under_45",
+                        "UNDER",
+                        1.63,
+                        "Stake.com",
+                        "betexplorer"
+                      ]
+                    ],
+                    2.85,
+                    2.0065
+                  ]
+                ],
+                "mean_acca_odds": 2.3666666666666667,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 6,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
                   "capacity_rescue_checked": true,
                   "dropped": [],
                   "ml_ranking_active": true
                 },
-                "total_stake": 6.0196
+                "total_stake": 6.0195
               }
             },
             "card_identical": false,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 6,
-            "mean_absolute_disagreement": 0.08362255679959706,
+            "mean_absolute_disagreement": 0.07852996006481087,
             "model_below_cohort": 5,
             "models": {
-              "225b2c1d5989d19e6fa5b49f02e6acbce81a4bc28a6492c31602c686473ac069": {
+              "31d2b066eb5f297442beecf144ea78af6b87859e92e58fc4c8b69e377eca577b": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 7,
+                    "0:1": 41,
+                    "0:11": 1,
+                    "0:2": 46,
+                    "0:3": 29,
+                    "0:4": 20,
+                    "0:5": 16,
+                    "0:6": 7,
+                    "0:7": 4,
+                    "0:8": 4,
+                    "0:9": 1,
+                    "1:0": 4,
+                    "1:1": 22,
+                    "1:2": 39,
+                    "1:3": 17,
+                    "1:4": 15,
+                    "1:5": 12,
+                    "1:6": 3,
+                    "1:7": 1,
+                    "1:9": 1,
+                    "2:0": 2,
+                    "2:1": 6,
+                    "2:2": 12,
+                    "2:3": 6,
+                    "2:4": 10,
+                    "2:5": 5,
+                    "3:0": 1,
+                    "3:1": 1,
+                    "3:3": 2,
+                    "3:4": 1,
+                    "3:5": 2,
+                    "3:6": 2,
+                    "4:0": 1,
+                    "4:2": 1,
+                    "4:3": 1,
+                    "5:2": 1
+                  },
+                  "classes": 36,
+                  "mean_rows_per_class": 9.555555555555555,
+                  "min_class_count": 1,
+                  "n": 344,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2052
+                },
+                "schema": "enh_score_logit_v2"
+              },
+              "6feab9874820dd2468b1916ac70e3709b5317d63973efe4b5871c7f167b89cef": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -1935,7 +2087,7 @@
                     "1:3": 6,
                     "1:4": 1,
                     "1:5": 1,
-                    "2:0": 120,
+                    "2:0": 119,
                     "2:1": 97,
                     "2:2": 44,
                     "2:3": 12,
@@ -1946,7 +2098,7 @@
                     "3:3": 4,
                     "3:4": 2,
                     "4:0": 61,
-                    "4:1": 46,
+                    "4:1": 47,
                     "4:2": 13,
                     "4:3": 7,
                     "4:4": 1,
@@ -1975,13 +2127,13 @@
                 "schema": "enh_score_logit_v2"
               }
             },
-            "paired_estimates": 13,
-            "pool_legs": 13,
+            "paired_estimates": 22,
+            "pool_legs": 22,
             "removed_from_ml_off": 3,
             "schemas": {
-              "enh_score_logit_v2": 13
+              "enh_score_logit_v2": 22
             },
-            "scored_legs": 13,
+            "scored_legs": 22,
             "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
           },
           "settlement": "UNAVAILABLE",

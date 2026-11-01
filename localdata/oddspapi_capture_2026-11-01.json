@@ -1,35 +1,402 @@
 {
-  "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "added": 44106,
+  "attempted": 10,
+  "attempted_fixtures": [
+    {
+      "away": "Ansan Greeners FC",
+      "fixture_id": "id1000077768046822",
+      "home": "Suwon FC"
+    },
+    {
+      "away": "Central Coast Mariners",
+      "fixture_id": "id1000013672897414",
+      "home": "Melbourne Victory FC"
+    },
+    {
+      "away": "Chicago Fire",
+      "fixture_id": "id1000024266299772",
+      "home": "Colorado Rapids"
+    },
+    {
+      "away": "Herrera FC",
+      "fixture_id": "id1002710276123258",
+      "home": "Veraguas United FC"
+    },
+    {
+      "away": "CD Olimpia Tegucigalpa",
+      "fixture_id": "id1002741475775528",
+      "home": "CD Choloma"
+    },
+    {
+      "away": "CD Hondupino",
+      "fixture_id": "id1004585776192258",
+      "home": "AFFI Academia"
+    },
+    {
+      "away": "Ferrymead Bays",
+      "fixture_id": "id1000059474873400",
+      "home": "Birkenhead United AFC"
+    },
+    {
+      "away": "CS Herediano",
+      "fixture_id": "id1002709272053674",
+      "home": "Sporting FC"
+    },
+    {
+      "away": "Deportivo Coatepeque",
+      "fixture_id": "id1004800076209062",
+      "home": "CSD Sacachispas"
+    },
+    {
+      "away": "Deportiva Venados",
+      "fixture_id": "id1005307074100744",
+      "home": "Irapuato"
+    }
+  ],
   "budget": {
     "day": "2026-11-01",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 3,
-    "remaining_today": 22,
-    "spent_today": 3
+    "month_spent": 15,
+    "remaining_today": 10,
+    "spent_today": 15
   },
-  "captured_at": "2026-10-31T22:16:27+00:00",
+  "budget_deferred": 37,
+  "captured_at": "2026-11-01T01:14:46+00:00",
   "date": "2026-11-01",
-  "errors": [
-    "fetch_fixtures: HTTP 429 (quota); capture stopped"
-  ],
-  "fixtures": 0,
-  "http_status": 429,
+  "errors": [],
+  "excluded_srl_fixtures": 27,
+  "fixtures": 1063,
+  "future_slate_fixtures": 10,
   "keys": 3,
-  "markets": {},
-  "matched": 0,
-  "quoted_fixtures": [],
-  "rate_limit": {
-    "http_status": 429,
-    "rate_limit_limit": null,
-    "rate_limit_remaining": null,
-    "rate_limit_reset": null,
-    "retry_after_s": null
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 632,
+  "markets": {
+    "1x2": 4990,
+    "btts": 2359,
+    "ou_0.5": 1054,
+    "ou_0.75": 74,
+    "ou_1": 401,
+    "ou_1.25": 232,
+    "ou_1.5": 2012,
+    "ou_1.75": 512,
+    "ou_2": 848,
+    "ou_2.25": 784,
+    "ou_2.5": 2907,
+    "ou_2.75": 1164,
+    "ou_3": 1362,
+    "ou_3.25": 1084,
+    "ou_3.5": 2875,
+    "ou_3.75": 786,
+    "ou_4": 731,
+    "ou_4.25": 435,
+    "ou_4.5": 2377,
+    "ou_4.75": 288,
+    "ou_5": 413,
+    "ou_5.25": 227,
+    "ou_5.5": 1411,
+    "ou_5.75": 111,
+    "ou_6": 94,
+    "ou_6.25": 50,
+    "ou_6.5": 413,
+    "ou_6.75": 20,
+    "ou_7": 20,
+    "ou_7.25": 20,
+    "ou_7.5": 117,
+    "ou_7.75": 10,
+    "ou_8": 5,
+    "ou_8.5": 44,
+    "tt_away_0.5": 1868,
+    "tt_away_0.75": 88,
+    "tt_away_1": 138,
+    "tt_away_1.25": 82,
+    "tt_away_1.5": 1790,
+    "tt_away_1.75": 56,
+    "tt_away_2": 84,
+    "tt_away_2.25": 24,
+    "tt_away_2.5": 1415,
+    "tt_away_2.75": 4,
+    "tt_away_3": 23,
+    "tt_away_3.25": 4,
+    "tt_away_3.5": 509,
+    "tt_away_3.75": 2,
+    "tt_away_4": 2,
+    "tt_away_4.5": 67,
+    "tt_away_5.5": 9,
+    "tt_home_0.5": 1365,
+    "tt_home_0.75": 44,
+    "tt_home_1": 158,
+    "tt_home_1.25": 50,
+    "tt_home_1.5": 1884,
+    "tt_home_1.75": 60,
+    "tt_home_2": 154,
+    "tt_home_2.25": 64,
+    "tt_home_2.5": 1956,
+    "tt_home_2.75": 62,
+    "tt_home_3": 94,
+    "tt_home_3.25": 56,
+    "tt_home_3.5": 1061,
+    "tt_home_3.75": 6,
+    "tt_home_4": 38,
+    "tt_home_4.5": 493,
+    "tt_home_5.5": 163,
+    "tt_home_6.5": 3
   },
-  "rows": 0,
+  "markets_source": "fetch",
+  "matched": 10,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 13,
+    "market_id_unknown": 8741,
+    "market_inactive": 1271,
+    "market_unsupported_clean_sheet": 651,
+    "market_unsupported_corners": 6171,
+    "market_unsupported_correct_score": 2593,
+    "market_unsupported_double_chance": 1568,
+    "market_unsupported_draw_no_bet": 1154,
+    "market_unsupported_handicap": 11460,
+    "market_unsupported_odd_even": 2294,
+    "market_unsupported_period": 37816,
+    "market_unsupported_win_to_nil": 1247,
+    "outcome_inactive": 4566
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 13,
+      "market_inactive": 1271,
+      "outcome_inactive": 4566
+    },
+    "loss_or_diagnosis": {
+      "market_id_unknown": 8741,
+      "market_unsupported_clean_sheet": 651,
+      "market_unsupported_corners": 6171,
+      "market_unsupported_correct_score": 2593,
+      "market_unsupported_double_chance": 1568,
+      "market_unsupported_draw_no_bet": 1154,
+      "market_unsupported_handicap": 11460,
+      "market_unsupported_odd_even": 2294,
+      "market_unsupported_period": 37816,
+      "market_unsupported_win_to_nil": 1247
+    }
+  },
+  "pending_fixtures": 47,
+  "quoted_fixtures": [
+    {
+      "away": "Ansan Greeners FC",
+      "fixture_id": "id1000077768046822",
+      "home": "Suwon FC"
+    },
+    {
+      "away": "Central Coast Mariners",
+      "fixture_id": "id1000013672897414",
+      "home": "Melbourne Victory FC"
+    },
+    {
+      "away": "Chicago Fire",
+      "fixture_id": "id1000024266299772",
+      "home": "Colorado Rapids"
+    },
+    {
+      "away": "Herrera FC",
+      "fixture_id": "id1002710276123258",
+      "home": "Veraguas United FC"
+    },
+    {
+      "away": "CD Olimpia Tegucigalpa",
+      "fixture_id": "id1002741475775528",
+      "home": "CD Choloma"
+    },
+    {
+      "away": "CD Hondupino",
+      "fixture_id": "id1004585776192258",
+      "home": "AFFI Academia"
+    },
+    {
+      "away": "Ferrymead Bays",
+      "fixture_id": "id1000059474873400",
+      "home": "Birkenhead United AFC"
+    },
+    {
+      "away": "CS Herediano",
+      "fixture_id": "id1002709272053674",
+      "home": "Sporting FC"
+    },
+    {
+      "away": "Deportivo Coatepeque",
+      "fixture_id": "id1004800076209062",
+      "home": "CSD Sacachispas"
+    },
+    {
+      "away": "Deportiva Venados",
+      "fixture_id": "id1005307074100744",
+      "home": "Irapuato"
+    }
+  ],
+  "reserved_requests": 10,
+  "rows": 44106,
   "schema": 1,
+  "slate_candidate_fixtures": 38,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 2,
+  "slate_provider_overlap_fixtures": 12,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Chelsea W",
+      "home": "Charlton Athletic W",
+      "league": "Women's Super League",
+      "normalized_pair": "charlton athletic w|chelsea w"
+    },
+    {
+      "away": "Aston Villa W",
+      "home": "Arsenal W",
+      "league": "Women's Super League",
+      "normalized_pair": "arsenal w|aston villa w"
+    },
+    {
+      "away": "JK Trans Narva",
+      "home": "Flora",
+      "league": "Meistriliiga",
+      "normalized_pair": "flora|jk trans narva"
+    },
+    {
+      "away": "Zemun",
+      "home": "Partizan",
+      "league": "Super Liga",
+      "normalized_pair": "partizan|zemun"
+    },
+    {
+      "away": "Moss",
+      "home": "Str\u00f8msgodset",
+      "league": "1. Division",
+      "normalized_pair": "moss|stromsgodset"
+    },
+    {
+      "away": "Z\u00fcrich",
+      "home": "Young Boys",
+      "league": "Super League",
+      "normalized_pair": "young boys|zurich"
+    },
+    {
+      "away": "Crystal Palace W",
+      "home": "Brighton W",
+      "league": "Women's Super League",
+      "normalized_pair": "brighton w|crystal palace w"
+    },
+    {
+      "away": "Venezia",
+      "home": "Como",
+      "league": "Serie A",
+      "normalized_pair": "como|venezia"
+    },
+    {
+      "away": "Asteras Tripolis",
+      "home": "PAOK",
+      "league": "Super League",
+      "normalized_pair": "asteras tripolis|paok"
+    },
+    {
+      "away": "Degerfors",
+      "home": "Djurg\u00e5rden",
+      "league": "Allsvenskan",
+      "normalized_pair": "degerfors|djurgarden"
+    },
+    {
+      "away": "Gaziantep F.K.",
+      "home": "Trabzonspor",
+      "league": "Super Lig",
+      "normalized_pair": "gaziantep f.k.|trabzonspor"
+    },
+    {
+      "away": "Boto\u015fani",
+      "home": "Universitatea Craiova",
+      "league": "Superliga",
+      "normalized_pair": "botosani|universitatea craiova"
+    },
+    {
+      "away": "Angers SCO",
+      "home": "Olympique Lyonnais",
+      "league": "Ligue 1",
+      "normalized_pair": "angers sco|olympique lyonnais"
+    },
+    {
+      "away": "\u00d6rgryte",
+      "home": "Elfsborg",
+      "league": "Allsvenskan",
+      "normalized_pair": "elfsborg|orgryte"
+    },
+    {
+      "away": "Haugesund",
+      "home": "\u00c5sane",
+      "league": "1. Division",
+      "normalized_pair": "asane|haugesund"
+    },
+    {
+      "away": "Cagliari",
+      "home": "Lazio",
+      "league": "Serie A",
+      "normalized_pair": "cagliari|lazio"
+    },
+    {
+      "away": "Ey\u00fcpspor",
+      "home": "Amed",
+      "league": "Turkey S\u00fcper Lig",
+      "normalized_pair": "amed|eyupspor"
+    },
+    {
+      "away": "Dunajsk\u00e1 Streda",
+      "home": "Bansk\u00e1 Bystrica",
+      "league": "Nik\u00e9 Liga",
+      "normalized_pair": "banska bystrica|dunajska streda"
+    },
+    {
+      "away": "Pineto",
+      "home": "Ravenna",
+      "league": "Serie C, Girone B",
+      "normalized_pair": "pineto|ravenna"
+    },
+    {
+      "away": "Gangwon FC",
+      "home": "Ulsan Hyundai FC",
+      "league": "South-Korea K League 1",
+      "normalized_pair": "gangwon|ulsan hyundai"
+    },
+    {
+      "away": "CD Nacional",
+      "home": "FC Arouca",
+      "league": "Liga Portugal Betclic",
+      "normalized_pair": "arouca|cd nacional"
+    },
+    {
+      "away": "Vasco da Gama",
+      "home": "Palmeiras",
+      "league": "Copa do Brasil",
+      "normalized_pair": "palmeiras|vasco da gama"
+    },
+    {
+      "away": "Treviso",
+      "home": "Cittadella",
+      "league": "Serie C, Girone A",
+      "normalized_pair": "cittadella|treviso"
+    },
+    {
+      "away": "Be\u015fikta\u015f JK",
+      "home": "Kas\u0131mpa\u015fa",
+      "league": "Trendyol Super Lig",
+      "normalized_pair": "besiktas jk|kasimpasa"
+    },
+    {
+      "away": "Vis Pesaro",
+      "home": "Gubbio",
+      "league": "Serie C, Girone B",
+      "normalized_pair": "gubbio|vis pesaro"
+    },
+    {
+      "away": "Lecco",
+      "home": "Dolomiti Bellunesi",
+      "league": "Serie C, Girone A",
+      "normalized_pair": "dolomiti bellunesi|lecco"
+    }
+  ],
   "source": "oddspapi_odds",
-  "status": "quota"
+  "status": "reserved"
 }
