@@ -239,7 +239,7 @@ def test_labels_only_are_not_context_or_fixture_identity(saved):
 
 
 @pytest.mark.parametrize('bad', [
-    PREFIX+'match/1?token=x',PREFIX+'match/1#x',PREFIX+'match/1/report',PREFIX+'match/1/statistics',
+    PREFIX+'match/1?token=x',PREFIX+'match/1#x',PREFIX+'match/1/report',PREFIX+'match/1/statistics?token=x',
     PREFIX+'match/1/',PREFIX+'match/0',PREFIX+'match/1234567890123',PREFIX+'match/1\n',
     PREFIX.replace('https://','http://')+'match/1',
     PREFIX.replace('/sportpesa/','/other/')+'match/1',
