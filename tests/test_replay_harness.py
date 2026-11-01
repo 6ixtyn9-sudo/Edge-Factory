@@ -1098,3 +1098,43 @@ def test_real_microsecond_build_time_and_seconds_freeze_record_have_parity(tmp_p
     at.write_ticket_receipt(path,json.dumps(payload))
     (localdata/'auto_tickets_state.json').write_text(json.dumps(state))
     assert rh.decision_parity_report(tmp_path)['status']=='PASS'
+
+
+@pytest.mark.parametrize('damage', [None, 'missing', 'corrupt'])
+def test_multipart_frozen_receipt_replays_exactly_or_fails_closed_without_mutation(
+        tmp_path, monkeypatch, damage):
+    import json
+    import random
+    from edgefactory import util
+    localdata, context, plan, state = _retained_decision(tmp_path, monkeypatch)
+    receipt = at.decision_receipt_path(context['date'])
+    payload = at.read_ticket_receipt(receipt)
+    payload.pop('sha256')
+    payload['retained_extra_evidence'] = random.Random(123).randbytes(9000).hex()
+    payload['sha256'] = at._decision_digest(payload)
+    raw = json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()
+    monkeypatch.setattr(util, 'TICKET_RECEIPT_MAX_FILE_BYTES', 4096)
+    monkeypatch.setattr(util, '_TICKET_RECEIPT_PART_BYTES', 1024)
+    util.write_ticket_receipt(receipt, raw)
+    parts = list(receipt.parent.glob(receipt.name + '.part-*'))
+    assert parts
+    before = {p: p.read_bytes() for p in localdata.rglob('*') if p.is_file()}
+    at.write_decision_receipt(context, [], frozen=False)
+    assert before == {p: p.read_bytes() for p in localdata.rglob('*') if p.is_file()}
+    if damage == 'missing':
+        parts[0].unlink()
+    elif damage == 'corrupt':
+        parts[0].write_bytes(b'bad part')
+    snapshot = {p: p.read_bytes() for p in localdata.rglob('*') if p.is_file()}
+    def forbidden(*args, **kwargs):
+        raise AssertionError('receipt replay must not mutate financial state or refetch facts')
+    for name in ('load_settled', 'load_settled_scores', 'save_state', 'compute_bucket_pnl',
+                 'compute_bucket_slice', 'ensure_slice_seeded'):
+        monkeypatch.setattr(at, name, forbidden)
+    report = rh.decision_parity_report(tmp_path)
+    assert report['status'] == ('PASS' if damage is None else 'FAIL')
+    if damage is None:
+        assert util.ticket_receipt_bytes(receipt) == raw
+        item = report['lanes']['main']['receipts'][0]
+        assert (item['status'], item['ledger'], item['bank_reconciliation']) == ('MATCH',) * 3
+    assert snapshot == {p: p.read_bytes() for p in localdata.rglob('*') if p.is_file()}
