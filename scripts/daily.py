@@ -1120,6 +1120,11 @@ def run_pipeline(
             f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
         )
+        # Independent paper lifecycle: no Main/ENH plan or financial state.
+        run_soft(
+            "PYTHONPATH=src python3 scripts/auto_tickets.py --autobets-ml",
+            "autobets_ML PAPER (own accas/stakes; 09:00 SAST cutoff)",
+        )
         run_soft(
             "PYTHONPATH=src python3 scripts/auto_tickets.py",
             "auto_tickets (generate/freeze)",
@@ -1265,6 +1270,11 @@ def run_pipeline(
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
+        )
+        # Independent paper lifecycle: no Main/ENH plan or financial state.
+        run_soft(
+            "PYTHONPATH=src python3 scripts/auto_tickets.py --autobets-ml",
+            "autobets_ML PAPER (own accas/stakes; 09:00 SAST cutoff)",
         )
         run_soft(
             "PYTHONPATH=src python3 scripts/auto_tickets.py",

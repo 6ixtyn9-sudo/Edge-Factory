@@ -39,6 +39,7 @@ PHASE5_CLEAN_EXCLUDES = (
     "/localdata/card_enrich_shadow_*.json",
     "/localdata/scored_candidate_shadow_*.jsonl",
     "/localdata/*_decision*.json",
+    "/localdata/autobets_ML*",
 )
 
 
@@ -741,12 +742,92 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
     return retained
 
 
+def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
+    """Preserve paper evidence independently; never reconcile live financials.
+
+    Exact frozen conflicts are not guessed away. Preserve both copies, block
+    PAPER, and still let the existing Main/ENH restore proceed unchanged.
+    Valid drafts can advance by their actual pre-cutoff persistence timestamp.
+    """
+    from edgefactory import ml_paper
+    from edgefactory.odds_normalization import parse_zoned_timestamp
+    import re
+
+    pattern = re.compile(r"^localdata/autobets_ML_(draft_)?(\d{4}-\d{2}-\d{2})\.json$")
+    tracked = {p for p in _tracked_localdata_paths(repo) if pattern.fullmatch(p)}
+    cached = {str(p.relative_to(repo)) for p in (repo / "localdata").glob("autobets_ML_*.json")
+              if pattern.fullmatch(str(p.relative_to(repo)))}
+    retained = {}
+    conflicts = []
+    for relative in sorted(tracked | cached):
+        match = pattern.fullmatch(relative)
+        draft, day = bool(match[1]), match[2]
+        head = _head_blob(repo, relative) or None
+        cache = (repo / relative).read_bytes() if (repo / relative).exists() else None
+        values = {}
+        invalid = False
+        for label, blob in (("committed", head), ("cached", cache)):
+            if blob is None:
+                continue
+            try:
+                row = json.loads(blob)
+                ml_paper.validate_record(row, day, draft=draft)
+                values[label] = row
+            except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
+                invalid = True
+        conflict = invalid
+        chosen = head if head is not None else cache
+        if not invalid and head is not None and cache is not None:
+            h, c = values["committed"], values["cached"]
+            if h["sha256"] != c["sha256"]:
+                if draft:
+                    ht = parse_zoned_timestamp(h["draft_persisted_at"])
+                    ct = parse_zoned_timestamp(c["draft_persisted_at"])
+                    if ct > ht and parse_zoned_timestamp(c["captured_at"]) >= parse_zoned_timestamp(h["captured_at"]):
+                        chosen = cache
+                    elif ht == ct:
+                        conflict = True
+                else:
+                    conflict = True
+        if conflict:
+            detail = {"file": relative, "invalid": invalid, "copies": {}}
+            for label, blob in (("committed", head), ("cached", cache)):
+                if blob is not None:
+                    sha = hashlib.sha256(blob).hexdigest()
+                    path = f"localdata/autobets_ML_conflicts/{Path(relative).name}.{label}.{sha}.json"
+                    _atomic_write(repo / path, blob)
+                    detail["copies"][label] = {"file": path, "sha256": sha}
+            conflicts.append(detail)
+        if chosen is not None:
+            retained[relative] = chosen
+    if conflicts:
+        marker = repo / "localdata/autobets_ML_integrity_block.json"
+        # Do not erase earlier unresolved conflict details on later restores.
+        try:
+            previous = json.loads(marker.read_text()) if marker.exists() else {"conflicts": []}
+            if not isinstance(previous.get("conflicts"), list):
+                raise ValueError("invalid conflict marker")
+        except (ValueError, AttributeError):
+            original = marker.read_bytes()
+            sha = hashlib.sha256(original).hexdigest()
+            retained_marker = f"localdata/autobets_ML_conflicts/integrity_marker.{sha}.json"
+            _atomic_write(repo / retained_marker, original)
+            previous = {"conflicts": [{"invalid_previous_marker": retained_marker, "sha256": sha}]}
+        merged = {json.dumps(c, sort_keys=True): c for c in [*previous["conflicts"], *conflicts]}
+        _atomic_write(marker, json.dumps({"lane": "autobets_ML", "paper_only": True,
+            "status": "blocked_pending_evidence_review", "conflicts": list(merged.values())},
+            indent=2).encode())
+        print("::warning::autobets_ML evidence conflict retained; PAPER blocked, live lanes unchanged")
+    return retained
+
+
 def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     """Restore ordinary tracked state without overwriting cached append-only evidence."""
     repo = Path(repo)
     # Validate BOTH lanes before checkout/clean mutates any restored evidence.
     financial_blobs = {relative: _retain_financial_state(repo, relative)
                        for relative in (ENH_STATE, MAIN_STATE)}
+    paper_blobs = _retain_ml_paper_evidence(repo)
     # Save original human cards before checkout, only after BOTH lanes passed
     # the explicit recovery checks. Never replace a committed frozen card.
     recovered_cards = {}
@@ -772,7 +853,10 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     restored: list[str] = []
     protected = set(APPEND_ONLY_JSONL_IDS)
     for relative in _tracked_localdata_paths(repo):
-        if relative in protected:
+        if relative in protected or (relative.startswith("localdata/autobets_ML")
+                                     and (repo / relative).exists()):
+            # Exact paper dates are reconciled above; preserve cached conflict
+            # markers/copies as well. Missing files still restore from HEAD.
             continue
         result = _run(repo, "checkout", "HEAD", "--", relative)
         if result.returncode != 0:
@@ -782,6 +866,8 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
             )
         restored.append(relative)
 
+    for relative, blob in paper_blobs.items():
+        _atomic_write(repo / relative, blob)
     for relative, blob in recovered_cards.items():
         _atomic_write(repo / relative, blob)
     # An authorized draft upgrade may have inserted its manifest before new

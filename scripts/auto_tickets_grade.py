@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -35,6 +36,7 @@ LOCALDATA = ROOT / "localdata"
 LANES = {
     "main": (None, "AUTO-TICKETS (ROLLING)", "auto_tickets_performance"),
     "enh": (at.ENHANCEMENT_LANE, "ENHANCEMENT TICKETS (ROLLING)", "autobets_enh_tickets_performance"),
+    "autobets_ML": (None, "autobets_ML (NO REAL STAKES)", "autobets_ML_performance"),
 }
 
 
@@ -131,6 +133,37 @@ def render_lines(st, label, last, held, accas, wins, generated):
     return [r.rstrip() for r in rows]
 
 
+
+def publish_ml_paper(*, write_empty=True):
+    """A third sibling card/report, never a comparison or a live-state load."""
+    from edgefactory import ml_paper
+    scores = at.load_settled_scores() if any(LOCALDATA.glob(
+        f"{ml_paper.PREFIX}_????-??-??.json")) else {}
+    lookup = at.ml_paper_score_lookup(scores)
+    card = ml_paper.latest_card(LOCALDATA)
+    # A sibling report with no paper evidence stays read-only, preserving the
+    # existing ENH no-state/no-write contract. Explicit paper reporting may
+    # publish its initial notional-bank report; this never creates live state.
+    if write_empty or card is not None:
+        report = ml_paper.publish(LOCALDATA, lookup)
+    else:
+        report = ml_paper.performance([], lookup)
+    if card is not None:
+        print("\n" + ml_paper.render_card(card))
+    print("\n" + ml_paper.render_performance(report))
+    return report
+
+
+def _show_ml_paper_beside_enh():
+    if os.environ.get('EDGE_FACTORY_ML_PAPER', '1') != '1':
+        return
+    try:
+        publish_ml_paper(write_empty=False)
+    except Exception as exc:
+        print(f"autobets_ML report unavailable; existing lanes unchanged: "
+              f"{type(exc).__name__}: {exc}", file=sys.stderr)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--lane", choices=sorted(LANES), default="main",
@@ -139,6 +172,10 @@ def main(argv=None):
     ap.add_argument("--no-settle", action="store_true", help="render current lane state only; no settlements")
     args = ap.parse_args(argv)
 
+    if args.lane == "autobets_ML":
+        publish_ml_paper()
+        return 0
+
     lane, label, stem = LANES[args.lane]
     st = at.load_state(lane)
     if not st:
@@ -146,6 +183,8 @@ def main(argv=None):
             print("no rolling state yet — run scripts/auto_tickets.py first")
         else:
             print(f"no {args.lane} lane state yet — nothing to report")
+        if args.lane == "enh":
+            _show_ml_paper_beside_enh()
         return 0
     if not args.no_settle:
         corrections = at.regrade_verified_settlements(st)
@@ -180,6 +219,8 @@ def main(argv=None):
         "events": st.get("events", []),
         "history": st["history"],
     }, indent=2, default=str))
+    if args.lane == "enh":
+        _show_ml_paper_beside_enh()
     return 0
 
 
