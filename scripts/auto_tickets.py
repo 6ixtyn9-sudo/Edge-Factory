@@ -4076,6 +4076,45 @@ def write_decision_receipt(context, plan, *, frozen=False):
         print(f"::warning::DECISION RECEIPT NOT PERSISTED: {type(exc).__name__}: {exc}", file=sys.stderr)
 
 
+def ml_paper_score_lookup(scores):
+    """Same regulation/ambiguity-vetted facts; exact non-truncated keys only."""
+    def lookup(candidate):
+        values = {scores[(candidate['date'], hk, ak)]
+                  for hk, ak, narrow in _result_write_key_specs(
+                      candidate['home'], candidate['away'])
+                  if not narrow and (candidate['date'], hk, ak) in scores}
+        return next(iter(values)) if len(values) == 1 else None
+    return lookup
+
+
+def _run_ml_paper():
+    """Independent paper lifecycle; never read/write live state or live plans."""
+    if os.environ.get('EDGE_FACTORY_ML_PAPER', '1') != '1':
+        return
+    try:
+        from edgefactory import ml_paper
+        now = datetime.now(TZ)
+        day = now.astimezone(TZ).date().isoformat()
+        freeze_at = now.astimezone(TZ).replace(hour=9, minute=0, second=0, microsecond=0)
+        # After the cutoff, do NOT load a newer slate or train on later facts.
+        # capture() will only seal a durably saved pre-cutoff draft, or NO BET.
+        slate = json.loads((LOCALDATA / "picks_today.json").read_text()) if now < freeze_at else []
+        history = ml_paper.receipts(LOCALDATA)
+        lookup = ml_paper_score_lookup(load_settled_scores() if history else {})
+        row = ml_paper.capture({"date": day, "build_at": now.isoformat(), "slate": slate},
+            root=LOCALDATA, score_lookup=lookup, kickoff_fn=parse_kickoff_proven,
+            source_guard=execution_source_rejection, min_leg_odds=1.0, freeze_hour=9)
+        ml_paper.publish(LOCALDATA, lookup)
+        card = row or ml_paper.latest_card(LOCALDATA)
+        if card is not None:
+            print(ml_paper.render_card(card))
+        return True
+    except Exception as exc:
+        print(f"::warning::autobets_ML unavailable; live lanes unchanged: "
+              f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        return False
+
+
 # ---------------- settlement + take-profit notification ----------------
 def _apply_settlement(st, ret_pct, staked_pct, when, lane: "Lane | None" = None):
     """Move the bank by the settled P&L (all %) and fire the TAKE-PROFIT
@@ -6372,7 +6411,13 @@ def main():
                          "operator-verified final score (Config/verified_results.json)")
     ap.add_argument("--enhancements", action="store_true",
                     help=f"the enhancement lane's own slip (needs {ENH_BOARD_FLAG}=1)")
+    ap.add_argument("--autobets-ml", action="store_true",
+                    help="independent paper draft/freeze/report only; never touch live financial state")
     args = ap.parse_args()
+    if args.autobets_ml:
+        if len(sys.argv) != 2:
+            ap.error("--autobets-ml is standalone; no live lane/reset/backfill/force arguments")
+        return 1 if _run_ml_paper() is False else 0
     if args.rebuild_unplaced and (not args.enhancements or args.force or args.reset
                                  or args.backfill or args.settle or args.status
                                  or args.apply_unplaced_resets):
