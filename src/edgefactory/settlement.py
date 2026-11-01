@@ -192,9 +192,11 @@ def warehouse_regulation_rows(con, sources=RESULT_SOURCES, *, start=None):
                                [start] if start else []).fetchall()
             for values in rows:
                 row = dict(zip(fields, values))
-                key = regulation_fixture_key(row)
                 if non_regulation_status(row.get("status")) or non_regulation_status(row.get("score_period")):
-                    risk.setdefault(key, row)
+                    # Raw/forecast rows only contribute positive period evidence.
+                    # Do not normalize every historical team pair just to throw
+                    # its identity away when no AET/PEN evidence was observed.
+                    risk.setdefault(regulation_fixture_key(row), row)
                 if table == source + "_settled":
                     row["src"] = table
                     candidates.append(row)
@@ -217,10 +219,16 @@ def filter_regulation_rows(rows, period_holds=()):
     for row in rows:
         if non_regulation_status(row.get("status")) or non_regulation_status(row.get("score_period")):
             risk.setdefault(regulation_fixture_key(row), row)
+    # Period vetoes are date-specific. Only those dates can possibly match a
+    # risk key; normalizing every other fixture in all-history loads is wasted
+    # work. Keep the full identity/squad test on dates that DO carry evidence.
+    risk_dates = {key[0] for key in risk}
     accepted = []
     for row in rows:
         pair = regulation_score(row)
-        if pair is None or (regulation_fixture_key(row) in risk and explicit_regulation_score(row) is None):
+        if pair is None or (str(row.get("date") or "")[:10] in risk_dates
+                            and regulation_fixture_key(row) in risk
+                            and explicit_regulation_score(row) is None):
             continue
         hs, gs = pair
         accepted.append(dict(row, date=str(row["date"])[:10], hs=hs, gs=gs,
