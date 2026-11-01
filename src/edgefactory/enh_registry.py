@@ -1064,15 +1064,13 @@ def enhancement_cohort_evidence(pick: dict, *, priced: bool = False,
         return None
 
 
-def enhancement_ml_probability(pick: dict, market: str) -> float | None:
-    """Optional ML ordering only; NEVER substitutes for measured admission.
+def enhancement_ml_score_weights(pick: dict) -> list[tuple[int, int, float]] | None:
+    """Validated existing score model, shared by ENH and the paper-only alternative.
 
-    Recompute from the retained compact model and this parent's own confidence.
-    All market probabilities sum one common score distribution, not independent
-    binary classifiers or multiplied marginal probabilities for an accumulator.
+    Unnormalised softmax weights are not calibrated acca forecasts or admission permission.
+    Callers retain their own activation and price/evidence gates. No fitting,
+    network, registry mutation, or fallback probability occurs here.
     """
-    if os.environ.get('EDGE_FACTORY_ENH_ML', '1') != '1':
-        return None
     try:
         import hashlib
         profile = pick.get('statistical_profile') or {}
@@ -1120,22 +1118,32 @@ def enhancement_ml_probability(pick: dict, market: str) -> float | None:
         if len(logits) != len(classes) or not all(math.isfinite(v) for v in logits):
             return None
         weights = [math.exp(v - max(logits)) for v in logits]
-        hits, pairs = [], []
+        pairs = []
         for label in classes:
             values = label.split(':')
             if len(values) != 2 or not all(v.isdigit() for v in values):
                 return None
             pair = tuple(map(int, values))
             pairs.append(pair)
-            hit = check_enhancement_hit(market, pick['pick'], *pair)
-            if hit is None:
-                return None
-            hits.append(hit)
         if len(set(pairs)) != len(pairs):
             return None
-        return sum(w for w, hit in zip(weights, hits) if hit) / sum(weights)
+        return [(hs, gs, w) for (hs, gs), w in zip(pairs, weights)]
     except (KeyError, TypeError, ValueError, AttributeError, ArithmeticError):
         return None
+
+
+def enhancement_ml_probability(pick: dict, market: str) -> float | None:
+    """Optional ENH ML score; measured admission and its enable flag stay separate."""
+    if os.environ.get('EDGE_FACTORY_ENH_ML', '1') != '1':
+        return None
+    distribution = enhancement_ml_score_weights(pick)
+    if distribution is None:
+        return None
+    hits = [(check_enhancement_hit(market, pick['pick'], hs, gs), p)
+            for hs, gs, p in distribution]
+    if any(hit is None for hit, _ in hits):
+        return None
+    return sum(p for hit, p in hits if hit) / sum(p for _, p in hits)
 
 
 def enhancement_price_context(pick: dict) -> dict | None:
