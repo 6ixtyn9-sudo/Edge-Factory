@@ -744,3 +744,30 @@ def test_loader_fixture_candidate_uses_capture_clock_and_makes_only_one_get(prob
     assert 'source_status_not_pre_match' in candidate['hold_reasons']
     assert r['admitted_rows']==r['writes']==loader['decoded_context_row_count']==0
     assert contract.SECRET not in text
+
+
+def test_loader_history_records_and_standings_use_same_single_get(probe,transport,capsys):
+    import importlib.util
+    spec=importlib.util.spec_from_file_location(
+        'loader_history_contract',Path(__file__).with_name('test_bookmaker_loader_history.py'))
+    contract=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(contract)
+    payload={'loaderData':{'root':{'data':contract.envelope(),
+                                  'history':[contract.history()],
+                                  'cctx':{'fishnetToken':contract.SECRET}}}}
+    body=(contract.semantic_document()+'<script type="application/json">'
+          +json.dumps(payload)+'</script>').encode()
+    requests,_=transport(lambda q: response(body=body))
+    assert probe.main(['--native-source','sportpesa-statshub','--native-url',DISCOVERY_URL,
+                       '--native-loader'])==0
+    text=capsys.readouterr().out
+    result=json.loads(text)
+    loader=result['receipts'][0]['loader_state']
+    history=loader['historical_result_candidates']
+    assert len(requests)==result['network_requests']==1
+    assert history['candidate_record_count']==1 and history['usable_form_rows']==0
+    assert history['records'][0]['source_ft_score']=={'home':0,'away':1}
+    assert loader['semantic_standings_candidates']['decoded_context_row_count']==2
+    assert history['admitted_rows']==result['writes']==result['admitted_rows']==0
+    assert loader['api_requests_made']==0 and not loader['javascript_executed']
+    assert contract.SECRET not in text

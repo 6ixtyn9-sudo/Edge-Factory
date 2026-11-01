@@ -9,7 +9,9 @@ ordinary public match URLs on the fixed, observed SportPesa tenant route only.
 SportPesa StatsHub is explicitly third-party supplied, not an independent bookmaker feed.
 No redirects, retries, proxies, cookies, credentials or production admission.
 Native responses are transport evidence, NOT executable or decoded quotes.
---native-loader decodes supported embedded loader JSON from one StatsHub page, without API calls.
+--native-loader decodes one StatsHub page: fixture/source-score candidates and supported semantic tables.
+History is limited to the supported match/sibling schema; source ft scores are NOT verified regulation.
+No form aggregates, slate binding or production admission are enabled, and no APIs are called.
 --native-discovery follows at most two referenced same-origin JS assets, within three GETs.
 --native-context opts into semantic standings/shape inspection for StatsHub only.
 This does not enable native H2H/results, whole-slate coverage or production admission.
