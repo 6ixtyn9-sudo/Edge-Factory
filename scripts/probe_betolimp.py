@@ -163,6 +163,17 @@ class _PageShape(HTMLParser):
         self.hidden = 0
         self.parts = []
 
+    def parse_html_declaration(self, position):
+        # Python 3.13's HTMLParser accepts unknown <![...]> declarations as
+        # bogus comments. Keep this diagnostic's existing fail-closed contract
+        # independent of that leniency: the inherited marked-section scanner
+        # rejects unknown keywords while preserving CDATA/legacy sections.
+        # Dispatch only parser-recognized declarations, not a body-wide regex:
+        # identical strings inside comments or script/style data are harmless.
+        if self.rawdata.startswith("<![", position):
+            return self.parse_marked_section(position)
+        return super().parse_html_declaration(position)
+
     def handle_starttag(self, tag, attrs):
         if tag in {"script", "style", "template", "noscript"}:
             self.hidden += 1

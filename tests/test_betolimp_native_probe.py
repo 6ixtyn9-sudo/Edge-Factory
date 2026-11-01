@@ -771,3 +771,56 @@ def test_loader_history_records_and_standings_use_same_single_get(probe,transpor
     assert history['admitted_rows']==result['writes']==result['admitted_rows']==0
     assert loader['api_requests_made']==0 and not loader['javascript_executed']
     assert contract.SECRET not in text
+
+
+def test_malformed_marked_section_stays_closed_with_lenient_stdlib(probe, transport, monkeypatch):
+    """3.13 treats unknown marked declarations as bogus comments, not errors."""
+    original = probe.HTMLParser.parse_html_declaration
+
+    def lenient_declaration(self, position):
+        if self.rawdata.startswith("<![", position):
+            return self.parse_bogus_comment(position)
+        return original(self, position)
+
+    monkeypatch.setattr(probe.HTMLParser, "parse_html_declaration", lenient_declaration)
+    requests, _ = transport(lambda request: response(body=b"<![TOP_SECRET]><p>Full Time Result</p>"))
+    result = probe.native_probe([URL, URL2])
+    assert not result["transport_ok"]
+    assert result["network_requests"] == len(requests) == 1
+    assert len(result["unattempted_urls"]) == 1
+    assert result["receipts"][0]["classification"] == "unparseable_html"
+    assert result["receipts"][0]["main_market_label_presence"] is None
+    assert result["admitted_rows"] == result["writes"] == 0
+    assert "TOP_SECRET" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("body", [
+    b"<![TOP_SECRET]><p>Full Time Result</p>",
+    b"<![top_secret]><p>Full Time Result</p>",
+    b"<![TOP_SECRET[secret]]><p>Full Time Result</p>",
+    b"<![]><p>Full Time Result</p>",
+])
+def test_unknown_marked_section_is_never_a_green_transport(probe, transport, body):
+    transport(lambda request: response(body=body))
+    result = probe.native_probe([URL])
+    assert not result["transport_ok"]
+    assert result["receipts"][0]["classification"] == "unparseable_html"
+    assert result["receipts"][0]["main_market_label_presence"] is None
+    assert "secret" not in json.dumps(result).casefold()
+
+
+@pytest.mark.parametrize("hidden", [
+    b"<!-- <![TOP_SECRET]> Both teams to score -->",
+    b'<script>const example = "<![TOP_SECRET]> Both teams to score";</script>',
+    b'<style>/* <![TOP_SECRET]> Both teams to score */</style>',
+    b"<![CDATA[TOP_SECRET Both teams to score]]>",
+])
+def test_legacy_declarations_and_hidden_markup_are_not_false_errors(probe, transport, hidden):
+    transport(lambda request: response(body=b"<!DOCTYPE html>" + hidden + b"<p>Full Time Result</p>"))
+    result = probe.native_probe([URL])
+    assert result["transport_ok"]
+    assert result["receipts"][0]["classification"] == "native_html_received_unverified"
+    labels = result["receipts"][0]["main_market_label_presence"]
+    assert labels["Full Time Result"] and not labels["Both teams to score"]
+    assert result["admitted_rows"] == result["writes"] == 0
+    assert "TOP_SECRET" not in json.dumps(result)
