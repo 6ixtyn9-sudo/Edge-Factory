@@ -167,7 +167,7 @@ class _PageShape(HTMLParser):
 
 def _native_receipt(response, body: bytes, complete: bool, *, context_url: str | None = None,
                     discovery_url: str | None = None, is_script: bool = False,
-                    loader_url: str | None = None) -> dict:
+                    loader_url: str | None = None, observed_at_utc: str | None = None) -> dict:
     # Default receipts contain fixed metadata/hashes only. Opt-in semantic
     # context adds a strict public-field allowlist, never raw markup. No
     # Location/Set-Cookie, body/title, arbitrary markup URLs, exception strings,
@@ -240,7 +240,8 @@ def _native_receipt(response, body: bytes, complete: bool, *, context_url: str |
         result["data_loading_discovery"] = inspect_native_data_loading(
             body, discovery_url, is_script=is_script)
     if loader_url is not None and classification == "native_html_received_unverified":
-        result["loader_state"] = inspect_native_loader_state(body, loader_url)
+        result["loader_state"] = inspect_native_loader_state(
+            body, loader_url, observed_at_utc=observed_at_utc)
     return {**result, "classification": classification,
             "transport_ok": classification in {
                 "native_html_received_unverified", "native_script_received_unverified"}}
@@ -306,7 +307,8 @@ def native_probe(urls: list[str], source: str = "betolimp", *, native_context: b
                                                context_url=url if native_context else None,
                                                discovery_url=url if native_discovery else None,
                                                is_script=is_script,
-                                               loader_url=url if native_loader else None))
+                                               loader_url=url if native_loader else None,
+                                               observed_at_utc=receipt["request_started_at_utc"]))
         except httpx.HTTPError as error:
             receipt.update({"transport_ok": False,
                             "classification": "transport_timeout" if isinstance(
