@@ -254,3 +254,103 @@ def test_malformed_html_is_sanitized_not_traceback_or_green(probe, transport):
     assert not result["transport_ok"]
     assert result["receipts"][0]["classification"] == "unparseable_html"
     assert "TOP_SECRET" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("source", [
+    "hollywoodbets", "betway", "betxchange", "sportpesa", "sportpesa-statshub",
+])
+def test_bookmaker_pages_reuse_bounded_transport_not_ingest(probe, transport, source):
+    body = (b'<script>Last meetings</script><style>Season Statistics</style>'
+            b'<nav>Head to Head Stats Hub</nav><p>Research Overall Form</p>')
+    requests, settings = transport(lambda request: response(body=body))
+    urls = list(probe.NATIVE_SOURCE_PAGES[source])
+    result = probe.native_probe(urls, source)
+    assert result["source_profile"] == source
+    assert result["network_requests"] == len(requests) == len(urls) == 2
+    assert result["admitted_rows"] == result["writes"] == 0
+    assert "unmeasured" in result["context_status"]
+    for r, request, config in zip(result["receipts"], requests, settings):
+        assert r["source_profile"] == source
+        assert r["decoded_context_row_count"] == r["decoded_observation_count"] == 0
+        assert r["context_label_presence"]["Head to Head"]
+        assert r["context_label_presence"]["Stats Hub"]
+        assert r["context_label_presence"]["Overall Form"]
+        assert not r["context_label_presence"]["Last meetings"]
+        assert not r["context_label_presence"]["Season Statistics"]
+        assert "native_context_decoding_unimplemented" in r["hold_reasons"]
+        assert r["kickoff_utc"] is r["quoted_at"] is None
+        assert config["trust_env"] is config["follow_redirects"] is False
+        assert config["timeout"].read == 15 and config["timeout"].connect == 5
+        assert request.method == "GET"
+        assert request.headers["accept-encoding"] == "identity"
+        assert not any(k in request.headers for k in ("cookie", "authorization"))
+        supplier = source == "sportpesa-statshub"
+        assert r["identified_context_supplier"] == ("sportradar" if supplier else None)
+        assert r["bookmaker_brand"] == ("sportpesa" if supplier else source)
+        assert r["content_origin"] == (
+            "third_party_bookmaker_branded_portal" if supplier else "bookmaker_public_page")
+
+
+@pytest.mark.parametrize("source", [
+    "hollywoodbets", "betway", "betxchange", "sportpesa", "sportpesa-statshub",
+])
+@pytest.mark.parametrize("mutation", [
+    "http", "credentials", "port", "fragment", "query", "newline", "other_source", "other_tenant",
+])
+def test_pinned_public_pages_validate_entire_batch(probe, transport, source, mutation):
+    requests, _ = transport(lambda request: response())
+    first, url = probe.NATIVE_SOURCE_PAGES[source]
+    bad = {
+        "http": url.replace("https://", "http://"),
+        "credentials": url.replace("https://", "https://secret@"),
+        "port": url.replace(".com/", ".com:443/").replace(".net/", ".net:443/")
+                   .replace(".co.za/", ".co.za:443/"),
+        "fragment": url + "#secret",
+        "query": url + "?token=secret",
+        "newline": url + "\n",
+        "other_source": URL,
+        "other_tenant": "https://statshub.sportradar.com/other/en/match/74319006",
+    }[mutation]
+    with pytest.raises(ValueError):
+        probe.native_probe([first, bad], source)
+    assert not requests
+
+
+@pytest.mark.parametrize("status", [302, 403, 429])
+@pytest.mark.parametrize("source", [
+    "hollywoodbets", "betway", "betxchange", "sportpesa", "sportpesa-statshub",
+])
+def test_new_sources_keep_fail_fast_and_do_not_follow_supplier_links(probe, transport, source, status):
+    requests, _ = transport(lambda request: response(status, headers={
+        "location": probe.NATIVE_SOURCE_PAGES["sportpesa-statshub"][0],
+        "set-cookie": "session=secret"}))
+    result = probe.native_probe(list(probe.NATIVE_SOURCE_PAGES[source]), source)
+    assert len(requests) == result["network_requests"] == 1
+    assert len(result["unattempted_urls"]) == 1
+    assert not result["transport_ok"]
+    assert result["receipts"][0]["decoded_context_row_count"] == 0
+    assert "session=secret" not in json.dumps(result)
+
+
+def test_unknown_profile_rejected_before_network(probe, transport):
+    requests, _ = transport(lambda request: response())
+    with pytest.raises(ValueError):
+        probe.native_probe([URL], "unknown")
+    assert not requests
+
+
+def test_non_betolimp_profile_cannot_relabel_saved_reader_input(probe):
+    with pytest.raises(SystemExit) as error:
+        probe.main(["--input", "unused.json", "--native-source", "sportpesa"])
+    assert error.value.code == 2
+
+
+def test_bookmaker_cli_keeps_native_provenance(probe, transport, capsys):
+    requests, _ = transport(lambda request: response())
+    url = probe.NATIVE_SOURCE_PAGES["sportpesa-statshub"][0]
+    assert probe.main(["--native-url", url, "--native-source", "sportpesa-statshub"]) == 0
+    output = json.loads(capsys.readouterr().out)
+    assert len(requests) == 1
+    assert output["receipts"][0]["evidence_kind"] == "native_http_response"
+    assert output["receipts"][0]["identified_context_supplier"] == "sportradar"
+    assert output["admitted_rows"] == 0
