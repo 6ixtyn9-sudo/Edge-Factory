@@ -896,10 +896,65 @@ def ticket_receipt_files(localdata, prefix, *, conflicts=False):
                    *(base / TICKET_RECEIPT_SUBDIR).glob(pattern + ".gz")])
 
 
-def ticket_receipt_bytes(path, *, raw=None):
+# Keep headroom below GitHub's 100 MiB blob limit. Parts live beside the
+# logical receipt, under the same retained/uploaded audit directory. The
+# receipt payload and its signed JSON digest are never rewritten.
+TICKET_RECEIPT_MAX_FILE_BYTES = 80 * 1024 * 1024
+_TICKET_RECEIPT_PART_BYTES = 32 * 1024 * 1024
+_TICKET_RECEIPT_PARTS_MAGIC = b"EDGEFACTORY_TICKET_RECEIPT_PARTS_V1\n"
+
+
+def _ticket_receipt_stored_bytes(path, raw, *, read_part=None):
+    """Resolve a size-bounded envelope to the ORIGINAL compressed bytes.
+
+    read_part lets committed-HEAD restore read parts from the same Git tree,
+    rather than accidentally using a different cache/worktree version.
+    """
+    import hashlib
+    import json
+    if not raw.startswith(_TICKET_RECEIPT_PARTS_MAGIC):
+        return raw
+    try:
+        if len(raw) > 1024 * 1024:
+            raise ValueError("receipt manifest too large")
+        manifest = json.loads(raw[len(_TICKET_RECEIPT_PARTS_MAGIC):])
+        if (not isinstance(manifest, dict) or type(manifest.get("schema")) is not int
+                or manifest.get("schema") != 1
+                or manifest.get("encoding") != "gzip" or path.suffix != ".gz"):
+            raise ValueError("unsupported receipt manifest")
+        parts = manifest["parts"]
+        if not isinstance(parts, list) or not 1 <= len(parts) <= 4096:
+            raise ValueError("invalid receipt parts")
+        sizes = []
+        for part in parts:
+            digest, size = part["sha256"], part["size"]
+            if (not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest)
+                    or type(size) is not int or not 0 < size <= TICKET_RECEIPT_MAX_FILE_BYTES):
+                raise ValueError("invalid receipt part metadata")
+            sizes.append(size)
+        if type(manifest["size"]) is not int or sum(sizes) != manifest["size"]:
+            raise ValueError("receipt size mismatch")
+        chunks = []
+        for part in parts:
+            # Names are derived from validated hashes, NEVER manifest paths.
+            name = path.name + ".part-" + part["sha256"]
+            chunk = read_part(name) if read_part is not None else path.with_name(name).read_bytes()
+            if len(chunk) != part["size"] or hashlib.sha256(chunk).hexdigest() != part["sha256"]:
+                raise ValueError("receipt part integrity mismatch")
+            chunks.append(chunk)
+        stored = b"".join(chunks)
+        if hashlib.sha256(stored).hexdigest() != manifest["sha256"]:
+            raise ValueError("receipt compressed digest mismatch")
+        return stored
+    except (OSError, KeyError, TypeError, ValueError) as exc:
+        raise ValueError(f"invalid multipart ticket receipt: {exc}") from exc
+
+
+def ticket_receipt_bytes(path, *, raw=None, read_part=None):
     import gzip
     import zlib
     raw = path.read_bytes() if raw is None else raw
+    raw = _ticket_receipt_stored_bytes(path, raw, read_part=read_part)
     try:
         return gzip.decompress(raw) if path.suffix == ".gz" else raw
     except (OSError, EOFError, zlib.error) as exc:
@@ -928,17 +983,72 @@ def encode_ticket_receipt(path, raw):
     return stored
 
 
-def write_ticket_receipt(path, raw):
-    """Atomically install a lossless receipt; never leave a partial final file."""
+def _ticket_receipt_storage(path, stored):
+    """Return parts first, logical receipt last; keep small gzip files as-is."""
+    import hashlib
+    import json
+    if len(stored) <= TICKET_RECEIPT_MAX_FILE_BYTES:
+        return {path: stored}
+    if path.suffix != ".gz":
+        raise ValueError("oversized receipts require canonical gzip storage")
+    files, parts = {}, []
+    width = min(_TICKET_RECEIPT_PART_BYTES, TICKET_RECEIPT_MAX_FILE_BYTES)
+    for offset in range(0, len(stored), width):
+        chunk = stored[offset:offset + width]
+        digest = hashlib.sha256(chunk).hexdigest()
+        files[path.with_name(path.name + ".part-" + digest)] = chunk
+        parts.append(dict(sha256=digest, size=len(chunk)))
+    manifest = dict(schema=1, encoding="gzip", size=len(stored),
+                    sha256=hashlib.sha256(stored).hexdigest(), parts=parts)
+    envelope = _TICKET_RECEIPT_PARTS_MAGIC + json.dumps(
+        manifest, sort_keys=True, separators=(",", ":")).encode()
+    if len(envelope) > min(TICKET_RECEIPT_MAX_FILE_BYTES, 1024 * 1024):
+        raise ValueError("receipt manifest exceeds storage limit")
+    files[path] = envelope
+    return files
+
+
+def encode_ticket_receipt_files(path, raw):
+    """Lossless storage bundle, including every part needed by cache restore."""
+    return _ticket_receipt_storage(path, encode_ticket_receipt(path, raw))
+
+
+def _write_ticket_receipt_stored(path, stored):
     import os
-    stored = encode_ticket_receipt(path, raw)
+    import tempfile
+    from pathlib import Path
+    files = _ticket_receipt_storage(path, stored)
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(path.name + ".tmp")
-    with temporary.open("wb") as handle:
-        handle.write(stored)
-        handle.flush()
-        os.fsync(handle.fileno())
-    temporary.replace(path)
+    for destination, blob in files.items():
+        if destination != path and destination.exists():
+            if destination.read_bytes() != blob:
+                raise ValueError("existing receipt part integrity mismatch")
+            continue
+        # Content-addressed parts are installed durably BEFORE the envelope.
+        # Interrupted writes leave the old complete receipt readable. Never
+        # garbage-collect old parts: they may belong to frozen/cache evidence.
+        fd, name = tempfile.mkstemp(prefix=destination.name + ".", suffix=".tmp",
+                                    dir=destination.parent)
+        try:
+            with os.fdopen(fd, "wb") as handle:
+                handle.write(blob)
+                handle.flush()
+                os.fsync(handle.fileno())
+            Path(name).replace(destination)
+            if hasattr(os, "O_DIRECTORY"):
+                directory = os.open(destination.parent, os.O_RDONLY | os.O_DIRECTORY)
+                try:
+                    os.fsync(directory)
+                finally:
+                    os.close(directory)
+        finally:
+            if os.path.exists(name):
+                os.unlink(name)
+
+
+def write_ticket_receipt(path, raw):
+    """Atomically install a lossless, Git-sized receipt without editing JSON."""
+    _write_ticket_receipt_stored(path, encode_ticket_receipt(path, raw))
 
 
 def compact_ticket_receipts(localdata):
@@ -983,6 +1093,19 @@ def compact_ticket_receipts(localdata):
             ticket_receipt_bytes(target)
             source.unlink()
             moved += 1
+    # Cached receipts were written by older releases too. Convert oversized
+    # canonical gzip files before git add, preserving even their compressed
+    # byte stream. Validate existing multipart dependencies before publication.
+    directory = Path(localdata) / TICKET_RECEIPT_SUBDIR
+    for source in sorted(directory.glob("*_decision*.json.gz")):
+        if source.stat().st_size > TICKET_RECEIPT_MAX_FILE_BYTES:
+            _write_ticket_receipt_stored(source, source.read_bytes())
+            moved += 1
+        else:
+            with source.open("rb") as handle:
+                prefix = handle.read(len(_TICKET_RECEIPT_PARTS_MAGIC))
+            if prefix == _TICKET_RECEIPT_PARTS_MAGIC:
+                _ticket_receipt_stored_bytes(source, source.read_bytes())
     return moved
 
 

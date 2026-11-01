@@ -820,3 +820,147 @@ def test_current_run_recovery_approvals_do_not_change_any_committed_financial_fi
         committed=json.loads(_git(ROOT,'show',f'HEAD:{relative}').stdout)
         working=json.loads((ROOT/relative).read_text())
         assert module._financial_fingerprint(committed)==module._financial_fingerprint(working)
+
+
+def _multipart_receipt_limits(monkeypatch):
+    from edgefactory import util
+    monkeypatch.setattr(util, 'TICKET_RECEIPT_MAX_FILE_BYTES', 4096)
+    monkeypatch.setattr(util, '_TICKET_RECEIPT_PART_BYTES', 1024)
+
+
+def _large_decision_blob(status='frozen', seed=1):
+    import random
+    return _decision_receipt_blob(status=status, exact_evidence=random.Random(seed).randbytes(9000).hex())
+
+
+def test_oversized_cached_receipt_persists_every_part_and_survives_cache_loss(tmp_path, monkeypatch):
+    import gzip
+    from edgefactory import util
+    _multipart_receipt_limits(monkeypatch)
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    remote = tmp_path / 'origin.git'
+    _git(tmp_path, 'init', '--bare', '-q', '--initial-branch=main', str(remote))
+    _git(repo, 'remote', 'add', 'origin', str(remote))
+    _git(repo, 'push', '-qu', 'origin', 'main')
+    # Emulate GitHub's per-new-blob limit at a cheap test size. The OLD seed
+    # tree can contain larger files; only newly pushed objects are checked.
+    hook = remote / 'hooks/pre-receive'
+    hook.write_text('''#!/usr/bin/env python3
+import subprocess,sys
+for line in sys.stdin:
+ old,new,ref=line.split()
+ args=['git','rev-list','--objects',new]
+ if old != '0'*40: args.append('^'+old)
+ for row in subprocess.check_output(args,text=True).splitlines():
+  oid=row.split()[0]
+  if subprocess.check_output(['git','cat-file','-t',oid],text=True).strip()=='blob':
+   if int(subprocess.check_output(['git','cat-file','-s',oid]))>4096:
+    print('oversized new blob',file=sys.stderr);sys.exit(1)
+''')
+    hook.chmod(0o755)
+    path = util.ticket_receipt_path(repo / 'localdata', 'auto_tickets_2026-10-27_decision.json')
+    path.parent.mkdir(parents=True)
+    original = _large_decision_blob()
+    stored = gzip.compress(original, mtime=123)
+    assert len(stored) > 4096
+    path.write_bytes(stored)  # an older runner's cached single gzip file
+    financial = repo / 'localdata/auto_tickets_state.json'
+    financial_raw = json.dumps(dict(bank=123, history=[], open_slips=[], frozen_by_date={}), indent=2).encode()
+    financial.write_bytes(financial_raw)
+    result = _persistence_module().persist_localdata(repo, run_id='multipart-test')
+    assert result['status'] == 'pushed'
+    assert util._ticket_receipt_stored_bytes(path, path.read_bytes()) == stored
+    assert financial.read_bytes() == financial_raw
+    fresh = tmp_path / 'cold-clone'
+    _git(tmp_path, 'clone', '-q', str(remote), str(fresh))
+    clone_path = fresh / path.relative_to(repo)
+    assert util.ticket_receipt_bytes(clone_path) == original
+    assert (fresh / financial.relative_to(repo)).read_bytes() == financial_raw
+    assert all(p.stat().st_size <= 4096 for p in clone_path.parent.iterdir() if p.is_file())
+    # No cache or artifact dependency: HEAD supplies every referenced byte.
+    _persistence_module().restore_committed_localdata(fresh)
+    assert util.ticket_receipt_bytes(clone_path) == original
+    assert util._ticket_receipt_stored_bytes(clone_path, clone_path.read_bytes()) == stored
+    assert (fresh / financial.relative_to(repo)).read_bytes() == financial_raw
+
+
+@pytest.mark.parametrize('authorized', [False, True])
+def test_multipart_draft_upgrade_requires_independent_financial_freeze(tmp_path, monkeypatch, authorized):
+    from edgefactory import util
+    _multipart_receipt_limits(monkeypatch)
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    path = util.ticket_receipt_path(repo / 'localdata', 'auto_tickets_2026-10-27_decision.json')
+    draft, frozen = _large_decision_blob(status='draft'), _large_decision_blob(seed=2)
+    util.write_ticket_receipt(path, draft)
+    _git(repo, 'add', 'localdata')
+    _git(repo, 'commit', '-qm', 'committed multipart draft')
+    util.write_ticket_receipt(path, frozen)
+    finance = {'localdata/auto_tickets_state.json': json.dumps(dict(
+        frozen_by_date={'2026-10-27': {'frozen_at': '2026-10-27T09:00:00+02:00'}})).encode()} if authorized else {}
+    blobs = _persistence_module()._retain_ticket_decisions(repo, finance)
+    assert util.ticket_receipt_bytes(path, raw=blobs[str(path.relative_to(repo))],
+        read_part=lambda name: blobs[str(path.with_name(name).relative_to(repo))]) == (frozen if authorized else draft)
+    conflicts = util.ticket_receipt_files(repo / 'localdata', 'auto_tickets', conflicts=True)
+    assert bool(conflicts) is not authorized
+    if conflicts:
+        assert util.ticket_receipt_bytes(conflicts[0]) == frozen
+
+
+@pytest.mark.parametrize('cached', ['divergent', 'missing_part', 'corrupt_part'])
+def test_committed_multipart_freeze_restores_from_head_and_retains_conflicts(
+        tmp_path, monkeypatch, cached):
+    from edgefactory import util
+    _multipart_receipt_limits(monkeypatch)
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    path = util.ticket_receipt_path(repo / 'localdata', 'auto_tickets_2026-10-27_decision.json')
+    original = _large_decision_blob()
+    util.write_ticket_receipt(path, original)
+    financial = repo / 'localdata/auto_tickets_state.json'
+    financial_raw = json.dumps(dict(bank=123, history=[], open_slips=[], frozen_by_date={}), indent=2).encode()
+    financial.write_bytes(financial_raw)
+    _git(repo, 'add', 'localdata')
+    _git(repo, 'commit', '-qm', 'committed frozen multipart evidence')
+    if cached == 'divergent':
+        util.write_ticket_receipt(path, _large_decision_blob(seed=2))
+    else:
+        part = next(path.parent.glob(path.name + '.part-*'))
+        if cached == 'missing_part':
+            part.unlink()
+        else:
+            part.write_bytes(b'damaged bytes retained as evidence')
+    _persistence_module().restore_committed_localdata(repo)
+    assert util.ticket_receipt_bytes(path) == original
+    assert financial.read_bytes() == financial_raw
+    conflicts = util.ticket_receipt_files(repo / 'localdata', 'auto_tickets', conflicts=True)
+    assert len(conflicts) == 1
+    if cached == 'divergent':
+        assert util.ticket_receipt_bytes(conflicts[0]) == _large_decision_blob(seed=2)
+    if cached == 'corrupt_part':
+        backups = list(path.parent.glob('receipt_part_conflict_*.bin.gz'))
+        assert backups and util.ticket_receipt_bytes(backups[0]) == b'damaged bytes retained as evidence'
+
+
+def test_persistence_refuses_missing_part_before_staging_financial_changes(tmp_path, monkeypatch):
+    from edgefactory import util
+    _multipart_receipt_limits(monkeypatch)
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    path = util.ticket_receipt_path(repo / 'localdata', 'auto_tickets_2026-10-27_decision.json')
+    util.write_ticket_receipt(path, _large_decision_blob())
+    next(path.parent.glob(path.name + '.part-*')).unlink()
+    financial = repo / 'localdata/auto_tickets_state.json'
+    financial.write_text('{"bank":123}')
+    head = _git(repo, 'rev-parse', 'HEAD').stdout
+    result = _persistence_module().persist_localdata(repo)
+    assert result['status'] == 'not_persisted'
+    assert 'storage validation failed' in result['reason']
+    assert _git(repo, 'rev-parse', 'HEAD').stdout == head
+    assert not _git(repo, 'diff', '--cached', '--name-only').stdout
+    assert financial.read_text() == '{"bank":123}'
