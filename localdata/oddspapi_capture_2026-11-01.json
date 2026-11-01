@@ -1,13 +1,7 @@
 {
-  "added": 5261,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Forli FC",
-      "fixture_id": "id1002655673294036",
-      "home": "Campobasso FC"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-01",
     "keys": 3,
@@ -16,211 +10,16 @@
     "remaining_today": 0,
     "spent_today": 25
   },
-  "budget_deferred": 199,
-  "captured_at": "2026-11-01T13:13:15+00:00",
+  "captured_at": "2026-11-01T16:16:07+00:00",
   "date": "2026-11-01",
   "errors": [],
-  "excluded_srl_fixtures": 23,
-  "fixtures": 1020,
-  "future_slate_fixtures": 1,
+  "fixtures": 0,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 405,
-  "markets": {
-    "1x2": 608,
-    "btts": 286,
-    "ou_0.5": 157,
-    "ou_0.75": 26,
-    "ou_1": 35,
-    "ou_1.25": 30,
-    "ou_1.5": 300,
-    "ou_1.75": 72,
-    "ou_2": 122,
-    "ou_2.25": 130,
-    "ou_2.5": 372,
-    "ou_2.75": 140,
-    "ou_3": 152,
-    "ou_3.25": 124,
-    "ou_3.5": 318,
-    "ou_3.75": 32,
-    "ou_4": 50,
-    "ou_4.25": 28,
-    "ou_4.5": 187,
-    "ou_4.75": 12,
-    "ou_5": 20,
-    "ou_5.5": 106,
-    "ou_5.75": 10,
-    "ou_6": 10,
-    "ou_6.25": 10,
-    "ou_6.5": 80,
-    "ou_7.5": 23,
-    "ou_8.5": 6,
-    "tt_away_0.5": 220,
-    "tt_away_0.75": 18,
-    "tt_away_1": 24,
-    "tt_away_1.25": 24,
-    "tt_away_1.5": 246,
-    "tt_away_1.75": 18,
-    "tt_away_2": 24,
-    "tt_away_2.25": 2,
-    "tt_away_2.5": 211,
-    "tt_away_2.75": 16,
-    "tt_away_3.5": 66,
-    "tt_away_4.5": 4,
-    "tt_away_5.5": 1,
-    "tt_home_0.5": 216,
-    "tt_home_0.75": 18,
-    "tt_home_1": 24,
-    "tt_home_1.25": 18,
-    "tt_home_1.5": 250,
-    "tt_home_1.75": 18,
-    "tt_home_2": 24,
-    "tt_home_2.25": 18,
-    "tt_home_2.5": 216,
-    "tt_home_2.75": 2,
-    "tt_home_3": 16,
-    "tt_home_3.5": 73,
-    "tt_home_4.5": 44,
-    "tt_home_5.5": 4
-  },
-  "markets_source": "cache",
-  "matched": 1,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 2,
-    "market_id_unknown": 1214,
-    "market_inactive": 1,
-    "market_unsupported_clean_sheet": 80,
-    "market_unsupported_corners": 668,
-    "market_unsupported_correct_score": 284,
-    "market_unsupported_double_chance": 188,
-    "market_unsupported_draw_no_bet": 111,
-    "market_unsupported_handicap": 1208,
-    "market_unsupported_odd_even": 315,
-    "market_unsupported_period": 4720,
-    "market_unsupported_win_to_nil": 148,
-    "outcome_inactive": 417
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 2,
-      "market_inactive": 1,
-      "outcome_inactive": 417
-    },
-    "loss_or_diagnosis": {
-      "market_id_unknown": 1214,
-      "market_unsupported_clean_sheet": 80,
-      "market_unsupported_corners": 668,
-      "market_unsupported_correct_score": 284,
-      "market_unsupported_double_chance": 188,
-      "market_unsupported_draw_no_bet": 111,
-      "market_unsupported_handicap": 1208,
-      "market_unsupported_odd_even": 315,
-      "market_unsupported_period": 4720,
-      "market_unsupported_win_to_nil": 148
-    }
-  },
-  "pending_fixtures": 470,
-  "quoted_fixtures": [
-    {
-      "away": "Forli FC",
-      "fixture_id": "id1002655673294036",
-      "home": "Campobasso FC"
-    }
-  ],
-  "reserved_requests": 0,
-  "rows": 5261,
+  "markets": {},
+  "matched": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 18,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 1,
-  "slate_provider_overlap_fixtures": 4,
-  "slate_unmatched_fixtures": [
-    {
-      "away": "Chelsea W",
-      "home": "Charlton Athletic W",
-      "league": "Women's Super League",
-      "normalized_pair": "charlton athletic w|chelsea w"
-    },
-    {
-      "away": "Zemun",
-      "home": "Partizan",
-      "league": "Super Liga",
-      "normalized_pair": "partizan|zemun"
-    },
-    {
-      "away": "Moss",
-      "home": "Str\u00f8msgodset",
-      "league": "1. Division",
-      "normalized_pair": "moss|stromsgodset"
-    },
-    {
-      "away": "Crystal Palace W",
-      "home": "Brighton W",
-      "league": "Women's Super League",
-      "normalized_pair": "brighton w|crystal palace w"
-    },
-    {
-      "away": "Asteras Tripolis",
-      "home": "PAOK",
-      "league": "Super League",
-      "normalized_pair": "asteras tripolis|paok"
-    },
-    {
-      "away": "Boto\u015fani",
-      "home": "Universitatea Craiova",
-      "league": "Superliga",
-      "normalized_pair": "botosani|universitatea craiova"
-    },
-    {
-      "away": "Angers SCO",
-      "home": "Olympique Lyonnais",
-      "league": "Ligue 1",
-      "normalized_pair": "angers sco|olympique lyonnais"
-    },
-    {
-      "away": "\u00d6rgryte",
-      "home": "Elfsborg",
-      "league": "Allsvenskan",
-      "normalized_pair": "elfsborg|orgryte"
-    },
-    {
-      "away": "Haugesund",
-      "home": "\u00c5sane",
-      "league": "1. Division",
-      "normalized_pair": "asane|haugesund"
-    },
-    {
-      "away": "Cagliari",
-      "home": "Lazio",
-      "league": "Serie A",
-      "normalized_pair": "cagliari|lazio"
-    },
-    {
-      "away": "Dunajsk\u00e1 Streda",
-      "home": "Bansk\u00e1 Bystrica",
-      "league": "Nik\u00e9 Liga",
-      "normalized_pair": "banska bystrica|dunajska streda"
-    },
-    {
-      "away": "CD Nacional",
-      "home": "FC Arouca",
-      "league": "Liga Portugal Betclic",
-      "normalized_pair": "arouca|cd nacional"
-    },
-    {
-      "away": "Vasco da Gama",
-      "home": "Palmeiras",
-      "league": "Copa do Brasil",
-      "normalized_pair": "palmeiras|vasco da gama"
-    },
-    {
-      "away": "Be\u015fikta\u015f JK",
-      "home": "Kas\u0131mpa\u015fa",
-      "league": "Trendyol Super Lig",
-      "normalized_pair": "besiktas jk|kasimpasa"
-    }
-  ],
   "source": "oddspapi_odds",
   "status": "budget"
 }
