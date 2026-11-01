@@ -257,3 +257,27 @@ def test_static_discovery_limits_and_fixed_asset_binding():
     for url in (URL+'?T=SECRET','https://evil.example/assets/app.js'):
         with pytest.raises(ValueError):inspect_native_data_loading(b'',url,is_script=True)
     with pytest.raises(ValueError):inspect_native_data_loading(b'x'*(2*1024*1024+1),URL)
+
+
+def test_observed_feed_operations_and_config_references_export_no_config_values():
+    from edgefactory.sources.bookmaker_context_snapshot import inspect_native_data_loading
+    # Selected code-like contracts, NOT the native JS body or a feed response.
+    body=b'''const cfg={fishnetUrl:"https://widgets.fn.sportradar.com",fishnetClientAlias:"SECRET",
+      fishnetToken:"SECRET"}; window.cctxInitValues={};
+      function tables(id){return r("stats_match_tableslice",id)}
+      function recent(id){return r("stats_team_lastxextended",id)}
+      function fixtures(id){return r("stats_season_fixtures2",id)}'''
+    r=inspect_native_data_loading(body,'https://statshub.sportradar.com/assets/feeds-example.js',is_script=True)
+    assert r['runtime_config_reference_hints']==['cctxInitValues','fishnetUrl','fishnetClientAlias','fishnetToken']
+    assert r['api_operation_reference_hints']==['stats_match_tableslice','stats_team_lastxextended','stats_season_fixtures2']
+    assert 'SECRET' not in json.dumps(r)
+    assert r['api_requests_made']==r['admitted_rows']==0 and not r['javascript_executed']
+    assert r['status']=='inspected_not_api_verified'
+
+
+def test_static_discovery_asset_reference_limit_is_fail_closed():
+    from edgefactory.sources.bookmaker_context_snapshot import inspect_native_data_loading
+    body=''.join(f'<link rel="modulepreload" href="/assets/vendor{i}.js">' for i in range(257)).encode()
+    r=inspect_native_data_loading(body,URL)
+    assert r['status']=='unsupported_or_malformed_static_payload'
+    assert r['script_asset_urls']==[]

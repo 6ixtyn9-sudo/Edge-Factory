@@ -546,6 +546,15 @@ _DISCOVERY_OPERATIONS = (
     "match_info_statshub", "stats_match_get", "stats_match_head2head",
     "stats_team_lastx", "stats_team_nextx", "stats_team_versus",
     "stats_season_tables", "config_tree_mini", "event_get",
+    # Observed in the page-referenced feeds bundle, not guessed API routes.
+    "stats_match_form", "stats_match_tableslice", "stats_team_versusrecent",
+    "stats_team_lastxextended", "stats_uniquetournament_fixtures",
+    "stats_season_teamfixtures", "stats_season_fixtures2", "stats_season_meta",
+    "livescore_season_fixtures",
+)
+_DISCOVERY_CONFIG_REFERENCES = (
+    "cctxInitValues", "__reactRouterContext", "__reactRouterManifest",
+    "fishnetUrl", "fishnetClientAlias", "fishnetToken",
 )
 _DISCOVERY_FIELDS = frozenset({
     "data", "props", "pageProps", "state", "events", "matches", "teams",
@@ -559,6 +568,19 @@ def validate_discovery_asset_url(url: str) -> str:
     if not isinstance(url, str) or _SCRIPT_URL.fullmatch(url) is None:
         raise ValueError("unsupported public script asset")
     return url
+
+
+def _rank_discovery_assets(assets: list[str]) -> list[str]:
+    """Prioritize observed feed/context assets, never manufacture a hashed URL.
+
+    A field run spent both asset GETs on manifest/jsx-runtime while the document
+    referenced feeds and root farther down the list. Rank before truncation so
+    reference order cannot hide those modules beyond the sixteen-item receipt.
+    Stable fallback preserves reference order; the HTTP budget remains three.
+    """
+    priority = {"feeds": 0, "root": 1, "cctx": 2}
+    return sorted(dict.fromkeys(assets), key=lambda url: priority.get(
+        url.rsplit("/", 1)[-1].split("-", 1)[0], 3))
 
 
 class _DataLoadingHTML(HTMLParser):
@@ -590,6 +612,8 @@ class _DataLoadingHTML(HTMLParser):
             if _SCRIPT_URL.fullmatch(target):
                 dest = self.assets if tag == "script" else self.preloads
                 if target not in dest:
+                    if len(self.assets) + len(self.preloads) >= 256:
+                        raise ValueError("discovery asset reference limit")
                     dest.append(target)
             else:
                 self.unsupported_assets += 1
@@ -616,6 +640,9 @@ def inspect_native_data_loading(body: bytes, source_url: str, *, is_script: bool
               "status": "inspected_not_api_verified",
               "coverage_status": "static_references_only_runtime_xhr_not_observed",
               "script_asset_urls": [],
+              "asset_selection_policy": "observed_feeds_root_context_then_reference_order",
+              "referenced_script_asset_count": 0,
+              "runtime_config_reference_hints": [],
               "unsupported_asset_reference_count": 0, "embedded_json_shapes": [],
               "api_operation_reference_hints": [], "sportradar_host_reference_hints": [],
               "gismo_reference_present": False,
@@ -631,13 +658,17 @@ def inspect_native_data_loading(body: bytes, source_url: str, *, is_script: bool
             parser.close()
             if parser.current is not None:
                 raise ValueError("unclosed script")
-            result["script_asset_urls"] = list(dict.fromkeys(parser.assets + parser.preloads))[:16]
+            ranked = _rank_discovery_assets(parser.assets + parser.preloads)
+            result["referenced_script_asset_count"] = len(ranked)
+            result["script_asset_urls"] = ranked[:16]
             result["unsupported_asset_reference_count"] = parser.unsupported_assets
             scripts = parser.scripts
         # Only script text, never a link/menu labelled with a supposed endpoint.
         combined = "\n".join(s["text"] for s in scripts)
         result["api_operation_reference_hints"] = [op for op in _DISCOVERY_OPERATIONS
             if re.search(r"\b" + re.escape(op) + r"\b", combined)]
+        result["runtime_config_reference_hints"] = [name for name in _DISCOVERY_CONFIG_REFERENCES
+            if re.search(r"\b" + re.escape(name) + r"\b", combined)]
         result["sportradar_host_reference_hints"] = sorted(set(re.findall(
             r"https://((?:[A-Za-z0-9-]+\.)*sportradar\.com)(?=[/\s\"'?:]|$)", combined)))[:8]
         result["gismo_reference_present"] = bool(re.search(r"\bgismo\b", combined))
