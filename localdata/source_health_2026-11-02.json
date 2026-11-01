@@ -21,14 +21,14 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 3,
         "selection_unmapped": 4
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -56,7 +56,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-02' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -152,8 +152,8 @@
       "op_matched": 0,
       "op_raw": 0,
       "op_usable": 0,
-      "reason": null,
-      "status": "absent"
+      "reason": "http_200_zero_rows_after_parse",
+      "status": "empty"
     },
     "pinnapi_odds": {
       "auth_attempts": [
@@ -177,11 +177,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 16907
+        "out_of_window": 18387
       },
       "pa_matched": 0,
-      "pa_raw": 941,
-      "pa_scored": 16907,
+      "pa_raw": 1029,
+      "pa_scored": 18387,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -231,33 +231,30 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 7,
-        "board_league_count": 5,
+        "board_fixtures": 6,
+        "board_league_count": 4,
         "board_leagues": {
-          "argentina_-_primera_nacional": 61,
-          "brazil_-_serie_b": 39,
-          "chile_-_primera_division": 20,
-          "el_salvador_-_primera_division": 61,
-          "usa_-_major_league_soccer": 19
+          "argentina_-_primera_division": 171,
+          "mexico_-_liga_mx_women": 23,
+          "venezuela_-_primera": 2,
+          "venezuela_-_primera_division": 4
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 13,
+        "board_team_count": 11,
         "board_team_names": {
-          "Austin FC": 14,
-          "CD Cacahuatique": 61,
-          "CD Inca": 61,
-          "Colon": 61,
-          "Defensores de Belgrano": 61,
-          "Juventude": 39,
-          "LA Galaxy": 14,
-          "Nublense": 20,
-          "O Higgins": 11,
-          "OHiggins": 9,
-          "Real Salt Lake": 5,
-          "San Jose Earthquakes": 5,
-          "Vila Nova": 39
+          "Caracas": 6,
+          "Club Tijuana (W)": 21,
+          "Cruz Azul (W)": 21,
+          "Cruz Azul [W]": 2,
+          "Estudiantes": 145,
+          "Estudiantes La Plata": 26,
+          "Instituto": 145,
+          "Instituto Cordoba": 26,
+          "Monagas": 4,
+          "Monagas SC": 2,
+          "Tijuana Caliente [W]": 2
         },
         "board_truncated": false,
         "card_fixture_count": 0,
