@@ -354,3 +354,20 @@ def test_bookmaker_cli_keeps_native_provenance(probe, transport, capsys):
     assert output["receipts"][0]["evidence_kind"] == "native_http_response"
     assert output["receipts"][0]["identified_context_supplier"] == "sportradar"
     assert output["admitted_rows"] == 0
+
+
+@pytest.mark.parametrize('event', ['73346090','73346084','73293298','73293300','72478680'])
+def test_discovered_public_match_routes_not_limited_to_two_example_events(probe,transport,event):
+    url='https://statshub.sportradar.com/sportpesa/en/match/'+event
+    requests,_=transport(lambda request: response())
+    result=probe.native_probe([url], 'sportpesa-statshub')
+    assert len(requests)==result['network_requests']==1
+    assert result['receipts'][0]['identified_context_supplier']=='sportradar'
+    assert result['receipts'][0]['decoded_context_row_count']==result['admitted_rows']==0
+
+
+def test_whole_slate_does_not_raise_native_three_url_budget(probe,transport):
+    requests,_=transport(lambda request: response())
+    urls=['https://statshub.sportradar.com/sportpesa/en/match/'+str(73346090+i) for i in range(40)]
+    with pytest.raises(ValueError): probe.native_probe(urls,'sportpesa-statshub')
+    assert not requests
