@@ -719,3 +719,28 @@ def test_loader_payload_evidence_survives_cli_without_values_or_extra_requests(p
     assert loader['fixture_binding_status']=='not_verified' and loader['kickoff_utc'] is None
     assert 'DO_NOT_PRINT' not in text and '2026-11-01T10:00:00Z' not in text
     assert '75879092' not in json.dumps(evidence)
+
+
+def test_loader_fixture_candidate_uses_capture_clock_and_makes_only_one_get(probe,transport,capsys):
+    import importlib.util
+    spec=importlib.util.spec_from_file_location(
+        'loader_fixture_contract',Path(__file__).with_name('test_bookmaker_loader_fixture_candidate.py'))
+    contract=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(contract)
+    payload={'loaderData':{'root':{'data':contract.envelope(7),
+                                 'cctx':{'fishnetToken':contract.SECRET}}}}
+    body=('<script type="application/json">'+json.dumps(payload)+'</script>').encode()
+    requests,_=transport(lambda q: response(body=body))
+    assert probe.main(['--native-source','sportpesa-statshub','--native-url',DISCOVERY_URL,
+                       '--native-loader'])==0
+    text=capsys.readouterr().out
+    r=json.loads(text)
+    loader=r['receipts'][0]['loader_state']
+    candidate=loader['fixture_candidate']
+    assert len(requests)==r['network_requests']==1
+    assert candidate['candidate_fixture_count']==1 and not candidate['pre_match_candidate']
+    assert candidate['fixture']['source_status']=='second_half'
+    assert candidate['fixture']['observed_at_utc']==r['receipts'][0]['request_started_at_utc']
+    assert 'source_status_not_pre_match' in candidate['hold_reasons']
+    assert r['admitted_rows']==r['writes']==loader['decoded_context_row_count']==0
+    assert contract.SECRET not in text
