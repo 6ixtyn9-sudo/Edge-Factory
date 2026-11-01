@@ -705,12 +705,27 @@ def inspect_native_data_loading(body: bytes, source_url: str, *, is_script: bool
 
 
 # React Router's documented StreamTransfer framing and vendored turbo-stream v2
-# JSON reference format. This deliberately supports only the JSON-valued subset:
+# JSON reference format. Nonfinite values/holes remain opaque, not numeric defaults:
 # https://github.com/remix-run/react-router/tree/4e6ff03752ac96d0de3e8052d9d9ba3037e45b6d/packages/react-router/vendor/turbo-stream-v2
 # No JavaScript evaluation, constructors, plugins, promises, cycles or HTTP replay.
 _LOADER_MAX_BYTES = 512 * 1024
 _LOADER_MAX_NODES = 40000
 _LOADER_UNDEFINED = object()
+# Stock v2 wire sentinels, also observed in the page's shipped client decoder.
+# Preserve unavailable/nonfinite values distinctly; NEVER substitute 0 or null.
+_LOADER_HOLE = object()
+_LOADER_NAN = object()
+_LOADER_NEGATIVE_INFINITY = object()
+_LOADER_POSITIVE_INFINITY = object()
+_LOADER_SPECIAL_REFERENCES = {
+    -2: _LOADER_NAN, -3: _LOADER_NEGATIVE_INFINITY,
+    -6: _LOADER_POSITIVE_INFINITY,
+}
+_LOADER_SPECIAL_NAMES = {
+    id(_LOADER_UNDEFINED): "undefined", id(_LOADER_HOLE): "array_hole",
+    id(_LOADER_NAN): "nan", id(_LOADER_NEGATIVE_INFINITY): "negative_infinity",
+    id(_LOADER_POSITIVE_INFINITY): "positive_infinity",
+}
 _LOADER_ENQUEUE = re.compile(
     r"window\s*\.\s*__reactRouterContext\s*\.\s*streamController\s*\.\s*enqueue\s*\(")
 _LOADER_KNOWN_ORIGINS = frozenset({
@@ -720,7 +735,11 @@ _LOADER_KNOWN_ORIGINS = frozenset({
 
 
 class _LoaderReject(ValueError):
-    """Fixed diagnostic enum only; never constructed from source text."""
+    """Fixed diagnostic enums only; never constructed from source text."""
+
+    def __init__(self, status, reference_failure_kind=None):
+        super().__init__(status)
+        self.reference_failure_kind = reference_failure_kind
 
 
 def _loader_pairs(pairs):
@@ -767,13 +786,19 @@ def _unpack_loader_v2(values):
         if edges > 100000 or depth > 64:
             raise _LoaderReject("loader_structure_limit")
         if type(index) is not int:
-            raise _LoaderReject("invalid_reference")
+            raise _LoaderReject("invalid_reference", "noninteger_reference")
         if index == -5:
             return None
         if index == -7:
             return _LOADER_UNDEFINED
+        if index == -4:
+            return -0.0
+        if index in _LOADER_SPECIAL_REFERENCES:
+            return _LOADER_SPECIAL_REFERENCES[index]
         if not 0 <= index < len(values):
-            raise _LoaderReject("invalid_reference")
+            reason = ("array_hole_outside_array" if index == -1 else
+                      "unknown_negative_reference" if index < 0 else "reference_out_of_range")
+            raise _LoaderReject("invalid_reference", reason)
         if index in active:
             raise _LoaderReject("cyclic_reference_graph")
         if index in memo:
@@ -792,7 +817,10 @@ def _unpack_loader_v2(values):
         elif isinstance(node, list):
             if node and isinstance(node[0], str):
                 raise _LoaderReject("unsupported_tagged_or_deferred_value")
-            result = [resolve(ref, depth + 1) for ref in node]
+            # HOLE is valid only in array slots. Distinct from undefined/null,
+            # retaining positions without creating false zero-valued statistics.
+            result = [_LOADER_HOLE if type(ref) is int and ref == -1 else resolve(ref, depth + 1)
+                      for ref in node]
         else:
             result = node
         active.remove(index)
@@ -830,12 +858,18 @@ def _summarize_loader_state(state):
     language_bound = context.get("language") == "en"
     counts = dict.fromkeys(("doc0_data_envelopes", "match", "teams", "results", "standings", "tables", "queries"), 0)
     stack, seen = [(loaders, 0)], set()
+    specials = dict.fromkeys((*_LOADER_SPECIAL_NAMES.values(), "negative_zero"), 0)
     nodes = 0
     while stack:
         node, depth = stack.pop()
         nodes += 1
         if nodes > 100000 or depth > 64:
             raise _LoaderReject("loader_structure_limit")
+        special = _LOADER_SPECIAL_NAMES.get(id(node))
+        if special:
+            specials[special] += 1
+        elif isinstance(node, float) and node == 0 and math.copysign(1, node) < 0:
+            specials["negative_zero"] += 1
         if not isinstance(node, (dict, list)) or id(node) in seen:
             continue
         seen.add(id(node))
@@ -856,7 +890,7 @@ def _summarize_loader_state(state):
                 "client_alias_has_supported_syntax": bool(alias_valid),
                 "token_present_nonempty_text": token_present,
                 "syntactically_complete": bool(origin and alias_valid and token_present and brand_bound and language_bound)},
-            "payload_structure_counts": counts}
+            "payload_structure_counts": counts, "wire_special_value_counts": specials}
 
 
 def inspect_native_loader_state(body: bytes, source_url: str) -> dict:
@@ -936,6 +970,10 @@ def inspect_native_loader_state(body: bytes, source_url: str) -> dict:
         return {**result, **summary, "status": "decoded_supported_loader_state",
                 "decoded_loader_state_count": 1}
     except _LoaderReject as error:
-        return {**result, "status": str(error)}
+        failure = {**result, "status": str(error)}
+        if error.reference_failure_kind is not None:
+            # Category only, never an index, field name, value or source snippet.
+            failure["reference_failure_kind"] = error.reference_failure_kind
+        return failure
     except (ValueError, UnicodeError, RecursionError, AssertionError):
         return {**result, "status": "invalid_or_unsupported_loader_serialization"}
