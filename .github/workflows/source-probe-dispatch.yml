@@ -1,11 +1,14 @@
 name: Bounded source interrogation probe
+
 on:
   workflow_dispatch:
     inputs:
       probe:
+        description: 'Probe to run; betolimp also supports the other bookmaker profiles'
         required: true
         type: choice
         options:
+          - betolimp
           - pinnapi
           - betminer
           - boggio
@@ -13,20 +16,25 @@ on:
           - oddspapi_markets
           - bzzoiro_odds
           - theoddsapi_events
+
       date:
-        description: 'Optional date; passed ONLY to date-capable probes (betminer, oddspapi_markets, bzzoiro_odds, theoddsapi_events)'
+        description: 'Optional date; used only by betminer, oddspapi_markets, bzzoiro_odds and theoddsapi_events'
         required: false
         type: string
+
       extra_args:
-        description: 'Optional extra CLI args appended verbatim (e.g. --verify-keys or --endpoint h2h --match-id 12345)'
+        description: 'Bookmakers: --native-source PROFILE --native-url URL; saved context: --context-input FILE --card FILE'
         required: false
         type: string
+
 permissions:
   contents: read
+
 jobs:
   probe:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+
     env:
       PINNAPI_KEY: ${{ inputs.probe == 'pinnapi' && secrets.PINNAPI_KEY || '' }}
       RAPIDAPI_KEY: ${{ (inputs.probe == 'betminer' || inputs.probe == 'boggio') && secrets.RAPIDAPI_KEY || '' }}
@@ -35,10 +43,13 @@ jobs:
       ODDSPAPI_API_KEYS: ${{ inputs.probe == 'oddspapi_markets' && secrets.ODDSPAPI_API_KEYS || '' }}
       BZZOIRO_TOKEN: ${{ inputs.probe == 'bzzoiro_odds' && secrets.BZZOIRO_TOKEN || '' }}
       ODDS_API_KEYS: ${{ inputs.probe == 'theoddsapi_events' && secrets.ODDS_API_KEYS || '' }}
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Install existing repo dependencies
         run: python3 -m pip install --quiet -r requirements.txt
+
       - name: Run existing bounded probe
         env:
           PROBE: ${{ inputs.probe }}
@@ -46,8 +57,20 @@ jobs:
           EXTRA: ${{ inputs.extra_args }}
         run: |
           ARGS=""
+
           case "$PROBE" in
             betminer|oddspapi_markets|bzzoiro_odds|theoddsapi_events)
-              [ -n "$DATE_IN" ] && ARGS="--date $DATE_IN" ;;
+              if [ -n "$DATE_IN" ]; then
+                ARGS="--date $DATE_IN"
+              fi
+              ;;
           esac
+
+          if [ "$PROBE" = "betolimp" ] && [ -z "$EXTRA" ]; then
+            echo "The bookmaker probe requires extra_args."
+            echo "Native example: --native-source sportpesa-statshub --native-url https://statshub.sportradar.com/sportpesa/en/match/72478680"
+            echo "Offline example: --context-input tests/fixtures/bookmaker_context_reader_2026-11-01.json --card localdata/picks_today.json"
+            exit 2
+          fi
+
           PYTHONPATH=src python3 "scripts/probe_${PROBE}.py" $ARGS $EXTRA
