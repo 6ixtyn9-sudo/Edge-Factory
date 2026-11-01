@@ -23,8 +23,8 @@ from typing import Any
 # The workflow invokes this script directly without PYTHONPATH.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from edgefactory.util import (ticket_receipt_files, ticket_receipt_path, ticket_receipt_bytes,
-                              compact_ticket_receipts, write_ticket_receipt, encode_ticket_receipt,
-                              read_ticket_receipt, freeze_timestamp_matches)
+                              compact_ticket_receipts, write_ticket_receipt,
+                              read_ticket_receipt, freeze_timestamp_matches, encode_ticket_receipt_files)
 
 APPEND_ONLY_JSONL_IDS = {
     "localdata/phase5_shadow/rows.jsonl": "row_id",
@@ -631,9 +631,32 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
                 # legacy JSON and an untracked gzip alias survives git clean.
                 # An authorized cached freeze below may upgrade only a draft.
                 if head_blob is not None:
-                    head_raw = ticket_receipt_bytes(repo / head_relative, raw=head_blob)
-                    retained.setdefault(canonical, encode_ticket_receipt(repo / canonical, head_raw))
-                candidate = json.loads(ticket_receipt_bytes(path))
+                    head_files = {}
+                    def head_part(name):
+                        part = str(Path(head_relative).with_name(name))
+                        result = _run(repo, "show", f"HEAD:{part}")
+                        if result.returncode != 0:
+                            raise ValueError(f"missing committed receipt part: {part}")
+                        head_files[part] = result.stdout
+                        return result.stdout
+                    head_raw = ticket_receipt_bytes(repo / head_relative, raw=head_blob,
+                                                    read_part=head_part)
+                    if head_relative == canonical:
+                        # Keep the original compressed stream AND envelope,
+                        # not a recompression dependent on this runner's zlib.
+                        head_files[canonical] = head_blob
+                        for destination, blob in head_files.items():
+                            retained.setdefault(destination, blob)
+                    else:
+                        for destination, blob in encode_ticket_receipt_files(repo / canonical, head_raw).items():
+                            retained.setdefault(destination.relative_to(repo).as_posix(), blob)
+                cached_parts = {}
+                def cached_part(name):
+                    part = path.with_name(name)
+                    blob = part.read_bytes()
+                    cached_parts[part.relative_to(repo).as_posix()] = blob
+                    return blob
+                candidate = json.loads(ticket_receipt_bytes(path, raw=cached, read_part=cached_part))
                 digest = candidate.pop("sha256")
                 encoded = json.dumps(candidate, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
                 if hashlib.sha256(encoded).hexdigest() != digest:
@@ -659,20 +682,41 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
                     if not freeze_timestamp_matches(freeze.get("frozen_at"), candidate["context"]["build_at"]):
                         raise ValueError("cached receipt is not the independently retained financial freeze")
                 if canonical in retained:
-                    previous = json.loads(ticket_receipt_bytes(repo / canonical, raw=retained[canonical]))
+                    previous = json.loads(ticket_receipt_bytes(
+                        repo / canonical, raw=retained[canonical],
+                        read_part=lambda name: retained[str(Path(canonical).with_name(name))]))
                     if previous.get("status") == "frozen":
                         if candidate.get("status") != "frozen":
                             continue
                         if previous.get("sha256") != digest:
                             raise ValueError("divergent cached frozen decision receipts")
-                retained[canonical] = encode_ticket_receipt(repo / canonical, ticket_receipt_bytes(path))
+                        continue  # identical evidence cannot rewrite HEAD's frozen storage
+                if relative == canonical:
+                    retained.update(cached_parts)
+                    retained[canonical] = cached
+                else:
+                    for destination, blob in encode_ticket_receipt_files(
+                            repo / canonical, ticket_receipt_bytes(path)).items():
+                        retained[destination.relative_to(repo).as_posix()] = blob
             except (OSError, EOFError, ValueError, KeyError, TypeError, AttributeError) as exc:
                 # Keep HEAD authoritative and the differing cache bytes visible
                 # to the report/artifact, without modifying bank or history.
                 try:
                     evidence = ticket_receipt_bytes(path)
                 except (OSError, EOFError, ValueError):
-                    evidence = cached  # retain even malformed gzip bytes
+                    evidence = cached  # retain even malformed gzip/envelope bytes
+                    # A HEAD restore may repair a corrupted content-addressed
+                    # part at the same path. Preserve its actual damaged bytes
+                    # first, just as legacy malformed gzip evidence is kept.
+                    for part in path.parent.glob(path.name + ".part-*"):
+                        damaged = part.read_bytes()
+                        expected = part.name.rsplit(".part-", 1)[-1]
+                        actual = hashlib.sha256(damaged).hexdigest()
+                        if expected == actual:
+                            continue
+                        expected = hashlib.sha256(part.name.encode()).hexdigest()
+                        backup = path.parent / f"receipt_part_conflict_{expected}_{actual}.bin.gz"
+                        write_ticket_receipt(backup, damaged)
                 conflict = ticket_receipt_path(repo / "localdata", name.removesuffix(".json")
                     + f"_cache_conflict_{hashlib.sha256(evidence).hexdigest()}.json")
                 write_ticket_receipt(conflict, evidence)
@@ -723,7 +767,9 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
 
     for relative, blob in recovered_cards.items():
         _atomic_write(repo / relative, blob)
-    for relative, blob in decision_blobs.items():
+    # An authorized draft upgrade may have inserted its manifest before new
+    # part keys. Always publish dependencies before ANY logical receipt.
+    for relative, blob in sorted(decision_blobs.items(), key=lambda item: ".part-" not in item[0]):
         _atomic_write(repo / relative, blob)
 
     for relative, financial_blob in financial_blobs.items():
@@ -877,6 +923,15 @@ def persist_localdata(
         verified_sha = hashlib.sha256(verified_path.read_bytes()).hexdigest()
     except OSError:
         verified_sha = "unavailable"
+    # Oversized cached receipts must become complete, size-bounded bundles
+    # BEFORE staging, not merely be omitted from the state commit. The same
+    # audit directory already survives cache restore and artifact upload.
+    try:
+        compact_ticket_receipts(repo / "localdata")
+    except (OSError, ValueError) as exc:
+        reason = f"ticket receipt storage validation failed: {exc}"
+        _warn_not_persisted(reason)
+        return {"status": "not_persisted", "reason": reason}
     # Raw candidate ledgers can exceed GitHub's per-blob limit in one day.
     # Keep working copies for the cache + dedicated 30-day artifact, including
     # files tracked by older revisions. Do not delete or truncate evidence.
