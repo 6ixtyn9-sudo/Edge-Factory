@@ -2047,7 +2047,11 @@ def _collect_settled_facts(*, root=None) -> tuple[_SettledOutcomes, dict, dict]:
             key_to.setdefault((d, hk, ak), r["outcome"])
             scores.setdefault((d, hk, ak), (r["hs"], r["gs"]))
         entries.setdefault(d, []).append({"home": str(home), "away": str(away), "outcome": r["outcome"]})
-    resolved_periods = {regulation_fixture_key(r) for r in donors}
+    # A period hold can only be resolved by a donor on its own date. Avoid
+    # deriving regulation identities for years of unrelated settled fixtures.
+    hold_dates = {str(r.get("date") or "")[:10] for r in period_holds}
+    resolved_periods = {regulation_fixture_key(r) for r in donors
+                        if str(r.get("date") or "")[:10] in hold_dates}
     period_blocks = [r for r in period_holds if regulation_fixture_key(r) not in resolved_periods]
     # Operator-verified scores outrank every donor and the overlay. Overwrite
     # the verified key AND every key written by an alias-matching donor before
@@ -2655,6 +2659,15 @@ def _squad_aware_norm_key(name: object, *, legacy: bool = False,
     keep the historical stem function but append the marker suffix so a
     senior row and a squad row no longer share one result key.
     """
+    return _squad_aware_norm_key_cached(str(name or ""), legacy, width)
+
+
+@lru_cache(maxsize=200_000)
+def _squad_aware_norm_key_cached(name: str, legacy: bool, width: int) -> str:
+    # Pure spelling/marker work, NOT result facts or registry-dependent aliases.
+    # A club recurs across years/opponents and all result-key passes. Cache by
+    # TEAM rather than fixture pair so a large corpus cannot thrash the existing
+    # pair-key cache into repeatedly parsing the same club's squad markers.
     from edgefactory.util import (norm_team, norm_team_legacy,
                                   squad_marker_suffix, strip_squad_markers)
 
