@@ -893,12 +893,153 @@ def _summarize_loader_state(state):
             "payload_structure_counts": counts, "wire_special_value_counts": specials}
 
 
+# Receipt vocabulary only: never print arbitrary provider keys, route names,
+# query keys/hashes, strings, IDs or values. These names describe candidates,
+# NOT an asserted StatsHub record schema or authority to admit records.
+_LOADER_SECTIONS = frozenset({"match", "teams", "results", "standings", "tables", "queries"})
+_LOADER_SHAPE_KEYS = _LOADER_SECTIONS | frozenset({
+    "data", "state", "dehydratedState", "cache", "doc", "home", "away",
+    "id", "_id", "uid", "matchId", "eventId", "teamId", "seasonId", "tournamentId",
+    "season", "tournament", "competition", "competitionId", "name", "title",
+    "date", "time", "kickoff", "kickoff_utc", "startTime", "updatedAt", "dataUpdatedAt",
+    "_dt", "uts", "tz", "dateiso", "status", "period", "periods", "score",
+    "FT", "HT", "AP", "AET", "fulltime", "halftime", "regularTime",
+    "played", "wins", "draws", "losses", "points", "rank", "rows", "total",
+    "goalsFor", "goalsAgainst", "value", "_dob", "_maxage",
+})
+_LOADER_PRIVATE_BRANCHES = frozenset({
+    "cctx", "errors", "actiondata", "querykey", "queryhash", "meta",
+    "token", "fishnettoken", "authorization", "credentials", "headers", "cookie",
+})
+_LOADER_ID_FIELDS = frozenset({
+    "id", "_id", "uid", "matchId", "eventId", "teamId", "seasonId",
+    "tournamentId", "competitionId",
+})
+_LOADER_TIME_FIELDS = frozenset({
+    "date", "time", "kickoff", "kickoff_utc", "startTime", "updatedAt", "dateiso",
+})
+_LOADER_SCORE_FIELDS = frozenset({"home", "away", "score", "value"})
+
+
+def _loader_value_kind(value):
+    special = _LOADER_SPECIAL_NAMES.get(id(value))
+    if special:
+        return special
+    if value is None:
+        return "null"
+    return {dict: "object", list: "array", str: "text", bool: "boolean",
+            int: "integer", float: "number"}.get(type(value), "unsupported")
+
+
+def _loader_positive_id(value):
+    # No bool/float coercion, signs, zero, leading zero, or default identities.
+    return ((type(value) is int and 0 < value < 10**12)
+            or (isinstance(value, str) and re.fullmatch(r"[1-9]\d{0,11}", value) is not None))
+
+
+def _loader_section_evidence(section, value, requested_id):
+    """Bounded sampled shape and field syntax; no values or semantic validation.
+
+    List samples are explicit, not representative record counts. No score period,
+    team pairing, epoch unit, competition or season semantics is inferred here.
+    """
+    shape, pending, seen = [], [(value, (), 0)], set()
+    truncated = False
+    while pending and len(shape) < 48:
+        node, path, depth = pending.pop()
+        entry = {"path": list(path), "kind": _loader_value_kind(node)}
+        if isinstance(node, (dict, list)):
+            if id(node) in seen:
+                entry["shared_reference"] = True
+                shape.append(entry)
+                continue
+            seen.add(id(node))
+            if isinstance(node, dict):
+                entry["field_count"] = len(node)
+                entry["unlisted_field_count"] = sum(k not in _LOADER_SHAPE_KEYS for k in node)
+                children = [(k, v) for k, v in node.items() if k in _LOADER_SHAPE_KEYS]
+                opaque = [v for k, v in node.items()
+                          if k not in _LOADER_SHAPE_KEYS
+                          and k.casefold() not in _LOADER_PRIVATE_BRANCHES]
+                entry["unlisted_sampled_field_count"] = min(3, len(opaque)) if depth < 4 else 0
+                children.extend(("opaque", v) for v in opaque[:3])
+                truncated |= len(opaque) > 3
+            else:
+                entry["length"] = len(node)
+                entry["sampled_item_count"] = min(3, len(node)) if depth < 4 else 0
+                children = [("[]", v) for v in node[:3]]
+                truncated |= len(node) > 3
+            if depth < 4:
+                pending.extend((v, (*path, k), depth + 1) for k, v in reversed(children))
+            else:
+                truncated |= bool(children)
+        elif path:
+            key = path[-1]
+            if key in _LOADER_ID_FIELDS:
+                entry["positive_decimal_id_syntax"] = _loader_positive_id(node)
+                if section == "match" and len(path) == 1 and key in {"id", "_id", "matchId", "eventId"}:
+                    entry["equals_requested_event_id"] = (_loader_positive_id(node)
+                                                          and str(node) == requested_id)
+            if key in _LOADER_TIME_FIELDS:
+                # Numeric epochs and wall clocks stay unresolved, not assumed UTC.
+                entry["explicit_zone_timestamp_syntax"] = (
+                    isinstance(node, str) and len(node) <= 128
+                    and parse_zoned_timestamp(node) is not None)
+            if section == "results" and key in _LOADER_SCORE_FIELDS:
+                entry["nonnegative_integer_score_syntax"] = type(node) is int and 0 <= node <= 999
+        shape.append(entry)
+    return {"section": section, "shape": shape,
+            "shape_truncated_or_sampled": bool(truncated or pending)}
+
+
+def _inspect_loader_payload_evidence(state, source_url):
+    """Locate embedded candidates, excluding runtime credentials and query keys.
+
+    Private loader state stays inside this call. Opaque ancestry is made explicit
+    rather than exporting unknown names or asserting that a query belongs to the
+    requested event. Even matching IDs are only lexical evidence, never binding.
+    """
+    requested_id = source_url.removesuffix("/statistics").rsplit("/", 1)[-1]
+    loaders = state["loaderData"]
+    pending = [(value, ("route",), 0) for value in reversed(list(loaders.values()))]
+    seen, sections, visited = set(), [], 0
+    truncated = False
+    while pending:
+        node, path, depth = pending.pop()
+        visited += 1
+        if visited > 100000 or depth > 64:
+            raise _LoaderReject("loader_structure_limit")
+        if not isinstance(node, (dict, list)) or id(node) in seen:
+            continue
+        seen.add(id(node))
+        if isinstance(node, list):
+            pending.extend((v, (*path, "[]")[-12:], depth + 1) for v in reversed(node))
+            continue
+        for key, value in node.items():
+            if key.casefold() in _LOADER_PRIVATE_BRANCHES:
+                continue
+            child_path = (*path, key if key in _LOADER_SHAPE_KEYS else "opaque")[-12:]
+            if key in _LOADER_SECTIONS:
+                if len(sections) < 24:
+                    sections.append({"location": list(child_path),
+                                     **_loader_section_evidence(key, value, requested_id)})
+                else:
+                    truncated = True
+            pending.append((value, child_path, depth + 1))
+    return {"status": "candidate_shape_and_field_syntax_only", "sections": sections,
+            "section_limit_reached": truncated,
+            "record_schema_verified": False, "fixture_identity_verified": False,
+            "team_competition_season_binding_verified": False,
+            "regulation_periods_verified": False, "freshness_verified": False,
+            "collection_permission_verified": False}
+
+
 def inspect_native_loader_state(body: bytes, source_url: str) -> dict:
     """Capture/decode supported embedded loader data, exporting a safe validation receipt.
 
     Not a StatsHub payload adapter. Decoded loader/config data is local to this
     call, never returned, persisted, executed or used to construct requests.
-    No current native HTML fixture exists: format compatibility needs field proof.
+    Candidate payload shapes/field syntax are not a verified native record schema.
     """
     validate_context_url(source_url)
     if not isinstance(body, bytes) or len(body) > _NATIVE_LIMIT:
@@ -967,7 +1108,9 @@ def inspect_native_loader_state(body: bytes, source_url: str) -> dict:
         else:
             return result
         summary = _summarize_loader_state(state)
-        return {**result, **summary, "status": "decoded_supported_loader_state",
+        return {**result, **summary,
+                "payload_evidence": _inspect_loader_payload_evidence(state, source_url),
+                "status": "decoded_supported_loader_state",
                 "decoded_loader_state_count": 1}
     except _LoaderReject as error:
         failure = {**result, "status": str(error)}
