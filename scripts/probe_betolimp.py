@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Bounded manual BetOlimp diagnostic. Prints JSON; writes nothing.
+"""Bounded manual bookmaker diagnostic. Prints JSON; writes nothing.
 
 --input decodes labelled saved reader excerpts; --card compares them read-only.
---native-url makes ONE ordinary GET per exact public event URL (maximum three; fail-fast).
+--native-url makes ONE ordinary GET per public URL (maximum three; fail-fast).
+--native-source defaults to BetOlimp; other sources use pinned, observed public pages.
+SportPesa StatsHub is explicitly third-party supplied, not an independent bookmaker feed.
 No redirects, retries, proxies, cookies, credentials or production admission.
 Native responses are transport evidence, NOT executable or decoded quotes.
 No native body, cookies, arbitrary headers or exception details are printed.
@@ -77,8 +79,42 @@ NATIVE_HOLDS = (
     "collection_permission_unresolved", "native_market_decoding_unimplemented",
     "odds_view_profile_unverified", "absolute_kickoff_unverified",
     "quote_update_time_unverified", "fixture_not_independently_corroborated",
-    "production_admission_not_implemented",
+    "production_admission_not_implemented", "native_context_decoding_unimplemented",
 )
+
+
+# Diagnostic-only exact pages actually observed in public navigation. Not a
+# production registry, host-wide crawler, endpoint discovery or API integration.
+# No dynamic tenant/client identifiers, credentials or arbitrary query strings.
+NATIVE_SOURCE_PAGES = {
+    "hollywoodbets": (
+        ("https://www.hollywoodbets.net/betting/1/soccer/all/248/england/3092452/"
+         "premier-league?filter=match-betting"),
+        "https://www.hollywoodbets.net/betting/1/soccer/results?filter=latest",
+    ),
+    "betway": (
+        ("https://www.betway.co.za/event/soccer/italy/serie-a/"
+         "lazio-cagliari?eventId=71945376&fixtureType=highlights"),
+        ("https://www.betway.co.za/event/soccer/scotland/premiership/"
+         "falkirk-celtic?eventId=72201696&fixtureType=highlights"),
+    ),
+    "betxchange": ("https://betxchange.com/sports", "https://betxchange.com/page/fixtures"),
+    "sportpesa": (
+        "https://www.sportpesa.co.za/en/sports-betting/soccer-1/",
+        "https://www.sportpesa.co.za/results",
+    ),
+    "sportpesa-statshub": (
+        "https://statshub.sportradar.com/sportpesa/en/match/72341350",
+        "https://statshub.sportradar.com/sportpesa/en/match/74319006",
+    ),
+}
+
+
+def _validate_native_url(url: str, source: str) -> None:
+    if source == "betolimp":
+        validate_event_url(url)
+    elif source not in NATIVE_SOURCE_PAGES or url not in NATIVE_SOURCE_PAGES[source]:
+        raise ValueError("expected an exact observed public page for the selected source")
 
 
 class _PageShape(HTMLParser):
@@ -119,6 +155,8 @@ def _native_receipt(response, body: bytes, complete: bool) -> dict:
         "sample_sha256": hashlib.sha256(body).hexdigest(),
         "content_encoding": "identity" if identity else "unsupported",
         "main_market_label_presence": None,
+        "context_label_presence": None,
+        "decoded_context_row_count": 0,
         "decoded_observation_count": 0,
     }
     status = response.status_code
@@ -155,21 +193,34 @@ def _native_receipt(response, body: bytes, complete: bool) -> dict:
             result["main_market_label_presence"] = {
                 label: label.casefold() in visible for label in (
                     "Full Time Result", "Total Goals", "Both teams to score")}
+            # Labels can be menus, tutorials or promotional copy. Never count
+            # them as statistics, fixture status, form probabilities or results.
+            result["context_label_presence"] = {
+                label: label.casefold() in visible for label in (
+                    "Head to Head", "H2H", "Last meetings", "Last matches",
+                    "Season Statistics", "League Position", "Overall Form", "Stats Hub")}
     return {**result, "classification": classification,
             "transport_ok": classification == "native_html_received_unverified"}
 
 
-def native_probe(urls: list[str]) -> dict:
+def native_probe(urls: list[str], source: str = "betolimp") -> dict:
     """Read-only ordinary public GETs, one attempt each, without an ingest path."""
     if not 1 <= len(urls) <= 3 or len(set(urls)) != len(urls):
         raise ValueError("expected one to three distinct exact event URLs")
     # Validate the ENTIRE batch before the first request (no partial SSRF).
     for url in urls:
-        validate_event_url(url)
+        _validate_native_url(url, source)
     receipts = []
     for url in urls:
         started = time.monotonic()
-        receipt = {"source_url": url, "evidence_kind": "native_http_attempt",
+        receipt = {"source_url": url, "source_profile": source,
+                   "content_origin": "third_party_bookmaker_branded_portal"
+                   if source == "sportpesa-statshub" else "bookmaker_public_page",
+                   "bookmaker_brand": "sportpesa" if source == "sportpesa-statshub" else source,
+                   "identified_context_supplier": "sportradar"
+                   if source == "sportpesa-statshub" else None,
+                   "decoded_context_row_count": 0,
+                   "evidence_kind": "native_http_attempt",
                    "request_started_at_utc": datetime.now(UTC).isoformat(),
                    "admitted_rows": 0, "kickoff_utc": None, "quoted_at": None,
                    "hold_reasons": list(NATIVE_HOLDS)}
@@ -178,7 +229,8 @@ def native_probe(urls: list[str]) -> dict:
             # .netrc/auth and SSL override environment; never follow redirects.
             with httpx.Client(trust_env=False, follow_redirects=False,
                               timeout=httpx.Timeout(15.0, connect=5.0),
-                              headers={"User-Agent": "EdgeFactory-BetOlimpProbe/1.0",
+                              headers={"User-Agent": "EdgeFactory-BetOlimpProbe/1.0"
+                                       if source == "betolimp" else "EdgeFactory-PublicBookmakerProbe/1.0",
                                        "Accept": "text/html",
                                        "Accept-Encoding": "identity"}) as client, \
                     client.stream("GET", url) as response:
@@ -200,24 +252,32 @@ def native_probe(urls: list[str]) -> dict:
         receipts.append(receipt)
         if not receipt["transport_ok"]:
             break  # Do not try other event paths after denial/challenge/failure.
-    return {"mode": "native_access_diagnostic_only", "network_requests": len(receipts),
+    return {"mode": "native_access_diagnostic_only", "source_profile": source,
+            "network_requests": len(receipts),
             "writes": 0, "admitted_rows": 0, "receipts": receipts,
             "requested_url_count": len(urls), "unattempted_urls": urls[len(receipts):],
             "transport_ok": all(r["transport_ok"] for r in receipts),
-            "coverage_status": "unmeasured_native_quote_decoding_not_implemented"}
+            "coverage_status": "unmeasured_native_quote_decoding_not_implemented",
+            "context_status": "unmeasured_native_context_decoding_not_implemented"}
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--input", type=Path, help="saved labelled JSON transcriptions")
-    mode.add_argument("--native-url", action="append", help="exact public event URL; repeat up to 3")
+    mode.add_argument("--native-url", action="append", help="exact public URL for selected source; repeat up to 3")
     parser.add_argument("--card", type=Path, help="optional existing card JSON (offline input only)")
+    parser.add_argument("--native-source", default="betolimp",
+                        choices=("betolimp", *NATIVE_SOURCE_PAGES),
+                        help="native diagnostic only; non-BetOlimp pages are pinned")
     args = parser.parse_args(argv)
+    if not args.native_url and args.native_source != "betolimp":
+        parser.error("--native-source requires --native-url; saved excerpts remain BetOlimp-only")
     if args.native_url and args.card:
         parser.error("--card requires --input; native responses are not decoded quotes")
     try:
-        result = native_probe(args.native_url) if args.native_url else dry_run(args.input, args.card)
+        result = (native_probe(args.native_url, args.native_source) if args.native_url
+                  else dry_run(args.input, args.card))
     except (ValueError, OSError, TypeError, KeyError, IndexError):
         # Do not echo untrusted input, file contents, URLs or exception strings.
         status = "invalid_native_input" if args.native_url else "invalid_offline_input"
