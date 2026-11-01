@@ -3,7 +3,9 @@
 
 --input decodes labelled saved reader excerpts; --card compares them read-only.
 --native-url makes ONE ordinary GET per public URL (maximum three; fail-fast).
---native-source defaults to BetOlimp; other sources use pinned, observed public pages.
+--context-input audits every own-card row against labelled saved StatsHub reader pages.
+--native-source defaults to BetOlimp; bookmaker pages are pinned; StatsHub accepts
+ordinary public match URLs on the fixed, observed SportPesa tenant route only.
 SportPesa StatsHub is explicitly third-party supplied, not an independent bookmaker feed.
 No redirects, retries, proxies, cookies, credentials or production admission.
 Native responses are transport evidence, NOT executable or decoded quotes.
@@ -27,11 +29,17 @@ import httpx
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.odds_normalization import parse_zoned_timestamp
 from edgefactory.sources.betolimp_snapshot import (
     MAX_BYTES,
     compare_card_identity,
     parse_saved_excerpt,
     validate_event_url,
+)
+from edgefactory.sources.bookmaker_context_snapshot import (
+    context_slate_coverage,
+    parse_context_batch,
+    validate_context_url,
 )
 
 
@@ -74,6 +82,14 @@ def dry_run(input_path: Path, card_path: Path | None = None) -> dict:
             "snapshots": snapshots}
 
 
+def context_dry_run(input_path: Path, card_path: Path, as_of: datetime) -> dict:
+    pages = parse_context_batch(_read_json(input_path, 8 * 1024 * 1024))
+    payload = _read_json(card_path, 16 * 1024 * 1024)
+    card = payload if isinstance(payload, list) else (
+        payload.get("picks") if isinstance(payload, dict) else None)
+    return context_slate_coverage(card, pages, as_of)
+
+
 MAX_NATIVE_BYTES = 2 * 1024 * 1024
 NATIVE_HOLDS = (
     "collection_permission_unresolved", "native_market_decoding_unimplemented",
@@ -113,6 +129,8 @@ NATIVE_SOURCE_PAGES = {
 def _validate_native_url(url: str, source: str) -> None:
     if source == "betolimp":
         validate_event_url(url)
+    elif source == "sportpesa-statshub":
+        validate_context_url(url)
     elif source not in NATIVE_SOURCE_PAGES or url not in NATIVE_SOURCE_PAGES[source]:
         raise ValueError("expected an exact observed public page for the selected source")
 
@@ -265,19 +283,29 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--input", type=Path, help="saved labelled JSON transcriptions")
+    mode.add_argument("--context-input", type=Path, help="labelled StatsHub reader pages; requires --card")
     mode.add_argument("--native-url", action="append", help="exact public URL for selected source; repeat up to 3")
     parser.add_argument("--card", type=Path, help="optional existing card JSON (offline input only)")
     parser.add_argument("--native-source", default="betolimp",
                         choices=("betolimp", *NATIVE_SOURCE_PAGES),
-                        help="native diagnostic only; non-BetOlimp pages are pinned")
+                        help="native only; pinned bookmaker pages or fixed-tenant public StatsHub match URLs")
+    parser.add_argument("--as-of", help="zone-bearing cutoff for offline context coverage only")
     args = parser.parse_args(argv)
+    if args.context_input and not args.card:
+        parser.error("--context-input requires --card so missing slate rows stay visible")
+    if args.as_of and not args.context_input:
+        parser.error("--as-of requires --context-input")
     if not args.native_url and args.native_source != "betolimp":
-        parser.error("--native-source requires --native-url; saved excerpts remain BetOlimp-only")
+        parser.error("--native-source requires --native-url; --input snapshots remain BetOlimp-only")
     if args.native_url and args.card:
-        parser.error("--card requires --input; native responses are not decoded quotes")
+        parser.error("--card is offline-only: use --input or --context-input, not --native-url")
     try:
-        result = (native_probe(args.native_url, args.native_source) if args.native_url
-                  else dry_run(args.input, args.card))
+        if args.context_input:
+            as_of = parse_zoned_timestamp(args.as_of) if args.as_of else datetime.now(UTC)
+            result = context_dry_run(args.context_input, args.card, as_of)
+        else:
+            result = (native_probe(args.native_url, args.native_source) if args.native_url
+                      else dry_run(args.input, args.card))
     except (ValueError, OSError, TypeError, KeyError, IndexError):
         # Do not echo untrusted input, file contents, URLs or exception strings.
         status = "invalid_native_input" if args.native_url else "invalid_offline_input"
