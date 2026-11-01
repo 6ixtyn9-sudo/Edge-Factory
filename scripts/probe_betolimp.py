@@ -9,6 +9,7 @@ ordinary public match URLs on the fixed, observed SportPesa tenant route only.
 SportPesa StatsHub is explicitly third-party supplied, not an independent bookmaker feed.
 No redirects, retries, proxies, cookies, credentials or production admission.
 Native responses are transport evidence, NOT executable or decoded quotes.
+--native-loader decodes supported embedded loader JSON from one StatsHub page, without API calls.
 --native-discovery follows at most two referenced same-origin JS assets, within three GETs.
 --native-context opts into semantic standings/shape inspection for StatsHub only.
 This does not enable native H2H/results, whole-slate coverage or production admission.
@@ -43,6 +44,7 @@ from edgefactory.sources.betolimp_snapshot import (
 from edgefactory.sources.bookmaker_context_snapshot import (
     context_slate_coverage,
     inspect_native_data_loading,
+    inspect_native_loader_state,
     parse_context_batch,
     parse_native_context_html,
     validate_context_url,
@@ -164,7 +166,8 @@ class _PageShape(HTMLParser):
 
 
 def _native_receipt(response, body: bytes, complete: bool, *, context_url: str | None = None,
-                    discovery_url: str | None = None, is_script: bool = False) -> dict:
+                    discovery_url: str | None = None, is_script: bool = False,
+                    loader_url: str | None = None) -> dict:
     # Default receipts contain fixed metadata/hashes only. Opt-in semantic
     # context adds a strict public-field allowlist, never raw markup. No
     # Location/Set-Cookie, body/title, arbitrary markup URLs, exception strings,
@@ -236,14 +239,19 @@ def _native_receipt(response, body: bytes, complete: bool, *, context_url: str |
             "native_html_received_unverified", "native_script_received_unverified"}:
         result["data_loading_discovery"] = inspect_native_data_loading(
             body, discovery_url, is_script=is_script)
+    if loader_url is not None and classification == "native_html_received_unverified":
+        result["loader_state"] = inspect_native_loader_state(body, loader_url)
     return {**result, "classification": classification,
             "transport_ok": classification in {
                 "native_html_received_unverified", "native_script_received_unverified"}}
 
 
 def native_probe(urls: list[str], source: str = "betolimp", *, native_context: bool = False,
-                 native_discovery: bool = False) -> dict:
+                 native_discovery: bool = False, native_loader: bool = False) -> dict:
     """Read-only ordinary public GETs, one attempt each, without an ingest path."""
+    if native_loader and (source != "sportpesa-statshub" or len(urls) != 1
+                          or native_context or native_discovery):
+        raise ValueError("loader inspection requires one StatsHub page and excludes other native modes")
     if native_discovery and (source != "sportpesa-statshub" or len(urls) != 1 or native_context):
         raise ValueError("discovery requires one StatsHub document and excludes context decoding")
     if native_context and source != "sportpesa-statshub":
@@ -297,7 +305,8 @@ def native_probe(urls: list[str], source: str = "betolimp", *, native_context: b
                 receipt.update(_native_receipt(response, bytes(body), complete,
                                                context_url=url if native_context else None,
                                                discovery_url=url if native_discovery else None,
-                                               is_script=is_script))
+                                               is_script=is_script,
+                                               loader_url=url if native_loader else None))
         except httpx.HTTPError as error:
             receipt.update({"transport_ok": False,
                             "classification": "transport_timeout" if isinstance(
@@ -309,16 +318,22 @@ def native_probe(urls: list[str], source: str = "betolimp", *, native_context: b
             queue.extend(assets[:2])  # Never more than three total GETs; no recursive imports.
         if not receipt["transport_ok"]:
             break  # Do not try other event paths after denial/challenge/failure.
-    return {"mode": "native_static_discovery_diagnostic_only" if native_discovery
+    result = {"mode": "native_embedded_loader_diagnostic_only" if native_loader
+            else "native_static_discovery_diagnostic_only" if native_discovery
             else "native_access_diagnostic_only", "source_profile": source,
             "network_requests": len(receipts),
             "writes": 0, "admitted_rows": 0, "receipts": receipts,
             "requested_url_count": len(queue), "unattempted_urls": queue[len(receipts):],
             "transport_ok": all(r["transport_ok"] for r in receipts),
             "coverage_status": "unmeasured_native_quote_decoding_not_implemented",
-            "context_status": "static_data_loading_discovery_not_api_verification" if native_discovery
+            "context_status": "embedded_loader_decoding_not_stats_or_api_validation" if native_loader
+            else "static_data_loading_discovery_not_api_verification" if native_discovery
             else "opt_in_native_semantic_inspection_not_slate_coverage" if native_context
             else "unmeasured_native_context_decoding_not_implemented"}
+    if native_loader:
+        result["loader_decoding_ok"] = all(
+            r.get("loader_state", {}).get("decoded_loader_state_count") == 1 for r in receipts)
+    return result
 
 
 def main(argv=None) -> int:
@@ -335,8 +350,13 @@ def main(argv=None) -> int:
                         help="StatsHub only: opt into bounded semantic standings/shape inspection")
     parser.add_argument("--native-discovery", action="store_true",
                         help="StatsHub only: inspect one page and at most two referenced static JS assets")
+    parser.add_argument("--native-loader", action="store_true",
+                        help="StatsHub only: decode supported embedded loader JSON from exactly one page")
     parser.add_argument("--as-of", help="zone-bearing cutoff for offline context coverage only")
     args = parser.parse_args(argv)
+    if args.native_loader and (not args.native_url or len(args.native_url) != 1
+            or args.native_source != "sportpesa-statshub" or args.native_discovery or args.native_context):
+        parser.error("--native-loader requires one StatsHub --native-url and excludes other native modes")
     if args.native_discovery and (not args.native_url or len(args.native_url) != 1
             or args.native_source != "sportpesa-statshub" or args.native_context):
         parser.error("--native-discovery requires one StatsHub --native-url and excludes --native-context")
@@ -356,7 +376,8 @@ def main(argv=None) -> int:
             result = context_dry_run(args.context_input, args.card, as_of)
         else:
             result = (native_probe(args.native_url, args.native_source, native_context=args.native_context,
-                                   native_discovery=args.native_discovery) if args.native_url
+                                   native_discovery=args.native_discovery,
+                                   native_loader=args.native_loader) if args.native_url
                       else dry_run(args.input, args.card))
     except (ValueError, OSError, TypeError, KeyError, IndexError):
         # Do not echo untrusted input, file contents, URLs or exception strings.
@@ -364,7 +385,10 @@ def main(argv=None) -> int:
         print(json.dumps({"status": status, "admitted_rows": 0}), file=sys.stderr)
         return 2
     print(json.dumps(result, indent=2, ensure_ascii=False, allow_nan=False))
-    return 1 if args.native_url and not result["transport_ok"] else 0
+    if args.native_url and (not result["transport_ok"] or (
+            args.native_loader and not result["loader_decoding_ok"])):
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
