@@ -4166,7 +4166,7 @@ def _run_ml_paper():
         # Match Main/ENH: until a card is frozen, evaluate the current slate
         # even after 09:00. Already-frozen dates never reload/reselect inputs.
         slate = (json.loads((LOCALDATA / "picks_today.json").read_text())
-                 if not ml_paper.receipt_path(LOCALDATA, day).exists() else [])
+                 if not ml_paper.has_receipt(LOCALDATA, day) else [])
         history = ml_paper.receipts(LOCALDATA)
         lookup = ml_paper_score_lookup(load_settled_scores() if history else {})
         row = ml_paper.capture({"date": day, "build_at": now.isoformat(), "slate": slate},
