@@ -1,11 +1,56 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 6,
+  "attempted_fixtures": [
+    {
+      "away": "Maccabi Tel Aviv",
+      "date": "2026-11-02",
+      "home": "Hapoel Ramat Gan",
+      "kickoff": "2026-11-02T18:00:00Z",
+      "league": "Ligat ha'Al"
+    },
+    {
+      "away": "Minnesota United",
+      "date": "2026-11-02",
+      "home": "Los Angeles FC",
+      "kickoff": "2026-11-02T01:30:00Z",
+      "league": "Major League Soccer"
+    },
+    {
+      "away": "Maccabi Haifa",
+      "date": "2026-11-02",
+      "home": "Hapoel Tel Aviv",
+      "kickoff": "2026-11-02T18:30:00Z",
+      "league": "Ligat ha'Al"
+    },
+    {
+      "away": "Fiorentina",
+      "date": "2026-11-02",
+      "home": "Sassuolo",
+      "kickoff": "2026-11-02T17:30:00Z",
+      "league": "Serie A"
+    },
+    {
+      "away": "FC Tulsa",
+      "date": "2026-11-02",
+      "home": "Sacramento Republic FC",
+      "kickoff": "2026-11-02T03:00:00+01:00",
+      "league": "United States: USL Championship"
+    },
+    {
+      "away": "Houston Dynamo",
+      "date": "2026-11-02",
+      "home": "Portland Timbers",
+      "kickoff": "2026-11-02T02:45:00Z",
+      "league": "MLS"
+    }
+  ],
   "candidate_fixtures": 11,
-  "captured_at": "2026-11-02T16:23:00+00:00",
+  "captured_at": "2026-11-02T19:22:24+00:00",
   "date": "2026-11-02",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 6
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -23,23 +68,30 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 2,
-    "priced": 3,
-    "retry_cooldown": 6
+    "priced": 3
   },
   "skipped": [
     "Benfica|Alverca (priced)",
-    "Hapoel Ramat Gan|Maccabi Tel Aviv (retry cooldown (6h after failed attempt))",
     "Radomiak Radom|\u015al\u0105sk Wroc\u0142aw (priced)",
-    "Los Angeles FC|Minnesota United (retry cooldown (6h after failed attempt))",
-    "Hapoel Tel Aviv|Maccabi Haifa (retry cooldown (6h after failed attempt))",
-    "Sassuolo|Fiorentina (retry cooldown (6h after failed attempt))",
     "Managua|UNAN Managua (kickoff already passed)",
     "Marko|Apollon Pontou (kickoff already passed)",
-    "Sacramento Republic FC|FC Tulsa (retry cooldown (6h after failed attempt))",
-    "Cruz Azul|Leon (priced)",
-    "Portland Timbers|Houston Dynamo (retry cooldown (6h after failed attempt))"
+    "Cruz Azul|Leon (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Hapoel Ramat Gan vs Maccabi Tel Aviv (league not covered: Ligat ha'Al)",
+    "Los Angeles FC vs Minnesota United (league not covered: Major League Soccer)",
+    "Hapoel Tel Aviv vs Maccabi Haifa (league not covered: Ligat ha'Al)",
+    "Sassuolo vs Fiorentina (league not covered: Serie A)",
+    "Sacramento Republic FC vs FC Tulsa (league not covered: United States: USL Championship)",
+    "Portland Timbers vs Houston Dynamo (league not covered: MLS)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Ligat ha'Al": 2,
+    "league not covered: MLS": 1,
+    "league not covered: Major League Soccer": 1,
+    "league not covered: Serie A": 1,
+    "league not covered: United States: USL Championship": 1
+  }
 }
