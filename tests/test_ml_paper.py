@@ -223,7 +223,7 @@ def test_pre_freeze_draft_is_not_a_settled_card_or_performance_history(tmp_path)
         ("bookmaker", "Betfair Exchange"),
         ("odds_captured_at", None),
         ("odds_captured_at", (NOW + timedelta(seconds=1)).isoformat()),
-        ("odds_captured_at", (NOW - timedelta(hours=7)).isoformat()),
+        ("odds_captured_at", (NOW - timedelta(hours=13)).isoformat()),
         ("kickoff_utc", "14:00"),
         ("kickoff_utc", (NOW + timedelta(minutes=29)).isoformat()),
         ("bucket", "WATCHLIST_SUSPECT_PRICE"),
@@ -664,7 +664,7 @@ def test_kickoff_lead_is_relative_to_nine_not_earlier_draft(tmp_path, lead, allo
 def test_quote_must_still_be_within_age_limit_at_scheduled_freeze(tmp_path):
     rows = [pick(1), pick(2)]
     for row in rows:
-        row["odds_captured_at"] = (NOW - timedelta(hours=5, minutes=30)).isoformat()
+        row["odds_captured_at"] = (NOW - timedelta(hours=11, minutes=30)).isoformat()
     r = capture(tmp_path, rows)
     assert not r["accas"]
 

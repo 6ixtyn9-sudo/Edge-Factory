@@ -992,11 +992,12 @@ def _write_fixture_cache(pick: dict, day: str, rows: list[dict], *, detail: bool
 
 def ml_price_refresh_needed(pick: dict, day: str, *, freeze_at: datetime,
                             now: datetime) -> bool:
-    """One pre-freeze refresh of a priced cache too old for ML's six-hour gate.
+    """One pre-freeze refresh targeting a capture within the final six hours.
 
-    This schedules collection, NOT quote admission. Negative answers, poisoned
-    rows, unknown kickoff and completed attempts never buy another request.
-    The normal cache TTL and all other callers retain their existing policy.
+    This collection target is intentionally tighter than ML's 12-hour admission
+    ceiling. It schedules collection, NOT quote admission. Negative answers,
+    poisoned rows, unknown kickoff and completed attempts never buy another
+    request. The normal cache TTL and other callers keep their existing policy.
     """
     from zoneinfo import ZoneInfo
 
