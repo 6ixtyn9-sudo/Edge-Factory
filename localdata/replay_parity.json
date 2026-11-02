@@ -6,20 +6,20 @@
       "attributed_scores": {
         "by_schema": {
           "enh_score_logit_v2": {
-            "cohort_brier": 0.20810957454545456,
-            "cohort_log_loss": 0.60338364589844,
-            "fixtures": 22,
-            "model_brier": 0.21367500720337976,
-            "model_log_loss": 0.6177170016970207,
-            "records": 22
+            "cohort_brier": 0.21540608416666665,
+            "cohort_log_loss": 0.619268660402036,
+            "fixtures": 24,
+            "model_brier": 0.22810365405166647,
+            "model_log_loss": 0.6527959673920943,
+            "records": 24
           }
         },
         "caveat": "Fixture-balanced descriptive scores on booked legs, not independent records or selection uplift; log probabilities clipped at 1e-15. No significance claim.",
-        "eligible_binary_legs": 78,
+        "eligible_binary_legs": 80,
         "missing_attribution": 56
       },
       "counts": {
-        "MATCH": 6
+        "MATCH": 7
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -2228,10 +2228,10 @@
                         "match": "Radomiak Radom vs \u015al\u0105sk Wroc\u0142aw",
                         "model": 0.652598109286834,
                         "odds": 1.55,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.7137,
@@ -2239,14 +2239,14 @@
                         "match": "Benfica vs Alverca",
                         "model": 0.8080528850852269,
                         "odds": 1.35,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 2.09,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 3.233
                   }
                 ],
@@ -2275,9 +2275,9 @@
                   ]
                 ],
                 "mean_acca_odds": 2.09,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 2,
+                "returned": 0.0,
                 "selected_legs": 2,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -2297,10 +2297,10 @@
                         "match": "Benfica vs Alverca",
                         "model": 0.8080528850852269,
                         "odds": 1.35,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.7137,
@@ -2308,14 +2308,14 @@
                         "match": "Radomiak Radom vs \u015al\u0105sk Wroc\u0142aw",
                         "model": 0.652598109286834,
                         "odds": 1.55,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 2.09,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 3.233
                   }
                 ],
@@ -2344,9 +2344,9 @@
                   ]
                 ],
                 "mean_acca_odds": 2.09,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 2,
+                "returned": 0.0,
                 "selected_legs": 2,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -2437,10 +2437,260 @@
               "enh_score_logit_v2": 16
             },
             "scored_legs": 16,
-            "status": "INCOMPLETE_OUTCOMES"
+            "status": "RESOLVED"
           },
-          "open_accas": 1,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": -3.233,
+          "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 1,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 22.631296,
+          "committed_excluding_target": 0.0,
+          "date": "2026-11-03",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "fc48dda2f0f0975fca3ead1f025b27620a344851",
+            "event_sha": "fc48dda2f0f0975fca3ead1f025b27620a344851",
+            "file_sha256": {
+              "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
+            },
+            "run_id": "41533389028",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-03_decision.json.gz",
+          "free_bank": 22.631296,
+          "ledger": "NOT_COMMITTED",
+          "ml_comparison": {
+            "added_to_ml_on": 0,
+            "arms": {
+              "ml_off": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7151,
+                        "market": "match_over_25",
+                        "match": "Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen",
+                        "model": 0.6592930911981302,
+                        "odds": 1.43,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.7151,
+                        "market": "match_over_25",
+                        "match": "Villarreal vs Paris Saint Germain",
+                        "model": 0.72610225989441,
+                        "odds": 1.34,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.92,
+                    "returned": null,
+                    "stake": 2.8289
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen",
+                        "match_over_25",
+                        "OVER",
+                        1.43,
+                        "Betsson",
+                        "theoddsapi"
+                      ],
+                      [
+                        "Villarreal vs Paris Saint Germain",
+                        "match_over_25",
+                        "OVER",
+                        1.34,
+                        "Betsson",
+                        "theoddsapi"
+                      ]
+                    ],
+                    1.92,
+                    2.8289
+                  ]
+                ],
+                "mean_acca_odds": 1.92,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 2,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": false
+                },
+                "total_stake": 2.8289
+              },
+              "ml_on": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7151,
+                        "market": "match_over_25",
+                        "match": "Villarreal vs Paris Saint Germain",
+                        "model": 0.72610225989441,
+                        "odds": 1.34,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.7151,
+                        "market": "match_over_25",
+                        "match": "Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen",
+                        "model": 0.6592930911981302,
+                        "odds": 1.43,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.92,
+                    "returned": null,
+                    "stake": 2.8289
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen",
+                        "match_over_25",
+                        "OVER",
+                        1.43,
+                        "Betsson",
+                        "theoddsapi"
+                      ],
+                      [
+                        "Villarreal vs Paris Saint Germain",
+                        "match_over_25",
+                        "OVER",
+                        1.34,
+                        "Betsson",
+                        "theoddsapi"
+                      ]
+                    ],
+                    1.92,
+                    2.8289
+                  ]
+                ],
+                "mean_acca_odds": 1.92,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 2,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": true,
+                  "dropped": [],
+                  "ml_ranking_active": true
+                },
+                "total_stake": 2.8289
+              }
+            },
+            "card_identical": true,
+            "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
+            "execution_leg_symmetric_difference": 0,
+            "mean_absolute_disagreement": 0.03340458434813992,
+            "model_below_cohort": 3,
+            "models": {
+              "56755a73dd52eed084b83dd67ce190446ae6579d2c7d1686e131c87501e29ae1": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 23,
+                    "0:1": 24,
+                    "0:2": 26,
+                    "0:3": 19,
+                    "0:4": 8,
+                    "0:5": 5,
+                    "0:6": 3,
+                    "0:7": 1,
+                    "1:0": 47,
+                    "1:1": 48,
+                    "1:2": 47,
+                    "1:3": 22,
+                    "1:4": 9,
+                    "1:5": 5,
+                    "1:6": 2,
+                    "1:7": 1,
+                    "2:0": 40,
+                    "2:1": 58,
+                    "2:2": 47,
+                    "2:3": 22,
+                    "2:4": 9,
+                    "2:5": 4,
+                    "2:6": 1,
+                    "3:0": 46,
+                    "3:1": 53,
+                    "3:2": 23,
+                    "3:3": 13,
+                    "3:4": 8,
+                    "3:5": 1,
+                    "3:6": 1,
+                    "4:0": 18,
+                    "4:1": 21,
+                    "4:2": 12,
+                    "4:3": 4,
+                    "4:4": 4,
+                    "5:0": 12,
+                    "5:1": 10,
+                    "5:2": 2,
+                    "5:3": 3,
+                    "5:4": 1,
+                    "5:5": 1,
+                    "6:0": 2,
+                    "6:1": 7,
+                    "6:2": 3,
+                    "7:0": 2,
+                    "7:1": 3,
+                    "7:2": 2,
+                    "8:0": 2,
+                    "8:1": 1,
+                    "8:3": 1,
+                    "9:0": 1,
+                    "9:1": 2
+                  },
+                  "classes": 52,
+                  "mean_rows_per_class": 14.038461538461538,
+                  "min_class_count": 1,
+                  "n": 730,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2964
+                },
+                "schema": "enh_score_logit_v2"
+              }
+            },
+            "paired_estimates": 6,
+            "pool_legs": 6,
+            "removed_from_ml_off": 0,
+            "schemas": {
+              "enh_score_logit_v2": 6
+            },
+            "scored_legs": 6,
+            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+          },
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],

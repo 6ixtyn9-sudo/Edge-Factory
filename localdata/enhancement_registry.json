@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-02",
+ "generated_at": "2026-11-03",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
-   "hits": 7,
-   "inv_price_sum": 6.735327475887133,
+   "hits": 10,
+   "inv_price_sum": 8.825210658705576,
    "multi_n": 0,
-   "n": 11,
+   "n": 14,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -71,9 +71,12 @@
     "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|away_over_05@v1",
     "2026-10-24|Melbourne Victory vs Melbourne City|away_over_05@v1",
     "2026-10-25|Wellington Phoenix vs Central Coast Mariners|away_over_05@v1",
-    "2026-10-25|Sydney FC vs Adelaide United|away_over_05@v1"
+    "2026-10-25|Sydney FC vs Adelaide United|away_over_05@v1",
+    "2026-11-02|Los Angeles FC vs Minnesota United|away_over_05@v1",
+    "2026-11-02|Cruz Azul vs Leon|away_over_05@v1",
+    "2026-11-02|Portland Timbers vs Houston Dynamo|away_over_05@v1"
    ],
-   "profit": -0.416,
+   "profit": 0.893,
    "records": [
     {
      "away": "Mixco",
@@ -381,6 +384,93 @@
      "rule": "pfc_27e0f725859bc708f95c58a3",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Minnesota United",
+     "away_key": "minnesotaunited",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7331,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "Major League Soccer",
+     "match": "Los Angeles FC vs Minnesota United",
+     "multi_source": false,
+     "price": 1.389,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-01T22:16:44.663978+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:30:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.389,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.663774+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Leon",
+     "away_key": "leon",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6325,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Cruz Azul",
+     "home_key": "cruzazul",
+     "league": "Mexico,Liga Mx Apertura",
+     "match": "Cruz Azul vs Leon",
+     "multi_source": false,
+     "price": 1.471,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-01T22:16:49.123560+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:10:00+00:00",
+      "league": "Mexico,Liga Mx Apertura",
+      "price": 1.471,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.726056+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Houston Dynamo",
+     "away_key": "houstondynamo",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6821,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Portland Timbers",
+     "home_key": "portlandtimbers",
+     "league": "MLS",
+     "match": "Portland Timbers vs Houston Dynamo",
+     "multi_source": false,
+     "price": 1.449,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-01T22:16:51.095990+00:00",
+      "contract_id": "pfc_226efd387e217a9d58a11f79",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T02:45:00+00:00",
+      "league": "MLS",
+      "price": 1.449,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.839493+00:00",
+     "rule": "pfc_226efd387e217a9d58a11f79",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -657,10 +747,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 10,
-   "inv_price_sum": 4.680286741662218,
+   "hits": 12,
+   "inv_price_sum": 5.750843169361502,
    "multi_n": 0,
-   "n": 11,
+   "n": 14,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -672,9 +762,12 @@
     "2026-10-23|Brisbane Roar vs Perth Glory|away_under_15@v1",
     "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|away_under_15@v1",
     "2026-10-24|Necaxa vs Ju\u00e1rez|away_under_15@v1",
-    "2026-10-25|Ehime vs Fukushima United|away_under_15@v1"
+    "2026-10-25|Ehime vs Fukushima United|away_under_15@v1",
+    "2026-11-02|Cruz Azul vs Leon|away_under_15@v1",
+    "2026-11-02|Los Angeles FC vs Minnesota United|away_under_15@v1",
+    "2026-11-02|Portland Timbers vs Houston Dynamo|away_under_15@v1"
    ],
-   "profit": 20.07,
+   "profit": 23.27,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -934,6 +1027,93 @@
      "rule": "pfc_5904b1fc7050646e6321090c",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Leon",
+     "away_key": "leon",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7229,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Cruz Azul",
+     "home_key": "cruzazul",
+     "league": "Mexico,Liga Mx Apertura",
+     "match": "Cruz Azul vs Leon",
+     "multi_source": false,
+     "price": 3.6,
+     "price_context": {
+      "book": "napoleonsports.be",
+      "captured_at": "2026-11-01T22:16:49.123560+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:10:00+00:00",
+      "league": "Mexico,Liga Mx Apertura",
+      "price": 3.6,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.719073+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Minnesota United",
+     "away_key": "minnesotaunited",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7018,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "MLS",
+     "match": "Los Angeles FC vs Minnesota United",
+     "multi_source": false,
+     "price": 2.45,
+     "price_context": {
+      "book": "napoleonsports.be",
+      "captured_at": "2026-11-01T22:16:44.663978+00:00",
+      "contract_id": "pfc_226efd387e217a9d58a11f79",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:30:00+00:00",
+      "league": "MLS",
+      "price": 2.45,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.797719+00:00",
+     "rule": "pfc_226efd387e217a9d58a11f79",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Houston Dynamo",
+     "away_key": "houstondynamo",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7018,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Portland Timbers",
+     "home_key": "portlandtimbers",
+     "league": "MLS",
+     "match": "Portland Timbers vs Houston Dynamo",
+     "multi_source": false,
+     "price": 2.6,
+     "price_context": {
+      "book": "napoleonsports.be",
+      "captured_at": "2026-11-01T22:16:51.095990+00:00",
+      "contract_id": "pfc_226efd387e217a9d58a11f79",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T02:45:00+00:00",
+      "league": "MLS",
+      "price": 2.6,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.832309+00:00",
+     "rule": "pfc_226efd387e217a9d58a11f79",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -943,9 +1123,9 @@
   },
   "away_under_25@v1": {
    "hits": 11,
-   "inv_price_sum": 7.71621397803061,
+   "inv_price_sum": 8.365564627381259,
    "multi_n": 0,
-   "n": 13,
+   "n": 14,
    "processed": [
     "2026-10-04|Portugal vs Norway|away_under_25@v1",
     "2026-09-14|Inter vs Udinese|away_under_25@v1",
@@ -991,9 +1171,10 @@
     "2026-10-25|Houston Dynamo vs Minnesota United|away_under_25@v1",
     "2026-10-25|Wellington Phoenix vs Central Coast Mariners|away_under_25@v1",
     "2026-10-25|Colorado Rapids vs Vancouver Whitecaps|away_under_25@v1",
-    "2026-10-25|Sydney FC vs Adelaide United|away_under_25@v1"
+    "2026-10-25|Sydney FC vs Adelaide United|away_under_25@v1",
+    "2026-11-02|Los Angeles FC vs Minnesota United|away_under_25@v1"
    ],
-   "profit": 5.783,
+   "profit": 4.783,
    "records": [
     {
      "away": "Norway",
@@ -1319,6 +1500,35 @@
      },
      "recorded_at": "2026-10-26T04:24:33.977837+00:00",
      "rule": "pfc_27e0f725859bc708f95c58a3",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Minnesota United",
+     "away_key": "minnesotaunited",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7994,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "Major League Soccer",
+     "match": "Los Angeles FC vs Minnesota United",
+     "multi_source": false,
+     "price": 1.54,
+     "price_context": {
+      "book": "asports.bet",
+      "captured_at": "2026-11-01T22:16:44.663978+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:30:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.54,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.635844+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
      "source": "oddspapi",
      "stated": null
     }
@@ -1941,10 +2151,10 @@
    "status_since": "2026-10-15"
   },
   "btts_yes@v1": {
-   "hits": 12,
-   "inv_price_sum": 8.112781099772091,
+   "hits": 13,
+   "inv_price_sum": 8.752985965329069,
    "multi_n": 4,
-   "n": 16,
+   "n": 17,
    "processed": [
     "2026-08-03|Celtic vs Dundee|btts_yes@v1",
     "2026-08-05|Fenerbah\u00e7e vs Sturm Graz|btts_yes@v1",
@@ -1967,9 +2177,10 @@
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|btts_yes@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|btts_yes@v1",
     "2026-10-23|Al Sailiya vs Al Rayyan|btts_yes@v1",
-    "2026-10-23|Inter Kashi vs East Bengal|btts_yes@v1"
+    "2026-10-23|Inter Kashi vs East Bengal|btts_yes@v1",
+    "2026-11-02|Los Angeles FC vs Minnesota United|btts_yes@v1"
    ],
-   "profit": 7.7,
+   "profit": 8.262,
    "records": [
     {
      "away": "Dundee",
@@ -2260,6 +2471,35 @@
      "recorded_at": "2026-10-23T22:34:26.257767+00:00",
      "rule": "pfc_439097cb9bb700e9996c0b07",
      "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "Minnesota United",
+     "away_key": "minnesotaunited",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6155,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "Major League Soccer",
+     "match": "Los Angeles FC vs Minnesota United",
+     "multi_source": false,
+     "price": 1.562,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-01T22:16:44.663978+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:30:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.562,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.670744+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "oddspapi",
      "stated": null
     }
    ],
@@ -2603,10 +2843,10 @@
    "status_since": "2026-10-16"
   },
   "home_over_15@v1": {
-   "hits": 6,
-   "inv_price_sum": 5.46093444409642,
+   "hits": 7,
+   "inv_price_sum": 7.160151411749419,
    "multi_n": 0,
-   "n": 9,
+   "n": 12,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -2616,9 +2856,12 @@
     "2026-10-24|Necaxa vs Ju\u00e1rez|home_over_15@v1",
     "2026-10-25|FC Tokyo vs Mito Hollyhock|home_over_15@v1",
     "2026-10-25|Sagan Tosu vs Vanraure Hachinohe|home_over_15@v1",
-    "2026-10-25|Ehime vs Fukushima United|home_over_15@v1"
+    "2026-10-25|Ehime vs Fukushima United|home_over_15@v1",
+    "2026-11-02|Los Angeles FC vs Minnesota United|home_over_15@v1",
+    "2026-11-02|Sacramento Republic FC vs FC Tulsa|home_over_15@v1",
+    "2026-11-02|Cruz Azul vs Leon|home_over_15@v1"
    ],
-   "profit": 0.94,
+   "profit": -0.274,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -2878,6 +3121,93 @@
      },
      "recorded_at": "2026-10-26T04:24:33.808582+00:00",
      "rule": "pfc_5904b1fc7050646e6321090c",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Minnesota United",
+     "away_key": "minnesotaunited",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.603,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "Major League Soccer",
+     "match": "Los Angeles FC vs Minnesota United",
+     "multi_source": false,
+     "price": 1.54,
+     "price_context": {
+      "book": "pamestoixima.gr",
+      "captured_at": "2026-11-01T22:16:44.663978+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:30:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.54,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.656933+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "FC Tulsa",
+     "away_key": "tulsa",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6997,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Sacramento Republic FC",
+     "home_key": "sacramentorepublic",
+     "league": "United States: USL Championship",
+     "match": "Sacramento Republic FC vs FC Tulsa",
+     "multi_source": false,
+     "price": 2.041,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-01T22:16:47.436570+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T02:00:00+00:00",
+      "league": "United States: USL Championship",
+      "price": 2.041,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.688077+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Leon",
+     "away_key": "leon",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6536,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Cruz Azul",
+     "home_key": "cruzazul",
+     "league": "Mexico,Liga Mx Apertura",
+     "match": "Cruz Azul vs Leon",
+     "multi_source": false,
+     "price": 1.786,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-01T22:16:49.123560+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:10:00+00:00",
+      "league": "Mexico,Liga Mx Apertura",
+      "price": 1.786,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.733085+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
      "source": "oddspapi",
      "stated": null
     }
@@ -3342,10 +3672,10 @@
    "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
-   "hits": 11,
-   "inv_price_sum": 9.988715750800612,
+   "hits": 13,
+   "inv_price_sum": 12.45122311714964,
    "multi_n": 0,
-   "n": 16,
+   "n": 20,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -3402,9 +3732,13 @@
     "2026-10-25|Sporting Kansas City vs Austin FC|home_under_25@v1",
     "2026-10-25|Wellington Phoenix vs Central Coast Mariners|home_under_25@v1",
     "2026-10-25|Colorado Rapids vs Vancouver Whitecaps|home_under_25@v1",
-    "2026-10-25|Sydney FC vs Adelaide United|home_under_25@v1"
+    "2026-10-25|Sydney FC vs Adelaide United|home_under_25@v1",
+    "2026-11-02|Los Angeles FC vs Minnesota United|home_under_25@v1",
+    "2026-11-02|Cruz Azul vs Leon|home_under_25@v1",
+    "2026-11-02|Managua vs UNAN Managua|home_under_25@v1",
+    "2026-11-02|Portland Timbers vs Houston Dynamo|home_under_25@v1"
    ],
-   "profit": 0.488,
+   "profit": -0.35,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -3857,6 +4191,122 @@
      "rule": "pfc_27e0f725859bc708f95c58a3",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Minnesota United",
+     "away_key": "minnesotaunited",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6445,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "Major League Soccer",
+     "match": "Los Angeles FC vs Minnesota United",
+     "multi_source": false,
+     "price": 1.562,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-01T22:16:44.663978+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:30:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.562,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.649960+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Leon",
+     "away_key": "leon",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6325,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Cruz Azul",
+     "home_key": "cruzazul",
+     "league": "Mexico,Liga Mx Apertura",
+     "match": "Cruz Azul vs Leon",
+     "multi_source": false,
+     "price": 1.6,
+     "price_context": {
+      "book": "7bet.lt",
+      "captured_at": "2026-11-01T22:16:49.123560+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:10:00+00:00",
+      "league": "Mexico,Liga Mx Apertura",
+      "price": 1.6,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.712083+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "UNAN Managua",
+     "away_key": "unanmanagua",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6272,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Managua",
+     "home_key": "managua",
+     "league": "Nicaragua Primera Division",
+     "match": "Managua vs UNAN Managua",
+     "multi_source": false,
+     "price": 2.01,
+     "price_context": {
+      "book": "admiralbet.ba",
+      "captured_at": "2026-11-01T22:16:46.055909+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:00:00+00:00",
+      "league": "Nicaragua Primera Division",
+      "price": 2.01,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.774739+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Houston Dynamo",
+     "away_key": "houstondynamo",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7036,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Portland Timbers",
+     "home_key": "portlandtimbers",
+     "league": "MLS",
+     "match": "Portland Timbers vs Houston Dynamo",
+     "multi_source": false,
+     "price": 1.429,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-01T22:16:51.095990+00:00",
+      "contract_id": "pfc_226efd387e217a9d58a11f79",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T02:45:00+00:00",
+      "league": "MLS",
+      "price": 1.429,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.810609+00:00",
+     "rule": "pfc_226efd387e217a9d58a11f79",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -3866,9 +4316,9 @@
   },
   "home_under_35@v1": {
    "hits": 2,
-   "inv_price_sum": 1.0562119584675975,
+   "inv_price_sum": 1.7969526992083382,
    "multi_n": 0,
-   "n": 2,
+   "n": 3,
    "processed": [
     "2026-08-13|Ilves vs HNK Rijeka|home_under_35@v1",
     "2026-08-13|NSI Runavik vs FC Lugano|home_under_35@v1",
@@ -3945,9 +4395,10 @@
     "2026-10-11|Svitavy vs Vysoke Myto|home_under_35@v1",
     "2026-10-10|Brusque vs Paysandu|home_under_35@v1",
     "2026-10-23|Dynamo Kyiv vs Kudrivka|home_under_35@v1",
-    "2026-10-21|Guadalajara vs Necaxa|home_under_35@v1"
+    "2026-10-21|Guadalajara vs Necaxa|home_under_35@v1",
+    "2026-11-02|Managua vs UNAN Managua|home_under_35@v1"
    ],
-   "profit": 2.13,
+   "profit": 1.13,
    "records": [
     {
      "away": "Kudrivka",
@@ -3996,6 +4447,35 @@
      "rule": "pfc_439097cb9bb700e9996c0b07",
      "source": "oddspapi",
      "stated": 0.8376
+    },
+    {
+     "away": "UNAN Managua",
+     "away_key": "unanmanagua",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.8033,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Managua",
+     "home_key": "managua",
+     "league": "Nicaragua Primera Division",
+     "match": "Managua vs UNAN Managua",
+     "multi_source": false,
+     "price": 1.35,
+     "price_context": {
+      "book": "1xbet",
+      "captured_at": "2026-11-01T22:16:46.055909+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:00:00+00:00",
+      "league": "Nicaragua Primera Division",
+      "price": 1.35,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.753017+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -4005,9 +4485,9 @@
   },
   "match_over_15@v1": {
    "hits": 39,
-   "inv_price_sum": 42.48609303952978,
+   "inv_price_sum": 43.165902692826855,
    "multi_n": 4,
-   "n": 50,
+   "n": 51,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -4082,9 +4562,10 @@
     "2026-10-20|El Geish vs Pyramids FC|match_over_15@v1",
     "2026-10-21|Millonarios vs Once Caldas|match_over_15@v1",
     "2026-10-25|Sagan Tosu vs Vanraure Hachinohe|match_over_15@v1",
-    "2026-10-26|Mladost \u017ddralovi vs Jadran LP|match_over_15@v1"
+    "2026-10-26|Mladost \u017ddralovi vs Jadran LP|match_over_15@v1",
+    "2026-11-02|Sacramento Republic FC vs FC Tulsa|match_over_15@v1"
    ],
-   "profit": -3.725,
+   "profit": -4.725,
    "records": [
     {
      "away": "Aston Villa",
@@ -4816,6 +5297,35 @@
      "rule": "pfc_1607fec83282d02c5254c2bf",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "FC Tulsa",
+     "away_key": "tulsa",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.8368,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Sacramento Republic FC",
+     "home_key": "sacramentorepublic",
+     "league": "United States: USL Championship",
+     "match": "Sacramento Republic FC vs FC Tulsa",
+     "multi_source": false,
+     "price": 1.471,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-01T22:16:47.436570+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T02:00:00+00:00",
+      "league": "United States: USL Championship",
+      "price": 1.471,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.681081+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -4824,11 +5334,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 342,
+   "hits": 344,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 335.18516893797613,
+   "inv_price_sum": 337.6307511907592,
    "multi_n": 103,
-   "n": 515,
+   "n": 519,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -5588,9 +6098,13 @@
     "2026-11-01|Djurg\u00e5rden vs Degerfors|match_over_25@v1",
     "2026-11-01|Brighton W vs Crystal Palace W|match_over_25@v1",
     "2026-11-01|PAOK vs Asteras Tripolis|match_over_25@v1",
-    "2026-11-01|Partizan vs Zemun|match_over_25@v1"
+    "2026-11-01|Partizan vs Zemun|match_over_25@v1",
+    "2026-11-02|Benfica vs Alverca|match_over_25@v1",
+    "2026-11-02|Los Angeles FC vs Minnesota United|match_over_25@v1",
+    "2026-11-02|Sacramento Republic FC vs FC Tulsa|match_over_25@v1",
+    "2026-11-02|Radomiak Radom vs \u015al\u0105sk Wroc\u0142aw|match_over_25@v1"
    ],
-   "profit": 12.757,
+   "profit": 11.847,
    "records": [
     {
      "away": "Spartak Varna",
@@ -13494,6 +14008,122 @@
      "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "Alverca",
+     "away_key": "alverca",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7123,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Benfica",
+     "home_key": "benfica",
+     "league": "Liga Portugal",
+     "match": "Benfica vs Alverca",
+     "multi_source": false,
+     "price": 1.35,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-11-01T22:16:42.191827+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T20:15:00+00:00",
+      "league": "Liga Portugal",
+      "price": 1.35,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.618293+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Minnesota United",
+     "away_key": "minnesotaunited",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7123,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "Major League Soccer",
+     "match": "Los Angeles FC vs Minnesota United",
+     "multi_source": false,
+     "price": 1.52,
+     "price_context": {
+      "book": "pamestoixima.gr",
+      "captured_at": "2026-11-01T22:16:44.663978+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:30:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.52,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.642970+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "FC Tulsa",
+     "away_key": "tulsa",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6322,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Sacramento Republic FC",
+     "home_key": "sacramentorepublic",
+     "league": "United States: USL Championship",
+     "match": "Sacramento Republic FC vs FC Tulsa",
+     "multi_source": false,
+     "price": 2.439,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-01T22:16:47.436570+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T02:00:00+00:00",
+      "league": "United States: USL Championship",
+      "price": 2.439,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.695228+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "\u015al\u0105sk Wroc\u0142aw",
+     "away_key": "slaskwroclaw",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7123,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Radomiak Radom",
+     "home_key": "radomiakradom",
+     "league": "Ekstraklasa",
+     "match": "Radomiak Radom vs \u015al\u0105sk Wroc\u0142aw",
+     "multi_source": false,
+     "price": 1.57,
+     "price_context": {
+      "book": "Unibet (NL)",
+      "captured_at": "2026-11-01T22:16:42.386921+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T17:00:00+00:00",
+      "league": "Ekstraklasa",
+      "price": 1.57,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.743019+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "theoddsapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -14565,9 +15195,9 @@
   },
   "match_under_35@v1": {
    "hits": 5,
-   "inv_price_sum": 5.888562155773584,
+   "inv_price_sum": 7.387846554217646,
    "multi_n": 0,
-   "n": 11,
+   "n": 14,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -14579,9 +15209,12 @@
     "2026-10-25|Barcelona vs Real Madrid|match_under_35@v1",
     "2026-10-26|Be\u015fikta\u015f vs Ba\u015fak\u015fehir|match_under_35@v1",
     "2026-10-28|AC Milan vs Bologna|match_under_35@v1",
-    "2026-11-01|Ogre United vs Riga|match_under_35@v1"
+    "2026-11-01|Ogre United vs Riga|match_under_35@v1",
+    "2026-11-02|Managua vs UNAN Managua|match_under_35@v1",
+    "2026-11-02|Los Angeles FC vs Minnesota United|match_under_35@v1",
+    "2026-11-02|Portland Timbers vs Houston Dynamo|match_under_35@v1"
    ],
-   "profit": 1.0,
+   "profit": -2.0,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -14901,6 +15534,93 @@
      "rule": "pfc_1607fec83282d02c5254c2bf",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "UNAN Managua",
+     "away_key": "unanmanagua",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6169,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Managua",
+     "home_key": "managua",
+     "league": "Nicaragua Primera Division",
+     "match": "Managua vs UNAN Managua",
+     "multi_source": false,
+     "price": 1.8,
+     "price_context": {
+      "book": "betway",
+      "captured_at": "2026-11-01T22:16:46.055909+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:00:00+00:00",
+      "league": "Nicaragua Primera Division",
+      "price": 1.8,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.767281+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Minnesota United",
+     "away_key": "minnesotaunited",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6143,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "MLS",
+     "match": "Los Angeles FC vs Minnesota United",
+     "multi_source": false,
+     "price": 1.813,
+     "price_context": {
+      "book": "4casters",
+      "captured_at": "2026-11-01T22:16:44.663978+00:00",
+      "contract_id": "pfc_226efd387e217a9d58a11f79",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:30:00+00:00",
+      "league": "MLS",
+      "price": 1.813,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.790517+00:00",
+     "rule": "pfc_226efd387e217a9d58a11f79",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Houston Dynamo",
+     "away_key": "houstondynamo",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6143,
+     "date": "2026-11-02",
+     "hit": false,
+     "home": "Portland Timbers",
+     "home_key": "portlandtimbers",
+     "league": "MLS",
+     "match": "Portland Timbers vs Houston Dynamo",
+     "multi_source": false,
+     "price": 2.55,
+     "price_context": {
+      "book": "dafabet",
+      "captured_at": "2026-11-01T22:16:51.095990+00:00",
+      "contract_id": "pfc_226efd387e217a9d58a11f79",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T02:45:00+00:00",
+      "league": "MLS",
+      "price": 2.55,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.825000+00:00",
+     "rule": "pfc_226efd387e217a9d58a11f79",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -14908,10 +15628,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 26,
-   "inv_price_sum": 18.47113396742882,
+   "hits": 30,
+   "inv_price_sum": 20.916264776803505,
    "multi_n": 0,
-   "n": 30,
+   "n": 34,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -14942,9 +15662,13 @@
     "2026-11-01|Young Boys vs Z\u00fcrich|match_under_45@v1",
     "2026-11-01|Brighton W vs Crystal Palace W|match_under_45@v1",
     "2026-11-01|Ogre United vs Riga|match_under_45@v1",
-    "2026-11-01|Partizan vs Zemun|match_under_45@v1"
+    "2026-11-01|Partizan vs Zemun|match_under_45@v1",
+    "2026-11-02|Los Angeles FC vs Minnesota United|match_under_45@v1",
+    "2026-11-02|Cruz Azul vs Leon|match_under_45@v1",
+    "2026-11-02|Managua vs UNAN Managua|match_under_45@v1",
+    "2026-11-02|Portland Timbers vs Houston Dynamo|match_under_45@v1"
    ],
-   "profit": 12.621,
+   "profit": 15.317,
    "records": [
     {
      "away": "Atlante",
@@ -15773,10 +16497,126 @@
      "rule": "pfc_fdade2e70df4d4bb78a8cd6e",
      "source": "betexplorer",
      "stated": null
+    },
+    {
+     "away": "Minnesota United",
+     "away_key": "minnesotaunited",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7206,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Los Angeles FC",
+     "home_key": "losangeles",
+     "league": "Major League Soccer",
+     "match": "Los Angeles FC vs Minnesota United",
+     "multi_source": false,
+     "price": 1.583,
+     "price_context": {
+      "book": "7bet.lt",
+      "captured_at": "2026-11-01T22:16:44.663978+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:30:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.583,
+      "selection": "over",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.628813+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Leon",
+     "away_key": "leon",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.753,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Cruz Azul",
+     "home_key": "cruzazul",
+     "league": "Mexico,Liga Mx Apertura",
+     "match": "Cruz Azul vs Leon",
+     "multi_source": false,
+     "price": 2.02,
+     "price_context": {
+      "book": "dafabet",
+      "captured_at": "2026-11-01T22:16:49.123560+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:10:00+00:00",
+      "league": "Mexico,Liga Mx Apertura",
+      "price": 2.02,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.705016+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "UNAN Managua",
+     "away_key": "unanmanagua",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7751,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Managua",
+     "home_key": "managua",
+     "league": "Nicaragua Primera Division",
+     "match": "Managua vs UNAN Managua",
+     "multi_source": false,
+     "price": 1.333,
+     "price_context": {
+      "book": "betway",
+      "captured_at": "2026-11-01T22:16:46.055909+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T01:00:00+00:00",
+      "league": "Nicaragua Primera Division",
+      "price": 1.333,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.760194+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Houston Dynamo",
+     "away_key": "houstondynamo",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7929,
+     "date": "2026-11-02",
+     "hit": true,
+     "home": "Portland Timbers",
+     "home_key": "portlandtimbers",
+     "league": "MLS",
+     "match": "Portland Timbers vs Houston Dynamo",
+     "multi_source": false,
+     "price": 1.76,
+     "price_context": {
+      "book": "7bet.lt",
+      "captured_at": "2026-11-01T22:16:51.095990+00:00",
+      "contract_id": "pfc_226efd387e217a9d58a11f79",
+      "decision_at": "2026-11-02T00:19:51+02:00",
+      "kickoff": "2026-11-02T02:45:00+00:00",
+      "league": "MLS",
+      "price": 1.76,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-02T22:44:22.817798+00:00",
+     "rule": "pfc_226efd387e217a9d58a11f79",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
-   "status_reason": "n=30 wilsonLB95=0.7032 >= mean breakeven 0.6157 but multi-source verification 0/8 not met",
+   "status_reason": "n=34 wilsonLB95=0.7338 >= mean breakeven 0.6152 but multi-source verification 0/9 not met",
    "status_since": "2026-10-22"
   }
  },
