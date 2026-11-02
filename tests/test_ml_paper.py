@@ -463,7 +463,7 @@ def test_receipts_are_persistable_but_not_pick_archives(tmp_path):
     result = subprocess.run(
         ["git", "check-ignore", "--no-index", "--stdin"],
         input=(
-            "localdata/autobets_ML_2026-11-02.json\n"
+            "localdata/phase5_reconciliation/ml_paper_receipts/autobets_ML_2026-11-02.json\n"
             "localdata/autobets_ML_performance.json\n"
             "localdata/autobets_ML_state.json\n"
         ),
