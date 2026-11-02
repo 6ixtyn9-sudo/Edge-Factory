@@ -1,0 +1,270 @@
+{
+  "added": 34262,
+  "attempted": 7,
+  "attempted_fixtures": [
+    {
+      "away": "Argentinos Juniors",
+      "fixture_id": "id1000015573265492",
+      "home": "Atletico Tucuman"
+    },
+    {
+      "away": "CA Banfield",
+      "fixture_id": "id1000015573265494",
+      "home": "Independiente Rivadavia"
+    },
+    {
+      "away": "SV Caiquetio",
+      "fixture_id": "id1005104676143424",
+      "home": "Bubali"
+    },
+    {
+      "away": "Cavalier FC",
+      "fixture_id": "id1000189274695508",
+      "home": "Waterhouse FC"
+    },
+    {
+      "away": "Atletico San Luis",
+      "fixture_id": "id1002895373204694",
+      "home": "Club Leon"
+    },
+    {
+      "away": "Atletico Nacional",
+      "fixture_id": "id1002707072335258",
+      "home": "CA Bucaramanga"
+    },
+    {
+      "away": "CD Malacateco",
+      "fixture_id": "id1002739672475058",
+      "home": "CD Suchitepequez"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-03",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 59,
+    "remaining_today": 16,
+    "spent_today": 9
+  },
+  "budget_deferred": 1,
+  "captured_at": "2026-11-02T22:26:06+00:00",
+  "date": "2026-11-03",
+  "errors": [],
+  "excluded_srl_fixtures": 9,
+  "fixtures": 223,
+  "future_slate_fixtures": 16,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 608,
+  "markets": {
+    "1x2": 4036,
+    "btts": 2005,
+    "ou_0.5": 1237,
+    "ou_0.75": 145,
+    "ou_1": 258,
+    "ou_1.25": 287,
+    "ou_1.5": 1745,
+    "ou_1.75": 500,
+    "ou_10.5": 12,
+    "ou_11.5": 12,
+    "ou_12.5": 12,
+    "ou_13.5": 12,
+    "ou_14.5": 9,
+    "ou_2": 786,
+    "ou_2.25": 910,
+    "ou_2.5": 2219,
+    "ou_2.75": 877,
+    "ou_3": 794,
+    "ou_3.25": 613,
+    "ou_3.5": 2262,
+    "ou_3.75": 393,
+    "ou_4": 464,
+    "ou_4.25": 297,
+    "ou_4.5": 1898,
+    "ou_4.75": 235,
+    "ou_5": 195,
+    "ou_5.25": 82,
+    "ou_5.5": 1114,
+    "ou_5.75": 13,
+    "ou_6": 33,
+    "ou_6.25": 5,
+    "ou_6.5": 363,
+    "ou_6.75": 5,
+    "ou_7": 4,
+    "ou_7.5": 145,
+    "ou_7.75": 10,
+    "ou_8": 5,
+    "ou_8.25": 5,
+    "ou_8.5": 51,
+    "ou_9.5": 12,
+    "tt_away_0.5": 1375,
+    "tt_away_0.75": 52,
+    "tt_away_1": 108,
+    "tt_away_1.25": 66,
+    "tt_away_1.5": 1434,
+    "tt_away_1.75": 38,
+    "tt_away_2": 72,
+    "tt_away_2.25": 6,
+    "tt_away_2.5": 1215,
+    "tt_away_3": 2,
+    "tt_away_3.5": 411,
+    "tt_away_4": 2,
+    "tt_away_4.5": 70,
+    "tt_away_5": 2,
+    "tt_away_5.5": 27,
+    "tt_away_6.5": 6,
+    "tt_home_0.5": 1054,
+    "tt_home_0.75": 38,
+    "tt_home_1": 62,
+    "tt_home_1.25": 44,
+    "tt_home_1.5": 1655,
+    "tt_home_1.75": 66,
+    "tt_home_2": 76,
+    "tt_home_2.25": 60,
+    "tt_home_2.5": 1320,
+    "tt_home_2.75": 6,
+    "tt_home_3": 21,
+    "tt_home_3.25": 2,
+    "tt_home_3.5": 658,
+    "tt_home_3.75": 2,
+    "tt_home_4": 5,
+    "tt_home_4.5": 209,
+    "tt_home_5": 2,
+    "tt_home_5.5": 33,
+    "tt_home_6.5": 3
+  },
+  "markets_source": "fetch",
+  "matched": 7,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 5,
+    "market_id_unknown": 7681,
+    "market_inactive": 1515,
+    "market_unsupported_clean_sheet": 598,
+    "market_unsupported_corners": 7441,
+    "market_unsupported_correct_score": 2185,
+    "market_unsupported_double_chance": 1265,
+    "market_unsupported_draw_no_bet": 1005,
+    "market_unsupported_handicap": 9994,
+    "market_unsupported_odd_even": 1956,
+    "market_unsupported_period": 33633,
+    "market_unsupported_win_to_nil": 1061,
+    "outcome_inactive": 4678
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 5,
+      "market_inactive": 1515,
+      "outcome_inactive": 4678
+    },
+    "loss_or_diagnosis": {
+      "market_id_unknown": 7681,
+      "market_unsupported_clean_sheet": 598,
+      "market_unsupported_corners": 7441,
+      "market_unsupported_correct_score": 2185,
+      "market_unsupported_double_chance": 1265,
+      "market_unsupported_draw_no_bet": 1005,
+      "market_unsupported_handicap": 9994,
+      "market_unsupported_odd_even": 1956,
+      "market_unsupported_period": 33633,
+      "market_unsupported_win_to_nil": 1061
+    }
+  },
+  "pending_fixtures": 8,
+  "quoted_fixtures": [
+    {
+      "away": "Argentinos Juniors",
+      "fixture_id": "id1000015573265492",
+      "home": "Atletico Tucuman"
+    },
+    {
+      "away": "CA Banfield",
+      "fixture_id": "id1000015573265494",
+      "home": "Independiente Rivadavia"
+    },
+    {
+      "away": "SV Caiquetio",
+      "fixture_id": "id1005104676143424",
+      "home": "Bubali"
+    },
+    {
+      "away": "Cavalier FC",
+      "fixture_id": "id1000189274695508",
+      "home": "Waterhouse FC"
+    },
+    {
+      "away": "Atletico San Luis",
+      "fixture_id": "id1002895373204694",
+      "home": "Club Leon"
+    },
+    {
+      "away": "Atletico Nacional",
+      "fixture_id": "id1002707072335258",
+      "home": "CA Bucaramanga"
+    },
+    {
+      "away": "CD Malacateco",
+      "fixture_id": "id1002739672475058",
+      "home": "CD Suchitepequez"
+    }
+  ],
+  "reserved_requests": 16,
+  "rows": 34262,
+  "schema": 1,
+  "slate_candidate_fixtures": 21,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 0,
+  "slate_provider_overlap_fixtures": 13,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Paris Saint Germain",
+      "home": "Villarreal",
+      "league": "Champions League",
+      "normalized_pair": "paris saint germain|villarreal"
+    },
+    {
+      "away": "Inter",
+      "home": "Feyenoord",
+      "league": "Champions League",
+      "normalized_pair": "feyenoord|inter"
+    },
+    {
+      "away": "Atl\u00e9tico San Luis W",
+      "home": "Le\u00f3n W",
+      "league": "Mexico Liga MX Femenil",
+      "normalized_pair": "atletico san luis w|leon w"
+    },
+    {
+      "away": "FC Bayern M\u00fcnchen",
+      "home": "Atl\u00e9tico Madrid",
+      "league": "Champions League",
+      "normalized_pair": "atletico madrid|bayern munchen"
+    },
+    {
+      "away": "Iwaki",
+      "home": "Omiya Ardija",
+      "league": "J2-League",
+      "normalized_pair": "iwaki|omiya ardija"
+    },
+    {
+      "away": "Santos",
+      "home": "RB Bragantino",
+      "league": "Brazil: Serie A",
+      "normalized_pair": "rb bragantino|santos"
+    },
+    {
+      "away": "Deportivo Maldonado",
+      "home": "Albion FC",
+      "league": "Uruguay: Primera Divisi\u00f3n",
+      "normalized_pair": "albion|deportivo maldonado"
+    },
+    {
+      "away": "Consadole Sapporo",
+      "home": "Imabari",
+      "league": "J2-League",
+      "normalized_pair": "consadole sapporo|imabari"
+    }
+  ],
+  "source": "oddspapi_odds",
+  "status": "reserved"
+}

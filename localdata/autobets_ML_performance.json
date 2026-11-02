@@ -3,116 +3,116 @@
   "paper_only": true,
   "unit": "model_chosen_paper_stakes_compounding_own_bank",
   "base_paper_units": 100.0,
-  "paper_bank_units": 100.0,
-  "paper_multiple": 1.0,
-  "paper_committed_units": 8.196803,
+  "paper_bank_units": 91.803197,
+  "paper_multiple": 0.9180319699999999,
+  "paper_committed_units": 0,
   "paper_free_units": 91.803197,
-  "settled_stake_units": 0,
+  "settled_stake_units": 8.196803,
   "receipt_days": 1,
   "bet_days": 1,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
-  "settled_accas": 0,
+  "settled_accas": 1,
   "wins": 0,
-  "losses": 0,
-  "hit_rate": null,
-  "pending_accas": 1,
-  "unresolved_result_legs": 2,
-  "resolved_result_legs": 0,
-  "profit_units": 0,
-  "roi": null,
-  "max_daily_close_drawdown_units": 0.0,
-  "max_daily_close_drawdown_fraction": 0.0,
+  "losses": 1,
+  "hit_rate": 0.0,
+  "pending_accas": 0,
+  "unresolved_result_legs": 0,
+  "resolved_result_legs": 2,
+  "profit_units": -8.196803,
+  "roi": -1.0,
+  "max_daily_close_drawdown_units": 8.196803,
+  "max_daily_close_drawdown_fraction": 0.08196803,
   "drawdown_basis": "ticket_date_latest_known_result_marks_pending_at_cost_not_settlement_timeline",
-  "drawdown_has_pending_results": true,
-  "selected_leg_brier_score": null,
+  "drawdown_has_pending_results": false,
+  "selected_leg_brier_score": 0.37256510937626536,
   "calibration": {
     "all_candidates": {
-      "resolved_fixtures": 0,
-      "resolved_observations": 0,
-      "base_brier": null,
-      "base_logloss": null,
-      "calibrated_brier": null,
-      "calibrated_logloss": null
+      "resolved_fixtures": 2,
+      "resolved_observations": 18,
+      "base_brier": 0.38828951255141436,
+      "base_logloss": 1.028285863873222,
+      "calibrated_brier": 0.38828951255141436,
+      "calibrated_logloss": 1.028285863873222
     },
     "selected_candidates": {
-      "resolved_fixtures": 0,
-      "resolved_observations": 0,
-      "base_brier": null,
-      "base_logloss": null,
-      "calibrated_brier": null,
-      "calibrated_logloss": null
+      "resolved_fixtures": 2,
+      "resolved_observations": 2,
+      "base_brier": 0.37256510937626536,
+      "base_logloss": 1.0061924449988884,
+      "calibrated_brier": 0.37256510937626536,
+      "calibrated_logloss": 1.0061924449988884
     },
     "source_comparison": {
       "basis": "frozen_market_matched_source_forecasts_not_independent_ground_truth",
       "weighting": "one_total_weight_per_fixture_within_each_group",
       "limitation": "descriptive_only_overlapping_groups_not_additive_no_significance_or_rule_changes",
       "all_candidates": {
-        "paired_fixtures": 0,
-        "paired_observations": 0,
-        "missing_source_fixtures": 0,
-        "missing_source_observations": 0,
-        "base_brier": null,
-        "base_logloss": null,
-        "model_brier": null,
-        "model_logloss": null,
-        "source_brier": null,
-        "source_logloss": null
+        "paired_fixtures": 2,
+        "paired_observations": 16,
+        "missing_source_fixtures": 1,
+        "missing_source_observations": 2,
+        "base_brier": 0.39526951049186215,
+        "base_logloss": 1.0447525788569065,
+        "model_brier": 0.39526951049186215,
+        "model_logloss": 1.0447525788569065,
+        "source_brier": 0.315156517580324,
+        "source_logloss": 0.8259987569211759
       },
       "selected_candidates": {
-        "paired_fixtures": 0,
-        "paired_observations": 0,
+        "paired_fixtures": 2,
+        "paired_observations": 2,
         "missing_source_fixtures": 0,
         "missing_source_observations": 0,
-        "base_brier": null,
-        "base_logloss": null,
-        "model_brier": null,
-        "model_logloss": null,
-        "source_brier": null,
-        "source_logloss": null
+        "base_brier": 0.37256510937626536,
+        "base_logloss": 1.0061924449988884,
+        "model_brier": 0.37256510937626536,
+        "model_logloss": 1.0061924449988884,
+        "source_brier": 0.39979384364635057,
+        "source_logloss": 1.0051602138621554
       },
       "by_model_source_gap": {
         "lt_10pp": {
-          "paired_fixtures": 0,
-          "paired_observations": 0,
+          "paired_fixtures": 1,
+          "paired_observations": 9,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": null,
-          "base_logloss": null,
-          "model_brier": null,
-          "model_logloss": null,
-          "source_brier": null,
-          "source_logloss": null
+          "base_brier": 0.17233137126400708,
+          "base_logloss": 0.5193478411544796,
+          "model_brier": 0.17233137126400708,
+          "model_logloss": 0.5193478411544796,
+          "source_brier": 0.15000538790680568,
+          "source_logloss": 0.471275043618504
         },
         "10_to_lt_20pp": {
-          "paired_fixtures": 0,
-          "paired_observations": 0,
+          "paired_fixtures": 2,
+          "paired_observations": 6,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": null,
-          "base_logloss": null,
-          "model_brier": null,
-          "model_logloss": null,
-          "source_brier": null,
-          "source_logloss": null
+          "base_brier": 0.3618610684740644,
+          "base_logloss": 0.9639672818966484,
+          "model_brier": 0.3618610684740644,
+          "model_logloss": 0.9639672818966484,
+          "source_brier": 0.3064306064839368,
+          "source_logloss": 0.8098606217878455
         },
         "ge_20pp": {
-          "paired_fixtures": 0,
-          "paired_observations": 0,
+          "paired_fixtures": 1,
+          "paired_observations": 1,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": null,
-          "base_logloss": null,
-          "model_brier": null,
-          "model_logloss": null,
-          "source_brier": null,
-          "source_logloss": null
+          "base_brier": 0.09218075365797189,
+          "base_logloss": 0.36184950194976545,
+          "model_brier": 0.09218075365797189,
+          "model_logloss": 0.36184950194976545,
+          "source_brier": 0.3303319693011872,
+          "source_logloss": 0.8550666055910534
         },
         "unavailable": {
           "paired_fixtures": 0,
           "paired_observations": 0,
-          "missing_source_fixtures": 0,
-          "missing_source_observations": 0,
+          "missing_source_fixtures": 1,
+          "missing_source_observations": 2,
           "base_brier": null,
           "base_logloss": null,
           "model_brier": null,
@@ -121,17 +121,69 @@
           "source_logloss": null
         }
       },
-      "by_board_bucket": {}
+      "by_board_bucket": {
+        "CAUTION": {
+          "paired_fixtures": 1,
+          "paired_observations": 2,
+          "missing_source_fixtures": 0,
+          "missing_source_observations": 0,
+          "base_brier": 0.6529494650945589,
+          "base_logloss": 1.6505353880480111,
+          "model_brier": 0.6529494650945589,
+          "model_logloss": 1.6505353880480111,
+          "source_brier": 0.46925571799151394,
+          "source_logloss": 1.1552538221332573
+        },
+        "SKIPPED_VETO": {
+          "paired_fixtures": 1,
+          "paired_observations": 14,
+          "missing_source_fixtures": 1,
+          "missing_source_observations": 2,
+          "base_brier": 0.1375895558891654,
+          "base_logloss": 0.43896976966580176,
+          "model_brier": 0.1375895558891654,
+          "model_logloss": 0.43896976966580176,
+          "source_brier": 0.16105731716913405,
+          "source_logloss": 0.4967436917090945
+        }
+      }
     }
   },
-  "acca_calibration_by_length": {},
+  "acca_calibration_by_length": {
+    "2": {
+      "resolved": 1,
+      "wins": 0,
+      "predicted_wins": 0.5627176577064706
+    }
+  },
   "current_risk_policy": {
     "schema": "autobets_ML_v2",
     "kelly_multiplier": 0.25,
     "max_free_bank_exposure": 0.25,
     "bankruptcy": "zero_free_capital_no_new_stakes_no_refill"
   },
-  "by_bucket_market_leg_diagnostics": {},
+  "by_bucket_market_leg_diagnostics": {
+    "bucket:SKIPPED_VETO": {
+      "settled": 1,
+      "wins": 1,
+      "profit": 1.12
+    },
+    "market:1x2": {
+      "settled": 1,
+      "wins": 1,
+      "profit": 1.12
+    },
+    "bucket:CAUTION": {
+      "settled": 1,
+      "wins": 0,
+      "profit": -1.0
+    },
+    "market:match_over_25": {
+      "settled": 1,
+      "wins": 0,
+      "profit": -1.0
+    }
+  },
   "history": [
     {
       "date": "2026-11-02",
@@ -141,11 +193,11 @@
           "odds": 2.8620000000000005,
           "stake_units": 8.196803,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -8.196803,
           "legs": [
             {
               "away": "\u015al\u0105sk Wroc\u0142aw",

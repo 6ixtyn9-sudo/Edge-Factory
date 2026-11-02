@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-11-02T21:37:42",
+  "generated_at": "2026-11-03T00:52:25",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 25.864296,
-  "multiple": 0.25864296,
+  "bank_pct": 22.631296,
+  "multiple": 0.22631295999999998,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 19,
+  "bet_days": 20,
   "accas": {
     "wins": 15,
-    "losses": 27
+    "losses": 28
   },
   "open_slips": [
     {
-      "date": "2026-11-02",
-      "staked_pct": 3.233
+      "date": "2026-11-03",
+      "staked_pct": 2.8289
     }
   ],
   "events": [],
@@ -5283,6 +5283,121 @@
       ],
       "bank_pct": 25.8643,
       "close_pct": 25.8642
+    },
+    {
+      "date": "2026-11-02",
+      "staked_pct": 3.233,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.09,
+          "won": false,
+          "stake_pct": 3.233,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Radomiak Radom vs \u015al\u0105sk Wroc\u0142aw",
+              "pick": "over",
+              "odds": 1.55,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "Betsson",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-01T22:16:42.386921+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-02",
+                "Radomiak Radom",
+                "\u015al\u0105sk Wroc\u0142aw"
+              ],
+              "prob": 0.7137,
+              "cohort_evidence": {
+                "rate": 0.7137,
+                "n": 723,
+                "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                "as_of_exclusive": "2026-11-02",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 516,
+                "cohort_lower_bound": 0.6796816949240602,
+                "price_context": {
+                  "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                  "selection": "over",
+                  "league": "Ekstraklasa",
+                  "book": "Betsson",
+                  "source": "theoddsapi",
+                  "price": 1.55,
+                  "captured_at": "2026-11-01T22:16:42.386921+00:00",
+                  "decision_at": "2026-11-02T09:13:17+02:00",
+                  "kickoff": "2026-11-02T17:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.652598109286834,
+              "ml_model_key": "6f22fcd4fa3beed1632d4c9416d73cec25e455d56a7072d83ca7fdb24ab65da6",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7071895502071297,
+              "floor_basis": "inherited",
+              "league": "Ekstraklasa",
+              "shadow": true,
+              "price_kickoff": "2026-11-02T17:00:00Z"
+            },
+            {
+              "match": "Benfica vs Alverca",
+              "pick": "over",
+              "odds": 1.35,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "Betsson",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-01T22:16:42.191827+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-02",
+                "Benfica",
+                "Alverca"
+              ],
+              "prob": 0.7137,
+              "cohort_evidence": {
+                "rate": 0.7137,
+                "n": 723,
+                "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                "as_of_exclusive": "2026-11-02",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 516,
+                "cohort_lower_bound": 0.6796816949240602,
+                "price_context": {
+                  "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                  "selection": "over",
+                  "league": "Liga Portugal",
+                  "book": "Betsson",
+                  "source": "theoddsapi",
+                  "price": 1.35,
+                  "captured_at": "2026-11-01T22:16:42.191827+00:00",
+                  "decision_at": "2026-11-02T09:13:17+02:00",
+                  "kickoff": "2026-11-02T20:15:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8080528850852269,
+              "ml_model_key": "6f22fcd4fa3beed1632d4c9416d73cec25e455d56a7072d83ca7fdb24ab65da6",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7071895502071297,
+              "floor_basis": "inherited",
+              "league": "Liga Portugal",
+              "shadow": false,
+              "price_kickoff": "2026-11-02T20:15:00Z"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 22.6313,
+      "close_pct": 22.6312
     }
   ]
 }
