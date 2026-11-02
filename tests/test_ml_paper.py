@@ -113,6 +113,7 @@ def capture(tmp_path, rows=None, **kwargs):
 def candidate(i, *, odds=2.0, p=0.7, market="1x2", bucket="CAUTION", book="Pinnacle", date=DAY):
     return {
         "candidate_id": str(i),
+        "kickoff_utc": date + "T12:00:00+00:00",
         "date": date,
         "home": f"Home Club {i}",
         "away": f"Away Club {i}",
@@ -129,7 +130,8 @@ def candidate(i, *, odds=2.0, p=0.7, market="1x2", bucket="CAUTION", book="Pinna
 
 def receipt(day, cs, accas=None):
     return {
-        "schema": mp.SCHEMA,
+        "schema": "autobets_ML_v1",
+        "paper_available_at_decision": 100.0,
         "date": day,
         "captured_at": day + "T06:00:00+00:00",
         "draft_persisted_at": day + "T06:00:00+00:00",
@@ -396,11 +398,11 @@ def test_exact_settlement_adapter_refuses_narrow_and_conflicting_keys():
     c = candidate(1)
     specs = at._result_write_key_specs(c["home"], c["away"])
     narrow = {(DAY, h, a): (2, 0) for h, a, n in specs if n}
-    assert at.ml_paper_score_lookup(narrow)(c) is None
+    assert at.ml_paper_score_lookup(narrow, now=FREEZE + timedelta(days=1))(c) is None
     keys = [(DAY, h, a) for h, a, n in specs if not n]
     scores = {k: (2, 0) for k in keys}
-    assert at.ml_paper_score_lookup(scores)(c) == (2, 0)
-    assert at.ml_paper_score_lookup({(DAY, "otherhome", "otheraway"): (2, 0)})(c) is None
+    assert at.ml_paper_score_lookup(scores, now=FREEZE + timedelta(days=1))(c) == (2, 0)
+    assert at.ml_paper_score_lookup({(DAY, "otherhome", "otheraway"): (2, 0)}, now=FREEZE + timedelta(days=1))(c) is None
 
 
 def test_grade_paper_never_loads_or_saves_financial_state(tmp_path, monkeypatch, capsys):
@@ -508,23 +510,26 @@ def test_future_input_timestamp_cannot_be_used(tmp_path, field):
 
 
 def test_own_leg_count_above_three_and_more_than_two_accas():
-    plan = mp.select_accas([candidate(i) for i in range(12)])
+    rows = [candidate(4*i+j, book=f"Book{i}", p=p**.25, odds=p**-.5)
+            for i, p in enumerate((.9, .6, .3)) for j in range(4)]
+    plan = mp.select_accas(rows)
     assert len(plan) > 2
     assert any(len(a["legs"]) > 3 and a["odds"] > 10 for a in plan)
-    assert sum(len(a["legs"]) for a in plan) == 12
+    assert len({c["candidate_id"] for a in plan for c in a["legs"]}) == 12
     large = mp.select_accas([candidate(i, p=0.99) for i in range(8)])
     assert max(len(a["legs"]) for a in large) == 8
 
 
 def test_model_chooses_unequal_stakes_and_rescales_without_leverage():
-    rows = [candidate(i, p=0.99 if i < 2 else 0.7, book="A" if i < 2 else "B") for i in range(4)]
+    rows = [candidate(2*i+j, book=f"Book{i}", p=p**.5, odds=1/p)
+            for i, p in enumerate((.9, .3)) for j in range(2)]
     before = deepcopy(rows)
     plan = mp.select_accas(rows)
     assert len(plan) == 2 and rows == before
     assert plan[0]["stake_units"] > plan[1]["stake_units"] > 1.0
-    assert sum(a["model_kelly_fraction"] for a in plan) > 1.0
-    assert sum(a["stake_units"] for a in plan) <= 100.0
-    assert sum(a["stake_units"] for a in plan) == pytest.approx(100.0, abs=2e-6)
+    assert all(a["model_kelly_fraction"] > 0 for a in plan)
+    assert 0 < sum(a["stake_units"] for a in plan) <= 25.0
+    assert all(a["portfolio_allocation"]["kelly_multiplier"] == .25 for a in plan)
     smaller = mp.select_accas(rows, 25.0)
     for large, small in zip(plan, smaller):
         assert small["stake_units"] == pytest.approx(large["stake_units"] / 4, abs=1e-6)
@@ -533,7 +538,8 @@ def test_model_chooses_unequal_stakes_and_rescales_without_leverage():
 
 
 def test_card_count_is_not_capped_even_when_budget_is_rescaled():
-    rows = [candidate(i, p=0.99, book=f"Book{i // 2}") for i in range(12)]
+    rows = [candidate(2*i+j, book=f"Book{i}", p=p**.5, odds=1/p)
+            for i, p in enumerate((.9, .75, .6, .45, .3, .15)) for j in range(2)]
     plan = mp.select_accas(rows)
     assert len(plan) == 6
     assert sum(a["stake_units"] for a in plan) <= 100.0
@@ -600,9 +606,14 @@ def test_invalid_draft_never_becomes_a_frozen_card(tmp_path, tamper):
         row["draft_persisted_at"] = FREEZE.isoformat()
         row["sha256"] = mp.digest({k: v for k, v in row.items() if k != "sha256"})
     path.write_text(json.dumps(row))
-    with pytest.raises(ValueError, match="invalid or post-cutoff"):
-        run_capture(tmp_path, {}, now=FREEZE)
-    assert not mp.receipt_path(tmp_path, DAY).exists()
+    damaged = path.read_bytes()
+    sealed = run_capture(tmp_path, {}, now=FREEZE)
+    assert sealed["status"] == "missed_freeze_no_paper_bet"
+    assert not sealed["accas"] and not sealed["candidates"]
+    assert sealed["rejections"] == {"corrupt_pre_cutoff_draft": 1}
+    assert path.read_bytes() == damaged
+    assert (tmp_path / sealed["draft_integrity_error"]["quarantine"]).read_bytes() == damaged
+    mp.validate_record(sealed, DAY)
 
 
 def test_build_crossing_cutoff_cannot_persist_a_new_draft(tmp_path, monkeypatch):
@@ -657,7 +668,10 @@ def test_own_bank_compounds_reserves_pending_and_never_tops_up(tmp_path, outcome
     r = run_capture(tmp_path, context([pick(1), pick(2)]), lookup=lambda c: outcome)
     assert r["paper_available_at_decision"] == available
     if available:
-        assert r["accas"][0]["stake_units"] > 100.0
+        total = sum(a["stake_units"] for a in r["accas"])
+        assert 0 < total <= available * mp.MAX_PAPER_EXPOSURE
+        baseline = run_capture(tmp_path / "fresh", context([pick(1), pick(2)]))
+        assert total == pytest.approx(sum(a["stake_units"] for a in baseline["accas"]) * 4, abs=5e-6)
     else:
         assert not r["accas"]
     assert r["paper_pending_reserved_at_decision"] == (100.0 if outcome is None else 0.0)
@@ -722,7 +736,11 @@ def test_daily_runs_paper_independently_next_to_existing_tickets():
         and n.args
         and isinstance(n.args[0], ast.Constant)
     ]
-    assert commands.count("PYTHONPATH=src python3 scripts/auto_tickets.py --autobets-ml") == 2
+    assert commands.count("PYTHONPATH=src python3 scripts/auto_tickets.py --autobets-ml") == 1
+    finalizer = next(n for n in tree.body if isinstance(n, ast.FunctionDef)
+                     and n.name == "finalize_priced_candidate_slate")
+    assert any(isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+               and n.func.id == "run_ml_paper" for n in ast.walk(finalizer))
     assert commands.count("PYTHONPATH=src python3 scripts/auto_tickets.py") == 2
     assert "_capture_ml_paper(decision_context" not in Path("scripts/auto_tickets.py").read_text()
 
