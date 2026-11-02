@@ -8,6 +8,14 @@ model is used unchanged, not a fabricated probability or a new bootstrap fit.
 
 Same-book paper accas choose their own leg count, card count and stakes.
 No odds band, fixed stake or artificial acca/leg-count cap is imposed.
+CAUTION and SKIPPED_VETO strategy labels are intentionally paper-eligible
+(test_lower_probability_and_caution_bucket_can_win_paper_search); identity,
+price-quality and timing guards still apply. This never overrides live gates.
+Morning drafts are advisory: the first eligible unfrozen post-09:00 run may
+build a current decision; frozen receipts supersede pending state rows.
+Learning needs >=30 distinct resolved prior-day fixtures AND both outcome
+classes; each bucket/market calibration feature also needs >=30 fixtures.
+Derived source-gap bands are descriptive diagnostics, never admission rules.
 Products of same-book single quotes are explicitly hypothetical acca payouts;
 neither book acceptance nor independence/calibration of joint probabilities is
 claimed. Positive estimated EV is a PAPER search objective, never a live gate.
@@ -1403,6 +1411,100 @@ def capture(
         return payload
 
 
+def source_forecast_probability(candidate):
+    """Market/side-matched frozen source aggregate, not odds or a calibrated truth.
+
+    Complements are valid for binary FT markets; double chance sums the two
+    named 1X2 outcomes. Unsupported markets, invalid values and missing inputs
+    stay unavailable. Never substitute another market's confidence or xG.
+    """
+    inputs = candidate.get("ml_inputs")
+    values = inputs.get("values") if isinstance(inputs, dict) else None
+    if not isinstance(values, dict):
+        return None
+
+    def value(key):
+        p = values.get(key)
+        return p if type(p) in (int, float) and math.isfinite(p) and 0 <= p <= 1 else None
+
+    market, side = candidate.get("market"), candidate.get("selection")
+    if market == "1x2" and side in ("home", "draw", "away"):
+        return value(f"forecast_1x2_{side}_mean")
+    if market == "double_chance":
+        sides = {"home": ("home", "draw"), "1x": ("home", "draw"),
+                 "away": ("away", "draw"), "x2": ("away", "draw"),
+                 "draw": ("home", "away"), "12": ("home", "away")}.get(side)
+        if sides is None:
+            return None
+        parts = [value(f"forecast_1x2_{s}_mean") for s in sides]
+        return sum(parts) if all(p is not None for p in parts) and sum(parts) <= 1 else None
+    if market in ("btts_yes", "btts_no") and side == market.removeprefix("btts_"):
+        p = value("forecast_btts_yes_mean")
+        return (p if side == "yes" else 1 - p) if p is not None else None
+    for line in ("1.5", "2.5", "3.5", "4.5"):
+        for outcome in ("over", "under"):
+            if market == f"match_{outcome}_{line.replace('.', '')}" and side == outcome:
+                p = value(f"forecast_ou_{line}_over_mean")
+                return (p if side == "over" else 1 - p) if p is not None else None
+    return None
+
+
+def quote_age_at_decision(candidate, receipt):
+    """Original quote age at original decision, never age at report refresh."""
+    quoted = parse_zoned_timestamp(candidate.get("price_at"))
+    decision = parse_zoned_timestamp(receipt.get("captured_at"))
+    if quoted is None or decision is None or quoted > decision:
+        return None
+    return (decision - quoted).total_seconds()
+
+
+def _paired_source_stats(records):
+    """Descriptive, fixture-weighted paired errors; no tuning or significance claim."""
+    paired = [r for r in records if r["source"] is not None]
+    missing = [r for r in records if r["source"] is None]
+    counts = Counter(r["fixture"] for r in paired)
+    stats = {
+        "paired_fixtures": len(counts),
+        "paired_observations": len(paired),
+        "missing_source_fixtures": len({r["fixture"] for r in missing}),
+        "missing_source_observations": len(missing),
+    }
+    for field in ("base", "model", "source"):
+        brier = logloss = 0.0
+        for r in paired:
+            p = r[field]
+            clipped = min(1 - 1e-12, max(1e-12, p))
+            weight = 1 / counts[r["fixture"]]
+            brier += weight * (p - r["hit"]) ** 2
+            logloss -= weight * (r["hit"] * math.log(clipped)
+                                 + (1 - r["hit"]) * math.log1p(-clipped))
+        stats[f"{field}_brier"] = brier / len(counts) if counts else None
+        stats[f"{field}_logloss"] = logloss / len(counts) if counts else None
+    return stats
+
+
+def _source_comparisons(records):
+    bands = {"lt_10pp": [], "10_to_lt_20pp": [], "ge_20pp": [], "unavailable": []}
+    buckets = defaultdict(list)
+    for r in records:
+        # Rounding only stabilises display-band boundaries, never model outputs.
+        gap = round(abs(r["model"] - r["source"]) * 100, 10) if r["source"] is not None else None
+        band = ("unavailable" if gap is None else "lt_10pp" if gap < 10
+                else "10_to_lt_20pp" if gap < 20 else "ge_20pp")
+        bands[band].append(r)
+        for bucket in r["buckets"]:
+            buckets[bucket].append(r)
+    return {
+        "basis": "frozen_market_matched_source_forecasts_not_independent_ground_truth",
+        "weighting": "one_total_weight_per_fixture_within_each_group",
+        "limitation": "descriptive_only_overlapping_groups_not_additive_no_significance_or_rule_changes",
+        "all_candidates": _paired_source_stats(records),
+        "selected_candidates": _paired_source_stats([r for r in records if r["selected"]]),
+        "by_model_source_gap": {k: _paired_source_stats(v) for k, v in bands.items()},
+        "by_board_bucket": {k: _paired_source_stats(v) for k, v in sorted(buckets.items())},
+    }
+
+
 def calibration_diagnostics(history, score_lookup):
     """Paired prequential errors of frozen base vs calibrated probabilities.
 
@@ -1411,6 +1513,7 @@ def calibration_diagnostics(history, score_lookup):
     Not a significance test; unresolved records stay absent and counts explicit.
     """
     samples = {}
+    comparisons = {}
     for receipt in history:
         selected = {c["candidate_id"] for a in receipt["accas"] for c in a["legs"]}
         for c in receipt["candidates"]:
@@ -1437,6 +1540,19 @@ def calibration_diagnostics(history, score_lookup):
                 },
             )
             record["selected"] |= c["candidate_id"] in selected
+            source = source_forecast_probability(c)
+            comparison_key = (*key, source)
+            comparison = comparisons.setdefault(comparison_key, {
+                "fixture": tuple(c["fixture"]),
+                "base": c.get("base_probability", c["probability"]),
+                "model": c["probability"],
+                "source": source,
+                "buckets": set(),
+                "hit": int(y),
+                "selected": False,
+            })
+            comparison["buckets"].add(c["bucket"])
+            comparison["selected"] |= c["candidate_id"] in selected
     groups = {}
     for name, values in (
         ("all_candidates", list(samples.values())),
@@ -1454,6 +1570,7 @@ def calibration_diagnostics(history, score_lookup):
             stats[field + "_brier"] = brier / len(counts) if counts else None
             stats[field + "_logloss"] = logloss / len(counts) if counts else None
         groups[name] = stats
+    groups["source_comparison"] = _source_comparisons(list(comparisons.values()))
     return groups
 
 
@@ -1605,10 +1722,16 @@ def render_card(receipt):
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
         for c in acca["legs"]:
+            source = source_forecast_probability(c)
+            age = quote_age_at_decision(c, receipt)
+            comparison = (f"Source forecast {source:.1%} · gap {(c['probability'] - source) * 100:+.1f} pp"
+                          if source is not None else "Source forecast unavailable")
+            quote_age = f"quote age {age / 3600:.2f}h at decision" if age is not None else "quote age unavailable"
             lines.extend([
                 f"   {c['home']} vs {c['away']}",
                 (f"      {c['market']} {c['selection']} @{c['odds']:.3f}"
                  f" · ML {c['probability']:.1%} · {c['bucket']}"),
+                f"      {comparison} · {quote_age}",
                 "",
             ])
     for heading, details in (
@@ -1625,6 +1748,8 @@ def render_card(receipt):
             lines.append("   None recorded")
         lines.append("")
     lines.extend([
+        "ADMISSION  CAUTION / SKIPPED_VETO are intentionally paper-eligible; data-quality guards remain.",
+        "",
         f"LEARNING  {receipt['learning']['status']}",
         "",
         f"FREEZE   {receipt.get('frozen_at') or receipt.get('freeze_at', '09:00 SAST')} | {receipt['status']}",
@@ -1634,6 +1759,24 @@ def render_card(receipt):
 
 def render_performance(report):
     roi = f"{report['roi']:+.1%}" if report["roi"] is not None else "not measured yet"
+    calibration = report.get("calibration", {})
+    selected = calibration.get("selected_candidates", {})
+    pool = calibration.get("all_candidates", {})
+    paired = calibration.get("source_comparison", {}).get("all_candidates", {})
+    learning = report.get("latest_learning") or {}
+    evidence = (
+        f"EVIDENCE {selected.get('resolved_observations', 0)} resolved selected observations / "
+        f"{selected.get('resolved_fixtures', 0)} fixtures · pool {pool.get('resolved_fixtures', 0)} resolved fixtures\n"
+        f"LEARNING last decision: {learning.get('fixtures', 0)}/{MIN_COHORT_N} eligible prior-day fixtures; "
+        "both outcome classes required, not an automatic review/promotion trigger\n"
+    )
+    if paired.get("paired_observations", 0):
+        evidence += (
+            f"PAIRED   {paired['paired_fixtures']} fixtures / {paired['paired_observations']} observations · "
+            f"Brier model {paired['model_brier']:.4f} / source {paired['source_brier']:.4f}\n"
+        )
+    else:
+        evidence += "PAIRED   no resolved market-matched source pairs yet\n"
     return (
         "autobets_ML — performance (paper only; no real stakes)\n" + "=" * 62 + "\n\n"
         f"BANK     {report['paper_bank_units']:.3f} paper units · x{report['paper_multiple']:.3f} of 100-unit base\n"
@@ -1642,6 +1785,7 @@ def render_performance(report):
         f"PROFIT   {report['profit_units']:+.3f} paper units · ROI {roi}\n"
         f"DRAWDOWN {report['max_daily_close_drawdown_units']:.3f} paper units / {report['max_daily_close_drawdown_fraction']:.1%} (ticket-date marks; pending at cost)\n"
         f"DAYS     {report['bet_days']} bet / {report['no_bet_days']} no-bet · {report['missed_freeze_days']} missed freeze\n\n"
+        + evidence + "\n"
         "STAKING  model Kelly, own paper bank only; ROI is profit / settled stakes\n"
         "PAYOUT   hypothetical same-book singles product, not a confirmed acca quote\n"
         "\nPaper only. No real-money stakes or automatic promotion.\n"
