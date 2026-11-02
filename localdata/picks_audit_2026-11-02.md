@@ -7,7 +7,7 @@
 - immutable morning-baseline rows: 920
 - late-slate additions (regular-ledger rows not in the morning baseline): 132, of which on days whose regular ledger was rewritten: 104
 - regular-ledger-only legacy rows: 0
-- unsafe regular ledgers ignored: 26
+- unsafe regular ledgers ignored: 27
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 992
 - eligible prior picks: 1013
@@ -300,7 +300,7 @@ Fixture-level secondary rates below score the fixture behind every settled pick;
 Metrics scored against actual outcomes of the settled consensus picks in this window:
 - **Over 2.5 Goals**: occurred in 548 / 908 matches (60.4%)
 - **Both Teams to Score (BTTS)**: occurred in 487 / 908 matches (53.6%)
-- **Selected Team Over 1.5 Goals**: occurred in 589 / 904 matches (65.2%)
+- **Selected Team Over 1.5 Goals**: occurred in 590 / 904 matches (65.3%)
 
 ## Recommended Enhancements Audit
 
@@ -394,7 +394,7 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 Scored as probabilistic forecasts per settled pick (each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) — calibration, not a direction call; the retired exact-score field remains in machine history only).
 
-- **Avg Goals forecast**: n=932, MAE=1.499979 goals, bias=-0.178155 (realized − promised), promised avg 3.346609 vs realized 3.168455
+- **Avg Goals forecast**: n=932, MAE=1.498906 goals, bias=-0.177082 (realized − promised), promised avg 3.346609 vs realized 3.169528
 
 ### Per-metric calibration
 
@@ -402,7 +402,7 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 | --- | --- | --- | --- | --- | --- |
 | Away Over 1.5 | 932 | 33.7% | 33.5% | -0.2% | 0.197615 |
 | BTTS-Yes | 932 | 48.4% | 53.6% | +5.2% | 0.254704 |
-| Home Over 1.5 | 932 | 57.8% | 53.5% | -4.3% | 0.217498 |
+| Home Over 1.5 | 932 | 57.8% | 53.6% | -4.2% | 0.216961 |
 | Over 2.5 | 932 | 64.7% | 60.2% | -4.5% | 0.242453 |
 
 ### Promised-vs-realized calibration (all 📊 metrics pooled)
@@ -416,7 +416,7 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 | 0.4-0.5 | 428 | 42.4% | 49.8% | +7.3% |
 | 0.5-0.6 | 960 | 55.6% | 57.6% | +2.0% |
 | 0.6-0.7 | 735 | 64.8% | 58.9% | -5.9% |
-| 0.7-0.8 | 274 | 75.1% | 71.2% | -3.9% |
+| 0.7-0.8 | 274 | 75.1% | 71.5% | -3.6% |
 | 0.8-0.9 | 340 | 84.8% | 64.7% | -20.1% |
 | 0.9-1.0 | 47 | 92.2% | 76.6% | -15.6% |
 
@@ -761,11 +761,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - **🔥 Possible Events (graded)**:
     - [🟢 HIT] **Match Over 2.5 Goals**: expected n/a (Actual: 3 goals)
 
-### 2026-11-01: Deportivo Cali vs Boyacá Chicó (Actual Score: **1-0**)
+### 2026-11-01: Deportivo Cali vs Boyacá Chicó (Actual Score: **2-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.3521 -> 🟢 WON (Expected prob: 70.0%)
-  - [🔴 MISS] **Over 2.5 Goals**: expected 65.7% (Actual: 1 goals)
+  - [🔴 MISS] **Over 2.5 Goals**: expected 65.7% (Actual: 2 goals)
   - [🔴 MISS] **BTTS-Yes**: expected 50.6% (Actual: BTTS-No)
-  - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 75.0% (Actual: 1 goals)
+  - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 75.0% (Actual: 2 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 80.7% (Actual: 0 goals)
   - **🔥 Possible Events (graded)**: none recorded on the archived pick
 

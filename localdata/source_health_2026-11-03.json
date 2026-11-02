@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 19,
@@ -29,7 +29,7 @@
         "selection_unmapped": 30
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-03' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -169,20 +169,20 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 6,
+      "coherence_excluded_rows": 12,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 6
+        "withheld_mixed_events_one_x_two": 12
       },
-      "coherence_withheld_fixtures": 1,
+      "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 13502
+        "out_of_window": 13722
       },
       "pa_matched": 0,
-      "pa_raw": 728,
-      "pa_scored": 13502,
+      "pa_raw": 740,
+      "pa_scored": 13722,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -232,32 +232,33 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 7,
-        "board_league_count": 5,
+        "board_fixtures": 6,
+        "board_league_count": 6,
         "board_leagues": {
-          "canada_-_premier_league": 113,
-          "ecuador_-_serie_a": 60,
-          "jamaica_-_premier_league": 1,
-          "paraguay_-_primera_division": 3,
-          "usa_-_major_league_soccer": 23
+          "argentina_-_primera_division": 48,
+          "bolivia_-_primera_division": 2,
+          "el_salvador_-_primera_division": 57,
+          "usa_-_major_league_soccer": 65,
+          "usa_-_usl_league_one": 25,
+          "venezuela_-_primera_division": 3
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
         "board_team_count": 12,
         "board_team_names": {
-          "Arnett Gardens": 1,
-          "Cavalry": 89,
-          "Cavalry FC": 24,
-          "Cerro Porteno": 3,
-          "FC Supra du Quebec": 113,
-          "Guayaquil City": 60,
-          "Libertad FC": 56,
-          "Libertad Loja": 4,
-          "Olimpia Asuncion": 3,
-          "Seattle Sounders": 23,
-          "Tivoli Gardens": 1,
-          "Vancouver Whitecaps": 23
+          "Always Ready": 2,
+          "Boise Cutthroats FC": 25,
+          "CD Fas": 57,
+          "CD Luis Angel Firpo": 57,
+          "Deportivo La Guaira": 3,
+          "Gimnasia Mendoza": 48,
+          "Inter Miami": 65,
+          "Lanus": 48,
+          "NE Revolution": 65,
+          "One Knoxville SC": 25,
+          "Portuguesa FC": 3,
+          "Universitario De Vinto": 2
         },
         "board_truncated": false,
         "card_fixture_count": 0,

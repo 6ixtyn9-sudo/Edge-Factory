@@ -1,73 +1,7 @@
 {
-  "added": 72514,
-  "attempted": 13,
-  "attempted_fixtures": [
-    {
-      "away": "Minnesota United FC",
-      "fixture_id": "id1000024266299780",
-      "home": "Los Angeles FC"
-    },
-    {
-      "away": "Unan Managua",
-      "fixture_id": "id1001924276203186",
-      "home": "Managua FC"
-    },
-    {
-      "away": "FC Tulsa",
-      "fixture_id": "id1002816376029502",
-      "home": "Sacramento Republic FC"
-    },
-    {
-      "away": "Club Leon",
-      "fixture_id": "id1002746472055296",
-      "home": "CF Cruz Azul"
-    },
-    {
-      "away": "Houston Dynamo",
-      "fixture_id": "id1000024266299786",
-      "home": "Portland Timbers"
-    },
-    {
-      "away": "Inter Miami CF",
-      "fixture_id": "id1000024266299784",
-      "home": "New England Revolution"
-    },
-    {
-      "away": "CSD Coban Imperial",
-      "fixture_id": "id1002739672475064",
-      "home": "CD Guastatoya"
-    },
-    {
-      "away": "FC Naples",
-      "fixture_id": "id1002816576029508",
-      "home": "Charlotte Independence"
-    },
-    {
-      "away": "SV Racing Club Aruba",
-      "fixture_id": "id1005104676143422",
-      "home": "SV Deportivo Nacional"
-    },
-    {
-      "away": "One Knoxville SC",
-      "fixture_id": "id1002816576029512",
-      "home": "AC Boise"
-    },
-    {
-      "away": "CD Once Caldas",
-      "fixture_id": "id1000133576027498",
-      "home": "Independiente Santa Fe"
-    },
-    {
-      "away": "Platense FC Puerto Cortes",
-      "fixture_id": "id1002741475680908",
-      "home": "Olancho FC"
-    },
-    {
-      "away": "Deportivo Mixco",
-      "fixture_id": "id1002739672475060",
-      "home": "Comunicaciones FC "
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-02",
     "keys": 3,
@@ -76,204 +10,21 @@
     "remaining_today": 10,
     "spent_today": 15
   },
-  "captured_at": "2026-11-01T22:17:06+00:00",
+  "captured_at": "2026-11-02T01:21:12+00:00",
   "date": "2026-11-02",
   "errors": [],
   "excluded_srl_fixtures": 0,
   "fixtures": 225,
-  "future_slate_fixtures": 1,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 647,
-  "markets": {
-    "1x2": 7972,
-    "btts": 3926,
-    "ou_0.5": 1704,
-    "ou_0.75": 98,
-    "ou_1": 526,
-    "ou_1.25": 350,
-    "ou_1.5": 3380,
-    "ou_1.75": 725,
-    "ou_10.5": 24,
-    "ou_11.5": 24,
-    "ou_12.5": 21,
-    "ou_13.5": 12,
-    "ou_14.5": 3,
-    "ou_2": 1220,
-    "ou_2.25": 1245,
-    "ou_2.5": 4520,
-    "ou_2.75": 1810,
-    "ou_3": 1987,
-    "ou_3.25": 1684,
-    "ou_3.5": 4961,
-    "ou_3.75": 1356,
-    "ou_4": 1245,
-    "ou_4.25": 662,
-    "ou_4.5": 3954,
-    "ou_4.75": 387,
-    "ou_5": 547,
-    "ou_5.25": 271,
-    "ou_5.5": 2480,
-    "ou_5.75": 107,
-    "ou_6": 84,
-    "ou_6.25": 14,
-    "ou_6.5": 888,
-    "ou_6.75": 14,
-    "ou_7.5": 295,
-    "ou_7.75": 5,
-    "ou_8.25": 5,
-    "ou_8.5": 81,
-    "ou_9.5": 24,
-    "tt_away_0.5": 2885,
-    "tt_away_0.75": 168,
-    "tt_away_1": 242,
-    "tt_away_1.25": 152,
-    "tt_away_1.5": 3099,
-    "tt_away_1.75": 106,
-    "tt_away_2": 192,
-    "tt_away_2.25": 74,
-    "tt_away_2.5": 2618,
-    "tt_away_2.75": 24,
-    "tt_away_3": 28,
-    "tt_away_3.25": 18,
-    "tt_away_3.5": 1103,
-    "tt_away_3.75": 2,
-    "tt_away_4": 7,
-    "tt_away_4.25": 2,
-    "tt_away_4.5": 205,
-    "tt_away_5.5": 45,
-    "tt_away_6.5": 3,
-    "tt_home_0.5": 2353,
-    "tt_home_0.75": 98,
-    "tt_home_1": 190,
-    "tt_home_1.25": 136,
-    "tt_home_1.5": 3740,
-    "tt_home_1.75": 170,
-    "tt_home_2": 232,
-    "tt_home_2.25": 116,
-    "tt_home_2.5": 2961,
-    "tt_home_2.75": 66,
-    "tt_home_3": 116,
-    "tt_home_3.25": 58,
-    "tt_home_3.5": 1777,
-    "tt_home_3.75": 10,
-    "tt_home_4": 30,
-    "tt_home_4.5": 764,
-    "tt_home_5.5": 110,
-    "tt_home_6.5": 3
-  },
-  "markets_source": "fetch",
-  "matched": 13,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 15,
-    "market_id_unknown": 13904,
-    "market_inactive": 265,
-    "market_unsupported_clean_sheet": 960,
-    "market_unsupported_corners": 12202,
-    "market_unsupported_correct_score": 3888,
-    "market_unsupported_double_chance": 2352,
-    "market_unsupported_draw_no_bet": 1808,
-    "market_unsupported_handicap": 18253,
-    "market_unsupported_odd_even": 3506,
-    "market_unsupported_period": 62857,
-    "market_unsupported_win_to_nil": 1954,
-    "outcome_inactive": 8279
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 15,
-      "market_inactive": 265,
-      "outcome_inactive": 8279
-    },
-    "loss_or_diagnosis": {
-      "market_id_unknown": 13904,
-      "market_unsupported_clean_sheet": 960,
-      "market_unsupported_corners": 12202,
-      "market_unsupported_correct_score": 3888,
-      "market_unsupported_double_chance": 2352,
-      "market_unsupported_draw_no_bet": 1808,
-      "market_unsupported_handicap": 18253,
-      "market_unsupported_odd_even": 3506,
-      "market_unsupported_period": 62857,
-      "market_unsupported_win_to_nil": 1954
-    }
-  },
-  "pending_fixtures": 13,
-  "quoted_fixtures": [
-    {
-      "away": "Minnesota United FC",
-      "fixture_id": "id1000024266299780",
-      "home": "Los Angeles FC"
-    },
-    {
-      "away": "Unan Managua",
-      "fixture_id": "id1001924276203186",
-      "home": "Managua FC"
-    },
-    {
-      "away": "FC Tulsa",
-      "fixture_id": "id1002816376029502",
-      "home": "Sacramento Republic FC"
-    },
-    {
-      "away": "Club Leon",
-      "fixture_id": "id1002746472055296",
-      "home": "CF Cruz Azul"
-    },
-    {
-      "away": "Houston Dynamo",
-      "fixture_id": "id1000024266299786",
-      "home": "Portland Timbers"
-    },
-    {
-      "away": "Inter Miami CF",
-      "fixture_id": "id1000024266299784",
-      "home": "New England Revolution"
-    },
-    {
-      "away": "CSD Coban Imperial",
-      "fixture_id": "id1002739672475064",
-      "home": "CD Guastatoya"
-    },
-    {
-      "away": "FC Naples",
-      "fixture_id": "id1002816576029508",
-      "home": "Charlotte Independence"
-    },
-    {
-      "away": "SV Racing Club Aruba",
-      "fixture_id": "id1005104676143422",
-      "home": "SV Deportivo Nacional"
-    },
-    {
-      "away": "One Knoxville SC",
-      "fixture_id": "id1002816576029512",
-      "home": "AC Boise"
-    },
-    {
-      "away": "CD Once Caldas",
-      "fixture_id": "id1000133576027498",
-      "home": "Independiente Santa Fe"
-    },
-    {
-      "away": "Platense FC Puerto Cortes",
-      "fixture_id": "id1002741475680908",
-      "home": "Olancho FC"
-    },
-    {
-      "away": "Deportivo Mixco",
-      "fixture_id": "id1002739672475060",
-      "home": "Comunicaciones FC "
-    }
-  ],
-  "reserved_requests": 1,
-  "rows": 72514,
+  "markets": {},
+  "matched": 0,
+  "pending_fixtures": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 11,
+  "slate_candidate_fixtures": 8,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 5,
-  "slate_provider_overlap_fixtures": 6,
+  "slate_provider_overlap_fixtures": 3,
   "slate_unmatched_fixtures": [
     {
       "away": "Alverca",
@@ -306,5 +57,6 @@
       "normalized_pair": "apollon pontou|marko"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "nothing_pending"
 }

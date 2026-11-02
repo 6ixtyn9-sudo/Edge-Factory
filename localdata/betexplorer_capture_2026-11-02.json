@@ -1,16 +1,6 @@
 {
-  "attempted": 7,
+  "attempted": 4,
   "attempted_fixtures": [
-    {
-      "avg_p": 62.0,
-      "away": "UNAN Managua",
-      "date": "2026-11-02",
-      "home": "Managua",
-      "league": "Nicaragua Primera Division",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
     {
       "avg_p": 62.0,
       "away": "Apollon Pontou",
@@ -30,26 +20,6 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6453
-    },
-    {
-      "avg_p": 56.66666666666668,
-      "away": "Leon",
-      "date": "2026-11-02",
-      "home": "Cruz Azul",
-      "league": "Mexico,Liga Mx Apertura",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5608
-    },
-    {
-      "avg_p": 55.82934373824746,
-      "away": "Minnesota United",
-      "date": "2026-11-02",
-      "home": "Los Angeles FC",
-      "league": "MLS",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.557
     },
     {
       "avg_p": 49.26334096764958,
@@ -73,19 +43,19 @@
     }
   ],
   "be_429": 0,
-  "be_cached": 0,
+  "be_cached": 4,
   "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 7,
-  "captured_at": "2026-11-01T22:17:06.470058+00:00",
+  "cache_only": 4,
+  "candidate_fixtures": 4,
+  "captured_at": "2026-11-02T01:21:12.328540+00:00",
   "date": "2026-11-02",
   "deferred_fixtures": 0,
   "errors": [],
-  "fixtures_with_rows": 5,
+  "fixtures_with_rows": 3,
   "market_budget_stop": false,
-  "market_requests": 25,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 85,
     "challenge_pages": 0,
@@ -99,7 +69,7 @@
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "network_attempted": 7,
+  "network_attempted": 0,
   "quoted_fixtures": [
     {
       "avg_p": 61.0,
@@ -110,26 +80,6 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.6453
-    },
-    {
-      "avg_p": 56.66666666666668,
-      "away": "Leon",
-      "date": "2026-11-02",
-      "home": "Cruz Azul",
-      "league": "Mexico,Liga Mx Apertura",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5608
-    },
-    {
-      "avg_p": 55.82934373824746,
-      "away": "Minnesota United",
-      "date": "2026-11-02",
-      "home": "Los Angeles FC",
-      "league": "MLS",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.557
     },
     {
       "avg_p": 49.26334096764958,
@@ -152,8 +102,8 @@
       "w_score": 0.557
     }
   ],
-  "requests": 38,
-  "rows": 15,
+  "requests": 0,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }

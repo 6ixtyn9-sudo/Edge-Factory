@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 11,
-  "captured_at": "2026-11-01T22:26:21+00:00",
+  "captured_at": "2026-11-02T01:27:42+00:00",
   "date": "2026-11-02",
   "due_reasons": {},
   "errors": [],
@@ -22,8 +22,9 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
     "priced": 3,
-    "retry_cooldown": 8
+    "retry_cooldown": 7
   },
   "skipped": [
     "Benfica|Alverca (priced)",
@@ -32,7 +33,7 @@
     "Los Angeles FC|Minnesota United (retry cooldown (6h after failed attempt))",
     "Hapoel Tel Aviv|Maccabi Haifa (retry cooldown (6h after failed attempt))",
     "Sassuolo|Fiorentina (retry cooldown (6h after failed attempt))",
-    "Managua|UNAN Managua (retry cooldown (6h after failed attempt))",
+    "Managua|UNAN Managua (kickoff already passed)",
     "Marko|Apollon Pontou (retry cooldown (6h after failed attempt))",
     "Sacramento Republic FC|FC Tulsa (retry cooldown (6h after failed attempt))",
     "Cruz Azul|Leon (priced)",
