@@ -2198,22 +2198,23 @@
           "bank_total": 25.864296,
           "committed_excluding_target": 0.0,
           "date": "2026-11-02",
-          "decision_status": "draft",
+          "decision_status": "frozen",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "3de7747b32123c5328733eaecfa460df9b0dfa1c",
-            "event_sha": "3de7747b32123c5328733eaecfa460df9b0dfa1c",
+            "checkout_head_at_capture": "a2aab8e4359bdc1c9871d8b0d8f69bc2e0dcfb62",
+            "event_sha": "a2aab8e4359bdc1c9871d8b0d8f69bc2e0dcfb62",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "41387172090",
+            "run_id": "41403441805",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-02_decision.json.gz",
           "free_bank": 25.864296,
-          "ledger": "NOT_COMMITTED",
+          "freeze_time": "MATCH",
+          "ledger": "MATCH",
           "ml_comparison": {
             "added_to_ml_on": 0,
             "arms": {
@@ -2225,23 +2226,23 @@
                         "cohort": 0.7137,
                         "market": "match_over_25",
                         "match": "Radomiak Radom vs \u015al\u0105sk Wroc\u0142aw",
-                        "model": 0.6525981092867922,
+                        "model": 0.652598109286834,
                         "odds": 1.55,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
                       {
                         "cohort": 0.7137,
                         "market": "match_over_25",
                         "match": "Benfica vs Alverca",
-                        "model": 0.8080528850852554,
+                        "model": 0.8080528850852269,
                         "odds": 1.35,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
                     "odds": 2.09,
@@ -2274,7 +2275,7 @@
                   ]
                 ],
                 "mean_acca_odds": 2.09,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "outcome_status": "INCOMPLETE_OUTCOMES",
                 "resolved_legs": 0,
                 "returned": null,
                 "selected_legs": 2,
@@ -2294,23 +2295,23 @@
                         "cohort": 0.7137,
                         "market": "match_over_25",
                         "match": "Benfica vs Alverca",
-                        "model": 0.8080528850852554,
+                        "model": 0.8080528850852269,
                         "odds": 1.35,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
                       {
                         "cohort": 0.7137,
                         "market": "match_over_25",
                         "match": "Radomiak Radom vs \u015al\u0105sk Wroc\u0142aw",
-                        "model": 0.6525981092867922,
+                        "model": 0.652598109286834,
                         "odds": 1.55,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
                     "odds": 2.09,
@@ -2343,7 +2344,7 @@
                   ]
                 ],
                 "mean_acca_odds": 2.09,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "outcome_status": "INCOMPLETE_OUTCOMES",
                 "resolved_legs": 0,
                 "returned": null,
                 "selected_legs": 2,
@@ -2359,10 +2360,10 @@
             "card_identical": true,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 0,
-            "mean_absolute_disagreement": 0.06210014065352221,
+            "mean_absolute_disagreement": 0.062100140653496734,
             "model_below_cohort": 10,
             "models": {
-              "be632489f4ed15deea183c507a40fb1a8346ae48b07e899121260df2e7f55106": {
+              "6f22fcd4fa3beed1632d4c9416d73cec25e455d56a7072d83ca7fdb24ab65da6": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -2436,9 +2437,10 @@
               "enh_score_logit_v2": 16
             },
             "scored_legs": 16,
-            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+            "status": "INCOMPLETE_OUTCOMES"
           },
-          "settlement": "UNAVAILABLE",
+          "open_accas": 1,
+          "settlement": "PENDING",
           "status": "MATCH"
         }
       ],
@@ -2661,14 +2663,14 @@
           "decision_status": "no_bet",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "3de7747b32123c5328733eaecfa460df9b0dfa1c",
-            "event_sha": "3de7747b32123c5328733eaecfa460df9b0dfa1c",
+            "checkout_head_at_capture": "a2aab8e4359bdc1c9871d8b0d8f69bc2e0dcfb62",
+            "event_sha": "a2aab8e4359bdc1c9871d8b0d8f69bc2e0dcfb62",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "41387172090",
+            "run_id": "41403441805",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-11-02_decision.json.gz",

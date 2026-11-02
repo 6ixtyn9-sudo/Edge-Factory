@@ -1,9 +1,11 @@
 autobets_ML TICKETS — 2026-11-02
 ==============================================================
 PAPER ONLY — own legs, accas and model-sized stakes; no odds band.
-FREEZE   2026-11-02T09:00:00+02:00 | draft_not_yet_frozen
+FREEZE   2026-11-02T07:16:00.824102+00:00 | paper_accas
 Same-book single-price products; acca acceptance/payout unconfirmed.
-NO PAPER BET — no qualifying model/price/capital combination.
-COVERAGE  {'candidate_count': 0, 'candidate_fixtures': 0, 'slate_rows': 7, 'status': 'input_starved_not_strategy_selectivity'}
-REJECTIONS  {'data_quality': 1, 'quote_or_probability_unavailable': 227}
+[PAPER ACCA #1] @2.862 — 8.196803 paper units — Betsson
+   Radomiak Radom vs Śląsk Wrocław | 1x2 home @2.120 | SKIPPED_VETO | ML 69.6%
+   Benfica vs Alverca | match_over_25 over @1.350 | CAUTION | ML 80.8%
+COVERAGE  {'candidate_count': 109, 'candidate_fixtures': 2, 'slate_rows': 7, 'status': 'inputs_available'}
+REJECTIONS  {'data_quality': 1, 'quote_or_probability_unavailable': 69}
 LEARNING  awaiting_prior_paper_results
