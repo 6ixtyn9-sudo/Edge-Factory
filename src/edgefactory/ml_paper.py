@@ -32,6 +32,7 @@ from zoneinfo import ZoneInfo
 from . import price_sources as psrc
 from .enh_pricing import (
     MARKET_PRICE_MAP,
+    ODDSPAPI_MAX_AGE_H,
     _betexplorer_asof_index,
     betexplorer_price_rejection,
     load_prices_index,
@@ -57,7 +58,10 @@ MAX_PAPER_EXPOSURE = 0.25  # of available paper capital, never live capital
 EXACT_SEARCH_SIZE = 8
 PORTFOLIO_ITERATIONS = 256
 SEARCH_NODE_BUDGET = 250_000  # computation bound, never a leg/card count cap
-QUOTE_MAX_AGE = timedelta(hours=6)
+# PAPER-only overnight collection allowance, measured at the scheduled freeze.
+# This is an operational policy, not an ROI-tuned optimum or a live-price claim.
+# A stricter source policy still wins; never retimestamp a quote to rescue it.
+QUOTE_MAX_AGE = timedelta(hours=12)
 MIN_LEAD = timedelta(minutes=30)
 
 
@@ -227,8 +231,19 @@ def _same(a, b):
     )
 
 
-def _quote_ok(row, quote, now, kickoff, source_guard, min_leg_odds, *, market, selection):
-    """A quote can enter research only with its own original price/time/book."""
+def _quote_max_age(source):
+    """ML's ceiling may tighten a source limit, never extend a stricter one."""
+    if psrc.spec(source).family == psrc.spec("oddspapi").family:
+        return min(QUOTE_MAX_AGE, timedelta(hours=ODDSPAPI_MAX_AGE_H))
+    # BE's configurable limit AND full admission receipt are rechecked below.
+    # Other source/index admission guards remain in their existing paths.
+    return QUOTE_MAX_AGE
+
+
+def _quote_ok(
+    row, quote, now, kickoff, source_guard, min_leg_odds, *, market, selection, freeze_at=None
+):
+    """Keep original quote evidence; require validity now AND at paper freeze."""
     side = {"1x": "home", "x2": "away", "12": "draw"}.get(selection, selection)
     probe = dict(row, as_of=now.isoformat(), pick=side, recommended_enhancement=market, **quote)
     source = probe.get("enhancement_price_source")
@@ -245,15 +260,16 @@ def _quote_ok(row, quote, now, kickoff, source_guard, min_leg_odds, *, market, s
         return False
     at = parse_zoned_timestamp(context["captured_at"])
     ku = parse_zoned_timestamp(context["kickoff"])
+    age_at = max(now, freeze_at or now)
     if (
         ku != kickoff
-        or not at <= now < ku
-        or now - at > QUOTE_MAX_AGE
+        or not at <= now <= age_at < ku
+        or age_at - at > _quote_max_age(source)
         or context["price"] < min_leg_odds
     ):
         return False
     if psrc.spec(source).family == psrc.spec("betexplorer").family:
-        return betexplorer_price_rejection(probe, execution_at=now) is None
+        return betexplorer_price_rejection(probe, execution_at=age_at) is None
     return True
 
 
@@ -420,9 +436,8 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
                     min_leg_odds,
                     market=market,
                     selection=selection,
+                    freeze_at=freeze_at,
                 )
-                or max(now, freeze_at or now) - parse_zoned_timestamp(q["enhancement_price_at"])
-                > QUOTE_MAX_AGE
             ):
                 rejected["quote_or_probability_unavailable"] += 1
                 continue
@@ -461,6 +476,10 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
                 "book": book,
                 "price_source": q["enhancement_price_source"],
                 "price_at": q["enhancement_price_at"],
+                "price_age_seconds_at_decision": (now - quote_at).total_seconds(),
+                "price_age_seconds_at_freeze": (
+                    max(now, freeze_at or now) - quote_at
+                ).total_seconds(),
                 "kickoff_utc": kickoff.isoformat(),
                 "price_provenance": q.get("enhancement_price_provenance"),
                 "base_probability": p,
@@ -1207,6 +1226,9 @@ def capture(
             "mode": "paper_only_no_real_stakes",
             "status": "draft_not_yet_frozen",
             "policy": {
+                "quote_max_age_hours": QUOTE_MAX_AGE.total_seconds() / 3600,
+                "quote_age_basis": "scheduled_freeze_original_capture",
+                "stricter_source_limits_retained": True,
                 "odds_band": None,
                 "max_accas": None,
                 "max_legs": None,

@@ -241,7 +241,7 @@ def test_actual_collector_refresh_reaches_ml_without_quote_or_gate_shortcuts(tmp
     localdata = tmp_path / "localdata"
     monkeypatch.setattr(capture, "LOCALDATA", localdata)
     monkeypatch.setattr(be, "LOCALDATA", localdata)
-    old = (now - timedelta(hours=7)).isoformat()
+    old = (now - timedelta(hours=13)).isoformat()
     fixture["captured_at"] = old
     _write_be_ledger(tmp_path, {"event": fixture})
     # Keep ONLY the independent schedule witness, not its odds.
@@ -257,7 +257,7 @@ def test_actual_collector_refresh_reaches_ml_without_quote_or_gate_shortcuts(tmp
                              source_guard=at.execution_source_rejection,
                              min_leg_odds=1.0, freeze_at=freeze)[0]
 
-    assert admitted() == []  # actual six-hour gate rejects stale named quotes
+    assert admitted() == []  # actual twelve-hour ML gate rejects stale named quotes
     calls = []
     matched = dict(fixture, date=BE_DAY, kickoff_utc=row["kickoff_utc"])
     monkeypatch.setattr(be, "fetch_day_matches", lambda day: [matched])
