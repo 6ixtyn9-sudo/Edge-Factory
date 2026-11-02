@@ -36,9 +36,11 @@ def test_ticket_txt_has_separate_leg_diagnostics_and_freeze_blocks():
         "Same-book single-price products; acca acceptance/payout unconfirmed.\n\n"
         "[PAPER ACCA #1] @2.862 — 8.196803 paper units — Betsson\n"
         "   Radomiak Radom vs Śląsk Wrocław\n"
-        "      1x2 home @2.120 · ML 69.6% · SKIPPED_VETO\n\n"
+        "      1x2 home @2.120 · ML 69.6% · SKIPPED_VETO\n"
+        "      Source forecast unavailable · quote age unavailable\n\n"
         "   Benfica vs Alverca\n"
-        "      match_over_25 over @1.350 · ML 80.8% · CAUTION\n\n"
+        "      match_over_25 over @1.350 · ML 80.8% · CAUTION\n"
+        "      Source forecast unavailable · quote age unavailable\n\n"
         "COVERAGE\n"
         "   Candidate count: 109\n"
         "   Candidate fixtures: 2\n"
@@ -47,6 +49,7 @@ def test_ticket_txt_has_separate_leg_diagnostics_and_freeze_blocks():
         "REJECTIONS\n"
         "   Data quality: 1\n"
         "   Quote or probability unavailable: 69\n\n"
+        "ADMISSION  CAUTION / SKIPPED_VETO are intentionally paper-eligible; data-quality guards remain.\n\n"
         "LEARNING  awaiting_prior_paper_results\n\n"
         "FREEZE   2026-11-02T07:16:00.824102+00:00 | paper_accas\n"
     )
@@ -57,7 +60,7 @@ def test_multiple_accas_have_blank_line_between_blocks():
     row = card()
     row["accas"].append(deepcopy(row["accas"][0]))
     text = mp.render_card(row)
-    assert "· CAUTION\n\n[PAPER ACCA #2]" in text
+    assert "quote age unavailable\n\n[PAPER ACCA #2]" in text
     assert text.count("[PAPER ACCA #") == 2
 
 
@@ -96,7 +99,8 @@ def test_performance_spacing_preserves_bank_and_risk_caveats():
     text = mp.render_performance(report)
     assert "=" * 62 + "\n\nBANK" in text
     assert "reserved paper units\n\nRECORD" in text
-    assert "missed freeze\n\nSTAKING" in text
+    assert "missed freeze\n\nEVIDENCE" in text
+    assert "\n\nSTAKING" in text
     assert "ROI not measured yet" in text
     assert "not a confirmed acca quote\n\nPaper only." in text
     assert report == before
