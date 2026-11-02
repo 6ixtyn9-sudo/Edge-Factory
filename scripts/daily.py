@@ -389,9 +389,11 @@ def capture_betexplorer_snapshot(target_date: str, trigger: str) -> None:
         max_fixtures = max(1, min(24, int(os.environ.get("EDGE_FACTORY_BETEXPLORER_MAX_FIXTURES", "12"))))
     except (TypeError, ValueError):
         max_fixtures = 12
+    ml_flag = " --ml-precutoff" if (trigger == "candidate_price_snapshot"
+                                    and os.environ.get("EDGE_FACTORY_ML_PAPER", "1") == "1") else ""
     run_soft(
         f"PYTHONPATH=src python3 scripts/capture_betexplorer.py --date {target_date} "
-        f"--max-fixtures {max_fixtures}",
+        f"--max-fixtures {max_fixtures}{ml_flag}",
         f"betexplorer bounded capture {target_date} [{trigger}]",
     )
 

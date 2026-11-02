@@ -16,8 +16,9 @@ import json
 import math
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
@@ -84,17 +85,37 @@ def _enh_pricing_gap_count(row: dict) -> int:
     return len(markets)
 
 
-def _candidate_rows(day: str) -> list[dict]:
+def _has_ml_model(row: dict) -> bool:
+    profile = row.get("statistical_profile")
+    model = profile.get("ml_model") if isinstance(profile, dict) else None
+    return (isinstance(model, dict) and model.get("schema") == "enh_score_logit_v2"
+            and type(model.get("n")) is int and model["n"] >= 30)
+
+
+def _ml_fixture_candidate(row: dict, day: str) -> bool:
+    from edgefactory.odds_normalization import parse_zoned_timestamp
+
+    kickoff = parse_zoned_timestamp(row.get("kickoff_utc"))
+    freeze = datetime.fromisoformat(str(day)[:10] + "T09:00:00").replace(
+        tzinfo=ZoneInfo("Africa/Johannesburg"))
+    return (_has_ml_model(row) and kickoff is not None
+            and kickoff >= freeze + timedelta(minutes=30))
+
+
+def _candidate_rows(day: str, *, ml_precutoff: bool = False) -> list[dict]:
     rows = _read_same_day_rows(day)
     if not rows:
         return []
-    # The adapter supports 1X2. Keep the capture order deterministic and do
-    # not spend its bounded budget on markets it cannot return.
+    # A fixture visit retains all supported detail tabs, not just the parent's
+    # 1X2 selection. During the ML window, include model-bound totals/BTTS
+    # parents too; otherwise those fixtures never reach the price collector.
+    # This changes collection only, never either lane's admission gates.
     candidates = [
         dict(row) for row in rows
         if isinstance(row, dict)
         and str(row.get("date") or "")[:10] == str(day)[:10]
-        and str(row.get("market") or "") == "1x2"
+        and (str(row.get("market") or "") == "1x2"
+             or (ml_precutoff and _ml_fixture_candidate(row, day)))
         and str(row.get("home") or "").strip()
         and str(row.get("away") or "").strip()
     ]
@@ -113,12 +134,17 @@ def _candidate_rows(day: str) -> list[dict]:
     )
     # One request per fixture, not one request per selection.
     unique: list[dict] = []
-    seen: set[tuple[str, str]] = set()
+    seen: dict[tuple[str, str], int] = {}
     for row in candidates:
         key = (str(row.get("home") or ""), str(row.get("away") or ""))
         if key not in seen:
-            seen.add(key)
+            seen[key] = len(unique)
             unique.append(row)
+        elif (ml_precutoff and _ml_fixture_candidate(row, day)
+              and not _ml_fixture_candidate(unique[seen[key]], day)):
+            # Keep the original fixture's position/budget priority, but do not
+            # let its unmodelled Main row hide a model-bound alternative.
+            unique[seen[key]] = row
     return unique
 
 
@@ -203,13 +229,21 @@ def _detail_summary(day: str) -> dict:
     return summary
 
 
-def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
+def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES,
+            ml_precutoff: bool = False, now: datetime | None = None) -> dict:
     """Capture up to max_fixtures network candidates plus free cache reads."""
+    now = now or datetime.now(timezone.utc)
+    freeze_at = datetime.fromisoformat(str(day)[:10] + "T09:00:00").replace(
+        tzinfo=ZoneInfo("Africa/Johannesburg"))
+    ml_active = bool(ml_precutoff and now.tzinfo is not None
+                     and freeze_at - timedelta(hours=6) <= now < freeze_at)
     limit = max(0, min(MAX_FIXTURES_CEILING, int(max_fixtures)))
     receipt = {
         "schema": 1,
         "date": str(day)[:10],
-        "captured_at": datetime.now(timezone.utc).isoformat(),
+        "captured_at": now.isoformat(),
+        "ml_precutoff_active": ml_active,
+        "ml_refresh_attempted": 0,
         "candidate_fixtures": 0,
         "attempted": 0,
         "network_attempted": 0,
@@ -227,7 +261,8 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
         from edgefactory.sources import betexplorer_odds as source
         from edgefactory.util import norm_team
 
-        candidates = _candidate_rows(day)
+        candidates = (_candidate_rows(day, ml_precutoff=True) if ml_active
+                      else _candidate_rows(day))
         receipt["candidate_fixtures"] = len(candidates)
         source.reset_fetch_count()
         source._MAX_FETCHES_PER_RUN = limit
@@ -235,7 +270,10 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
             try:
                 # A deferred detail upgrade is not a refusal of the cached
                 # quote. Read it through the identity guard without networking.
-                needs_capture = source.fixture_capture_needed(pick, day)
+                refresh_due = (ml_active and _has_ml_model(pick)
+                               and source.ml_price_refresh_needed(
+                                   pick, day, freeze_at=freeze_at, now=now))
+                needs_capture = refresh_due or source.fixture_capture_needed(pick, day)
                 network_stopped = (
                     source.run_stats().get("be_cooling_down", False)
                     or source.request_stats().get("requests", 0) >= source._MAX_REQUESTS_PER_RUN)
@@ -248,9 +286,14 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
                 receipt["attempted_fixtures"].append(_fixture_receipt(pick))
                 if needs_capture:
                     receipt["network_attempted"] += 1
-                    rows = source.betexplorer_odds_rows_for_pick(
-                        pick, day, norm_team_fn=norm_team,
-                    )
+                    if refresh_due:
+                        receipt["ml_refresh_attempted"] += 1
+                        rows = source.refresh_ml_prices_for_pick(
+                            pick, day, freeze_at=freeze_at, now=now, norm_team_fn=norm_team)
+                    else:
+                        rows = source.betexplorer_odds_rows_for_pick(
+                            pick, day, norm_team_fn=norm_team,
+                        )
                 else:
                     receipt["cache_only"] += 1
                     rows = source.cached_odds_rows_for_pick(pick, day)
@@ -281,14 +324,17 @@ def main() -> int:
     parser.add_argument("--date", required=True)
     parser.add_argument("--max-fixtures", type=int, default=DEFAULT_MAX_FIXTURES,
                         help="maximum network fixture attempts; cache-only reads are free")
+    parser.add_argument("--ml-precutoff", action="store_true",
+                        help="include model-bound fixtures and refresh stale priced caches once before 09:00 SAST")
     args = parser.parse_args()
-    receipt = capture(args.date, max_fixtures=args.max_fixtures)
+    receipt = capture(args.date, max_fixtures=args.max_fixtures, ml_precutoff=args.ml_precutoff)
     detail = receipt.get("match_detail") or {}
     print(
         "betexplorer snapshot "
         f"{receipt['date']}: candidates={receipt['candidate_fixtures']} "
         f"attempted={receipt['attempted']} network_attempted={receipt['network_attempted']} "
         f"cache_only={receipt['cache_only']} deferred={receipt['deferred_fixtures']} "
+        f"ml_refresh_attempted={receipt['ml_refresh_attempted']} "
         f"fixtures={receipt['fixtures_with_rows']} "
         f"rows={receipt['rows']} detail={detail.get('fixtures', 0)}fixtures/"
         f"{detail.get('markets', 0)}markets/{detail.get('market_rows', 0)}rows "
