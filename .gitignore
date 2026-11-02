@@ -223,7 +223,8 @@ localdata/autobets_enh_tickets_????-??-??_decision*.json
 
 # Independent forward autobets_ML lane: immutable predictions and own performance.
 # Separate prefix; never consumed as a Main/ENH picks or financial-state file.
-!localdata/autobets_ML_20??-??-??.json
+# Daily human cards are TXT only; frozen JSON lives under phase5_reconciliation.
+localdata/autobets_ML_20??-??-??.json
 !localdata/autobets_ML_20??-??-??.txt
 !localdata/autobets_ML_performance.json
 !localdata/autobets_ML_performance.txt

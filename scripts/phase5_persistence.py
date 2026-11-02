@@ -753,10 +753,15 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
     from edgefactory.odds_normalization import parse_zoned_timestamp
     import re
 
-    pattern = re.compile(r"^localdata/autobets_ML_(?:(draft_)?(\d{4}-\d{2}-\d{2})|state)\.json$")
+    pattern = re.compile(
+        r"^localdata/(?:phase5_reconciliation/ml_paper_receipts/)?"
+        r"autobets_ML_(?:(draft_)?(\d{4}-\d{2}-\d{2})|state)\.json$"
+    )
     tracked = {p for p in _tracked_localdata_paths(repo) if pattern.fullmatch(p)}
-    cached = {str(p.relative_to(repo)) for p in (repo / "localdata").glob("autobets_ML_*.json")
-              if pattern.fullmatch(str(p.relative_to(repo)))}
+    cached = {str(p.relative_to(repo)) for p in [
+        *(repo / "localdata").glob("autobets_ML_*.json"),
+        *ml_paper.receipt_files(repo / "localdata"),
+    ] if pattern.fullmatch(str(p.relative_to(repo)))}
     retained = {}
     conflicts = []
     for relative in sorted(tracked | cached):
@@ -795,8 +800,8 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
             # Preserve its exact bytes, but do not turn that acknowledged
             # no-bet day into a permanent experiment-wide block on restore.
             # Frozen conflicts and pre-existing integrity blocks still win.
-            sealed_paths = ((repo / "localdata").glob("autobets_ML_????-??-??.json")
-                            if state_file else [repo / "localdata" / f"autobets_ML_{day}.json"])
+            sealed_paths = [p for p in ml_paper.receipt_files(repo / "localdata")
+                            if state_file or p.stem == f"autobets_ML_{day}"]
             acknowledged = False
             for sealed_path in sealed_paths:
                 try:
@@ -848,6 +853,22 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
             conflicts.append(detail)
         if chosen is not None:
             retained[relative] = chosen
+    frozen_by_day = {}
+    for relative, blob in retained.items():
+        match = pattern.fullmatch(relative)
+        if match[1] or match[2] is None:  # mutable pending evidence is handled above
+            continue
+        frozen_by_day.setdefault(match[2], []).append((relative, blob))
+    for day, copies in frozen_by_day.items():
+        if len({blob for _, blob in copies}) <= 1:
+            continue
+        detail = {"date": day, "cross_layout_conflict": True, "copies": {}}
+        for relative, blob in copies:
+            sha = hashlib.sha256(blob).hexdigest()
+            path = f"localdata/autobets_ML_conflicts/layout_{day}.{sha}.json"
+            _atomic_write(repo / path, blob)
+            detail["copies"][relative] = {"file": path, "sha256": sha}
+        conflicts.append(detail)
     if conflicts:
         marker = repo / "localdata/autobets_ML_integrity_block.json"
         # Do not erase earlier unresolved conflict details on later restores.
@@ -901,8 +922,11 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     restored: list[str] = []
     protected = set(APPEND_ONLY_JSONL_IDS)
     for relative in _tracked_localdata_paths(repo):
-        if relative in protected or (relative.startswith("localdata/autobets_ML")
-                                     and (repo / relative).exists()):
+        if relative in protected or (
+            relative.startswith(("localdata/autobets_ML",
+                                 "localdata/phase5_reconciliation/ml_paper_receipts/"))
+            and (repo / relative).exists()
+        ):
             # Exact paper dates are reconciled above; preserve cached conflict
             # markers/copies as well. Missing files still restore from HEAD.
             continue
@@ -933,6 +957,11 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     )
     if clean.returncode != 0:
         raise RuntimeError(f"git clean failed: {_decode_output(clean.stderr)}")
+    from edgefactory import ml_paper
+    try:
+        ml_paper.migrate_receipts(repo / "localdata")
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, ArithmeticError) as exc:
+        print(f"::warning::autobets_ML receipt migration deferred; live lanes unchanged: {exc}")
     compacted = compact_ticket_receipts(repo / "localdata")
     return {
         "compacted_ticket_receipts": compacted,

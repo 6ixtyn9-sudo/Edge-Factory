@@ -137,8 +137,7 @@ def render_lines(st, label, last, held, accas, wins, generated):
 def publish_ml_paper(*, write_empty=True):
     """A third sibling card/report, never a comparison or a live-state load."""
     from edgefactory import ml_paper
-    scores = at.load_settled_scores() if any(LOCALDATA.glob(
-        f"{ml_paper.PREFIX}_????-??-??.json")) else {}
+    scores = at.load_settled_scores() if ml_paper.receipt_files(LOCALDATA) else {}
     lookup = at.ml_paper_score_lookup(scores)
     card = ml_paper.latest_card(LOCALDATA)
     # A sibling report with no paper evidence stays read-only, preserving the
