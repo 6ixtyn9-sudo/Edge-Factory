@@ -781,6 +781,15 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
             except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
                 invalid = True
                 damaged.append(blob)
+        if state_file and damaged and values:
+            # Only exact, receipt-acknowledged corrupt bytes can be superseded
+            # by a validated later-day recovery. Never clear an integrity block.
+            repaired = next((label for label, row in values.items()
+                if all(ml_paper.state_recovery_acknowledges(repo / "localdata", row, blob)
+                       for blob in damaged)), None)
+            if repaired is not None:
+                retained[relative] = cache if repaired == "cached" else head
+                continue
         if draft and damaged:
             # A seal may acknowledge an unreadable draft as a missed day.
             # Preserve its exact bytes, but do not turn that acknowledged
@@ -805,7 +814,7 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
                     continue
                 if acknowledged:
                     break
-            if acknowledged:
+            if acknowledged and (not state_file or not values):
                 retained[relative] = cache if cache is not None else head
                 continue
         conflict = invalid
