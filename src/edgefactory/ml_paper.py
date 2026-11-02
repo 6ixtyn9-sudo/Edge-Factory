@@ -829,6 +829,7 @@ def _write_once(path, payload):
             os.fsync(stream.fileno())
         try:
             os.link(name, path)
+            _sync_directory(path.parent)
             return True
         except FileExistsError:
             return False
@@ -846,6 +847,21 @@ def validate_state(state):
         state.get("pending_by_date"), dict
     ):
         raise ValueError("invalid ML paper lane state; refusing reset")
+    # Retain pending witnesses after freeze deliberately: do not prune merely
+    # on date/file existence. Compaction needs verified receipt equivalence.
+    if not isinstance(state.get("recoveries", {}), dict):
+        raise TypeError("invalid ML pending-state recovery witnesses")
+    for sha, proof in state.get("recoveries", {}).items():
+        if not isinstance(proof, dict) or not isinstance(sha, str) or len(sha) != 64:
+            raise ValueError("invalid ML state recovery proof")
+        at = parse_zoned_timestamp(proof.get("recovered_at"))
+        day = proof.get("date")
+        receipt_sha = proof.get("receipt_sha256")
+        if (not isinstance(day, str) or at is None
+                or not isinstance(receipt_sha, str) or len(receipt_sha) != 64
+                or at.astimezone(LOCAL_TZ).date().isoformat() <= day):
+            raise ValueError("invalid ML state recovery proof timestamp")
+        datetime.strptime(day, "%Y-%m-%d")
     for day, row in state["pending_by_date"].items():
         datetime.strptime(day, "%Y-%m-%d")
         validate_record(row, day, draft=True)
@@ -871,6 +887,7 @@ def _save_state(root, state):
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(name, path)
+        _sync_directory(path.parent)
     finally:
         Path(name).unlink(missing_ok=True)
 
@@ -889,33 +906,148 @@ def merge_pending_states(head, cache):
             new = parse_zoned_timestamp(row["draft_persisted_at"])
             if old == new:
                 raise ValueError("conflicting equal-time ML pending cards")
+            if parse_zoned_timestamp(previous["captured_at"]) == parse_zoned_timestamp(row["captured_at"]):
+                raise ValueError("conflicting equal-capture-time ML pending cards")
             newer, older = (row, previous) if new > old else (previous, row)
             if parse_zoned_timestamp(newer["captured_at"]) < parse_zoned_timestamp(older["captured_at"]):
                 raise ValueError("regressing ML pending decision timestamp")
             merged["pending_by_date"][day] = newer
+    recoveries = dict(head.get("recoveries") or {})
+    for sha, proof in (cache.get("recoveries") or {}).items():
+        if sha in recoveries and recoveries[sha] != proof:
+            raise ValueError("conflicting ML state recovery witnesses")
+        recoveries[sha] = proof
+    if recoveries:
+        merged["recoveries"] = recoveries
     return merged
 
 
-def _migrate_legacy_drafts(root):
-    """Read-only-format compatibility: move exact old evidence into lane state.
+def _sync_directory(path):
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
 
-    No fresh decisions/timestamps are manufactured, including after cutoff.
-    Keep the old file on any validation/conflict/write failure.
-    Called under the same capture lock as state updates and freezes.
+
+def _archive_bytes(root, relative, blob):
+    """Durable exact-byte archive; never replace a conflicting witness."""
+    path = Path(root) / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        if path.read_bytes() != blob:
+            raise ValueError("paper evidence archive conflict")
+        with path.open("rb") as stream:
+            os.fsync(stream.fileno())
+        _sync_directory(path.parent)
+        _sync_directory(Path(root))
+        return
+    fd, name = tempfile.mkstemp(dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(blob)
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            os.link(name, path)
+        except FileExistsError:
+            if path.read_bytes() != blob:
+                raise ValueError("paper evidence archive conflict")
+        _sync_directory(path.parent)
+        _sync_directory(Path(root))
+    finally:
+        Path(name).unlink(missing_ok=True)
+
+
+def _quarantine_state(root, day):
+    blob = state_path(root).read_bytes()
+    sha = hashlib.sha256(blob).hexdigest()
+    relative = f"{PREFIX}_conflicts/draft_{day}.{sha}.bin"
+    _archive_bytes(root, relative, blob)
+    return {"sha256": sha, "quarantine": relative}
+
+
+def acknowledged_state_damage(root, blob):
+    """Exact corrupt bytes pinned by a valid immutable missed-freeze receipt."""
+    sha = hashlib.sha256(blob).hexdigest()
+    try:
+        history = receipts(root)
+    except (ValueError, TypeError, KeyError, AttributeError):
+        return None
+    for row in history:
+        proof = row.get("draft_integrity_error") or {}
+        relative = f"{PREFIX}_conflicts/draft_{row['date']}.{sha}.bin"
+        if (row["status"] == "missed_freeze_no_paper_bet"
+                and proof == {"sha256": sha, "quarantine": relative}
+                and (Path(root) / relative).is_file()
+                and (Path(root) / relative).read_bytes() == blob):
+            return row
+    return None
+
+
+def state_recovery_acknowledges(root, state, blob):
+    """Restore may accept a repaired pending store, never a reset bank/history."""
+    validate_state(state)
+    sealed = acknowledged_state_damage(root, blob)
+    if sealed is None:
+        return False
+    sha = hashlib.sha256(blob).hexdigest()
+    proof = (state.get("recoveries") or {}).get(sha) or {}
+    at = parse_zoned_timestamp(proof.get("recovered_at"))
+    return (proof.get("receipt_sha256") == sealed["sha256"]
+            and proof.get("date") == sealed["date"] and at is not None
+            and at.astimezone(LOCAL_TZ).date().isoformat() > sealed["date"]
+            and all(day > sealed["date"] for day in state["pending_by_date"]))
+
+
+def _recover_acknowledged_state(root, day, at):
+    try:
+        _read_state(root)
+        return
+    except (ValueError, TypeError, KeyError, AttributeError):
+        blob = state_path(root).read_bytes()
+    sealed = acknowledged_state_damage(root, blob)
+    if sealed is None or sealed["date"] >= day:
+        return  # Today stays no-bet; recovery can only affect later dates.
+    sha = hashlib.sha256(blob).hexdigest()
+    state = {"schema": "autobets_ML_state_v1", "pending_by_date": {}, "recoveries": {
+        sha: {"date": sealed["date"], "receipt_sha256": sealed["sha256"],
+              "recovered_at": at.isoformat()}}}
+    _save_state(root, state)
+    print(f"autobets_ML pending-state recovery: {sha}; exact bytes quarantined; "
+          "frozen history and paper capital unchanged")
+
+
+def _migrate_legacy_drafts(root):
+    """Migrate pending evidence; archive obsolete drafts only after a valid freeze.
+
+    No fresh decisions/timestamps are manufactured. Frozen daily receipts
+    supersede pending rows; exact legacy bytes are archived before unlinking.
+    Unfrozen conflicts and failed writes still fail closed with originals kept.
     """
-    paths = sorted(Path(root).glob(f"{PREFIX}_draft_????-??-??.json"))
-    if not paths:
+    pending = []
+    for path in sorted(Path(root).glob(f"{PREFIX}_draft_????-??-??.json")):
+        day = path.stem.removeprefix(f"{PREFIX}_draft_")
+        frozen = receipt_path(root, day)
+        if frozen.exists():
+            validate_record(json.loads(frozen.read_text()), day)
+            blob = path.read_bytes()
+            sha = hashlib.sha256(blob).hexdigest()
+            _archive_bytes(root, f"{PREFIX}_conflicts/legacy_superseded_{day}.{sha}.bin", blob)
+            path.unlink()
+        else:
+            pending.append((path, day))
+    if not pending:
         return
     state = _read_state(root)
-    for path in paths:
-        day = path.stem.removeprefix(f"{PREFIX}_draft_")
+    for path, day in pending:
         row = json.loads(path.read_text())
         validate_record(row, day, draft=True)
         state = merge_pending_states(
             state, {"schema": "autobets_ML_state_v1", "pending_by_date": {day: row}}
         )
     _save_state(root, state)
-    for path in paths:
+    for path, _ in pending:
         path.unlink()
 
 
@@ -971,12 +1103,12 @@ def capture(
         current = clock()
         if current.astimezone(LOCAL_TZ).hour < generate_hour:
             return None
-        _migrate_legacy_drafts(root)
         day = current.astimezone(LOCAL_TZ).date().isoformat()
         freeze_at = datetime.fromisoformat(day).replace(tzinfo=LOCAL_TZ, hour=freeze_hour)
         path = receipt_path(root, day)
         if path.exists():
             receipts(root)  # corrupted frozen evidence is never silently ignored
+            _migrate_legacy_drafts(root)
             return None
 
         def seal(at):
@@ -986,23 +1118,7 @@ def capture(
             except (ValueError, TypeError, KeyError, AttributeError):
                 # Preserve original bytes and an explicit missed-day receipt;
                 # never delete/rebuild the corrupt draft or select late inputs.
-                blob = state_path(root).read_bytes()
-                sha = hashlib.sha256(blob).hexdigest()
-                quarantine = root / f"{PREFIX}_conflicts" / f"draft_{day}.{sha}.bin"
-                quarantine.parent.mkdir(parents=True, exist_ok=True)
-                if quarantine.exists() and quarantine.read_bytes() != blob:
-                    raise ValueError("paper draft quarantine conflict; refusing evidence loss")
-                if not quarantine.exists():
-                    fd, name = tempfile.mkstemp(dir=quarantine.parent)
-                    try:
-                        with os.fdopen(fd, "wb") as stream:
-                            stream.write(blob)
-                            stream.flush()
-                            os.fsync(stream.fileno())
-                        os.link(name, quarantine)
-                    finally:
-                        Path(name).unlink(missing_ok=True)
-                corruption = {"sha256": sha, "quarantine": str(quarantine.relative_to(root))}
+                corruption = _quarantine_state(root, day)
                 draft = None
             if draft is None:
                 payload = {
@@ -1029,6 +1145,19 @@ def capture(
             payload["sha256"] = digest(payload)
             return payload if _write_once(path, payload) else None
 
+        _recover_acknowledged_state(root, day, current)
+        try:
+            _read_state(root)
+        except (ValueError, TypeError, KeyError, AttributeError):
+            _quarantine_state(root, day)
+            if current < freeze_at:
+                # Never publish/backdate a freeze before 09:00. Preserve the
+                # damaged store, visibly quarantine now, seal NO BET at cutoff.
+                print(f"autobets_ML corrupt pending state: {day} quarantined; "
+                      "no build; awaiting 09:00 missed-freeze publication")
+                return None
+            return seal(current)
+        _migrate_legacy_drafts(root)
         if current >= freeze_at:
             return seal(current)
         captured = parse_zoned_timestamp(context.get("build_at"))
