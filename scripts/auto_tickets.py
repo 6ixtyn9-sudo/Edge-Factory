@@ -3080,6 +3080,51 @@ def _apply_settled_enhancement_reconciliations(st: dict, localdata: Path) -> boo
     return changed
 
 
+def repair_enhancement_reporting_closes(st: dict) -> bool:
+    """Repair only the witnessed Oct-25 stale reporting chain, never money.
+
+    The old verified-result regrader credited the 6.1814 payout but left the
+    daily closes unchanged. Later code fixes do not revisit already-corrected
+    legs. Scope this repair to that exact booked win and offset, check the
+    repaired end against the existing bank, and preserve the old closes.
+    """
+    rows = sorted(st.get("history") or [], key=lambda h: h["date"])
+    index = next((i for i, h in enumerate(rows) if h["date"] == "2026-10-25"), None)
+    if index is None or index == 0:
+        return False
+    row, previous = rows[index], rows[index - 1]
+    witnessed = any(
+        a.get("won") is True and a.get("stake_pct") == 3.288
+        and a.get("odds") == 1.88 and a.get("returned_pct") == 6.1814
+        and any(l.get("match") == "Lillestrøm SK vs SK Brann"
+                and l.get("result") == "win"
+                and l.get("label") == "Match Over 2.5 Goals"
+                for l in a.get("legs", []))
+        for a in row.get("accas", []))
+    if not witnessed or "close_pct" not in row:
+        return False
+    expected = previous.get("close_pct", previous["bank_pct"]) + row["returned_pct"] - row["staked_pct"]
+    if abs(expected - row["close_pct"] - 6.1814) > 0.0002:
+        return False
+    trial = copy.deepcopy(st)
+    _rechain_from(trial, "2026-10-25")
+    last = max(trial["history"], key=lambda h: h["date"])
+    if abs(last["close_pct"] - st["bank"]) > 0.001:
+        raise ValueError("ENH reporting-close repair does not reconcile to existing bank")
+    corrections = []
+    by_date = {h["date"]: h for h in trial["history"]}
+    for h in st["history"]:
+        after = by_date[h["date"]].get("close_pct")
+        if h["date"] >= "2026-10-25" and h.get("close_pct") != after:
+            corrections.append({"date": h["date"], "before": h.get("close_pct"), "after": after})
+            h["close_pct"] = after
+    st.setdefault("integrity_recovery", {})["reporting_close_correction"] = {
+        "reason": "Oct-25 verified 6.1814 payout was already credited; stale reporting closes only",
+        "bank_unchanged": st["bank"], "corrections": corrections,
+        "stakes_results_open_slips_and_freezes": "unchanged"}
+    return True
+
+
 def _apply_unplaced_enhancement_resets(st: dict, localdata: Path) -> bool:
     """Apply committed operator receipts BEFORE enhancement settlement.
 
@@ -3163,6 +3208,8 @@ def load_state(lane: "Lane | None" = None) -> dict:
         if _apply_settled_enhancement_reconciliations(st, state_path(lane).parent) and st:
             save_state(st, lane)
         if _apply_unplaced_enhancement_resets(st, state_path(lane).parent) and st:
+            save_state(st, lane)
+        if repair_enhancement_reporting_closes(st):
             save_state(st, lane)
     if not st:
         return {}
