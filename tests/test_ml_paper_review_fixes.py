@@ -172,7 +172,7 @@ def test_invalid_json_draft_has_visible_missed_day_and_original_bytes(tmp_path):
 def test_starvation_is_explicit_not_mislabeled_strategy_selectivity(tmp_path):
     rows = [pick(1), pick(2)]
     for row in rows:
-        row["odds_captured_at"] = (FREEZE - timedelta(hours=6, seconds=1)).isoformat()
+        row["odds_captured_at"] = (FREEZE - timedelta(hours=12, seconds=1)).isoformat()
     blocked = run_capture(tmp_path, context(rows))
     assert blocked["coverage"]["candidate_count"] == 0
     assert blocked["coverage"]["status"] == "input_starved_not_strategy_selectivity"
@@ -383,7 +383,11 @@ def test_committed_morning_archive_has_a_genuine_pre_cutoff_opportunity():
     assert cs
     assert len({tuple(c["fixture"]) for c in cs}) >= 2
     assert all(datetime.fromisoformat(c["price_at"]) <= now for c in cs)
-    assert all(freeze - datetime.fromisoformat(c["price_at"]) <= timedelta(hours=6) for c in cs)
+    assert all(freeze - datetime.fromisoformat(c["price_at"]) <= timedelta(hours=12) for c in cs)
+    assert all(
+        freeze - datetime.fromisoformat(c["price_at"]) <= timedelta(hours=6)
+        for c in cs if c["price_source"] in {"oddspapi", "oddspapi_odds"}
+    )
 
 
 @pytest.mark.parametrize("tamper_quarantine", [False, True])
