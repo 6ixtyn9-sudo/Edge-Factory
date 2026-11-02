@@ -42,6 +42,86 @@
       "base_logloss": null,
       "calibrated_brier": null,
       "calibrated_logloss": null
+    },
+    "source_comparison": {
+      "basis": "frozen_market_matched_source_forecasts_not_independent_ground_truth",
+      "weighting": "one_total_weight_per_fixture_within_each_group",
+      "limitation": "descriptive_only_overlapping_groups_not_additive_no_significance_or_rule_changes",
+      "all_candidates": {
+        "paired_fixtures": 0,
+        "paired_observations": 0,
+        "missing_source_fixtures": 0,
+        "missing_source_observations": 0,
+        "base_brier": null,
+        "base_logloss": null,
+        "model_brier": null,
+        "model_logloss": null,
+        "source_brier": null,
+        "source_logloss": null
+      },
+      "selected_candidates": {
+        "paired_fixtures": 0,
+        "paired_observations": 0,
+        "missing_source_fixtures": 0,
+        "missing_source_observations": 0,
+        "base_brier": null,
+        "base_logloss": null,
+        "model_brier": null,
+        "model_logloss": null,
+        "source_brier": null,
+        "source_logloss": null
+      },
+      "by_model_source_gap": {
+        "lt_10pp": {
+          "paired_fixtures": 0,
+          "paired_observations": 0,
+          "missing_source_fixtures": 0,
+          "missing_source_observations": 0,
+          "base_brier": null,
+          "base_logloss": null,
+          "model_brier": null,
+          "model_logloss": null,
+          "source_brier": null,
+          "source_logloss": null
+        },
+        "10_to_lt_20pp": {
+          "paired_fixtures": 0,
+          "paired_observations": 0,
+          "missing_source_fixtures": 0,
+          "missing_source_observations": 0,
+          "base_brier": null,
+          "base_logloss": null,
+          "model_brier": null,
+          "model_logloss": null,
+          "source_brier": null,
+          "source_logloss": null
+        },
+        "ge_20pp": {
+          "paired_fixtures": 0,
+          "paired_observations": 0,
+          "missing_source_fixtures": 0,
+          "missing_source_observations": 0,
+          "base_brier": null,
+          "base_logloss": null,
+          "model_brier": null,
+          "model_logloss": null,
+          "source_brier": null,
+          "source_logloss": null
+        },
+        "unavailable": {
+          "paired_fixtures": 0,
+          "paired_observations": 0,
+          "missing_source_fixtures": 0,
+          "missing_source_observations": 0,
+          "base_brier": null,
+          "base_logloss": null,
+          "model_brier": null,
+          "model_logloss": null,
+          "source_brier": null,
+          "source_logloss": null
+        }
+      },
+      "by_board_bucket": {}
     }
   },
   "acca_calibration_by_length": {},
