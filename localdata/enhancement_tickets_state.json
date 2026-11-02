@@ -5301,12 +5301,12 @@
                   "source": "theoddsapi",
                   "price": 1.55,
                   "captured_at": "2026-11-01T22:16:42.386921+00:00",
-                  "decision_at": "2026-11-02T06:32:14+02:00",
+                  "decision_at": "2026-11-02T09:13:17+02:00",
                   "kickoff": "2026-11-02T17:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6525981092867922,
-              "ml_model_key": "be632489f4ed15deea183c507a40fb1a8346ae48b07e899121260df2e7f55106",
+              "ml_rank_probability": 0.652598109286834,
+              "ml_model_key": "6f22fcd4fa3beed1632d4c9416d73cec25e455d56a7072d83ca7fdb24ab65da6",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7071895502071297,
@@ -5350,12 +5350,12 @@
                   "source": "theoddsapi",
                   "price": 1.35,
                   "captured_at": "2026-11-01T22:16:42.191827+00:00",
-                  "decision_at": "2026-11-02T06:32:14+02:00",
+                  "decision_at": "2026-11-02T09:13:17+02:00",
                   "kickoff": "2026-11-02T20:15:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.8080528850852554,
-              "ml_model_key": "be632489f4ed15deea183c507a40fb1a8346ae48b07e899121260df2e7f55106",
+              "ml_rank_probability": 0.8080528850852269,
+              "ml_model_key": "6f22fcd4fa3beed1632d4c9416d73cec25e455d56a7072d83ca7fdb24ab65da6",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7071895502071297,
@@ -5375,7 +5375,12 @@
             }
           ],
           "odds": 2.09,
-          "stake_pct": 3.233
+          "stake_pct": 3.233,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 3.233
@@ -5474,6 +5479,11 @@
     },
     "2026-11-01": {
       "frozen_at": "2026-11-01T09:40:14+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-02": {
+      "frozen_at": "2026-11-02T09:24:50+02:00",
       "final": true,
       "lock_source": "state"
     }
