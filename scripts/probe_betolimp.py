@@ -10,7 +10,9 @@ Source FT score candidates remain unadmitted; null status is not completion proo
 ordinary public match URLs on the fixed, observed SportPesa tenant route only.
 SportPesa StatsHub is explicitly third-party supplied, not an independent bookmaker feed.
 Default HTTP modes: no redirects, retries, proxies, cookies, credentials or production admission.
-Native responses are transport evidence, NOT executable or decoded quotes.
+Native responses are transport evidence, NOT executable quotes.
+--native-markets inspects BetOlimp native full-time market candidates, still unadmitted.
+Its conservative layout contract is synthetic-tested, not origin-verified.
 --native-loader decodes one StatsHub page: fixture/source-score candidates and supported semantic tables.
 History is limited to the supported match/sibling schema; source ft scores are NOT verified regulation.
 No form aggregates, slate binding or production admission are enabled, and no APIs are called.
@@ -48,6 +50,7 @@ from edgefactory.odds_normalization import parse_zoned_timestamp
 from edgefactory.sources.betolimp_snapshot import (
     MAX_BYTES,
     compare_card_identity,
+    inspect_native_event_html,
     parse_saved_excerpt,
     validate_event_url,
 )
@@ -189,7 +192,8 @@ class _PageShape(HTMLParser):
 
 def _native_receipt(response, body: bytes, complete: bool, *, context_url: str | None = None,
                     discovery_url: str | None = None, is_script: bool = False,
-                    loader_url: str | None = None, observed_at_utc: str | None = None) -> dict:
+                    loader_url: str | None = None, observed_at_utc: str | None = None,
+                    market_url: str | None = None) -> dict:
     # Default receipts contain fixed metadata/hashes only. Opt-in semantic
     # context adds a strict public-field allowlist, never raw markup. No
     # Location/Set-Cookie, body/title, arbitrary markup URLs, exception strings,
@@ -253,6 +257,10 @@ def _native_receipt(response, body: bytes, complete: bool, *, context_url: str |
                 label: label.casefold() in visible for label in (
                     "Head to Head", "H2H", "Last meetings", "Last matches",
                     "Season Statistics", "League Position", "Overall Form", "Stats Hub")}
+    if market_url is not None and classification == "native_html_received_unverified":
+        inspection = inspect_native_event_html(body, market_url)
+        result["native_markets"] = inspection
+        result["decoded_observation_count"] = len(inspection["observations"])
     if context_url is not None and classification == "native_html_received_unverified":
         context = parse_native_context_html(body, context_url)
         result["native_context"] = context
@@ -270,8 +278,11 @@ def _native_receipt(response, body: bytes, complete: bool, *, context_url: str |
 
 
 def native_probe(urls: list[str], source: str = "betolimp", *, native_context: bool = False,
-                 native_discovery: bool = False, native_loader: bool = False) -> dict:
+                 native_discovery: bool = False, native_loader: bool = False,
+                 native_markets: bool = False) -> dict:
     """Read-only ordinary public GETs, one attempt each, without an ingest path."""
+    if native_markets and (source != "betolimp" or native_context or native_discovery or native_loader):
+        raise ValueError("native market inspection requires BetOlimp and excludes other native modes")
     if native_loader and (source != "sportpesa-statshub" or len(urls) != 1
                           or native_context or native_discovery):
         raise ValueError("loader inspection requires one StatsHub page and excludes other native modes")
@@ -330,11 +341,16 @@ def native_probe(urls: list[str], source: str = "betolimp", *, native_context: b
                                                discovery_url=url if native_discovery else None,
                                                is_script=is_script,
                                                loader_url=url if native_loader else None,
-                                               observed_at_utc=receipt["request_started_at_utc"]))
+                                               observed_at_utc=receipt["request_started_at_utc"],
+                                               market_url=url if native_markets else None))
         except httpx.HTTPError as error:
             receipt.update({"transport_ok": False,
                             "classification": "transport_timeout" if isinstance(
                                 error, httpx.TimeoutException) else "transport_error"})
+        if native_markets and receipt.get("decoded_observation_count", 0):
+            receipt["hold_reasons"] = [r for r in receipt["hold_reasons"]
+                                       if r != "native_market_decoding_unimplemented"]
+            receipt["hold_reasons"].append("native_layout_not_origin_verified")
         receipt["request_finished_at_utc"] = datetime.now(UTC).isoformat()
         receipts.append(receipt)
         if native_discovery and not is_script and receipt["transport_ok"]:
@@ -354,6 +370,10 @@ def native_probe(urls: list[str], source: str = "betolimp", *, native_context: b
             else "static_data_loading_discovery_not_api_verification" if native_discovery
             else "opt_in_native_semantic_inspection_not_slate_coverage" if native_context
             else "unmeasured_native_context_decoding_not_implemented"}
+    if native_markets:
+        result["mode"] = "native_betolimp_market_candidates_only"
+        result["market_decoding_ok"] = all(r.get("decoded_observation_count", 0) > 0 for r in receipts)
+        result["coverage_status"] = "unadmitted_native_layout_candidates_not_executable_prices"
     if native_loader:
         result["loader_decoding_ok"] = all(
             r.get("loader_state", {}).get("decoded_loader_state_count") == 1 for r in receipts)
@@ -844,6 +864,8 @@ def main(argv=None) -> int:
     parser.add_argument("--native-source", default="betolimp",
                         choices=("betolimp", *NATIVE_SOURCE_PAGES),
                         help="native only; pinned bookmaker pages or fixed-tenant public StatsHub match URLs")
+    parser.add_argument("--native-markets", action="store_true",
+                        help="BetOlimp only: inspect supported native event market candidates; no price admission")
     parser.add_argument("--native-context", action="store_true",
                         help="StatsHub only: opt into bounded semantic standings/shape inspection")
     parser.add_argument("--native-discovery", action="store_true",
@@ -856,6 +878,9 @@ def main(argv=None) -> int:
                         help="explicitly install pinned Playwright/Chromium on a GitHub-hosted Linux runner only")
     parser.add_argument("--as-of", help="zone-bearing cutoff for offline context coverage only")
     args = parser.parse_args(argv)
+    if args.native_markets and (not args.native_url or args.native_source != "betolimp"
+            or args.native_context or args.native_discovery or args.native_loader or args.browser_context):
+        parser.error("--native-markets requires BetOlimp --native-url and excludes other native modes")
     if args.browser_response_input and args.card:
         parser.error("--browser-response-input does not implement card binding")
     if args.browser_install_runtime and not args.browser_context:
@@ -891,7 +916,8 @@ def main(argv=None) -> int:
         else:
             result = (native_probe(args.native_url, args.native_source, native_context=args.native_context,
                                    native_discovery=args.native_discovery,
-                                   native_loader=args.native_loader) if args.native_url
+                                   native_loader=args.native_loader,
+                                   native_markets=args.native_markets) if args.native_url
                       else dry_run(args.input, args.card))
     except (ValueError, OSError, TypeError, KeyError, IndexError, RecursionError, OverflowError):
         # Do not echo untrusted input, file contents, URLs or exception strings.
@@ -900,7 +926,8 @@ def main(argv=None) -> int:
         return 2
     print(json.dumps(result, indent=2, ensure_ascii=False, allow_nan=False))
     if args.native_url and (not result["transport_ok"] or (
-            args.native_loader and not result["loader_decoding_ok"])):
+            args.native_loader and not result["loader_decoding_ok"]) or (
+            args.native_markets and not result["market_decoding_ok"])):
         return 1
     return 0
 
