@@ -50,6 +50,7 @@ from .util import norm_team
 SCHEMA = "autobets_ML_v2"
 READABLE_SCHEMAS = {"autobets_ML_v1", SCHEMA}
 PREFIX = "autobets_ML"
+RECEIPT_DIR = Path("phase5_reconciliation/ml_paper_receipts")
 LOCAL_TZ = ZoneInfo("Africa/Johannesburg")
 SEARCH_BEAM_WIDTH = 512  # computational search breadth, NOT a betting/leg/odds cap
 BASE_PAPER_UNITS = 100.0
@@ -74,7 +75,22 @@ def digest(value):
 
 def receipt_path(root, day):
     datetime.strptime(day, "%Y-%m-%d")
-    return Path(root) / f"{PREFIX}_{day}.json"
+    return Path(root) / RECEIPT_DIR / f"{PREFIX}_{day}.json"
+
+
+def receipt_files(root):
+    """Read both layouts during upgrades/cache restore; never treat loss as empty history."""
+    root = Path(root)
+    return sorted([
+        *root.glob(f"{PREFIX}_????-??-??.json"),
+        *(root / RECEIPT_DIR).glob(f"{PREFIX}_????-??-??.json"),
+    ])
+
+
+def has_receipt(root, day):
+    canonical = receipt_path(root, day)  # also validates the requested date
+    # Migration publishes the internal copy before removing the legacy copy.
+    return (Path(root) / canonical.name).exists() or canonical.exists()
 
 
 def _validate_bets(row):
@@ -205,19 +221,68 @@ def receipts(root):
     """Corrupt evidence is an error, never an empty/reset performance history."""
     if (Path(root) / f"{PREFIX}_integrity_block.json").exists():
         raise ValueError("autobets_ML evidence conflict; paper lane blocked, live lanes unchanged")
-    result = []
-    for path in sorted(Path(root).glob(f"{PREFIX}_????-??-??.json")):
-        row = json.loads(path.read_text())
+    result = {}
+    blobs = {}
+    for path in receipt_files(root):
+        try:
+            blob = path.read_bytes()
+        except FileNotFoundError:
+            if path.parent != Path(root):
+                raise
+            # Another reader may have held the old directory listing while a
+            # locked migration durably published, then unlinked, this legacy copy.
+            path = receipt_path(root, path.stem.removeprefix(f"{PREFIX}_"))
+            blob = path.read_bytes()  # absence still fails closed, never empty history
+        row = json.loads(blob)
         unsigned = {k: v for k, v in row.items() if k != "sha256"}
+        day = path.stem.removeprefix(f"{PREFIX}_")
+        canonical = receipt_path(root, day)
         if (
             row.get("schema") not in READABLE_SCHEMAS
             or row.get("sha256") != digest(unsigned)
-            or path != receipt_path(root, row["date"])
+            or row.get("date") != day
+            or path not in (canonical, Path(root) / canonical.name)
         ):
             raise ValueError(f"invalid ML paper receipt: {path.name}")
         validate_record(row, row["date"])
-        result.append(row)
-    return result
+        day = row["date"]
+        if day in blobs and blobs[day] != blob:
+            raise ValueError(f"conflicting ML paper receipt layouts: {day}")
+        blobs[day] = blob
+        result[day] = row
+    return [result[day] for day in sorted(result)]
+
+
+def _migrate_frozen_receipts(root):
+    """Caller holds the lane lock. Validate everything before moving exact bytes."""
+    receipts(root)  # corruption, conflicts and integrity blocks must never disappear
+    root = Path(root)
+    moved = 0
+    for legacy in sorted(root.glob(f"{PREFIX}_????-??-??.json")):
+        blob = legacy.read_bytes()
+        day = legacy.stem.removeprefix(f"{PREFIX}_")
+        destination = receipt_path(root, day)
+        _archive_bytes(root, destination.relative_to(root), blob)
+        # The archive is nested two levels deep. Persist the new receipt-dir
+        # entry in its audit parent as well, before unlinking the legacy copy.
+        _sync_directory(destination.parent.parent)
+        _sync_directory(root)
+        if legacy.read_bytes() != blob:
+            raise ValueError("ML paper receipt changed during migration")
+        legacy.unlink()  # only after durable publication of identical bytes
+        _sync_directory(root)
+        moved += 1
+    return moved
+
+
+def migrate_receipts(root):
+    """Storage-only migration: no selection, settlement, learning or receipt rewriting."""
+    root = Path(root)
+    if not root.exists():
+        return 0
+    with (root / f".{PREFIX}.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        return _migrate_frozen_receipts(root)
 
 
 def hit(market, selection, hs, gs):
@@ -1137,6 +1202,7 @@ def capture(
     # One lock for draft updates AND first freeze prevents races across cutoff.
     with (root / f".{PREFIX}.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
+        _migrate_frozen_receipts(root)
         current = clock()
         if current.astimezone(LOCAL_TZ).hour < generate_hour:
             return None
@@ -1586,7 +1652,7 @@ def latest_card(root, *, now=None):
     """Current draft/frozen card for adjacent display; never selects or settles."""
     now = now or datetime.now(LOCAL_TZ)
     today = now.astimezone(LOCAL_TZ).date().isoformat()
-    if state_path(root).exists() and not receipt_path(root, today).exists():
+    if state_path(root).exists() and not has_receipt(root, today):
         freeze_at = datetime.fromisoformat(today).replace(tzinfo=LOCAL_TZ, hour=9)
         row = _checked_draft(root, today, freeze_at)
         if row is not None:
@@ -1599,6 +1665,7 @@ def latest_card(root, *, now=None):
 
 def publish(root, score_lookup):
     """Sibling card/performance files, read by the same existing lane-report CLI."""
+    migrate_receipts(root)
     history = receipts(root)
     report = performance(history, score_lookup)
     root = Path(root)
