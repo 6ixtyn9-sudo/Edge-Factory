@@ -237,3 +237,20 @@ def test_failed_superseded_legacy_archive_never_unlinks_original(tmp_path,monkey
         next_capture(tmp_path)
     assert path.read_bytes() == original
     assert mp.receipt_path(tmp_path, DAY).read_bytes() == frozen
+
+
+def test_archive_directory_sync_failure_retains_legacy_and_retries(tmp_path,monkeypatch):
+    capture(tmp_path)
+    path,original = legacy_draft(tmp_path,mp._read_state(tmp_path)['pending_by_date'][DAY])
+    sync = mp._sync_directory
+
+    def fail(*args):
+        raise OSError('directory sync failed')
+
+    monkeypatch.setattr(mp,'_sync_directory',fail)
+    with pytest.raises(OSError):
+        next_capture(tmp_path)
+    assert path.read_bytes() == original
+    monkeypatch.setattr(mp,'_sync_directory',sync)
+    assert next_capture(tmp_path)['status'] == 'draft_not_yet_frozen'
+    assert not path.exists()

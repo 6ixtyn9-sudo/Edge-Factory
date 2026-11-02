@@ -829,6 +829,7 @@ def _write_once(path, payload):
             os.fsync(stream.fileno())
         try:
             os.link(name, path)
+            _sync_directory(path.parent)
             return True
         except FileExistsError:
             return False
@@ -886,6 +887,7 @@ def _save_state(root, state):
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(name, path)
+        _sync_directory(path.parent)
     finally:
         Path(name).unlink(missing_ok=True)
 
@@ -920,6 +922,14 @@ def merge_pending_states(head, cache):
     return merged
 
 
+def _sync_directory(path):
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
 def _archive_bytes(root, relative, blob):
     """Durable exact-byte archive; never replace a conflicting witness."""
     path = Path(root) / relative
@@ -927,6 +937,10 @@ def _archive_bytes(root, relative, blob):
     if path.exists():
         if path.read_bytes() != blob:
             raise ValueError("paper evidence archive conflict")
+        with path.open("rb") as stream:
+            os.fsync(stream.fileno())
+        _sync_directory(path.parent)
+        _sync_directory(Path(root))
         return
     fd, name = tempfile.mkstemp(dir=path.parent)
     try:
@@ -939,6 +953,8 @@ def _archive_bytes(root, relative, blob):
         except FileExistsError:
             if path.read_bytes() != blob:
                 raise ValueError("paper evidence archive conflict")
+        _sync_directory(path.parent)
+        _sync_directory(Path(root))
     finally:
         Path(name).unlink(missing_ok=True)
 
