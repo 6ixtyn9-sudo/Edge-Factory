@@ -766,6 +766,7 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
         cache = (repo / relative).read_bytes() if (repo / relative).exists() else None
         values = {}
         invalid = False
+        damaged = []
         for label, blob in (("committed", head), ("cached", cache)):
             if blob is None:
                 continue
@@ -775,6 +776,28 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
                 values[label] = row
             except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
                 invalid = True
+                damaged.append(blob)
+        if draft and damaged:
+            # A seal may acknowledge an unreadable draft as a missed day.
+            # Preserve its exact bytes, but do not turn that acknowledged
+            # no-bet day into a permanent experiment-wide block on restore.
+            # Frozen conflicts and pre-existing integrity blocks still win.
+            try:
+                sealed_path = repo / "localdata" / f"autobets_ML_{day}.json"
+                sealed = json.loads(sealed_path.read_bytes())
+                ml_paper.validate_record(sealed, day)
+                proof = sealed["draft_integrity_error"]
+                sha = proof["sha256"]
+                expected = f"autobets_ML_conflicts/draft_{day}.{sha}.bin"
+                acknowledged = (sealed["status"] == "missed_freeze_no_paper_bet"
+                    and proof["quarantine"] == expected
+                    and all(hashlib.sha256(blob).hexdigest() == sha for blob in damaged)
+                    and (repo / "localdata" / expected).read_bytes() == damaged[0])
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                acknowledged = False
+            if acknowledged:
+                retained[relative] = cache if cache is not None else head
+                continue
         conflict = invalid
         chosen = head if head is not None else cache
         if not invalid and head is not None and cache is not None:

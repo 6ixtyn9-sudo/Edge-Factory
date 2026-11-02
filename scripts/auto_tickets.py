@@ -4076,13 +4076,30 @@ def write_decision_receipt(context, plan, *, frozen=False):
         print(f"::warning::DECISION RECEIPT NOT PERSISTED: {type(exc).__name__}: {exc}", file=sys.stderr)
 
 
-def ml_paper_score_lookup(scores):
-    """Same regulation/ambiguity-vetted facts; exact non-truncated keys only."""
+def ml_paper_score_lookup(scores, *, now=None):
+    """Exact regulation results on the leg's SAST kickoff day, never card day.
+
+    No +/-day, truncated-name or receipt-date rescue. The shared result store
+    is date/pair keyed, not provider-event keyed: that remaining limitation is
+    explicit, and ambiguous exact aliases stay unresolved. UTC/SAST calendar
+    boundaries stay unresolved until stronger donor event/timezone evidence
+    exists. A future kickoff cannot settle against an already-present score.
+    """
+    from datetime import UTC
+
+    from edgefactory.odds_normalization import parse_zoned_timestamp
     def lookup(candidate):
-        values = {scores[(candidate['date'], hk, ak)]
+        kickoff = parse_zoned_timestamp(candidate.get('kickoff_utc'))
+        at = now if now is not None else datetime.now(TZ)
+        if kickoff is None or at.tzinfo is None or kickoff >= at:
+            return None
+        if kickoff.astimezone(UTC).date() != kickoff.astimezone(TZ).date():
+            return None  # donor calendar basis is unproven; never guess
+        day = kickoff.astimezone(TZ).date().isoformat()
+        values = {scores[(day, hk, ak)]
                   for hk, ak, narrow in _result_write_key_specs(
                       candidate['home'], candidate['away'])
-                  if not narrow and (candidate['date'], hk, ak) in scores}
+                  if not narrow and (day, hk, ak) in scores}
         return next(iter(values)) if len(values) == 1 else None
     return lookup
 
