@@ -1518,12 +1518,14 @@ def performance(history, score_lookup):
 
 
 def render_card(receipt):
+    """Readable TXT card; the JSON receipt remains the machine/audit record."""
     lines = [
         f"autobets_ML TICKETS — {receipt['date']}",
         "=" * 62,
+        "",
         "PAPER ONLY — own legs, accas and model-sized stakes; no odds band.",
-        f"FREEZE   {receipt.get('frozen_at') or receipt.get('freeze_at', '09:00 SAST')} | {receipt['status']}",
         "Same-book single-price products; acca acceptance/payout unconfirmed.",
+        "",
     ]
     if not receipt["accas"]:
         lines.append(
@@ -1531,34 +1533,52 @@ def render_card(receipt):
             if receipt["status"] == "missed_freeze_no_paper_bet"
             else "NO PAPER BET — no qualifying model/price/capital combination."
         )
+        lines.append("")
     for i, acca in enumerate(receipt["accas"], 1):
         lines.append(
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
         for c in acca["legs"]:
-            lines.append(
-                f"   {c['home']} vs {c['away']} | {c['market']} {c['selection']} "
-                f"@{c['odds']:.3f} | {c['bucket']} | ML {c['probability']:.1%}"
+            lines.extend([
+                f"   {c['home']} vs {c['away']}",
+                (f"      {c['market']} {c['selection']} @{c['odds']:.3f}"
+                 f" · ML {c['probability']:.1%} · {c['bucket']}"),
+                "",
+            ])
+    for heading, details in (
+        ("COVERAGE", receipt.get("coverage", {})),
+        ("REJECTIONS", receipt.get("rejections", {})),
+    ):
+        lines.append(heading)
+        if details:
+            lines.extend(
+                f"   {key.replace('_', ' ').capitalize()}: {value}"
+                for key, value in details.items()
             )
-    lines.append(f"COVERAGE  {receipt.get('coverage', {})}")
-    lines.append(f"REJECTIONS  {receipt.get('rejections', {})}")
-    lines.append(f"LEARNING  {receipt['learning']['status']}")
+        else:
+            lines.append("   None recorded")
+        lines.append("")
+    lines.extend([
+        f"LEARNING  {receipt['learning']['status']}",
+        "",
+        f"FREEZE   {receipt.get('frozen_at') or receipt.get('freeze_at', '09:00 SAST')} | {receipt['status']}",
+    ])
     return "\n".join(lines) + "\n"
 
 
 def render_performance(report):
     roi = f"{report['roi']:+.1%}" if report["roi"] is not None else "not measured yet"
     return (
-        "autobets_ML — performance (paper only; no real stakes)\n" + "=" * 62 + "\n"
+        "autobets_ML — performance (paper only; no real stakes)\n" + "=" * 62 + "\n\n"
         f"BANK     {report['paper_bank_units']:.3f} paper units · x{report['paper_multiple']:.3f} of 100-unit base\n"
-        f"CAPITAL  {report['paper_free_units']:.3f} free / {report['paper_committed_units']:.3f} reserved paper units\n"
+        f"CAPITAL  {report['paper_free_units']:.3f} free / {report['paper_committed_units']:.3f} reserved paper units\n\n"
         f"RECORD   {report['wins']}W / {report['losses']}L · {report['pending_accas']} pending accas · {report['unresolved_result_legs']} unresolved leg results\n"
         f"PROFIT   {report['profit_units']:+.3f} paper units · ROI {roi}\n"
         f"DRAWDOWN {report['max_daily_close_drawdown_units']:.3f} paper units / {report['max_daily_close_drawdown_fraction']:.1%} (ticket-date marks; pending at cost)\n"
-        f"DAYS     {report['bet_days']} bet / {report['no_bet_days']} no-bet · {report['missed_freeze_days']} missed freeze\n"
+        f"DAYS     {report['bet_days']} bet / {report['no_bet_days']} no-bet · {report['missed_freeze_days']} missed freeze\n\n"
         "STAKING  model Kelly, own paper bank only; ROI is profit / settled stakes\n"
         "PAYOUT   hypothetical same-book singles product, not a confirmed acca quote\n"
-        "Paper only. No real-money stakes or automatic promotion.\n"
+        "\nPaper only. No real-money stakes or automatic promotion.\n"
     )
 
 
