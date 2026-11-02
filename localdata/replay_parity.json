@@ -2199,7 +2199,7 @@
           "committed_excluding_target": 0.0,
           "date": "2026-11-02",
           "decision_status": "frozen",
-          "engine_changed": false,
+          "engine_changed": true,
           "execution_provenance": {
             "checkout_head_at_capture": "a2aab8e4359bdc1c9871d8b0d8f69bc2e0dcfb62",
             "event_sha": "a2aab8e4359bdc1c9871d8b0d8f69bc2e0dcfb62",
@@ -2663,14 +2663,14 @@
           "decision_status": "no_bet",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "db579d749c27cd06dace4a3ca27c57069e52c8fa",
-            "event_sha": "db579d749c27cd06dace4a3ca27c57069e52c8fa",
+            "checkout_head_at_capture": "6177a4f69061f46aa579d5bcf6b87bcfa98e2627",
+            "event_sha": "6177a4f69061f46aa579d5bcf6b87bcfa98e2627",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "41449230797",
+            "run_id": "41477117744",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-11-02_decision.json.gz",
