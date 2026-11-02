@@ -159,7 +159,7 @@ def test_quarter_kelly_avoids_review_stress_full_kelly_overbet():
 
 
 def test_invalid_json_draft_has_visible_missed_day_and_original_bytes(tmp_path):
-    path = mp.draft_path(tmp_path, DAY)
+    path = mp.state_path(tmp_path)
     path.write_bytes(b"{bad-json\x00")
     row = run_capture(tmp_path, {}, now=FREEZE)
     assert row["status"] == "missed_freeze_no_paper_bet"
@@ -396,7 +396,7 @@ def test_damaged_draft_restore_requires_acknowledged_missed_day_and_exact_bytes(
     repo.mkdir()
     _seed_repo(repo)
     local = repo / "localdata"
-    path = mp.draft_path(local, DAY)
+    path = mp.state_path(local)
     path.write_bytes(b"{damaged-draft")
     sealed = run_capture(local, {}, now=FREEZE)
     if tamper_quarantine:

@@ -836,16 +836,93 @@ def _write_once(path, payload):
         Path(name).unlink(missing_ok=True)
 
 
-def draft_path(root, day):
-    datetime.strptime(day, "%Y-%m-%d")
-    return Path(root) / f"{PREFIX}_draft_{day}.json"
+def state_path(root):
+    """One lane state file, like Main/ENH; daily files are frozen receipts."""
+    return Path(root) / f"{PREFIX}_state.json"
+
+
+def validate_state(state):
+    if state.get("schema") != "autobets_ML_state_v1" or not isinstance(
+        state.get("pending_by_date"), dict
+    ):
+        raise ValueError("invalid ML paper lane state; refusing reset")
+    for day, row in state["pending_by_date"].items():
+        datetime.strptime(day, "%Y-%m-%d")
+        validate_record(row, day, draft=True)
+    return state
+
+
+def _read_state(root):
+    path = state_path(root)
+    if not path.exists():
+        return {"schema": "autobets_ML_state_v1", "pending_by_date": {}}
+    return validate_state(json.loads(path.read_text()))
+
+
+def _save_state(root, state):
+    """Atomic mutable lane state; immutable daily receipts remain separate."""
+    validate_state(state)
+    path = state_path(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(dir=path.parent, prefix=".ml-paper-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as stream:
+            json.dump(state, stream, sort_keys=True, allow_nan=False)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+    finally:
+        Path(name).unlink(missing_ok=True)
+
+
+def merge_pending_states(head, cache):
+    """Union pre-cutoff evidence, never regress or guess equal-time conflicts."""
+    validate_state(head)
+    validate_state(cache)
+    merged = {"schema": "autobets_ML_state_v1", "pending_by_date": dict(head["pending_by_date"])}
+    for day, row in cache["pending_by_date"].items():
+        previous = merged["pending_by_date"].get(day)
+        if previous is None:
+            merged["pending_by_date"][day] = row
+        elif previous["sha256"] != row["sha256"]:
+            old = parse_zoned_timestamp(previous["draft_persisted_at"])
+            new = parse_zoned_timestamp(row["draft_persisted_at"])
+            if old == new:
+                raise ValueError("conflicting equal-time ML pending cards")
+            newer, older = (row, previous) if new > old else (previous, row)
+            if parse_zoned_timestamp(newer["captured_at"]) < parse_zoned_timestamp(older["captured_at"]):
+                raise ValueError("regressing ML pending decision timestamp")
+            merged["pending_by_date"][day] = newer
+    return merged
+
+
+def _migrate_legacy_drafts(root):
+    """Read-only-format compatibility: move exact old evidence into lane state.
+
+    No fresh decisions/timestamps are manufactured, including after cutoff.
+    Keep the old file on any validation/conflict/write failure.
+    Called under the same capture lock as state updates and freezes.
+    """
+    paths = sorted(Path(root).glob(f"{PREFIX}_draft_????-??-??.json"))
+    if not paths:
+        return
+    state = _read_state(root)
+    for path in paths:
+        day = path.stem.removeprefix(f"{PREFIX}_draft_")
+        row = json.loads(path.read_text())
+        validate_record(row, day, draft=True)
+        state = merge_pending_states(
+            state, {"schema": "autobets_ML_state_v1", "pending_by_date": {day: row}}
+        )
+    _save_state(root, state)
+    for path in paths:
+        path.unlink()
 
 
 def _checked_draft(root, day, freeze_at):
-    path = draft_path(root, day)
-    if not path.exists():
+    row = _read_state(root)["pending_by_date"].get(day)
+    if row is None:
         return None
-    row = json.loads(path.read_text())
     captured = parse_zoned_timestamp(row.get("captured_at"))
     persisted = parse_zoned_timestamp(row.get("draft_persisted_at"))
     if (
@@ -870,11 +947,12 @@ def capture(
     kickoff_fn,
     source_guard,
     min_leg_odds=1.0,
+    generate_hour=6,
     freeze_hour=9,
     now=None,
     index=None,
 ):
-    """Independent pre-09:00 draft, immutable scheduled-09:00 card (SAST).
+    """Independent 06:00 build / immutable scheduled-09:00 card (SAST).
 
     A run at/after the cutoff may ONLY seal an already persisted pre-cutoff
     draft, never select from later inputs/results. If no draft exists, record a
@@ -891,6 +969,9 @@ def capture(
     with (root / f".{PREFIX}.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         current = clock()
+        if current.astimezone(LOCAL_TZ).hour < generate_hour:
+            return None
+        _migrate_legacy_drafts(root)
         day = current.astimezone(LOCAL_TZ).date().isoformat()
         freeze_at = datetime.fromisoformat(day).replace(tzinfo=LOCAL_TZ, hour=freeze_hour)
         path = receipt_path(root, day)
@@ -905,7 +986,7 @@ def capture(
             except (ValueError, TypeError, KeyError, AttributeError):
                 # Preserve original bytes and an explicit missed-day receipt;
                 # never delete/rebuild the corrupt draft or select late inputs.
-                blob = draft_path(root, day).read_bytes()
+                blob = state_path(root).read_bytes()
                 sha = hashlib.sha256(blob).hexdigest()
                 quarantine = root / f"{PREFIX}_conflicts" / f"draft_{day}.{sha}.bin"
                 quarantine.parent.mkdir(parents=True, exist_ok=True)
@@ -1026,18 +1107,20 @@ def capture(
             "accas": plan,
         }
         payload["sha256"] = digest(payload)
-        # Atomic draft replacement allowed BEFORE 09:00 only; frozen receipts
-        # always use the separate write-once publisher and cannot be replaced.
+        # Like the other lanes: pending cards live in one mutable lane state,
+        # not separate dated draft files. Keep earlier dates' exact evidence.
+        state = _read_state(root)
+        state["pending_by_date"][day] = payload
         fd, name = tempfile.mkstemp(dir=root, prefix=".ml-paper-", suffix=".tmp")
         try:
             with os.fdopen(fd, "w") as stream:
-                json.dump(payload, stream, sort_keys=True, allow_nan=False)
+                json.dump(state, stream, sort_keys=True, allow_nan=False)
                 stream.flush()
                 os.fsync(stream.fileno())
             # Check again after fsync: only durably pre-cutoff evidence may win.
             if clock() >= freeze_at:
                 return seal(clock())
-            os.replace(name, draft_path(root, day))
+            os.replace(name, state_path(root))
         finally:
             Path(name).unlink(missing_ok=True)
         return payload
@@ -1272,12 +1355,13 @@ def latest_card(root, *, now=None):
     """Current draft/frozen card for adjacent display; never selects or settles."""
     now = now or datetime.now(LOCAL_TZ)
     today = now.astimezone(LOCAL_TZ).date().isoformat()
-    if draft_path(root, today).exists() and not receipt_path(root, today).exists():
+    if state_path(root).exists() and not receipt_path(root, today).exists():
         freeze_at = datetime.fromisoformat(today).replace(tzinfo=LOCAL_TZ, hour=9)
         row = _checked_draft(root, today, freeze_at)
-        if now >= freeze_at:
-            row = dict(row, status="09:00_cutoff_passed_awaiting_publication_no_late_changes")
-        return row
+        if row is not None:
+            if now >= freeze_at:
+                row = dict(row, status="09:00_cutoff_passed_awaiting_publication_no_late_changes")
+            return row
     history = receipts(root)
     return history[-1] if history else None
 

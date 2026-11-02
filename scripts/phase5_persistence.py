@@ -753,7 +753,7 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
     from edgefactory.odds_normalization import parse_zoned_timestamp
     import re
 
-    pattern = re.compile(r"^localdata/autobets_ML_(draft_)?(\d{4}-\d{2}-\d{2})\.json$")
+    pattern = re.compile(r"^localdata/autobets_ML_(?:(draft_)?(\d{4}-\d{2}-\d{2})|state)\.json$")
     tracked = {p for p in _tracked_localdata_paths(repo) if pattern.fullmatch(p)}
     cached = {str(p.relative_to(repo)) for p in (repo / "localdata").glob("autobets_ML_*.json")
               if pattern.fullmatch(str(p.relative_to(repo)))}
@@ -761,7 +761,8 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
     conflicts = []
     for relative in sorted(tracked | cached):
         match = pattern.fullmatch(relative)
-        draft, day = bool(match[1]), match[2]
+        state_file = relative == "localdata/autobets_ML_state.json"
+        draft, day = bool(match[1]) or state_file, match[2]
         head = _head_blob(repo, relative) or None
         cache = (repo / relative).read_bytes() if (repo / relative).exists() else None
         values = {}
@@ -772,7 +773,10 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
                 continue
             try:
                 row = json.loads(blob)
-                ml_paper.validate_record(row, day, draft=draft)
+                if state_file:
+                    ml_paper.validate_state(row)
+                else:
+                    ml_paper.validate_record(row, day, draft=draft)
                 values[label] = row
             except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
                 invalid = True
@@ -782,19 +786,25 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
             # Preserve its exact bytes, but do not turn that acknowledged
             # no-bet day into a permanent experiment-wide block on restore.
             # Frozen conflicts and pre-existing integrity blocks still win.
-            try:
-                sealed_path = repo / "localdata" / f"autobets_ML_{day}.json"
-                sealed = json.loads(sealed_path.read_bytes())
-                ml_paper.validate_record(sealed, day)
-                proof = sealed["draft_integrity_error"]
-                sha = proof["sha256"]
-                expected = f"autobets_ML_conflicts/draft_{day}.{sha}.bin"
-                acknowledged = (sealed["status"] == "missed_freeze_no_paper_bet"
-                    and proof["quarantine"] == expected
-                    and all(hashlib.sha256(blob).hexdigest() == sha for blob in damaged)
-                    and (repo / "localdata" / expected).read_bytes() == damaged[0])
-            except (OSError, ValueError, KeyError, TypeError, AttributeError):
-                acknowledged = False
+            sealed_paths = ((repo / "localdata").glob("autobets_ML_????-??-??.json")
+                            if state_file else [repo / "localdata" / f"autobets_ML_{day}.json"])
+            acknowledged = False
+            for sealed_path in sealed_paths:
+                try:
+                    sealed = json.loads(sealed_path.read_bytes())
+                    sealed_day = sealed_path.stem.removeprefix("autobets_ML_")
+                    ml_paper.validate_record(sealed, sealed_day)
+                    proof = sealed["draft_integrity_error"]
+                    sha = proof["sha256"]
+                    expected = f"autobets_ML_conflicts/draft_{sealed_day}.{sha}.bin"
+                    acknowledged = (sealed["status"] == "missed_freeze_no_paper_bet"
+                        and proof["quarantine"] == expected
+                        and all(hashlib.sha256(blob).hexdigest() == sha for blob in damaged)
+                        and (repo / "localdata" / expected).read_bytes() == damaged[0])
+                except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                    continue
+                if acknowledged:
+                    break
             if acknowledged:
                 retained[relative] = cache if cache is not None else head
                 continue
@@ -802,7 +812,13 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
         chosen = head if head is not None else cache
         if not invalid and head is not None and cache is not None:
             h, c = values["committed"], values["cached"]
-            if h["sha256"] != c["sha256"]:
+            if state_file:
+                try:
+                    chosen = json.dumps(ml_paper.merge_pending_states(h, c), sort_keys=True,
+                                        allow_nan=False).encode()
+                except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
+                    conflict = True
+            elif h["sha256"] != c["sha256"]:
                 if draft:
                     ht = parse_zoned_timestamp(h["draft_persisted_at"])
                     ct = parse_zoned_timestamp(c["draft_persisted_at"])
