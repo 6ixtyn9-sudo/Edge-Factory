@@ -26,6 +26,31 @@
   "drawdown_basis": "ticket_date_latest_known_result_marks_pending_at_cost_not_settlement_timeline",
   "drawdown_has_pending_results": false,
   "selected_leg_brier_score": null,
+  "calibration": {
+    "all_candidates": {
+      "resolved_fixtures": 0,
+      "resolved_observations": 0,
+      "base_brier": null,
+      "base_logloss": null,
+      "calibrated_brier": null,
+      "calibrated_logloss": null
+    },
+    "selected_candidates": {
+      "resolved_fixtures": 0,
+      "resolved_observations": 0,
+      "base_brier": null,
+      "base_logloss": null,
+      "calibrated_brier": null,
+      "calibrated_logloss": null
+    }
+  },
+  "acca_calibration_by_length": {},
+  "current_risk_policy": {
+    "schema": "autobets_ML_v2",
+    "kelly_multiplier": 0.25,
+    "max_free_bank_exposure": 0.25,
+    "bankruptcy": "zero_free_capital_no_new_stakes_no_refill"
+  },
   "by_bucket_market_leg_diagnostics": {},
   "history": [],
   "latest_learning": null,
