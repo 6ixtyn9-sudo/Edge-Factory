@@ -157,7 +157,7 @@ def test_capture_uses_bound_existing_ml_and_never_mutates_inputs(tmp_path):
     assert r["policy"]["odds_band"] is None
     assert len({tuple(c["fixture"]) for a in r["accas"] for c in a["legs"]}) == 6
     assert r["learning"]["status"] == "awaiting_prior_paper_results"
-    assert not list(tmp_path.glob("*state*"))
+    assert {p.name for p in tmp_path.glob("*state*")} == {mp.state_path(tmp_path).name}
     assert mp.receipts(tmp_path) == [r]
     assert not {"main_plan", "main_comparison", "bank", "stake_pct"} & r.keys()
 
@@ -207,7 +207,7 @@ def test_no_stale_or_future_context_capture(tmp_path, change):
 def test_pre_freeze_draft_is_not_a_settled_card_or_performance_history(tmp_path):
     draft = run_capture(tmp_path, context([pick(1), pick(2)]))
     assert draft["status"] == "draft_not_yet_frozen"
-    assert mp.draft_path(tmp_path, DAY).exists()
+    assert mp.state_path(tmp_path).exists()
     assert mp.receipts(tmp_path) == []
     assert mp.performance(mp.receipts(tmp_path), lambda c: (2, 0))["settled_accas"] == 0
 
@@ -421,7 +421,7 @@ def test_grade_paper_never_loads_or_saves_financial_state(tmp_path, monkeypatch,
     output = capsys.readouterr().out
     assert "autobets_ML" in output and "PAPER ONLY" in output
     assert (tmp_path / "autobets_ML_performance.json").exists()
-    assert not list(tmp_path.glob("*state*"))
+    assert {p.name for p in tmp_path.glob("*state*")} == {mp.state_path(tmp_path).name}
 
 
 def test_existing_enh_report_shows_sibling_paper_card_without_comparison(
@@ -445,6 +445,13 @@ def test_paper_failure_cannot_change_live_state_or_abort(tmp_path, monkeypatch, 
         raise ValueError("broken paper evidence")
 
     monkeypatch.setattr(mp, "receipts", fail)
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return NOW.astimezone(tz) if tz else NOW
+
+    monkeypatch.setattr(at, "datetime", Clock)
     at._run_ml_paper()
     assert "live lanes unchanged" in capsys.readouterr().err
     assert not list(tmp_path.glob("*state*"))
@@ -458,7 +465,7 @@ def test_receipts_are_persistable_but_not_pick_archives(tmp_path):
         input=(
             "localdata/autobets_ML_2026-11-02.json\n"
             "localdata/autobets_ML_performance.json\n"
-            "localdata/autobets_ML_draft_2026-11-02.json\n"
+            "localdata/autobets_ML_state.json\n"
         ),
         text=True,
         capture_output=True,
@@ -491,12 +498,14 @@ def test_report_refresh_cannot_rewrite_forward_predictions(tmp_path):
     r = capture(tmp_path)
     path = mp.receipt_path(tmp_path, DAY)
     before = path.read_bytes()
+    state_before = mp.state_path(tmp_path).read_bytes()
     pending = mp.publish(tmp_path, lambda c: None)
     graded = mp.publish(tmp_path, lambda c: (2, 0))
     assert pending["pending_accas"] and graded["settled_accas"]
     assert path.read_bytes() == before
+    assert mp.state_path(tmp_path).read_bytes() == state_before
     assert (tmp_path / f"{mp.PREFIX}_{DAY}.txt").read_text() == mp.render_card(r)
-    assert not list(tmp_path.glob("*state*"))
+    assert {p.name for p in tmp_path.glob("*state*")} == {mp.state_path(tmp_path).name}
 
 
 @pytest.mark.parametrize("field", ["as_of", "built_at_utc"])
@@ -552,7 +561,7 @@ def test_latest_pre_cutoff_draft_freezes_without_reading_late_inputs_or_results(
     last_ctx = dict(context([pick(3), pick(4)]), build_at=last_at.isoformat())
     last = run_capture(tmp_path, last_ctx, now=last_at)
     assert first["accas"] != last["accas"]
-    draft_bytes = mp.draft_path(tmp_path, DAY).read_bytes()
+    draft_bytes = mp.state_path(tmp_path).read_bytes()
 
     def forbidden(*args):
         raise AssertionError("post-cutoff results must not change frozen stakes or picks")
@@ -568,7 +577,7 @@ def test_latest_pre_cutoff_draft_freezes_without_reading_late_inputs_or_results(
         run_capture(tmp_path, context([pick(9), pick(10)]), now=FREEZE + timedelta(hours=3)) is None
     )
     assert mp.receipt_path(tmp_path, DAY).read_bytes() == before
-    assert mp.draft_path(tmp_path, DAY).read_bytes() == draft_bytes
+    assert mp.state_path(tmp_path).read_bytes() == draft_bytes
 
 
 def test_missed_freeze_is_no_bet_not_a_backdated_late_card(tmp_path, monkeypatch):
@@ -590,22 +599,23 @@ def test_draft_cannot_regress_to_an_earlier_observation(tmp_path):
     later = NOW + timedelta(minutes=20)
     ctx = dict(context([pick(3), pick(4)]), build_at=later.isoformat())
     run_capture(tmp_path, ctx, now=later)
-    before = mp.draft_path(tmp_path, DAY).read_bytes()
+    before = mp.state_path(tmp_path).read_bytes()
     assert run_capture(tmp_path, context([pick(1), pick(2)])) is None
-    assert mp.draft_path(tmp_path, DAY).read_bytes() == before
+    assert mp.state_path(tmp_path).read_bytes() == before
 
 
 @pytest.mark.parametrize("tamper", ["hash", "post_cutoff_persist"])
 def test_invalid_draft_never_becomes_a_frozen_card(tmp_path, tamper):
     run_capture(tmp_path, context([pick(1), pick(2)]))
-    path = mp.draft_path(tmp_path, DAY)
-    row = json.loads(path.read_text())
+    path = mp.state_path(tmp_path)
+    state = json.loads(path.read_text())
+    row = state["pending_by_date"][DAY]
     if tamper == "hash":
         row["accas"][0]["stake_units"] *= 2
     else:
         row["draft_persisted_at"] = FREEZE.isoformat()
         row["sha256"] = mp.digest({k: v for k, v in row.items() if k != "sha256"})
-    path.write_text(json.dumps(row))
+    path.write_text(json.dumps(state))
     damaged = path.read_bytes()
     sealed = run_capture(tmp_path, {}, now=FREEZE)
     assert sealed["status"] == "missed_freeze_no_paper_bet"
@@ -675,7 +685,7 @@ def test_own_bank_compounds_reserves_pending_and_never_tops_up(tmp_path, outcome
     else:
         assert not r["accas"]
     assert r["paper_pending_reserved_at_decision"] == (100.0 if outcome is None else 0.0)
-    assert not list(tmp_path.glob("*state*"))
+    assert {p.name for p in tmp_path.glob("*state*")} == {mp.state_path(tmp_path).name}
 
 
 def test_variable_stakes_roi_is_weighted_and_missing_stakes_fail_closed():
@@ -758,10 +768,10 @@ def test_future_receipt_cannot_supply_paper_capital_or_learning(tmp_path):
 
 def test_paper_draft_is_visible_without_becoming_a_performance_bet(tmp_path):
     draft = run_capture(tmp_path, context([pick(1), pick(2)]))
-    before = mp.draft_path(tmp_path, DAY).read_bytes()
+    before = mp.state_path(tmp_path).read_bytes()
     assert mp.latest_card(tmp_path, now=NOW) == draft
     after_cutoff = mp.latest_card(tmp_path, now=FREEZE)
     assert "awaiting_publication" in after_cutoff["status"]
     assert after_cutoff["accas"] == draft["accas"]
-    assert mp.draft_path(tmp_path, DAY).read_bytes() == before
+    assert mp.state_path(tmp_path).read_bytes() == before
     assert mp.receipts(tmp_path) == []

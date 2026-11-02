@@ -228,8 +228,8 @@ localdata/autobets_enh_tickets_????-??-??_decision*.json
 !localdata/autobets_ML_performance.json
 !localdata/autobets_ML_performance.txt
 
-# Latest pre-09:00 ML paper draft; frozen daily receipts use the separate name above.
-!localdata/autobets_ML_draft_20??-??-??.json
+# Mutable lane state, matching the Main/ENH state-file convention.
+!localdata/autobets_ML_state.json
 
 # Preserve conflicting paper evidence for review; never silently reset a paper bank.
 !localdata/autobets_ML_integrity_block.json
