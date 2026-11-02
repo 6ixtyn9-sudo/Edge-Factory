@@ -580,7 +580,7 @@ def test_latest_pre_cutoff_draft_freezes_without_reading_late_inputs_or_results(
     assert mp.state_path(tmp_path).read_bytes() == draft_bytes
 
 
-def test_missed_freeze_is_no_bet_not_a_backdated_late_card(tmp_path, monkeypatch):
+def test_missing_fresh_context_and_draft_is_no_bet_not_backdated(tmp_path, monkeypatch):
     def forbidden(*args, **kwargs):
         raise AssertionError("no late candidate generation, learning or selection")
 
@@ -626,7 +626,7 @@ def test_invalid_draft_never_becomes_a_frozen_card(tmp_path, tamper):
     mp.validate_record(sealed, DAY)
 
 
-def test_build_crossing_cutoff_cannot_persist_a_new_draft(tmp_path, monkeypatch):
+def test_build_crossing_cutoff_freezes_current_selection_not_a_late_draft(tmp_path, monkeypatch):
     original = run_capture(tmp_path, context([pick(1), pick(2)]))
     times = iter([NOW + timedelta(minutes=30), FREEZE])
 
@@ -638,8 +638,13 @@ def test_build_crossing_cutoff_cannot_persist_a_new_draft(tmp_path, monkeypatch)
     monkeypatch.setattr(mp, "datetime", Clock)
     ctx = dict(context([pick(3), pick(4)]), build_at=(NOW + timedelta(minutes=30)).isoformat())
     r = run_capture(tmp_path, ctx, now=None)
-    assert r["accas"] == original["accas"]
-    assert r["draft_sha256"] == original["sha256"]
+    assert r["accas"] != original["accas"]
+    assert {c["home"] for c in r["candidates"]} == {"Home Club 3", "Home Club 4"}
+    assert r["freeze_basis"] == mp.ACTUAL_RUN_FREEZE
+    assert r["frozen_at"] == FREEZE.isoformat()
+    assert "draft_sha256" not in r and "draft_persisted_at" not in r
+    assert mp._read_state(tmp_path)["pending_by_date"][DAY] == original
+    mp.validate_record(r, DAY)
 
 
 def test_concurrent_freeze_keeps_one_unchanged_card(tmp_path):
