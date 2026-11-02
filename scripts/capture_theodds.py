@@ -48,7 +48,7 @@ import re
 import sys
 from collections import Counter
 from datetime import date as _date
-from datetime import datetime, timezone  # timedelta dropped: unused (red-team hygiene)
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -356,7 +356,8 @@ def _kickoff_mismatch_detail_counts(lines: list[str]) -> dict[str, int]:
 
 def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *,
               now: datetime | None = None, kickoff_fn=None, kickoff_source_fn=None,
-              match_fn=None, requested_scope: str | None = None) -> tuple[list[dict], dict, list[str]]:
+              match_fn=None, requested_scope: str | None = None,
+              ml_freeze: datetime | None = None) -> tuple[list[dict], dict, list[str]]:
     """Decide which fixtures need a snapshot this iteration.
 
     Returns (due_fixtures, updates, skip_lines). `updates` maps fixture key ->
@@ -443,6 +444,36 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
         if started:
             skips.append(f"{fk} (kickoff already passed)")
             continue
+
+        # Explicit v2 PAPER request: one bounded refresh of stale fixture
+        # quotes inside the six-hour window ending at today's 09:00 SAST.
+        # Uses the SAME adapter budget and failure cooldown, not a new source,
+        # key ring, retry path or relaxed admission rule. Default auto is intact.
+        if (ml_freeze is not None and ml_freeze.tzinfo is not None
+                and ml_freeze.astimezone(_SAST_TZ).hour == 9
+                and ml_freeze.astimezone(_SAST_TZ).date() == now.astimezone(_SAST_TZ).date()
+                and ml_freeze - timedelta(hours=6) <= now < ml_freeze
+                and kickoff is not None and kickoff >= ml_freeze + timedelta(minutes=30)
+                and not rec.get("ml_pre_freeze_at")
+                and not _recent(rec.get("fail_at"), ATTEMPT_RETRY_HOURS, now)
+                and not _recent(rec.get("close_fail_at"), ATTEMPT_RETRY_HOURS, now)):
+            from edgefactory.odds_normalization import parse_zoned_timestamp
+            fresh = any(
+                match_fn and match_fn(f.get("home"), r.get("home"))
+                and match_fn(f.get("away"), r.get("away"))
+                and str(r.get("date"))[:10] == str(f.get("date"))[:10]
+                and str(r.get("bookmaker") or "").strip()
+                and not any(x in str(r.get("bookmaker")).casefold()
+                            for x in ("matchbook", "betfair", "smarkets", "betdaq"))
+                and (row_kickoff := parse_zoned_timestamp(r.get("kickoff"))) is not None
+                and abs((row_kickoff - kickoff).total_seconds()) <= 300
+                and (stamp := parse_zoned_timestamp(r.get("captured_at"))) is not None
+                and ml_freeze - timedelta(hours=6) <= stamp <= now
+                for r in existing_rows)
+            if not fresh:
+                due.append(f)
+                updates[fk] = "ml_pre_freeze_at"
+                continue
 
         if in_close_window and not rec.get("close_at") and not _recent(rec.get("close_fail_at"), ATTEMPT_RETRY_HOURS, now):
             due.append(f)
@@ -586,11 +617,15 @@ def main() -> int:
     ap.add_argument("--date", default=_date.today().isoformat(), help="match date YYYY-MM-DD (default: today)")
     ap.add_argument("--snapshot", default="adhoc", choices=["pick_time", "close", "adhoc"], help="label for manual runs")
     ap.add_argument("--auto", action="store_true", help="timing-driven mode called by daily.py (pick_time/close windows)")
+    ap.add_argument("--ml-precutoff", action="store_true",
+                    help="with --auto: one budget/cooldown-controlled stale-quote refresh before 09:00 SAST")
     ap.add_argument("--dry-run", action="store_true", help="no network, no credits: coverage + cost estimate")
     ap.add_argument("--self-test", action="store_true", help="offline parse checks, no key needed")
     ap.add_argument("--refresh-sports", action="store_true", help="force sport-key cache rebuild (free)")
     ap.add_argument("--usage", action="store_true", help="print per-key ring status and exit")
     args = ap.parse_args()
+    if args.ml_precutoff and not args.auto:
+        ap.error("--ml-precutoff requires --auto")
 
     mod = importlib.import_module("edgefactory.sources.theoddsapi")
 
@@ -671,7 +706,9 @@ def main() -> int:
         due, updates, skips = plan_auto(fixtures, existing, attempts,
                                         kickoff_source_fn=mod._pick_kickoff_with_source,
                                         match_fn=mod._team_names_match,
-                                        requested_scope=capture_scope(mod))
+                                        requested_scope=capture_scope(mod),
+                                        ml_freeze=(datetime.fromisoformat(args.date).replace(tzinfo=_SAST_TZ, hour=9)
+                                                   if args.ml_precutoff else None))
         skip_counts = _skip_reason_counts(skips)
         mismatch_detail_counts = _kickoff_mismatch_detail_counts(skips)
         due_counts = dict(Counter(updates.values()))

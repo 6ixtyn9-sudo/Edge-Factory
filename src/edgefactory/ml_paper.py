@@ -46,11 +46,17 @@ from .identity import source_team_key, squad_marker_mismatch
 from .odds_normalization import parse_zoned_timestamp
 from .util import norm_team
 
-SCHEMA = "autobets_ML_v1"
+SCHEMA = "autobets_ML_v2"
+READABLE_SCHEMAS = {"autobets_ML_v1", SCHEMA}
 PREFIX = "autobets_ML"
 LOCAL_TZ = ZoneInfo("Africa/Johannesburg")
-SEARCH_BEAM_WIDTH = 128  # computational search breadth, NOT a betting/leg/odds cap
+SEARCH_BEAM_WIDTH = 512  # computational search breadth, NOT a betting/leg/odds cap
 BASE_PAPER_UNITS = 100.0
+KELLY_MULTIPLIER = 0.25  # v2: quarter of robust portfolio Kelly; NOT a fixed stake
+MAX_PAPER_EXPOSURE = 0.25  # of available paper capital, never live capital
+EXACT_SEARCH_SIZE = 8
+PORTFOLIO_ITERATIONS = 256
+SEARCH_NODE_BUDGET = 250_000  # computation bound, never a leg/card count cap
 QUOTE_MAX_AGE = timedelta(hours=6)
 MIN_LEAD = timedelta(minutes=30)
 
@@ -68,7 +74,7 @@ def receipt_path(root, day):
 
 def _validate_bets(row):
     """Refuse internally inconsistent paper positions, not just bad checksums."""
-    used = set()
+    signatures = set()
     stake_total = 0.0
     candidates_by_id = {c["candidate_id"]: c for c in row["candidates"]}
     if len(candidates_by_id) != len(row["candidates"]):
@@ -89,6 +95,11 @@ def _validate_bets(row):
             raise ValueError("invalid paper price or stake")
         if len({c["book"].strip().casefold() for c in legs}) != 1:
             raise ValueError("mixed-book paper acca")
+        signature = tuple(sorted(c["candidate_id"] for c in legs))
+        if signature in signatures:
+            raise ValueError("duplicate paper acca")
+        signatures.add(signature)
+        used = set()  # shared teams ACROSS accas are allowed, never within one
         for c in legs:
             teams = set(c["fixture"][1:])
             if (
@@ -108,19 +119,24 @@ def _validate_bets(row):
             raise ValueError("paper acca price differs from original quote product")
         stake_total += stake
     available = row.get("paper_available_at_decision")
-    if available is not None and (
-        type(available) not in (int, float)
-        or not math.isfinite(available)
-        or available < 0
-        or stake_total > available + 1e-6
+    if (row["accas"] and available is None) or (
+        available is not None
+        and (
+            type(available) not in (int, float)
+            or not math.isfinite(available)
+            or available < 0
+            or stake_total > available + 1e-6
+        )
     ):
         raise ValueError("paper stakes exceed frozen available capital")
+    if row.get("schema") == SCHEMA and stake_total > (available or 0) * MAX_PAPER_EXPOSURE + 1e-6:
+        raise ValueError("paper stakes exceed declared v2 exposure limit")
 
 
 def validate_record(row, day, *, draft=False):
     """Shared read/restore validation; no rewriting or financial-state access."""
     if (
-        row.get("schema") != SCHEMA
+        row.get("schema") not in READABLE_SCHEMAS
         or row.get("date") != day
         or row.get("sha256") != digest({k: v for k, v in row.items() if k != "sha256"})
     ):
@@ -176,7 +192,7 @@ def receipts(root):
         row = json.loads(path.read_text())
         unsigned = {k: v for k, v in row.items() if k != "sha256"}
         if (
-            row.get("schema") != SCHEMA
+            row.get("schema") not in READABLE_SCHEMAS
             or row.get("sha256") != digest(unsigned)
             or path != receipt_path(root, row["date"])
         ):
@@ -307,6 +323,12 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
         kickoff = kickoff_fn(row)
         if kickoff is None or kickoff < max(now, freeze_at or now) + MIN_LEAD:
             rejected["kickoff_unproven_or_too_close"] += 1
+            continue
+        # Date-only donor results cannot establish whether an overnight
+        # UTC/SAST boundary belongs to one calendar day or the other. Do not
+        # emit an unresolvable position or guess a neighbouring result date.
+        if kickoff.astimezone(UTC).date() != kickoff.astimezone(LOCAL_TZ).date():
+            rejected["settlement_calendar_ambiguous"] += 1
             continue
         fixture_key = (day, source_team_key(row.get("home")), source_team_key(row.get("away")))
         previous_kickoff = fixture_kickoffs.setdefault(fixture_key, kickoff)
@@ -581,93 +603,219 @@ def _kelly(p, odds):
     return fraction, growth
 
 
-def select_accas(rows, available_units=BASE_PAPER_UNITS):
-    """Autonomous paper accas/stakes, maximising estimated log-bank growth.
+def acca_proposals(rows, *, beam_width=SEARCH_BEAM_WIDTH, diagnostics=None):
+    """Exact small-universe enumeration; bounded beam for larger universes.
 
-    Every supported candidate enters the search; no odds band, preset leg
-    count, card count, bucket mix or fixed stake. Beam breadth bounds compute,
-    not acca size. This is a deterministic heuristic, NOT a global optimum.
-    Same-book/disjoint fixtures and teams keep the hypothetical payout honest.
-    Kelly fractions come from this lane's probabilities; if their sum exceeds
-    available paper capital they are proportionally rescaled, without leverage.
-    Pending stakes are already reserved by the caller. Never top up a lost bank.
+    Negative-EV singles and prefixes remain searchable. Only completed accas
+    need positive joint Kelly. The bound below prunes only prefixes that cannot
+    possibly become positive even if every remaining favourable leg is added.
+    No greedy removal of teams/fixtures across proposals or across accas.
+    """
+    books = defaultdict(list)
+    for c in sorted(rows, key=lambda c: c["candidate_id"]):
+        if (
+            type(c["odds"]) in (int, float)
+            and type(c["probability"]) in (int, float)
+            and math.isfinite(c["odds"])
+            and c["odds"] > 1
+            and math.isfinite(c["probability"])
+            and 0 < c["probability"] < 1
+        ):
+            books[c["book"].casefold()].append(c)
+    proposals = []
+    searched = 0
+    budget_exhausted = False
+    for book_rows in books.values():
+        suffix = [0.0] * (len(book_rows) + 1)
+        for j in range(len(book_rows) - 1, -1, -1):
+            c = book_rows[j]
+            suffix[j] = suffix[j + 1] + max(0.0, math.log(c["odds"]) + math.log(c["probability"]))
+        beam = [((), frozenset(), 1.0, 1.0)]
+        retained = []
+        exact = len(book_rows) <= EXACT_SEARCH_SIZE
+        while beam:
+            expanded = []
+            for indices, used, odds, prob in beam:
+                for j in range(indices[-1] + 1 if indices else 0, len(book_rows)):
+                    searched += 1
+                    if searched > SEARCH_NODE_BUDGET:
+                        budget_exhausted = True
+                        break
+                    c = book_rows[j]
+                    teams = frozenset(c["fixture"][1:])
+                    if len(teams) != 2 or used.intersection(teams):
+                        continue
+                    d, p = odds * c["odds"], prob * c["probability"]
+                    if not math.isfinite(d) or p <= 0:
+                        continue
+                    optimistic_ev = math.log(d) + math.log(p) + suffix[j + 1]
+                    if optimistic_ev <= 0:
+                        continue
+                    ix = (*indices, j)
+                    decision = _kelly(p, d)
+                    growth = decision[1] if decision else 0.0
+                    # Search breadth is computational, not a cap on acca size.
+                    rank = (
+                        growth,
+                        optimistic_ev,
+                        p,
+                        tuple(book_rows[k]["candidate_id"] for k in ix),
+                    )
+                    node = (ix, used | teams, d, p)
+                    if exact:
+                        expanded.append((rank, node))
+                    elif len(expanded) < beam_width:
+                        heappush(expanded, (rank, node))
+                    elif rank > expanded[0][0]:
+                        heapreplace(expanded, (rank, node))
+                if budget_exhausted:
+                    break
+            beam = [node for _, node in sorted(expanded, reverse=True)]
+            for ix, _, d, p in beam:
+                decision = _kelly(p, d)
+                if len(ix) < 2 or decision is None:
+                    continue
+                f, growth = decision
+                legs = [book_rows[k] for k in ix]
+                a = {
+                    "legs": legs,
+                    "odds": d,
+                    "probability_estimate": p,
+                    "estimated_ev": p * d - 1,
+                    "estimated_log_growth": growth,
+                    "model_kelly_fraction": f,
+                    "book": legs[0]["book"],
+                    "odds_basis": "hypothetical_product_of_same_book_single_quotes",
+                    "probability_basis": "product_assumes_cross_fixture_independence_not_validated",
+                }
+                rank = (growth, tuple(c["candidate_id"] for c in legs))
+                if exact:
+                    retained.append((rank, a))
+                elif len(retained) < beam_width:
+                    heappush(retained, (rank, a))
+                elif rank > retained[0][0]:
+                    heapreplace(retained, (rank, a))
+            if budget_exhausted:
+                break
+        proposals.extend(a for _, a in sorted(retained, reverse=True))
+        if budget_exhausted:
+            break
+    if diagnostics is not None:
+        diagnostics.update(
+            node_expansions=min(searched, SEARCH_NODE_BUDGET),
+            node_budget=SEARCH_NODE_BUDGET,
+            beam_width=beam_width,
+            budget_exhausted=budget_exhausted,
+            approximation="exact_small_books_otherwise_bounded_beam",
+            candidate_count=len(rows),
+        )
+    return proposals
+
+
+def allocate_portfolio(proposals):
+    """Joint concave log-utility allocation under worst-case acca dependence.
+
+    For fixed acca win marginals, comonotonic payouts minimise expected log
+    wealth: this deliberately does NOT assume independent overlapping accas.
+    Marginals inside each acca still assume cross-fixture independence. A
+    simplex Frank-Wolfe solve reports its remaining dual gap; neither beam nor
+    numerical optimisation is represented as a global strategy optimum.
+    """
+    import numpy as np
+    from scipy.optimize import minimize_scalar
+    from threadpoolctl import threadpool_limits
+
+    if not proposals:
+        return [], {"status": "no_positive_joint_ev_proposals"}
+    ps = np.array([a["probability_estimate"] for a in proposals])
+    odds = np.array([a["odds"] for a in proposals])
+    edges = np.unique(np.r_[0.0, ps, 1.0])
+    weights = np.diff(edges)
+    u = (edges[:-1] + edges[1:]) / 2
+    order = np.argsort(ps, kind="stable")
+    first_winner = np.searchsorted(ps[order], u, side="right")
+    winning_states = np.searchsorted(u, ps, side="left")
+
+    def payout(f):
+        suffix = np.r_[np.cumsum((f * odds)[order][::-1])[::-1], 0.0]
+        return suffix[first_winner] - f.sum()
+
+    def derivatives(wealth):
+        cumulative = np.r_[0.0, np.cumsum(weights / wealth)]
+        return odds * cumulative[winning_states] - cumulative[-1]
+
+    fractions = np.zeros(len(proposals))
+    wealth = np.ones(len(weights))
+    gap = float("inf")
+    # Reproducible fixed computational budget, not a count/leg/stake recipe.
+    with threadpool_limits(limits=1, user_api="blas"):
+        for iteration in range(PORTFOLIO_ITERATIONS):
+            gradient = derivatives(wealth)
+            best = int(np.argmax(gradient))
+            vertex = np.zeros(len(proposals))
+            if gradient[best] > 0:
+                vertex[best] = 1 - 1e-9
+            delta = vertex - fractions
+            change = payout(delta)
+            gap = max(0.0, float(gradient @ delta))
+            if gap < 1e-9:
+                break
+
+            def objective(alpha, wealth=wealth, change=change):
+                return -float(weights @ np.log(wealth + alpha * change))
+
+            result = minimize_scalar(
+                objective, bounds=(0.0, 1.0), method="bounded", options={"xatol": 1e-10}
+            )
+            alpha = float(result.x)
+            fractions += alpha * delta
+            wealth += alpha * change
+        gradient = derivatives(wealth)
+        gap = max(0.0, float(max(0.0, gradient.max()) * (1 - 1e-9) - gradient @ fractions))
+        full_growth = float(weights @ np.log(wealth))
+    scale = min(KELLY_MULTIPLIER, MAX_PAPER_EXPOSURE / max(float(fractions.sum()), 1e-300))
+    return (fractions * scale).tolist(), {
+        "status": "robust_portfolio_Kelly",
+        "dependence": "worst_case_comonotonic_acca_payouts_given_model_marginals",
+        "iterations": iteration + 1,
+        "duality_gap": gap,
+        "full_kelly_estimated_log_growth": full_growth,
+        "kelly_multiplier": KELLY_MULTIPLIER,
+        "max_free_bank_exposure": MAX_PAPER_EXPOSURE,
+        "proposal_count": len(proposals),
+        "search": "exact_per_book_up_to_8_candidates_otherwise_512_beam_approximate",
+    }
+
+
+def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None):
+    """v2: joint robust portfolio sizing, quarter Kelly, <=25% of FREE paper bank.
+
+    No band/count/leg cap, no negative-single-EV filter, no cross-acca team
+    exclusion. Reusing teams across accas is allowed and allocated jointly.
+    No refill or leverage; uncertainty in the acca marginals remains unproved.
     """
     if not math.isfinite(available_units) or available_units <= 0:
         return []
-    pool = sorted(
-        (c for c in rows if _kelly(c["probability"], c["odds"]) is not None),
-        key=lambda c: c["candidate_id"],
-    )
+    search = {}
+    proposals = acca_proposals(rows, diagnostics=search)
+    fractions, allocation = allocate_portfolio(proposals)
+    allocation["search_work"] = search
+    if diagnostics is not None:
+        diagnostics.update(allocation)
     plan = []
-    while len(pool) >= 2:
-        books = defaultdict(list)
-        for c in pool:
-            books[c["book"].casefold()].append(c)
-        best = None
-        for book_rows in books.values():
-            # (indices, used teams, odds, joint p); increasing indices avoid
-            # permutations. All lengths can be explored, including >3 legs.
-            beam = [((), frozenset(), 1.0, 1.0)]
-            while beam:
-                expanded = []
-                for indices, used, odds, prob in beam:
-                    for j in range(indices[-1] + 1 if indices else 0, len(book_rows)):
-                        c = book_rows[j]
-                        teams = frozenset(c["fixture"][1:])
-                        if len(teams) != 2 or used.intersection(teams):
-                            continue
-                        d, p = odds * c["odds"], prob * c["probability"]
-                        decision = _kelly(p, d)
-                        if decision is None:
-                            continue
-                        fraction, growth = decision
-                        ix = (*indices, j)
-                        node = (ix, used | teams, d, p)
-                        rank = (
-                            growth,
-                            p,
-                            -len(ix),
-                            tuple(book_rows[k]["candidate_id"] for k in ix),
-                        )
-                        if len(expanded) < SEARCH_BEAM_WIDTH:
-                            heappush(expanded, (rank, node))
-                        elif rank > expanded[0][0]:
-                            heapreplace(expanded, (rank, node))
-                        if len(ix) >= 2 and (best is None or rank > best[0]):
-                            best = (rank, [book_rows[k] for k in ix], d, p, fraction)
-                beam = [
-                    node
-                    for _, node in sorted(expanded, key=lambda x: x[0], reverse=True)[
-                        :SEARCH_BEAM_WIDTH
-                    ]
-                ]
-        if best is None:
-            break
-        rank, legs, odds, p, fraction = best
+    for a, fraction in zip(proposals, fractions):
+        stake = math.floor(available_units * fraction * 1e6) / 1e6
+        if stake <= 0:
+            continue
         plan.append(
-            {
-                "legs": legs,
-                "odds": odds,
-                "probability_estimate": p,
-                "estimated_ev": p * odds - 1,
-                "estimated_log_growth": rank[0],
-                "model_kelly_fraction": fraction,
-                "book": legs[0]["book"],
-                "odds_basis": "hypothetical_product_of_same_book_single_quotes",
-                "probability_basis": "product_assumes_cross_fixture_independence_not_validated",
-            }
+            dict(
+                a,
+                stake_units=stake,
+                stake_fraction_of_free_bank=fraction,
+                portfolio_allocation=allocation,
+            )
         )
-        used = {team for c in legs for team in c["fixture"][1:]}
-        pool = [c for c in pool if not used.intersection(c["fixture"][1:])]
-    scale = max(1.0, sum(a["model_kelly_fraction"] for a in plan))
-    remaining = available_units
-    for a in plan:
-        fraction = a["model_kelly_fraction"] / scale
-        # Round down, not up: never spend more than the available paper bank.
-        stake = min(remaining, math.floor(available_units * fraction * 1e6) / 1e6)
-        a.update(stake_units=stake, stake_fraction_of_free_bank=fraction)
-        remaining -= stake
-    return [a for a in plan if a["stake_units"] > 0]
+    return plan
 
 
 def _write_once(path, payload):
@@ -701,7 +849,7 @@ def _checked_draft(root, day, freeze_at):
     captured = parse_zoned_timestamp(row.get("captured_at"))
     persisted = parse_zoned_timestamp(row.get("draft_persisted_at"))
     if (
-        row.get("schema") != SCHEMA
+        row.get("schema") not in READABLE_SCHEMAS
         or row.get("date") != day
         or row.get("sha256") != digest({k: v for k, v in row.items() if k != "sha256"})
         or captured is None
@@ -751,7 +899,30 @@ def capture(
             return None
 
         def seal(at):
-            draft = _checked_draft(root, day, freeze_at)
+            corruption = None
+            try:
+                draft = _checked_draft(root, day, freeze_at)
+            except (ValueError, TypeError, KeyError, AttributeError):
+                # Preserve original bytes and an explicit missed-day receipt;
+                # never delete/rebuild the corrupt draft or select late inputs.
+                blob = draft_path(root, day).read_bytes()
+                sha = hashlib.sha256(blob).hexdigest()
+                quarantine = root / f"{PREFIX}_conflicts" / f"draft_{day}.{sha}.bin"
+                quarantine.parent.mkdir(parents=True, exist_ok=True)
+                if quarantine.exists() and quarantine.read_bytes() != blob:
+                    raise ValueError("paper draft quarantine conflict; refusing evidence loss")
+                if not quarantine.exists():
+                    fd, name = tempfile.mkstemp(dir=quarantine.parent)
+                    try:
+                        with os.fdopen(fd, "wb") as stream:
+                            stream.write(blob)
+                            stream.flush()
+                            os.fsync(stream.fileno())
+                        os.link(name, quarantine)
+                    finally:
+                        Path(name).unlink(missing_ok=True)
+                corruption = {"sha256": sha, "quarantine": str(quarantine.relative_to(root))}
+                draft = None
             if draft is None:
                 payload = {
                     "schema": SCHEMA,
@@ -770,6 +941,9 @@ def capture(
                 payload = {k: v for k, v in draft.items() if k != "sha256"}
                 payload["draft_sha256"] = draft["sha256"]
                 payload["status"] = "paper_accas" if draft["accas"] else "no_paper_bet"
+            if corruption is not None:
+                payload["draft_integrity_error"] = corruption
+                payload["rejections"] = {"corrupt_pre_cutoff_draft": 1}
             payload["persisted_at"] = at.isoformat()
             payload["sha256"] = digest(payload)
             return payload if _write_once(path, payload) else None
@@ -805,7 +979,8 @@ def capture(
         ]
         report = performance(prior, score_lookup)
         available = max(0.0, report["paper_free_units"])
-        plan = select_accas(rows, available)
+        search_diagnostics = {}
+        plan = select_accas(rows, available, diagnostics=search_diagnostics)
         persisted = clock()
         if persisted >= freeze_at:
             # A slow build that crosses 09:00 cannot sneak a late draft in.
@@ -827,9 +1002,12 @@ def capture(
                 "max_legs": None,
                 "minimum_legs": 2,
                 "search_beam_width": SEARCH_BEAM_WIDTH,
-                "staking": "model_Kelly_rescaled_to_available_paper_bank_without_leverage",
+                "staking": "joint_worst_case_dependence_portfolio_quarter_Kelly",
+                "kelly_multiplier": KELLY_MULTIPLIER,
+                "max_free_bank_exposure": MAX_PAPER_EXPOSURE,
+                "cross_acca_team_reuse": True,
                 "method": "existing_form_forecast_score_ml_plus_prior_paper_error_calibration",
-                "objective": "estimated_log_bank_growth_not_a_profit_guarantee",
+                "objective": "robust_estimated_log_bank_growth_not_a_profit_guarantee",
             },
             "paper_available_at_decision": available,
             "paper_bank_at_decision": report["paper_bank_units"],
@@ -837,7 +1015,14 @@ def capture(
             "candidates": rows,
             "models": models,
             "learning": learner,
+            "coverage": {
+                "slate_rows": len(context["slate"]),
+                "candidate_count": len(rows),
+                "candidate_fixtures": len({tuple(c["fixture"]) for c in rows}),
+                "status": "inputs_available" if rows else "input_starved_not_strategy_selectivity",
+            },
             "rejections": rejected,
+            "search": search_diagnostics,
             "accas": plan,
         }
         payload["sha256"] = digest(payload)
@@ -858,6 +1043,60 @@ def capture(
         return payload
 
 
+def calibration_diagnostics(history, score_lookup):
+    """Paired prequential errors of frozen base vs calibrated probabilities.
+
+    Includes unbet candidates. Repeated books/buckets do not manufacture more
+    independent fixtures: each fixture contributes total weight one per day.
+    Not a significance test; unresolved records stay absent and counts explicit.
+    """
+    samples = {}
+    for receipt in history:
+        selected = {c["candidate_id"] for a in receipt["accas"] for c in a["legs"]}
+        for c in receipt["candidates"]:
+            score = score_lookup(c)
+            y = hit(c["market"], c["selection"], *score) if score is not None else None
+            if y is None:
+                continue
+            key = (
+                tuple(c["fixture"]),
+                c["market"],
+                c["selection"],
+                c.get("model_key"),
+                c.get("base_probability", c["probability"]),
+                c["probability"],
+            )
+            record = samples.setdefault(
+                key,
+                {
+                    "fixture": tuple(c["fixture"]),
+                    "base": c.get("base_probability", c["probability"]),
+                    "calibrated": c["probability"],
+                    "hit": int(y),
+                    "selected": False,
+                },
+            )
+            record["selected"] |= c["candidate_id"] in selected
+    groups = {}
+    for name, values in (
+        ("all_candidates", list(samples.values())),
+        ("selected_candidates", [r for r in samples.values() if r["selected"]]),
+    ):
+        counts = Counter(r["fixture"] for r in values)
+        stats = {"resolved_fixtures": len(counts), "resolved_observations": len(values)}
+        for field in ("base", "calibrated"):
+            brier = logloss = 0.0
+            for r in values:
+                p = min(1 - 1e-12, max(1e-12, r[field]))
+                weight = 1 / counts[r["fixture"]]
+                brier += weight * (p - r["hit"]) ** 2
+                logloss -= weight * (r["hit"] * math.log(p) + (1 - r["hit"]) * math.log1p(-p))
+            stats[field + "_brier"] = brier / len(counts) if counts else None
+            stats[field + "_logloss"] = logloss / len(counts) if counts else None
+        groups[name] = stats
+    return groups
+
+
 def performance(history, score_lookup):
     """Own acca/unit ROI, drawdown, Brier error and market/bucket diagnostics.
 
@@ -868,6 +1107,8 @@ def performance(history, score_lookup):
     """
     days, accas, groups = [], [], defaultdict(lambda: {"settled": 0, "wins": 0, "profit": 0.0})
     brier = []
+    seen_legs = set()
+    acca_calibration = defaultdict(lambda: {"resolved": 0, "wins": 0, "predicted_wins": 0.0})
     unresolved_legs = 0
     equity = peak = drawdown = drawdown_fraction = 0.0
     for receipt in history:
@@ -879,8 +1120,11 @@ def performance(history, score_lookup):
                 score = score_lookup(c)
                 y = hit(c["market"], c["selection"], *score) if score is not None else None
                 outcomes.append(y)
-                unresolved_legs += y is None
-                if y is not None:
+                unique_leg = (receipt["date"], c["candidate_id"])
+                fresh_leg = unique_leg not in seen_legs
+                seen_legs.add(unique_leg)
+                unresolved_legs += fresh_leg and y is None
+                if y is not None and fresh_leg:
                     brier.append((c["probability"] - int(y)) ** 2)
                     for group in (f"bucket:{c['bucket']}", f"market:{c['market']}"):
                         g = groups[group]
@@ -908,6 +1152,13 @@ def performance(history, score_lookup):
             }
             accas.append(item)
             daily.append(item)
+            if all(y is not None for y in outcomes):
+                group = acca_calibration[str(len(outcomes))]
+                group["resolved"] += 1
+                group["wins"] += int(all(outcomes))
+                group["predicted_wins"] += acca.get(
+                    "probability_estimate", math.prod(c["probability"] for c in acca["legs"])
+                )
         # Ticket-date marks of latest known results; pending stakes held at
         # cost. Never omit a known loss just because another acca is pending.
         # This is NOT observed settlement-time or intraday drawdown.
@@ -956,6 +1207,14 @@ def performance(history, score_lookup):
         "drawdown_basis": "ticket_date_latest_known_result_marks_pending_at_cost_not_settlement_timeline",
         "drawdown_has_pending_results": unresolved_legs > 0,
         "selected_leg_brier_score": sum(brier) / len(brier) if brier else None,
+        "calibration": calibration_diagnostics(history, score_lookup),
+        "acca_calibration_by_length": dict(acca_calibration),
+        "current_risk_policy": {
+            "schema": SCHEMA,
+            "kelly_multiplier": KELLY_MULTIPLIER,
+            "max_free_bank_exposure": MAX_PAPER_EXPOSURE,
+            "bankruptcy": "zero_free_capital_no_new_stakes_no_refill",
+        },
         "by_bucket_market_leg_diagnostics": dict(groups),
         "history": days,
         "latest_learning": history[-1]["learning"] if history else None,
@@ -987,6 +1246,8 @@ def render_card(receipt):
                 f"   {c['home']} vs {c['away']} | {c['market']} {c['selection']} "
                 f"@{c['odds']:.3f} | {c['bucket']} | ML {c['probability']:.1%}"
             )
+    lines.append(f"COVERAGE  {receipt.get('coverage', {})}")
+    lines.append(f"REJECTIONS  {receipt.get('rejections', {})}")
     lines.append(f"LEARNING  {receipt['learning']['status']}")
     return "\n".join(lines) + "\n"
 
