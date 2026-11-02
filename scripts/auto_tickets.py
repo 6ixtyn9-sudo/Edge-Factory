@@ -4111,8 +4111,12 @@ def _run_ml_paper():
     try:
         from edgefactory import ml_paper
         now = datetime.now(TZ)
+        if now.hour < GENERATE_HOUR_START:
+            print(f"autobets_ML: NOT YET — TICKETS START BUILDING AT "
+                  f"{GENERATE_HOUR_START:02d}:00, FREEZE AT {FREEZE_HOUR:02d}:00")
+            return True
         day = now.astimezone(TZ).date().isoformat()
-        freeze_at = now.astimezone(TZ).replace(hour=9, minute=0, second=0, microsecond=0)
+        freeze_at = now.astimezone(TZ).replace(hour=FREEZE_HOUR, minute=0, second=0, microsecond=0)
         # After the cutoff, do NOT load a newer slate or train on later facts.
         # capture() will only seal a durably saved pre-cutoff draft, or NO BET.
         slate = json.loads((LOCALDATA / "picks_today.json").read_text()) if now < freeze_at else []
@@ -4120,7 +4124,8 @@ def _run_ml_paper():
         lookup = ml_paper_score_lookup(load_settled_scores() if history else {})
         row = ml_paper.capture({"date": day, "build_at": now.isoformat(), "slate": slate},
             root=LOCALDATA, score_lookup=lookup, kickoff_fn=parse_kickoff_proven,
-            source_guard=execution_source_rejection, min_leg_odds=1.0, freeze_hour=9)
+            source_guard=execution_source_rejection, min_leg_odds=1.0,
+            generate_hour=GENERATE_HOUR_START, freeze_hour=FREEZE_HOUR)
         ml_paper.publish(LOCALDATA, lookup)
         card = row or ml_paper.latest_card(LOCALDATA)
         if card is not None:

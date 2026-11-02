@@ -21,9 +21,14 @@ def sign(row):
 
 
 def save(root, row, draft=False):
-    path = mp.draft_path(root, row["date"]) if draft else mp.receipt_path(root, row["date"])
+    path = mp.state_path(root) if draft else mp.receipt_path(root, row["date"])
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(sign(row)))
+    if draft:
+        state = mp._read_state(root)
+        state["pending_by_date"][row["date"]] = sign(row)
+        mp._save_state(root, state)
+    else:
+        path.write_text(json.dumps(sign(row)))
     return path
 
 
@@ -234,10 +239,10 @@ def test_untracked_paper_draft_and_freeze_survive_real_runner_cache_clean(tmp_pa
     r = capture(local)
     path = mp.receipt_path(local, DAY)
     frozen_bytes = path.read_bytes()
-    draft_bytes = mp.draft_path(local, DAY).read_bytes()
+    draft_bytes = mp.state_path(local).read_bytes()
     _persistence_module().restore_committed_localdata(repo)
     assert path.read_bytes() == frozen_bytes
-    assert mp.draft_path(local, DAY).read_bytes() == draft_bytes
+    assert mp.state_path(local).read_bytes() == draft_bytes
     assert mp.receipts(local) == [r]
 
 
@@ -247,7 +252,7 @@ def test_newer_valid_cached_draft_survives_tracked_head_restore(tmp_path):
     _seed_repo(repo)
     local = repo / "localdata"
     run_capture(local, context([pick(1), pick(2)]))
-    path = mp.draft_path(local, DAY)
+    path = mp.state_path(local)
     _git(repo, "add", str(path.relative_to(repo)))
     _git(repo, "commit", "-qm", "paper morning draft")
     later = NOW + timedelta(minutes=20)
@@ -255,7 +260,7 @@ def test_newer_valid_cached_draft_survives_tracked_head_restore(tmp_path):
     expected = path.read_bytes()
     _persistence_module().restore_committed_localdata(repo)
     assert path.read_bytes() == expected
-    assert run_capture(local, {}, now=FREEZE)["accas"] == json.loads(expected)["accas"]
+    assert run_capture(local, {}, now=FREEZE)["accas"] == json.loads(expected)["pending_by_date"][DAY]["accas"]
 
 
 def test_divergent_frozen_cache_is_preserved_blocks_only_paper_and_never_replaces_head(tmp_path):
