@@ -62,6 +62,7 @@ SEARCH_NODE_BUDGET = 250_000  # computation bound, never a leg/card count cap
 # This is an operational policy, not an ROI-tuned optimum or a live-price claim.
 # A stricter source policy still wins; never retimestamp a quote to rescue it.
 QUOTE_MAX_AGE = timedelta(hours=12)
+ACTUAL_RUN_FREEZE = "first_run_actual_decision_v1"
 MIN_LEAD = timedelta(minutes=30)
 
 
@@ -171,7 +172,20 @@ def validate_record(row, day, *, draft=False):
         if row["status"] == "missed_freeze_no_paper_bet":
             if captured < freeze or row["candidates"] or row["accas"]:
                 raise ValueError("invalid missed-freeze evidence")
+        elif row.get("freeze_basis") == ACTUAL_RUN_FREEZE:
+            # New first-run freezes are decisions at actual runtime, not
+            # backdated selections masquerading as a pre-09:00 saved draft.
+            if (
+                captured > published
+                or published.astimezone(LOCAL_TZ).date().isoformat() != day
+                or parse_zoned_timestamp(row.get("frozen_at")) != published
+                or row.get("draft_persisted_at") is not None
+                or row.get("draft_sha256") is not None
+            ):
+                raise ValueError("invalid actual-run paper freeze evidence")
         else:
+            if row.get("freeze_basis") is not None:
+                raise ValueError("unknown paper freeze basis")
             saved = parse_zoned_timestamp(row.get("draft_persisted_at"))
             draft_sha = row.get("draft_sha256")
             if (
@@ -235,7 +249,11 @@ def _quote_max_age(source):
     """ML's ceiling may tighten a source limit, never extend a stricter one."""
     if psrc.spec(source).family == psrc.spec("oddspapi").family:
         return min(QUOTE_MAX_AGE, timedelta(hours=ODDSPAPI_MAX_AGE_H))
-    # BE's configurable limit AND full admission receipt are rechecked below.
+    if psrc.spec(source).family == psrc.spec("betexplorer").family:
+        from .sources.betexplorer_odds import CACHE_FRESHNESS_H
+        if not math.isfinite(CACHE_FRESHNESS_H) or CACHE_FRESHNESS_H < 0:
+            return timedelta(0)
+        return min(QUOTE_MAX_AGE, timedelta(hours=CACHE_FRESHNESS_H))
     # Other source/index admission guards remain in their existing paths.
     return QUOTE_MAX_AGE
 
@@ -1103,13 +1121,13 @@ def capture(
     now=None,
     index=None,
 ):
-    """Independent 06:00 build / immutable scheduled-09:00 card (SAST).
+    """06:00 drafts / first eligible run at or after 09:00 freezes (SAST).
 
-    A run at/after the cutoff may ONLY seal an already persisted pre-cutoff
-    draft, never select from later inputs/results. If no draft exists, record a
-    missed freeze/no bet honestly. Persisted-at is actual runtime, never 09:00
-    backdating. Requires a runner to save a draft before 09:00; this module is
-    not a scheduler. No live plan/state/bank is read, compared or modified.
+    Like Main/ENH, an unfrozen day may select from current eligible inputs at
+    actual runtime after 09:00. Never backdate that decision or revise a frozen
+    card. Legacy saved drafts can still be sealed when fresh context is absent;
+    missing context AND missing prior evidence remains an explicit no-bet.
+    No live plan/state/bank is read, compared or modified.
     """
     clock = (lambda: now) if now is not None else (lambda: datetime.now(UTC))
     root = Path(root)
@@ -1177,15 +1195,16 @@ def capture(
                 return None
             return seal(current)
         _migrate_legacy_drafts(root)
-        if current >= freeze_at:
-            return seal(current)
         captured = parse_zoned_timestamp(context.get("build_at"))
         if (
             context.get("date") != day
             or captured is None
             or not timedelta(0) <= current - captured <= timedelta(minutes=5)
+            or not isinstance(context.get("slate"), list)
         ):
-            return None
+            return seal(current) if current >= freeze_at else None
+        if current >= freeze_at:
+            captured = current  # actual first-freeze decision, never 09:00 backdating
         history = receipts(root)
         quotes = index if index is not None else load_prices_index(root.parent, day)
         rows, models, rejected = candidates(
@@ -1211,11 +1230,11 @@ def capture(
         search_diagnostics = {}
         plan = select_accas(rows, available, diagnostics=search_diagnostics)
         persisted = clock()
-        if persisted >= freeze_at:
-            # A slow build that crosses 09:00 cannot sneak a late draft in.
-            return seal(persisted)
+        if persisted.astimezone(LOCAL_TZ).date().isoformat() != day or persisted < captured:
+            return None  # no cross-day/backdated publication
         previous = _checked_draft(root, day, freeze_at)
-        if previous and parse_zoned_timestamp(previous["captured_at"]) >= captured:
+        if (persisted < freeze_at and previous
+                and parse_zoned_timestamp(previous["captured_at"]) >= captured):
             return None
         payload = {
             "schema": SCHEMA,
@@ -1227,7 +1246,7 @@ def capture(
             "status": "draft_not_yet_frozen",
             "policy": {
                 "quote_max_age_hours": QUOTE_MAX_AGE.total_seconds() / 3600,
-                "quote_age_basis": "scheduled_freeze_original_capture",
+                "quote_age_basis": "later_of_decision_and_scheduled_freeze_original_capture",
                 "stricter_source_limits_retained": True,
                 "odds_band": None,
                 "max_accas": None,
@@ -1257,6 +1276,45 @@ def capture(
             "search": search_diagnostics,
             "accas": plan,
         }
+
+        def freeze_current(at):
+            if at < captured or at.astimezone(LOCAL_TZ).date().isoformat() != day:
+                return None
+            # Do not carry a quote/kickoff across expiry during a slow build.
+            # Probabilities/learning remain bound to the original decision;
+            # only remove ineligible quotes and resize the own-paper portfolio.
+            eligible = [c for c in rows
+                        if at - parse_zoned_timestamp(c["price_at"])
+                        <= _quote_max_age(c["price_source"])
+                        and parse_zoned_timestamp(c["kickoff_utc"]) >= at + MIN_LEAD]
+            final_plan = plan
+            if len(eligible) != len(rows):
+                rejected["quote_or_kickoff_expired_during_build"] = len(rows) - len(eligible)
+                final_plan = select_accas(eligible, available, diagnostics=search_diagnostics)
+            for c in eligible:
+                c["price_age_seconds_at_freeze"] = (
+                    at - parse_zoned_timestamp(c["price_at"])
+                ).total_seconds()
+            frozen = {k: v for k, v in payload.items()
+                      if k not in {"sha256", "draft_persisted_at"}}
+            frozen.update(
+                status="paper_accas" if final_plan else "no_paper_bet",
+                candidates=eligible,
+                accas=final_plan,
+                coverage=dict(payload["coverage"], candidate_count=len(eligible),
+                              candidate_fixtures=len({tuple(c["fixture"]) for c in eligible}),
+                              status="inputs_available" if eligible
+                              else "input_starved_not_strategy_selectivity"),
+                freeze_basis=ACTUAL_RUN_FREEZE,
+                frozen_at=at.isoformat(),
+                persisted_at=at.isoformat(),
+            )
+            frozen["sha256"] = digest(frozen)
+            validate_record(frozen, day)
+            return frozen if _write_once(path, frozen) else None
+
+        if persisted >= freeze_at:
+            return freeze_current(persisted)
         payload["sha256"] = digest(payload)
         # Like the other lanes: pending cards live in one mutable lane state,
         # not separate dated draft files. Keep earlier dates' exact evidence.
@@ -1268,9 +1326,11 @@ def capture(
                 json.dump(state, stream, sort_keys=True, allow_nan=False)
                 stream.flush()
                 os.fsync(stream.fileno())
-            # Check again after fsync: only durably pre-cutoff evidence may win.
-            if clock() >= freeze_at:
-                return seal(clock())
+            # A build crossing 09:00 becomes an actual-time frozen card,
+            # never a post-cutoff draft or a backdated pre-cutoff receipt.
+            durable_at = clock()
+            if durable_at >= freeze_at:
+                return freeze_current(durable_at)
             os.replace(name, state_path(root))
         finally:
             Path(name).unlink(missing_ok=True)
@@ -1462,7 +1522,7 @@ def render_card(receipt):
         f"autobets_ML TICKETS — {receipt['date']}",
         "=" * 62,
         "PAPER ONLY — own legs, accas and model-sized stakes; no odds band.",
-        f"FREEZE   {receipt.get('freeze_at', '09:00 SAST')} | {receipt['status']}",
+        f"FREEZE   {receipt.get('frozen_at') or receipt.get('freeze_at', '09:00 SAST')} | {receipt['status']}",
         "Same-book single-price products; acca acceptance/payout unconfirmed.",
     ]
     if not receipt["accas"]:
@@ -1511,7 +1571,7 @@ def latest_card(root, *, now=None):
         row = _checked_draft(root, today, freeze_at)
         if row is not None:
             if now >= freeze_at:
-                row = dict(row, status="09:00_cutoff_passed_awaiting_publication_no_late_changes")
+                row = dict(row, status="09:00_cutoff_passed_awaiting_publication")
             return row
     history = receipts(root)
     return history[-1] if history else None
