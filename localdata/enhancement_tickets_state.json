@@ -689,7 +689,7 @@
         }
       ],
       "bank_pct": 43.7309,
-      "close_pct": 37.5495
+      "close_pct": 43.7309
     },
     {
       "date": "2026-10-26",
@@ -742,7 +742,7 @@
         }
       ],
       "bank_pct": 34.1576,
-      "close_pct": 27.9762
+      "close_pct": 34.1576
     },
     {
       "date": "2026-10-27",
@@ -1098,7 +1098,7 @@
         }
       ],
       "bank_pct": 29.8879,
-      "close_pct": 23.7065
+      "close_pct": 29.8879
     },
     {
       "date": "2026-10-28",
@@ -2470,7 +2470,7 @@
         }
       ],
       "bank_pct": 31.9053,
-      "close_pct": 25.7239
+      "close_pct": 31.9053
     },
     {
       "date": "2026-10-29",
@@ -2971,7 +2971,7 @@
         }
       ],
       "bank_pct": 27.9171,
-      "close_pct": 21.7357
+      "close_pct": 27.9171
     },
     {
       "date": "2026-10-30",
@@ -4278,7 +4278,7 @@
         }
       ],
       "bank_pct": 20.9379,
-      "close_pct": 14.7565
+      "close_pct": 20.9379
     },
     {
       "date": "2026-10-31",
@@ -4393,7 +4393,7 @@
         }
       ],
       "bank_pct": 24.0785,
-      "close_pct": 17.8971
+      "close_pct": 24.0785
     },
     {
       "date": "2026-11-01",
@@ -5265,7 +5265,7 @@
         }
       ],
       "bank_pct": 25.8643,
-      "close_pct": 19.6828
+      "close_pct": 25.8642
     }
   ],
   "events": [],
@@ -5570,6 +5570,53 @@
       "verification_basis": "Exact committed/cached financial fingerprints in the supplied restore traceback; original cached payload unavailable through GitHub API (404). All existing independent corroboration checks remain mandatory.",
       "receipt_sha256": "b131d40155fabfb6db55bc4f69d72f7ff4f5e5e1b84563aa80b15e504b6bd157",
       "recovered_financial_sha256": "dd2f9d4f4087fa5460a23e308b2bdc163e38b6385e32023cf1fc9436532ad335"
+    },
+    "reporting_close_correction": {
+      "reason": "Oct-25 verified 6.1814 payout was already credited; stale reporting closes only",
+      "bank_unchanged": 25.864296,
+      "corrections": [
+        {
+          "date": "2026-10-25",
+          "before": 37.5495,
+          "after": 43.7309
+        },
+        {
+          "date": "2026-10-26",
+          "before": 27.9762,
+          "after": 34.1576
+        },
+        {
+          "date": "2026-10-27",
+          "before": 23.7065,
+          "after": 29.8879
+        },
+        {
+          "date": "2026-10-28",
+          "before": 25.7239,
+          "after": 31.9053
+        },
+        {
+          "date": "2026-10-29",
+          "before": 21.7357,
+          "after": 27.9171
+        },
+        {
+          "date": "2026-10-30",
+          "before": 14.7565,
+          "after": 20.9379
+        },
+        {
+          "date": "2026-10-31",
+          "before": 17.8971,
+          "after": 24.0785
+        },
+        {
+          "date": "2026-11-01",
+          "before": 19.6828,
+          "after": 25.8642
+        }
+      ],
+      "stakes_results_open_slips_and_freezes": "unchanged"
     }
   },
   "enh_floor_table": {
