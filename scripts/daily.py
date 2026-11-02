@@ -349,8 +349,12 @@ def capture_theodds_snapshot(target_date: str, trigger: str) -> None:
     first snapshot once per fixture
     per day, close snapshot once per fixture inside the pre-kickoff window;
     0 credits otherwise. Key rotation + monthly budget live in the adapter."""
+    # Only the existing candidate-price capture may request the bounded ML
+    # refresh; CLV/end-of-run calls retain their historical zero-extra-cost due rules.
+    ml_flag = " --ml-precutoff" if (trigger == "candidate_price_snapshot"
+                                    and os.environ.get("EDGE_FACTORY_ML_PAPER", "1") == "1") else ""
     run_soft(
-        f"PYTHONPATH=src python3 scripts/capture_theodds.py --date {target_date} --auto",
+        f"PYTHONPATH=src python3 scripts/capture_theodds.py --date {target_date} --auto{ml_flag}",
         f"theoddsapi capture {target_date} [{trigger}]",
     )
 
@@ -433,7 +437,18 @@ def finalize_priced_candidate_slate(target_date: str, *, phase5_shadow: bool = F
         f"scripts/picks_today.py {target_date}",
         f"picks_today {target_date} (final priced card)",
     )
+    # Consume the fresh final card NOW, before archive stacking, notifications,
+    # future planning, CLV and audits can delay/replace it. capture itself seals
+    # only a pre-cutoff draft if this step arrives at/after 09:00.
+    run_ml_paper()
     return priced_as_of
+
+
+def run_ml_paper():
+    run_soft(
+        "PYTHONPATH=src python3 scripts/auto_tickets.py --autobets-ml",
+        "autobets_ML PAPER (early fresh-card census/draft; 09:00 SAST cutoff)",
+    )
 
 
 def run(cmd: str, label: str | None = None) -> None:
@@ -1034,6 +1049,7 @@ def run_pipeline(
             target_picks_text = target_archive.read_text()
             restore_target_picks(target_picks_text)
             save_morning_baseline(target_date, target_picks_text, overwrite=False)
+            run_ml_paper()  # seal/report even when the official card is reused
             print(f"  reused archive: {target_archive}")
         else:
             if target_archive.exists() and not target_is_frozen:
@@ -1119,11 +1135,6 @@ def run_pipeline(
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
-        )
-        # Independent paper lifecycle: no Main/ENH plan or financial state.
-        run_soft(
-            "PYTHONPATH=src python3 scripts/auto_tickets.py --autobets-ml",
-            "autobets_ML PAPER (own accas/stakes; 09:00 SAST cutoff)",
         )
         run_soft(
             "PYTHONPATH=src python3 scripts/auto_tickets.py",
@@ -1270,11 +1281,6 @@ def run_pipeline(
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
-        )
-        # Independent paper lifecycle: no Main/ENH plan or financial state.
-        run_soft(
-            "PYTHONPATH=src python3 scripts/auto_tickets.py --autobets-ml",
-            "autobets_ML PAPER (own accas/stakes; 09:00 SAST cutoff)",
         )
         run_soft(
             "PYTHONPATH=src python3 scripts/auto_tickets.py",

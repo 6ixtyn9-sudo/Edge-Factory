@@ -462,7 +462,7 @@ def betexplorer_price_rejection(pick: dict, *, execution_at: datetime | None = N
         mapping = MARKET_PRICE_MAP.get(pick.get("recommended_enhancement"))
         if pick.get("recommended_enhancement") == "double_chance":
             side = str(pick.get("pick") or "").strip().lower()
-            mapping = ("dc", {"home": "1x", "away": "x2"}.get(side))
+            mapping = ("dc", {"home": "1x", "away": "x2", "draw": "12"}.get(side))
         if not mapping or tuple(mapping) != (receipt.get("market"), receipt.get("selection")):
             return "betexplorer_market_selection_mismatch"
         price = _parse_price(receipt.get("price"))
