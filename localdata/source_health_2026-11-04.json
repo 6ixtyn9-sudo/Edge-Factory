@@ -225,44 +225,60 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
         "board_fixtures": 2,
-        "board_league_count": 1,
+        "board_league_count": 2,
         "board_leagues": {
-          "japan_-_j2_league": 200
+          "afc_-_champions_league": 173,
+          "japan_-_j2_league": 27
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 76,
+        "board_priced_rows": 2,
         "board_rows": 200,
         "board_team_count": 4,
         "board_team_names": {
-          "Albirex Niigata": 138,
-          "Kofu": 138,
-          "Sendai": 62,
-          "Toyama": 62
+          "FC Imabari": 27,
+          "Newcastle Jets": 173,
+          "Sapporo": 27,
+          "Shanghai Port FC": 173
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_correct_score": 21,
+          "unknown_market:1st_half_moneyline": 3,
+          "unknown_market:1st_half_total_goals": 1,
+          "unknown_market:2nd_half_total_goals": 1,
+          "unknown_market:both_halves_goal_scored": 2,
+          "unknown_market:exact_total_goals": 13,
+          "unsupported_market:correct_score": 78,
+          "unsupported_market:double_chance": 3
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 27,
+          "player_prop": 49
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 2
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 1,
+      "sa_scored": 2,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
