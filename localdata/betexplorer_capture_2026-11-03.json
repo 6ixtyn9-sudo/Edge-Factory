@@ -1,16 +1,6 @@
 {
-  "attempted": 13,
+  "attempted": 10,
   "attempted_fixtures": [
-    {
-      "avg_p": 72.5909090909091,
-      "away": "Inter",
-      "date": "2026-11-03",
-      "home": "Feyenoord",
-      "league": "Champions League",
-      "market": "ou_2.5",
-      "pick": "over",
-      "w_score": 0.6681
-    },
     {
       "avg_p": 71.58771929824562,
       "away": "Slovan Bratislava",
@@ -72,56 +62,6 @@
       "w_score": 0.6681
     },
     {
-      "avg_p": 55.3303985171455,
-      "away": "Blaublitz Akita",
-      "date": "2026-11-03",
-      "home": "Yokohama",
-      "league": "J2-League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 49.65648717022045,
-      "away": "Ruch Chorz\u00f3w",
-      "date": "2026-11-03",
-      "home": "Pogo\u0144 Siedlce",
-      "league": "1. Liga",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 49.322950365098436,
-      "away": "Iwaki",
-      "date": "2026-11-03",
-      "home": "Omiya Ardija",
-      "league": "J2-League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 45.08719851576994,
-      "away": "Albirex Niigata",
-      "date": "2026-11-03",
-      "home": "Ventforet Kofu",
-      "league": "J2-League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 44.11647146309723,
-      "away": "Vanraure Hachinohe",
-      "date": "2026-11-03",
-      "home": "Oita Trinita",
-      "league": "J2-League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
       "avg_p": 42.425357689192836,
       "away": "Caracas",
       "date": "2026-11-03",
@@ -130,39 +70,17 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
-    }
-  ],
-  "be_429": 0,
-  "be_cached": 1,
-  "be_cooling_down": false,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "cache_only": 1,
-  "candidate_fixtures": 18,
-  "captured_at": "2026-11-03T01:16:19.279291+00:00",
-  "date": "2026-11-03",
-  "deferred_fixtures": 5,
-  "errors": [],
-  "fixtures_with_rows": 9,
-  "market_budget_stop": false,
-  "market_requests": 45,
-  "match_detail": {
-    "bookmakers": 147,
-    "challenge_pages": 0,
-    "fixtures": 9,
-    "market_rows": 383,
-    "markets": 54,
-    "named_rows": 383,
-    "standings_rows": 0,
-    "with_h2h": 0,
-    "with_last_results": 0,
-    "with_standings": 0
-  },
-  "max_fixtures": 12,
-  "ml_precutoff_active": true,
-  "ml_refresh_attempted": 1,
-  "network_attempted": 12,
-  "quoted_fixtures": [
+    },
+    {
+      "avg_p": 69.40366972477064,
+      "away": "Club Africain",
+      "date": "2026-11-03",
+      "home": "Stade Tunisien",
+      "league": "Ligue 1",
+      "market": "ou_2.5",
+      "pick": "under",
+      "w_score": 0.6681
+    },
     {
       "avg_p": 72.5909090909091,
       "away": "Inter",
@@ -173,6 +91,48 @@
       "pick": "over",
       "w_score": 0.6681
     },
+    {
+      "avg_p": 49.65648717022045,
+      "away": "Ruch Chorz\u00f3w",
+      "date": "2026-11-03",
+      "home": "Pogo\u0144 Siedlce",
+      "league": "1. Liga",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    }
+  ],
+  "be_429": 0,
+  "be_cached": 9,
+  "be_cooling_down": false,
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "cache_only": 9,
+  "candidate_fixtures": 10,
+  "captured_at": "2026-11-03T06:00:29.855839+00:00",
+  "date": "2026-11-03",
+  "deferred_fixtures": 0,
+  "errors": [],
+  "fixtures_with_rows": 7,
+  "market_budget_stop": false,
+  "market_requests": 5,
+  "match_detail": {
+    "bookmakers": 153,
+    "challenge_pages": 0,
+    "fixtures": 10,
+    "market_rows": 396,
+    "markets": 60,
+    "named_rows": 396,
+    "standings_rows": 0,
+    "with_h2h": 0,
+    "with_last_results": 0,
+    "with_standings": 0
+  },
+  "max_fixtures": 12,
+  "ml_precutoff_active": true,
+  "ml_refresh_attempted": 0,
+  "network_attempted": 1,
+  "quoted_fixtures": [
     {
       "avg_p": 71.58771929824562,
       "away": "Slovan Bratislava",
@@ -204,14 +164,34 @@
       "w_score": 0.6681
     },
     {
-      "avg_p": 55.3303985171455,
-      "away": "Blaublitz Akita",
+      "avg_p": 42.425357689192836,
+      "away": "Caracas",
       "date": "2026-11-03",
-      "home": "Yokohama",
-      "league": "J2-League",
+      "home": "Monagas",
+      "league": "Primera Division",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
+    },
+    {
+      "avg_p": 69.40366972477064,
+      "away": "Club Africain",
+      "date": "2026-11-03",
+      "home": "Stade Tunisien",
+      "league": "Ligue 1",
+      "market": "ou_2.5",
+      "pick": "under",
+      "w_score": 0.6681
+    },
+    {
+      "avg_p": 72.5909090909091,
+      "away": "Inter",
+      "date": "2026-11-03",
+      "home": "Feyenoord",
+      "league": "Champions League",
+      "market": "ou_2.5",
+      "pick": "over",
+      "w_score": 0.6681
     },
     {
       "avg_p": 49.65648717022045,
@@ -222,40 +202,10 @@
       "market": "1x2",
       "pick": "away",
       "w_score": 0.5405
-    },
-    {
-      "avg_p": 49.322950365098436,
-      "away": "Iwaki",
-      "date": "2026-11-03",
-      "home": "Omiya Ardija",
-      "league": "J2-League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 44.11647146309723,
-      "away": "Vanraure Hachinohe",
-      "date": "2026-11-03",
-      "home": "Oita Trinita",
-      "league": "J2-League",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 42.425357689192836,
-      "away": "Caracas",
-      "date": "2026-11-03",
-      "home": "Monagas",
-      "league": "Primera Division",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
     }
   ],
-  "requests": 66,
-  "rows": 27,
+  "requests": 9,
+  "rows": 21,
   "schema": 1,
   "status": "ok"
 }
