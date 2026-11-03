@@ -345,12 +345,15 @@ def test_learning_uses_own_prior_results_and_fixture_weights_not_quote_count():
     assert next_rows[0]["probability"] < 0.8
     assert history == before
     duplicate = [receipt(yesterday, [dict(c, book=f"Book{j}") for c in cs[:2] for j in range(100)])]
-    assert mp.learn(duplicate, NOW, lookup)["status"] == "awaiting_prior_paper_results"
+    # Dynamic learning fits from the first resolved fixtures, but duplicated
+    # book quotes still dedupe to the same two observations, not 200.
+    dup_model = mp.learn(duplicate, NOW, lookup)
+    assert dup_model["status"] == "fitted_prior_paper_errors" and dup_model["observations"] == 2
     assert mp.learn([history[1]], NOW, lookup)["fixtures"] == 0
     assert mp.learn(history, NOW, lambda c: None)["fixtures"] == 0
 
 
-def test_learning_bucket_and_market_columns_require_unique_fixture_evidence():
+def test_learning_bucket_and_market_columns_use_any_unique_fixture_evidence():
     yesterday = "2026-11-01"
     cs = [
         candidate(i, date=yesterday, p=0.8, bucket="CAUTION" if i < 35 else "RARE")
@@ -360,7 +363,7 @@ def test_learning_bucket_and_market_columns_require_unique_fixture_evidence():
         [receipt(yesterday, cs)], NOW, lambda c: (2, 0) if int(c["candidate_id"]) % 2 else (0, 1)
     )
     assert "bucket:CAUTION" in model["columns"]
-    assert "bucket:RARE" not in model["columns"]
+    assert "bucket:RARE" in model["columns"]  # dynamic: no 30-fixture column gate
     assert model["observations"] == 40
 
 

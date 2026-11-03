@@ -215,8 +215,8 @@ def test_last_decision_learning_gate_is_not_confused_with_selected_leg_count():
     report = mp.performance([r], lambda c: (2, 0))
     text = mp.render_performance(report)
     assert "0 resolved selected observations / 0 fixtures · pool 2 resolved fixtures" in text
-    assert "last decision: 2/30 eligible prior-day fixtures" in text
-    assert "both outcome classes required" in text
+    assert "last decision: 2 resolved prior-day fixtures" in text
+    assert "dynamic calibration + success tilt from first results" in text
     assert "not an automatic review/promotion trigger" in text
     assert "PAIRED   2 fixtures / 2 observations" in text
 
