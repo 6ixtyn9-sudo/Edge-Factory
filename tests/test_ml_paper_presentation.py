@@ -37,7 +37,7 @@ def test_ticket_txt_matches_other_lane_spacing_with_leg_diagnostics():
         "[PAPER ACCA #1] @2.862 — 8.196803 paper units — Betsson\n"
         "   Radomiak Radom vs Śląsk Wrocław\n"
         "      1x2 home @2.120 · ML 69.6% · SKIPPED_VETO\n"
-        "      Source forecast unavailable · quote age unavailable\n"
+        "      Source forecast unavailable · quote age unavailable\n\n"
         "   Benfica vs Alverca\n"
         "      match_over_25 over @1.350 · ML 80.8% · CAUTION\n"
         "      Source forecast unavailable · quote age unavailable\n\n"

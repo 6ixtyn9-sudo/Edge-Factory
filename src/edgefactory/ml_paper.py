@@ -2358,22 +2358,26 @@ def render_card(receipt):
         lines.append(
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
-        for c in acca["legs"]:
-            match = f"{c['home']} vs {c['away']}"
+        for leg_index, c in enumerate(acca["legs"]):
+            if leg_index:
+                lines.append("")  # one blank line between legs
+            # Matchup with its kickoff next to it on the same line: one header
+            # line per leg, so legs are countable at a glance.
+            leg_lines = [f"   {c['home']} vs {c['away']}"]
             if receipt.get("freeze_basis") == ROLLING_FREEZE:
                 kickoff = parse_zoned_timestamp(c["kickoff_utc"]).astimezone(LOCAL_TZ)
-                match = f"KICKOFF {kickoff:%Y-%m-%d %H:%M} SAST  {match}"
+                leg_lines[0] += f" · KICKOFF {kickoff:%Y-%m-%d %H:%M} SAST"
             source = source_forecast_probability(c)
             age = quote_age_at_decision(c, receipt)
             comparison = (f"Source forecast {source:.1%} · gap {(c['probability'] - source) * 100:+.1f} pp"
                           if source is not None else "Source forecast unavailable")
             quote_age = f"quote age {age / 3600:.2f}h at decision" if age is not None else "quote age unavailable"
-            lines.extend([
-                f"   {match}",
+            leg_lines.extend([
                 (f"      {c['market']} {c['selection']} @{c['odds']:.3f}"
                  f" · ML {c['probability']:.1%} · {c['bucket']}"),
                 f"      {comparison} · {quote_age}",
             ])
+            lines.extend(leg_lines)
         lines.append("")
     concentration = receipt.get("fixture_concentration")
     if concentration is not None:
