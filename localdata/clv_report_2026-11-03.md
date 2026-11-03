@@ -69,8 +69,8 @@
 
 - `CAUTION`: n=188, two_prices=176, avg_raw=-0.003465, avg_ip=0.001307, beat_rate=0.130682
 - `CERTIFIED_CLEAN`: n=113, two_prices=111, avg_raw=-0.001884, avg_ip=-0.001324, beat_rate=0.027027
-- `SKIPPED_VETO`: n=630, two_prices=550, avg_raw=-0.003772, avg_ip=0.000274, beat_rate=0.063636
+- `SKIPPED_VETO`: n=632, two_prices=552, avg_raw=-0.003758, avg_ip=0.000273, beat_rate=0.063406
 - `WATCHLIST_NO_ODDS`: n=67, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
-- `WATCHLIST_SUSPECT_PRICE`: n=100, two_prices=82, avg_raw=-0.001951, avg_ip=0.000181, beat_rate=0.109756
-- `WATCHLIST_UNCORROBORATED_PRICE`: n=49, two_prices=47, avg_raw=0.003191, avg_ip=-0.001452, beat_rate=0.021277
+- `WATCHLIST_SUSPECT_PRICE`: n=99, two_prices=81, avg_raw=-0.001975, avg_ip=0.000184, beat_rate=0.111111
+- `WATCHLIST_UNCORROBORATED_PRICE`: n=48, two_prices=46, avg_raw=0.003261, avg_ip=-0.001484, beat_rate=0.021739
 - `WATCHLIST_UNKNOWN_CTX`: n=22, two_prices=22, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0

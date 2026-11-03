@@ -9,7 +9,7 @@
   "paper_free_units": 76.58850799999999,
   "settled_stake_units": 8.196803,
   "receipt_days": 2,
-  "decision_receipts": 7,
+  "decision_receipts": 9,
   "bet_days": 2,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
@@ -162,6 +162,10 @@
     "kelly_multiplier": 0.25,
     "max_free_bank_exposure": 0.25,
     "max_aggregate_bank_exposure_for_rolling": 0.25,
+    "max_new_fixture_stake_fraction_of_total_bank": 0.05,
+    "accas_mutually_exclusive_within_new_publications": true,
+    "fixture_concentration_policy": "ml_paper_fixture_gross_stake_cap",
+    "fixture_concentration_applies_to": "new_publications_only_existing_positions_unchanged",
     "bankruptcy": "zero_free_capital_no_new_stakes_no_refill"
   },
   "by_bucket_market_leg_diagnostics": {
@@ -4208,12 +4212,224 @@
       "decision_id": "20261103T104616532976Z",
       "captured_at": "2026-11-03T10:46:16.532976+00:00",
       "frozen_at": "2026-11-03T10:46:23.144117+00:00"
+    },
+    {
+      "date": "2026-11-03",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261103T132453176607Z",
+      "captured_at": "2026-11-03T13:24:53.176607+00:00",
+      "frozen_at": "2026-11-03T13:24:59.154456+00:00"
+    },
+    {
+      "date": "2026-11-03",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261103T132634191291Z",
+      "captured_at": "2026-11-03T13:26:34.191291+00:00",
+      "frozen_at": "2026-11-03T13:26:39.154440+00:00"
     }
   ],
   "latest_learning": {
+    "coef": [
+      -0.09958264602256241,
+      6.779853371335254e-05,
+      -0.00017767284648943562,
+      -0.03224657320660674,
+      -0.03011983790452467,
+      0.030137215895828757,
+      0.031982501489235274,
+      0.03197630573846982,
+      -0.16802998185197665,
+      0.028068577759505726,
+      -0.03167529548876228,
+      -0.031959057740980824,
+      0.16811494087228893,
+      -0.028051243779101065,
+      0.031692573903847644
+    ],
+    "columns": [
+      "bucket:CAUTION",
+      "bucket:SKIPPED_VETO",
+      "market:1x2",
+      "market:btts_no",
+      "market:btts_yes",
+      "market:double_chance",
+      "market:match_over_15",
+      "market:match_over_25",
+      "market:match_over_35",
+      "market:match_over_45",
+      "market:match_under_15",
+      "market:match_under_25",
+      "market:match_under_35",
+      "market:match_under_45"
+    ],
+    "evidence_gate": "none_from_first_resolved_prior_day_results_evidence_smoothed",
     "fixtures": 2,
+    "intercept": -0.0004021693642480435,
+    "learning_policy": "ml_paper_dynamic_calibration_success_tilt",
     "observations": 18,
-    "status": "awaiting_prior_paper_results",
+    "recency_half_life_days": 14.0,
+    "smoothing_factor": 0.2857142857142857,
+    "smoothing_k_fixtures": 5.0,
+    "status": "fitted_prior_paper_errors",
+    "success_tilt": {
+      "bucket:CAUTION": {
+        "excess": 7.123404267411759e-05,
+        "fixtures": 1,
+        "tilt_logit": 0.00014246808534823518,
+        "weighted_hit_rate": 0.5,
+        "weighted_observations": 0.9516951530106196,
+        "weighted_reference_rate": 0.4999287659573259
+      },
+      "bucket:SKIPPED_VETO": {
+        "excess": -0.0001803204180489959,
+        "fixtures": 1,
+        "tilt_logit": -0.0003606408360979918,
+        "weighted_hit_rate": 0.49999999999999983,
+        "weighted_observations": 0.9516951530106198,
+        "weighted_reference_rate": 0.5001803204180488
+      },
+      "gap:0_to_10pp": {
+        "excess": 0.0036034874537032024,
+        "fixtures": 1,
+        "tilt_logit": 0.007206974907406405,
+        "weighted_hit_rate": 0.5,
+        "weighted_observations": 0.2379237882526549,
+        "weighted_reference_rate": 0.4963965125462968
+      },
+      "gap:10_to_20pp": {
+        "excess": -0.3161413078324895,
+        "fixtures": 2,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.11111111111111112,
+        "weighted_observations": 0.5353285235684735,
+        "weighted_reference_rate": 0.4272524189436006
+      },
+      "gap:20pp_plus": {
+        "excess": 0.5288417451818117,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.059480947063163724,
+        "weighted_reference_rate": 0.4711582548181883
+      },
+      "gap:negative": {
+        "excess": 0.14374914664142646,
+        "fixtures": 2,
+        "tilt_logit": 0.2874982932828529,
+        "weighted_hit_rate": 0.6875,
+        "weighted_observations": 0.9516951530106197,
+        "weighted_reference_rate": 0.5437508533585735
+      },
+      "gap:source_unavailable": {
+        "excess": 0.00014217361348095592,
+        "fixtures": 1,
+        "tilt_logit": 0.00028434722696191184,
+        "weighted_hit_rate": 0.5,
+        "weighted_observations": 0.11896189412632745,
+        "weighted_reference_rate": 0.49985782638651904
+      },
+      "market:1x2": {
+        "excess": -0.18010328961400146,
+        "fixtures": 1,
+        "tilt_logit": -0.3602065792280029,
+        "weighted_hit_rate": 0.33333333333333337,
+        "weighted_observations": 0.17844284118949116,
+        "weighted_reference_rate": 0.5134366229473348
+      },
+      "market:btts_no": {
+        "excess": -0.507744047643762,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.059480947063163724,
+        "weighted_reference_rate": 0.507744047643762
+      },
+      "market:btts_yes": {
+        "excess": 0.5080295531902261,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.059480947063163724,
+        "weighted_reference_rate": 0.4919704468097738
+      },
+      "market:double_chance": {
+        "excess": 0.17867364686730175,
+        "fixtures": 1,
+        "tilt_logit": 0.3573472937346035,
+        "weighted_hit_rate": 0.6666666666666667,
+        "weighted_observations": 0.17844284118949116,
+        "weighted_reference_rate": 0.487993019799365
+      },
+      "market:match_over_15": {
+        "excess": 0.5378843047391053,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.059480947063163724,
+        "weighted_reference_rate": 0.46211569526089463
+      },
+      "market:match_over_25": {
+        "excess": -0.31382079018658837,
+        "fixtures": 2,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.11111111111111112,
+        "weighted_observations": 0.5353285235684735,
+        "weighted_reference_rate": 0.4249319012976995
+      },
+      "market:match_over_35": {
+        "excess": 0.47445796614639335,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.059480947063163724,
+        "weighted_reference_rate": 0.5255420338536066
+      },
+      "market:match_over_45": {
+        "excess": -0.5329926547198611,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.059480947063163724,
+        "weighted_reference_rate": 0.5329926547198611
+      },
+      "market:match_under_15": {
+        "excess": -0.5376003230213783,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.059480947063163724,
+        "weighted_reference_rate": 0.5376003230213783
+      },
+      "market:match_under_25": {
+        "excess": 0.3139768877131227,
+        "fixtures": 2,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 0.888888888888889,
+        "weighted_observations": 0.5353285235684735,
+        "weighted_reference_rate": 0.5749120011757662
+      },
+      "market:match_under_35": {
+        "excess": -0.4741731321422536,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.059480947063163724,
+        "weighted_reference_rate": 0.4741731321422536
+      },
+      "market:match_under_45": {
+        "excess": 0.533277001946823,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.059480947063163724,
+        "weighted_reference_rate": 0.46672299805317696
+      }
+    },
+    "success_tilt_total_limit_logit": 0.75,
     "training_last_date": "2026-11-02",
     "training_outcomes": [
       {

@@ -10,10 +10,12 @@ DRAWDOWN 8.197 paper units / 8.2% (ticket-date marks; pending at cost)
 DAYS     2 bet / 0 no-bet · 0 missed freeze
 
 EVIDENCE 2 resolved selected observations / 2 fixtures · pool 2 resolved fixtures
-LEARNING last decision: 2/30 eligible prior-day fixtures; both outcome classes required, not an automatic review/promotion trigger
+LEARNING last decision: 2 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 PAIRED   2 fixtures / 16 observations · Brier model 0.3953 / source 0.3152
 
-STAKING  model Kelly, own paper bank only; ROI is profit / settled stakes
+STAKING  quarter Kelly, own paper bank only; ROI is profit / settled stakes
+FIXTURES new publications: gross stake <= 5.0% of TOTAL paper bank per canonical fixture;
+         downward-only, no refill; existing frozen positions remain unchanged
 PAYOUT   hypothetical same-book singles product, not a confirmed acca quote
 
 Paper only. No real-money stakes or automatic promotion.
