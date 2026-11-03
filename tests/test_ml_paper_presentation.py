@@ -26,18 +26,18 @@ def card():
     return row
 
 
-def test_ticket_txt_has_separate_leg_diagnostics_and_freeze_blocks():
+def test_ticket_txt_matches_other_lane_spacing_with_leg_diagnostics():
     row = card()
     before = deepcopy(row)
     text = mp.render_card(row)
     assert text == (
-        "autobets_ML TICKETS — 2026-11-02\n" + "=" * 62 + "\n\n"
+        "autobets_ML TICKETS — 2026-11-02\n" + "=" * 62 + "\n"
         "PAPER ONLY — own legs, accas and model-sized stakes; no odds band.\n"
         "Same-book single-price products; acca acceptance/payout unconfirmed.\n\n"
         "[PAPER ACCA #1] @2.862 — 8.196803 paper units — Betsson\n"
         "   Radomiak Radom vs Śląsk Wrocław\n"
         "      1x2 home @2.120 · ML 69.6% · SKIPPED_VETO\n"
-        "      Source forecast unavailable · quote age unavailable\n\n"
+        "      Source forecast unavailable · quote age unavailable\n"
         "   Benfica vs Alverca\n"
         "      match_over_25 over @1.350 · ML 80.8% · CAUTION\n"
         "      Source forecast unavailable · quote age unavailable\n\n"
