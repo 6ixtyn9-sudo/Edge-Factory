@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 
+import pytest
 from test_ml_paper import NOW, candidate, receipt
 
 from edgefactory import ml_paper as mp
@@ -93,3 +94,69 @@ def test_evidence_smoothing_softens_early_swings():
     mp.apply_learning(many_rows, many_model)
     # Same direction, but the thin-evidence shift is much gentler.
     assert 0.5 < few_rows[0]["probability"] < many_rows[0]["probability"]
+
+
+def test_missing_sklearn_degrades_to_tilt_only_not_lane_failure(monkeypatch):
+    import sys
+
+    for name in ("sklearn", "sklearn.exceptions", "sklearn.linear_model"):
+        monkeypatch.setitem(sys.modules, name, None)
+    cs = [candidate(1, date=YESTERDAY, p=0.5, bucket="CAUTION"),
+          candidate(2, date=YESTERDAY, p=0.5, bucket="RARE")]
+    lookup = lambda c: (2, 0) if c["bucket"] == "CAUTION" else (0, 2)
+    learner = mp.learn([receipt(YESTERDAY, cs)], NOW, lookup)
+    assert learner["status"] == "learning_fit_unavailable_existing_model_retained"
+    assert learner["success_tilt"]["bucket:CAUTION"]["tilt_logit"] > 0
+    rows = [candidate(50, p=0.5, bucket="CAUTION")]
+    mp.apply_learning(rows, learner)
+    assert rows[0]["probability"] > 0.5  # success tilt still applies
+
+
+def test_broken_sklearn_module_degrades_to_tilt_only(monkeypatch):
+    import sys
+    import types
+
+    broken = types.ModuleType("sklearn")
+    broken.__path__ = []
+    monkeypatch.setitem(sys.modules, "sklearn", broken)
+    monkeypatch.delitem(sys.modules, "sklearn.exceptions", raising=False)
+    monkeypatch.delitem(sys.modules, "sklearn.linear_model", raising=False)
+    cs = [candidate(1, date=YESTERDAY, p=0.5), candidate(2, date=YESTERDAY, p=0.5)]
+    learner = mp.learn([receipt(YESTERDAY, cs)], NOW,
+                       lambda c: (2, 0) if c["candidate_id"] == "1" else (0, 2))
+    assert learner["status"] in (
+        "learning_fit_unavailable_existing_model_retained", "dynamic_success_tilt_only")
+    assert learner["observations"] == 2
+
+
+def test_success_tilt_uses_crossfit_not_insample_reference():
+    cs = [candidate(1, date=YESTERDAY, p=0.5, bucket="CAUTION"),
+          candidate(2, date=YESTERDAY, p=0.5, bucket="RARE")]
+    learner = mp.learn([receipt(YESTERDAY, cs)], NOW,
+                       lambda c: (2, 0) if c["bucket"] == "CAUTION" else (0, 2))
+    # One fixture per bucket: in-sample calibration could memorise the bucket
+    # and erase the residual; cross-fitting cannot, so the tilt survives.
+    assert learner["success_tilt_reference"] in (
+        "cross_fitted_calibration_out_of_sample", "base_probability")
+    assert learner["success_tilt"]["bucket:CAUTION"]["tilt_logit"] > 0.4
+    assert learner["success_tilt"]["bucket:RARE"]["tilt_logit"] < -0.4
+
+
+def test_correlated_group_tilts_average_not_stack():
+    model = {"status": "awaiting_prior_paper_results", "smoothing_factor": 1.0,
+             "success_tilt": {"bucket:CAUTION": {"tilt_logit": 0.5},
+                              "market:1x2": {"tilt_logit": 0.5},
+                              "gap:source_unavailable": {"tilt_logit": 0.5}}}
+    rows = [candidate(50, p=0.5)]
+    mp.apply_learning(rows, model)
+    assert rows[0]["probability"] == pytest.approx(0.622459, abs=1e-6)
+
+
+def test_malformed_historical_candidates_are_skipped_not_fatal():
+    good = candidate(1, date=YESTERDAY, p=0.5)
+    bad = candidate(2, date=YESTERDAY, p=0.5)
+    bad.pop("bucket")
+    worse = candidate(3, date=YESTERDAY, p=0.5)
+    worse["base_probability"] = 1.5
+    learner = mp.learn([receipt(YESTERDAY, [good, bad, worse])], NOW, lambda c: (2, 0))
+    assert learner["fixtures"] == 1 and learner["observations"] == 1
