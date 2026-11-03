@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-11-03T21:52:16",
+  "generated_at": "2026-11-04T01:08:09",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 22.631296,
-  "multiple": 0.22631295999999998,
+  "bank_pct": 21.980648999999996,
+  "multiple": 0.21980648999999997,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 20,
+  "bet_days": 21,
   "accas": {
-    "wins": 15,
-    "losses": 28
+    "wins": 16,
+    "losses": 29
   },
   "open_slips": [
     {
-      "date": "2026-11-03",
-      "staked_pct": 5.6578
+      "date": "2026-11-04",
+      "staked_pct": 2.7476
     }
   ],
   "events": [],
@@ -5398,6 +5398,634 @@
       ],
       "bank_pct": 22.6313,
       "close_pct": 22.6312
+    },
+    {
+      "date": "2026-11-03",
+      "staked_pct": 5.6578,
+      "returned_pct": 5.0072,
+      "accas": [
+        {
+          "odds": 1.77,
+          "won": true,
+          "stake_pct": 2.8289,
+          "returned_pct": 5.0072,
+          "legs": [
+            {
+              "match": "Feyenoord vs Inter",
+              "pick": "under",
+              "odds": 1.33,
+              "result": "win",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-03T01:16:54.642064+00:00",
+              "price_provenance": {
+                "away": "Inter",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-03T01:16:54.642064+00:00",
+                "data_dt": [
+                  3,
+                  11,
+                  2026,
+                  21,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-03T07:00:00+00:00",
+                "decision_day": "2026-11-03",
+                "home": "Feyenoord",
+                "kickoff_utc": "2026-11-03T20:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-03.json",
+                "ledger_sha256": "01a8ce2f1a4df5ba942239f0a313f37d0eb42d443f4ae29a473b16e2fe172385",
+                "market": "ou_4.5",
+                "price": 1.33,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-23T19:13",
+                      "2026-10-23T19:13"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      3.4,
+                      1.33
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 19,
+                  "row_sha256": "a36a9ad19c4b36d8218a4aa6885692aa6d6570d2b7413d145e20f371c719876a"
+                },
+                "raw_kickoff": "21:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-03T20:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Inter Milan",
+                      "csv_data_row": 812,
+                      "file": "theoddsapi_odds_2026-11.csv.gz",
+                      "file_sha256": "e943a89d148f258fec534c46d22f1c10fc9f2c0d9eedccf1a877c02d50623e4e",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Feyenoord",
+                      "kickoff_origin": "provider_commence_time",
+                      "kickoff_utc": "2026-11-03T20:00:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-02T22:25:46.157147+00:00",
+                      "provider_commence_time": "2026-11-03T20:00:00Z",
+                      "provider_event_id": "f6f3cf01c2b20b7f746b5a06097a0569",
+                      "row_sha256": "8608b74e7ff6cde643ccc89da9f9b50a3f60aceafa844c11c27371c957d521c2",
+                      "source": "theoddsapi"
+                    },
+                    {
+                      "away": "Inter",
+                      "csv_data_row": 380,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "546d98a80d1c93e42c0e5ed64bb2d6ca5303268e62ad9ee3f0d69a6ecf761da7",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Feyenoord",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-03T20:00:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-02T22:06:41+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "d6f298cbcf0219da1c4dab80ae631a10f7fd84e75c6d5e306be155114beed449",
+                      "schedule_row": {
+                        "away": "Inter",
+                        "captured_at": "2026-11-02T22:06:41+00:00",
+                        "country": "Europe",
+                        "date": "2026-11-03",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Feyenoord",
+                        "hs": "",
+                        "kickoff": "2026-11-03T20:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Champions League",
+                        "odd1": "3.75",
+                        "odd2": "1.8",
+                        "odd_gg": "1.4",
+                        "odd_ng": "2.75",
+                        "odd_o15": "1.12",
+                        "odd_o25": "1.4",
+                        "odd_o35": "2.0",
+                        "odd_u15": "6.0",
+                        "odd_u25": "3.0",
+                        "odd_u35": "1.8",
+                        "oddx": "4.2",
+                        "p1": "25.150886457940402",
+                        "p2": "52.39532251980384",
+                        "p_gg": "66.26506024096386",
+                        "p_ng": "33.734939759036145",
+                        "p_o15": "84.26966292134833",
+                        "p_o25": "68.18181818181819",
+                        "p_o35": "47.368421052631575",
+                        "px": "22.45379102225575",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "20:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Inter Milan",
+                      "csv_data_row": 1518,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "69f4439ce527368c1e03d6f48b06eff059e1854625ac327a3860a31aecbc8d2b",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Feyenoord",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-03T20:00:00+00:00",
+                      "league": "World: UEFA Champions League",
+                      "observed_at_utc": "2026-11-02T22:06:13+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "154113ddccfa578882a16ed6321dbdcd34ab799a2b4b3a052ec7823161f19d3e",
+                      "schedule_row": {
+                        "away": "Inter Milan",
+                        "captured_at": "2026-11-02T22:06:13+00:00",
+                        "date": "2026-11-03",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Feyenoord",
+                        "hs": "",
+                        "index": "-0.62",
+                        "kickoff": "2026-11-03T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "World: UEFA Champions League",
+                        "p1": "29.0",
+                        "p2": "42.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "29.0",
+                        "schedule_history": "[{\"away\": \"Inter Milan\", \"captured_at\": \"2026-11-01T22:02:39+00:00\", \"date\": \"2026-11-03\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Feyenoord\", \"kickoff\": \"2026-11-03T21:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Inter Milan",
+                      "csv_data_row": 1518,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "69f4439ce527368c1e03d6f48b06eff059e1854625ac327a3860a31aecbc8d2b",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Feyenoord",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-03T20:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-01T22:02:39+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "4ae71e563a9a8ec380cf139983c92e06d827f97806b83c002c208dd088feb2e5",
+                      "schedule_row": {
+                        "away": "Inter Milan",
+                        "captured_at": "2026-11-01T22:02:39+00:00",
+                        "date": "2026-11-03",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Feyenoord",
+                        "kickoff": "2026-11-03T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-03",
+                "Feyenoord",
+                "Inter"
+              ],
+              "prob": 0.8358,
+              "cohort_evidence": {
+                "rate": 0.8358,
+                "n": 889,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-03",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 743,
+                "cohort_lower_bound": 0.8099816429379805,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "away",
+                  "league": "Champions League",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.33,
+                  "captured_at": "2026-11-03T01:16:54.642064+00:00",
+                  "decision_at": "2026-11-03T09:23:38+02:00",
+                  "kickoff": "2026-11-03T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7212235417729177,
+              "ml_model_key": "8373307f836d6395bb87ace73b3f662e63e4e6ebc5dd52b4b19bd9431755ab91",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Champions League",
+              "shadow": true,
+              "price_kickoff": "2026-11-03T20:00:00+00:00"
+            },
+            {
+              "match": "Pogo\u0144 Siedlce vs Ruch Chorz\u00f3w",
+              "pick": "under",
+              "odds": 1.33,
+              "result": "win",
+              "label": "Match Under 3.5 Goals",
+              "market": "match_under_35",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-03T01:19:35.188583+00:00",
+              "price_provenance": {
+                "away": "Ruch Chorzow",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-03T01:19:35.188583+00:00",
+                "data_dt": [
+                  3,
+                  11,
+                  2026,
+                  18,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-03T07:00:00+00:00",
+                "decision_day": "2026-11-03",
+                "home": "Pogon Siedlce",
+                "kickoff_utc": "2026-11-03T17:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-03.json",
+                "ledger_sha256": "01a8ce2f1a4df5ba942239f0a313f37d0eb42d443f4ae29a473b16e2fe172385",
+                "market": "ou_3.5",
+                "price": 1.33,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-28T12:18",
+                      "2026-10-28T12:18"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      3.25,
+                      1.33
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 12,
+                  "row_sha256": "00ad9e51bbb5d25569ead48fcd57702fd5fbac6ff1626644fa9a95b365496326"
+                },
+                "raw_kickoff": "18:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-03T17:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Ruch Chorz\u00f3w",
+                      "csv_data_row": 406,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "546d98a80d1c93e42c0e5ed64bb2d6ca5303268e62ad9ee3f0d69a6ecf761da7",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Pogo\u0144 Siedlce",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-03T17:00:00+00:00",
+                      "league": "1. Liga",
+                      "observed_at_utc": "2026-11-02T22:06:41+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "55fdaa7a6d620702cf9ca3b7361564fd70c52dcd9c7b6744824fed8722f60a54",
+                      "schedule_row": {
+                        "away": "Ruch Chorz\u00f3w",
+                        "captured_at": "2026-11-02T22:06:41+00:00",
+                        "country": "Poland",
+                        "date": "2026-11-03",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Pogo\u0144 Siedlce",
+                        "hs": "",
+                        "kickoff": "2026-11-03T17:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "1. Liga",
+                        "odd1": "4.0",
+                        "odd2": "1.72",
+                        "odd_gg": "1.8",
+                        "odd_ng": "1.9",
+                        "odd_o15": "1.25",
+                        "odd_o25": "1.85",
+                        "odd_o35": "3.25",
+                        "odd_u15": "3.75",
+                        "odd_u25": "1.95",
+                        "odd_u35": "1.33",
+                        "oddx": "3.6",
+                        "p1": "22.587640043368268",
+                        "p2": "52.31297434044091",
+                        "p_gg": "51.35135135135135",
+                        "p_ng": "48.648648648648646",
+                        "p_o15": "75.0",
+                        "p_o25": "51.315789473684205",
+                        "p_o35": "29.03930131004367",
+                        "px": "25.099385616190823",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "17:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Ruch Chorzow",
+                      "csv_data_row": 1600,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "69f4439ce527368c1e03d6f48b06eff059e1854625ac327a3860a31aecbc8d2b",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Pogo\u0144 Siedlce",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-03T17:00:00+00:00",
+                      "league": "Poland: I Liga",
+                      "observed_at_utc": "2026-11-02T22:06:13+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "466569b20c8e7193413268d9f4d55916503be329d4886b58096eb4773405706f",
+                      "schedule_row": {
+                        "away": "Ruch Chorzow",
+                        "captured_at": "2026-11-02T22:06:13+00:00",
+                        "date": "2026-11-03",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Pogo\u0144 Siedlce",
+                        "hs": "",
+                        "index": "-0.91",
+                        "kickoff": "2026-11-03T18:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Poland: I Liga",
+                        "p1": "26.0",
+                        "p2": "48.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "26.0",
+                        "schedule_history": "[{\"away\": \"Ruch Chorzow\", \"captured_at\": \"2026-11-01T22:02:39+00:00\", \"date\": \"2026-11-03\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Pogo\\u0144 Siedlce\", \"kickoff\": \"2026-11-03T18:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Ruch Chorzow",
+                      "csv_data_row": 1600,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "69f4439ce527368c1e03d6f48b06eff059e1854625ac327a3860a31aecbc8d2b",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Pogo\u0144 Siedlce",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-03T17:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-01T22:02:39+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "77d7bc5af79216c53441a41a118bc2f49b2170d54f8464566a8e75627f33954c",
+                      "schedule_row": {
+                        "away": "Ruch Chorzow",
+                        "captured_at": "2026-11-01T22:02:39+00:00",
+                        "date": "2026-11-03",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Pogo\u0144 Siedlce",
+                        "kickoff": "2026-11-03T18:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Ruch Chorzow",
+                      "board_fetched_at": "2026-11-03T06:00:26+00:00",
+                      "board_fixture": {
+                        "fixtureId": "id1000022972231150",
+                        "participant1Name": "Pogon Siedlce",
+                        "participant2Name": "Ruch Chorzow",
+                        "startTime": "2026-11-03T17:00:00.000Z"
+                      },
+                      "file": "oddspapi_fixture_state.json",
+                      "file_sha256": "71fc9cb9fed54440b306ff5e5a2dac9d9a993fa3eee2c9beb18bc5f7015bcf56",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Pogon Siedlce",
+                      "json_pointer": "/boards/2026-11-03/fixtures/80",
+                      "kickoff_origin": "provider_startTime",
+                      "kickoff_utc": "2026-11-03T17:00:00+00:00",
+                      "observed_at_utc": "2026-11-03T06:00:26+00:00",
+                      "provider_event_id": "id1000022972231150",
+                      "row_sha256": "3d0b8db154b931bdfe26b459023c53765901cca19c5d2f4104b34644c991acd2",
+                      "source": "oddspapi"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-03",
+                "Pogo\u0144 Siedlce",
+                "Ruch Chorz\u00f3w"
+              ],
+              "prob": 0.6873,
+              "cohort_evidence": {
+                "rate": 0.6873,
+                "n": 889,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-03",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 611,
+                "cohort_lower_bound": 0.6560635995520713,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "away",
+                  "league": "1. Liga",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.33,
+                  "captured_at": "2026-11-03T01:19:35.188583+00:00",
+                  "decision_at": "2026-11-03T09:23:38+02:00",
+                  "kickoff": "2026-11-03T17:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8182712060946198,
+              "ml_model_key": "8373307f836d6395bb87ace73b3f662e63e4e6ebc5dd52b4b19bd9431755ab91",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "1. Liga",
+              "shadow": true,
+              "price_kickoff": "2026-11-03T17:00:00+00:00"
+            }
+          ]
+        },
+        {
+          "odds": 1.92,
+          "won": false,
+          "stake_pct": 2.8289,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen",
+              "pick": "over",
+              "odds": 1.43,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "Betsson",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-02T22:25:46.389174+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-03",
+                "Atl\u00e9tico Madrid",
+                "FC Bayern M\u00fcnchen"
+              ],
+              "prob": 0.7151,
+              "cohort_evidence": {
+                "rate": 0.7151,
+                "n": 730,
+                "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                "as_of_exclusive": "2026-11-03",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 522,
+                "cohort_lower_bound": 0.6812651604882319,
+                "price_context": {
+                  "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                  "selection": "over",
+                  "league": "Champions League",
+                  "book": "Betsson",
+                  "source": "theoddsapi",
+                  "price": 1.43,
+                  "captured_at": "2026-11-02T22:25:46.389174+00:00",
+                  "decision_at": "2026-11-03T09:23:38+02:00",
+                  "kickoff": "2026-11-03T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6592930912034505,
+              "ml_model_key": "627978a058c1c013ee84c42e0dc97b0f3cfc560bc04864fa711da69d95c87a3d",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7101065018290273,
+              "floor_basis": "inherited",
+              "league": "Champions League",
+              "shadow": false,
+              "price_kickoff": "2026-11-03T20:00:00Z"
+            },
+            {
+              "match": "Villarreal vs Paris Saint Germain",
+              "pick": "over",
+              "odds": 1.34,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "Betsson",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-02T22:25:46.100803+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-03",
+                "Villarreal",
+                "Paris Saint Germain"
+              ],
+              "prob": 0.7151,
+              "cohort_evidence": {
+                "rate": 0.7151,
+                "n": 730,
+                "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                "as_of_exclusive": "2026-11-03",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 522,
+                "cohort_lower_bound": 0.6812651604882319,
+                "price_context": {
+                  "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                  "selection": "over",
+                  "league": "Champions League",
+                  "book": "Betsson",
+                  "source": "theoddsapi",
+                  "price": 1.34,
+                  "captured_at": "2026-11-02T22:25:46.100803+00:00",
+                  "decision_at": "2026-11-03T09:23:38+02:00",
+                  "kickoff": "2026-11-03T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7261022598940601,
+              "ml_model_key": "627978a058c1c013ee84c42e0dc97b0f3cfc560bc04864fa711da69d95c87a3d",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7101065018290273,
+              "floor_basis": "inherited",
+              "league": "Champions League",
+              "shadow": true,
+              "price_kickoff": "2026-11-03T20:00:00Z"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 21.9806,
+      "close_pct": 21.9806
     }
   ]
 }

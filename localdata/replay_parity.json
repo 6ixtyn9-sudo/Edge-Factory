@@ -6,20 +6,20 @@
       "attributed_scores": {
         "by_schema": {
           "enh_score_logit_v2": {
-            "cohort_brier": 0.21540608416666665,
-            "cohort_log_loss": 0.619268660402036,
-            "fixtures": 24,
-            "model_brier": 0.22810365405166647,
-            "model_log_loss": 0.6527959673920943,
-            "records": 24
+            "cohort_brier": 0.21025089178571427,
+            "cohort_log_loss": 0.6074195751027794,
+            "fixtures": 28,
+            "model_brier": 0.2176755970564171,
+            "model_log_loss": 0.6282595681834874,
+            "records": 28
           }
         },
         "caveat": "Fixture-balanced descriptive scores on booked legs, not independent records or selection uplift; log probabilities clipped at 1e-15. No significance claim.",
-        "eligible_binary_legs": 80,
+        "eligible_binary_legs": 84,
         "missing_attribution": 56
       },
       "counts": {
-        "MATCH": 7
+        "MATCH": 8
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -2480,10 +2480,10 @@
                         "match": "Feyenoord vs Inter",
                         "model": 0.7212235417729177,
                         "odds": 1.33,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.6873,
@@ -2491,14 +2491,14 @@
                         "match": "Pogo\u0144 Siedlce vs Ruch Chorz\u00f3w",
                         "model": 0.8182712060946198,
                         "odds": 1.33,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 1.77,
-                    "returned": null,
+                    "returned": 5.0072,
                     "stake": 2.8289
                   },
                   {
@@ -2509,10 +2509,10 @@
                         "match": "Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen",
                         "model": 0.6592930912034505,
                         "odds": 1.43,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.7151,
@@ -2520,14 +2520,14 @@
                         "match": "Villarreal vs Paris Saint Germain",
                         "model": 0.7261022598940601,
                         "odds": 1.34,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 1.92,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 2.8289
                   }
                 ],
@@ -2578,9 +2578,9 @@
                   ]
                 ],
                 "mean_acca_odds": 1.845,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 4,
+                "returned": 5.0072,
                 "selected_legs": 4,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -2604,10 +2604,10 @@
                         "match": "Pogo\u0144 Siedlce vs Ruch Chorz\u00f3w",
                         "model": 0.8182712060946198,
                         "odds": 1.33,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.8358,
@@ -2615,14 +2615,14 @@
                         "match": "Feyenoord vs Inter",
                         "model": 0.7212235417729177,
                         "odds": 1.33,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 1.77,
-                    "returned": null,
+                    "returned": 5.0072,
                     "stake": 2.8289
                   },
                   {
@@ -2633,10 +2633,10 @@
                         "match": "Villarreal vs Paris Saint Germain",
                         "model": 0.7261022598940601,
                         "odds": 1.34,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.7151,
@@ -2644,14 +2644,14 @@
                         "match": "Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen",
                         "model": 0.6592930912034505,
                         "odds": 1.43,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 1.92,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 2.8289
                   }
                 ],
@@ -2702,9 +2702,9 @@
                   ]
                 ],
                 "mean_acca_odds": 1.845,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 4,
+                "returned": 5.0072,
                 "selected_legs": 4,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -2851,10 +2851,260 @@
               "enh_score_logit_v2": 23
             },
             "scored_legs": 23,
-            "status": "INCOMPLETE_OUTCOMES"
+            "status": "RESOLVED"
           },
-          "open_accas": 2,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": -0.6505999999999998,
+          "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 1,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 21.980648999999996,
+          "committed_excluding_target": 0.0,
+          "date": "2026-11-04",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "6192220cf4d8e7734ed0ea13f255522de776c959",
+            "event_sha": "6192220cf4d8e7734ed0ea13f255522de776c959",
+            "file_sha256": {
+              "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
+            },
+            "run_id": "41726832699",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-04_decision.json.gz",
+          "free_bank": 21.980648999999996,
+          "ledger": "NOT_COMMITTED",
+          "ml_comparison": {
+            "added_to_ml_on": 0,
+            "arms": {
+              "ml_off": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7151,
+                        "market": "match_over_25",
+                        "match": "Fenerbah\u00e7e vs Liverpool",
+                        "model": 0.697794391095446,
+                        "odds": 1.39,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.7151,
+                        "market": "match_over_25",
+                        "match": "RB Leipzig vs Manchester City",
+                        "model": 0.6026512401269003,
+                        "odds": 1.32,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.83,
+                    "returned": null,
+                    "stake": 2.7476
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Fenerbah\u00e7e vs Liverpool",
+                        "match_over_25",
+                        "OVER",
+                        1.39,
+                        "Betsson",
+                        "theoddsapi"
+                      ],
+                      [
+                        "RB Leipzig vs Manchester City",
+                        "match_over_25",
+                        "OVER",
+                        1.32,
+                        "Betsson",
+                        "theoddsapi"
+                      ]
+                    ],
+                    1.83,
+                    2.7476
+                  ]
+                ],
+                "mean_acca_odds": 1.83,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 2,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": false
+                },
+                "total_stake": 2.7476
+              },
+              "ml_on": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7151,
+                        "market": "match_over_25",
+                        "match": "Fenerbah\u00e7e vs Liverpool",
+                        "model": 0.697794391095446,
+                        "odds": 1.39,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.7151,
+                        "market": "match_over_25",
+                        "match": "RB Leipzig vs Manchester City",
+                        "model": 0.6026512401269003,
+                        "odds": 1.32,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.83,
+                    "returned": null,
+                    "stake": 2.7476
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Fenerbah\u00e7e vs Liverpool",
+                        "match_over_25",
+                        "OVER",
+                        1.39,
+                        "Betsson",
+                        "theoddsapi"
+                      ],
+                      [
+                        "RB Leipzig vs Manchester City",
+                        "match_over_25",
+                        "OVER",
+                        1.32,
+                        "Betsson",
+                        "theoddsapi"
+                      ]
+                    ],
+                    1.83,
+                    2.7476
+                  ]
+                ],
+                "mean_acca_odds": 1.83,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 2,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": true,
+                  "dropped": [],
+                  "ml_ranking_active": true
+                },
+                "total_stake": 2.7476
+              }
+            },
+            "card_identical": true,
+            "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
+            "execution_leg_symmetric_difference": 0,
+            "mean_absolute_disagreement": 0.06487718438882678,
+            "model_below_cohort": 6,
+            "models": {
+              "52b60aef5f9066fdb39dfc280df620460951d6e2176f1ba08630d1b6010186d7": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 23,
+                    "0:1": 24,
+                    "0:2": 27,
+                    "0:3": 20,
+                    "0:4": 8,
+                    "0:5": 5,
+                    "0:6": 4,
+                    "0:7": 1,
+                    "1:0": 47,
+                    "1:1": 48,
+                    "1:2": 47,
+                    "1:3": 22,
+                    "1:4": 9,
+                    "1:5": 5,
+                    "1:6": 2,
+                    "1:7": 1,
+                    "2:0": 41,
+                    "2:1": 59,
+                    "2:2": 47,
+                    "2:3": 22,
+                    "2:4": 9,
+                    "2:5": 4,
+                    "2:6": 1,
+                    "3:0": 47,
+                    "3:1": 53,
+                    "3:2": 23,
+                    "3:3": 13,
+                    "3:4": 8,
+                    "3:5": 1,
+                    "3:6": 1,
+                    "4:0": 19,
+                    "4:1": 21,
+                    "4:2": 12,
+                    "4:3": 4,
+                    "4:4": 4,
+                    "5:0": 12,
+                    "5:1": 10,
+                    "5:2": 2,
+                    "5:3": 3,
+                    "5:4": 1,
+                    "5:5": 1,
+                    "6:0": 2,
+                    "6:1": 7,
+                    "6:2": 3,
+                    "7:0": 2,
+                    "7:1": 3,
+                    "7:2": 2,
+                    "8:0": 2,
+                    "8:1": 1,
+                    "8:3": 1,
+                    "9:0": 1,
+                    "9:1": 2
+                  },
+                  "classes": 52,
+                  "mean_rows_per_class": 14.173076923076923,
+                  "min_class_count": 1,
+                  "n": 737,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2964
+                },
+                "schema": "enh_score_logit_v2"
+              }
+            },
+            "paired_estimates": 6,
+            "pool_legs": 6,
+            "removed_from_ml_off": 0,
+            "schemas": {
+              "enh_score_logit_v2": 6
+            },
+            "scored_legs": 6,
+            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+          },
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],
@@ -3116,8 +3366,9 @@
           "free_bank": 317.93582000000004,
           "freeze_time": "MATCH",
           "ledger": "MATCH",
-          "open_accas": 2,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": 25.03750000000001,
+          "settlement": "MATCH",
           "status": "MATCH"
         }
       ],

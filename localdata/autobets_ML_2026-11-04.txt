@@ -1,0 +1,85 @@
+autobets_ML TICKETS — 2026-11-04
+==============================================================
+PAPER ONLY — own legs, accas and model-sized stakes; no odds band.
+Same-book single-price products; acca acceptance/payout unconfirmed.
+DECISION 20261103T224916872142Z · next 24 hours · frozen on publication
+
+[PAPER ACCA #1] @4.185 — 1.806675 paper units — betsson
+   Alianza Lima vs Cienciano · KICKOFF 2026-11-04 03:00 SAST
+      match_over_15 over @1.220 · ML 80.0% · SKIPPED_VETO
+      Source forecast 79.7% · gap +0.4 pp · quote age 0.30h at decision
+
+   RB Leipzig vs Manchester City · KICKOFF 2026-11-04 22:00 SAST
+      match_under_25 under @3.430 · ML 52.8% · SKIPPED_VETO
+      Source forecast 34.9% · gap +17.9 pp · quote age 0.31h at decision
+
+FIXTURE STAKE BUDGET (gross; overlapping exposures are not additive bank commitments)
+   5.0% of TOTAL paper bank at decision · 4.473200 units per canonical fixture
+   Full acca stake counted once per fixture across markets, sides, books and contracts; no netting.
+   Reservation 1.806675 -> 1.806675 units · released/idle 0.000000 units; no refill.
+   2026-11-04 alianzalima vs cienciano: new 1.806675 + prior open 0.000000 · unused new budget 2.666525 units
+   2026-11-04 rbleipzig vs manchestercity: new 1.806675 + prior open 0.000000 · unused new budget 2.666525 units
+   Existing over-cap positions are grandfathered, not resized.
+
+COVERAGE
+   Candidate count: 4799
+   Candidate fixtures: 8
+   Slate rows: 50
+   Status: inputs_available
+
+REJECTIONS
+   Data quality: 2
+   Fixture bound ml unavailable: 1
+   Fixture date or prior model unproven: 2
+   Outside rolling window or unproven kickoff: 28
+   Quote or probability unavailable: 298
+   Same time same book price conflict: 102
+
+ADMISSION  CAUTION / SKIPPED_VETO are intentionally paper-eligible; data-quality guards remain.
+
+LEARNING  fitted_prior_paper_errors
+
+FREEZE   2026-11-03T22:49:25.114591+00:00 | paper_accas
+
+autobets_ML TICKETS — 2026-11-04
+==============================================================
+PAPER ONLY — own legs, accas and model-sized stakes; no odds band.
+Same-book single-price products; acca acceptance/payout unconfirmed.
+DECISION 20261103T225158402488Z · next 24 hours · frozen on publication
+
+[PAPER ACCA #1] @5.708 — 2.393197 paper units — Betsson
+   Borussia Dortmund vs Real Betis · KICKOFF 2026-11-04 22:00 SAST
+      match_under_25 under @2.680 · ML 56.0% · SKIPPED_VETO
+      Source forecast 37.5% · gap +18.5 pp · quote age 0.35h at decision
+
+   Porto vs Napoli · KICKOFF 2026-11-04 22:00 SAST
+      match_under_25 under @2.130 · ML 58.8% · SKIPPED_VETO
+      Source forecast 47.3% · gap +11.5 pp · quote age 0.35h at decision
+
+FIXTURE STAKE BUDGET (gross; overlapping exposures are not additive bank commitments)
+   5.0% of TOTAL paper bank at decision · 4.473200 units per canonical fixture
+   Full acca stake counted once per fixture across markets, sides, books and contracts; no netting.
+   Reservation 2.393197 -> 2.393197 units · released/idle 0.000000 units; no refill.
+   2026-11-04 borussiadortmund vs realbetis: new 2.393197 + prior open 0.000000 · unused new budget 2.080003 units
+   2026-11-04 porto vs napoli: new 2.393197 + prior open 0.000000 · unused new budget 2.080003 units
+   Existing over-cap positions are grandfathered, not resized.
+
+COVERAGE
+   Candidate count: 384
+   Candidate fixtures: 5
+   Slate rows: 19
+   Status: inputs_available
+
+REJECTIONS
+   Already ticketed fixture: 3
+   Data quality: 1
+   Fixture bound ml unavailable: 1
+   Fixture date or prior model unproven: 2
+   Outside rolling window or unproven kickoff: 2
+   Quote or probability unavailable: 166
+
+ADMISSION  CAUTION / SKIPPED_VETO are intentionally paper-eligible; data-quality guards remain.
+
+LEARNING  fitted_prior_paper_errors
+
+FREEZE   2026-11-03T22:52:06.557101+00:00 | paper_accas

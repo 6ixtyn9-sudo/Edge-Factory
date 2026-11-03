@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-03T21:48:57",
+  "generated_at": "2026-11-04T01:03:40",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 317.93582000000004,
-  "multiple": 3.1793582000000002,
+  "bank_pct": 342.97328,
+  "multiple": 3.4297328,
   "cycle_base_pct": 203.9865280000001,
   "next_take_profit_pct": 407.97,
-  "bet_days": 64,
+  "bet_days": 65,
   "accas": {
-    "wins": 77,
-    "losses": 52
+    "wins": 78,
+    "losses": 53
   },
-  "open_slips": [
-    {
-      "date": "2026-11-03",
-      "staked_pct": 79.484
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -1751,6 +1746,87 @@
       ],
       "bank_pct": 317.9358,
       "close_pct": 317.9357
+    },
+    {
+      "date": "2026-11-03",
+      "staked_pct": 79.484,
+      "returned_pct": 104.5215,
+      "accas": [
+        {
+          "odds": 2.63,
+          "won": true,
+          "stake_pct": 39.742,
+          "returned_pct": 104.5215,
+          "legs": [
+            {
+              "match": "LASK Linz vs Slovan Bratislava",
+              "pick": "HOME",
+              "odds": 1.4386,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-03",
+                "LASK Linz",
+                "Slovan Bratislava"
+              ]
+            },
+            {
+              "match": "Feyenoord vs Inter",
+              "pick": "AWAY",
+              "odds": 1.83,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-03",
+                "Feyenoord",
+                "Inter"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.92,
+          "won": false,
+          "stake_pct": 39.742,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Villarreal vs Paris Saint Germain",
+              "pick": "AWAY",
+              "odds": 1.67,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-03",
+                "Villarreal",
+                "Paris Saint Germain"
+              ]
+            },
+            {
+              "match": "Pogo\u0144 Siedlce vs Ruch Chorz\u00f3w",
+              "pick": "AWAY",
+              "odds": 1.75,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-03",
+                "Pogo\u0144 Siedlce",
+                "Ruch Chorz\u00f3w"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 342.9733,
+      "close_pct": 342.9732
     }
   ]
 }

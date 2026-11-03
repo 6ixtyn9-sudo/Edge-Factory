@@ -1,0 +1,261 @@
+{
+  "added": 30803,
+  "attempted": 5,
+  "attempted_fixtures": [
+    {
+      "away": "Cienciano",
+      "fixture_id": "id1000040675833536",
+      "home": "Alianza Lima"
+    },
+    {
+      "away": "Coritiba FC PR",
+      "fixture_id": "id1000032566887150",
+      "home": "SC Internacional RS"
+    },
+    {
+      "away": "Perez Zeledon",
+      "fixture_id": "id1002709272053690",
+      "home": "Sporting FC"
+    },
+    {
+      "away": "Deportes Quindio",
+      "fixture_id": "id1000123876086132",
+      "home": "Real Cartagena FC"
+    },
+    {
+      "away": "Yokogawa Musashino FC",
+      "fixture_id": "id1000182475116050",
+      "home": "J-Lease FC"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-04",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 82,
+    "remaining_today": 18,
+    "spent_today": 7
+  },
+  "captured_at": "2026-11-03T22:31:26+00:00",
+  "date": "2026-11-04",
+  "errors": [],
+  "excluded_srl_fixtures": 9,
+  "fixtures": 210,
+  "future_slate_fixtures": 6,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 612,
+  "markets": {
+    "1x2": 3112,
+    "btts": 1662,
+    "ou_0.5": 900,
+    "ou_0.75": 108,
+    "ou_1": 271,
+    "ou_1.25": 325,
+    "ou_1.5": 1597,
+    "ou_1.75": 398,
+    "ou_2": 628,
+    "ou_2.25": 736,
+    "ou_2.5": 1891,
+    "ou_2.75": 910,
+    "ou_3": 926,
+    "ou_3.25": 795,
+    "ou_3.5": 1806,
+    "ou_3.75": 422,
+    "ou_4": 487,
+    "ou_4.25": 318,
+    "ou_4.5": 1559,
+    "ou_4.75": 263,
+    "ou_5": 188,
+    "ou_5.25": 72,
+    "ou_5.5": 1016,
+    "ou_5.75": 35,
+    "ou_6": 48,
+    "ou_6.25": 15,
+    "ou_6.5": 408,
+    "ou_7": 2,
+    "ou_7.25": 10,
+    "ou_7.5": 118,
+    "ou_7.75": 15,
+    "ou_8.25": 5,
+    "ou_8.5": 46,
+    "ou_9.5": 20,
+    "tt_away_0.5": 1403,
+    "tt_away_0.75": 84,
+    "tt_away_1": 82,
+    "tt_away_1.25": 70,
+    "tt_away_1.5": 1169,
+    "tt_away_1.75": 18,
+    "tt_away_2": 56,
+    "tt_away_2.25": 2,
+    "tt_away_2.5": 922,
+    "tt_away_2.75": 2,
+    "tt_away_3": 2,
+    "tt_away_3.5": 343,
+    "tt_away_4": 2,
+    "tt_away_4.5": 48,
+    "tt_away_5": 2,
+    "tt_away_5.5": 33,
+    "tt_away_6.5": 1,
+    "tt_home_0.5": 816,
+    "tt_home_0.75": 20,
+    "tt_home_1": 64,
+    "tt_home_1.25": 38,
+    "tt_home_1.5": 1504,
+    "tt_home_1.75": 78,
+    "tt_home_2": 66,
+    "tt_home_2.25": 56,
+    "tt_home_2.5": 1383,
+    "tt_home_2.75": 6,
+    "tt_home_3": 48,
+    "tt_home_3.25": 4,
+    "tt_home_3.5": 930,
+    "tt_home_3.75": 4,
+    "tt_home_4": 6,
+    "tt_home_4.5": 360,
+    "tt_home_5": 2,
+    "tt_home_5.5": 63,
+    "tt_home_6.5": 4
+  },
+  "markets_source": "fetch",
+  "matched": 5,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 12,
+    "market_id_unknown": 5887,
+    "market_inactive": 67,
+    "market_unsupported_clean_sheet": 452,
+    "market_unsupported_corners": 5414,
+    "market_unsupported_correct_score": 1639,
+    "market_unsupported_double_chance": 914,
+    "market_unsupported_draw_no_bet": 756,
+    "market_unsupported_handicap": 8343,
+    "market_unsupported_odd_even": 1432,
+    "market_unsupported_period": 26802,
+    "market_unsupported_win_to_nil": 935,
+    "outcome_inactive": 3025
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 12,
+      "market_inactive": 67,
+      "outcome_inactive": 3025
+    },
+    "loss_or_diagnosis": {
+      "market_id_unknown": 5887,
+      "market_unsupported_clean_sheet": 452,
+      "market_unsupported_corners": 5414,
+      "market_unsupported_correct_score": 1639,
+      "market_unsupported_double_chance": 914,
+      "market_unsupported_draw_no_bet": 756,
+      "market_unsupported_handicap": 8343,
+      "market_unsupported_odd_even": 1432,
+      "market_unsupported_period": 26802,
+      "market_unsupported_win_to_nil": 935
+    }
+  },
+  "pending_fixtures": 5,
+  "quoted_fixtures": [
+    {
+      "away": "Cienciano",
+      "fixture_id": "id1000040675833536",
+      "home": "Alianza Lima"
+    },
+    {
+      "away": "Coritiba FC PR",
+      "fixture_id": "id1000032566887150",
+      "home": "SC Internacional RS"
+    },
+    {
+      "away": "Perez Zeledon",
+      "fixture_id": "id1002709272053690",
+      "home": "Sporting FC"
+    },
+    {
+      "away": "Deportes Quindio",
+      "fixture_id": "id1000123876086132",
+      "home": "Real Cartagena FC"
+    },
+    {
+      "away": "Yokogawa Musashino FC",
+      "fixture_id": "id1000182475116050",
+      "home": "J-Lease FC"
+    }
+  ],
+  "reserved_requests": 6,
+  "rows": 30803,
+  "schema": 1,
+  "slate_candidate_fixtures": 16,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 1,
+  "slate_provider_overlap_fixtures": 5,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Arsenal",
+      "home": "Slavia Praha",
+      "league": "World: UEFA Champions League",
+      "normalized_pair": "arsenal|slavia praha"
+    },
+    {
+      "away": "Nizhny Novgorod",
+      "home": "Enisey",
+      "league": "Russia Cup",
+      "normalized_pair": "enisey|nizhny novgorod"
+    },
+    {
+      "away": "Coritiba",
+      "home": "Internacional",
+      "league": "Serie A",
+      "normalized_pair": "coritiba|internacional"
+    },
+    {
+      "away": "Perez Zeledon",
+      "home": "Sporting San Jose",
+      "league": "Costa Rica: Primera Divisi\u00f3n",
+      "normalized_pair": "perez zeledon|sporting san jose"
+    },
+    {
+      "away": "Jaguares",
+      "home": "Deportivo Pasto",
+      "league": "Colombia: Primera A",
+      "normalized_pair": "deportivo pasto|jaguares"
+    },
+    {
+      "away": "Real Betis",
+      "home": "Borussia Dortmund",
+      "league": "World: UEFA Champions League",
+      "normalized_pair": "borussia dortmund|real betis"
+    },
+    {
+      "away": "Puerto Cabello",
+      "home": "Deportivo Tachira FC",
+      "league": "Venezuela: Primera Divisi\u00f3n",
+      "normalized_pair": "deportivo tachira|puerto cabello"
+    },
+    {
+      "away": "Napoli",
+      "home": "Porto",
+      "league": "Champions League",
+      "normalized_pair": "napoli|porto"
+    },
+    {
+      "away": "Como",
+      "home": "Lens",
+      "league": "Champions League",
+      "normalized_pair": "como|lens"
+    },
+    {
+      "away": "Cerro Porte\u00f1o",
+      "home": "Libertad",
+      "league": "Division 1",
+      "normalized_pair": "cerro porteno|libertad"
+    },
+    {
+      "away": "Guaran\u00ed",
+      "home": "Sportivo Ameliano",
+      "league": "Division 1",
+      "normalized_pair": "guarani|sportivo ameliano"
+    }
+  ],
+  "source": "oddspapi_odds"
+}
