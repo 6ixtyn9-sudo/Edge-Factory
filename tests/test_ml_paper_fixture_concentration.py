@@ -470,3 +470,12 @@ def test_rolling_publication_accas_are_mutually_exclusive(tmp_path):
         assert not fixtures & seen
         seen |= fixtures
     assert row["search"]["mutual_exclusivity"]["kept_acca_count"] == len(row["accas"])
+
+
+def test_mutual_exclusivity_prefers_highest_stake_not_input_or_book_order():
+    small = acca(1.0, [leg(1), leg(2)])
+    large = acca(9.0, [leg(2), leg(3)])
+    kept, dropped = mp._mutually_exclusive_accas([small, large])
+    assert kept == [large] and dropped == 1
+    kept2, dropped2 = mp._mutually_exclusive_accas([large, small])
+    assert [signature(a) for a in kept2] == [signature(large)] and dropped2 == 1
