@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 21,
-  "captured_at": "2026-11-02T22:37:10+00:00",
+  "captured_at": "2026-11-03T01:30:13+00:00",
   "date": "2026-11-03",
   "due_reasons": {},
   "errors": [],
@@ -22,8 +22,9 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
     "priced": 5,
-    "retry_cooldown": 16
+    "retry_cooldown": 15
   },
   "skipped": [
     "FC Barcelona|Aston Villa (priced)",
@@ -32,7 +33,7 @@
     "Feyenoord|Inter (priced)",
     "Galatasaray|VfB Stuttgart (priced)",
     "Stade Tunisien|Club Africain (retry cooldown (6h after failed attempt))",
-    "Le\u00f3n W|Atl\u00e9tico San Luis W (retry cooldown (6h after failed attempt))",
+    "Le\u00f3n W|Atl\u00e9tico San Luis W (kickoff already passed)",
     "Atl\u00e9tico Madrid|FC Bayern M\u00fcnchen (priced)",
     "Omiya Ardija|Iwaki (retry cooldown (6h after failed attempt))",
     "Manchester United|Roma (retry cooldown (6h after failed attempt))",

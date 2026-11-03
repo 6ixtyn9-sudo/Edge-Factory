@@ -2445,7 +2445,7 @@
           "status": "MATCH"
         },
         {
-          "accas": 1,
+          "accas": 2,
           "bank_reconciliation": "MATCH",
           "bank_total": 22.631296,
           "committed_excluding_target": 0.0,
@@ -2453,14 +2453,14 @@
           "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "fc48dda2f0f0975fca3ead1f025b27620a344851",
-            "event_sha": "fc48dda2f0f0975fca3ead1f025b27620a344851",
+            "checkout_head_at_capture": "dd01a0c353abaa5f58bd72bf6b430d2402bc86b6",
+            "event_sha": "dd01a0c353abaa5f58bd72bf6b430d2402bc86b6",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "41533389028",
+            "run_id": "41556766706",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-03_decision.json.gz",
@@ -2474,10 +2474,39 @@
                   {
                     "legs": [
                       {
+                        "cohort": 0.8358,
+                        "market": "match_under_45",
+                        "match": "Feyenoord vs Inter",
+                        "model": 0.7212235417729177,
+                        "odds": 1.33,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.6873,
+                        "market": "match_under_35",
+                        "match": "Pogo\u0144 Siedlce vs Ruch Chorz\u00f3w",
+                        "model": 0.8182712060946198,
+                        "odds": 1.33,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.77,
+                    "returned": null,
+                    "stake": 2.8289
+                  },
+                  {
+                    "legs": [
+                      {
                         "cohort": 0.7151,
                         "market": "match_over_25",
                         "match": "Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen",
-                        "model": 0.6592930911981302,
+                        "model": 0.6592930912034505,
                         "odds": 1.43,
                         "outcome_source": null,
                         "pick": "over",
@@ -2488,7 +2517,7 @@
                         "cohort": 0.7151,
                         "market": "match_over_25",
                         "match": "Villarreal vs Paris Saint Germain",
-                        "model": 0.72610225989441,
+                        "model": 0.7261022598940601,
                         "odds": 1.34,
                         "outcome_source": null,
                         "pick": "over",
@@ -2523,30 +2552,85 @@
                     ],
                     1.92,
                     2.8289
+                  ],
+                  [
+                    [
+                      [
+                        "Feyenoord vs Inter",
+                        "match_under_45",
+                        "UNDER",
+                        1.33,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Pogo\u0144 Siedlce vs Ruch Chorz\u00f3w",
+                        "match_under_35",
+                        "UNDER",
+                        1.33,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    1.77,
+                    2.8289
                   ]
                 ],
-                "mean_acca_odds": 1.92,
+                "mean_acca_odds": 1.845,
                 "outcome_status": "UNSETTLED_OR_UNPROVEN",
                 "resolved_legs": 0,
                 "returned": null,
-                "selected_legs": 2,
+                "selected_legs": 4,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
                   "capacity_rescue_checked": false,
-                  "dropped": [],
+                  "dropped": [
+                    "Feyenoord vs Inter",
+                    "Feyenoord vs Inter",
+                    "Feyenoord vs Inter"
+                  ],
                   "ml_ranking_active": false
                 },
-                "total_stake": 2.8289
+                "total_stake": 5.6578
               },
               "ml_on": {
                 "accas": [
                   {
                     "legs": [
                       {
+                        "cohort": 0.6873,
+                        "market": "match_under_35",
+                        "match": "Pogo\u0144 Siedlce vs Ruch Chorz\u00f3w",
+                        "model": 0.8182712060946198,
+                        "odds": 1.33,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.8358,
+                        "market": "match_under_45",
+                        "match": "Feyenoord vs Inter",
+                        "model": 0.7212235417729177,
+                        "odds": 1.33,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.77,
+                    "returned": null,
+                    "stake": 2.8289
+                  },
+                  {
+                    "legs": [
+                      {
                         "cohort": 0.7151,
                         "market": "match_over_25",
                         "match": "Villarreal vs Paris Saint Germain",
-                        "model": 0.72610225989441,
+                        "model": 0.7261022598940601,
                         "odds": 1.34,
                         "outcome_source": null,
                         "pick": "over",
@@ -2557,7 +2641,7 @@
                         "cohort": 0.7151,
                         "market": "match_over_25",
                         "match": "Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen",
-                        "model": 0.6592930911981302,
+                        "model": 0.6592930912034505,
                         "odds": 1.43,
                         "outcome_source": null,
                         "pick": "over",
@@ -2592,29 +2676,55 @@
                     ],
                     1.92,
                     2.8289
+                  ],
+                  [
+                    [
+                      [
+                        "Feyenoord vs Inter",
+                        "match_under_45",
+                        "UNDER",
+                        1.33,
+                        "bet365.us",
+                        "betexplorer"
+                      ],
+                      [
+                        "Pogo\u0144 Siedlce vs Ruch Chorz\u00f3w",
+                        "match_under_35",
+                        "UNDER",
+                        1.33,
+                        "bet365.us",
+                        "betexplorer"
+                      ]
+                    ],
+                    1.77,
+                    2.8289
                   ]
                 ],
-                "mean_acca_odds": 1.92,
+                "mean_acca_odds": 1.845,
                 "outcome_status": "UNSETTLED_OR_UNPROVEN",
                 "resolved_legs": 0,
                 "returned": null,
-                "selected_legs": 2,
+                "selected_legs": 4,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
                   "capacity_rescue_checked": true,
-                  "dropped": [],
+                  "dropped": [
+                    "Feyenoord vs Inter",
+                    "Feyenoord vs Inter",
+                    "Feyenoord vs Inter"
+                  ],
                   "ml_ranking_active": true
                 },
-                "total_stake": 2.8289
+                "total_stake": 5.6578
               }
             },
             "card_identical": true,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 0,
-            "mean_absolute_disagreement": 0.03340458434813992,
-            "model_below_cohort": 3,
+            "mean_absolute_disagreement": 0.061221876825514956,
+            "model_below_cohort": 12,
             "models": {
-              "56755a73dd52eed084b83dd67ce190446ae6579d2c7d1686e131c87501e29ae1": {
+              "627978a058c1c013ee84c42e0dc97b0f3cfc560bc04864fa711da69d95c87a3d": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -2679,15 +2789,67 @@
                   "stored_coefficients": 2964
                 },
                 "schema": "enh_score_logit_v2"
+              },
+              "8373307f836d6395bb87ace73b3f662e63e4e6ebc5dd52b4b19bd9431755ab91": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 56,
+                    "0:1": 84,
+                    "0:2": 75,
+                    "0:3": 61,
+                    "0:4": 30,
+                    "0:5": 10,
+                    "0:6": 3,
+                    "0:7": 4,
+                    "1:0": 41,
+                    "1:1": 109,
+                    "1:2": 93,
+                    "1:3": 44,
+                    "1:4": 18,
+                    "1:5": 6,
+                    "1:6": 2,
+                    "1:7": 1,
+                    "2:0": 35,
+                    "2:1": 50,
+                    "2:2": 36,
+                    "2:3": 27,
+                    "2:4": 10,
+                    "2:5": 9,
+                    "2:6": 3,
+                    "3:0": 7,
+                    "3:1": 18,
+                    "3:2": 11,
+                    "3:3": 12,
+                    "3:4": 9,
+                    "3:5": 2,
+                    "3:6": 1,
+                    "4:0": 4,
+                    "4:1": 6,
+                    "4:2": 4,
+                    "4:3": 3,
+                    "4:4": 2,
+                    "5:5": 1,
+                    "6:1": 1,
+                    "6:2": 1
+                  },
+                  "classes": 38,
+                  "mean_rows_per_class": 23.394736842105264,
+                  "min_class_count": 1,
+                  "n": 889,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2166
+                },
+                "schema": "enh_score_logit_v2"
               }
             },
-            "paired_estimates": 6,
-            "pool_legs": 6,
+            "paired_estimates": 23,
+            "pool_legs": 23,
             "removed_from_ml_off": 0,
             "schemas": {
-              "enh_score_logit_v2": 6
+              "enh_score_logit_v2": 23
             },
-            "scored_legs": 6,
+            "scored_legs": 23,
             "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
           },
           "settlement": "UNAVAILABLE",

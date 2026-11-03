@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 9,
@@ -29,7 +29,7 @@
         "selection_unmapped": 28
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-04' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -178,11 +178,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 15156
+        "out_of_window": 15340
       },
       "pa_matched": 0,
-      "pa_raw": 811,
-      "pa_scored": 15156,
+      "pa_raw": 823,
+      "pa_scored": 15340,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -232,34 +232,26 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 7,
-        "board_league_count": 6,
+        "board_fixtures": 4,
+        "board_league_count": 3,
         "board_leagues": {
-          "algeria_-_ligue_1": 1,
-          "argentina_-_primera_division": 21,
-          "bolivia_-_primera_division": 74,
+          "argentina_-_primera_division": 86,
           "brazil_-_serie_b": 10,
-          "chile_-_primera_division": 85,
-          "colombia_-_primera_a": 9
+          "chile_-_primera_division": 104
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 13,
+        "board_team_count": 8,
         "board_team_names": {
-          "Aguilas Doradas": 9,
-          "Athletic Club MG": 10,
-          "Audax Italiano": 85,
-          "Blooming": 49,
-          "Blooming Santa Cruz": 25,
-          "CA Platense": 21,
-          "CR Belouizdad": 1,
-          "Ceara CE": 10,
-          "Central Cordoba": 21,
-          "Deportes Limache": 85,
-          "Fortaleza FC": 9,
-          "JS Saoura": 1,
-          "Real Tomayapo": 74
+          "Argentinos Juniors": 79,
+          "Atl Tucuman": 79,
+          "Banfield": 7,
+          "CRB": 10,
+          "Deportes Concepcion": 104,
+          "Goias": 10,
+          "Independiente Rivadavia": 7,
+          "Palestino": 104
         },
         "board_truncated": false,
         "card_fixture_count": 0,
