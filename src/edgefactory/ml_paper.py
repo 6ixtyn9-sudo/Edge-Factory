@@ -37,6 +37,7 @@ import json
 import math
 import os
 import tempfile
+import zlib
 from collections import Counter, defaultdict
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
@@ -75,11 +76,12 @@ FIXTURE_CONCENTRATION_POLICY = "ml_paper_fixture_gross_stake_cap"
 DYNAMIC_LEARNING_POLICY = "ml_paper_dynamic_calibration_success_tilt"
 RECENCY_HALF_LIFE_DAYS = 14.0  # recency weighting for dynamic learning effects
 SUCCESS_TILT_GROUP_LIMIT_LOGIT = 0.50  # max logit shift from one group effect
-SUCCESS_TILT_TOTAL_LIMIT_LOGIT = 0.75  # max combined success-tilt logit shift
+SUCCESS_TILT_TOTAL_LIMIT_LOGIT = 0.50  # correlated groups average, never stack past one group
 # Evidence smoothing: total dynamic logit shift is scaled by
 # fixtures / (fixtures + K), so the first results move probabilities gently
 # and full strength is approached only as resolved evidence accumulates.
 LEARNING_SMOOTHING_K_FIXTURES = 5.0
+SUCCESS_TILT_FOLDS = 5  # fixture-grouped cross-fitting for out-of-sample tilt residuals
 MICRO_UNITS = 1_000_000
 EXACT_SEARCH_SIZE = 8
 PORTFOLIO_ITERATIONS = 256
@@ -743,6 +745,24 @@ def _recency_weight(candidate, today):
     return 0.5 ** (age_days / RECENCY_HALF_LIFE_DAYS)
 
 
+def _valid_learning_candidate(candidate):
+    """Shape guard: malformed historical candidates are skipped, never fatal."""
+    if not isinstance(candidate, dict):
+        return False
+    p = candidate.get("base_probability")
+    try:
+        _fixture_key(candidate.get("fixture"))
+    except (ValueError, TypeError):
+        return False
+    return (
+        type(p) in (int, float) and math.isfinite(p) and 0 < p < 1
+        and isinstance(candidate.get("date"), str)
+        and isinstance(candidate.get("bucket"), str) and bool(candidate["bucket"])
+        and isinstance(candidate.get("market"), str) and bool(candidate["market"])
+        and isinstance(candidate.get("selection"), str) and bool(candidate["selection"])
+    )
+
+
 def _success_groups(candidate):
     """Groups whose recent success may tilt a candidate's probability."""
     groups = [f"bucket:{candidate['bucket']}", f"market:{candidate['market']}"]
@@ -770,6 +790,55 @@ def _reference_probability(candidate, model):
         w * x for w, x in zip(model["coef"], _vector(candidate, model["columns"]))
     )
     return 1 / (1 + math.exp(-max(-700.0, min(700.0, z))))
+
+
+def _fit_logistic_calibrator(rows, weights, columns):
+    """(calibration | None, sklearn_available). Failure degrades, never raises."""
+    import warnings
+
+    try:
+        from sklearn.exceptions import ConvergenceWarning
+        from sklearn.linear_model import LogisticRegression
+    except ImportError:
+        return None, False
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", ConvergenceWarning)
+            model = LogisticRegression(C=1.0, max_iter=1000, random_state=42)
+            model.fit([_vector(c, columns) for c, _ in rows],
+                      [y for _, y in rows], sample_weight=weights)
+    except (ValueError, ArithmeticError, ConvergenceWarning):
+        return None, True
+    return {"columns": columns, "coef": model.coef_[0].tolist(),
+            "intercept": float(model.intercept_[0])}, True
+
+
+def _crossfit_references(rows, weights, columns):
+    """Out-of-sample reference per row: fit on other fixtures, predict held-out.
+
+    Fixtures are fold-grouped (a fixture never predicts itself), folds are a
+    stable CRC of the canonical fixture key — deterministic across processes.
+    Held-out rows whose training folds lack both classes, or whose fit is
+    unavailable, fall back to the base probability.
+    """
+    folds = [zlib.crc32(repr(tuple(c["fixture"])).encode()) % SUCCESS_TILT_FOLDS
+             for c, _ in rows]
+    references = [c["base_probability"] for c, _ in rows]
+    used = False
+    for fold in sorted(set(folds)):
+        train = [i for i in range(len(rows)) if folds[i] != fold]
+        held = [i for i in range(len(rows)) if folds[i] == fold]
+        if len({rows[i][1] for i in train}) < 2:
+            continue
+        calibration, _ = _fit_logistic_calibrator(
+            [rows[i] for i in train], [weights[i] for i in train], columns)
+        if calibration is None:
+            continue
+        model = dict(calibration, status="fitted_prior_paper_errors")
+        for i in held:
+            references[i] = _reference_probability(rows[i][0], model)
+        used = True
+    return references, used
 
 
 def learn(history, now, score_lookup):
@@ -800,8 +869,8 @@ def learn(history, now, score_lookup):
         captured = parse_zoned_timestamp(receipt.get("captured_at"))
         if receipt["date"] >= today or captured is None or captured >= now:
             continue
-        for c in receipt["candidates"]:
-            if c["date"] >= today:
+        for c in receipt.get("candidates") or []:
+            if not _valid_learning_candidate(c) or c["date"] >= today:
                 continue
             score = score_lookup(c)
             if score is None:
@@ -861,33 +930,27 @@ def learn(history, now, score_lookup):
     if len({y for _, y in rows}) >= 2:
         # Same regularised estimator already used by the existing feature
         # model; dynamic now: every observed bucket/market is a column.
-        import warnings
-
-        from sklearn.exceptions import ConvergenceWarning
-        from sklearn.linear_model import LogisticRegression
-
+        # A missing/broken sklearn degrades to tilt-only, never lane failure.
         columns = sorted({f"{field}:{c[field]}" for c, _ in rows
                           for field in ("bucket", "market")})
-        vectors = [_vector(c, columns) for c, _ in rows]
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", ConvergenceWarning)
-                model = LogisticRegression(C=1.0, max_iter=1000, random_state=42)
-                model.fit(vectors, [y for _, y in rows], sample_weight=weights)
-            result.update(
-                status="fitted_prior_paper_errors",
-                columns=columns,
-                coef=model.coef_[0].tolist(),
-                intercept=float(model.intercept_[0]),
-            )
+        calibration, _available = _fit_logistic_calibrator(rows, weights, columns)
+        if calibration is not None:
+            result.update(status="fitted_prior_paper_errors", **calibration)
             fitted = True
-        except (ValueError, ArithmeticError, ConvergenceWarning):
+        else:
             result["status"] = "learning_fit_unavailable_existing_model_retained"
-    # Success tilt: per-group recency-weighted hit rate versus reference
-    # expectation, converted to a bounded logit shift (2x excess, clamped).
+    else:
+        columns = sorted({f"{field}:{c[field]}" for c, _ in rows
+                          for field in ("bucket", "market")})
+    # Success tilt: per-group recency-weighted hit rate versus CROSS-FITTED
+    # (out-of-sample) reference expectation — never the in-sample residuals
+    # of the calibration just fitted on the same rows.
+    references, crossfit_used = _crossfit_references(rows, weights, columns)
+    result["success_tilt_reference"] = (
+        "cross_fitted_calibration_out_of_sample" if crossfit_used else "base_probability")
+    result["success_tilt_folds"] = SUCCESS_TILT_FOLDS
     groups = {}
-    for (c, y), weight in zip(rows, weights):
-        reference = _reference_probability(c, result)
+    for (c, y), weight, reference in zip(rows, weights, references):
         for key in _success_groups(c):
             entry = groups.setdefault(key, {"weight": 0.0, "hits": 0.0,
                                             "expected": 0.0, "fixtures": set()})
@@ -936,9 +999,14 @@ def apply_learning(rows, model):
         return
     smoothing = model.get("smoothing_factor", 1.0)
     for c in rows:
+        if not _valid_learning_candidate(c):
+            continue
         base_logit = math.log(c["base_probability"] / (1 - c["base_probability"]))
         p = _reference_probability(c, model) if fitted else c["base_probability"]
-        shift = sum(tilt[key]["tilt_logit"] for key in _success_groups(c) if key in tilt)
+        # Bucket/market/gap tilts are driven by largely the same fixtures, so
+        # they are averaged, not summed: correlated evidence cannot stack.
+        group_tilts = [tilt[key]["tilt_logit"] for key in _success_groups(c) if key in tilt]
+        shift = sum(group_tilts) / len(group_tilts) if group_tilts else 0.0
         shift = max(-SUCCESS_TILT_TOTAL_LIMIT_LOGIT,
                     min(SUCCESS_TILT_TOTAL_LIMIT_LOGIT, shift))
         dynamic_shift = (math.log(p / (1 - p)) - base_logit) + shift
@@ -1252,16 +1320,31 @@ def _fixture_exposure_micro_units(accas):
     return exposure
 
 
-def _mutually_exclusive_accas(accas):
-    """Pairwise fixture-disjoint subset of a publication; first acca wins.
+def _exclusivity_priority(acca):
+    """Book-neutral priority: largest allocated stake first, canonical tiebreak.
 
-    Deterministic in allocator order and downward-only: a later acca sharing
-    any canonical fixture with a kept acca is dropped, kept stakes are never
-    changed, and dropped stake is never refilled or redistributed. This is a
-    publication-level rule; legs inside one acca were already fixture-distinct.
+    Allocator order is book-grouped, so first-come-wins would systematically
+    favour whichever book happened to be iterated first. Stake descending
+    with a leg-signature tiebreak is deterministic for any input ordering.
+    """
+    stake = acca.get("stake_units")
+    stake = stake if type(stake) in (int, float) and math.isfinite(stake) else 0.0
+    signature = tuple(sorted(
+        str(c.get("candidate_id") or "") for c in acca.get("legs", [])))
+    return (-stake, signature)
+
+
+def _mutually_exclusive_accas(accas):
+    """Pairwise fixture-disjoint subset of a publication; highest stake wins.
+
+    Downward-only: an acca sharing any canonical fixture with a kept acca is
+    dropped, kept stakes are never changed, and dropped stake is never
+    refilled or redistributed. Kept accas are returned in priority order.
+    This is a publication-level rule; legs inside one acca were already
+    fixture-distinct.
     """
     kept, used, dropped = [], set(), 0
-    for acca in accas:
+    for acca in sorted(accas, key=_exclusivity_priority):
         fixtures = set(_acca_fixtures(acca))
         if fixtures & used:
             dropped += 1
@@ -1451,7 +1534,7 @@ def _concentrate_sealed_draft(payload, history, score_lookup):
         search=dict(payload.get("search") or {},
                     diagnostics_scope="unconstrained_pre_projection_solver_not_published_optimality",
                     published_portfolio_optimality_proven=False,
-                    mutual_exclusivity={"rule": "pairwise_fixture_disjoint_first_acca_wins_no_refill",
+                    mutual_exclusivity={"rule": "pairwise_fixture_disjoint_highest_stake_first_no_refill",
                                         "dropped_acca_count": exclusivity_dropped}),
     )
     if payload["status"] != "missed_freeze_no_paper_bet":
@@ -1468,8 +1551,8 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
     immutable writers independently require the approved policy. The default
     preserves the old helper's unconstrained semantics, not production policy.
     With concentration supplied (production), accas are additionally mutually
-    exclusive: pairwise fixture-disjoint, first in allocator order wins, no
-    refill. No leverage, confidence gate or change to the allocator/oracle.
+    exclusive: pairwise fixture-disjoint, highest allocated stake wins
+    (canonical tiebreak), no refill. No leverage, confidence gate or change to the allocator/oracle.
     """
     if concentration is not None:
         if (not isinstance(concentration, dict)
@@ -1507,7 +1590,7 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
             acca["stake_fraction_of_free_bank"] = acca["stake_units"] / available_units
         if diagnostics is not None:
             diagnostics["mutual_exclusivity"] = {
-                "rule": "pairwise_fixture_disjoint_first_acca_wins_no_refill",
+                "rule": "pairwise_fixture_disjoint_highest_stake_first_no_refill",
                 "input_acca_count": input_count,
                 "kept_acca_count": exclusive_count,
                 "dropped_acca_count": exclusivity_dropped,
