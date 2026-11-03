@@ -1936,7 +1936,34 @@ def capture(
             if corruption is not None:
                 payload["draft_integrity_error"] = corruption
                 payload["rejections"] = {"corrupt_pre_cutoff_draft": 1}
-            payload = _concentrate_sealed_draft(payload, receipts(root), score_lookup)
+            history = receipts(root)
+            payload_captured = parse_zoned_timestamp(payload.get("captured_at"))
+            # A sealed draft is a backdated receipt: history is ordered by
+            # captured_at (legacy rows sort first on ties), so any rolling
+            # publication captured at or after the draft was necessarily
+            # written without this receipt in its prior_receipt_sha256s.
+            # Publishing now would ignore those intervening commitments in
+            # the aggregate/fixture budgets and fork the rolling chain,
+            # making the whole history unreadable. Fail closed instead:
+            # publish nothing, preserve the draft and every frozen receipt,
+            # and let later publications account for the true history.
+            intervening_rolling = [
+                row for row in history
+                if row.get("freeze_basis") == ROLLING_FREEZE
+                and (
+                    payload_captured is None
+                    or parse_zoned_timestamp(row["captured_at"]) >= payload_captured
+                )
+            ]
+            if intervening_rolling:
+                print(
+                    f"autobets_ML stale pre-cutoff draft not sealed: {day} "
+                    f"superseded by {len(intervening_rolling)} intervening "
+                    "rolling publication(s); draft preserved, no backdated "
+                    "receipt published"
+                )
+                return None
+            payload = _concentrate_sealed_draft(payload, history, score_lookup)
             payload["persisted_at"] = at.isoformat()
             payload["sha256"] = digest(payload)
             return payload if _publish_receipt(path, payload) else None
