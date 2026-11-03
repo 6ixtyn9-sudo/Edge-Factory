@@ -408,3 +408,65 @@ def test_large_incidence_projection_remains_bounded():
     assert len(projected) == 3000
     assert len(audit["fixtures"]) == 100
     assert all(v <= 5_000_000 for v in exposure(projected).values())
+
+
+def test_mutual_exclusivity_keeps_first_drops_overlapping_without_refill():
+    plan = [acca(4.0, [leg(1), leg(2)]), acca(3.0, [leg(2), leg(3)]),
+            acca(2.0, [leg(4), leg(5)])]
+    kept, dropped = mp._mutually_exclusive_accas(plan)
+    assert kept == plan[::2] and dropped == 1
+    assert [a["stake_units"] for a in kept] == [4.0, 2.0]  # no redistribution
+    assert not ({tuple(c["fixture"]) for c in kept[0]["legs"]}
+                & {tuple(c["fixture"]) for c in kept[1]["legs"]})
+
+
+def test_mutual_exclusivity_is_deterministic_and_publish_gate_fails_closed():
+    plan = [acca(4.0, [leg(1), leg(2)]), acca(3.0, [leg(1), leg(3)])]
+    assert mp._mutually_exclusive_accas(plan) == mp._mutually_exclusive_accas(deepcopy(plan))
+    with pytest.raises(ValueError, match="not mutually exclusive"):
+        mp._require_mutually_exclusive(plan)
+
+
+def test_production_sizing_returns_pairwise_disjoint_accas():
+    rows = [candidate(i, p=0.72, odds=2.1, book=("A" if i < 4 else "B")) for i in range(1, 7)]
+    diagnostics = {}
+    plan = mp.select_accas(rows, 100.0, diagnostics=diagnostics, concentration={
+        "total_bank_units": 100.0, "prior_open_fixture_micro_units": {}})
+    seen = set()
+    for a in plan:
+        fixtures = {tuple(c["fixture"]) for c in a["legs"]}
+        assert not fixtures & seen
+        seen |= fixtures
+    assert diagnostics["mutual_exclusivity"]["rule"].startswith("pairwise_fixture_disjoint")
+    assert (diagnostics["mutual_exclusivity"]["kept_acca_count"]
+            + diagnostics["mutual_exclusivity"]["dropped_acca_count"]
+            == diagnostics["mutual_exclusivity"]["input_acca_count"])
+
+
+def test_sealed_pre_policy_draft_drops_overlapping_accas_at_publication(tmp_path):
+    draft = run_capture(tmp_path, context([pick(1), pick(2)]))
+    draft["policy"].pop("fixture_concentration")
+    draft.pop("fixture_concentration")
+    overlapping = deepcopy(draft["accas"][0])
+    overlapping["legs"] = list(reversed(overlapping["legs"]))
+    overlapping["stake_units"] = 3.0
+    overlapping["stake_fraction_of_free_bank"] = 0.03
+    draft["accas"][0]["stake_units"] = 13.0
+    draft["accas"][0]["stake_fraction_of_free_bank"] = 0.13
+    draft["accas"].append(overlapping)
+    payload = {k: v for k, v in draft.items() if k != "sha256"}
+    sealed = mp._concentrate_sealed_draft(payload, [], lambda c: None)
+    assert len(sealed["accas"]) == 1
+    assert sealed["accas"][0]["stake_units"] == 5.0
+    assert sealed["search"]["mutual_exclusivity"]["dropped_acca_count"] == 1
+    mp._require_mutually_exclusive(sealed["accas"])
+
+
+def test_rolling_publication_accas_are_mutually_exclusive(tmp_path):
+    row = run(tmp_path)
+    seen = set()
+    for a in row["accas"]:
+        fixtures = {tuple(c["fixture"]) for c in a["legs"]}
+        assert not fixtures & seen
+        seen |= fixtures
+    assert row["search"]["mutual_exclusivity"]["kept_acca_count"] == len(row["accas"])
