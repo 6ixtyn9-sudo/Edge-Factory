@@ -4158,25 +4158,33 @@ def _run_ml_paper():
     try:
         from edgefactory import ml_paper
         now = datetime.now(TZ)
-        if now.hour < GENERATE_HOUR_START:
-            print(f"autobets_ML: NOT YET — TICKETS START BUILDING AT "
-                  f"{GENERATE_HOUR_START:02d}:00, FREEZE AT {FREEZE_HOUR:02d}:00")
-            return True
-        day = now.astimezone(TZ).date().isoformat()
-        # Match Main/ENH: until a card is frozen, evaluate the current slate
-        # even after 09:00. Already-frozen dates never reload/reselect inputs.
-        slate = (json.loads((LOCALDATA / "picks_today.json").read_text())
-                 if not ml_paper.has_receipt(LOCALDATA, day) else [])
         history = ml_paper.receipts(LOCALDATA)
         lookup = ml_paper_score_lookup(load_settled_scores() if history else {})
-        row = ml_paper.capture({"date": day, "build_at": now.isoformat(), "slate": slate},
-            root=LOCALDATA, score_lookup=lookup, kickoff_fn=parse_kickoff_proven,
-            source_guard=execution_source_rejection, min_leg_odds=1.0,
-            generate_hour=GENERATE_HOUR_START, freeze_hour=FREEZE_HOUR)
+        # Consume only existing, timestamped model/forecast rows. The future
+        # planner is the existing engine, not a new feed or a future-data fill.
+        slate, found = [], False
+        for path in [LOCALDATA / "picks_today.json", *sorted(LOCALDATA.glob("picks_next_*days.json"))]:
+            if not path.exists():
+                continue
+            rows = json.loads(path.read_text())
+            if not isinstance(rows, list):
+                raise TypeError(f"invalid ML forecast slate: {path.name}")
+            slate.extend(rows)
+            found = True
+        if found:
+            row = ml_paper.capture_rolling({"build_at": now.isoformat(), "slate": slate},
+                root=LOCALDATA, score_lookup=lookup, kickoff_fn=parse_kickoff_proven,
+                source_guard=execution_source_rejection, min_leg_odds=1.0)
+        else:
+            ml_paper.migrate_receipts(LOCALDATA)
+            row = None  # absent input is not a fabricated NO BET decision
         ml_paper.publish(LOCALDATA, lookup)
         card = row or ml_paper.latest_card(LOCALDATA)
         if card is not None:
-            print(ml_paper.render_card(card))
+            # Report the complete day's immutable publications, not merely a
+            # last NO BET/addition that could hide earlier outstanding tickets.
+            daily_card = LOCALDATA / f"{ml_paper.PREFIX}_{card['date']}.txt"
+            print(daily_card.read_text())
         return True
     except Exception as exc:
         print(f"::warning::autobets_ML unavailable; live lanes unchanged: "

@@ -440,8 +440,8 @@ def finalize_priced_candidate_slate(target_date: str, *, phase5_shadow: bool = F
         f"picks_today {target_date} (final priced card)",
     )
     # Consume the fresh final card NOW, before archive stacking, notifications,
-    # future planning, CLV and audits can delay/replace it. capture itself seals
-    # only a pre-cutoff draft if this step arrives at/after 09:00.
+    # future planning, CLV and audits can delay/replace it. ML paper freezes
+    # each new rolling decision immediately; Main/ENH clocks are unchanged.
     run_ml_paper()
     return priced_as_of
 
@@ -449,7 +449,7 @@ def finalize_priced_candidate_slate(target_date: str, *, phase5_shadow: bool = F
 def run_ml_paper():
     run_soft(
         "PYTHONPATH=src python3 scripts/auto_tickets.py --autobets-ml",
-        "autobets_ML PAPER (early fresh-card census/draft; 09:00 SAST cutoff)",
+        "autobets_ML PAPER (rolling next 24h; immutable publication)",
     )
 
 
@@ -732,6 +732,7 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
         )
     )
     write_future_outputs(all_picks, days, run_as_of)
+    run_ml_paper()  # newly available overnight rows; never revise prior tickets
 
 
 def generate_forecast_report(target_date: str, flabel: str, picks: list[dict[str, Any]]) -> Path | None:
