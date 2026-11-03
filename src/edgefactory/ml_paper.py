@@ -1141,6 +1141,34 @@ def _fixture_exposure_micro_units(accas):
     return exposure
 
 
+def _mutually_exclusive_accas(accas):
+    """Pairwise fixture-disjoint subset of a publication; first acca wins.
+
+    Deterministic in allocator order and downward-only: a later acca sharing
+    any canonical fixture with a kept acca is dropped, kept stakes are never
+    changed, and dropped stake is never refilled or redistributed. This is a
+    publication-level rule; legs inside one acca were already fixture-distinct.
+    """
+    kept, used, dropped = [], set(), 0
+    for acca in accas:
+        fixtures = set(_acca_fixtures(acca))
+        if fixtures & used:
+            dropped += 1
+            continue
+        used |= fixtures
+        kept.append(acca)
+    return kept, dropped
+
+
+def _require_mutually_exclusive(accas):
+    seen = set()
+    for acca in accas:
+        fixtures = set(_acca_fixtures(acca))
+        if fixtures & seen:
+            raise ValueError("new ML paper accas are not mutually exclusive by fixture")
+        seen |= fixtures
+
+
 def _concentration_audit(fixtures_by_acca, input_stakes, projected_stakes, published,
                          prior, limit, *, aggregate_scale=1.0):
     affected = defaultdict(list)
@@ -1298,8 +1326,9 @@ def _concentrate_sealed_draft(payload, history, score_lookup):
     report = performance(prior, score_lookup)
     bank, committed = report["paper_bank_units"], report["paper_committed_units"]
     available = max(0.0, report["paper_free_units"])
+    exclusive_accas, exclusivity_dropped = _mutually_exclusive_accas(payload["accas"])
     plan, audit = project_fixture_stakes(
-        payload["accas"], total_bank_units=bank,
+        exclusive_accas, total_bank_units=bank,
         prior_open_fixture_micro_units=_prior_open_fixture_micro_units(report),
     )
     plan, audit = _scale_aggregate_stakes(
@@ -1310,7 +1339,9 @@ def _concentrate_sealed_draft(payload, history, score_lookup):
         paper_pending_reserved_at_decision=committed, paper_available_at_decision=available,
         search=dict(payload.get("search") or {},
                     diagnostics_scope="unconstrained_pre_projection_solver_not_published_optimality",
-                    published_portfolio_optimality_proven=False),
+                    published_portfolio_optimality_proven=False,
+                    mutual_exclusivity={"rule": "pairwise_fixture_disjoint_first_acca_wins_no_refill",
+                                        "dropped_acca_count": exclusivity_dropped}),
     )
     if payload["status"] != "missed_freeze_no_paper_bet":
         payload["status"] = "paper_accas" if plan else "no_paper_bet"
@@ -1325,8 +1356,9 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
     and prior open fixture micro-units. Production sizing ALWAYS supplies it;
     immutable writers independently require the approved policy. The default
     preserves the old helper's unconstrained semantics, not production policy.
-    Fixture reuse remains allowed within the gross stake budget. No refill,
-    leverage, confidence gate or change to the allocator/oracle is introduced.
+    With concentration supplied (production), accas are additionally mutually
+    exclusive: pairwise fixture-disjoint, first in allocator order wins, no
+    refill. No leverage, confidence gate or change to the allocator/oracle.
     """
     if concentration is not None:
         if (not isinstance(concentration, dict)
@@ -1356,10 +1388,19 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
             )
         )
     if concentration is not None:
+        input_count = len(plan)
+        plan, exclusivity_dropped = _mutually_exclusive_accas(plan)
+        exclusive_count = len(plan)
         plan, audit = project_fixture_stakes(plan, **concentration)
         for acca in plan:
             acca["stake_fraction_of_free_bank"] = acca["stake_units"] / available_units
         if diagnostics is not None:
+            diagnostics["mutual_exclusivity"] = {
+                "rule": "pairwise_fixture_disjoint_first_acca_wins_no_refill",
+                "input_acca_count": input_count,
+                "kept_acca_count": exclusive_count,
+                "dropped_acca_count": exclusivity_dropped,
+            }
             diagnostics["fixture_concentration"] = audit
     return plan
 
@@ -1373,6 +1414,7 @@ def _publish_receipt(path, payload):
     """
     validate_record(payload, payload["date"])
     _validate_concentration_record(payload, required=True)
+    _require_mutually_exclusive(payload["accas"])
     return _write_once(path, payload)
 
 
@@ -2324,6 +2366,7 @@ def performance(history, score_lookup):
             "max_free_bank_exposure": MAX_PAPER_EXPOSURE,
             "max_aggregate_bank_exposure_for_rolling": MAX_PAPER_EXPOSURE,
             "max_new_fixture_stake_fraction_of_total_bank": MAX_FIXTURE_STAKE_FRACTION,
+            "accas_mutually_exclusive_within_new_publications": True,
             "fixture_concentration_policy": FIXTURE_CONCENTRATION_POLICY,
             "fixture_concentration_applies_to": "new_publications_only_existing_positions_unchanged",
             "bankruptcy": "zero_free_capital_no_new_stakes_no_refill",
@@ -2358,22 +2401,26 @@ def render_card(receipt):
         lines.append(
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
-        for c in acca["legs"]:
-            match = f"{c['home']} vs {c['away']}"
+        for leg_index, c in enumerate(acca["legs"]):
+            if leg_index:
+                lines.append("")  # one blank line between legs
+            # Matchup with its kickoff next to it on the same line: one header
+            # line per leg, so legs are countable at a glance.
+            leg_lines = [f"   {c['home']} vs {c['away']}"]
             if receipt.get("freeze_basis") == ROLLING_FREEZE:
                 kickoff = parse_zoned_timestamp(c["kickoff_utc"]).astimezone(LOCAL_TZ)
-                match = f"KICKOFF {kickoff:%Y-%m-%d %H:%M} SAST  {match}"
+                leg_lines[0] += f" · KICKOFF {kickoff:%Y-%m-%d %H:%M} SAST"
             source = source_forecast_probability(c)
             age = quote_age_at_decision(c, receipt)
             comparison = (f"Source forecast {source:.1%} · gap {(c['probability'] - source) * 100:+.1f} pp"
                           if source is not None else "Source forecast unavailable")
             quote_age = f"quote age {age / 3600:.2f}h at decision" if age is not None else "quote age unavailable"
-            lines.extend([
-                f"   {match}",
+            leg_lines.extend([
                 (f"      {c['market']} {c['selection']} @{c['odds']:.3f}"
                  f" · ML {c['probability']:.1%} · {c['bucket']}"),
                 f"      {comparison} · {quote_age}",
             ])
+            lines.extend(leg_lines)
         lines.append("")
     concentration = receipt.get("fixture_concentration")
     if concentration is not None:
