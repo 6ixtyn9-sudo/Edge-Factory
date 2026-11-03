@@ -41,6 +41,8 @@ def test_ticket_txt_has_separate_leg_diagnostics_and_freeze_blocks():
         "   Benfica vs Alverca\n"
         "      match_over_25 over @1.350 · ML 80.8% · CAUTION\n"
         "      Source forecast unavailable · quote age unavailable\n\n"
+        "LEGACY STAKING — no fixture-cap policy is declared on this frozen receipt.\n"
+        "   Historical stakes are preserved; the new gross fixture budget applies to new publications.\n\n"
         "COVERAGE\n"
         "   Candidate count: 109\n"
         "   Candidate fixtures: 2\n"
