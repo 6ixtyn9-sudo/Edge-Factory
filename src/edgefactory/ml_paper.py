@@ -68,7 +68,7 @@ BASE_PAPER_UNITS = 100.0
 KELLY_MULTIPLIER = 0.25  # v2: quarter of robust portfolio Kelly; NOT a fixed stake
 MAX_PAPER_EXPOSURE = 0.25  # shared aggregate ceiling; legacy free-bank sizing retained
 MAX_FIXTURE_STAKE_FRACTION = 0.05  # NEW gross stake per canonical fixture / TOTAL paper bank
-FIXTURE_CONCENTRATION_VERSION = "ml_paper_fixture_gross_stake_v1"
+FIXTURE_CONCENTRATION_POLICY = "ml_paper_fixture_gross_stake_cap"
 MICRO_UNITS = 1_000_000
 EXACT_SEARCH_SIZE = 8
 PORTFOLIO_ITERATIONS = 256
@@ -1106,7 +1106,7 @@ def _prior_open_fixture_micro_units(report):
 def _fixture_concentration_policy(total_bank_units):
     limit = _fixture_limit_micro_units(total_bank_units)
     return {
-        "version": FIXTURE_CONCENTRATION_VERSION,
+        "id": FIXTURE_CONCENTRATION_POLICY,
         "max_fixture_stake_fraction": MAX_FIXTURE_STAKE_FRACTION,
         "denominator": "total_paper_bank_at_decision",
         "fixture_limit_micro_units": limit,
@@ -2324,7 +2324,7 @@ def performance(history, score_lookup):
             "max_free_bank_exposure": MAX_PAPER_EXPOSURE,
             "max_aggregate_bank_exposure_for_rolling": MAX_PAPER_EXPOSURE,
             "max_new_fixture_stake_fraction_of_total_bank": MAX_FIXTURE_STAKE_FRACTION,
-            "fixture_concentration_version": FIXTURE_CONCENTRATION_VERSION,
+            "fixture_concentration_policy": FIXTURE_CONCENTRATION_POLICY,
             "fixture_concentration_applies_to": "new_publications_only_existing_positions_unchanged",
             "bankruptcy": "zero_free_capital_no_new_stakes_no_refill",
         },
