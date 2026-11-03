@@ -634,6 +634,8 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
         for path in ticket_receipt_files(repo / "localdata", prefix):
             relative = path.relative_to(repo).as_posix()
             cached = path.read_bytes()
+            receipt_started = time.monotonic()
+            print(f"restore: checking receipt {path.name} ({len(cached)} stored header/stream bytes)", flush=True)
             # Resolve both layouts by logical receipt name, not storage suffix.
             name = path.name.removesuffix(".gz")
             canonical = ticket_receipt_path(repo / "localdata", name).relative_to(repo).as_posix()
@@ -668,21 +670,33 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
                     else:
                         for destination, blob in encode_ticket_receipt_files(repo / canonical, head_raw).items():
                             retained.setdefault(destination.relative_to(repo).as_posix(), blob)
-                cached_parts = {}
+                # Identical storage still receives full signed-payload validation,
+                # but never needs two decompressions/two giant JSON object graphs.
+                same_storage = (head_blob is not None and head_relative == relative
+                                and head_blob == cached and all(
+                                    (repo / destination).read_bytes() == blob
+                                    for destination, blob in head_files.items()))
+                cached_parts = ({p: b for p, b in head_files.items() if p != canonical}
+                                if same_storage else {})
                 def cached_part(name):
                     part = path.with_name(name)
                     blob = part.read_bytes()
                     cached_parts[part.relative_to(repo).as_posix()] = blob
                     return blob
-                candidate = json.loads(ticket_receipt_bytes(path, raw=cached, read_part=cached_part))
+                candidate = json.loads(head_raw if same_storage else ticket_receipt_bytes(
+                    path, raw=cached, read_part=cached_part))
                 digest = candidate.pop("sha256")
-                encoded = json.dumps(candidate, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
-                if hashlib.sha256(encoded).hexdigest() != digest:
+                hasher = hashlib.sha256()
+                for chunk in json.JSONEncoder(sort_keys=True, separators=(",", ":"), allow_nan=False).iterencode(candidate):
+                    hasher.update(chunk.encode())
+                if hasher.hexdigest() != digest:
                     raise ValueError("cached decision receipt hash mismatch")
                 expected_lane = "main" if prefix == "auto_tickets" else "enh"
                 if (candidate["context"]["lane"] != expected_lane
                         or name != f"{prefix}_{candidate['context']['date']}_decision.json"):
                     raise ValueError("cached receipt filename/context mismatch")
+                if same_storage:
+                    continue  # exact HEAD bundle already retained, payload fully checked
                 if head_blob is not None:
                     head = json.loads(head_raw)
                     if candidate["status"] != "frozen" or head.get("sha256") == digest:
@@ -739,6 +753,11 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
                     + f"_cache_conflict_{hashlib.sha256(evidence).hexdigest()}.json")
                 write_ticket_receipt(conflict, evidence)
                 print(f"::warning::Ticket decision receipt conflict: {relative}: {exc}")
+            finally:
+                # Drop the prior receipt's decoded graphs BEFORE evaluating the
+                # next receipt's JSON. Retain only the required compressed bytes.
+                head_raw = head = candidate = previous = evidence = None
+                print(f"restore: receipt check finished {path.name} ({time.monotonic() - receipt_started:.2f}s)", flush=True)
     return retained
 
 
@@ -755,7 +774,7 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
 
     pattern = re.compile(
         r"^localdata/(?:phase5_reconciliation/ml_paper_receipts/)?"
-        r"autobets_ML_(?:(draft_)?(\d{4}-\d{2}-\d{2})|state)\.json$"
+        r"autobets_ML_(?:(draft_)?(\d{4}-\d{2}-\d{2})(_\d{8}T\d{12}Z)?|state)\.json$"
     )
     tracked = {p for p in _tracked_localdata_paths(repo) if pattern.fullmatch(p)}
     cached = {str(p.relative_to(repo)) for p in [
@@ -806,7 +825,7 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
             for sealed_path in sealed_paths:
                 try:
                     sealed = json.loads(sealed_path.read_bytes())
-                    sealed_day = sealed_path.stem.removeprefix("autobets_ML_")
+                    sealed_day = sealed["date"]
                     ml_paper.validate_record(sealed, sealed_day)
                     proof = sealed["draft_integrity_error"]
                     sha = proof["sha256"]
@@ -858,7 +877,7 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
         match = pattern.fullmatch(relative)
         if match[1] or match[2] is None:  # mutable pending evidence is handled above
             continue
-        frozen_by_day.setdefault(match[2], []).append((relative, blob))
+        frozen_by_day.setdefault(match[2] + (match[3] or ""), []).append((relative, blob))
     for day, copies in frozen_by_day.items():
         if len({blob for _, blob in copies}) <= 1:
             continue
@@ -893,9 +912,12 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
 def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     """Restore ordinary tracked state without overwriting cached append-only evidence."""
     repo = Path(repo)
+    started = time.monotonic()
+    print("restore: validating Main/ENH financial evidence", flush=True)
     # Validate BOTH lanes before checkout/clean mutates any restored evidence.
     financial_blobs = {relative: _retain_financial_state(repo, relative)
                        for relative in (ENH_STATE, MAIN_STATE)}
+    print(f"restore: financial evidence checked ({time.monotonic() - started:.2f}s); validating ML evidence", flush=True)
     paper_blobs = _retain_ml_paper_evidence(repo)
     # Save original human cards before checkout, only after BOTH lanes passed
     # the explicit recovery checks. Never replace a committed frozen card.
@@ -910,6 +932,7 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
             prefix = "auto_tickets" if relative == MAIN_STATE else "autobets_enh_tickets"
             card = f"localdata/{prefix}_{record['date']}.txt"
             recovered_cards[card] = (repo / card).read_bytes()
+    print(f"restore: retaining ticket decision evidence ({time.monotonic() - started:.2f}s)", flush=True)
     decision_blobs = _retain_ticket_decisions(repo, financial_blobs)
     try:
         merge_counts = merge_cached_phase5_evidence(repo)
@@ -919,6 +942,7 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
         merge_counts = {"merge_warning": 1}
         print(f"::warning::Phase 5 cache/HEAD union was not applied: {exc}")
 
+    print(f"restore: evidence union complete ({time.monotonic() - started:.2f}s); restoring tracked files", flush=True)
     restored: list[str] = []
     protected = set(APPEND_ONLY_JSONL_IDS)
     for relative in _tracked_localdata_paths(repo):
@@ -930,13 +954,18 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
             # Exact paper dates are reconciled above; preserve cached conflict
             # markers/copies as well. Missing files still restore from HEAD.
             continue
-        result = _run(repo, "checkout", "HEAD", "--", relative)
+        restored.append(relative)
+    # Same allowlisted paths, after the same financial/evidence validations;
+    # bounded batches avoid spawning Git and refreshing its index per file.
+    for offset in range(0, len(restored), 128):
+        batch = restored[offset:offset + 128]
+        result = _run(repo, "checkout", "HEAD", "--", *batch)
         if result.returncode != 0:
             raise RuntimeError(
-                f"could not restore committed localdata file {relative}: "
+                f"could not restore committed localdata batch at {batch[0]}: "
                 f"{_decode_output(result.stderr)}"
             )
-        restored.append(relative)
+    print(f"restore: {len(restored)} tracked files restored ({time.monotonic() - started:.2f}s)", flush=True)
 
     for relative, blob in paper_blobs.items():
         _atomic_write(repo / relative, blob)
@@ -962,7 +991,9 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
         ml_paper.migrate_receipts(repo / "localdata")
     except (OSError, ValueError, KeyError, TypeError, AttributeError, ArithmeticError) as exc:
         print(f"::warning::autobets_ML receipt migration deferred; live lanes unchanged: {exc}")
+    print(f"restore: compacting ticket receipts ({time.monotonic() - started:.2f}s)", flush=True)
     compacted = compact_ticket_receipts(repo / "localdata")
+    print(f"restore: complete ({time.monotonic() - started:.2f}s)", flush=True)
     return {
         "compacted_ticket_receipts": compacted,
         "phase5_ledgers": merge_counts,

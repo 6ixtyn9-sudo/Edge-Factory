@@ -1100,3 +1100,94 @@ def test_main_card_approval_with_head_pin_accepts_only_the_committed_card(tmp_pa
         assert recovered['bank'] == head['bank'] and recovered['history'] == head['history']
         assert recovered['open_slips'] == cache['open_slips']
         assert recovered['frozen_by_date'] == cache['frozen_by_date']
+
+
+@pytest.mark.parametrize('damage', ['none', 'hash', 'context'])
+def test_identical_multipart_bundle_decodes_once_but_still_checks_signed_payload(
+        tmp_path, monkeypatch, capsys, damage):
+    from edgefactory import util
+    _multipart_receipt_limits(monkeypatch)
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    original = _decision_receipt_blob(
+        exact_evidence={'unicode': 'Śląsk — São Paulo 🏟', 'floats': [-0.0, 1e-20, 1e25],
+                        'nested': [None, True, {'z': 3, 'a': 'quoted " slash \\'}]},
+        large=json.loads(_large_decision_blob())['exact_evidence'])
+    payload = json.loads(original)
+    if damage == 'hash':
+        payload['sha256'] = '0' * 64
+        original = json.dumps(payload).encode()
+    elif damage == 'context':
+        payload['context']['lane'] = 'enh'
+        unsigned = {k: v for k, v in payload.items() if k != 'sha256'}
+        import hashlib
+        payload['sha256'] = hashlib.sha256(json.dumps(unsigned, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        original = json.dumps(payload).encode()
+    path = util.ticket_receipt_path(repo / 'localdata', 'auto_tickets_2026-10-27_decision.json')
+    util.write_ticket_receipt(path, original)
+    stored = {p: p.read_bytes() for p in path.parent.iterdir()}
+    assert len(stored) > 2
+    _git(repo, 'add', 'localdata')
+    _git(repo, 'commit', '-qm', 'identical signed multipart evidence')
+    decode = util.ticket_receipt_bytes
+    calls = []
+    def counting(*args, **kwargs):
+        calls.append((args, kwargs))
+        return decode(*args, **kwargs)
+    monkeypatch.setattr(_persistence_module(), 'ticket_receipt_bytes', counting)
+    retained = _persistence_module()._retain_ticket_decisions(repo, {})
+    assert all(retained[p.relative_to(repo).as_posix()] == b for p, b in stored.items())
+    if damage == 'none':
+        assert len(calls) == 1  # verified HEAD decompression reused, not parsed twice
+        assert 'conflict' not in capsys.readouterr().out.lower()
+    else:
+        assert 'conflict' in capsys.readouterr().out.lower()
+        conflicts = util.ticket_receipt_files(repo / 'localdata', 'auto_tickets', conflicts=True)
+        assert len(conflicts) == 1 and decode(conflicts[0]) == original
+
+
+def test_batched_restore_uses_exact_paths_and_preserves_cached_append_only_rows(tmp_path, monkeypatch):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    paths = [repo / 'localdata' / f'ordinary file Ś {i:03d}.json' for i in range(260)]
+    for i, path in enumerate(paths):
+        path.write_text(json.dumps({'i': i}))
+    expected = {p: p.read_bytes() for p in paths}
+    _git(repo, 'add', '-f', 'localdata')
+    _git(repo, 'commit', '-qm', 'ordinary tracked data')
+    for path in paths:
+        path.write_text('stale cache')
+    _append_fixture(repo, 'New cached evidence')
+    protected = (repo / LEDGER).read_bytes()
+    module = _persistence_module()
+    original_run, batches = module._run, []
+    def recording(repo, *args, **kwargs):
+        if args[:3] == ('checkout', 'HEAD', '--'):
+            batches.append(args[3:])
+        return original_run(repo, *args, **kwargs)
+    monkeypatch.setattr(module, '_run', recording)
+    result = module.restore_committed_localdata(repo)
+    assert len(batches) == 3 and all(0 < len(b) <= 128 for b in batches)
+    flattened = [p for batch in batches for p in batch]
+    assert len(flattened) == len(set(flattened)) == result['restored_tracked_files']
+    assert LEDGER not in flattened
+    assert all(p.relative_to(repo).as_posix() in flattened for p in paths)
+    assert all(p.read_bytes() == blob for p, blob in expected.items())
+    assert (repo / LEDGER).read_bytes() == protected
+
+
+def test_batched_checkout_failure_is_not_reported_as_success(tmp_path, monkeypatch):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    module = _persistence_module()
+    original_run = module._run
+    def failing(repo, *args, **kwargs):
+        if args[:3] == ('checkout', 'HEAD', '--'):
+            return subprocess.CompletedProcess(args, 1, stdout=b'', stderr=b'checkout failed')
+        return original_run(repo, *args, **kwargs)
+    monkeypatch.setattr(module, '_run', failing)
+    with pytest.raises(RuntimeError, match='could not restore committed localdata batch'):
+        module.restore_committed_localdata(repo)
