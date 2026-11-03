@@ -210,7 +210,7 @@ def test_rolling_writer_enforces_declares_and_validates_policy(tmp_path):
     row = run(tmp_path)
     mp.validate_record(row, DAY)
     policy = row["policy"]["fixture_concentration"]
-    assert policy["version"] == mp.FIXTURE_CONCENTRATION_VERSION
+    assert policy["id"] == mp.FIXTURE_CONCENTRATION_POLICY
     assert policy["max_fixture_stake_fraction"] == 0.05
     assert policy["denominator"] == "total_paper_bank_at_decision"
     assert policy["fixture_limit_micro_units"] == 5_000_000
@@ -341,15 +341,15 @@ def test_repeated_input_deduplication_and_prior_exposure_identity(tmp_path):
 
 
 @pytest.mark.parametrize("damage", [
-    "fraction", "version", "limit", "missing_audit", "exposure", "order", "count",
+    "fraction", "policy_id", "limit", "missing_audit", "exposure", "order", "count",
 ])
 def test_malformed_new_policy_metadata_fails_closed(tmp_path, damage):
     row = deepcopy(run(tmp_path))
     policy = row["policy"]["fixture_concentration"]
     if damage == "fraction":
         policy["max_fixture_stake_fraction"] = 0.10
-    elif damage == "version":
-        policy["version"] = "unknown"
+    elif damage == "policy_id":
+        policy["id"] = "unknown"
     elif damage == "limit":
         policy["fixture_limit_micro_units"] += 1
     elif damage == "missing_audit":
