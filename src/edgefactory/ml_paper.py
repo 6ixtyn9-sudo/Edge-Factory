@@ -2341,13 +2341,12 @@ def render_card(receipt):
     lines = [
         f"autobets_ML TICKETS — {receipt['date']}",
         "=" * 62,
-        "",
         "PAPER ONLY — own legs, accas and model-sized stakes; no odds band.",
         "Same-book single-price products; acca acceptance/payout unconfirmed.",
-        "",
     ]
     if receipt.get("freeze_basis") == ROLLING_FREEZE:
-        lines.extend([f"DECISION {receipt['decision_id']} · next 24 hours · frozen on publication", ""])
+        lines.append(f"DECISION {receipt['decision_id']} · next 24 hours · frozen on publication")
+    lines.append("")
     if not receipt["accas"]:
         lines.append(
             "NO PAPER BET — missed 09:00 freeze; no late backfill."
@@ -2360,21 +2359,22 @@ def render_card(receipt):
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
         for c in acca["legs"]:
+            match = f"{c['home']} vs {c['away']}"
             if receipt.get("freeze_basis") == ROLLING_FREEZE:
                 kickoff = parse_zoned_timestamp(c["kickoff_utc"]).astimezone(LOCAL_TZ)
-                lines.append(f"   KICKOFF {kickoff:%Y-%m-%d %H:%M} SAST")
+                match = f"KICKOFF {kickoff:%Y-%m-%d %H:%M} SAST  {match}"
             source = source_forecast_probability(c)
             age = quote_age_at_decision(c, receipt)
             comparison = (f"Source forecast {source:.1%} · gap {(c['probability'] - source) * 100:+.1f} pp"
                           if source is not None else "Source forecast unavailable")
             quote_age = f"quote age {age / 3600:.2f}h at decision" if age is not None else "quote age unavailable"
             lines.extend([
-                f"   {c['home']} vs {c['away']}",
+                f"   {match}",
                 (f"      {c['market']} {c['selection']} @{c['odds']:.3f}"
                  f" · ML {c['probability']:.1%} · {c['bucket']}"),
                 f"      {comparison} · {quote_age}",
-                "",
             ])
+        lines.append("")
     concentration = receipt.get("fixture_concentration")
     if concentration is not None:
         policy = receipt["policy"]["fixture_concentration"]
