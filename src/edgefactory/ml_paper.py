@@ -2,9 +2,11 @@
 
 Uses the retained, fixture-bound ENH score model (form + source forecasts),
 existing local quote index, exact result keys and shared market outcomes. Its
-own forward receipts train a regularised probability calibrator on prior-day
-mistakes, including bucket/market effects. No history means the *existing*
-model is used unchanged, not a fabricated probability or a new bootstrap fit.
+own forward receipts dynamically train a regularised probability calibrator
+on prior-day mistakes, including bucket/market effects, plus a bounded
+success tilt toward groups beating their calibrated expectations. Learning
+starts from the first resolved prior-day results; no history means the
+*existing* model is used unchanged, not a fabricated probability.
 
 Same-book paper accas choose their own leg count, card count and stakes.
 No odds band, fixed stake or artificial acca/leg-count cap is imposed.
@@ -15,9 +17,11 @@ New decisions use a rolling 24-hour kickoff horizon, at any existing run,
 and freeze on publication. No 06:00/09:00 clock gate applies to rolling ML.
 Legacy daily receipts/drafts remain readable and immutable; frozen receipts
 supersede pending rows. Aggregate open exposure is capped at 25% of paper bank.
-Learning needs >=30 distinct resolved prior-day fixtures AND both outcome
-classes; each bucket/market calibration feature also needs >=30 fixtures.
-Derived source-gap bands are descriptive diagnostics, never admission rules.
+Learning is dynamic from the first resolved prior-day fixtures: the logistic
+calibrator needs both outcome classes (a mathematical requirement, not an
+evidence gate), and the bounded success tilt applies even before that.
+Effects are recency-weighted (14-day half-life) and fitted only on prior-day
+receipts, never on today's outcomes. Source-gap bands feed the success tilt.
 Products of same-book single quotes are explicitly hypothetical acca payouts;
 neither book acceptance nor independence/calibration of joint probabilities is
 claimed. Positive estimated EV is a PAPER search objective, never a live gate.
@@ -49,7 +53,6 @@ from .enh_pricing import (
     load_prices_index,
 )
 from .enh_registry import (
-    MIN_COHORT_N,
     check_enhancement_hit,
     enhancement_ml_score_weights,
     enhancement_price_context,
@@ -69,6 +72,14 @@ KELLY_MULTIPLIER = 0.25  # v2: quarter of robust portfolio Kelly; NOT a fixed st
 MAX_PAPER_EXPOSURE = 0.25  # shared aggregate ceiling; legacy free-bank sizing retained
 MAX_FIXTURE_STAKE_FRACTION = 0.05  # NEW gross stake per canonical fixture / TOTAL paper bank
 FIXTURE_CONCENTRATION_POLICY = "ml_paper_fixture_gross_stake_cap"
+DYNAMIC_LEARNING_POLICY = "ml_paper_dynamic_calibration_success_tilt"
+RECENCY_HALF_LIFE_DAYS = 14.0  # recency weighting for dynamic learning effects
+SUCCESS_TILT_GROUP_LIMIT_LOGIT = 0.50  # max logit shift from one group effect
+SUCCESS_TILT_TOTAL_LIMIT_LOGIT = 0.75  # max combined success-tilt logit shift
+# Evidence smoothing: total dynamic logit shift is scaled by
+# fixtures / (fixtures + K), so the first results move probabilities gently
+# and full strength is approached only as resolved evidence accumulates.
+LEARNING_SMOOTHING_K_FIXTURES = 5.0
 MICRO_UNITS = 1_000_000
 EXACT_SEARCH_SIZE = 8
 PORTFOLIO_ITERATIONS = 256
@@ -724,13 +735,62 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
     )
 
 
-def learn(history, now, score_lookup):
-    """Refit only on this lane's immutable, prior-day forward observations.
+def _recency_weight(candidate, today):
+    try:
+        age_days = max(0, (today - datetime.strptime(candidate["date"], "%Y-%m-%d").date()).days)
+    except (KeyError, TypeError, ValueError):
+        return 1.0
+    return 0.5 ** (age_days / RECENCY_HALF_LIFE_DAYS)
 
+
+def _success_groups(candidate):
+    """Groups whose recent success may tilt a candidate's probability."""
+    groups = [f"bucket:{candidate['bucket']}", f"market:{candidate['market']}"]
+    source = source_forecast_probability(candidate)
+    if source is None:
+        groups.append("gap:source_unavailable")
+    else:
+        gap_pp = (candidate["base_probability"] - source) * 100
+        if gap_pp < 0:
+            groups.append("gap:negative")
+        elif gap_pp < 10:
+            groups.append("gap:0_to_10pp")
+        elif gap_pp < 20:
+            groups.append("gap:10_to_20pp")
+        else:
+            groups.append("gap:20pp_plus")
+    return groups
+
+
+def _reference_probability(candidate, model):
+    """Calibrated probability when the logistic fit exists, else the base."""
+    if model.get("status") != "fitted_prior_paper_errors":
+        return candidate["base_probability"]
+    z = model["intercept"] + sum(
+        w * x for w, x in zip(model["coef"], _vector(candidate, model["columns"]))
+    )
+    return 1 / (1 + math.exp(-max(-700.0, min(700.0, z))))
+
+
+def learn(history, now, score_lookup):
+    """Dynamic learning on this lane's immutable, prior-day forward observations.
+
+    Two separately auditable layers, refit at every decision from the first
+    resolved prior-day results (no evidence gate):
+    1. a regularised, recency-weighted logistic calibrator on
+       logit(base probability) plus bucket/market effects — it needs both
+       outcome classes, a mathematical requirement, not an evidence gate;
+    2. a bounded success tilt shifting probabilities toward bucket/market/
+       source-gap groups beating their reference (calibrated or base)
+       expectations, and away from groups trailing them.
+    The combined shift is evidence-smoothed, scaled by
+    fixtures/(fixtures+5): dynamic from the first result, gentle early,
+    full strength only as resolved evidence accumulates. The tilt judges
+    success against expectation (hit rate minus reference rate), never raw
+    hit rate, so heavy favourites cannot look successful merely by hitting.
     Repeated book/market quotes do not manufacture independent games: each
-    fixture receives total sample weight one; feature eligibility counts unique
-    fixtures. Bucket/market effects are regularised and unsupported groups
-    remain absent. This fits prediction errors, not hindsight-winning buckets.
+    fixture receives total sample weight one before recency weighting.
+    Never fitted on today's outcomes (prior-day receipts only).
     """
     rows = []
     training_outcomes = []
@@ -782,40 +842,75 @@ def learn(history, now, score_lookup):
         "training_outcomes": training_outcomes,
         "training_outcomes_sha256": digest(training_outcomes),
         "training_last_date": max((c["date"] for c, _ in rows), default=None),
+        "learning_policy": DYNAMIC_LEARNING_POLICY,
+        "evidence_gate": "none_from_first_resolved_prior_day_results_evidence_smoothed",
+        "smoothing_k_fixtures": LEARNING_SMOOTHING_K_FIXTURES,
+        "smoothing_factor": (len(fixtures) / (len(fixtures) + LEARNING_SMOOTHING_K_FIXTURES)
+                             if fixtures else 0.0),
+        "recency_half_life_days": RECENCY_HALF_LIFE_DAYS,
+        "success_tilt_total_limit_logit": SUCCESS_TILT_TOTAL_LIMIT_LOGIT,
+        "success_tilt": {},
     }
-    if len(fixtures) < MIN_COHORT_N or len({y for _, y in rows}) < 2:
+    if not rows:
         return result
-    # Same regularised estimator and minimum-observation convention already
-    # used by the existing feature model; never fitted on today's outcomes.
-    import warnings
-
-    from sklearn.exceptions import ConvergenceWarning
-    from sklearn.linear_model import LogisticRegression
-
-    group_counts = defaultdict(set)
+    today_date = now.astimezone(LOCAL_TZ).date()
     counts = Counter(tuple(c["fixture"]) for c, _ in rows)
-    for c, _ in rows:
-        for field in ("bucket", "market"):
-            group_counts[f"{field}:{c[field]}"].add(tuple(c["fixture"]))
-    columns = sorted(k for k, v in group_counts.items() if len(v) >= MIN_COHORT_N)
-    vectors = [_vector(c, columns) for c, _ in rows]
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", ConvergenceWarning)
-            model = LogisticRegression(C=1.0, max_iter=1000, random_state=42)
-            model.fit(
-                vectors,
-                [y for _, y in rows],
-                sample_weight=[1 / counts[tuple(c["fixture"])] for c, _ in rows],
+    weights = [1 / counts[tuple(c["fixture"])] * _recency_weight(c, today_date)
+               for c, _ in rows]
+    fitted = False
+    if len({y for _, y in rows}) >= 2:
+        # Same regularised estimator already used by the existing feature
+        # model; dynamic now: every observed bucket/market is a column.
+        import warnings
+
+        from sklearn.exceptions import ConvergenceWarning
+        from sklearn.linear_model import LogisticRegression
+
+        columns = sorted({f"{field}:{c[field]}" for c, _ in rows
+                          for field in ("bucket", "market")})
+        vectors = [_vector(c, columns) for c, _ in rows]
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", ConvergenceWarning)
+                model = LogisticRegression(C=1.0, max_iter=1000, random_state=42)
+                model.fit(vectors, [y for _, y in rows], sample_weight=weights)
+            result.update(
+                status="fitted_prior_paper_errors",
+                columns=columns,
+                coef=model.coef_[0].tolist(),
+                intercept=float(model.intercept_[0]),
             )
-        result.update(
-            status="fitted_prior_paper_errors",
-            columns=columns,
-            coef=model.coef_[0].tolist(),
-            intercept=float(model.intercept_[0]),
-        )
-    except (ValueError, ArithmeticError, ConvergenceWarning):
-        result["status"] = "learning_fit_unavailable_existing_model_retained"
+            fitted = True
+        except (ValueError, ArithmeticError, ConvergenceWarning):
+            result["status"] = "learning_fit_unavailable_existing_model_retained"
+    # Success tilt: per-group recency-weighted hit rate versus reference
+    # expectation, converted to a bounded logit shift (2x excess, clamped).
+    groups = {}
+    for (c, y), weight in zip(rows, weights):
+        reference = _reference_probability(c, result)
+        for key in _success_groups(c):
+            entry = groups.setdefault(key, {"weight": 0.0, "hits": 0.0,
+                                            "expected": 0.0, "fixtures": set()})
+            entry["weight"] += weight
+            entry["hits"] += weight * y
+            entry["expected"] += weight * reference
+            entry["fixtures"].add(tuple(c["fixture"]))
+    result["success_tilt"] = {
+        key: {
+            "fixtures": len(entry["fixtures"]),
+            "weighted_observations": entry["weight"],
+            "weighted_hit_rate": entry["hits"] / entry["weight"],
+            "weighted_reference_rate": entry["expected"] / entry["weight"],
+            "excess": entry["hits"] / entry["weight"] - entry["expected"] / entry["weight"],
+            "tilt_logit": max(-SUCCESS_TILT_GROUP_LIMIT_LOGIT,
+                              min(SUCCESS_TILT_GROUP_LIMIT_LOGIT,
+                                  2.0 * (entry["hits"] / entry["weight"]
+                                         - entry["expected"] / entry["weight"]))),
+        }
+        for key, entry in sorted(groups.items()) if entry["weight"] > 0
+    }
+    if not fitted and result["status"] == "awaiting_prior_paper_results":
+        result["status"] = "dynamic_success_tilt_only"
     return result
 
 
@@ -828,12 +923,28 @@ def _vector(c, columns):
 
 
 def apply_learning(rows, model):
+    """Calibration layer first, then the bounded success tilt, both dynamic.
+
+    The combined dynamic shift (calibration move + success tilt) is scaled by
+    the evidence smoothing factor fixtures/(fixtures+K): early wins/losses
+    move probabilities gently, full strength only as evidence accumulates.
+    Learner records without a smoothing factor (older receipts) apply at 1.0.
+    """
+    tilt = model.get("success_tilt") or {}
+    fitted = model.get("status") == "fitted_prior_paper_errors"
+    if not fitted and not tilt:
+        return
+    smoothing = model.get("smoothing_factor", 1.0)
     for c in rows:
-        if model["status"] != "fitted_prior_paper_errors":
+        base_logit = math.log(c["base_probability"] / (1 - c["base_probability"]))
+        p = _reference_probability(c, model) if fitted else c["base_probability"]
+        shift = sum(tilt[key]["tilt_logit"] for key in _success_groups(c) if key in tilt)
+        shift = max(-SUCCESS_TILT_TOTAL_LIMIT_LOGIT,
+                    min(SUCCESS_TILT_TOTAL_LIMIT_LOGIT, shift))
+        dynamic_shift = (math.log(p / (1 - p)) - base_logit) + shift
+        if not dynamic_shift:
             continue
-        z = model["intercept"] + sum(
-            w * x for w, x in zip(model["coef"], _vector(c, model["columns"]))
-        )
+        z = base_logit + smoothing * dynamic_shift
         c["probability"] = 1 / (1 + math.exp(-max(-700.0, min(700.0, z))))
 
 
@@ -2483,8 +2594,8 @@ def render_performance(report):
     evidence = (
         f"EVIDENCE {selected.get('resolved_observations', 0)} resolved selected observations / "
         f"{selected.get('resolved_fixtures', 0)} fixtures · pool {pool.get('resolved_fixtures', 0)} resolved fixtures\n"
-        f"LEARNING last decision: {learning.get('fixtures', 0)}/{MIN_COHORT_N} eligible prior-day fixtures; "
-        "both outcome classes required, not an automatic review/promotion trigger\n"
+        f"LEARNING last decision: {learning.get('fixtures', 0)} resolved prior-day fixtures; "
+        "dynamic calibration + success tilt from first results, not an automatic review/promotion trigger\n"
     )
     if paired.get("paired_observations", 0):
         evidence += (
