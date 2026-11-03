@@ -11,8 +11,10 @@ No odds band, fixed stake or artificial acca/leg-count cap is imposed.
 CAUTION and SKIPPED_VETO strategy labels are intentionally paper-eligible
 (test_lower_probability_and_caution_bucket_can_win_paper_search); identity,
 price-quality and timing guards still apply. This never overrides live gates.
-Morning drafts are advisory: the first eligible unfrozen post-09:00 run may
-build a current decision; frozen receipts supersede pending state rows.
+New decisions use a rolling 24-hour kickoff horizon, at any existing run,
+and freeze on publication. No 06:00/09:00 clock gate applies to rolling ML.
+Legacy daily receipts/drafts remain readable and immutable; frozen receipts
+supersede pending rows. Aggregate open exposure is capped at 25% of paper bank.
 Learning needs >=30 distinct resolved prior-day fixtures AND both outcome
 classes; each bucket/market calibration feature also needs >=30 fixtures.
 Derived source-gap bands are descriptive diagnostics, never admission rules.
@@ -72,6 +74,7 @@ SEARCH_NODE_BUDGET = 250_000  # computation bound, never a leg/card count cap
 # A stricter source policy still wins; never retimestamp a quote to rescue it.
 QUOTE_MAX_AGE = timedelta(hours=12)
 ACTUAL_RUN_FREEZE = "first_run_actual_decision_v1"
+ROLLING_FREEZE = "rolling_24h_actual_decision_v1"
 MIN_LEAD = timedelta(minutes=30)
 
 
@@ -92,13 +95,15 @@ def receipt_files(root):
     return sorted([
         *root.glob(f"{PREFIX}_????-??-??.json"),
         *(root / RECEIPT_DIR).glob(f"{PREFIX}_????-??-??.json"),
+        *(root / RECEIPT_DIR).glob(f"{PREFIX}_????-??-??_*.json"),
     ])
 
 
 def has_receipt(root, day):
     canonical = receipt_path(root, day)  # also validates the requested date
     # Migration publishes the internal copy before removing the legacy copy.
-    return (Path(root) / canonical.name).exists() or canonical.exists()
+    return ((Path(root) / canonical.name).exists() or canonical.exists()
+            or any((Path(root) / RECEIPT_DIR).glob(f"{PREFIX}_{day}_*.json")))
 
 
 def _validate_bets(row):
@@ -183,6 +188,8 @@ def validate_record(row, day, *, draft=False):
             or row.get("freeze_at") != freeze.isoformat()
         ):
             raise ValueError("invalid pre-cutoff paper draft")
+    elif row.get("freeze_basis") == ROLLING_FREEZE:
+        _validate_rolling_record(row, captured)
     else:
         freeze = datetime.fromisoformat(day).replace(tzinfo=LOCAL_TZ, hour=9)
         published = parse_zoned_timestamp(row.get("persisted_at"))
@@ -243,8 +250,9 @@ def receipts(root):
             blob = path.read_bytes()  # absence still fails closed, never empty history
         row = json.loads(blob)
         unsigned = {k: v for k, v in row.items() if k != "sha256"}
-        day = path.stem.removeprefix(f"{PREFIX}_")
-        canonical = receipt_path(root, day)
+        day = path.stem.removeprefix(f"{PREFIX}_")[:10]
+        canonical = (rolling_receipt_path(root, row) if row.get("freeze_basis") == ROLLING_FREEZE
+                     else receipt_path(root, day))
         if (
             row.get("schema") not in READABLE_SCHEMAS
             or row.get("sha256") != digest(unsigned)
@@ -253,12 +261,24 @@ def receipts(root):
         ):
             raise ValueError(f"invalid ML paper receipt: {path.name}")
         validate_record(row, row["date"])
-        day = row["date"]
+        day = (row["date"], row.get("decision_id", ""))
         if day in blobs and blobs[day] != blob:
             raise ValueError(f"conflicting ML paper receipt layouts: {day}")
         blobs[day] = blob
         result[day] = row
-    return [result[day] for day in sorted(result)]
+    ordered = sorted(result.values(), key=lambda r: (parse_zoned_timestamp(r["captured_at"]), r.get("decision_id", "")))
+    committed = set()
+    prior_hashes = []
+    for row in ordered:
+        fixtures = {tuple(c["fixture"]) for a in row["accas"] for c in a["legs"]}
+        if row.get("freeze_basis") == ROLLING_FREEZE:
+            if committed.intersection(fixtures):
+                raise ValueError("rolling receipts recommit a ticketed fixture")
+            if row.get("prior_receipt_sha256s") != prior_hashes:
+                raise ValueError("rolling paper history fork or missing capital evidence")
+        committed.update(fixtures)
+        prior_hashes.append(row["sha256"])
+    return ordered
 
 
 def _migrate_frozen_receipts(root):
@@ -332,7 +352,7 @@ def _quote_max_age(source):
 
 
 def _quote_ok(
-    row, quote, now, kickoff, source_guard, min_leg_odds, *, market, selection, freeze_at=None
+    row, quote, now, kickoff, source_guard, min_leg_odds, *, market, selection, freeze_at=None, rolling=False
 ):
     """Keep original quote evidence; require validity now AND at paper freeze."""
     side = {"1x": "home", "x2": "away", "12": "draw"}.get(selection, selection)
@@ -346,7 +366,12 @@ def _quote_ok(
         or probe.get("enhancement_price_rejection")
     ):
         return False
-    context = enhancement_price_context(probe)
+    # The shared live validator expects a same-day decision. In rolling ML
+    # only, its calendar field describes the ACTUAL decision day, not the
+    # future fixture day. Original fixture identity/date and all timestamps
+    # remain unchanged and are checked separately by candidates/receipts.
+    context_probe = dict(probe, date=now.date().isoformat()) if rolling else probe
+    context = enhancement_price_context(context_probe)
     if context is None:
         return False
     at = parse_zoned_timestamp(context["captured_at"])
@@ -377,7 +402,7 @@ def _quote(price, book, at, source, kickoff, provenance=None):
     }
 
 
-def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds, freeze_at=None):
+def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds, freeze_at=None, rolling=False):
     """All supported FT markets, not only the live lane's chosen enhancement.
 
     Full canonical pair/orientation/squad + identical proven kickoff required.
@@ -527,7 +552,7 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
                     min_leg_odds,
                     market=market,
                     selection=selection,
-                    freeze_at=freeze_at,
+                    freeze_at=freeze_at, rolling=rolling,
                 )
             ):
                 rejected["quote_or_probability_unavailable"] += 1
@@ -608,6 +633,8 @@ def learn(history, now, score_lookup):
         if receipt["date"] >= today or captured is None or captured >= now:
             continue
         for c in receipt["candidates"]:
+            if c["date"] >= today:
+                continue
             score = score_lookup(c)
             if score is None:
                 continue
@@ -1411,6 +1438,176 @@ def capture(
         return payload
 
 
+def rolling_receipt_path(root, receipt):
+    """One immutable decision per publication, inside the existing internal store."""
+    captured = parse_zoned_timestamp(receipt.get("captured_at"))
+    if captured is None:
+        raise ValueError("missing rolling decision timestamp")
+    identity = captured.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+    if receipt.get("decision_id") != identity:
+        raise ValueError("invalid rolling decision identity")
+    return receipt_path(root, receipt["date"]).with_name(
+        f"{PREFIX}_{receipt['date']}_{identity}.json")
+
+
+def _validate_rolling_record(row, captured):
+    published = parse_zoned_timestamp(row.get("persisted_at"))
+    end = parse_zoned_timestamp(row.get("window_end"))
+    if (published is None or published < captured
+            or published.astimezone(LOCAL_TZ).date().isoformat() != row["date"]
+            or parse_zoned_timestamp(row.get("frozen_at")) != published
+            or parse_zoned_timestamp(row.get("freeze_at")) != published
+            or parse_zoned_timestamp(row.get("window_start")) != captured
+            or end != captured + timedelta(hours=24)
+            or row.get("status") not in ("paper_accas", "no_paper_bet")
+            or row.get("draft_sha256") is not None
+            or row.get("draft_persisted_at") is not None):
+        raise ValueError("invalid rolling paper freeze")
+    rolling_receipt_path(Path("."), row)
+    bank, committed = row.get("paper_bank_at_decision"), row.get("paper_pending_reserved_at_decision")
+    if any(type(v) not in (int, float) or not math.isfinite(v) or v < 0 for v in (bank, committed)):
+        raise ValueError("invalid rolling paper capital")
+    if not math.isclose(row["paper_available_at_decision"], max(0, bank - committed), abs_tol=1e-9):
+        raise ValueError("rolling free capital disagrees with commitments")
+    if sum(a["stake_units"] for a in row["accas"]) > max(0, bank * MAX_PAPER_EXPOSURE - committed) + 1e-6:
+        raise ValueError("rolling aggregate exposure exceeded")
+    for c in row["candidates"]:
+        kickoff = parse_zoned_timestamp(c.get("kickoff_utc"))
+        quote = parse_zoned_timestamp(c.get("price_at"))
+        model = row["models"].get(c.get("model_key"), {})
+        if (kickoff is None or quote is None or not quote <= captured <= published
+                or not published + MIN_LEAD <= kickoff <= end
+                or published - quote > _quote_max_age(c.get("price_source"))
+                or kickoff.astimezone(UTC).date() != kickoff.astimezone(LOCAL_TZ).date()
+                or c["date"] != kickoff.astimezone(LOCAL_TZ).date().isoformat()
+                or c["fixture"] != [c["date"], source_team_key(c["home"]), source_team_key(c["away"])]
+                or not model.get("train_last_date", "9999") < row["date"]):
+            raise ValueError("rolling candidate timing/model evidence invalid")
+
+
+def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
+                    min_leg_odds=1.0, now=None, index=None):
+    """Next-24h PAPER decisions at every existing run; no daily clock gate.
+
+    Never edits old receipts, spends live capital, or invents future inputs.
+    Quarter-Kelly remains unchanged; remaining aggregate commitment headroom
+    can only reduce a new allocation. Already ticketed fixtures never re-enter.
+    """
+    clock = (lambda: now) if now is not None else (lambda: datetime.now(UTC))
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    with (root / f".{PREFIX}.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        _migrate_frozen_receipts(root)
+        captured = clock()
+        day = captured.astimezone(LOCAL_TZ).date().isoformat()
+        _recover_acknowledged_state(root, day, captured)
+        _read_state(root)  # corruption is not permission to restart paper capital
+        _migrate_legacy_drafts(root)
+        built = parse_zoned_timestamp(context.get("build_at"))
+        if (built is None or not timedelta(0) <= captured - built <= timedelta(minutes=5)
+                or not isinstance(context.get("slate"), list)):
+            return None  # missing context never seals a fictitious daily NO BET
+        history = receipts(root)
+        if any(parse_zoned_timestamp(r["persisted_at"]) > captured for r in history):
+            raise ValueError("future paper evidence cannot fund a rolling decision")
+        used = {tuple(c["fixture"]) for r in history for a in r["accas"] for c in a["legs"]}
+        end = captured + timedelta(hours=24)
+        eligible = defaultdict(list)
+        rejected = Counter()
+        for row in context["slate"]:
+            kickoff = kickoff_fn(row) if isinstance(row, dict) else None
+            if kickoff is None or not captured + MIN_LEAD <= kickoff <= end:
+                rejected["outside_rolling_window_or_unproven_kickoff"] += 1
+                continue
+            fixture_day = kickoff.astimezone(LOCAL_TZ).date().isoformat()
+            fixture = (fixture_day, source_team_key(row.get("home")), source_team_key(row.get("away")))
+            if fixture in used:
+                rejected["already_ticketed_fixture"] += 1
+                continue
+            profile = row.get("statistical_profile")
+            model = profile.get("ml_model") if isinstance(profile, dict) else None
+            last_train = model.get("train_last_date") if isinstance(model, dict) else None
+            if (row.get("date") != fixture_day or not isinstance(last_train, str)
+                    or not last_train < day):
+                rejected["fixture_date_or_prior_model_unproven"] += 1
+                continue
+            eligible[fixture_day].append(row)
+        rows, models = [], {}
+        for fixture_day, slate in sorted(eligible.items()):
+            quotes = index if index is not None else load_prices_index(root.parent, fixture_day)
+            found, bound_models, failures = candidates(
+                slate, fixture_day, captured, quotes, kickoff_fn=kickoff_fn,
+                source_guard=source_guard, min_leg_odds=min_leg_odds, freeze_at=captured, rolling=True)
+            rows.extend(found)
+            models.update(bound_models)
+            rejected.update(failures)
+        learner = learn(history, captured, score_lookup)
+        apply_learning(rows, learner)
+        report = performance(history, score_lookup)
+        available = max(0.0, report["paper_free_units"])
+        budget = max(0.0, report["paper_bank_units"] * MAX_PAPER_EXPOSURE - report["paper_committed_units"])
+        if not rows and history:
+            return None  # no new eligible opportunity, not another daily seal
+        search = {}
+        # Timestamp AFTER search/sizing and recheck every guard at publication.
+        # If a slow search crosses expiry, rebuild only the surviving candidates.
+        for _ in range(3):
+            plan = select_accas(rows, available, diagnostics=search) if budget > 0 else []
+            persisted = clock()
+            if persisted < captured or persisted.astimezone(LOCAL_TZ).date().isoformat() != day:
+                return None
+            final_rows = [c for c in rows
+                          if persisted - parse_zoned_timestamp(c["price_at"]) <= _quote_max_age(c["price_source"])
+                          and persisted + MIN_LEAD <= parse_zoned_timestamp(c["kickoff_utc"]) <= end]
+            if len(final_rows) == len(rows):
+                break
+            rejected["quote_or_kickoff_expired_during_build"] += len(rows) - len(final_rows)
+            rows = final_rows
+        else:
+            return None  # continuously expiring inputs are not publishable
+        snapshot = digest({
+            "date": day, "candidates": [{k: v for k, v in c.items()
+                if not k.startswith("price_age_seconds_")} for c in rows],
+            "learning": learner, "bank": report["paper_bank_units"],
+            "committed": report["paper_committed_units"], "rejections": dict(rejected),
+        })
+        if any(r.get("snapshot_sha256") == snapshot for r in history):
+            return None
+        total = sum(a["stake_units"] for a in plan)
+        scale = min(1.0, budget / total) if total else 1.0
+        for a in plan:
+            a["stake_units"] = math.floor(a["stake_units"] * scale * 1e6) / 1e6
+            a["stake_fraction_of_free_bank"] = a["stake_units"] / available
+            a["portfolio_allocation"] = dict(a["portfolio_allocation"], aggregate_budget_scale=scale)
+        plan = [a for a in plan if a["stake_units"] > 0]
+        for c in rows:
+            c["price_age_seconds_at_freeze"] = (persisted - parse_zoned_timestamp(c["price_at"])).total_seconds()
+        receipt = {
+            "schema": SCHEMA, "date": day, "mode": "paper_only_no_real_stakes",
+            "decision_id": captured.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ"),
+            "captured_at": captured.isoformat(), "persisted_at": persisted.isoformat(),
+            "frozen_at": persisted.isoformat(), "freeze_at": persisted.isoformat(),
+            "freeze_basis": ROLLING_FREEZE, "window_start": captured.isoformat(), "window_end": end.isoformat(),
+            "prior_receipt_sha256s": [r["sha256"] for r in history],
+            "snapshot_sha256": snapshot, "status": "paper_accas" if plan else "no_paper_bet",
+            "paper_available_at_decision": available, "paper_bank_at_decision": report["paper_bank_units"],
+            "paper_pending_reserved_at_decision": report["paper_committed_units"],
+            "candidates": rows, "models": models, "learning": learner, "accas": plan,
+            "search": search, "rejections": dict(rejected),
+            "coverage": {"candidate_count": len(rows), "candidate_fixtures": len({tuple(c["fixture"]) for c in rows}),
+                         "slate_rows": len(context["slate"]), "status": "inputs_available" if rows else "input_starved_not_strategy_selectivity"},
+            "policy": {"window_hours": 24, "kelly_multiplier": KELLY_MULTIPLIER,
+                       "max_aggregate_bank_exposure": MAX_PAPER_EXPOSURE, "odds_band": None,
+                       "quote_max_age_hours": QUOTE_MAX_AGE.total_seconds() / 3600,
+                       "stricter_source_limits_retained": True, "minimum_legs": 2,
+                       "probability_basis": "product_assumes_cross_fixture_independence_not_validated"},
+        }
+        receipt["sha256"] = digest(receipt)
+        validate_record(receipt, day)
+        return receipt if _write_once(rolling_receipt_path(root, receipt), receipt) else None
+
+
 def source_forecast_probability(candidate):
     """Market/side-matched frozen source aggregate, not odds or a calibrated truth.
 
@@ -1588,6 +1785,7 @@ def performance(history, score_lookup):
     acca_calibration = defaultdict(lambda: {"resolved": 0, "wins": 0, "predicted_wins": 0.0})
     unresolved_legs = 0
     equity = peak = drawdown = drawdown_fraction = 0.0
+    day_marks = defaultdict(float)
     for receipt in history:
         _validate_bets(receipt)
         daily = []
@@ -1640,18 +1838,22 @@ def performance(history, score_lookup):
         # cost. Never omit a known loss just because another acca is pending.
         # This is NOT observed settlement-time or intraday drawdown.
         if daily:
-            equity += sum(a["profit_units"] for a in daily if a["profit_units"] is not None)
-            peak = max(peak, equity)
-            drawdown = max(drawdown, peak - equity)
-            drawdown_fraction = max(drawdown_fraction, (peak - equity) / (BASE_PAPER_UNITS + peak))
+            day_marks[receipt["date"]] += sum(a["profit_units"] for a in daily if a["profit_units"] is not None)
         days.append(
             {
                 "date": receipt["date"],
                 "status": receipt["status"],
                 "accas": daily,
                 "learning_status": receipt["learning"]["status"],
+                **({"decision_id": receipt["decision_id"], "captured_at": receipt["captured_at"],
+                    "frozen_at": receipt["frozen_at"]} if receipt.get("freeze_basis") == ROLLING_FREEZE else {}),
             }
         )
+    for day in sorted(day_marks):
+        equity += day_marks[day]
+        peak = max(peak, equity)
+        drawdown = max(drawdown, peak - equity)
+        drawdown_fraction = max(drawdown_fraction, (peak - equity) / (BASE_PAPER_UNITS + peak))
     graded = [a for a in accas if a["profit_units"] is not None]
     profit = sum(a["profit_units"] for a in graded)
     staked = sum(a["stake_units"] for a in graded)
@@ -1666,9 +1868,10 @@ def performance(history, score_lookup):
         "paper_committed_units": committed,
         "paper_free_units": BASE_PAPER_UNITS + profit - committed,
         "settled_stake_units": staked,
-        "receipt_days": len(history),
-        "bet_days": sum(bool(r["accas"]) for r in history),
-        "no_bet_days": sum(not r["accas"] for r in history),
+        "receipt_days": len({r["date"] for r in history}),
+        "decision_receipts": len(history),
+        "bet_days": len({r["date"] for r in history if r["accas"]}),
+        "no_bet_days": len({r["date"] for r in history} - {r["date"] for r in history if r["accas"]}),
         "missed_freeze_days": sum(r["status"] == "missed_freeze_no_paper_bet" for r in history),
         "settled_accas": len(graded),
         "wins": sum(a["status"] == "win" for a in graded),
@@ -1690,6 +1893,7 @@ def performance(history, score_lookup):
             "schema": SCHEMA,
             "kelly_multiplier": KELLY_MULTIPLIER,
             "max_free_bank_exposure": MAX_PAPER_EXPOSURE,
+            "max_aggregate_bank_exposure_for_rolling": MAX_PAPER_EXPOSURE,
             "bankruptcy": "zero_free_capital_no_new_stakes_no_refill",
         },
         "by_bucket_market_leg_diagnostics": dict(groups),
@@ -1710,6 +1914,8 @@ def render_card(receipt):
         "Same-book single-price products; acca acceptance/payout unconfirmed.",
         "",
     ]
+    if receipt.get("freeze_basis") == ROLLING_FREEZE:
+        lines.extend([f"DECISION {receipt['decision_id']} · next 24 hours · frozen on publication", ""])
     if not receipt["accas"]:
         lines.append(
             "NO PAPER BET — missed 09:00 freeze; no late backfill."
@@ -1722,6 +1928,9 @@ def render_card(receipt):
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
         for c in acca["legs"]:
+            if receipt.get("freeze_basis") == ROLLING_FREEZE:
+                kickoff = parse_zoned_timestamp(c["kickoff_utc"]).astimezone(LOCAL_TZ)
+                lines.append(f"   KICKOFF {kickoff:%Y-%m-%d %H:%M} SAST")
             source = source_forecast_probability(c)
             age = quote_age_at_decision(c, receipt)
             comparison = (f"Source forecast {source:.1%} · gap {(c['probability'] - source) * 100:+.1f} pp"
@@ -1796,6 +2005,9 @@ def latest_card(root, *, now=None):
     """Current draft/frozen card for adjacent display; never selects or settles."""
     now = now or datetime.now(LOCAL_TZ)
     today = now.astimezone(LOCAL_TZ).date().isoformat()
+    history = receipts(root)
+    if history and history[-1].get("freeze_basis") == ROLLING_FREEZE:
+        return history[-1]
     if state_path(root).exists() and not has_receipt(root, today):
         freeze_at = datetime.fromisoformat(today).replace(tzinfo=LOCAL_TZ, hour=9)
         row = _checked_draft(root, today, freeze_at)
@@ -1803,7 +2015,6 @@ def latest_card(root, *, now=None):
             if now >= freeze_at:
                 row = dict(row, status="09:00_cutoff_passed_awaiting_publication")
             return row
-    history = receipts(root)
     return history[-1] if history else None
 
 
@@ -1817,8 +2028,10 @@ def publish(root, score_lookup):
     (root / f"{PREFIX}_performance.json").write_text(json.dumps(report, indent=2, allow_nan=False))
     (root / f"{PREFIX}_performance.txt").write_text(render_performance(report))
     if history:
-        (root / f"{PREFIX}_{history[-1]['date']}.txt").write_text(render_card(history[-1]))
+        latest_day = history[-1]["date"]
+        (root / f"{PREFIX}_{latest_day}.txt").write_text("\n".join(
+            render_card(r) for r in history if r["date"] == latest_day))
     card = latest_card(root)
-    if card is not None:
+    if card is not None and card.get("freeze_basis") != ROLLING_FREEZE:
         (root / f"{PREFIX}_{card['date']}.txt").write_text(render_card(card))
     return report

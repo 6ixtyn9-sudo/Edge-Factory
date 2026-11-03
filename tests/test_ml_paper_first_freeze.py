@@ -149,7 +149,7 @@ def test_concurrent_current_first_freezes_publish_only_one_card(tmp_path):
     assert mp.receipts(tmp_path) == [next(r for r in results if r is not None)]
 
 
-def test_cli_loads_current_slate_after_nine_but_never_reselects_frozen_card(tmp_path, monkeypatch):
+def test_rolling_cli_adds_new_fixtures_after_nine_but_never_revises_frozen_card(tmp_path, monkeypatch):
     decision = FREEZE + timedelta(minutes=15)
     path = tmp_path / "picks_today.json"
     path.write_text(json.dumps(current_context(decision)["slate"]))
@@ -171,12 +171,17 @@ def test_cli_loads_current_slate_after_nine_but_never_reselects_frozen_card(tmp_
     assert at._run_ml_paper() is True
     frozen = mp.receipts(tmp_path)[0]
     assert frozen["accas"] and frozen["captured_at"] == decision.isoformat()
-    before = mp.receipt_path(tmp_path, DAY).read_bytes()
-    path.write_text("{do not reload a newer slate after freeze")
-    monkeypatch.setattr(mp, "candidates", forbidden)
-    monkeypatch.setattr(mp, "learn", forbidden)
+    frozen_path = mp.rolling_receipt_path(tmp_path, frozen)
+    before = frozen_path.read_bytes()
+    decision += timedelta(minutes=1)
+    # The same frozen fixtures cannot re-enter; new fixtures may be added.
+    path.write_text(json.dumps(current_context(decision, [pick(1), pick(2), pick(8), pick(9)])["slate"]))
     assert at._run_ml_paper() is True
-    assert mp.receipt_path(tmp_path, DAY).read_bytes() == before
+    history = mp.receipts(tmp_path)
+    assert len(history) == 2 and history[0] == frozen
+    assert history[1]["accas"]
+    assert {c["home"] for c in history[1]["candidates"]} == {"Home Club 8", "Home Club 9"}
+    assert frozen_path.read_bytes() == before
 
 
 def test_fsync_crossing_nine_freezes_current_build_without_creating_late_draft(tmp_path, monkeypatch):

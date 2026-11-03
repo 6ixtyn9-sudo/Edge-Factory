@@ -49,25 +49,36 @@ def test_exact_six_am_can_build_pending_card(tmp_path):
     assert not mp.receipts(tmp_path)
 
 
-def test_cli_before_six_does_not_load_slate_or_touch_live_state(tmp_path, monkeypatch, capsys):
+def test_rolling_cli_before_six_freezes_available_inputs_without_live_state(tmp_path, monkeypatch, capsys):
+    early = NOW.astimezone(at.TZ).replace(hour=3, minute=36)
+
     class Clock(datetime):
         @classmethod
         def now(cls, tz=None):
-            return NOW.astimezone(at.TZ).replace(hour=3, minute=36)
+            return early
 
     def forbidden(*args, **kwargs):
-        raise AssertionError("data or live state loaded before build window")
+        raise AssertionError("live state or legacy daily capture loaded")
 
+    rows = [pick(1), pick(2)]
+    for row in rows:
+        row.update(as_of=early.isoformat(), odds_captured_at=(early - timedelta(minutes=10)).isoformat(),
+                   kickoff_utc=(early + timedelta(hours=4)).isoformat())
+    (tmp_path / "picks_today.json").write_text(json.dumps(rows))
     monkeypatch.setattr(at, "datetime", Clock)
+    monkeypatch.setattr(mp, "datetime", Clock)
     monkeypatch.setattr(at, "LOCALDATA", tmp_path)
     monkeypatch.setenv("EDGE_FACTORY_ML_PAPER", "1")
     monkeypatch.setattr(at, "load_state", forbidden)
     monkeypatch.setattr(at, "load_settled_scores", forbidden)
     monkeypatch.setattr(mp, "capture", forbidden)
-    assert at._run_ml_paper() is True  # no picks_today.json exists to read
+    assert at._run_ml_paper() is True
+    frozen = mp.receipts(tmp_path)[0]
+    assert frozen["accas"] and frozen["freeze_basis"] == mp.ROLLING_FREEZE
+    assert frozen["frozen_at"] == early.isoformat()
+    assert not mp.state_path(tmp_path).exists()
     out = capsys.readouterr()
-    assert "06:00" in out.out and "09:00" in out.out and not out.err
-    assert not list(tmp_path.iterdir())
+    assert "next 24 hours" in out.out and "NOT YET" not in out.out and not out.err
 
 
 def test_next_date_keeps_prior_pending_evidence_and_frozen_receipt(tmp_path):
