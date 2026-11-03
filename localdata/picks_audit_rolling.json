@@ -2109,6 +2109,102 @@
         "since_activation": null,
         "since_activation_unavailable_reason": "activation date unavailable"
       },
+      "pfc_0187397f26c1f84f6c3a9883": {
+        "activated_as_of": "2026-11-03",
+        "historical_validation": {
+          "metrics": {
+            "avg_odds": 1.641,
+            "hit": 0.641,
+            "n": 390,
+            "n_priced": 390,
+            "roi": 0.0025,
+            "wilson_lb": 0.5923,
+            "wins": 250
+          },
+          "mining_window": {
+            "as_of_exclusive": "2026-11-03",
+            "split": "2026-10-06",
+            "start": "2026-06-13"
+          },
+          "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+          "statistical_gates_passed": true
+        },
+        "label": "1x2 unanimous[scoutingstats+zulubet] avg_p>=0",
+        "last_30_days": {
+          "archive_days_available": 29,
+          "archive_days_expected": 29,
+          "archive_receipt": {
+            "empty_regular_ledger_dates": [],
+            "unsafe_regular_ledger_dates": [
+              "2026-10-05",
+              "2026-10-06",
+              "2026-10-09",
+              "2026-10-10",
+              "2026-10-11",
+              "2026-10-12",
+              "2026-10-13",
+              "2026-10-14",
+              "2026-10-15",
+              "2026-10-16",
+              "2026-10-17",
+              "2026-10-18",
+              "2026-10-19",
+              "2026-10-21",
+              "2026-10-22",
+              "2026-10-23",
+              "2026-10-24",
+              "2026-10-25",
+              "2026-10-26",
+              "2026-10-27",
+              "2026-10-28",
+              "2026-10-29",
+              "2026-10-30",
+              "2026-10-31",
+              "2026-11-01",
+              "2026-11-02",
+              "2026-11-03"
+            ]
+          },
+          "by_price_evidence": {},
+          "by_price_quarantine_reason": {},
+          "end": "2026-11-03",
+          "first_observed_pick": null,
+          "hit_rate": null,
+          "last_observed_pick": null,
+          "missing_archive_dates": [],
+          "priced_picks": 0,
+          "pricing_coverage": null,
+          "roi": null,
+          "settled_picks": 0,
+          "start": "2026-10-05",
+          "wins": 0
+        },
+        "registry_status": "certified",
+        "since_activation": {
+          "archive_days_available": 0,
+          "archive_days_expected": 0,
+          "archive_receipt": {
+            "empty_regular_ledger_dates": [],
+            "unsafe_regular_ledger_dates": [
+              "2026-11-03"
+            ]
+          },
+          "by_price_evidence": {},
+          "by_price_quarantine_reason": {},
+          "end": "2026-11-03",
+          "first_observed_pick": null,
+          "hit_rate": null,
+          "last_observed_pick": null,
+          "missing_archive_dates": [],
+          "priced_picks": 0,
+          "pricing_coverage": null,
+          "roi": null,
+          "settled_picks": 0,
+          "start": "2026-11-03",
+          "wins": 0
+        },
+        "since_activation_unavailable_reason": null
+      },
       "pfc_054448b499623dd39b072b38": {
         "activated_as_of": "2026-10-20",
         "historical_validation": {
@@ -8866,6 +8962,102 @@
           "roi": null,
           "settled_picks": 0,
           "start": "2026-10-20",
+          "wins": 0
+        },
+        "since_activation_unavailable_reason": null
+      },
+      "pfc_ad11db4313c86de27efdde5a": {
+        "activated_as_of": "2026-11-03",
+        "historical_validation": {
+          "metrics": {
+            "avg_odds": 1.641,
+            "hit": 0.641,
+            "n": 390,
+            "n_priced": 390,
+            "roi": 0.0025,
+            "wilson_lb": 0.5923,
+            "wins": 250
+          },
+          "mining_window": {
+            "as_of_exclusive": "2026-11-03",
+            "split": "2026-10-06",
+            "start": "2026-06-13"
+          },
+          "price_basis": "retrospective_same_side_donor; live prices require existing evidence gates",
+          "statistical_gates_passed": true
+        },
+        "label": "1x2 unanimous[scoutingstats+zulubet] avg_p>=35",
+        "last_30_days": {
+          "archive_days_available": 29,
+          "archive_days_expected": 29,
+          "archive_receipt": {
+            "empty_regular_ledger_dates": [],
+            "unsafe_regular_ledger_dates": [
+              "2026-10-05",
+              "2026-10-06",
+              "2026-10-09",
+              "2026-10-10",
+              "2026-10-11",
+              "2026-10-12",
+              "2026-10-13",
+              "2026-10-14",
+              "2026-10-15",
+              "2026-10-16",
+              "2026-10-17",
+              "2026-10-18",
+              "2026-10-19",
+              "2026-10-21",
+              "2026-10-22",
+              "2026-10-23",
+              "2026-10-24",
+              "2026-10-25",
+              "2026-10-26",
+              "2026-10-27",
+              "2026-10-28",
+              "2026-10-29",
+              "2026-10-30",
+              "2026-10-31",
+              "2026-11-01",
+              "2026-11-02",
+              "2026-11-03"
+            ]
+          },
+          "by_price_evidence": {},
+          "by_price_quarantine_reason": {},
+          "end": "2026-11-03",
+          "first_observed_pick": null,
+          "hit_rate": null,
+          "last_observed_pick": null,
+          "missing_archive_dates": [],
+          "priced_picks": 0,
+          "pricing_coverage": null,
+          "roi": null,
+          "settled_picks": 0,
+          "start": "2026-10-05",
+          "wins": 0
+        },
+        "registry_status": "certified",
+        "since_activation": {
+          "archive_days_available": 0,
+          "archive_days_expected": 0,
+          "archive_receipt": {
+            "empty_regular_ledger_dates": [],
+            "unsafe_regular_ledger_dates": [
+              "2026-11-03"
+            ]
+          },
+          "by_price_evidence": {},
+          "by_price_quarantine_reason": {},
+          "end": "2026-11-03",
+          "first_observed_pick": null,
+          "hit_rate": null,
+          "last_observed_pick": null,
+          "missing_archive_dates": [],
+          "priced_picks": 0,
+          "pricing_coverage": null,
+          "roi": null,
+          "settled_picks": 0,
+          "start": "2026-11-03",
           "wins": 0
         },
         "since_activation_unavailable_reason": null

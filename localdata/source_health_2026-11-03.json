@@ -42,8 +42,8 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 22,
-      "be_raw": 27,
+      "be_matched": 18,
+      "be_raw": 30,
       "be_usable": 27,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
@@ -51,10 +51,10 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 8,
+      "join_matched_rows": 5,
       "join_miss_counts": {
-        "fixture_key_miss": 7,
-        "no_pick_for_fixture": 12
+        "fixture_key_miss": 14,
+        "no_pick_for_fixture": 8
       },
       "reason": null,
       "status": "cache_only"
@@ -92,8 +92,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 2,
+      "join_matched_rows": 0,
       "join_miss_counts": {
+        "fixture_key_miss": 2,
         "selection_unsupported": 10
       },
       "reason": null,
@@ -155,15 +156,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 1334,
+      "join_matched_rows": 103,
       "join_miss_counts": {
-        "fixture_key_miss": 24060,
-        "market_unsupported": 21770,
-        "no_pick_for_fixture": 24729
+        "fixture_key_miss": 50123,
+        "market_unsupported": 23199,
+        "no_pick_for_fixture": 2644
       },
-      "op_matched": 12,
-      "op_raw": 71893,
-      "op_usable": 71893,
+      "op_matched": 1,
+      "op_raw": 76069,
+      "op_usable": 76069,
       "reason": null,
       "status": "cache_only"
     },
@@ -182,12 +183,12 @@
       "coherence_withheld_fixtures": 2,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 22,
+      "join_matched_rows": 13,
       "join_miss_counts": {
-        "fixture_key_miss": 13455,
-        "no_pick_for_fixture": 245
+        "fixture_key_miss": 13595,
+        "no_pick_for_fixture": 114
       },
-      "pa_matched": 59,
+      "pa_matched": 46,
       "pa_raw": 13722,
       "pa_scored": 13722,
       "reason": null,
@@ -331,7 +332,7 @@
         "fixture_key_miss": 47,
         "no_pick_for_fixture": 210
       },
-      "oa_matched": 24,
+      "oa_matched": 26,
       "oa_raw": 360,
       "oa_usable": 360,
       "reason": null,

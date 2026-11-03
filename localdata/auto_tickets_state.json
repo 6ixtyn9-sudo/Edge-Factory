@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 317.93582000000004,
   "cycle_base": 203.9865280000001,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-03",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "LASK Linz vs Slovan Bratislava",
+              "pick": "HOME",
+              "prob": 0.7328263337116913,
+              "odds": 1.4386,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-03",
+                "LASK Linz",
+                "Slovan Bratislava"
+              ]
+            },
+            {
+              "match": "Feyenoord vs Inter",
+              "pick": "AWAY",
+              "prob": 0.4669766125990192,
+              "odds": 1.83,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-03",
+                "Feyenoord",
+                "Inter"
+              ]
+            }
+          ],
+          "odds": 2.63,
+          "stake_pct": 39.742
+        },
+        {
+          "legs": [
+            {
+              "match": "Villarreal vs Paris Saint Germain",
+              "pick": "AWAY",
+              "prob": 0.665,
+              "odds": 1.67,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-03",
+                "Villarreal",
+                "Paris Saint Germain"
+              ]
+            },
+            {
+              "match": "Pogo\u0144 Siedlce vs Ruch Chorz\u00f3w",
+              "pick": "AWAY",
+              "prob": 0.49656487170220454,
+              "odds": 1.75,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-03",
+                "Pogo\u0144 Siedlce",
+                "Ruch Chorz\u00f3w"
+              ]
+            }
+          ],
+          "odds": 2.92,
+          "stake_pct": 39.742
+        }
+      ],
+      "staked_pct": 79.484
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
