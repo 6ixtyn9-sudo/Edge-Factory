@@ -155,7 +155,9 @@ def test_capture_uses_bound_existing_ml_and_never_mutates_inputs(tmp_path):
     assert all(a["stake_units"] > 0 for a in r["accas"])
     assert sum(a["stake_units"] for a in r["accas"]) <= 100.0
     assert r["policy"]["odds_band"] is None
-    assert len({tuple(c["fixture"]) for a in r["accas"] for c in a["legs"]}) == 6
+    # Accas are mutually exclusive: distinct fixtures == total published legs.
+    distinct = {tuple(c["fixture"]) for a in r["accas"] for c in a["legs"]}
+    assert len(distinct) == sum(len(a["legs"]) for a in r["accas"]) == 4
     assert r["learning"]["status"] == "awaiting_prior_paper_results"
     assert {p.name for p in tmp_path.glob("*state*")} == {mp.state_path(tmp_path).name}
     assert mp.receipts(tmp_path) == [r]

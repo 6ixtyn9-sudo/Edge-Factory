@@ -81,6 +81,10 @@ def test_next_day_overnight_quotes_are_eligible_from_previous_evening(tmp_path):
     assert row["window_end"] == (now + timedelta(hours=24)).isoformat()
     card = mp.render_card(row)
     assert "2026-11-03 03:00 SAST" in card and "next 24 hours" in card
+    # Kickoff sits next to its matchup on the same line: one header line
+    # per leg, so legs are countable at a glance.
+    assert "   Home Club 1 vs Away Club 1 · KICKOFF 2026-11-03 03:00 SAST\n" in card
+    assert card.count("KICKOFF ") == sum(len(a["legs"]) for a in row["accas"])
 
 
 @pytest.mark.parametrize("delta,allowed", [(29, False), (30, True), (1440, True), (1441, False)])
