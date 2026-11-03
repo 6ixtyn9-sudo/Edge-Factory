@@ -256,6 +256,43 @@ def test_legacy_draft_seal_enforces_policy_and_preserves_draft_hash(tmp_path):
     mp.validate_record(frozen, DAY)
 
 
+def test_seal_refuses_draft_superseded_by_intervening_rolling_publications(tmp_path):
+    # Regression: the seal used to size the draft only against receipts
+    # captured before it, ignoring rolling commitments published after the
+    # draft. Sealing then breached the aggregate/fixture budgets and forked
+    # the rolling prior-hash chain, making the whole history unreadable.
+    draft = run_capture(tmp_path, context([pick(1), pick(2)]))
+    assert draft["accas"]
+    state_bytes = mp.state_path(tmp_path).read_bytes()
+    for i in range(5):
+        now = NOW + timedelta(minutes=i + 1)
+        published = run(tmp_path, now, slate(now, ids=(2 * i + 1, 2 * i + 2)))
+        assert published["accas"]
+    before = mp.receipts(tmp_path)
+    assert mp.performance(before, lambda c: None)["paper_committed_units"] == 25.0
+    # The draft's fixtures and stake now collide with intervening rolling
+    # commitments (25u aggregate ceiling and 5u fixture cap already used).
+    assert run_capture(tmp_path, {}, now=FREEZE) is None
+    assert not mp.receipt_path(tmp_path, DAY).exists()
+    assert mp.receipts(tmp_path) == before
+    assert mp.performance(mp.receipts(tmp_path), lambda c: None)[
+        "paper_committed_units"] == 25.0
+    assert mp.state_path(tmp_path).read_bytes() == state_bytes
+
+
+def test_seal_refuses_draft_after_disjoint_rolling_publication(tmp_path):
+    # Even with no fixture or budget overlap, an intervening rolling receipt
+    # was written without the backdated legacy receipt in its prior hashes,
+    # so sealing would fork the chain. The draft must stay unsealed.
+    run_capture(tmp_path, context([pick(1), pick(2)]))
+    now = NOW + timedelta(minutes=1)
+    run(tmp_path, now, slate(now, ids=(3, 4)))
+    before = mp.receipts(tmp_path)
+    assert run_capture(tmp_path, {}, now=FREEZE) is None
+    assert not mp.receipt_path(tmp_path, DAY).exists()
+    assert mp.receipts(tmp_path) == before
+
+
 def test_pre_policy_concentrated_draft_is_reduced_only_at_new_publication(tmp_path):
     draft = run_capture(tmp_path, context([pick(1), pick(2)]))
     # Simulate a genuine pre-policy draft: no declaration, original concentrated stake.
