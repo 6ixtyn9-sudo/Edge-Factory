@@ -35,6 +35,7 @@ import os
 import tempfile
 from collections import Counter, defaultdict
 from datetime import UTC, datetime, timedelta
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from heapq import heappush, heapreplace
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -65,7 +66,10 @@ LOCAL_TZ = ZoneInfo("Africa/Johannesburg")
 SEARCH_BEAM_WIDTH = 512  # computational search breadth, NOT a betting/leg/odds cap
 BASE_PAPER_UNITS = 100.0
 KELLY_MULTIPLIER = 0.25  # v2: quarter of robust portfolio Kelly; NOT a fixed stake
-MAX_PAPER_EXPOSURE = 0.25  # of available paper capital, never live capital
+MAX_PAPER_EXPOSURE = 0.25  # shared aggregate ceiling; legacy free-bank sizing retained
+MAX_FIXTURE_STAKE_FRACTION = 0.05  # NEW gross stake per canonical fixture / TOTAL paper bank
+FIXTURE_CONCENTRATION_POLICY = "ml_paper_fixture_gross_stake_cap"
+MICRO_UNITS = 1_000_000
 EXACT_SEARCH_SIZE = 8
 PORTFOLIO_ITERATIONS = 256
 SEARCH_NODE_BUDGET = 250_000  # computation bound, never a leg/card count cap
@@ -167,6 +171,109 @@ def _validate_bets(row):
         raise ValueError("paper stakes exceed declared v2 exposure limit")
 
 
+def _validate_concentration_record(row, *, required=False):
+    """Old evidence stays legacy; any new declaration is strict and fail-closed."""
+    policy_container = row.get("policy")
+    declared = isinstance(policy_container, dict) and "fixture_concentration" in policy_container
+    has_audit = "fixture_concentration" in row
+    if not declared and not has_audit:
+        if required:
+            raise ValueError("new ML paper publication lacks fixture concentration policy")
+        return
+    if not declared or not has_audit:
+        raise ValueError("incomplete ML paper fixture concentration evidence")
+    bank = _nonnegative_finite(row.get("paper_bank_at_decision"), "total paper bank")
+    committed = _nonnegative_finite(row.get("paper_pending_reserved_at_decision"), "paper commitments")
+    available = _nonnegative_finite(row.get("paper_available_at_decision"), "free paper bank")
+    if not math.isclose(available, max(0.0, bank - committed), rel_tol=0, abs_tol=1e-9):
+        raise ValueError("fixture concentration capital disagrees with bank")
+    expected_policy = _fixture_concentration_policy(bank)
+    if policy_container["fixture_concentration"] != expected_policy:
+        raise ValueError("invalid or unsupported ML paper fixture concentration policy")
+    audit = row["fixture_concentration"]
+    expected_keys = {
+        "input_stake_micro_units", "fixture_projected_stake_micro_units",
+        "published_stake_micro_units", "released_stake_micro_units", "input_acca_count",
+        "dropped_acca_count", "aggregate_budget_scale",
+        "fixture_exposures_overlap_not_additive_bank_commitments",
+        "fixtures",
+    }
+    if not isinstance(audit, dict) or set(audit) != expected_keys:
+        raise ValueError("invalid fixture concentration audit schema")
+    for key in expected_keys - {"aggregate_budget_scale", "fixtures",
+                                "fixture_exposures_overlap_not_additive_bank_commitments"}:
+        if type(audit[key]) is not int or audit[key] < 0:
+            raise ValueError("invalid fixture concentration audit integer")
+    scale = audit["aggregate_budget_scale"]
+    if (type(scale) not in (int, float) or not math.isfinite(scale) or not 0 <= scale <= 1
+            or audit["fixture_exposures_overlap_not_additive_bank_commitments"] is not True
+            or not isinstance(audit["fixtures"], list)):
+        raise ValueError("invalid fixture concentration audit values")
+    if not (audit["input_stake_micro_units"] >= audit["fixture_projected_stake_micro_units"]
+            >= audit["published_stake_micro_units"]):
+        raise ValueError("fixture concentration audit increases stake")
+    if audit["released_stake_micro_units"] != (
+            audit["input_stake_micro_units"] - audit["published_stake_micro_units"]):
+        raise ValueError("fixture concentration released stake mismatch")
+    actual = _fixture_exposure_micro_units(row["accas"])
+    total = sum(_stake_micro_units(a["stake_units"]) for a in row["accas"])
+    headroom = _aggregate_headroom_micro_units(bank, committed)
+    if (total != audit["published_stake_micro_units"] or total > headroom
+            or total > _decimal_micro_units(available, "free paper bank")
+            or audit["dropped_acca_count"] != audit["input_acca_count"] - len(row["accas"])):
+        raise ValueError("published paper capital audit mismatch")
+    expected_scale = (min(1.0, headroom / audit["fixture_projected_stake_micro_units"])
+                      if audit["fixture_projected_stake_micro_units"] else 1.0)
+    if not math.isclose(scale, expected_scale, rel_tol=1e-12, abs_tol=1e-15):
+        raise ValueError("fixture concentration aggregate scale mismatch")
+    limit = expected_policy["fixture_limit_micro_units"]
+    seen = set()
+    entry_keys = {
+        "fixture", "prior_open_stake_micro_units", "residual_budget_micro_units",
+        "input_stake_micro_units", "fixture_projected_stake_micro_units",
+        "published_stake_micro_units", "total_open_stake_micro_units", "idle_budget_micro_units",
+    }
+    for entry in audit["fixtures"]:
+        if not isinstance(entry, dict) or set(entry) != entry_keys:
+            raise ValueError("invalid audited fixture schema")
+        fixture = _fixture_key(entry["fixture"])
+        if fixture in seen or entry["fixture"] != list(fixture):
+            raise ValueError("duplicate or noncanonical audited fixture order")
+        seen.add(fixture)
+        for key in entry_keys - {"fixture"}:
+            if type(entry[key]) is not int or entry[key] < 0:
+                raise ValueError("invalid audited fixture integer")
+        prior = entry["prior_open_stake_micro_units"]
+        residual = max(0, limit - prior)
+        final = actual.get(fixture, 0)
+        if (entry["residual_budget_micro_units"] != residual
+                or entry["published_stake_micro_units"] != final
+                or final > residual
+                or not entry["input_stake_micro_units"]
+                >= entry["fixture_projected_stake_micro_units"] >= final
+                or entry["total_open_stake_micro_units"] != prior + final
+                or entry["idle_budget_micro_units"] != residual - final):
+            raise ValueError("audited fixture exposure violates the approved budget")
+    if set(actual) - seen:
+        raise ValueError("published fixture missing from concentration audit")
+    if [tuple(e["fixture"]) for e in audit["fixtures"]] != sorted(seen):
+        raise ValueError("fixture concentration audit is not canonically ordered")
+    for acca in row["accas"]:
+        stake = _stake_micro_units(acca["stake_units"])
+        fraction = acca.get("stake_fraction_of_free_bank")
+        allocation = acca.get("portfolio_allocation")
+        if (type(fraction) not in (int, float) or not math.isfinite(fraction)
+                or not math.isclose(fraction, stake / MICRO_UNITS / available,
+                                    rel_tol=1e-12, abs_tol=1e-15)
+                or not isinstance(allocation, dict)
+                or allocation.get("aggregate_budget_scale") != scale):
+            raise ValueError("published acca sizing audit mismatch")
+        for leg in acca["legs"]:
+            if tuple(leg["fixture"]) != (leg["date"], source_team_key(leg["home"]),
+                                         source_team_key(leg["away"])):
+                raise ValueError("published leg lacks canonical fixture identity")
+
+
 def validate_record(row, day, *, draft=False):
     """Shared read/restore validation; no rewriting or financial-state access."""
     if (
@@ -230,6 +337,7 @@ def validate_record(row, day, *, draft=False):
     if not draft and bool(row["accas"]) != (row["status"] == "paper_accas"):
         raise ValueError("paper receipt status/positions disagree")
     _validate_bets(row)
+    _validate_concentration_record(row)
 
 
 def receipts(root):
@@ -921,16 +1029,311 @@ def allocate_portfolio(proposals):
         "max_free_bank_exposure": MAX_PAPER_EXPOSURE,
         "proposal_count": len(proposals),
         "search": "exact_per_book_up_to_8_candidates_otherwise_512_beam_approximate",
+        "diagnostics_scope": "unconstrained_pre_projection_solver_not_published_optimality",
+        "published_portfolio_optimality_proven": False,
     }
 
 
-def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None):
-    """v2: joint robust portfolio sizing, quarter Kelly, <=25% of FREE paper bank.
+def _nonnegative_finite(value, name):
+    if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
+        raise ValueError(f"invalid {name}")
+    return value
 
-    No band/count/leg cap, no negative-single-EV filter, no cross-acca team
-    exclusion. Reusing teams across accas is allowed and allocated jointly.
-    No refill or leverage; uncertainty in the acca marginals remains unproved.
+
+def _decimal_micro_units(value, name, *, rounding=ROUND_FLOOR):
+    _nonnegative_finite(value, name)
+    return int((Decimal(str(value)) * MICRO_UNITS).to_integral_value(rounding=rounding))
+
+
+def _stake_micro_units(value):
+    """New stakes live on the existing downward-floored 1e-6 unit grid."""
+    _nonnegative_finite(value, "paper stake")
+    scaled = Decimal(str(value)) * MICRO_UNITS
+    if scaled != scaled.to_integral_value():
+        raise ValueError("paper stake is not on the micro-unit grid")
+    return int(scaled)
+
+
+def _fixture_limit_micro_units(total_bank_units):
+    _nonnegative_finite(total_bank_units, "total paper bank")
+    # Decimal avoids rounding 4.59015985 up to 4.590160 at a grid boundary.
+    limit = (Decimal(str(total_bank_units)) * Decimal(str(MAX_FIXTURE_STAKE_FRACTION))
+             * MICRO_UNITS)
+    return int(limit.to_integral_value(rounding=ROUND_FLOOR))
+
+
+def _aggregate_headroom_micro_units(bank, committed):
+    _nonnegative_finite(bank, "total paper bank")
+    _nonnegative_finite(committed, "paper commitments")
+    remaining = (Decimal(str(bank)) * Decimal(str(MAX_PAPER_EXPOSURE))
+                 - Decimal(str(committed)))
+    return max(0, int((remaining * MICRO_UNITS).to_integral_value(rounding=ROUND_FLOOR)))
+
+
+def _fixture_key(value):
+    """The already-canonical (SAST fixture day, home key, away key), without aliases."""
+    if (not isinstance(value, (list, tuple)) or len(value) != 3
+            or any(not isinstance(part, str) or not part for part in value)):
+        raise ValueError("invalid canonical fixture identity")
+    key = tuple(value)
+    datetime.strptime(key[0], "%Y-%m-%d")
+    return key
+
+
+def _acca_fixtures(acca):
+    return sorted({_fixture_key(c["fixture"]) for c in acca["legs"]})
+
+
+def _prior_open_fixture_micro_units(report):
+    """Reuse performance()'s settled/pending items, not a second settlement rule.
+
+    A known loss is settled even if other legs lack scores; only profit_units=None
+    remains reserved. Historical non-grid stakes are rounded UP for this prior
+    reservation, never down, so sub-micro precision cannot create extra budget.
     """
+    prior = defaultdict(int)
+    for day in report["history"]:
+        for acca in day["accas"]:
+            if acca["profit_units"] is None:
+                stake = _decimal_micro_units(
+                    acca["stake_units"], "prior open stake", rounding=ROUND_CEILING
+                )
+                for fixture in _acca_fixtures(acca):
+                    prior[fixture] += stake
+    return dict(sorted(prior.items()))
+
+
+def _fixture_concentration_policy(total_bank_units):
+    limit = _fixture_limit_micro_units(total_bank_units)
+    return {
+        "id": FIXTURE_CONCENTRATION_POLICY,
+        "max_fixture_stake_fraction": MAX_FIXTURE_STAKE_FRACTION,
+        "denominator": "total_paper_bank_at_decision",
+        "fixture_limit_micro_units": limit,
+        "fixture_limit_units": limit / MICRO_UNITS,
+        "rounding": "floor_to_micro_units",
+        "fixture_identity": ["fixture_day", "canonical_home_key", "canonical_away_key"],
+        "counting": "full_acca_stake_once_per_distinct_fixture_all_markets_sides_books_contracts_no_netting",
+        "prior_exposure_basis": "performance_profit_units_is_none_prior_stakes_ceiling_to_micro_units",
+        "projection": "canonical_sorted_fixtures_integer_proportional_downward_only_no_refill",
+        "grandfathering": "existing_positions_unchanged_over_cap_prior_leaves_zero_new_budget",
+    }
+
+
+def _normalise_prior_fixtures(prior):
+    if not isinstance(prior, dict):
+        raise ValueError("invalid prior fixture exposure")  # noqa: TRY004 - evidence validation
+    result = {}
+    for key, stake in prior.items():
+        fixture = _fixture_key(key)
+        if fixture in result or type(stake) is not int or stake < 0:
+            raise ValueError("invalid prior fixture micro-unit exposure")
+        result[fixture] = stake
+    return result
+
+
+def _fixture_exposure_micro_units(accas):
+    exposure = defaultdict(int)
+    for acca in accas:
+        stake = _stake_micro_units(acca["stake_units"])
+        for fixture in _acca_fixtures(acca):
+            exposure[fixture] += stake
+    return exposure
+
+
+def _concentration_audit(fixtures_by_acca, input_stakes, projected_stakes, published,
+                         prior, limit, *, aggregate_scale=1.0):
+    affected = defaultdict(list)
+    for index, fixtures in enumerate(fixtures_by_acca):
+        for fixture in fixtures:
+            affected[fixture].append(index)
+    final_exposure = _fixture_exposure_micro_units(published)
+    entries = []
+    for fixture in sorted(set(affected) | set(prior)):
+        indices = affected.get(fixture, [])
+        before = sum(input_stakes[i] for i in indices)
+        projected = sum(projected_stakes[i] for i in indices)
+        final = final_exposure.get(fixture, 0)
+        reserved = prior.get(fixture, 0)
+        residual = max(0, limit - reserved)
+        if not before >= projected >= final or final > residual:
+            raise ValueError("fixture projection increased stake or exceeded residual budget")
+        entries.append({
+            "fixture": list(fixture),
+            "prior_open_stake_micro_units": reserved,
+            "residual_budget_micro_units": residual,
+            "input_stake_micro_units": before,
+            "fixture_projected_stake_micro_units": projected,
+            "published_stake_micro_units": final,
+            "total_open_stake_micro_units": reserved + final,
+            "idle_budget_micro_units": residual - final,
+        })
+    before, projected_total = sum(input_stakes), sum(projected_stakes)
+    final_total = sum(_stake_micro_units(a["stake_units"]) for a in published)
+    return {
+        "input_stake_micro_units": before,
+        "fixture_projected_stake_micro_units": projected_total,
+        "published_stake_micro_units": final_total,
+        "released_stake_micro_units": before - final_total,
+        "input_acca_count": len(input_stakes),
+        "dropped_acca_count": len(input_stakes) - len(published),
+        "aggregate_budget_scale": aggregate_scale,
+        "fixture_exposures_overlap_not_additive_bank_commitments": True,
+        "fixtures": entries,
+    }
+
+
+def project_fixture_stakes(accas, *, total_bank_units, prior_open_fixture_micro_units=None):
+    """Conservative post-allocation projection; never re-optimise or redistribute.
+
+    Each canonical fixture scales ALL affected current tickets by the same
+    integer floor ratio. Later passes can only decrease earlier exposures.
+    Public helper callers opt in explicitly; immutable publication always does.
+    """
+    limit = _fixture_limit_micro_units(total_bank_units)
+    prior = _normalise_prior_fixtures(prior_open_fixture_micro_units or {})
+    fixtures_by_acca = [_acca_fixtures(a) for a in accas]
+    stakes = [_stake_micro_units(a["stake_units"]) for a in accas]
+    affected = defaultdict(list)
+    for index, fixtures in enumerate(fixtures_by_acca):
+        for fixture in fixtures:
+            affected[fixture].append(index)
+    for fixture in sorted(affected):
+        indices = affected[fixture]
+        exposure = sum(stakes[i] for i in indices)
+        residual = max(0, limit - prior.get(fixture, 0))
+        if exposure > residual:
+            for index in indices:
+                stakes[index] = stakes[index] * residual // exposure
+    projected = list(stakes)
+    published = [dict(a, stake_units=stake / MICRO_UNITS)
+                 for a, stake in zip(accas, stakes) if stake > 0]
+    return published, _concentration_audit(
+        fixtures_by_acca, [_stake_micro_units(a["stake_units"]) for a in accas],
+        projected, published, prior, limit,
+    )
+
+
+def _scale_aggregate_stakes(accas, audit, *, bank, committed, available):
+    """Existing shared 25% headroom, applied AFTER projection, downward only."""
+    _nonnegative_finite(available, "free paper bank")
+    headroom = _aggregate_headroom_micro_units(bank, committed)
+    stakes = [_stake_micro_units(a["stake_units"]) for a in accas]
+    total = sum(stakes)
+    scale = min(1.0, headroom / total) if total else 1.0
+    final_stakes = [stake * headroom // total if total > headroom else stake for stake in stakes]
+    if any(final_stakes) and available <= 0:
+        raise ValueError("nonzero paper stakes without free capital")
+    published = []
+    for acca, before, stake in zip(accas, stakes, final_stakes):
+        if stake <= 0:
+            continue
+        if stake > before:
+            raise ValueError("aggregate scaling increased a paper stake")
+        published.append(dict(
+            acca, stake_units=stake / MICRO_UNITS,
+            stake_fraction_of_free_bank=stake / MICRO_UNITS / available,
+            portfolio_allocation=dict(acca.get("portfolio_allocation", {}),
+                                      aggregate_budget_scale=scale),
+        ))
+    entries = {tuple(e["fixture"]): e for e in audit["fixtures"]}
+    final_exposure = _fixture_exposure_micro_units(published)
+    fixtures = []
+    for fixture, entry in sorted(entries.items()):
+        final = final_exposure.get(fixture, 0)
+        if final > entry["fixture_projected_stake_micro_units"]:
+            raise ValueError("aggregate scaling refilled a fixture")
+        fixtures.append(dict(
+            entry, published_stake_micro_units=final,
+            total_open_stake_micro_units=entry["prior_open_stake_micro_units"] + final,
+            idle_budget_micro_units=entry["residual_budget_micro_units"] - final,
+        ))
+    final_total = sum(stake for stake in final_stakes if stake > 0)
+    if final_total > headroom or final_total > _decimal_micro_units(available, "free paper bank"):
+        raise ValueError("final paper reservation exceeds capital headroom")
+    audit = dict(
+        audit, fixtures=fixtures, published_stake_micro_units=final_total,
+        released_stake_micro_units=audit["input_stake_micro_units"] - final_total,
+        dropped_acca_count=audit["dropped_acca_count"] + len(accas) - len(published),
+        aggregate_budget_scale=scale,
+    )
+    return published, audit
+
+
+def _size_publication_accas(rows, report, diagnostics):
+    """All fresh-production sizing: allocator -> fixture projection -> aggregate."""
+    bank, committed = report["paper_bank_units"], report["paper_committed_units"]
+    available = max(0.0, report["paper_free_units"])
+    concentration = {
+        "total_bank_units": bank,
+        "prior_open_fixture_micro_units": _prior_open_fixture_micro_units(report),
+    }
+    if _aggregate_headroom_micro_units(bank, committed) > 0 and available > 0:
+        plan = select_accas(rows, available, diagnostics=diagnostics, concentration=concentration)
+        audit = diagnostics.pop("fixture_concentration")
+    else:
+        plan, audit = project_fixture_stakes([], **concentration)
+    return _scale_aggregate_stakes(
+        plan, audit, bank=bank, committed=committed, available=available
+    )
+
+
+def _attach_concentration_policy(payload, audit):
+    payload["policy"] = dict(payload.get("policy") or {},
+                             fixture_concentration=_fixture_concentration_policy(
+                                 payload["paper_bank_at_decision"]))
+    payload["fixture_concentration"] = audit
+    return payload
+
+
+def _concentrate_sealed_draft(payload, history, score_lookup):
+    """A pre-policy draft is not frozen evidence: seal only a capped reduction.
+
+    Keep its picks/probabilities/learning and original draft hash. Re-read validated
+    prior capital under the caller's lock; never resize any historical receipt.
+    """
+    captured = parse_zoned_timestamp(payload["captured_at"])
+    prior = [r for r in history if r["date"] <= payload["date"]
+             and parse_zoned_timestamp(r["captured_at"]) < captured]
+    report = performance(prior, score_lookup)
+    bank, committed = report["paper_bank_units"], report["paper_committed_units"]
+    available = max(0.0, report["paper_free_units"])
+    plan, audit = project_fixture_stakes(
+        payload["accas"], total_bank_units=bank,
+        prior_open_fixture_micro_units=_prior_open_fixture_micro_units(report),
+    )
+    plan, audit = _scale_aggregate_stakes(
+        plan, audit, bank=bank, committed=committed, available=available
+    )
+    payload.update(
+        accas=plan, paper_bank_at_decision=bank,
+        paper_pending_reserved_at_decision=committed, paper_available_at_decision=available,
+        search=dict(payload.get("search") or {},
+                    diagnostics_scope="unconstrained_pre_projection_solver_not_published_optimality",
+                    published_portfolio_optimality_proven=False),
+    )
+    if payload["status"] != "missed_freeze_no_paper_bet":
+        payload["status"] = "paper_accas" if plan else "no_paper_bet"
+    return _attach_concentration_policy(payload, audit)
+
+
+def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
+                 concentration=None):
+    """Joint comonotonic-acca sizing, quarter Kelly and downward free-bank flooring.
+
+    ``concentration`` is an explicit replay/helper opt-in containing total bank
+    and prior open fixture micro-units. Production sizing ALWAYS supplies it;
+    immutable writers independently require the approved policy. The default
+    preserves the old helper's unconstrained semantics, not production policy.
+    Fixture reuse remains allowed within the gross stake budget. No refill,
+    leverage, confidence gate or change to the allocator/oracle is introduced.
+    """
+    if concentration is not None:
+        if (not isinstance(concentration, dict)
+                or set(concentration) != {"total_bank_units", "prior_open_fixture_micro_units"}):
+            raise ValueError("invalid fixture concentration inputs")
+        _fixture_limit_micro_units(concentration["total_bank_units"])
+        _normalise_prior_fixtures(concentration["prior_open_fixture_micro_units"])
     if not math.isfinite(available_units) or available_units <= 0:
         return []
     search = {}
@@ -941,18 +1344,36 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None):
         diagnostics.update(allocation)
     plan = []
     for a, fraction in zip(proposals, fractions):
-        stake = math.floor(available_units * fraction * 1e6) / 1e6
+        stake = math.floor(available_units * fraction * 1e6)
         if stake <= 0:
             continue
         plan.append(
             dict(
                 a,
-                stake_units=stake,
+                stake_units=stake / MICRO_UNITS,
                 stake_fraction_of_free_bank=fraction,
                 portfolio_allocation=allocation,
             )
         )
+    if concentration is not None:
+        plan, audit = project_fixture_stakes(plan, **concentration)
+        for acca in plan:
+            acca["stake_fraction_of_free_bank"] = acca["stake_units"] / available_units
+        if diagnostics is not None:
+            diagnostics["fixture_concentration"] = audit
     return plan
+
+
+def _publish_receipt(path, payload):
+    """The only production decision writer: require policy BEFORE atomic creation.
+
+    _write_once remains a byte-storage primitive for validated historical replay.
+    A production caller cannot use that primitive's legacy tolerance to publish
+    an undeclared or over-budget new portfolio. Caller holds the lane lock.
+    """
+    validate_record(payload, payload["date"])
+    _validate_concentration_record(payload, required=True)
+    return _write_once(path, payload)
 
 
 def _write_once(path, payload):
@@ -1279,9 +1700,10 @@ def capture(
             if corruption is not None:
                 payload["draft_integrity_error"] = corruption
                 payload["rejections"] = {"corrupt_pre_cutoff_draft": 1}
+            payload = _concentrate_sealed_draft(payload, receipts(root), score_lookup)
             payload["persisted_at"] = at.isoformat()
             payload["sha256"] = digest(payload)
-            return payload if _write_once(path, payload) else None
+            return payload if _publish_receipt(path, payload) else None
 
         _recover_acknowledged_state(root, day, current)
         try:
@@ -1324,12 +1746,12 @@ def capture(
         prior = [
             r
             for r in history
-            if r["date"] < day and parse_zoned_timestamp(r["captured_at"]) < captured
+            if r["date"] <= day and parse_zoned_timestamp(r["captured_at"]) < captured
         ]
         report = performance(prior, score_lookup)
         available = max(0.0, report["paper_free_units"])
         search_diagnostics = {}
-        plan = select_accas(rows, available, diagnostics=search_diagnostics)
+        plan, concentration_audit = _size_publication_accas(rows, report, search_diagnostics)
         persisted = clock()
         if persisted.astimezone(LOCAL_TZ).date().isoformat() != day or persisted < captured:
             return None  # no cross-day/backdated publication
@@ -1377,6 +1799,7 @@ def capture(
             "search": search_diagnostics,
             "accas": plan,
         }
+        _attach_concentration_policy(payload, concentration_audit)
 
         def freeze_current(at):
             if at < captured or at.astimezone(LOCAL_TZ).date().isoformat() != day:
@@ -1388,10 +1811,12 @@ def capture(
                         if at - parse_zoned_timestamp(c["price_at"])
                         <= _quote_max_age(c["price_source"])
                         and parse_zoned_timestamp(c["kickoff_utc"]) >= at + MIN_LEAD]
-            final_plan = plan
+            final_plan, final_audit = plan, concentration_audit
             if len(eligible) != len(rows):
                 rejected["quote_or_kickoff_expired_during_build"] = len(rows) - len(eligible)
-                final_plan = select_accas(eligible, available, diagnostics=search_diagnostics)
+                final_plan, final_audit = _size_publication_accas(
+                    eligible, report, search_diagnostics
+                )
             for c in eligible:
                 c["price_age_seconds_at_freeze"] = (
                     at - parse_zoned_timestamp(c["price_at"])
@@ -1402,6 +1827,7 @@ def capture(
                 status="paper_accas" if final_plan else "no_paper_bet",
                 candidates=eligible,
                 accas=final_plan,
+                fixture_concentration=final_audit,
                 coverage=dict(payload["coverage"], candidate_count=len(eligible),
                               candidate_fixtures=len({tuple(c["fixture"]) for c in eligible}),
                               status="inputs_available" if eligible
@@ -1411,8 +1837,7 @@ def capture(
                 persisted_at=at.isoformat(),
             )
             frozen["sha256"] = digest(frozen)
-            validate_record(frozen, day)
-            return frozen if _write_once(path, frozen) else None
+            return frozen if _publish_receipt(path, frozen) else None
 
         if persisted >= freeze_at:
             return freeze_current(persisted)
@@ -1546,14 +1971,13 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
         apply_learning(rows, learner)
         report = performance(history, score_lookup)
         available = max(0.0, report["paper_free_units"])
-        budget = max(0.0, report["paper_bank_units"] * MAX_PAPER_EXPOSURE - report["paper_committed_units"])
         if not rows and history:
             return None  # no new eligible opportunity, not another daily seal
         search = {}
         # Timestamp AFTER search/sizing and recheck every guard at publication.
         # If a slow search crosses expiry, rebuild only the surviving candidates.
         for _ in range(3):
-            plan = select_accas(rows, available, diagnostics=search) if budget > 0 else []
+            plan, concentration_audit = _size_publication_accas(rows, report, search)
             persisted = clock()
             if persisted < captured or persisted.astimezone(LOCAL_TZ).date().isoformat() != day:
                 return None
@@ -1571,16 +1995,19 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
                 if not k.startswith("price_age_seconds_")} for c in rows],
             "learning": learner, "bank": report["paper_bank_units"],
             "committed": report["paper_committed_units"], "rejections": dict(rejected),
+            # Policy/prior exposure participate in deduplication identity. Equal
+            # bank totals do not imply equal per-fixture residual budgets.
+            "fixture_concentration": {
+                "policy": _fixture_concentration_policy(report["paper_bank_units"]),
+                "prior_open_fixture_micro_units": [
+                    [e["fixture"], e["prior_open_stake_micro_units"]]
+                    for e in concentration_audit["fixtures"]
+                    if e["prior_open_stake_micro_units"]
+                ],
+            },
         })
         if any(r.get("snapshot_sha256") == snapshot for r in history):
             return None
-        total = sum(a["stake_units"] for a in plan)
-        scale = min(1.0, budget / total) if total else 1.0
-        for a in plan:
-            a["stake_units"] = math.floor(a["stake_units"] * scale * 1e6) / 1e6
-            a["stake_fraction_of_free_bank"] = a["stake_units"] / available
-            a["portfolio_allocation"] = dict(a["portfolio_allocation"], aggregate_budget_scale=scale)
-        plan = [a for a in plan if a["stake_units"] > 0]
         for c in rows:
             c["price_age_seconds_at_freeze"] = (persisted - parse_zoned_timestamp(c["price_at"])).total_seconds()
         receipt = {
@@ -1594,6 +2021,7 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
             "paper_available_at_decision": available, "paper_bank_at_decision": report["paper_bank_units"],
             "paper_pending_reserved_at_decision": report["paper_committed_units"],
             "candidates": rows, "models": models, "learning": learner, "accas": plan,
+            "fixture_concentration": concentration_audit,
             "search": search, "rejections": dict(rejected),
             "coverage": {"candidate_count": len(rows), "candidate_fixtures": len({tuple(c["fixture"]) for c in rows}),
                          "slate_rows": len(context["slate"]), "status": "inputs_available" if rows else "input_starved_not_strategy_selectivity"},
@@ -1601,11 +2029,12 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
                        "max_aggregate_bank_exposure": MAX_PAPER_EXPOSURE, "odds_band": None,
                        "quote_max_age_hours": QUOTE_MAX_AGE.total_seconds() / 3600,
                        "stricter_source_limits_retained": True, "minimum_legs": 2,
-                       "probability_basis": "product_assumes_cross_fixture_independence_not_validated"},
+                       "probability_basis": "product_assumes_cross_fixture_independence_not_validated",
+                       "fixture_concentration": _fixture_concentration_policy(
+                           report["paper_bank_units"])},
         }
         receipt["sha256"] = digest(receipt)
-        validate_record(receipt, day)
-        return receipt if _write_once(rolling_receipt_path(root, receipt), receipt) else None
+        return receipt if _publish_receipt(rolling_receipt_path(root, receipt), receipt) else None
 
 
 def source_forecast_probability(candidate):
@@ -1894,6 +2323,9 @@ def performance(history, score_lookup):
             "kelly_multiplier": KELLY_MULTIPLIER,
             "max_free_bank_exposure": MAX_PAPER_EXPOSURE,
             "max_aggregate_bank_exposure_for_rolling": MAX_PAPER_EXPOSURE,
+            "max_new_fixture_stake_fraction_of_total_bank": MAX_FIXTURE_STAKE_FRACTION,
+            "fixture_concentration_policy": FIXTURE_CONCENTRATION_POLICY,
+            "fixture_concentration_applies_to": "new_publications_only_existing_positions_unchanged",
             "bankruptcy": "zero_free_capital_no_new_stakes_no_refill",
         },
         "by_bucket_market_leg_diagnostics": dict(groups),
@@ -1943,6 +2375,34 @@ def render_card(receipt):
                 f"      {comparison} · {quote_age}",
                 "",
             ])
+    concentration = receipt.get("fixture_concentration")
+    if concentration is not None:
+        policy = receipt["policy"]["fixture_concentration"]
+        lines.extend([
+            "FIXTURE STAKE BUDGET (gross; overlapping exposures are not additive bank commitments)",
+            (f"   {policy['max_fixture_stake_fraction']:.1%} of TOTAL paper bank at decision"
+             f" · {policy['fixture_limit_units']:.6f} units per canonical fixture"),
+            "   Full acca stake counted once per fixture across markets, sides, books and contracts; no netting.",
+            (f"   Reservation {concentration['input_stake_micro_units'] / MICRO_UNITS:.6f}"
+             f" -> {concentration['published_stake_micro_units'] / MICRO_UNITS:.6f} units"
+             f" · released/idle {concentration['released_stake_micro_units'] / MICRO_UNITS:.6f} units; no refill."),
+        ])
+        for entry in concentration["fixtures"]:
+            if not entry["input_stake_micro_units"]:
+                continue
+            day, home, away = entry["fixture"]
+            lines.append(
+                f"   {day} {home} vs {away}: new {entry['published_stake_micro_units'] / MICRO_UNITS:.6f}"
+                f" + prior open {entry['prior_open_stake_micro_units'] / MICRO_UNITS:.6f}"
+                f" · unused new budget {entry['idle_budget_micro_units'] / MICRO_UNITS:.6f} units"
+            )
+        lines.extend(["   Existing over-cap positions are grandfathered, not resized.", ""])
+    elif receipt["accas"]:
+        lines.extend([
+            "LEGACY STAKING — no fixture-cap policy is declared on this frozen receipt.",
+            "   Historical stakes are preserved; the new gross fixture budget applies to new publications.",
+            "",
+        ])
     for heading, details in (
         ("COVERAGE", receipt.get("coverage", {})),
         ("REJECTIONS", receipt.get("rejections", {})),
@@ -1995,7 +2455,9 @@ def render_performance(report):
         f"DRAWDOWN {report['max_daily_close_drawdown_units']:.3f} paper units / {report['max_daily_close_drawdown_fraction']:.1%} (ticket-date marks; pending at cost)\n"
         f"DAYS     {report['bet_days']} bet / {report['no_bet_days']} no-bet · {report['missed_freeze_days']} missed freeze\n\n"
         + evidence + "\n"
-        "STAKING  model Kelly, own paper bank only; ROI is profit / settled stakes\n"
+        "STAKING  quarter Kelly, own paper bank only; ROI is profit / settled stakes\n"
+        f"FIXTURES new publications: gross stake <= {MAX_FIXTURE_STAKE_FRACTION:.1%} of TOTAL paper bank per canonical fixture;\n"
+        "         downward-only, no refill; existing frozen positions remain unchanged\n"
         "PAYOUT   hypothetical same-book singles product, not a confirmed acca quote\n"
         "\nPaper only. No real-money stakes or automatic promotion.\n"
     )
