@@ -157,12 +157,17 @@ def test_many_additions_share_one_aggregate_exposure_limit(tmp_path):
         assert report["paper_committed_units"] <= 25 + 1e-6
         assert all(p.read_bytes() == blob for p, blob in originals.items())
     assert len(history) == 10 and sum(bool(r["accas"]) for r in history) > 1
+    # The approved 5% fixture budget binds before the shared 25% ceiling:
+    # five distinct-fixture publications reserve 5u each; later ones are NO BET.
     assert report["receipt_days"] == report["bet_days"] == 1
     assert report["no_bet_days"] == 0 and report["decision_receipts"] == 10
-    assert report["paper_committed_units"] == pytest.approx(25, abs=1e-5)
-    assert any(
-        a["portfolio_allocation"]["aggregate_budget_scale"] < 1 for r in history for a in r["accas"]
+    assert sum(bool(r["accas"]) for r in history) == 5
+    assert report["paper_committed_units"] == pytest.approx(25, abs=1e-6)
+    assert all(
+        e["published_stake_micro_units"] <= e["residual_budget_micro_units"]
+        for r in history for e in r["fixture_concentration"]["fixtures"]
     )
+    assert any(r["fixture_concentration"]["released_stake_micro_units"] for r in history)
     mp.publish(tmp_path, lambda c: None)
     text = (tmp_path / f"{mp.PREFIX}_{DAY}.txt").read_text()
     assert all(r["decision_id"] in text for r in history)
