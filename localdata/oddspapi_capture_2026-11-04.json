@@ -1,248 +1,137 @@
 {
-  "added": 19597,
-  "attempted": 11,
+  "added": 3907,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Real Madrid",
-      "fixture_id": "id1000232474560618",
-      "home": "AEK Athens"
-    },
-    {
-      "away": "Persib Bandung",
-      "fixture_id": "id1000066873878926",
-      "home": "Melbourne Victory FC"
-    },
-    {
-      "away": "FC Nizhny Novgorod",
-      "fixture_id": "id1000009175696974",
-      "home": "FC Yenisey Krasnoyarsk"
-    },
-    {
-      "away": "Naegohyang Womens FC",
-      "fixture_id": "id1004298574318996",
-      "home": "Bam Khatoon FC"
-    },
-    {
-      "away": "Ho Chi Minh City FC",
-      "fixture_id": "id1004298574319008",
-      "home": "April 25 National Defence Sports Club"
-    },
-    {
-      "away": "PSGC Ciamis",
-      "fixture_id": "id1005400276076074",
-      "home": "PSS Sleman"
-    },
-    {
-      "away": "MTK Budapest",
-      "fixture_id": "id1000232475801762",
-      "home": "Kairat Almaty"
-    },
-    {
-      "away": "FC Adhyaksa Bekasi",
-      "fixture_id": "id1005400276075986",
-      "home": "Java United FC"
-    },
-    {
-      "away": "Persiku Kudus",
-      "fixture_id": "id1005400276076060",
-      "home": "Persikad Depok"
-    },
-    {
-      "away": "FC Viktoria Plzen B",
-      "fixture_id": "id1001415175747584",
-      "home": "Sparta Prague B"
-    },
-    {
-      "away": "Dynamic Herb Cebu FC",
-      "fixture_id": "id1000165474515542",
-      "home": "Mendiola FC"
+      "away": "Liverpool",
+      "fixture_id": "id1000232474560622",
+      "home": "Fenerbahce"
     }
   ],
   "budget": {
     "day": "2026-11-04",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 95,
-    "remaining_today": 5,
-    "spent_today": 20
+    "month_spent": 97,
+    "remaining_today": 3,
+    "spent_today": 22
   },
-  "budget_deferred": 7,
-  "captured_at": "2026-11-04T04:26:30+00:00",
+  "budget_deferred": 77,
+  "captured_at": "2026-11-04T07:29:57+00:00",
   "date": "2026-11-04",
   "errors": [],
-  "excluded_srl_fixtures": 9,
-  "fixtures": 210,
-  "future_slate_fixtures": 5,
+  "excluded_srl_fixtures": 10,
+  "fixtures": 201,
+  "future_slate_fixtures": 4,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 459,
+  "market_census_distinct": 403,
   "markets": {
-    "1x2": 3175,
-    "btts": 1074,
-    "ou_0.5": 394,
-    "ou_0.75": 50,
-    "ou_1": 132,
-    "ou_1.25": 102,
-    "ou_1.5": 744,
-    "ou_1.75": 227,
-    "ou_2": 295,
-    "ou_2.25": 315,
-    "ou_2.5": 1442,
-    "ou_2.75": 516,
-    "ou_3": 548,
-    "ou_3.25": 556,
-    "ou_3.5": 1514,
-    "ou_3.75": 452,
-    "ou_4": 464,
-    "ou_4.25": 304,
-    "ou_4.5": 928,
-    "ou_4.75": 204,
-    "ou_5": 216,
-    "ou_5.25": 161,
-    "ou_5.5": 498,
-    "ou_5.75": 94,
-    "ou_6": 116,
-    "ou_6.25": 30,
-    "ou_6.5": 158,
-    "ou_6.75": 25,
-    "ou_7": 25,
-    "ou_7.25": 25,
-    "ou_7.5": 67,
-    "ou_7.75": 20,
-    "ou_8": 20,
-    "ou_8.25": 20,
-    "ou_8.5": 42,
-    "tt_away_0.5": 500,
-    "tt_away_0.75": 22,
-    "tt_away_1": 106,
-    "tt_away_1.25": 38,
-    "tt_away_1.5": 592,
-    "tt_away_1.75": 36,
-    "tt_away_2": 66,
-    "tt_away_2.25": 20,
-    "tt_away_2.5": 467,
+    "1x2": 444,
+    "btts": 190,
+    "ou_0.5": 50,
+    "ou_0.75": 10,
+    "ou_1": 26,
+    "ou_1.25": 10,
+    "ou_1.5": 114,
+    "ou_1.75": 34,
+    "ou_2": 36,
+    "ou_2.25": 36,
+    "ou_2.5": 152,
+    "ou_2.75": 99,
+    "ou_3": 136,
+    "ou_3.25": 140,
+    "ou_3.5": 246,
+    "ou_3.75": 140,
+    "ou_4": 134,
+    "ou_4.25": 98,
+    "ou_4.5": 162,
+    "ou_4.75": 40,
+    "ou_5": 36,
+    "ou_5.25": 29,
+    "ou_5.5": 103,
+    "ou_5.75": 13,
+    "ou_6": 29,
+    "ou_6.25": 13,
+    "ou_6.5": 56,
+    "ou_6.75": 5,
+    "ou_7.5": 41,
+    "ou_8.5": 22,
+    "tt_away_0.5": 114,
+    "tt_away_0.75": 2,
+    "tt_away_1": 2,
+    "tt_away_1.25": 18,
+    "tt_away_1.5": 174,
+    "tt_away_1.75": 24,
+    "tt_away_2": 24,
+    "tt_away_2.25": 18,
+    "tt_away_2.5": 124,
     "tt_away_2.75": 18,
-    "tt_away_3": 36,
-    "tt_away_3.25": 18,
-    "tt_away_3.5": 256,
-    "tt_away_3.75": 2,
-    "tt_away_4.5": 137,
-    "tt_away_5.5": 59,
-    "tt_away_6.5": 19,
-    "tt_home_0.5": 508,
-    "tt_home_0.75": 20,
-    "tt_home_1": 74,
-    "tt_home_1.25": 36,
-    "tt_home_1.5": 652,
-    "tt_home_1.75": 56,
-    "tt_home_2": 60,
-    "tt_home_2.25": 40,
-    "tt_home_2.5": 431,
+    "tt_away_3": 2,
+    "tt_away_3.25": 2,
+    "tt_away_3.5": 63,
+    "tt_away_4.5": 40,
+    "tt_away_5.5": 9,
+    "tt_away_6.5": 3,
+    "tt_home_0.5": 116,
+    "tt_home_0.75": 18,
+    "tt_home_1": 18,
+    "tt_home_1.25": 24,
+    "tt_home_1.5": 188,
+    "tt_home_1.75": 18,
+    "tt_home_2": 18,
+    "tt_home_2.25": 18,
+    "tt_home_2.5": 116,
     "tt_home_2.75": 2,
-    "tt_home_3": 36,
-    "tt_home_3.5": 217,
-    "tt_home_4": 16,
-    "tt_home_4.5": 85,
-    "tt_home_5": 16,
+    "tt_home_3.5": 58,
+    "tt_home_4.5": 29,
     "tt_home_5.5": 3
   },
   "markets_source": "cache",
-  "matched": 11,
+  "matched": 1,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "market_id_unknown": 4258,
-    "market_inactive": 141,
-    "market_unsupported_clean_sheet": 272,
-    "market_unsupported_corners": 923,
-    "market_unsupported_correct_score": 1229,
-    "market_unsupported_double_chance": 919,
-    "market_unsupported_draw_no_bet": 581,
-    "market_unsupported_handicap": 5248,
-    "market_unsupported_odd_even": 1102,
-    "market_unsupported_period": 16237,
-    "market_unsupported_win_to_nil": 476,
-    "outcome_inactive": 2404
+    "market_id_unknown": 834,
+    "market_unsupported_clean_sheet": 68,
+    "market_unsupported_corners": 475,
+    "market_unsupported_correct_score": 190,
+    "market_unsupported_double_chance": 115,
+    "market_unsupported_draw_no_bet": 89,
+    "market_unsupported_handicap": 1155,
+    "market_unsupported_odd_even": 184,
+    "market_unsupported_period": 3732,
+    "market_unsupported_win_to_nil": 108,
+    "outcome_inactive": 536
   },
   "parse_skips_classified": {
     "expected": {
-      "market_inactive": 141,
-      "outcome_inactive": 2404
+      "outcome_inactive": 536
     },
     "loss_or_diagnosis": {
-      "market_id_unknown": 4258,
-      "market_unsupported_clean_sheet": 272,
-      "market_unsupported_corners": 923,
-      "market_unsupported_correct_score": 1229,
-      "market_unsupported_double_chance": 919,
-      "market_unsupported_draw_no_bet": 581,
-      "market_unsupported_handicap": 5248,
-      "market_unsupported_odd_even": 1102,
-      "market_unsupported_period": 16237,
-      "market_unsupported_win_to_nil": 476
+      "market_id_unknown": 834,
+      "market_unsupported_clean_sheet": 68,
+      "market_unsupported_corners": 475,
+      "market_unsupported_correct_score": 190,
+      "market_unsupported_double_chance": 115,
+      "market_unsupported_draw_no_bet": 89,
+      "market_unsupported_handicap": 1155,
+      "market_unsupported_odd_even": 184,
+      "market_unsupported_period": 3732,
+      "market_unsupported_win_to_nil": 108
     }
   },
-  "pending_fixtures": 18,
+  "pending_fixtures": 78,
   "quoted_fixtures": [
     {
-      "away": "Real Madrid",
-      "fixture_id": "id1000232474560618",
-      "home": "AEK Athens"
-    },
-    {
-      "away": "Persib Bandung",
-      "fixture_id": "id1000066873878926",
-      "home": "Melbourne Victory FC"
-    },
-    {
-      "away": "FC Nizhny Novgorod",
-      "fixture_id": "id1000009175696974",
-      "home": "FC Yenisey Krasnoyarsk"
-    },
-    {
-      "away": "Naegohyang Womens FC",
-      "fixture_id": "id1004298574318996",
-      "home": "Bam Khatoon FC"
-    },
-    {
-      "away": "Ho Chi Minh City FC",
-      "fixture_id": "id1004298574319008",
-      "home": "April 25 National Defence Sports Club"
-    },
-    {
-      "away": "PSGC Ciamis",
-      "fixture_id": "id1005400276076074",
-      "home": "PSS Sleman"
-    },
-    {
-      "away": "MTK Budapest",
-      "fixture_id": "id1000232475801762",
-      "home": "Kairat Almaty"
-    },
-    {
-      "away": "FC Adhyaksa Bekasi",
-      "fixture_id": "id1005400276075986",
-      "home": "Java United FC"
-    },
-    {
-      "away": "Persiku Kudus",
-      "fixture_id": "id1005400276076060",
-      "home": "Persikad Depok"
-    },
-    {
-      "away": "FC Viktoria Plzen B",
-      "fixture_id": "id1001415175747584",
-      "home": "Sparta Prague B"
-    },
-    {
-      "away": "Dynamic Herb Cebu FC",
-      "fixture_id": "id1000165474515542",
-      "home": "Mendiola FC"
+      "away": "Liverpool",
+      "fixture_id": "id1000232474560622",
+      "home": "Fenerbahce"
     }
   ],
-  "reserved_requests": 5,
-  "rows": 19597,
+  "reserved_requests": 3,
+  "rows": 3907,
   "schema": 1,
-  "slate_candidate_fixtures": 11,
+  "slate_candidate_fixtures": 10,
   "slate_match_mode": "exact_normalized_pair",
   "slate_priority_fixtures": 1,
   "slate_provider_overlap_fixtures": 4,
@@ -252,12 +141,6 @@
       "home": "Slavia Praha",
       "league": "World: UEFA Champions League",
       "normalized_pair": "arsenal|slavia praha"
-    },
-    {
-      "away": "Nizhny Novgorod",
-      "home": "Enisey",
-      "league": "Russia Cup",
-      "normalized_pair": "enisey|nizhny novgorod"
     },
     {
       "away": "Real Betis",
