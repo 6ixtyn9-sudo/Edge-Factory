@@ -40,7 +40,7 @@ def _eligible(pick, as_of, min_lead=30):
     return pt.operational_pick_eligibility(pick, as_of=as_of, min_lead=min_lead)
 
 
-# --- the observed renderings, verbatim from localdata/picks_2026-10-03.json --
+# --- the observed renderings, verbatim from localdata/archive/picks/2026/10/picks_2026-10-03.json --
 
 @pytest.mark.parametrize("raw,kickoff_utc,witness", [
     # statarea bare HH:MM rendered at UTC-5; true kickoff 20:45 SAST

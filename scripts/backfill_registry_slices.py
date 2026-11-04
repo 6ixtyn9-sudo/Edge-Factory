@@ -37,6 +37,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.util import dated_archive_path
+
 from edgefactory.enh_registry import (  # noqa: E402
     REGISTRY_VERSION, _locked, _read, _write_atomic, registry_path,
 )
@@ -45,9 +47,13 @@ from edgefactory.enh_registry import (  # noqa: E402
 def _picks_for_day(ref: str, day: str) -> list[dict]:
     """The committed pick list for one day, or [] when there is none."""
     path = f"localdata/picks_{str(day)[:10]}.json"
-    proc = subprocess.run(["git", "show", f"{ref}:{path}"], cwd=ROOT,
-                          capture_output=True, text=True)
-    if proc.returncode != 0:
+    paths = [path, str(dated_archive_path(Path("localdata"), Path(path).name))]
+    for candidate in paths:
+        proc = subprocess.run(["git", "show", f"{ref}:{candidate}"], cwd=ROOT,
+                              capture_output=True, text=True)
+        if proc.returncode == 0:
+            break
+    else:
         return []
     try:
         payload = json.loads(proc.stdout)

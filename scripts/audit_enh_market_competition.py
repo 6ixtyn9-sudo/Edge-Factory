@@ -15,6 +15,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / 'src'), str(ROOT / 'scripts')]
+from edgefactory.util import dated_artifact_files, dated_artifact_path
 from scripts import audit_enh_under_parity as audit
 
 
@@ -22,7 +23,7 @@ def competition(root=ROOT, source=None):
     source = Path(source) if source is not None else root / 'docs/operator/audits/enh-under-redteam-2026-10-19.json'
     original = json.loads(source.read_text())
     for relative, expected in original['inputs_sha256'].items():
-        if hashlib.sha256((root / relative).read_bytes()).hexdigest() != expected:
+        if hashlib.sha256((dated_artifact_path(root / 'localdata', Path(relative).name) if Path(relative).parent == Path('localdata') else root / relative).read_bytes()).hexdigest() != expected:
             raise ValueError(f'Prior audit input changed: {relative}; rerun original audit first')
     evidence = {tuple(row['fixture']): row for row in original['evidence']}
     raw = defaultdict(list)
@@ -50,7 +51,9 @@ def competition(root=ROOT, source=None):
             if path not in original['inputs_sha256']:
                 raise ValueError(f'Archive is not in the source manifest: {path}')
             if path not in archives:
-                archives[path] = json.loads((root / path).read_text())
+                archives[path] = json.loads((dated_artifact_path(root / 'localdata', Path(path).name)
+                                            if Path(path).parent == Path('localdata')
+                                            else root / path).read_text())
             candidates = [r for r in archives[path] if audit.identity(r) == key and
                           r.get('as_of') == entry['as_of'] and audit.snapshot_rates(r) == rates]
             if not candidates:
@@ -131,7 +134,7 @@ def recover_evidence(root=ROOT, *, warehouse=None):
     rows, receipt = load_archived_picks_with_receipt(start, end, localdata=root / 'localdata')
     # Witness the actual input bytes, not just the reconstructed values.
     for pattern in ('picks_????-??-??.json', 'picks_morning_????-??-??.json'):
-        for path in (root / 'localdata').glob(pattern):
+        for path in dated_artifact_files(root / 'localdata', pattern):
             if start <= path.stem[-10:] <= end:
                 read(path)
     by_fixture, raw_quotes = defaultdict(list), defaultdict(list)

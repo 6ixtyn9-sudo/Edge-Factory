@@ -18,6 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 MAX_DEV = 0.07
 
 
+from edgefactory.util import dated_artifact_files
+
+
 def _key(value: object) -> str:
     return re.sub(r"[^a-z0-9]+", "", str(value or "").lower())
 
@@ -58,7 +61,7 @@ def _matches(pick: dict[str, Any], row: dict[str, Any]) -> bool:
 
 
 def build_report(localdata: Path, n: int = 14) -> dict[str, Any]:
-    archives = sorted(localdata.glob("picks_morning_*.json"))[-max(0, int(n)):]
+    archives = dated_artifact_files(localdata, "picks_morning_*.json")[-max(0, int(n)):]
     days = [path.stem.removeprefix("picks_morning_") for path in archives]
     shadow = _shadow_rows(localdata, days)
     candidates: list[dict[str, Any]] = []

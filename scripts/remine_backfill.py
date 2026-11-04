@@ -66,6 +66,9 @@ BE_TERMINAL = {"success", "no_matches_day"}
 FOOTBALL_COMPLETE = "football_data_complete"
 
 
+from edgefactory.util import dated_artifact_files, dated_artifact_path
+
+
 def _run_date() -> str:
     value = os.environ.get("EDGE_FACTORY_RUN_DATE")
     if value:
@@ -123,7 +126,7 @@ def _ledger_rows() -> list[dict[str, Any]]:
 
 
 def _audit_path(run_date: str) -> Path:
-    return LOCALDATA / f"remine_audit_{run_date}.jsonl"
+    return dated_artifact_path(LOCALDATA, f"remine_audit_{run_date}.jsonl")
 
 
 def _record(run_date: str, record: dict[str, Any]) -> None:
@@ -191,7 +194,7 @@ def _approved_betexplorer_days(inventory: dict[str, Any]) -> list[str]:
 def _hold_statarea(run_date: str, inventory: dict[str, Any], ledger: list[dict[str, Any]], dry_run: bool = False) -> int:
     days = inventory.get("sources", {}).get("statarea", {}).get("date_range", {}).get("no_matches_days", [])
     audited: list[dict[str, Any]] = []
-    for audit_path in sorted(LOCALDATA.glob("remine_audit_*.jsonl")):
+    for audit_path in dated_artifact_files(LOCALDATA, "remine_audit_*.jsonl"):
         audited.extend(_read_jsonl(audit_path))
     held = 0
     for day in days:

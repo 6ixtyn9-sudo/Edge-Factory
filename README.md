@@ -337,3 +337,10 @@ PYTHONPATH=src python3 scripts/probe_oddspapi_markets.py --self-test
 The default report lands in `/tmp`, not `localdata/`. Treat coverage as evidence,
 not a new bet recommendation: only a verified fixture/market/selection map and
 later calibration can promote any new market into the pipeline.
+
+### Dated localdata storage
+
+Recent daily outputs remain in `localdata/`; older supported daily evidence is
+preserved byte-for-byte under `localdata/archive/<family>/<year>/<month>/`.
+Rollover runs through the existing cleanup and persistence scripts. See
+[archive layout, compatible readers and cache safeguards](docs/operator/localdata-archives.md).

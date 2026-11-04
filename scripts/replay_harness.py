@@ -84,6 +84,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from edgefactory.util import dated_artifact_files, dated_artifact_path
 from edgefactory.util import ticket_receipt_files, read_ticket_receipt, freeze_timestamp_matches
 
 import auto_tickets as at  # the live engine — guards, floors, constants  # noqa: E402
@@ -230,7 +231,7 @@ def slate_generation(faithful: bool = True) -> dict:
             if day:
                 by_day.setdefault(day, []).append(r)
         return by_day
-    for f in sorted(LOCALDATA.glob("picks_morning_*.json")):
+    for f in dated_artifact_files(LOCALDATA, "picks_morning_*.json"):
         m = MORNING_RE.match(f.name)
         if not m:
             continue
@@ -869,7 +870,7 @@ def enh_ml_coverage(records, root=None, since=None):
         if day not in archive_rows:
             from audit_recent_picks import _load_archive_rows
             base = (root or at.ROOT) / "localdata"
-            archive_rows[day] = [(name, _load_archive_rows(base / name, day)) for name in
+            archive_rows[day] = [(name, _load_archive_rows(dated_artifact_path(base, name), day)) for name in
                                 (f"picks_morning_{day}.json", f"picks_{day}.json")]
         source = next((name for name, rows in archive_rows[day] if row in rows), None)
         stats["provenance"].append(dict(date=day, home=rec.get("home"), away=rec.get("away"),
@@ -941,7 +942,7 @@ def enh_day_plans(records, floors, *, stake_frac=None, stake_mode=None,
                     continue
                 # Registry records don't retain an exact-parent cohort recipe;
                 # only archived predecision picks may supply it. No invented n.
-                archive = (root or at.ROOT) / "localdata" / f"picks_{day}.json"
+                archive = dated_artifact_path((root or at.ROOT) / "localdata", f"picks_{day}.json")
                 try:
                     rows = json.loads(archive.read_text())
                     row = next(r for r in rows if r.get("contract_id") == context.get("contract_id")

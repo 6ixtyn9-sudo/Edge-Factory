@@ -1123,3 +1123,174 @@ def freeze_timestamp_matches(frozen_at, build_at):
                                         and frozen == built.replace(microsecond=0))))
     except (TypeError, ValueError):
         return False
+
+
+# Dated evidence has a bounded hot directory and a byte-preserving cold layout.
+# Monthly raw source CSVs, decision receipts, resets/reconciliations and all
+# financial state are deliberately outside this exact daily-family allowlist.
+DATED_ARCHIVE_FAMILIES = {
+    "picks": {"json", "txt"}, "picks_morning": {"json"},
+    "auto_tickets": {"txt"}, "autobets_enh_tickets": {"txt"}, "autobets_ML": {"txt"},
+    "source_health": {"json"}, "betminer_probe": {"json"},
+    "oddspapi_capture": {"json"}, "theoddsapi_capture": {"json"},
+    "card_enrich_shadow": {"json"}, "remine_audit": {"jsonl"},
+    "ml_fade_research_report": {"md"}, "ml_fade_checkpoint_contexts": {"txt"},
+    "ml_fade_checkpoint_price_study": {"txt"},
+}
+DATED_ARCHIVE_KEEP_DAYS = 30
+_DATED_ARTIFACT_RE = re.compile(r"^(?P<family>[A-Za-z_]+)_(?P<day>20\d{2}-\d{2}-\d{2})\.(?P<ext>json|jsonl|txt|md)$")
+
+
+def dated_archive_path(localdata, name):
+    """Canonical cold path, or None for unknown/state/monthly/special files."""
+    from pathlib import Path
+    if Path(name).name != name:
+        raise ValueError("dated artifact name must be a basename")
+    match = _DATED_ARTIFACT_RE.fullmatch(name)
+    if not match or match["ext"] not in DATED_ARCHIVE_FAMILIES.get(match["family"], set()):
+        return None
+    try:
+        day = date.fromisoformat(match["day"])
+    except ValueError:
+        return None
+    return (Path(localdata) / "archive" / match["family"] / f"{day.year:04d}"
+            / f"{day.month:02d}" / name)
+
+
+def _dated_file_hash(path):
+    import hashlib
+    if path.is_symlink() or not path.is_file():
+        raise ValueError(f"dated evidence is not a regular file: {path}")
+    with path.open("rb") as handle:
+        return hashlib.file_digest(handle, "sha256").hexdigest()
+
+
+def dated_artifact_path(localdata, name):
+    """Read/write compatibility: active root, or existing archive; never guess a revision.
+
+    Equal cache/HEAD copies are one logical artifact. Different bytes fail
+    closed; root-first fallback must not silently mask a changed morning/slip.
+    Missing outputs still use the original root path, including current days.
+    """
+    from pathlib import Path
+    root = Path(localdata) / name
+    archived = dated_archive_path(localdata, name)
+    if archived is not None:
+        for parent in (archived.parent, archived.parent.parent,
+                       archived.parent.parent.parent, Path(localdata) / "archive"):
+            if parent.is_symlink():
+                raise ValueError(f"archive directory must not be a symlink: {parent}")
+        if root.is_symlink() or archived.is_symlink():
+            raise ValueError(f"dated evidence must not be a symlink: {name}")
+    if archived is not None and archived.exists():
+        if root.exists() and _dated_file_hash(root) != _dated_file_hash(archived):
+            raise ValueError(f"conflicting root/archive dated evidence: {name}")
+        return archived
+    return root
+
+
+def dated_artifact_files(localdata, pattern):
+    """The old root glob plus canonical archived files, ordered by basename.
+
+    No recursive scan of raw source/financial trees; duplicates count once.
+    The family/year/month sharding keeps every archive directory small.
+    """
+    from pathlib import Path
+    base = Path(localdata)
+    names = {p.name for p in base.glob(pattern) if p.is_file()}
+    for path in (base / "archive").glob(f"*/*/*/{pattern}"):
+        if dated_archive_path(base, path.name) == path:
+            names.add(path.name)
+    return [dated_artifact_path(base, name) for name in sorted(names)]
+
+
+def archive_dated_artifacts(localdata, *, today=None, keep_days=DATED_ARCHIVE_KEEP_DAYS,
+                            dry_run=False):
+    """Rollover old known daily files, without compression, pruning or replacement.
+
+    Cooperating maintenance calls share a lock. Copy/fsync/link publishes an
+    independent, no-clobber archive; verify source and destination before
+    unlinking the redundant root copy. Conflicts preserve both inputs and fail.
+    Active/future files, symlinks, state and unknown families never move.
+    """
+    import fcntl
+    import os
+    import shutil
+    import tempfile
+    from datetime import timedelta
+    from pathlib import Path
+    from zoneinfo import ZoneInfo
+    base = Path(localdata)
+    if keep_days < 1:
+        raise ValueError("archive retention must be at least one day")
+    today = today or datetime.now(ZoneInfo("Africa/Johannesburg")).date()
+    cutoff = today - timedelta(days=keep_days - 1)
+    if not base.exists():
+        return []
+    latest_cards = {}
+    for path in base.iterdir():
+        match = _DATED_ARTIFACT_RE.fullmatch(path.name)
+        if (match and match["family"] in {"auto_tickets", "autobets_enh_tickets", "autobets_ML"}
+                and match["ext"] == "txt" and dated_archive_path(base, path.name) is not None):
+            family = match["family"]
+            latest_cards[family] = max(latest_cards.get(family, ""), path.name)
+    planned = []
+    for source in sorted(base.iterdir()):
+        target = dated_archive_path(base, source.name)
+        if (target is not None and source.name not in latest_cards.values()
+                and source.is_file() and not source.is_symlink()
+                and date.fromisoformat(_DATED_ARTIFACT_RE.fullmatch(source.name)["day"]) < cutoff):
+            planned.append((source, target))
+    if dry_run or not planned:
+        return planned
+    archive = base / "archive"
+    if archive.is_symlink():
+        raise ValueError("archive directory must not be a symlink")
+    archive.mkdir(exist_ok=True)
+    with (archive / ".rollover.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        for source, target in planned:
+            for parent in [target.parent.parent.parent, target.parent.parent, target.parent]:
+                if parent.is_symlink():
+                    raise ValueError(f"archive directory must not be a symlink: {parent}")
+                parent.mkdir(exist_ok=True)
+            if not source.exists():
+                if target.is_file():
+                    continue  # another locked rollover already completed
+                raise ValueError(f"dated evidence disappeared during rollover: {source}")
+            original = _dated_file_hash(source)
+            if target.exists():
+                if _dated_file_hash(target) != original:
+                    raise ValueError(f"conflicting dated evidence; both copies preserved: {source.name}")
+            else:
+                fd, temporary = tempfile.mkstemp(dir=target.parent, prefix=".rollover-")
+                os.close(fd)
+                try:
+                    shutil.copy2(source, temporary)
+                    with open(temporary, "rb") as handle:
+                        os.fsync(handle.fileno())
+                    if _dated_file_hash(Path(temporary)) != original:
+                        raise ValueError(f"dated source changed during copy: {source.name}")
+                    try:
+                        os.link(temporary, target)
+                    except FileExistsError:
+                        if _dated_file_hash(target) != original:
+                            raise ValueError(f"conflicting concurrent archive: {source.name}")
+                finally:
+                    Path(temporary).unlink(missing_ok=True)
+            for directory in (target.parent, target.parent.parent,
+                              target.parent.parent.parent, archive, base):
+                descriptor = os.open(directory, os.O_RDONLY)
+                try:
+                    os.fsync(descriptor)
+                finally:
+                    os.close(descriptor)
+            if _dated_file_hash(source) != original or _dated_file_hash(target) != original:
+                raise ValueError(f"dated evidence changed before retirement: {source.name}")
+            source.unlink()
+        descriptor = os.open(base, os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    return planned

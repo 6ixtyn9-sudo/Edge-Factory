@@ -13,6 +13,7 @@ from scipy.optimize import minimize
 from test_ml_paper import DAY, FREEZE, NOW, at, candidate, context, pick, receipt, run_capture
 
 from edgefactory import ml_paper as mp
+from edgefactory.util import dated_artifact_path
 
 
 def _scores(c, day, score):
@@ -367,7 +368,7 @@ def test_committed_morning_archive_has_a_genuine_pre_cutoff_opportunity():
 
     root = Path(__file__).resolve().parents[1]
     day = "2026-10-29"
-    rows = json.loads((root / "localdata" / f"picks_morning_{day}.json").read_text())
+    rows = json.loads((dated_artifact_path(root / "localdata", f"picks_morning_{day}.json")).read_text())
     now = datetime.fromisoformat(day + "T06:00:00Z")
     freeze = datetime.fromisoformat(day + "T09:00:00+02:00")
     cs, _, _ = mp.candidates(

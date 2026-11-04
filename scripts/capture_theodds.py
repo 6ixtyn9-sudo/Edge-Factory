@@ -66,6 +66,9 @@ KICKOFF_MISMATCH_MIN = 15     # pick-listed vs captured-API kickoff divergence g
 _SAST_TZ = ZoneInfo("Africa/Johannesburg")  # the operator's clock: log kickoffs in SAST
 
 
+from edgefactory.util import dated_artifact_path
+
+
 def _sast_hm(stamp: datetime) -> str:
     """Kickoff clock for an operator log line: SAST, never UTC."""
     return stamp.astimezone(_SAST_TZ).strftime("%H:%M SAST")
@@ -86,7 +89,7 @@ def _month_file(day: str) -> Path:
 
 
 def _receipt_path(day: str) -> Path:
-    return LOCALDATA / f"theoddsapi_capture_{str(day)[:10]}.json"
+    return dated_artifact_path(LOCALDATA, f"theoddsapi_capture_{str(day)[:10]}.json")
 
 
 def _fixture_receipt(f: dict) -> dict:
