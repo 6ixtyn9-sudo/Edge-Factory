@@ -68,6 +68,7 @@ except Exception:  # pragma: no cover - standalone use
     _ef_norm_team = None
 
 
+from edgefactory.identity import AMBIGUOUS_DOMESTIC_LEAGUE_KEYS
 from edgefactory.util import dated_artifact_path
 
 
@@ -733,6 +734,9 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
     inherit soccer_japan_j_league.
     """
     if not str(league_raw or "").strip():
+        return None
+    # Catalogue containment proves lexical overlap, not a missing country.
+    if " ".join(re.findall(r"[a-z0-9]+", _ascii_fold(league_raw))) in AMBIGUOUS_DOMESTIC_LEAGUE_KEYS:
         return None
     code = _league_code(league_raw)
     if code in SHORT_LEAGUE_KEYS:
