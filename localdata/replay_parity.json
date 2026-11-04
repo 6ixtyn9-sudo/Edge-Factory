@@ -2867,14 +2867,14 @@
           "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "a144cd700e01cbc3f38a78142ddb58eb3f13fc29",
-            "event_sha": "a144cd700e01cbc3f38a78142ddb58eb3f13fc29",
+            "checkout_head_at_capture": "f9f4ce32096045da74cd7cfba6736ebe3fd3ef27",
+            "event_sha": "f9f4ce32096045da74cd7cfba6736ebe3fd3ef27",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "41750930612",
+            "run_id": "41770490103",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-04_decision.json.gz",
@@ -2891,7 +2891,7 @@
                         "cohort": 0.7151,
                         "market": "match_over_25",
                         "match": "Fenerbah\u00e7e vs Liverpool",
-                        "model": 0.697794391095446,
+                        "model": 0.6977943910954361,
                         "odds": 1.39,
                         "outcome_source": null,
                         "pick": "over",
@@ -2902,7 +2902,7 @@
                         "cohort": 0.7151,
                         "market": "match_over_25",
                         "match": "RB Leipzig vs Manchester City",
-                        "model": 0.6026512401269003,
+                        "model": 0.6026512401268624,
                         "odds": 1.32,
                         "outcome_source": null,
                         "pick": "over",
@@ -2960,7 +2960,7 @@
                         "cohort": 0.7151,
                         "market": "match_over_25",
                         "match": "Fenerbah\u00e7e vs Liverpool",
-                        "model": 0.697794391095446,
+                        "model": 0.6977943910954361,
                         "odds": 1.39,
                         "outcome_source": null,
                         "pick": "over",
@@ -2971,7 +2971,7 @@
                         "cohort": 0.7151,
                         "market": "match_over_25",
                         "match": "RB Leipzig vs Manchester City",
-                        "model": 0.6026512401269003,
+                        "model": 0.6026512401268624,
                         "odds": 1.32,
                         "outcome_source": null,
                         "pick": "over",
@@ -3025,62 +3025,10 @@
             "card_identical": true,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 0,
-            "mean_absolute_disagreement": 0.07114878777335776,
+            "mean_absolute_disagreement": 0.07114889203621992,
             "model_below_cohort": 9,
             "models": {
-              "50709f9988c68da90b74e21e73b1ef116657c43690bbe9394c505846a11109c7": {
-                "fit_adequacy": {
-                  "assessment": "descriptive_only_not_validation",
-                  "class_counts": {
-                    "0:0": 57,
-                    "0:1": 87,
-                    "0:2": 76,
-                    "0:3": 62,
-                    "0:4": 31,
-                    "0:5": 10,
-                    "0:6": 4,
-                    "0:7": 4,
-                    "1:0": 43,
-                    "1:1": 111,
-                    "1:2": 94,
-                    "1:3": 44,
-                    "1:4": 18,
-                    "1:5": 6,
-                    "1:6": 2,
-                    "1:7": 1,
-                    "2:0": 35,
-                    "2:1": 50,
-                    "2:2": 36,
-                    "2:3": 28,
-                    "2:4": 10,
-                    "2:5": 9,
-                    "2:6": 3,
-                    "3:0": 7,
-                    "3:1": 18,
-                    "3:2": 11,
-                    "3:3": 12,
-                    "3:4": 9,
-                    "3:5": 2,
-                    "3:6": 1,
-                    "4:0": 5,
-                    "4:1": 6,
-                    "4:2": 4,
-                    "4:3": 3,
-                    "4:4": 2,
-                    "5:5": 1,
-                    "6:1": 1,
-                    "6:2": 1
-                  },
-                  "classes": 38,
-                  "mean_rows_per_class": 23.789473684210527,
-                  "min_class_count": 1,
-                  "n": 904,
-                  "served_dimensions": 57,
-                  "stored_coefficients": 2166
-                },
-                "schema": "enh_score_logit_v2"
-              },
-              "52b60aef5f9066fdb39dfc280df620460951d6e2176f1ba08630d1b6010186d7": {
+              "1c4ae4301bf20100fa4548f4dd9ed4d4072ed5fef2b40696cf4836dc5c33e617": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -3145,6 +3093,58 @@
                   "stored_coefficients": 2964
                 },
                 "schema": "enh_score_logit_v2"
+              },
+              "a810b31342f82ff5b5ac283a29069e1db0e4758791fe0e107603d637580848c4": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 57,
+                    "0:1": 87,
+                    "0:2": 76,
+                    "0:3": 62,
+                    "0:4": 31,
+                    "0:5": 10,
+                    "0:6": 4,
+                    "0:7": 4,
+                    "1:0": 43,
+                    "1:1": 111,
+                    "1:2": 94,
+                    "1:3": 44,
+                    "1:4": 18,
+                    "1:5": 6,
+                    "1:6": 2,
+                    "1:7": 1,
+                    "2:0": 35,
+                    "2:1": 50,
+                    "2:2": 36,
+                    "2:3": 28,
+                    "2:4": 10,
+                    "2:5": 9,
+                    "2:6": 3,
+                    "3:0": 7,
+                    "3:1": 18,
+                    "3:2": 11,
+                    "3:3": 12,
+                    "3:4": 9,
+                    "3:5": 2,
+                    "3:6": 1,
+                    "4:0": 5,
+                    "4:1": 6,
+                    "4:2": 4,
+                    "4:3": 3,
+                    "4:4": 2,
+                    "5:5": 1,
+                    "6:1": 1,
+                    "6:2": 1
+                  },
+                  "classes": 38,
+                  "mean_rows_per_class": 23.789473684210527,
+                  "min_class_count": 1,
+                  "n": 904,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2166
+                },
+                "schema": "enh_score_logit_v2"
               }
             },
             "paired_estimates": 9,
@@ -3164,7 +3164,7 @@
     },
     "main": {
       "counts": {
-        "MATCH": 7
+        "MATCH": 8
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -3421,6 +3421,31 @@
           "open_accas": 0,
           "settled_net": 25.03750000000001,
           "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 2,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 342.97328,
+          "committed_excluding_target": 0.0,
+          "date": "2026-11-04",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "f9f4ce32096045da74cd7cfba6736ebe3fd3ef27",
+            "event_sha": "f9f4ce32096045da74cd7cfba6736ebe3fd3ef27",
+            "file_sha256": {
+              "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
+            },
+            "run_id": "41770490103",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-11-04_decision.json.gz",
+          "free_bank": 342.97328,
+          "ledger": "NOT_COMMITTED",
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],
