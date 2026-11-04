@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from audit_recent_picks import (  # noqa: E402
     load_archived_picks_with_receipt,
 )
+from edgefactory.util import dated_artifact_files
 from edgefactory.identity import source_team_key  # noqa: E402
 from edgefactory.util import ledger_team_key  # noqa: E402
 
@@ -410,7 +411,7 @@ def load_raw_pick_archives() -> tuple[list[dict[str, Any]], dict[str, list[str]]
     rows: list[dict[str, Any]] = []
     files_by_key: dict[str, list[str]] = defaultdict(list)
     pattern = re.compile(r"^picks_(morning_)?(\d{4}-\d\d-\d\d)\.json$")
-    for path in sorted(LOCALDATA.glob("picks_*.json")):
+    for path in dated_artifact_files(LOCALDATA, "picks_*.json"):
         match = pattern.fullmatch(path.name)
         if not match:
             continue

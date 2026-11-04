@@ -103,6 +103,7 @@ LOCALDATA = ROOT / "localdata"
 # Never re-add a module-local wilson_lb here. One existed (z=1.645) with no
 # callers at all, and its only live effect was to SHADOW the engine's Z95 bound
 # for anything imported after it -- a floor quietly moved from 95% to 90%.
+from edgefactory.util import dated_artifact_files, dated_artifact_path
 from edgefactory.assay import context_verdict_league                # noqa: E402
 from edgefactory.assay import grade as assay_grade                  # noqa: E402
 from edgefactory.assay import wilson_lb                              # noqa: E402
@@ -928,7 +929,7 @@ def seed_slice_ledger(*, archives=None, settled=None, path=None,
     data_dir = LOCALDATA if localdata is None else Path(localdata)
     archive_index = _archive_index_for_slice(archives)
     real_rows, unresolved = [], []
-    for slip in sorted(data_dir.glob("auto_tickets_*.txt")):
+    for slip in dated_artifact_files(data_dir, "auto_tickets_*.txt"):
         day_match = re.search(r"(\d{4}-\d{2}-\d{2})", slip.name)
         if not day_match:
             continue
@@ -1905,7 +1906,7 @@ def _donor_supply_lines(day: str | None) -> list[str]:
     """
     if not day:
         return []
-    path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
+    path = dated_artifact_path(LOCALDATA, f"source_health_{str(day)[:10]}.json")
     try:
         payload = json.loads(path.read_text())
         sources = payload.get("sources", {})
@@ -1931,7 +1932,7 @@ def _donor_supply_lines(day: str | None) -> list[str]:
 
 def load_archived_picks():
     out = []
-    for f in sorted(LOCALDATA.glob("picks_*.json")):
+    for f in dated_artifact_files(LOCALDATA, "picks_*.json"):
         m = PICK_RE.match(f.name)
         if not m:
             continue
@@ -3163,7 +3164,7 @@ def _apply_unplaced_enhancement_resets(st: dict, localdata: Path) -> bool:
                 continue  # an explicitly newer replacement, not the withdrawn card
         if any(str(h.get("date")) == target for h in st.get("history", [])):
             raise ValueError(f"enhancement reset {target} refused: settled history exists; reconciliation required")
-        slip = localdata / f"autobets_enh_tickets_{target}.txt"
+        slip = dated_artifact_path(localdata, f"autobets_enh_tickets_{target}.txt")
         if slip.exists() and hashlib.sha256(slip.read_bytes()).hexdigest() != expected:
             raise ValueError(f"enhancement reset {target} refused: active artifact differs from approved ticket")
         recut = localdata / f"autobets_enh_tickets_{target}_force_recut.txt"
@@ -5307,7 +5308,7 @@ def cmd_today(args, st, *, settled=None):
     settled = load_settled() if settled is None else settled
     now = datetime.now(TZ)
     target = args.date or now.strftime("%Y-%m-%d")
-    slip_txt = LOCALDATA / f"auto_tickets_{target}.txt"
+    slip_txt = dated_artifact_path(LOCALDATA, f"auto_tickets_{target}.txt")
     slate_error = None
     try:
         slate = json.loads((LOCALDATA / "picks_today.json").read_text())
@@ -6437,7 +6438,7 @@ def cmd_rebuild_unplaced_enhancement(args, st):
     if not receipt.exists():
         raise ValueError("unplaced rebuild requires an approved none-placed reset receipt")
     # load_state validated/applied the receipt before this call.
-    slip = LOCALDATA / f"autobets_enh_tickets_{target}.txt"
+    slip = dated_artifact_path(LOCALDATA, f"autobets_enh_tickets_{target}.txt")
     if is_frozen(st, target, ENHANCEMENT_LANE) or _frozen_text_on_disk(slip):
         return cmd_enhancement(args, st)  # preserve a newer replacement
     reason = None

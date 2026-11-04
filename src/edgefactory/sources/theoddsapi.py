@@ -68,6 +68,9 @@ except Exception:  # pragma: no cover - standalone use
     _ef_norm_team = None
 
 
+from edgefactory.util import dated_artifact_path
+
+
 def _parse_keys() -> tuple[str, ...]:
     raw = os.environ.get("ODDS_API_KEYS") or os.environ.get("ODDS_API_KEY") or ""
     seen, out = set(), []
@@ -784,7 +787,7 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
 
 def _shortlist_file(date: str) -> Path | None:
     for name in (f"picks_{date}.json", f"picks_morning_{date}.json"):
-        path = LOCALDATA / name
+        path = dated_artifact_path(LOCALDATA, name)
         if path.exists():
             return path
     return None

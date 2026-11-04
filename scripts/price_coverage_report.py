@@ -26,8 +26,11 @@ LOCALDATA = ROOT / "localdata"
 _DATE_PICK_RE = re.compile(r"^picks_\d{4}-\d{2}-\d{2}\.json$")
 
 
+from edgefactory.util import dated_artifact_files
+
+
 def pick_archives(localdata: Path = LOCALDATA) -> list[Path]:
-    return sorted(p for p in localdata.glob("picks_*.json") if _DATE_PICK_RE.match(p.name))
+    return [p for p in dated_artifact_files(localdata, "picks_*.json") if _DATE_PICK_RE.match(p.name)]
 
 
 def load_rows(path: Path) -> list[dict[str, Any]]:

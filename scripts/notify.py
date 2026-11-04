@@ -24,6 +24,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.util import dated_artifact_path
 from edgefactory.notifier import (  # noqa: E402
     BUCKET_CAUTION,
     BUCKET_CLEAN,
@@ -194,7 +195,7 @@ def _load_rolling_bucket_stats() -> dict[str, Any] | None:
 
 
 def _morning_baseline_file(target_date: str) -> Path:
-    return LOCALDATA / f"picks_morning_{target_date}.json"
+    return dated_artifact_path(LOCALDATA, f"picks_morning_{target_date}.json")
 
 
 def _record_delivery_failure(provider: str, error: object) -> None:

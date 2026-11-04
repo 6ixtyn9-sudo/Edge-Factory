@@ -46,6 +46,9 @@ PLAYABLE = {"ALLOW", "BOOST"}
 RESOLVED = {"ALLOW", "BOOST", "CAUTION", "VETO"}
 
 
+from edgefactory.util import dated_artifact_files
+
+
 def pooled_verdict(n: int, w_roi: float | None) -> str:
     """Scenario B pooled verdict: ALLOW>=40, CAUTION>=20, VETO>=12.
 
@@ -208,7 +211,7 @@ def load_audit_ledger(path: Path) -> dict[tuple[str, str], dict]:
 # --------------------------------------------------------------------------
 def load_picks(localdata: Path, start: str) -> list[dict]:
     picks = []
-    for f in sorted(localdata.glob("picks_20*.json")):
+    for f in dated_artifact_files(localdata, "picks_20*.json"):
         m = re.match(r"picks_(\d{4}-\d{2}-\d{2})\.json$", f.name)
         if not m or m.group(1) < start:
             continue

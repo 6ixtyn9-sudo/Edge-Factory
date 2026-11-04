@@ -17,6 +17,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / 'src'), str(ROOT / 'scripts')]
 from scripts.audit_enh_under_parity import identity, instant, legacy_thresholds, snapshot_rates
+from edgefactory.util import dated_artifact_files
 from edgefactory.enh_registry import wilson_lb
 
 
@@ -67,7 +68,7 @@ def min_hits_for_lower_bound(n, odds):
 def archived_under25(root, since='2026-10-14', until='2026-10-18'):
     """Same retained snapshot conditions as the earlier audit; no odds invented."""
     snapshots, inputs = {}, {}
-    for path in sorted((root / 'localdata').glob('picks_????-??-??.json')):
+    for path in dated_artifact_files(root / 'localdata', 'picks_????-??-??.json'):
         day = path.stem[6:]
         if not since <= day <= until:
             continue

@@ -17,6 +17,9 @@ LOCALDATA = Path(os.environ.get("EDGE_FACTORY_LOCALDATA", ROOT / "localdata"))
 STATE_PATH = LOCALDATA / "source_health_state.json"
 
 
+from edgefactory.util import dated_artifact_path
+
+
 def _empty_state() -> dict[str, Any]:
     return {"schema": 1, "updated_at": None, "sources": {}}
 
@@ -467,7 +470,7 @@ def persist_daily_source_health(
 ) -> dict[str, Any]:
     """Persist ``source_health_YYYY-MM-DD.json`` atomically and return it."""
     payload = build_daily_source_health(day, observations)
-    path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
+    path = dated_artifact_path(LOCALDATA, f"source_health_{str(day)[:10]}.json")
     LOCALDATA.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
@@ -687,7 +690,7 @@ def _zero_reason(row: dict[str, Any], raw: int) -> str:
 
 def source_role_lines(day: str) -> list[str]:
     """Deterministic ``name: health + role`` lines for the operator log."""
-    path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
+    path = dated_artifact_path(LOCALDATA, f"source_health_{str(day)[:10]}.json")
     try:
         sources = json.loads(path.read_text()).get("sources", {})
     except (OSError, ValueError, TypeError):
@@ -709,7 +712,7 @@ def source_role_lines(day: str) -> list[str]:
 
 def daily_status_block(day: str) -> str:
     """One compact, deterministic status line for the card/run log."""
-    path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
+    path = dated_artifact_path(LOCALDATA, f"source_health_{str(day)[:10]}.json")
     try:
         payload = json.loads(path.read_text())
         sources = payload.get("sources", {})

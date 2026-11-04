@@ -15,7 +15,6 @@ Metrics:
 
 from __future__ import annotations
 
-import glob
 import json
 import sys
 from collections import defaultdict
@@ -30,7 +29,7 @@ from edgefactory.entities import (
     canonical_league,
 )
 from edgefactory.identity import team_identity_words
-from edgefactory.util import norm_league
+from edgefactory.util import dated_artifact_files, norm_league
 
 
 def legacy_canonical_league(label: str) -> str:
@@ -45,7 +44,7 @@ def legacy_canonical_league(label: str) -> str:
 
 def _load_archives() -> list[dict]:
     rows: list[dict] = []
-    for path in sorted(glob.glob(str(ROOT / "localdata" / "picks_2026-*.json"))):
+    for path in dated_artifact_files(ROOT / "localdata", "picks_2026-*.json"):
         try:
             data = json.loads(Path(path).read_text())
         except (OSError, json.JSONDecodeError):
@@ -54,7 +53,7 @@ def _load_archives() -> list[dict]:
             continue
         if isinstance(data, dict):
             data = data.get("rows", data.get("picks", []))
-        day = path.rsplit("picks_", 1)[-1][:10]
+        day = path.name.removeprefix("picks_")[:10]
         for row in data:
             if str(row.get("date") or "")[:10] != day:
                 continue
