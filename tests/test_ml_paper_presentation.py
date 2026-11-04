@@ -101,7 +101,9 @@ def test_performance_spacing_preserves_bank_and_risk_caveats():
     text = mp.render_performance(report)
     assert "=" * 62 + "\n\nBANK" in text
     assert "reserved paper units\n\nRECORD" in text
-    assert "missed freeze\n\nEVIDENCE" in text
+    assert "missed freeze\n\nBET-DAYS" in text
+    assert text.index("BET-DAYS") < text.index("HELD (not yet settled") < text.index("NOTES") < text.index("LEARNING & EVIDENCE")
+    assert "LEARNING & EVIDENCE\nEVIDENCE" in text
     assert "\n\nSTAKING" in text
     assert "ROI not measured yet" in text
     assert "not a confirmed acca quote\n\nPaper only." in text
