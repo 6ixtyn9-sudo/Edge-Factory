@@ -1,14 +1,49 @@
-autobets_ML — performance (paper only; no real stakes)
+autobets_ML — performance, percent of capital (PAPER ONLY)
 ==============================================================
 
-BANK     89.464 paper units · x0.895 of 100-unit base
-CAPITAL  84.250 free / 5.214 reserved paper units
+BANK     89.5%   x0.895 of the initial base · 89.464 paper units
+CAPITAL  84.3% free / 5.2% reserved · 84.250 free / 5.214 reserved paper units
 
-RECORD   3W / 6L · 3 pending accas · 6 unresolved leg results
-PROFIT   -10.536 paper units · ROI -45.0%
+RECORD   3W / 6L   (33.3% hit)   over 3 bet-days
+OPEN     3 held accas · 6 unresolved leg results
+PROFIT   -10.5% of capital · -10.536 paper units · ROI -45.0%
 DRAWDOWN 10.536 paper units / 10.5% (ticket-date marks; pending at cost)
 DAYS     3 bet / 0 no-bet · 0 missed freeze
 
+BET-DAYS, oldest first (3 of 3)
+  Staked/returned/net cover settled accas only; pending stakes are separate.
+  2026-11-02   0W/1L   staked    8.2%   returned    0.0%   net   -8.2%   pending    0.0%   bank*   91.8%
+  2026-11-03   3W/5L   staked   15.2%   returned   12.9%   net   -2.3%   pending    0.0%   bank*   89.5%
+  2026-11-04   0W/0L   staked    0.0%   returned       —   net       —   pending    5.2%   bank*   89.5%
+
+HELD (not yet settled; stake counted as committed)
+  2026-11-04   ACCA #1 @4.185   stake 1.8% (1.806675 paper units)   HELD (not settled)
+      Receipt 20261103T224916872142Z / publication-local ticket 1
+      Alianza Lima vs Cienciano · 2026-11-04 03:00 SAST
+         Match Over 1.5 Goals @1.220
+      RB Leipzig vs Manchester City · 2026-11-04 22:00 SAST
+         Match Under 2.5 Goals @3.430
+  2026-11-04   ACCA #2 @5.708   stake 2.4% (2.393197 paper units)   HELD (not settled)
+      Receipt 20261103T225158402488Z / publication-local ticket 1
+      Borussia Dortmund vs Real Betis · 2026-11-04 22:00 SAST
+         Match Under 2.5 Goals @2.680
+      Porto vs Napoli · 2026-11-04 22:00 SAST
+         Match Under 2.5 Goals @2.130
+  2026-11-04   ACCA #3 @4.636   stake 1.0% (1.013731 paper units)   HELD (not settled)
+      Receipt 20261104T014241385100Z / publication-local ticket 1
+      Fenerbahçe vs Liverpool · 2026-11-04 19:45 SAST
+         Match Under 2.5 Goals @3.030
+      Slavia Praha vs Arsenal · 2026-11-04 22:00 SAST
+         Match Over 2.5 Goals @1.530
+
+NOTES
+  Percentages of capital use the initial 100-paper-unit base, not today's free bank.
+  bank* is reconstructed from latest known results by ticket date; pending is held at cost.
+  These are not stored historical daily closes or a settlement-time equity curve.
+  A known losing leg settles its acca as a loss even if other leg results are unresolved.
+  All retained history is included; no regime reset or old-loss exclusion.
+
+LEARNING & EVIDENCE
 EVIDENCE 12 resolved selected observations / 8 fixtures · pool 10 resolved fixtures
 LEARNING last decision: 10 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 PAIRED   10 fixtures / 84 observations · Brier model 0.2667 / source 0.2506
