@@ -1,0 +1,67 @@
+autobets_ML TICKETS — 2026-11-05
+==============================================================
+CURRENT PAPER BANK (all dates): 78.346 units · free 75.139 / reserved 3.207
+2 paper accas · 2 ticket publications · 0 scans without tickets · times in SAST
+PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
+Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
+
+[PAPER ACCA #1] @3.225 — 1.620243 paper units — 1xBet
+   Published 2026-11-05 01:07:12 SAST · reference P1/1
+   Benfica vs Lech Poznań · KICKOFF 2026-11-05 22:00 SAST
+      Home Win (1X2) @1.160 · ML 86.4% · SKIPPED_VETO
+
+   FC Midtjylland vs Ajax · KICKOFF 2026-11-05 19:45 SAST
+      Home Win (1X2) @2.780 · ML 47.2% · SKIPPED_VETO
+
+[PAPER ACCA #2] @3.225 — 1.586735 paper units — 1xBet
+   Published 2026-11-05 01:09:52 SAST · reference P2/1
+   Benfica vs Lech Poznań · KICKOFF 2026-11-05 22:00 SAST
+      Home Win (1X2) @1.160 · ML 86.4% · SKIPPED_VETO
+
+   FC Midtjylland vs Ajax · KICKOFF 2026-11-05 19:45 SAST
+      Home Win (1X2) @2.780 · ML 47.2% · SKIPPED_VETO
+
+PUBLICATION & LEG DETAILS
+Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
+Rejection counts are checks, not unique fixtures; checks can recur across scans.
+P1 · 2026-11-05 01:07:12 SAST · ACCA #1
+   Receipt 20261104T230700625704Z · status paper_accas
+   Frozen at 2026-11-04T23:07:12.141447+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794
+   Decision window 2026-11-04T23:07:00.625704+00:00 → 2026-11-05T23:07:00.625704+00:00
+   Bank at decision: 78.345774 paper units
+   Available at decision: 78.345774 paper units
+   Reserved at decision: 0.000000 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.917288 units per canonical fixture
+   Reservation 1.620243 → 1.620243 units · released/idle 0.000000; no refill
+   2026-11-05 benfica vs lechpoznan: new 1.620243 + prior open 0.000000 · unused new budget 2.297045 units
+   2026-11-05 midtjylland vs ajax: new 1.620243 + prior open 0.000000 · unused new budget 2.297045 units
+   Coverage: candidate count: 209; candidate fixtures: 7; slate rows: 56; status: inputs_available
+   Rejections: data quality: 4; fixture date or prior model unproven: 1; outside rolling window or unproven kickoff: 20; quote identity unproven: 6161; quote or probability unavailable: 342
+   ACCA #1 / leg 1: source forecast 79.8% · gap +6.6 pp · quote age 0.58h at decision
+   ACCA #1 / leg 2: source forecast 44.7% · gap +2.6 pp · quote age 0.58h at decision
+   Learning: fitted_prior_paper_errors
+
+P2 · 2026-11-05 01:09:52 SAST · ACCA #2
+   Receipt 20261104T230940664895Z · status paper_accas
+   Frozen at 2026-11-04T23:09:52.177843+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 19ad3254f21a127653c6444ac6d1f6ef4ea802de88279a93402a19e7d37e222c
+   Decision window 2026-11-04T23:09:40.664895+00:00 → 2026-11-05T23:09:40.664895+00:00
+   Bank at decision: 78.345774 paper units
+   Available at decision: 76.725531 paper units
+   Reserved at decision: 1.620243 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.917288 units per canonical fixture
+   Reservation 1.586735 → 1.586735 units · released/idle 0.000000; no refill
+   2026-11-05 benfica vs lechpoznan: new 1.586735 + prior open 1.620243 · unused new budget 0.710310 units
+   2026-11-05 midtjylland vs ajax: new 1.586735 + prior open 1.620243 · unused new budget 0.710310 units
+   Coverage: candidate count: 209; candidate fixtures: 7; slate rows: 33; status: inputs_available
+   Rejections: data quality: 4; fixture date or prior model unproven: 1; outside rolling window or unproven kickoff: 1; quote identity unproven: 6161; quote or probability unavailable: 296
+   ACCA #2 / leg 1: source forecast 79.8% · gap +6.6 pp · quote age 0.62h at decision
+   ACCA #2 / leg 2: source forecast 44.7% · gap +2.6 pp · quote age 0.62h at decision
+   Learning: fitted_prior_paper_errors
+
+ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
+STAKING    Gross fixture exposure counts the full acca stake once per fixture; no netting.
+           Fixture subtotals overlap; do not add them to bank commitments.
+           Decision-specific limits are in the audit report; old positions are not resized.
+Paper only. No real-money stakes or automatic promotion.

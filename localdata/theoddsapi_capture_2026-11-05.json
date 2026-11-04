@@ -1,0 +1,67 @@
+{
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 29,
+  "captured_at": "2026-11-04T23:10:13+00:00",
+  "date": "2026-11-05",
+  "due_reasons": {},
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
+  "quoted_fixtures": [],
+  "requested_markets": [
+    "h2h",
+    "totals",
+    "team_totals"
+  ],
+  "requested_scope": "6a09969a791b6e0d",
+  "requested_total_points": [
+    "2.5"
+  ],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "kickoff_mismatch": 1,
+    "priced": 12,
+    "priced_close_window_not_open": 1,
+    "retry_cooldown": 16
+  },
+  "skipped": [
+    "Benfica|Lech Pozna\u0144 (priced)",
+    "Olimpia|Deportivo Recoleta (retry cooldown (6h after failed attempt))",
+    "FC Twente|Pafos FC (priced)",
+    "Crvena Zvezda|Inter Club d'Escaldes (retry cooldown (6h after failed attempt))",
+    "CD Olimpia|Juticalpa (retry cooldown (6h after failed attempt))",
+    "AC Milan|Ferencvarosi TC (priced)",
+    "Lillestr\u00f8m|Viktoria Plze\u0148 (priced)",
+    "Botafogo|Atl\u00e9tico Mineiro (retry cooldown (6h after failed attempt))",
+    "Monaco|FC Nordsjaelland (priced)",
+    "Monaco|Nordsj\u00e6lland (priced)",
+    "Municipal Lime\u00f1o|Fuerte San Francisco (retry cooldown (6h after failed attempt))",
+    "Trabzonspor|SC Freiburg (priced)",
+    "Thun|Hearts (priced)",
+    "Celtic|Be\u015fikta\u015f (retry cooldown (6h after failed attempt))",
+    "Panathinaikos|CSKA Sofia (priced)",
+    "WARN kickoff-mismatch FC Midtjylland|Ajax: pick legacy display says 17:45 SAST, captured rows say 19:45 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "FC Midtjylland|Ajax (priced, close window not open)",
+    "Sturm Graz|Celje (priced)",
+    "KuPS|Gent (retry cooldown (6h after failed attempt))",
+    "Bayer Leverkusen|Marseille (retry cooldown (6h after failed attempt))",
+    "Getafe|Brighton (retry cooldown (6h after failed attempt))",
+    "Sturm Graz|NK Celje (priced)",
+    "Levski Sofia|Jagiellonia (retry cooldown (6h after failed attempt))",
+    "Puntarenas FC|San Carlos (retry cooldown (6h after failed attempt))",
+    "Rubio \u00d1\u00fa|Sportivo Luque\u00f1o (retry cooldown (6h after failed attempt))",
+    "Valenciennes|Orl\u00e9ans (retry cooldown (6h after failed attempt))",
+    "Al Kholood|Al Khaleej (retry cooldown (6h after failed attempt))",
+    "Riga|Jablonec (priced)",
+    "S\u00e3o Paulo|Corinthians (retry cooldown (6h after failed attempt))",
+    "Metropolitanos FC|Carabobo FC (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "not_due",
+  "unmatched_reasons": {}
+}

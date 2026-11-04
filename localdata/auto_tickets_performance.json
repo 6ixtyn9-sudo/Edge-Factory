@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-04T21:40:03",
+  "generated_at": "2026-11-05T01:21:24",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 342.97328,
-  "multiple": 3.4297328,
-  "cycle_base_pct": 203.9865280000001,
-  "next_take_profit_pct": 407.97,
-  "bet_days": 65,
+  "bank_pct": 413.282968,
+  "multiple": 4.1328296799999995,
+  "cycle_base_pct": 456.154568,
+  "next_take_profit_pct": 912.31,
+  "bet_days": 66,
   "accas": {
-    "wins": 78,
-    "losses": 53
+    "wins": 79,
+    "losses": 54
   },
-  "open_slips": [
-    {
-      "date": "2026-11-04",
-      "staked_pct": 85.7433
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -25,6 +20,13 @@
       "gain_pct": 103.99,
       "bank_after_pct": 203.99,
       "next_target_pct": 407.97
+    },
+    {
+      "date": "2026-11-04",
+      "action": "TAKE_PROFIT_NOTIFICATION",
+      "gain_pct": 252.17,
+      "bank_after_pct": 456.15,
+      "next_target_pct": 912.31
     }
   ],
   "history": [
@@ -1832,6 +1834,87 @@
       ],
       "bank_pct": 342.9733,
       "close_pct": 342.9732
+    },
+    {
+      "date": "2026-11-04",
+      "staked_pct": 85.7433,
+      "returned_pct": 156.053,
+      "accas": [
+        {
+          "odds": 3.64,
+          "won": true,
+          "stake_pct": 42.8717,
+          "returned_pct": 156.053,
+          "legs": [
+            {
+              "match": "Borussia Dortmund vs Real Betis",
+              "pick": "HOME",
+              "odds": 1.82,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-04",
+                "Borussia Dortmund",
+                "Real Betis"
+              ]
+            },
+            {
+              "match": "Porto vs Napoli",
+              "pick": "HOME",
+              "odds": 2.0,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-04",
+                "Porto",
+                "Napoli"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.31,
+          "won": false,
+          "stake_pct": 42.8716,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Fenerbah\u00e7e vs Liverpool",
+              "pick": "AWAY",
+              "odds": 1.49,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-04",
+                "Fenerbah\u00e7e",
+                "Liverpool"
+              ]
+            },
+            {
+              "match": "RB Leipzig vs Manchester City",
+              "pick": "AWAY",
+              "odds": 1.55,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-04",
+                "RB Leipzig",
+                "Manchester City"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 413.283,
+      "close_pct": 413.2829
     }
   ]
 }
