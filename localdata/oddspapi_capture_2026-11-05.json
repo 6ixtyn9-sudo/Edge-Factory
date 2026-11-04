@@ -1,0 +1,443 @@
+{
+  "added": 79953,
+  "attempted": 15,
+  "attempted_fixtures": [
+    {
+      "away": "AD San Carlos",
+      "fixture_id": "id1002709272053688",
+      "home": "Puntarenas FC"
+    },
+    {
+      "away": "CD Universidad Catolica del Ecuador",
+      "fixture_id": "id1002920875235022",
+      "home": "LDU Quito"
+    },
+    {
+      "away": "Club Nacional de Football",
+      "fixture_id": "id1003712776125640",
+      "home": "Ferro Carril FC"
+    },
+    {
+      "away": "Nongbua Pitchaya FC",
+      "fixture_id": "id1005370275885968",
+      "home": "Chachoengsao FC"
+    },
+    {
+      "away": "Recoleta FC",
+      "fixture_id": "id1002709873038646",
+      "home": "Club Olimpia"
+    },
+    {
+      "away": "Atletico Mineiro MG",
+      "fixture_id": "id1000032566887140",
+      "home": "Botafogo FR RJ"
+    },
+    {
+      "away": "SC Corinthians SP",
+      "fixture_id": "id1000032566887142",
+      "home": "Sao Paulo FC SP"
+    },
+    {
+      "away": "Always Ready",
+      "fixture_id": "id1003903375478298",
+      "home": "The Strongest"
+    },
+    {
+      "away": "CD Fuerte San Francisco Morazan",
+      "fixture_id": "id1002708873075408",
+      "home": "Municipal Limeno"
+    },
+    {
+      "away": "Alianza FC San Salvador",
+      "fixture_id": "id1002708876365352",
+      "home": "CD Luis Angel Firpo Usulutan"
+    },
+    {
+      "away": "Club Atletico La Paz",
+      "fixture_id": "id1002738276388268",
+      "home": "Tlaxcala FC"
+    },
+    {
+      "away": "Sport Boys Association",
+      "fixture_id": "id1000040675831042",
+      "home": "Universitario de Deportes"
+    },
+    {
+      "away": "America de Cali",
+      "fixture_id": "id1002707075837454",
+      "home": "Millonarios FC"
+    },
+    {
+      "away": "Juticalpa FC",
+      "fixture_id": "id1002741476124604",
+      "home": "CD Olimpia Tegucigalpa"
+    },
+    {
+      "away": "Liga Deportiva Alajuelense",
+      "fixture_id": "id1002709273095522",
+      "home": "CD Escorpiones Belen"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-05",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 117,
+    "remaining_today": 8,
+    "spent_today": 17
+  },
+  "captured_at": "2026-11-04T22:33:37+00:00",
+  "date": "2026-11-05",
+  "errors": [],
+  "excluded_srl_fixtures": 17,
+  "fixtures": 169,
+  "future_slate_fixtures": 4,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 654,
+  "markets": {
+    "1x2": 8555,
+    "btts": 4513,
+    "ou_0.5": 2191,
+    "ou_0.75": 357,
+    "ou_1": 498,
+    "ou_1.25": 685,
+    "ou_1.5": 3971,
+    "ou_1.75": 1089,
+    "ou_10.5": 32,
+    "ou_11.5": 12,
+    "ou_12.5": 9,
+    "ou_13.5": 6,
+    "ou_14.5": 6,
+    "ou_2": 1689,
+    "ou_2.25": 1807,
+    "ou_2.5": 5024,
+    "ou_2.75": 2197,
+    "ou_3": 2415,
+    "ou_3.25": 1729,
+    "ou_3.5": 4893,
+    "ou_3.75": 1232,
+    "ou_4": 1198,
+    "ou_4.25": 725,
+    "ou_4.5": 3955,
+    "ou_4.75": 507,
+    "ou_5": 538,
+    "ou_5.25": 207,
+    "ou_5.5": 2267,
+    "ou_5.75": 97,
+    "ou_6": 100,
+    "ou_6.25": 50,
+    "ou_6.5": 962,
+    "ou_6.75": 30,
+    "ou_7": 52,
+    "ou_7.25": 45,
+    "ou_7.5": 504,
+    "ou_7.75": 20,
+    "ou_8": 5,
+    "ou_8.25": 10,
+    "ou_8.5": 201,
+    "ou_9.5": 48,
+    "tt_away_0.5": 3303,
+    "tt_away_0.75": 154,
+    "tt_away_1": 246,
+    "tt_away_1.25": 142,
+    "tt_away_1.5": 3393,
+    "tt_away_1.75": 118,
+    "tt_away_2": 173,
+    "tt_away_2.25": 94,
+    "tt_away_2.5": 2578,
+    "tt_away_2.75": 26,
+    "tt_away_3": 42,
+    "tt_away_3.25": 4,
+    "tt_away_3.5": 1123,
+    "tt_away_3.75": 2,
+    "tt_away_4": 18,
+    "tt_away_4.5": 377,
+    "tt_away_5": 2,
+    "tt_away_5.5": 108,
+    "tt_away_6.5": 26,
+    "tt_away_7.5": 6,
+    "tt_home_0.5": 2971,
+    "tt_home_0.75": 98,
+    "tt_home_1": 190,
+    "tt_home_1.25": 170,
+    "tt_home_1.5": 3863,
+    "tt_home_1.75": 150,
+    "tt_home_2": 194,
+    "tt_home_2.25": 94,
+    "tt_home_2.5": 3319,
+    "tt_home_2.75": 38,
+    "tt_home_3": 101,
+    "tt_home_3.25": 6,
+    "tt_home_3.5": 1616,
+    "tt_home_3.75": 6,
+    "tt_home_4": 23,
+    "tt_home_4.5": 571,
+    "tt_home_5": 2,
+    "tt_home_5.5": 162,
+    "tt_home_6.5": 13
+  },
+  "markets_source": "fetch",
+  "matched": 15,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 26,
+    "market_id_unknown": 16375,
+    "market_inactive": 355,
+    "market_unsupported_clean_sheet": 1228,
+    "market_unsupported_corners": 11824,
+    "market_unsupported_correct_score": 4512,
+    "market_unsupported_double_chance": 2599,
+    "market_unsupported_draw_no_bet": 2095,
+    "market_unsupported_handicap": 22969,
+    "market_unsupported_odd_even": 4020,
+    "market_unsupported_period": 69650,
+    "market_unsupported_win_to_nil": 2736,
+    "outcome_inactive": 12933
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 26,
+      "market_inactive": 355,
+      "outcome_inactive": 12933
+    },
+    "loss_or_diagnosis": {
+      "market_id_unknown": 16375,
+      "market_unsupported_clean_sheet": 1228,
+      "market_unsupported_corners": 11824,
+      "market_unsupported_correct_score": 4512,
+      "market_unsupported_double_chance": 2599,
+      "market_unsupported_draw_no_bet": 2095,
+      "market_unsupported_handicap": 22969,
+      "market_unsupported_odd_even": 4020,
+      "market_unsupported_period": 69650,
+      "market_unsupported_win_to_nil": 2736
+    }
+  },
+  "pending_fixtures": 15,
+  "quoted_fixtures": [
+    {
+      "away": "AD San Carlos",
+      "fixture_id": "id1002709272053688",
+      "home": "Puntarenas FC"
+    },
+    {
+      "away": "CD Universidad Catolica del Ecuador",
+      "fixture_id": "id1002920875235022",
+      "home": "LDU Quito"
+    },
+    {
+      "away": "Club Nacional de Football",
+      "fixture_id": "id1003712776125640",
+      "home": "Ferro Carril FC"
+    },
+    {
+      "away": "Nongbua Pitchaya FC",
+      "fixture_id": "id1005370275885968",
+      "home": "Chachoengsao FC"
+    },
+    {
+      "away": "Recoleta FC",
+      "fixture_id": "id1002709873038646",
+      "home": "Club Olimpia"
+    },
+    {
+      "away": "Atletico Mineiro MG",
+      "fixture_id": "id1000032566887140",
+      "home": "Botafogo FR RJ"
+    },
+    {
+      "away": "SC Corinthians SP",
+      "fixture_id": "id1000032566887142",
+      "home": "Sao Paulo FC SP"
+    },
+    {
+      "away": "Always Ready",
+      "fixture_id": "id1003903375478298",
+      "home": "The Strongest"
+    },
+    {
+      "away": "CD Fuerte San Francisco Morazan",
+      "fixture_id": "id1002708873075408",
+      "home": "Municipal Limeno"
+    },
+    {
+      "away": "Alianza FC San Salvador",
+      "fixture_id": "id1002708876365352",
+      "home": "CD Luis Angel Firpo Usulutan"
+    },
+    {
+      "away": "Club Atletico La Paz",
+      "fixture_id": "id1002738276388268",
+      "home": "Tlaxcala FC"
+    },
+    {
+      "away": "Sport Boys Association",
+      "fixture_id": "id1000040675831042",
+      "home": "Universitario de Deportes"
+    },
+    {
+      "away": "America de Cali",
+      "fixture_id": "id1002707075837454",
+      "home": "Millonarios FC"
+    },
+    {
+      "away": "Juticalpa FC",
+      "fixture_id": "id1002741476124604",
+      "home": "CD Olimpia Tegucigalpa"
+    },
+    {
+      "away": "Liga Deportiva Alajuelense",
+      "fixture_id": "id1002709273095522",
+      "home": "CD Escorpiones Belen"
+    }
+  ],
+  "reserved_requests": 4,
+  "rows": 79953,
+  "schema": 1,
+  "slate_candidate_fixtures": 28,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 0,
+  "slate_provider_overlap_fixtures": 5,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Lech Pozna\u0144",
+      "home": "Benfica",
+      "league": "Europa League",
+      "normalized_pair": "benfica|lech poznan"
+    },
+    {
+      "away": "Deportivo Recoleta",
+      "home": "Olimpia",
+      "league": "Division 1",
+      "normalized_pair": "deportivo recoleta|olimpia"
+    },
+    {
+      "away": "Pafos FC",
+      "home": "FC Twente",
+      "league": "Europa Conference League",
+      "normalized_pair": "pafos|twente"
+    },
+    {
+      "away": "Inter Club d'Escaldes",
+      "home": "Crvena Zvezda",
+      "league": "Europa Conference League",
+      "normalized_pair": "crvena zvezda|inter d'escaldes"
+    },
+    {
+      "away": "Juticalpa",
+      "home": "CD Olimpia",
+      "league": "Honduras: Liga Nacional",
+      "normalized_pair": "cd olimpia|juticalpa"
+    },
+    {
+      "away": "Viktoria Plze\u0148",
+      "home": "Lillestr\u00f8m",
+      "league": "Europa League",
+      "normalized_pair": "lillestrom|viktoria plzen"
+    },
+    {
+      "away": "CSKA Sofia",
+      "home": "Panathinaikos",
+      "league": "World: UEFA Europa Conference League",
+      "normalized_pair": "cska sofia|panathinaikos"
+    },
+    {
+      "away": "Ferencvarosi TC",
+      "home": "AC Milan",
+      "league": "World: UEFA Europa League",
+      "normalized_pair": "ferencvarosi tc|milan"
+    },
+    {
+      "away": "Atl\u00e9tico Mineiro",
+      "home": "Botafogo",
+      "league": "Serie A",
+      "normalized_pair": "atletico mineiro|botafogo"
+    },
+    {
+      "away": "Fuerte San Francisco",
+      "home": "Municipal Lime\u00f1o",
+      "league": "El Salvador: Primera Division",
+      "normalized_pair": "fuerte san francisco|municipal limeno"
+    },
+    {
+      "away": "Hearts",
+      "home": "Thun",
+      "league": "Europa Conference League",
+      "normalized_pair": "hearts|thun"
+    },
+    {
+      "away": "Be\u015fikta\u015f",
+      "home": "Celtic",
+      "league": "Europa League",
+      "normalized_pair": "besiktas|celtic"
+    },
+    {
+      "away": "Gent",
+      "home": "KuPS",
+      "league": "World: UEFA Europa Conference League",
+      "normalized_pair": "gent|kups"
+    },
+    {
+      "away": "Ajax",
+      "home": "FC Midtjylland",
+      "league": "World UEFA Europa Conference League",
+      "normalized_pair": "ajax|midtjylland"
+    },
+    {
+      "away": "Celje",
+      "home": "Sturm Graz",
+      "league": "Europa League",
+      "normalized_pair": "celje|sturm graz"
+    },
+    {
+      "away": "Marseille",
+      "home": "Bayer Leverkusen",
+      "league": "International,Europa League",
+      "normalized_pair": "bayer leverkusen|marseille"
+    },
+    {
+      "away": "Brighton",
+      "home": "Getafe",
+      "league": "World: UEFA Europa Conference League",
+      "normalized_pair": "brighton|getafe"
+    },
+    {
+      "away": "Jagiellonia",
+      "home": "Levski Sofia",
+      "league": "International,Europa League",
+      "normalized_pair": "jagiellonia|levski sofia"
+    },
+    {
+      "away": "San Carlos",
+      "home": "Puntarenas FC",
+      "league": "Costa Rica: Primera Divisi\u00f3n",
+      "normalized_pair": "puntarenas|san carlos"
+    },
+    {
+      "away": "Orl\u00e9ans",
+      "home": "Valenciennes",
+      "league": "Ligue 3",
+      "normalized_pair": "orleans|valenciennes"
+    },
+    {
+      "away": "Al Khaleej",
+      "home": "Al Kholood",
+      "league": "Pro League",
+      "normalized_pair": "al khaleej|al kholood"
+    },
+    {
+      "away": "Corinthians",
+      "home": "S\u00e3o Paulo",
+      "league": "Serie A",
+      "normalized_pair": "corinthians|sao paulo"
+    },
+    {
+      "away": "Carabobo FC",
+      "home": "Metropolitanos FC",
+      "league": "Venezuela: Primera Divisi\u00f3n",
+      "normalized_pair": "carabobo|metropolitanos"
+    }
+  ],
+  "source": "oddspapi_odds"
+}

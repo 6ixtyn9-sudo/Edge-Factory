@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-11-04T21:42:49",
+  "generated_at": "2026-11-05T01:26:02",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 21.980648999999996,
-  "multiple": 0.21980648999999997,
+  "bank_pct": 16.485449,
+  "multiple": 0.16485449,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 21,
+  "bet_days": 22,
   "accas": {
     "wins": 16,
-    "losses": 29
+    "losses": 31
   },
   "open_slips": [
     {
-      "date": "2026-11-04",
-      "staked_pct": 5.4952
+      "date": "2026-11-05",
+      "staked_pct": 4.1214
     }
   ],
   "events": [],
@@ -6026,6 +6026,950 @@
       ],
       "bank_pct": 21.9806,
       "close_pct": 21.9806
+    },
+    {
+      "date": "2026-11-04",
+      "staked_pct": 5.4952,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.07,
+          "won": false,
+          "stake_pct": 2.7476,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "RB Leipzig vs Manchester City",
+              "pick": "under",
+              "odds": 1.44,
+              "result": "loss",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-04T01:28:19.382403+00:00",
+              "price_provenance": {
+                "away": "Manchester City",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-04T01:28:19.382403+00:00",
+                "data_dt": [
+                  4,
+                  11,
+                  2026,
+                  21,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-04T07:00:00+00:00",
+                "decision_day": "2026-11-04",
+                "home": "RB Leipzig",
+                "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-04.json",
+                "ledger_sha256": "9fe46bd1be2e63684629dab83e6ff0161e38756e668da2cd4cfab9b1880ace61",
+                "market": "ou_4.5",
+                "price": 1.44,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-04T01:14",
+                      "2026-11-04T01:14"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      2.75,
+                      1.44
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 17,
+                  "row_sha256": "2c6d090c23bf6f1f21e91de2b9b87db61a114a8780dc5a71e2318d00db368fce"
+                },
+                "raw_kickoff": "21:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                  "late_witness_records": 2,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Manchester City",
+                      "csv_data_row": 1372,
+                      "file": "theoddsapi_odds_2026-11.csv.gz",
+                      "file_sha256": "837bad86f2c3b66c4558e2575b757c6bf147c69f0501ec74f4b9a57677547bdc",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "RB Leipzig",
+                      "kickoff_origin": "provider_commence_time",
+                      "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-03T22:30:41.903829+00:00",
+                      "provider_commence_time": "2026-11-04T20:00:00Z",
+                      "provider_event_id": "df7d2d81b9e2f3f11c6aeddaee6b7085",
+                      "row_sha256": "b5fb3f970e74e2776bc6d0f46cc52183124ecc2665f807835146a80e7bf37d99",
+                      "source": "theoddsapi"
+                    },
+                    {
+                      "away": "Manchester City",
+                      "csv_data_row": 477,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "144c7e1f98e9d5ba7ccffa6ea2dfb72411c26114201a646aa38df97281b5b63c",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "RB Leipzig",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-03T22:08:46+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "65da9ea39cc71731300ef3b9826283a4d855d9ca272cba7ecf8fa3e950793576",
+                      "schedule_row": {
+                        "away": "Manchester City",
+                        "captured_at": "2026-11-03T22:08:46+00:00",
+                        "country": "Europe",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "RB Leipzig",
+                        "hs": "",
+                        "kickoff": "2026-11-04T20:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Champions League",
+                        "odd1": "5.0",
+                        "odd2": "1.55",
+                        "odd_gg": "1.4",
+                        "odd_ng": "2.75",
+                        "odd_o15": "1.1",
+                        "odd_o25": "1.36",
+                        "odd_o35": "1.8",
+                        "odd_u15": "7.0",
+                        "odd_u25": "3.2",
+                        "odd_u35": "2.0",
+                        "oddx": "4.75",
+                        "p1": "18.94477597802406",
+                        "p2": "61.11584730510562",
+                        "p_gg": "66.26506024096386",
+                        "p_ng": "33.734939759036145",
+                        "p_o15": "86.41975308641976",
+                        "p_o25": "70.17543859649122",
+                        "p_o35": "52.63157894736842",
+                        "px": "19.939376716870324",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "20:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Manchester City FC",
+                      "csv_data_row": 1850,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "ede0d57b382229387e0b247f5583169e21a1d4f30a5137fc20e02317151a1d25",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "RB Leipzig",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                      "league": "World: UEFA Champions League",
+                      "observed_at_utc": "2026-11-03T22:08:21+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "8b081aef2d1d407a33dc3deb61fb33a4f13a72474e8dc7c60a9400ce848374ef",
+                      "schedule_row": {
+                        "away": "Manchester City FC",
+                        "captured_at": "2026-11-03T22:08:21+00:00",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "RB Leipzig",
+                        "hs": "",
+                        "index": "-1.41",
+                        "kickoff": "2026-11-04T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "World: UEFA Champions League",
+                        "p1": "21.0",
+                        "p2": "53.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "26.0",
+                        "schedule_history": "[{\"away\": \"Manchester City FC\", \"captured_at\": \"2026-11-02T22:06:14+00:00\", \"date\": \"2026-11-04\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"RB Leipzig\", \"kickoff\": \"2026-11-04T21:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "2"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Manchester City FC",
+                      "csv_data_row": 1850,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "ede0d57b382229387e0b247f5583169e21a1d4f30a5137fc20e02317151a1d25",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "RB Leipzig",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-02T22:06:14+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "7b163181e5bf04fc965a244dd283db59d74b13adac6c1c34b3e3f3caa7088c18",
+                      "schedule_row": {
+                        "away": "Manchester City FC",
+                        "captured_at": "2026-11-02T22:06:14+00:00",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "RB Leipzig",
+                        "kickoff": "2026-11-04T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-04",
+                "RB Leipzig",
+                "Manchester City"
+              ],
+              "prob": 0.8363,
+              "cohort_evidence": {
+                "rate": 0.8363,
+                "n": 904,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-04",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 756,
+                "cohort_lower_bound": 0.8107487418756993,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "away",
+                  "league": "Champions League",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.44,
+                  "captured_at": "2026-11-04T01:28:19.382403+00:00",
+                  "decision_at": "2026-11-04T09:29:57+02:00",
+                  "kickoff": "2026-11-04T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7098749366614653,
+              "ml_model_key": "50709f9988c68da90b74e21e73b1ef116657c43690bbe9394c505846a11109c7",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Champions League",
+              "shadow": true,
+              "price_kickoff": "2026-11-04T20:00:00+00:00"
+            },
+            {
+              "match": "Porto vs Napoli",
+              "pick": "under",
+              "odds": 1.44,
+              "result": "loss",
+              "label": "Match Under 3.5 Goals",
+              "market": "match_under_35",
+              "price_book": "bet365.us",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-04T01:29:22.387276+00:00",
+              "price_provenance": {
+                "away": "Napoli",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-04T01:29:22.387276+00:00",
+                "data_dt": [
+                  4,
+                  11,
+                  2026,
+                  21,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-04T07:00:00+00:00",
+                "decision_day": "2026-11-04",
+                "home": "FC Porto",
+                "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-04.json",
+                "ledger_sha256": "9fe46bd1be2e63684629dab83e6ff0161e38756e668da2cd4cfab9b1880ace61",
+                "market": "ou_3.5",
+                "price": 1.44,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-10-30T08:23",
+                      "2026-10-30T08:23"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      null,
+                      null
+                    ],
+                    "odds": [
+                      2.75,
+                      1.44
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 17,
+                  "row_sha256": "fffca02210d47b850352172d97921ff8b21f58f92459e1d7cf0a687242106434"
+                },
+                "raw_kickoff": "21:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                  "late_witness_records": 2,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Napoli",
+                      "csv_data_row": 1278,
+                      "file": "theoddsapi_odds_2026-11.csv.gz",
+                      "file_sha256": "837bad86f2c3b66c4558e2575b757c6bf147c69f0501ec74f4b9a57677547bdc",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Porto",
+                      "kickoff_origin": "provider_commence_time",
+                      "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-03T22:30:42.479621+00:00",
+                      "provider_commence_time": "2026-11-04T20:00:00Z",
+                      "provider_event_id": "ba82ee37f64a66a30d85f8b90082ec2f",
+                      "row_sha256": "7fa455ce8d7437e290c76a91ed683cf106d48fff919ed6cb974d4a98cdc407f7",
+                      "source": "theoddsapi"
+                    },
+                    {
+                      "away": "Napoli",
+                      "csv_data_row": 474,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "144c7e1f98e9d5ba7ccffa6ea2dfb72411c26114201a646aa38df97281b5b63c",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Porto",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-03T22:08:46+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "ce3f97e3e10be6daf510781117b758640c98ceb2c4d30561c46044ea279fad5b",
+                      "schedule_row": {
+                        "away": "Napoli",
+                        "captured_at": "2026-11-03T22:08:46+00:00",
+                        "country": "Europe",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Porto",
+                        "hs": "",
+                        "kickoff": "2026-11-04T20:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Champions League",
+                        "odd1": "1.95",
+                        "odd2": "3.75",
+                        "odd_gg": "1.61",
+                        "odd_ng": "2.2",
+                        "odd_o15": "1.22",
+                        "odd_o25": "1.72",
+                        "odd_o35": "2.75",
+                        "odd_u15": "4.33",
+                        "odd_u25": "2.1",
+                        "odd_u35": "1.44",
+                        "oddx": "3.7",
+                        "p1": "48.84739950466756",
+                        "p2": "25.40483901695561",
+                        "p_gg": "57.74278215223097",
+                        "p_ng": "42.257217847769034",
+                        "p_o15": "78.01801801801803",
+                        "p_o25": "54.9738219895288",
+                        "p_o35": "34.36754176610979",
+                        "px": "25.747761478376834",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "20:00"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "SSC Napoli",
+                      "csv_data_row": 1750,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "ede0d57b382229387e0b247f5583169e21a1d4f30a5137fc20e02317151a1d25",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "FC Porto",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                      "league": "World: UEFA Champions League",
+                      "observed_at_utc": "2026-11-03T22:08:21+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "4dd283dd9fb8264b4c6deb2431138d276a2bdd545d7a7e899371b7c049191bda",
+                      "schedule_row": {
+                        "away": "SSC Napoli",
+                        "captured_at": "2026-11-03T22:08:21+00:00",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "FC Porto",
+                        "hs": "",
+                        "index": "0.44",
+                        "kickoff": "2026-11-04T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "World: UEFA Champions League",
+                        "p1": "41.0",
+                        "p2": "30.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "29.0",
+                        "schedule_history": "[{\"away\": \"SSC Napoli\", \"captured_at\": \"2026-11-02T22:06:14+00:00\", \"date\": \"2026-11-04\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"FC Porto\", \"kickoff\": \"2026-11-04T21:00:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": ""
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "SSC Napoli",
+                      "csv_data_row": 1750,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "ede0d57b382229387e0b247f5583169e21a1d4f30a5137fc20e02317151a1d25",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "FC Porto",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-02T22:06:14+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "6620525f4fbbbdb6dbd0d9129af4b8a75b58763e1bddb0573a43ecb3fe304eff",
+                      "schedule_row": {
+                        "away": "SSC Napoli",
+                        "captured_at": "2026-11-02T22:06:14+00:00",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "FC Porto",
+                        "kickoff": "2026-11-04T21:00:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-04",
+                "Porto",
+                "Napoli"
+              ],
+              "prob": 0.6672,
+              "cohort_evidence": {
+                "rate": 0.6672,
+                "n": 2662,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-04",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1776,
+                "cohort_lower_bound": 0.64903705728381,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "home",
+                  "league": "Champions League",
+                  "book": "bet365.us",
+                  "source": "betexplorer",
+                  "price": 1.44,
+                  "captured_at": "2026-11-04T01:29:22.387276+00:00",
+                  "decision_at": "2026-11-04T09:29:57+02:00",
+                  "kickoff": "2026-11-04T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.728092632473219,
+              "ml_model_key": "6b5d93add6cc0ea5b51bb00cc4d33c6550c7319711d0abc1fcbd83d3f36d52a4",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "Champions League",
+              "shadow": true,
+              "price_kickoff": "2026-11-04T20:00:00+00:00"
+            }
+          ]
+        },
+        {
+          "odds": 2.19,
+          "won": false,
+          "stake_pct": 2.7476,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Fenerbah\u00e7e vs Liverpool",
+              "pick": "under",
+              "odds": 1.37,
+              "result": "loss",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "Stake.com",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-04T01:27:48.228608+00:00",
+              "price_provenance": {
+                "away": "Liverpool",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-11-04T01:27:48.228608+00:00",
+                "data_dt": [
+                  4,
+                  11,
+                  2026,
+                  18,
+                  45
+                ],
+                "decision_cutoff_utc": "2026-11-04T07:00:00+00:00",
+                "decision_day": "2026-11-04",
+                "home": "Fenerbahce",
+                "kickoff_utc": "2026-11-04T17:45:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-04.json",
+                "ledger_sha256": "9fe46bd1be2e63684629dab83e6ff0161e38756e668da2cd4cfab9b1880ace61",
+                "market": "ou_4.5",
+                "price": 1.37,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-04T01:05",
+                      "2026-11-04T01:05"
+                    ],
+                    "line": "4.50",
+                    "movement": [
+                      "down",
+                      "up"
+                    ],
+                    "odds": [
+                      2.95,
+                      1.37
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 20,
+                  "row_sha256": "28374060a949f5ba0df8cb7db74c600c72dcd353b29422f0dff46680d6ab549c"
+                },
+                "raw_kickoff": "18:45",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-04T17:45:00+00:00",
+                  "late_witness_records": 2,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Liverpool",
+                      "csv_data_row": 1134,
+                      "file": "theoddsapi_odds_2026-11.csv.gz",
+                      "file_sha256": "837bad86f2c3b66c4558e2575b757c6bf147c69f0501ec74f4b9a57677547bdc",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Fenerbahce",
+                      "kickoff_origin": "provider_commence_time",
+                      "kickoff_utc": "2026-11-04T17:45:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-03T22:30:41.735860+00:00",
+                      "provider_commence_time": "2026-11-04T17:45:00Z",
+                      "provider_event_id": "e901dbcdd6e2255fb24d84032b9d437a",
+                      "row_sha256": "91bc58ece6ed49cfa2a054e33a5ec82dcea1f548edb7861c410f34e10fb38901",
+                      "source": "theoddsapi"
+                    },
+                    {
+                      "away": "Liverpool",
+                      "csv_data_row": 451,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "144c7e1f98e9d5ba7ccffa6ea2dfb72411c26114201a646aa38df97281b5b63c",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Fenerbah\u00e7e",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T17:45:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-03T22:08:46+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "8a3553b97434423d253e09f790aa47724c09afa324e3ef77cce41c268ae12e9b",
+                      "schedule_row": {
+                        "away": "Liverpool",
+                        "captured_at": "2026-11-03T22:08:46+00:00",
+                        "country": "Europe",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Fenerbah\u00e7e",
+                        "hs": "",
+                        "kickoff": "2026-11-04T17:45:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Champions League",
+                        "odd1": "5.75",
+                        "odd2": "1.48",
+                        "odd_gg": "1.5",
+                        "odd_ng": "2.5",
+                        "odd_o15": "1.11",
+                        "odd_o25": "1.4",
+                        "odd_o35": "2.0",
+                        "odd_u15": "6.5",
+                        "odd_u25": "3.0",
+                        "odd_u35": "1.8",
+                        "oddx": "5.0",
+                        "p1": "16.568216463414636",
+                        "p2": "64.37690548780488",
+                        "p_gg": "62.5",
+                        "p_ng": "37.50000000000001",
+                        "p_o15": "85.41392904073587",
+                        "p_o25": "68.18181818181819",
+                        "p_o35": "47.368421052631575",
+                        "px": "19.054878048780488",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "17:45"
+                      },
+                      "source": "scoutingstats"
+                    },
+                    {
+                      "away": "Liverpool",
+                      "csv_data_row": 1757,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "ede0d57b382229387e0b247f5583169e21a1d4f30a5137fc20e02317151a1d25",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Fenerbah\u00e7e",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T17:45:00+00:00",
+                      "league": "World: UEFA Champions League",
+                      "observed_at_utc": "2026-11-03T22:08:21+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "7eafb046f67e3d30c9d80196356b246a5eefd2b3bdb1e52f25a2bd0fb3cefe15",
+                      "schedule_row": {
+                        "away": "Liverpool",
+                        "captured_at": "2026-11-03T22:08:21+00:00",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Fenerbah\u00e7e",
+                        "hs": "",
+                        "index": "-1.97",
+                        "kickoff": "2026-11-04T18:45:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "World: UEFA Champions League",
+                        "p1": "17.0",
+                        "p2": "60.0",
+                        "pred_gs": "",
+                        "pred_hs": "",
+                        "px": "23.0",
+                        "schedule_history": "[{\"away\": \"Liverpool\", \"captured_at\": \"2026-11-02T22:06:14+00:00\", \"date\": \"2026-11-04\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Fenerbah\\u00e7e\", \"kickoff\": \"2026-11-04T18:45:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "source": "vitibet",
+                        "status": "scheduled",
+                        "tip": "2"
+                      },
+                      "source": "vitibet"
+                    },
+                    {
+                      "away": "Liverpool",
+                      "csv_data_row": 1757,
+                      "csv_history_index": 0,
+                      "file": "vitibet_2026-11.csv.gz",
+                      "file_sha256": "ede0d57b382229387e0b247f5583169e21a1d4f30a5137fc20e02317151a1d25",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Fenerbah\u00e7e",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T17:45:00+00:00",
+                      "league": null,
+                      "observed_at_utc": "2026-11-02T22:06:14+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "462644f24a1ba31d0e613d802c5b5d42eabf6bc68c52f0d2579f0818b697f30d",
+                      "schedule_row": {
+                        "away": "Liverpool",
+                        "captured_at": "2026-11-02T22:06:14+00:00",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "home": "Fenerbah\u00e7e",
+                        "kickoff": "2026-11-04T18:45:00+01:00",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "source": "vitibet"
+                      },
+                      "source": "vitibet"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-04",
+                "Fenerbah\u00e7e",
+                "Liverpool"
+              ],
+              "prob": 0.8363,
+              "cohort_evidence": {
+                "rate": 0.8363,
+                "n": 904,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-04",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 756,
+                "cohort_lower_bound": 0.8107487418756993,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "away",
+                  "league": "Champions League",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.37,
+                  "captured_at": "2026-11-04T01:27:48.228608+00:00",
+                  "decision_at": "2026-11-04T09:29:57+02:00",
+                  "kickoff": "2026-11-04T17:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6787749140320011,
+              "ml_model_key": "50709f9988c68da90b74e21e73b1ef116657c43690bbe9394c505846a11109c7",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Champions League",
+              "shadow": true,
+              "price_kickoff": "2026-11-04T17:45:00+00:00"
+            },
+            {
+              "match": "Lens vs Como",
+              "pick": "under",
+              "odds": 1.6,
+              "result": "loss",
+              "label": "Match Under 3.5 Goals",
+              "market": "match_under_35",
+              "price_book": "Stake.com",
+              "price_source": "betexplorer",
+              "price_at": "2026-11-04T01:29:53.998811+00:00",
+              "price_provenance": {
+                "away": "Como",
+                "bookmaker": "Stake.com",
+                "captured_at": "2026-11-04T01:29:53.998811+00:00",
+                "data_dt": [
+                  4,
+                  11,
+                  2026,
+                  21,
+                  0
+                ],
+                "decision_cutoff_utc": "2026-11-04T07:00:00+00:00",
+                "decision_day": "2026-11-04",
+                "home": "Lens",
+                "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                "kind": "betexplorer_pre_cutoff_v1",
+                "ledger_file": "betexplorer_match_detail_2026-11-04.json",
+                "ledger_sha256": "9fe46bd1be2e63684629dab83e6ff0161e38756e668da2cd4cfab9b1880ace61",
+                "market": "ou_3.5",
+                "price": 1.6,
+                "quote_evidence": {
+                  "column_index": 1,
+                  "columns": [
+                    "Over",
+                    "Under"
+                  ],
+                  "market_slug": "ou",
+                  "row": {
+                    "best": true,
+                    "bookmaker": "Stake.com",
+                    "bookmaker_id": "1105",
+                    "created": [
+                      "2026-11-03T21:02",
+                      "2026-11-03T06:05"
+                    ],
+                    "line": "3.50",
+                    "movement": [
+                      "up",
+                      "down"
+                    ],
+                    "odds": [
+                      2.25,
+                      1.6
+                    ],
+                    "pos": [
+                      "1",
+                      "2"
+                    ],
+                    "source": "all"
+                  },
+                  "row_index": 18,
+                  "row_sha256": "4027491210d351233e5d1656df7e51bacb8eb8dc56798654da7fea743167f2b1"
+                },
+                "raw_kickoff": "21:00",
+                "resolution": {
+                  "interpretations": [
+                    "inferred_europe_prague",
+                    "inferred_fixed_utc_plus_1"
+                  ],
+                  "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                  "late_witness_records": 0,
+                  "provenance": "witness_corroborated_aware_iso",
+                  "reason": "independent_pre_cutoff_schedule_witness",
+                  "status": "corroborated",
+                  "witnesses": [
+                    {
+                      "away": "Como",
+                      "csv_data_row": 460,
+                      "file": "scoutingstats_2026-11.csv.gz",
+                      "file_sha256": "144c7e1f98e9d5ba7ccffa6ea2dfb72411c26114201a646aa38df97281b5b63c",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Lens",
+                      "kickoff_origin": "provider_explicit_offset",
+                      "kickoff_utc": "2026-11-04T20:00:00+00:00",
+                      "league": "Champions League",
+                      "observed_at_utc": "2026-11-03T22:08:46+00:00",
+                      "provider_commence_time": null,
+                      "provider_event_id": null,
+                      "row_sha256": "a896e4056a74c548db2e86927376bb7366d3f21760a3e3bbef8a6474009c24aa",
+                      "schedule_row": {
+                        "away": "Como",
+                        "captured_at": "2026-11-03T22:08:46+00:00",
+                        "country": "Europe",
+                        "date": "2026-11-04",
+                        "fixture_identity_origin": "provider_participants",
+                        "gs": "",
+                        "home": "Lens",
+                        "hs": "",
+                        "kickoff": "2026-11-04T20:00:00Z",
+                        "kickoff_origin": "provider_explicit_offset",
+                        "league": "Champions League",
+                        "odd1": "3.1",
+                        "odd2": "2.15",
+                        "odd_gg": "1.5",
+                        "odd_ng": "2.5",
+                        "odd_o15": "1.16",
+                        "odd_o25": "1.57",
+                        "odd_o35": "2.3",
+                        "odd_u15": "5.0",
+                        "odd_u25": "2.37",
+                        "odd_u35": "1.61",
+                        "oddx": "3.75",
+                        "p1": "30.595599393019725",
+                        "p2": "44.11039453717754",
+                        "p_gg": "62.5",
+                        "p_ng": "37.50000000000001",
+                        "p_o15": "81.16883116883116",
+                        "p_o25": "60.1522842639594",
+                        "p_o35": "41.17647058823529",
+                        "px": "25.294006069802734",
+                        "schedule_history": "[]",
+                        "source": "scoutingstats",
+                        "status": "20:00"
+                      },
+                      "source": "scoutingstats"
+                    }
+                  ]
+                },
+                "selection": "under",
+                "site_best": true
+              },
+              "fixture_key": [
+                "2026-11-04",
+                "Lens",
+                "Como"
+              ],
+              "prob": 0.6881,
+              "cohort_evidence": {
+                "rate": 0.6881,
+                "n": 904,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-04",
+                "market": "match_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 622,
+                "cohort_lower_bound": 0.6571102519434937,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "away",
+                  "league": "Champions League",
+                  "book": "Stake.com",
+                  "source": "betexplorer",
+                  "price": 1.6,
+                  "captured_at": "2026-11-04T01:29:53.998811+00:00",
+                  "decision_at": "2026-11-04T09:29:57+02:00",
+                  "kickoff": "2026-11-04T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6044080054575803,
+              "ml_model_key": "50709f9988c68da90b74e21e73b1ef116657c43690bbe9394c505846a11109c7",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.64,
+              "floor_basis": "inherited",
+              "league": "Champions League",
+              "shadow": true,
+              "price_kickoff": "2026-11-04T20:00:00+00:00"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 16.4854,
+      "close_pct": 16.4854
     }
   ]
 }

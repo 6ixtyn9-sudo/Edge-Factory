@@ -6,20 +6,20 @@
       "attributed_scores": {
         "by_schema": {
           "enh_score_logit_v2": {
-            "cohort_brier": 0.21025089178571427,
-            "cohort_log_loss": 0.6074195751027794,
-            "fixtures": 28,
-            "model_brier": 0.2176755970564171,
-            "model_log_loss": 0.6282595681834874,
-            "records": 28
+            "cohort_brier": 0.25638930625,
+            "cohort_log_loss": 0.7153898099216057,
+            "fixtures": 32,
+            "model_brier": 0.24859382642881064,
+            "model_log_loss": 0.6935621891041256,
+            "records": 32
           }
         },
         "caveat": "Fixture-balanced descriptive scores on booked legs, not independent records or selection uplift; log probabilities clipped at 1e-15. No significance claim.",
-        "eligible_binary_legs": 84,
+        "eligible_binary_legs": 88,
         "missing_attribution": 56
       },
       "counts": {
-        "MATCH": 8
+        "MATCH": 9
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -2894,10 +2894,10 @@
                         "match": "RB Leipzig vs Manchester City",
                         "model": 0.7098749366614653,
                         "odds": 1.44,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.6672,
@@ -2905,14 +2905,14 @@
                         "match": "Porto vs Napoli",
                         "model": 0.728092632473219,
                         "odds": 1.44,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 2.07,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 2.7476
                   },
                   {
@@ -2923,10 +2923,10 @@
                         "match": "Fenerbah\u00e7e vs Liverpool",
                         "model": 0.6787749140320011,
                         "odds": 1.37,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.6881,
@@ -2934,14 +2934,14 @@
                         "match": "Lens vs Como",
                         "model": 0.6044080054575803,
                         "odds": 1.6,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 2.19,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 2.7476
                   }
                 ],
@@ -2992,9 +2992,9 @@
                   ]
                 ],
                 "mean_acca_odds": 2.13,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 4,
+                "returned": 0.0,
                 "selected_legs": 4,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -3021,10 +3021,10 @@
                         "match": "RB Leipzig vs Manchester City",
                         "model": 0.7098749366614653,
                         "odds": 1.44,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.6881,
@@ -3032,14 +3032,14 @@
                         "match": "Lens vs Como",
                         "model": 0.6044080054575803,
                         "odds": 1.62,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 2.33,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 2.7476
                   },
                   {
@@ -3050,10 +3050,10 @@
                         "match": "Porto vs Napoli",
                         "model": 0.728092632473219,
                         "odds": 1.44,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "under",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.7151,
@@ -3061,14 +3061,14 @@
                         "match": "Fenerbah\u00e7e vs Liverpool",
                         "model": 0.697794391095446,
                         "odds": 1.36,
-                        "outcome_source": null,
+                        "outcome_source": "shared_settlement_facts",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 1.96,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 2.7476
                   }
                 ],
@@ -3119,9 +3119,9 @@
                   ]
                 ],
                 "mean_acca_odds": 2.145,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 4,
+                "returned": 0.0,
                 "selected_legs": 4,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -3332,10 +3332,479 @@
               "enh_score_logit_v2": 33
             },
             "scored_legs": 33,
-            "status": "INCOMPLETE_OUTCOMES"
+            "status": "RESOLVED"
           },
-          "open_accas": 2,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": -5.4952,
+          "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 2,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 16.485449,
+          "committed_excluding_target": 0.0,
+          "date": "2026-11-05",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "8c3ab205add739bff64142058d2468a323ef6246",
+            "event_sha": "8c3ab205add739bff64142058d2468a323ef6246",
+            "file_sha256": {
+              "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
+            },
+            "run_id": "41921253780",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-05_decision.json.gz",
+          "free_bank": 16.485449,
+          "ledger": "NOT_COMMITTED",
+          "ml_comparison": {
+            "added_to_ml_on": 2,
+            "arms": {
+              "ml_off": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7162,
+                        "market": "match_over_25",
+                        "match": "Trabzonspor vs SC Freiburg",
+                        "model": 0.6237112222722896,
+                        "odds": 1.55,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.6538,
+                        "market": "match_over_25",
+                        "match": "AC Milan vs Ferencvarosi TC",
+                        "model": 0.7939943112940359,
+                        "odds": 1.5,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 2.33,
+                    "returned": null,
+                    "stake": 2.0607
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7162,
+                        "market": "match_over_25",
+                        "match": "Benfica vs Lech Pozna\u0144",
+                        "model": 0.6441346897897439,
+                        "odds": 1.3,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.6748,
+                        "market": "match_over_25",
+                        "match": "Thun vs Hearts",
+                        "model": 0.6634445849838291,
+                        "odds": 1.5,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.95,
+                    "returned": null,
+                    "stake": 2.0607
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "AC Milan vs Ferencvarosi TC",
+                        "match_over_25",
+                        "OVER",
+                        1.5,
+                        "William Hill",
+                        "theoddsapi"
+                      ],
+                      [
+                        "Trabzonspor vs SC Freiburg",
+                        "match_over_25",
+                        "OVER",
+                        1.55,
+                        "William Hill",
+                        "theoddsapi"
+                      ]
+                    ],
+                    2.33,
+                    2.0607
+                  ],
+                  [
+                    [
+                      [
+                        "Benfica vs Lech Pozna\u0144",
+                        "match_over_25",
+                        "OVER",
+                        1.3,
+                        "William Hill",
+                        "theoddsapi"
+                      ],
+                      [
+                        "Thun vs Hearts",
+                        "match_over_25",
+                        "OVER",
+                        1.5,
+                        "William Hill",
+                        "theoddsapi"
+                      ]
+                    ],
+                    1.95,
+                    2.0607
+                  ]
+                ],
+                "mean_acca_odds": 2.14,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 4,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": false
+                },
+                "total_stake": 4.1214
+              },
+              "ml_on": {
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.6538,
+                        "market": "match_over_25",
+                        "match": "AC Milan vs Ferencvarosi TC",
+                        "model": 0.7939943112940359,
+                        "odds": 1.55,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.6748,
+                        "market": "match_over_25",
+                        "match": "Thun vs Hearts",
+                        "model": 0.6634445849838291,
+                        "odds": 1.5,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 2.33,
+                    "returned": null,
+                    "stake": 2.0607
+                  },
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7162,
+                        "market": "match_over_25",
+                        "match": "Benfica vs Lech Pozna\u0144",
+                        "model": 0.6441346897897439,
+                        "odds": 1.3,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.7162,
+                        "market": "match_over_25",
+                        "match": "Trabzonspor vs SC Freiburg",
+                        "model": 0.6237112222722896,
+                        "odds": 1.55,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 2.02,
+                    "returned": null,
+                    "stake": 2.0607
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "AC Milan vs Ferencvarosi TC",
+                        "match_over_25",
+                        "OVER",
+                        1.55,
+                        "Nordic Bet",
+                        "theoddsapi"
+                      ],
+                      [
+                        "Thun vs Hearts",
+                        "match_over_25",
+                        "OVER",
+                        1.5,
+                        "Nordic Bet",
+                        "theoddsapi"
+                      ]
+                    ],
+                    2.33,
+                    2.0607
+                  ],
+                  [
+                    [
+                      [
+                        "Benfica vs Lech Pozna\u0144",
+                        "match_over_25",
+                        "OVER",
+                        1.3,
+                        "William Hill",
+                        "theoddsapi"
+                      ],
+                      [
+                        "Trabzonspor vs SC Freiburg",
+                        "match_over_25",
+                        "OVER",
+                        1.55,
+                        "William Hill",
+                        "theoddsapi"
+                      ]
+                    ],
+                    2.02,
+                    2.0607
+                  ]
+                ],
+                "mean_acca_odds": 2.175,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 4,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": true,
+                  "dropped": [],
+                  "ml_ranking_active": true
+                },
+                "total_stake": 4.1214
+              }
+            },
+            "card_identical": false,
+            "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
+            "execution_leg_symmetric_difference": 4,
+            "mean_absolute_disagreement": 0.08041808223240073,
+            "model_below_cohort": 7,
+            "models": {
+              "5d56f755d114f33c770c824d64937dd7ac9e286d78b51ce52524adcb7297b6ee": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 45,
+                    "0:1": 69,
+                    "0:2": 49,
+                    "0:3": 46,
+                    "0:4": 14,
+                    "0:5": 6,
+                    "0:6": 4,
+                    "0:7": 3,
+                    "1:0": 95,
+                    "1:1": 110,
+                    "1:2": 90,
+                    "1:3": 43,
+                    "1:4": 13,
+                    "1:5": 5,
+                    "1:6": 2,
+                    "1:7": 1,
+                    "1:9": 1,
+                    "2:0": 85,
+                    "2:1": 129,
+                    "2:2": 90,
+                    "2:3": 35,
+                    "2:4": 21,
+                    "2:5": 8,
+                    "2:6": 2,
+                    "3:0": 73,
+                    "3:1": 80,
+                    "3:2": 49,
+                    "3:3": 26,
+                    "3:4": 10,
+                    "3:5": 1,
+                    "3:6": 1,
+                    "4:0": 33,
+                    "4:1": 37,
+                    "4:2": 20,
+                    "4:3": 8,
+                    "4:4": 5,
+                    "4:5": 1,
+                    "5:0": 18,
+                    "5:1": 19,
+                    "5:2": 6,
+                    "5:3": 5,
+                    "5:4": 1,
+                    "5:5": 1,
+                    "6:0": 3,
+                    "6:1": 10,
+                    "6:2": 3,
+                    "7:0": 5,
+                    "7:1": 3,
+                    "7:2": 2,
+                    "8:0": 2,
+                    "8:1": 1,
+                    "8:3": 1,
+                    "9:0": 1,
+                    "9:1": 2
+                  },
+                  "classes": 54,
+                  "mean_rows_per_class": 25.796296296296298,
+                  "min_class_count": 1,
+                  "n": 1393,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 3078
+                },
+                "schema": "enh_score_logit_v2"
+              },
+              "6bd98646750ac4b6ef2c5d67bc33378799ed3b54e72f70c410d0238af70716c1": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 23,
+                    "0:1": 24,
+                    "0:2": 27,
+                    "0:3": 20,
+                    "0:4": 8,
+                    "0:5": 5,
+                    "0:6": 4,
+                    "0:7": 1,
+                    "1:0": 47,
+                    "1:1": 48,
+                    "1:2": 47,
+                    "1:3": 22,
+                    "1:4": 9,
+                    "1:5": 5,
+                    "1:6": 2,
+                    "1:7": 1,
+                    "2:0": 41,
+                    "2:1": 59,
+                    "2:2": 47,
+                    "2:3": 24,
+                    "2:4": 9,
+                    "2:5": 4,
+                    "2:6": 1,
+                    "3:0": 47,
+                    "3:1": 53,
+                    "3:2": 24,
+                    "3:3": 13,
+                    "3:4": 8,
+                    "3:5": 1,
+                    "3:6": 1,
+                    "4:0": 19,
+                    "4:1": 21,
+                    "4:2": 12,
+                    "4:3": 4,
+                    "4:4": 4,
+                    "5:0": 12,
+                    "5:1": 10,
+                    "5:2": 2,
+                    "5:3": 3,
+                    "5:4": 1,
+                    "5:5": 1,
+                    "6:0": 2,
+                    "6:1": 7,
+                    "6:2": 3,
+                    "7:0": 2,
+                    "7:1": 3,
+                    "7:2": 2,
+                    "8:0": 2,
+                    "8:1": 1,
+                    "8:3": 1,
+                    "9:0": 1,
+                    "9:1": 2
+                  },
+                  "classes": 52,
+                  "mean_rows_per_class": 14.23076923076923,
+                  "min_class_count": 1,
+                  "n": 740,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2964
+                },
+                "schema": "enh_score_logit_v2"
+              },
+              "72df74e43ffee12a10581954578d92ed6f76801c2d673fa3c428efa1fa81eec4": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 17,
+                    "0:1": 17,
+                    "0:2": 4,
+                    "0:3": 5,
+                    "1:0": 44,
+                    "1:1": 33,
+                    "1:2": 14,
+                    "1:3": 7,
+                    "1:4": 2,
+                    "2:0": 56,
+                    "2:1": 49,
+                    "2:2": 32,
+                    "2:3": 5,
+                    "2:4": 1,
+                    "3:0": 35,
+                    "3:1": 29,
+                    "3:2": 27,
+                    "3:3": 6,
+                    "3:4": 1,
+                    "4:0": 20,
+                    "4:1": 25,
+                    "4:2": 6,
+                    "4:3": 5,
+                    "4:4": 2,
+                    "5:0": 15,
+                    "5:1": 7,
+                    "5:2": 8,
+                    "5:3": 2,
+                    "6:0": 7,
+                    "6:1": 3,
+                    "7:0": 3,
+                    "7:2": 3,
+                    "8:0": 2,
+                    "8:1": 1,
+                    "9:1": 1
+                  },
+                  "classes": 35,
+                  "mean_rows_per_class": 14.114285714285714,
+                  "min_class_count": 1,
+                  "n": 494,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 1995
+                },
+                "schema": "enh_score_logit_v2"
+              }
+            },
+            "paired_estimates": 10,
+            "pool_legs": 10,
+            "removed_from_ml_off": 2,
+            "schemas": {
+              "enh_score_logit_v2": 10
+            },
+            "scored_legs": 10,
+            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+          },
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],
@@ -3625,8 +4094,9 @@
           "free_bank": 342.97328,
           "freeze_time": "MATCH",
           "ledger": "MATCH",
-          "open_accas": 2,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": 70.30969999999999,
+          "settlement": "MATCH",
           "status": "MATCH"
         }
       ],

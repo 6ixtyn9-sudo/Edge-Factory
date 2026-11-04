@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-04",
+ "generated_at": "2026-11-05",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
    "hits": 10,
-   "inv_price_sum": 8.825210658705576,
+   "inv_price_sum": 9.385121073039283,
    "multi_n": 0,
-   "n": 14,
+   "n": 15,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -74,9 +74,10 @@
     "2026-10-25|Sydney FC vs Adelaide United|away_over_05@v1",
     "2026-11-02|Los Angeles FC vs Minnesota United|away_over_05@v1",
     "2026-11-02|Cruz Azul vs Leon|away_over_05@v1",
-    "2026-11-02|Portland Timbers vs Houston Dynamo|away_over_05@v1"
+    "2026-11-02|Portland Timbers vs Houston Dynamo|away_over_05@v1",
+    "2026-11-04|Alianza Lima vs Cienciano|away_over_05@v1"
    ],
-   "profit": 0.893,
+   "profit": -0.107,
    "records": [
     {
      "away": "Mixco",
@@ -471,6 +472,35 @@
      "rule": "pfc_226efd387e217a9d58a11f79",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Cienciano",
+     "away_key": "cienciano",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6593,
+     "date": "2026-11-04",
+     "hit": false,
+     "home": "Alianza Lima",
+     "home_key": "alianzalima",
+     "league": "Primera Division",
+     "match": "Alianza Lima vs Cienciano",
+     "multi_source": false,
+     "price": 1.786,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-03T22:31:06.989462+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T01:00:00+00:00",
+      "league": "Primera Division",
+      "price": 1.786,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.393502+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -747,10 +777,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 12,
-   "inv_price_sum": 5.750843169361502,
+   "hits": 14,
+   "inv_price_sum": 6.502979921498254,
    "multi_n": 0,
-   "n": 14,
+   "n": 16,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -765,9 +795,11 @@
     "2026-10-25|Ehime vs Fukushima United|away_under_15@v1",
     "2026-11-02|Cruz Azul vs Leon|away_under_15@v1",
     "2026-11-02|Los Angeles FC vs Minnesota United|away_under_15@v1",
-    "2026-11-02|Portland Timbers vs Houston Dynamo|away_under_15@v1"
+    "2026-11-02|Portland Timbers vs Houston Dynamo|away_under_15@v1",
+    "2026-11-04|Internacional vs Coritiba|away_under_15@v1",
+    "2026-11-04|Alianza Lima vs Cienciano|away_under_15@v1"
    ],
-   "profit": 23.27,
+   "profit": 26.77,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -1112,6 +1144,64 @@
      },
      "recorded_at": "2026-11-02T22:44:22.832309+00:00",
      "rule": "pfc_226efd387e217a9d58a11f79",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Coritiba",
+     "away_key": "coritiba",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7679,
+     "date": "2026-11-04",
+     "hit": true,
+     "home": "Internacional",
+     "home_key": "internacional",
+     "league": "Serie A",
+     "match": "Internacional vs Coritiba",
+     "multi_source": false,
+     "price": 3.25,
+     "price_context": {
+      "book": "napoleonsports.be",
+      "captured_at": "2026-11-03T22:31:11.585118+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 3.25,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.346780+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Cienciano",
+     "away_key": "cienciano",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7074,
+     "date": "2026-11-04",
+     "hit": true,
+     "home": "Alianza Lima",
+     "home_key": "alianzalima",
+     "league": "Primera Division",
+     "match": "Alianza Lima vs Cienciano",
+     "multi_source": false,
+     "price": 2.25,
+     "price_context": {
+      "book": "napoleonsports.be",
+      "captured_at": "2026-11-03T22:31:06.989462+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T01:00:00+00:00",
+      "league": "Primera Division",
+      "price": 2.25,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.378831+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
     }
@@ -2844,9 +2934,9 @@
   },
   "home_over_15@v1": {
    "hits": 7,
-   "inv_price_sum": 7.160151411749419,
+   "inv_price_sum": 7.740197815461716,
    "multi_n": 0,
-   "n": 12,
+   "n": 13,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -2859,9 +2949,10 @@
     "2026-10-25|Ehime vs Fukushima United|home_over_15@v1",
     "2026-11-02|Los Angeles FC vs Minnesota United|home_over_15@v1",
     "2026-11-02|Sacramento Republic FC vs FC Tulsa|home_over_15@v1",
-    "2026-11-02|Cruz Azul vs Leon|home_over_15@v1"
+    "2026-11-02|Cruz Azul vs Leon|home_over_15@v1",
+    "2026-11-04|Internacional vs Coritiba|home_over_15@v1"
    ],
-   "profit": -0.274,
+   "profit": -1.274,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -3208,6 +3299,35 @@
      },
      "recorded_at": "2026-11-02T22:44:22.733085+00:00",
      "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Coritiba",
+     "away_key": "coritiba",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6267,
+     "date": "2026-11-04",
+     "hit": false,
+     "home": "Internacional",
+     "home_key": "internacional",
+     "league": "Serie A",
+     "match": "Internacional vs Coritiba",
+     "multi_source": false,
+     "price": 1.724,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-03T22:31:11.585118+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.724,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.353950+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
      "source": "oddspapi",
      "stated": null
     }
@@ -3672,10 +3792,10 @@
    "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
-   "hits": 13,
-   "inv_price_sum": 12.45122311714964,
+   "hits": 15,
+   "inv_price_sum": 13.816758384634449,
    "multi_n": 0,
-   "n": 20,
+   "n": 22,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -3736,9 +3856,11 @@
     "2026-11-02|Los Angeles FC vs Minnesota United|home_under_25@v1",
     "2026-11-02|Cruz Azul vs Leon|home_under_25@v1",
     "2026-11-02|Managua vs UNAN Managua|home_under_25@v1",
-    "2026-11-02|Portland Timbers vs Houston Dynamo|home_under_25@v1"
+    "2026-11-02|Portland Timbers vs Houston Dynamo|home_under_25@v1",
+    "2026-11-04|Internacional vs Coritiba|home_under_25@v1",
+    "2026-11-04|Alianza Lima vs Cienciano|home_under_25@v1"
    ],
-   "profit": -0.35,
+   "profit": 0.584,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -4305,6 +4427,64 @@
      },
      "recorded_at": "2026-11-02T22:44:22.810609+00:00",
      "rule": "pfc_226efd387e217a9d58a11f79",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Coritiba",
+     "away_key": "coritiba",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6631,
+     "date": "2026-11-04",
+     "hit": true,
+     "home": "Internacional",
+     "home_key": "internacional",
+     "league": "Serie A",
+     "match": "Internacional vs Coritiba",
+     "multi_source": false,
+     "price": 1.408,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-03T22:31:11.585118+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.408,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.361148+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Cienciano",
+     "away_key": "cienciano",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7273,
+     "date": "2026-11-04",
+     "hit": true,
+     "home": "Alianza Lima",
+     "home_key": "alianzalima",
+     "league": "Primera Division",
+     "match": "Alianza Lima vs Cienciano",
+     "multi_source": false,
+     "price": 1.526,
+     "price_context": {
+      "book": "bodog.eu",
+      "captured_at": "2026-11-03T22:31:06.989462+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T01:00:00+00:00",
+      "league": "Primera Division",
+      "price": 1.526,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.386262+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
     }
@@ -5334,11 +5514,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 345,
+   "hits": 347,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 339.80624755407564,
+   "inv_price_sum": 341.28324777208303,
    "multi_n": 103,
-   "n": 522,
+   "n": 524,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -6105,9 +6285,11 @@
     "2026-11-02|Radomiak Radom vs \u015al\u0105sk Wroc\u0142aw|match_over_25@v1",
     "2026-11-03|Galatasaray vs VfB Stuttgart|match_over_25@v1",
     "2026-11-03|Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen|match_over_25@v1",
-    "2026-11-03|Villarreal vs Paris Saint Germain|match_over_25@v1"
+    "2026-11-03|Villarreal vs Paris Saint Germain|match_over_25@v1",
+    "2026-11-04|Fenerbah\u00e7e vs Liverpool|match_over_25@v1",
+    "2026-11-04|RB Leipzig vs Manchester City|match_over_25@v1"
    ],
-   "profit": 10.187,
+   "profit": 10.897,
    "records": [
     {
      "away": "Spartak Varna",
@@ -14214,6 +14396,64 @@
      "rule": "pfc_54fcf87604b73b87ee6c0a90",
      "source": "theoddsapi",
      "stated": null
+    },
+    {
+     "away": "Liverpool",
+     "away_key": "liverpool",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7151,
+     "date": "2026-11-04",
+     "hit": true,
+     "home": "Fenerbah\u00e7e",
+     "home_key": "fenerbahce",
+     "league": "Champions League",
+     "match": "Fenerbah\u00e7e vs Liverpool",
+     "multi_source": false,
+     "price": 1.39,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-11-03T22:30:41.735860+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T17:45:00+00:00",
+      "league": "Champions League",
+      "price": 1.39,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.328546+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Manchester City",
+     "away_key": "manchestercity",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7151,
+     "date": "2026-11-04",
+     "hit": true,
+     "home": "RB Leipzig",
+     "home_key": "rbleipzig",
+     "league": "Champions League",
+     "match": "RB Leipzig vs Manchester City",
+     "multi_source": false,
+     "price": 1.32,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-11-03T22:30:41.903829+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T20:00:00+00:00",
+      "league": "Champions League",
+      "price": 1.32,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.368490+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "theoddsapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -15284,10 +15524,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_35@v1": {
-   "hits": 5,
-   "inv_price_sum": 7.387846554217646,
+   "hits": 6,
+   "inv_price_sum": 8.047912560818306,
    "multi_n": 0,
-   "n": 14,
+   "n": 15,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -15302,9 +15542,10 @@
     "2026-11-01|Ogre United vs Riga|match_under_35@v1",
     "2026-11-02|Managua vs UNAN Managua|match_under_35@v1",
     "2026-11-02|Los Angeles FC vs Minnesota United|match_under_35@v1",
-    "2026-11-02|Portland Timbers vs Houston Dynamo|match_under_35@v1"
+    "2026-11-02|Portland Timbers vs Houston Dynamo|match_under_35@v1",
+    "2026-11-04|Alianza Lima vs Cienciano|match_under_35@v1"
    ],
-   "profit": -2.0,
+   "profit": -1.485,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -15711,6 +15952,35 @@
      "rule": "pfc_226efd387e217a9d58a11f79",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Cienciano",
+     "away_key": "cienciano",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6672,
+     "date": "2026-11-04",
+     "hit": true,
+     "home": "Alianza Lima",
+     "home_key": "alianzalima",
+     "league": "Primera Division",
+     "match": "Alianza Lima vs Cienciano",
+     "multi_source": false,
+     "price": 1.515,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-03T22:31:06.989462+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T01:00:00+00:00",
+      "league": "Primera Division",
+      "price": 1.515,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.400766+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -15718,10 +15988,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 30,
-   "inv_price_sum": 20.916264776803505,
+   "hits": 31,
+   "inv_price_sum": 21.413777214614452,
    "multi_n": 0,
-   "n": 34,
+   "n": 35,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -15756,9 +16026,10 @@
     "2026-11-02|Los Angeles FC vs Minnesota United|match_under_45@v1",
     "2026-11-02|Cruz Azul vs Leon|match_under_45@v1",
     "2026-11-02|Managua vs UNAN Managua|match_under_45@v1",
-    "2026-11-02|Portland Timbers vs Houston Dynamo|match_under_45@v1"
+    "2026-11-02|Portland Timbers vs Houston Dynamo|match_under_45@v1",
+    "2026-11-04|Internacional vs Coritiba|match_under_45@v1"
    ],
-   "profit": 15.317,
+   "profit": 16.327,
    "records": [
     {
      "away": "Atlante",
@@ -16703,10 +16974,39 @@
      "rule": "pfc_226efd387e217a9d58a11f79",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Coritiba",
+     "away_key": "coritiba",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.8053,
+     "date": "2026-11-04",
+     "hit": true,
+     "home": "Internacional",
+     "home_key": "internacional",
+     "league": "Serie A",
+     "match": "Internacional vs Coritiba",
+     "multi_source": false,
+     "price": 2.01,
+     "price_context": {
+      "book": "hth",
+      "captured_at": "2026-11-03T22:31:11.585118+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-04T00:35:49+02:00",
+      "kickoff": "2026-11-04T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 2.01,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-04T23:17:22.339232+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
-   "status_reason": "n=34 wilsonLB95=0.7338 >= mean breakeven 0.6152 but multi-source verification 0/9 not met",
+   "status_reason": "n=35 wilsonLB95=0.7405 >= mean breakeven 0.6118 but multi-source verification 0/9 not met",
    "status_since": "2026-10-22"
   }
  },
