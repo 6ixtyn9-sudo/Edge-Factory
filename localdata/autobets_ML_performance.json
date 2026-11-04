@@ -9,7 +9,7 @@
   "paper_free_units": 84.25040317919999,
   "settled_stake_units": 23.411492,
   "receipt_days": 3,
-  "decision_receipts": 17,
+  "decision_receipts": 19,
   "bet_days": 3,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
@@ -4892,6 +4892,24 @@
       "decision_id": "20261104T074623459156Z",
       "captured_at": "2026-11-04T07:46:23.459156+00:00",
       "frozen_at": "2026-11-04T07:46:32.725974+00:00"
+    },
+    {
+      "date": "2026-11-04",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261104T104240916928Z",
+      "captured_at": "2026-11-04T10:42:40.916928+00:00",
+      "frozen_at": "2026-11-04T10:42:51.137132+00:00"
+    },
+    {
+      "date": "2026-11-04",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261104T104508539990Z",
+      "captured_at": "2026-11-04T10:45:08.539990+00:00",
+      "frozen_at": "2026-11-04T10:45:18.238426+00:00"
     }
   ],
   "latest_learning": {
