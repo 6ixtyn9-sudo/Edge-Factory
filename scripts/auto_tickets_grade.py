@@ -148,7 +148,7 @@ def publish_ml_paper(*, write_empty=True):
     else:
         report = ml_paper.performance([], lookup)
     if card is not None:
-        print("\n" + ml_paper.render_card(card))
+        print("\n" + ml_paper.render_latest_card(LOCALDATA, report, card=card))
     print("\n" + ml_paper.render_performance(report))
     return report
 

@@ -88,6 +88,16 @@ def fold_league_identity(name: object) -> str:
     return fold_identity_words(name)
 
 
+# These domestic titles occur in multiple countries. A bare title cannot prove
+# country identity, even if a learned registry/provider catalogue has one match.
+AMBIGUOUS_DOMESTIC_LEAGUE_KEYS = frozenset({
+    "premier league", "super league", "first league", "second league", "third league",
+    "division 1", "division 2", "division 3", "first division", "second division",
+    "third division", "league one", "league two", "serie a", "serie b",
+    "liga 1", "liga 2", "ligue 1", "ligue 2", "primera division",
+})
+
+
 # Explicit alias pairs, each PROVEN same-league by archive evidence:
 # the same (date, folded home, folded away) fixture appearing under both
 # spellings in the same slate. Targets are the purity-registry keys so

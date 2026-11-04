@@ -174,7 +174,9 @@ def test_many_additions_share_one_aggregate_exposure_limit(tmp_path):
     assert any(r["fixture_concentration"]["released_stake_micro_units"] for r in history)
     mp.publish(tmp_path, lambda c: None)
     text = (tmp_path / f"{mp.PREFIX}_{DAY}.txt").read_text()
-    assert all(r["decision_id"] in text for r in history)
+    audit = (tmp_path / mp.RECEIPT_DIR / "reports" / f"{mp.PREFIX}_{DAY}_audit.txt").read_text()
+    assert all(r["decision_id"] in text for r in history if r["accas"])
+    assert all(r["decision_id"] in audit for r in history)
     assert text.count("[PAPER ACCA #") == sum(len(r["accas"]) for r in history)
     assert not list(tmp_path.glob("autobets_ML_????-??-??*.json"))
 

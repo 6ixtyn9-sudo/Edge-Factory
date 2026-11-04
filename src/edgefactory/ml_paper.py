@@ -388,16 +388,28 @@ def receipts(root):
         blobs[day] = blob
         result[day] = row
     ordered = sorted(result.values(), key=lambda r: (parse_zoned_timestamp(r["captured_at"]), r.get("decision_id", "")))
-    committed = set()
+    committed = defaultdict(int)
     prior_hashes = []
     for row in ordered:
         fixtures = {tuple(c["fixture"]) for a in row["accas"] for c in a["legs"]}
         if row.get("freeze_basis") == ROLLING_FREEZE:
-            if committed.intersection(fixtures):
-                raise ValueError("rolling receipts recommit a ticketed fixture")
+            reused = set(committed).intersection(fixtures)
+            if reused:
+                audit = row.get("fixture_concentration") or {}
+                prior = {tuple(e["fixture"]): e["prior_open_stake_micro_units"]
+                         for e in audit.get("fixtures", [])}
+                # The approved cap replaces the old unconditional fixture ban,
+                # not the protection against missing/understated prior stakes.
+                # Since settled fixtures never reopen, every earlier stake on
+                # a reused fixture must be present in its frozen prior budget.
+                if any(prior.get(f) != committed[f] for f in reused):
+                    raise ValueError("rolling fixture reuse lacks complete prior stake evidence")
             if row.get("prior_receipt_sha256s") != prior_hashes:
                 raise ValueError("rolling paper history fork or missing capital evidence")
-        committed.update(fixtures)
+        for acca in row["accas"]:
+            stake = _decimal_micro_units(acca["stake_units"], "prior open stake", rounding=ROUND_CEILING)
+            for fixture in {tuple(c["fixture"]) for c in acca["legs"]}:
+                committed[fixture] += stake
         prior_hashes.append(row["sha256"])
     return ordered
 
@@ -2179,7 +2191,8 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
 
     Never edits old receipts, spends live capital, or invents future inputs.
     Quarter-Kelly remains unchanged; remaining aggregate commitment headroom
-    can only reduce a new allocation. Already ticketed fixtures never re-enter.
+    can only reduce a new allocation. Pending fixtures may reuse residual budget;
+    settled fixtures never re-enter.
     """
     clock = (lambda: now) if now is not None else (lambda: datetime.now(UTC))
     root = Path(root)
@@ -2199,7 +2212,13 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
         history = receipts(root)
         if any(parse_zoned_timestamp(r["persisted_at"]) > captured for r in history):
             raise ValueError("future paper evidence cannot fund a rolling decision")
-        used = {tuple(c["fixture"]) for r in history for a in r["accas"] for c in a["legs"]}
+        report = performance(history, score_lookup)
+        prior_open = _prior_open_fixture_micro_units(report)
+        fixture_limit = _fixture_limit_micro_units(report["paper_bank_units"])
+        # Never reopen settled evidence (including an acca already lost with
+        # unresolved other legs). Pending fixtures may reuse residual budget.
+        settled = {tuple(c["fixture"]) for r in report["history"] for a in r["accas"]
+                   if a["profit_units"] is not None for c in a["legs"]}
         end = captured + timedelta(hours=24)
         eligible = defaultdict(list)
         rejected = Counter()
@@ -2210,8 +2229,11 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
                 continue
             fixture_day = kickoff.astimezone(LOCAL_TZ).date().isoformat()
             fixture = (fixture_day, source_team_key(row.get("home")), source_team_key(row.get("away")))
-            if fixture in used:
-                rejected["already_ticketed_fixture"] += 1
+            if fixture in settled:
+                rejected["previously_settled_fixture"] += 1
+                continue
+            if prior_open.get(fixture, 0) >= fixture_limit:
+                rejected["fixture_budget_exhausted"] += 1
                 continue
             profile = row.get("statistical_profile")
             model = profile.get("ml_model") if isinstance(profile, dict) else None
@@ -2232,7 +2254,6 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
             rejected.update(failures)
         learner = learn(history, captured, score_lookup)
         apply_learning(rows, learner)
-        report = performance(history, score_lookup)
         available = max(0.0, report["paper_free_units"])
         if not rows and history:
             return None  # no new eligible opportunity, not another daily seal
@@ -2722,11 +2743,12 @@ def _paper_publication_time(receipt):
     return stamp.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M:%S SAST") if stamp else "time unavailable"
 
 
-def render_daily_card(history, report=None):
+def render_daily_card(history, report=None, *, audit=False):
     """One day's rolling publications; labels are views, never receipt identity.
 
     No deduplication of legs/fixtures, selection, staking or settlement occurs.
-    Full receipt ids and receipt-local indices remain in the publication ledger.
+    Full receipt ids and receipt-local indices remain in publication references.
+    The verbose audit view is opt-in; no diagnostic evidence is discarded.
     Empty scans do not cancel earlier tickets or consume acca numbers.
     """
     rows = sorted(history, key=lambda r: (parse_zoned_timestamp(r["captured_at"]), r.get("decision_id", "")))
@@ -2740,13 +2762,15 @@ def render_daily_card(history, report=None):
             f" · free {report['paper_free_units']:.3f} / reserved {report['paper_committed_units']:.3f}"
         )
     lines.extend([
-        f"{count} paper accas · {len(rows)} publications · times in SAST",
+        (f"{count} paper accas · {sum(bool(r['accas']) for r in rows)} ticket publications"
+         f" · {sum(not r['accas'] for r in rows)} scans without tickets · times in SAST"),
         "PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.",
         "Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.", "",
     ])
     if not count:
-        lines.extend(["NO PAPER BET — no tickets published for this date; reasons below.", ""])
+        lines.extend(["NO PAPER BET — no tickets published for this date; reasons in the audit report.", ""])
     diagnostics = []
+    references = []
     number = 1
     had_tickets = False
     for publication, row in enumerate(rows, 1):
@@ -2781,6 +2805,12 @@ def render_daily_card(history, report=None):
             result = "No additional tickets" if had_tickets else "No tickets at this publication"
         had_tickets = had_tickets or bool(row["accas"])
         identity = row.get("decision_id") or row.get("sha256") or "legacy daily receipt"
+        if row["accas"]:
+            references.append(
+                f"P{publication} · {_paper_publication_time(row)} · {result} · receipt {identity}"
+            )
+        if not audit:
+            continue
         diagnostics.extend([
             f"P{publication} · {_paper_publication_time(row)} · {result}",
             f"   Receipt {identity} · status {row['status']}",
@@ -2820,14 +2850,35 @@ def render_daily_card(history, report=None):
             detail = "; ".join(f"{k.replace('_', ' ')}: {v}" for k, v in row.get(key, {}).items())
             diagnostics.append(f"   {key.capitalize()}: {detail or 'None recorded'}")
         diagnostics.extend([*leg_diagnostics, f"   Learning: {row['learning']['status']}", ""])
+    if audit:
+        lines.extend([
+            "PUBLICATION & LEG DETAILS",
+            "Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.",
+            "Rejection counts are checks, not unique fixtures; checks can recur across scans.",
+            *diagnostics,
+        ])
+    else:
+        empty_count = sum(not r["accas"] for r in rows)
+        if empty_count:
+            latest_empty = next(r for r in reversed(rows) if not r["accas"])
+            after_tickets = bool(count) and not rows[-1]["accas"]
+            label = "No additional tickets" if after_tickets else "Scans without tickets"
+            lines.extend([
+                f"{label}: {empty_count} scan(s); latest empty scan {_paper_publication_time(latest_empty)}.",
+                "Existing tickets are unchanged; empty scans do not cancel positions.", "",
+            ])
+        lines.extend([
+            "PUBLICATION REFERENCES",
+            "P/publication-local index maps each displayed acca to its immutable receipt.",
+            *(references or ["No ticket publications."]), "",
+            f"Full scan/leg diagnostics: {RECEIPT_DIR.as_posix()}/reports/{PREFIX}_{rows[0]['date']}_audit.txt",
+            "Frozen JSON receipts remain alongside that reports directory.", "",
+        ])
     lines.extend([
-        "PUBLICATION & LEG DETAILS",
-        "Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.",
-        *diagnostics,
         "ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.",
         "STAKING    Gross fixture exposure counts the full acca stake once per fixture; no netting.",
         "           Fixture subtotals overlap; do not add them to bank commitments.",
-        "           Policy/bank limits are decision-specific above; old positions are not resized.",
+        "           Decision-specific limits are in the audit report; old positions are not resized.",
         "Paper only. No real-money stakes or automatic promotion.",
     ])
     return "\n".join(lines) + "\n"
@@ -2957,6 +3008,17 @@ def latest_card(root, *, now=None):
     return history[-1] if history else None
 
 
+def render_latest_card(root, report=None, *, card=None):
+    """Adjacent report uses the same daily view, retaining legacy/draft behavior."""
+    card = latest_card(root) if card is None else card
+    if card is None:
+        return ""
+    if card.get("freeze_basis") != ROLLING_FREEZE:
+        return render_card(card)
+    daily = [r for r in receipts(root) if r["date"] == card["date"]]
+    return render_daily_card(daily, report)
+
+
 def publish(root, score_lookup):
     """Sibling card/performance files, read by the same existing lane-report CLI."""
     migrate_receipts(root)
@@ -2972,6 +3034,10 @@ def publish(root, score_lookup):
         text = (render_daily_card(daily, report) if any(r.get("freeze_basis") == ROLLING_FREEZE for r in daily)
                 else "\n".join(render_card(r) for r in daily))
         dated_artifact_path(root, f"{PREFIX}_{latest_day}.txt").write_text(text)
+        if any(r.get("freeze_basis") == ROLLING_FREEZE for r in daily):
+            audit_path = root / RECEIPT_DIR / "reports" / f"{PREFIX}_{latest_day}_audit.txt"
+            audit_path.parent.mkdir(parents=True, exist_ok=True)
+            audit_path.write_text(render_daily_card(daily, report, audit=True))
     card = latest_card(root)
     if card is not None and card.get("freeze_basis") != ROLLING_FREEZE:
         dated_artifact_path(root, f"{PREFIX}_{card['date']}.txt").write_text(render_card(card))

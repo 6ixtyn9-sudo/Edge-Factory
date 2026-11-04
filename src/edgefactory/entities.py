@@ -16,7 +16,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .identity import (canonical_league_key, fold_league_identity,
+from .identity import (AMBIGUOUS_DOMESTIC_LEAGUE_KEYS, canonical_league_key, fold_league_identity,
                        team_identity_words)
 from .util import (
     clear_team_alias_cache,
@@ -123,6 +123,9 @@ def canonical_league(raw: object) -> str:
     override = _override_lookup("leagues", raw)
     if override:
         return canonical_league_key(norm_league(override))
+    # A global learned alias cannot disambiguate a country-less domestic title.
+    if fold_league_identity(raw) in AMBIGUOUS_DOMESTIC_LEAGUE_KEYS:
+        return canonical_league_key(raw)
     learned = _registry_lookup("leagues", raw)
     if learned:
         # An older learned registry may still return the sponsored spelling.
