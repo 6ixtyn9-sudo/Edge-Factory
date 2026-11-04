@@ -72,8 +72,13 @@ Their existing policies remain in effect. Selection, probability and staking
 rules are not changed by this storage layout.
 
 This bounds the managed daily families, not every imaginable future filename.
-Persistence warns at 900 root entries so new/unmanaged families and monthly raw
-archive growth can be reviewed before GitHub truncates the listing again. New
+Persistence reports both filesystem entries (including ignored/cache-only files)
+and indexed Git entries after staging. Only indexed immediate children count
+against GitHub's listing limit; a nested archive directory counts once, not once
+per archived file. The warning starts at 900 indexed root entries, so unmanaged
+families and monthly raw archive growth can be reviewed before GitHub truncates
+the listing again. A higher filesystem count is not permission to delete cached
+evidence, and an inventory failure is reported as unknown, never as zero. New
 families must have their readers and cache behaviour checked before joining the
 allowlist; do not enable unrestricted recursive archival of unknown evidence.
 

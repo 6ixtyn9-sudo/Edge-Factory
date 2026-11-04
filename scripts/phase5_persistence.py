@@ -629,6 +629,79 @@ def _retain_financial_state(repo, relative=ENH_STATE):
     )
 
 
+def _receipt_payload_sha256(payload: dict) -> str:
+    """Same canonical JSON digest, C-encode bounded subtrees instead of tokens.
+
+    Never serialize the entire huge decision graph a second time. Each C call
+    handles at most 512 values / 64 KiB of raw strings (except an individual
+    scalar, which the standard encoder also emits whole). JSON-loaded keys are
+    strings; separators, ordering, ASCII escaping and finite floats match the
+    original signed-payload encoder exactly. Storage/part hashes remain separate.
+    """
+    def small(value):
+        stack = [iter((value,))]
+        nodes, chars = 0, 0
+        while stack:
+            try:
+                item = next(stack[-1])
+            except StopIteration:
+                stack.pop()
+                continue
+            nodes += 1
+            if nodes > 512:
+                return False
+            if isinstance(item, dict):
+                chars += sum(len(k) for k in item)
+                stack.append(iter(item.values()))
+            elif isinstance(item, list):
+                stack.append(iter(item))
+            elif isinstance(item, str):
+                chars += len(item)
+            if chars > 65536:
+                return False
+        return True
+
+    def encode(value):
+        return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+    def chunks(value):
+        if small(value) or not isinstance(value, (dict, list)):
+            yield encode(value)
+        elif isinstance(value, dict):
+            yield "{"
+            for index, key in enumerate(sorted(value)):
+                if index:
+                    yield ","
+                yield encode(key)
+                yield ":"
+                yield from chunks(value[key])
+            yield "}"
+        else:
+            yield "["
+            for start in range(0, len(value), 64):
+                if start:
+                    yield ","
+                batch = value[start:start + 64]
+                if small(batch):
+                    yield encode(batch)[1:-1]
+                else:
+                    for index, item in enumerate(batch):
+                        if index:
+                            yield ","
+                        yield from chunks(item)
+            yield "]"
+
+    hasher = hashlib.sha256()
+    buffer = bytearray()
+    for chunk in chunks(payload):
+        buffer.extend(chunk.encode())
+        if len(buffer) >= 1024 * 1024:
+            hasher.update(buffer)
+            buffer.clear()
+    hasher.update(buffer)
+    return hasher.hexdigest()
+
+
 def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, bytes]:
     """Keep cached frozen audit receipts when finance restore retains that freeze.
 
@@ -692,10 +765,7 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
                 candidate = json.loads(head_raw if same_storage else ticket_receipt_bytes(
                     path, raw=cached, read_part=cached_part))
                 digest = candidate.pop("sha256")
-                hasher = hashlib.sha256()
-                for chunk in json.JSONEncoder(sort_keys=True, separators=(",", ":"), allow_nan=False).iterencode(candidate):
-                    hasher.update(chunk.encode())
-                if hasher.hexdigest() != digest:
+                if _receipt_payload_sha256(candidate) != digest:
                     raise ValueError("cached decision receipt hash mismatch")
                 expected_lane = "main" if prefix == "auto_tickets" else "enh"
                 if (candidate["context"]["lane"] != expected_lane
@@ -1157,6 +1227,26 @@ def _warn_not_persisted(reason: str) -> None:
     )
 
 
+def _report_localdata_root_entries(repo: Path) -> dict[str, int | None]:
+    """GitHub's listing is the index tree, not ignored runner/cache files."""
+    root = repo / "localdata"
+    filesystem = sum(1 for _ in root.iterdir()) if root.exists() else 0
+    indexed = _run(repo, "ls-files", "--cached", "-z", "--", "localdata/")
+    if indexed.returncode != 0:
+        print(f"::warning::localdata root inventory unavailable; filesystem={filesystem}; "
+              "Git listing size was not verified")
+        return {"filesystem": filesystem, "indexed": None}
+    names = {p.split(b"/")[1] for p in indexed.stdout.split(b"\0")
+             if p.startswith(b"localdata/") and len(p.split(b"/")) >= 2}
+    count = len(names)
+    print(f"LOCALDATA_ROOT indexed={count} filesystem={filesystem} "
+          "(indexed includes directory entries; filesystem includes ignored/cache-only entries)")
+    if count >= 900:
+        print(f"::warning::localdata has {count} indexed root entries; "
+              "review new/unmanaged families before GitHub's 1000-entry listing limit")
+    return {"filesystem": filesystem, "indexed": count}
+
+
 def persist_localdata(
     repo: Path | str,
     *,
@@ -1182,9 +1272,6 @@ def persist_localdata(
         compact_ticket_receipts(repo / "localdata")
         archived = archive_dated_artifacts(repo / "localdata")
         print(f"DATED_ARCHIVE rolled_over={len(archived)}", flush=True)
-        entries = sum(1 for _ in (repo / "localdata").iterdir())
-        if entries >= 900:
-            print(f"::warning::localdata has {entries} root entries; review new/unmanaged families")
     except (OSError, ValueError) as exc:
         reason = f"ticket receipt storage validation failed: {exc}"
         _warn_not_persisted(reason)
@@ -1198,6 +1285,7 @@ def persist_localdata(
         reason = _decode_output(staged.stderr)
         _warn_not_persisted(f"git add failed: {reason}")
         return {"status": "not_persisted", "reason": reason}
+    _report_localdata_root_entries(repo)
     if _run(repo, "diff", "--cached", "--quiet").returncode == 0:
         print("PHASE5_PERSISTENCE no_localdata_changes")
         return {"status": "no_changes"}
