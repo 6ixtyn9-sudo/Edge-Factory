@@ -4,12 +4,13 @@ Read-only: no engine interaction. Reports the checkpoint-3 gate:
   priced 50-60% band: n>=30 AND hit>=70% AND flat ROI>0 -> PASS
 Run:  PYTHONPATH=src python3 scripts/o25_tracker.py
 """
-import json, glob, re, sys, collections
+import json, re, sys, collections
 from pathlib import Path
 from datetime import datetime, timedelta
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts")); sys.path.insert(0, str(ROOT / "src"))
 import auto_tickets as at
+from edgefactory.util import dated_artifact_files
 from edgefactory.util import norm_team, finite_probability, pick_probability_pct
 
 def is_o25_enhancement(pick):
@@ -55,8 +56,8 @@ def main(root=ROOT):
         return None
 
     bets = []
-    for f in sorted(glob.glob(str(root/"localdata/picks_2026-*.json"))):
-        day = re.match(r"picks_(\S+-\d+-\d+)\.json", f.split("/")[-1]).group(1)
+    for f in dated_artifact_files(root / "localdata", "picks_2026-*.json"):
+        day = re.match(r"picks_(\S+-\d+-\d+)\.json", f.name).group(1)
         for p in json.loads(open(f).read()):
             rule = str(p.get('edge_rule') or p.get('rule') or '')
             if not (is_o25_enhancement(p) or is_o25_primary(p)):

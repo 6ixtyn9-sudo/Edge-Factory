@@ -22,7 +22,8 @@ from typing import Any
 
 # The workflow invokes this script directly without PYTHONPATH.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from edgefactory.util import (ticket_receipt_files, ticket_receipt_path, ticket_receipt_bytes,
+from edgefactory.util import (archive_dated_artifacts, dated_archive_path, dated_artifact_path,
+                              ticket_receipt_files, ticket_receipt_path, ticket_receipt_bytes,
                               compact_ticket_receipts, write_ticket_receipt,
                               read_ticket_receipt, freeze_timestamp_matches, encode_ticket_receipt_files)
 
@@ -32,6 +33,7 @@ APPEND_ONLY_JSONL_IDS = {
     "localdata/phase5_activation/mutation_receipts.jsonl": "receipt_sha256",
 }
 PHASE5_CLEAN_EXCLUDES = (
+    "/localdata/archive/",
     "/localdata/phase5_shadow/",
     "/localdata/phase5_activation/",
     "/localdata/phase5_reconciliation/",
@@ -133,6 +135,10 @@ def merge_jsonl_payloads(
 
 def _head_blob(repo: Path, path: str) -> bytes:
     result = _run(repo, "show", f"HEAD:{path}")
+    if result.returncode != 0 and Path(path).parent == Path("localdata"):
+        archived = dated_archive_path(Path("localdata"), Path(path).name)
+        if archived is not None:
+            result = _run(repo, "show", f"HEAD:{archived.as_posix()}")
     return result.stdout if result.returncode == 0 else b""
 
 
@@ -909,10 +915,45 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
     return retained
 
 
+def _validate_cached_dated_archives(repo):
+    """Check the cache/HEAD union BEFORE checkout or clean can destroy a copy.
+
+    Archive paths are immutable logical files, unlike current mutable state.
+    Preserve cache-only archives; reject changed duplicates across both layouts.
+    """
+    base = repo / "localdata"
+    tracked = set(_tracked_localdata_paths(repo))
+    candidates = {p for p in tracked if p.startswith("localdata/archive/")}
+    for path in (base / "archive").glob("*/*/*/*"):
+        if path.is_file() and not path.name.startswith("."):
+            if path != dated_archive_path(base, path.name):
+                raise EvidenceMergeError(f"noncanonical cached dated archive: {path}")
+            candidates.add(path.relative_to(repo).as_posix())
+    for relative in sorted(candidates):
+        archived = repo / relative
+        legacy_relative = "localdata/" + archived.name
+        legacy = repo / legacy_relative
+        # Also checks byte-different duplicates already present in the cache.
+        dated_artifact_path(base, archived.name)
+        committed = _head_blob(repo, relative) if relative in tracked else None
+        old_committed = _head_blob(repo, legacy_relative) if legacy_relative in tracked else None
+        for path in (archived, legacy):
+            if not path.exists():
+                continue
+            if path.is_symlink():
+                raise EvidenceMergeError(f"symlink in dated archive evidence: {path}")
+            payload = path.read_bytes()
+            if committed is not None and payload != committed:
+                raise EvidenceMergeError(f"conflicting cache/HEAD dated archive: {relative}")
+            if archived.exists() and old_committed is not None and payload != old_committed:
+                raise EvidenceMergeError(f"conflicting cached archive/legacy HEAD: {legacy_relative}")
+
+
 def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     """Restore ordinary tracked state without overwriting cached append-only evidence."""
     repo = Path(repo)
     started = time.monotonic()
+    _validate_cached_dated_archives(repo)
     print("restore: validating Main/ENH financial evidence", flush=True)
     # Validate BOTH lanes before checkout/clean mutates any restored evidence.
     financial_blobs = {relative: _retain_financial_state(repo, relative)
@@ -931,7 +972,7 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
         if record.get("status") == "recovered" and record["date"] not in (committed.get("frozen_by_date") or {}):
             prefix = "auto_tickets" if relative == MAIN_STATE else "autobets_enh_tickets"
             card = f"localdata/{prefix}_{record['date']}.txt"
-            recovered_cards[card] = (repo / card).read_bytes()
+            recovered_cards[card] = dated_artifact_path(repo / "localdata", Path(card).name).read_bytes()
     print(f"restore: retaining ticket decision evidence ({time.monotonic() - started:.2f}s)", flush=True)
     decision_blobs = _retain_ticket_decisions(repo, financial_blobs)
     try:
@@ -947,7 +988,7 @@ def restore_committed_localdata(repo: Path | str) -> dict[str, Any]:
     protected = set(APPEND_ONLY_JSONL_IDS)
     for relative in _tracked_localdata_paths(repo):
         if relative in protected or (
-            relative.startswith(("localdata/autobets_ML",
+            relative.startswith(("localdata/archive/", "localdata/autobets_ML",
                                  "localdata/phase5_reconciliation/ml_paper_receipts/"))
             and (repo / relative).exists()
         ):
@@ -1139,6 +1180,11 @@ def persist_localdata(
     # audit directory already survives cache restore and artifact upload.
     try:
         compact_ticket_receipts(repo / "localdata")
+        archived = archive_dated_artifacts(repo / "localdata")
+        print(f"DATED_ARCHIVE rolled_over={len(archived)}", flush=True)
+        entries = sum(1 for _ in (repo / "localdata").iterdir())
+        if entries >= 900:
+            print(f"::warning::localdata has {entries} root entries; review new/unmanaged families")
     except (OSError, ValueError) as exc:
         reason = f"ticket receipt storage validation failed: {exc}"
         _warn_not_persisted(reason)

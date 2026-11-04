@@ -31,9 +31,12 @@ DEFAULT_MAX_FIXTURES = 12
 MAX_FIXTURES_CEILING = int(os.environ.get("EDGE_FACTORY_BETEXPLORER_MAX_CEILING", "24") or 24)
 
 
+from edgefactory.util import dated_artifact_path
+
+
 def _slate_paths(day: str) -> tuple[Path, ...]:
     d = str(day)[:10]
-    return (LOCALDATA / "picks_today.json", LOCALDATA / f"picks_{d}.json")
+    return (LOCALDATA / "picks_today.json", dated_artifact_path(LOCALDATA, f"picks_{d}.json"))
 
 
 def _read_same_day_rows(day: str) -> list[dict]:

@@ -43,6 +43,9 @@ BANDS = [(0.0, 1.20, "<1.20"), (1.20, 1.30, "1.20-1.30"), (1.30, 1.50, "1.30-1.5
          (1.50, 1.80, "1.50-1.80"), (1.80, 2.20, "1.80-2.20"), (2.20, 99.0, ">=2.20")]
 
 
+from edgefactory.util import dated_artifact_files, dated_artifact_path
+
+
 def band_of(price: float) -> str | None:
     for lo, hi, name in BANDS:
         if lo <= price < hi:
@@ -139,7 +142,7 @@ def main() -> int:
     frozen = set((state.get("frozen_by_date") or {}).keys())
 
     card_days = sorted(
-        m.group(1) for p in LD.glob("auto_tickets_*.txt") if (m := CARD_RE.match(p.name))
+        m.group(1) for p in dated_artifact_files(LD, "auto_tickets_*.txt") if (m := CARD_RE.match(p.name))
     )
     notes = defaultdict(list)
     out = {"card_days": len(card_days), "populations": {}, "bands": {}, "identity": {}, "notes": {}}
@@ -150,10 +153,10 @@ def main() -> int:
     out_of_day_total = 0
 
     for day in card_days:
-        accas, locked = parse_card(LD / f"auto_tickets_{day}.txt")
+        accas, locked = parse_card(dated_artifact_path(LD, f"auto_tickets_{day}.txt"))
         locked_counts["locked" if locked else "unlocked"] += 1
         # Pool: same-day file, rows whose embedded date equals the file date.
-        pool_path = LD / f"picks_{day}.json"
+        pool_path = dated_artifact_path(LD, f"picks_{day}.json")
         day_pool = {}
         if pool_path.exists():
             for r in json.loads(pool_path.read_text(encoding="utf-8")):

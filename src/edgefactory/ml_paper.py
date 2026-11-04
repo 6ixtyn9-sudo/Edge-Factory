@@ -60,7 +60,7 @@ from .enh_registry import (
 )
 from .identity import source_team_key, squad_marker_mismatch
 from .odds_normalization import parse_zoned_timestamp
-from .util import norm_team
+from .util import dated_artifact_path, norm_team
 
 SCHEMA = "autobets_ML_v2"
 READABLE_SCHEMAS = {"autobets_ML_v1", SCHEMA}
@@ -2759,9 +2759,9 @@ def publish(root, score_lookup):
     (root / f"{PREFIX}_performance.txt").write_text(render_performance(report))
     if history:
         latest_day = history[-1]["date"]
-        (root / f"{PREFIX}_{latest_day}.txt").write_text("\n".join(
+        dated_artifact_path(root, f"{PREFIX}_{latest_day}.txt").write_text("\n".join(
             render_card(r) for r in history if r["date"] == latest_day))
     card = latest_card(root)
     if card is not None and card.get("freeze_basis") != ROLLING_FREEZE:
-        (root / f"{PREFIX}_{card['date']}.txt").write_text(render_card(card))
+        dated_artifact_path(root, f"{PREFIX}_{card['date']}.txt").write_text(render_card(card))
     return report

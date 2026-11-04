@@ -31,6 +31,7 @@ LOCALDATA = ROOT / "localdata"
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.identity import source_team_key  # noqa: E402
+from edgefactory.util import dated_artifact_files
 
 
 # The source list is intentionally explicit. A missing source is an inventory
@@ -190,7 +191,7 @@ def _sha256(path: Path) -> str:
 def _no_match_days() -> dict[str, set[str]]:
     """Read only completed no-match receipts; failures never become coverage."""
     found: dict[str, set[str]] = defaultdict(set)
-    for path in sorted(LOCALDATA.glob("remine_audit_*.jsonl")):
+    for path in dated_artifact_files(LOCALDATA, "remine_audit_*.jsonl"):
         try:
             with path.open() as fh:
                 for line in fh:

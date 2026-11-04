@@ -31,7 +31,12 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from edgefactory.util import heal_ledger_labels, honest_display_label  # noqa: E402
+from edgefactory.util import (  # noqa: E402
+    dated_artifact_files,
+    dated_artifact_path,
+    heal_ledger_labels,
+    honest_display_label,
+)
 
 GLOBS = ("picks_*.json", "picks_today.json", "picks_morning_*.json")
 _DATE_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
@@ -64,7 +69,7 @@ def _render_txt(localdata: Path, target_date: str, data: list) -> bool:
     """
     try:
         import daily  # scripts/ is on sys.path
-        out = localdata / f"picks_{target_date}.txt"
+        out = dated_artifact_path(localdata, f"picks_{target_date}.txt")
         daily.generate_daily_report(target_date, output_path=out, source_picks=data)
         return True
     except Exception as exc:  # noqa: BLE001 - report must never kill the sweep
@@ -81,7 +86,7 @@ def main() -> int:
     ld = Path(args.localdata)
     files: list[Path] = []
     for g in GLOBS:
-        files.extend(sorted(ld.glob(g)))
+        files.extend(dated_artifact_files(ld, g))
     files = sorted(set(files))
     if not files:
         print(f"no pick ledgers found in {ld}")
@@ -117,7 +122,7 @@ def main() -> int:
             date = None
         if not date:
             continue
-        txt_path = ld / f"picks_{date}.txt"
+        txt_path = dated_artifact_path(ld, f"picks_{date}.txt")
         # Re-render when the .txt is stale vs the honest label set — even if
         # the JSON was already healed by a previous run (the Mac's state).
         if healed or (txt_path.exists() and not _txt_labels_match(txt_path, data)):

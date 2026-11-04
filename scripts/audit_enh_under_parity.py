@@ -28,6 +28,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / "src"), str(ROOT / "scripts")]
 import auto_tickets as at
+from edgefactory.util import dated_artifact_files
 import scripts.picks_today as pt
 from edgefactory.enh_pricing import MARKET_PRICE_MAP, ODDSPAPI_MIN_SCHEMA_VERSION
 from edgefactory.enh_registry import check_enhancement_hit
@@ -465,9 +466,9 @@ def archived_snapshots(root, since, until, *, snapshot_mode="final"):
     inputs = []
     paths = []
     if snapshot_mode in {"final", "earliest"}:
-        paths += list((root / "localdata").glob("picks_????-??-??.json"))
+        paths += list(dated_artifact_files(root / "localdata", "picks_????-??-??.json"))
     if snapshot_mode in {"morning", "earliest"}:
-        paths += list((root / "localdata").glob("picks_morning_????-??-??.json"))
+        paths += list(dated_artifact_files(root / "localdata", "picks_morning_????-??-??.json"))
     for path in sorted(paths):
         day = path.stem[-10:]
         if not since <= day <= until:

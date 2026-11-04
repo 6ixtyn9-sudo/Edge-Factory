@@ -13,6 +13,7 @@ they were always supposed to take, and pins the two invariants that makes safe:
 import json
 from pathlib import Path
 
+from edgefactory.util import dated_artifact_files
 from edgefactory.enh_registry import (MAX_PROCESSED_KEYS, _read, _write_atomic,
                                       processed_window_is_safe, record_outcome,
                                       registry_path, versioned)
@@ -94,7 +95,7 @@ def test_a_trimmed_window_cannot_hide_a_key_the_archives_will_present():
     keys move to their own capped list; do not raise the cap.
     """
     by_market: dict[str, set[str]] = {}
-    for path in sorted((REPO / "localdata").glob("picks_2026-*.json")):
+    for path in dated_artifact_files(REPO / "localdata", "picks_2026-*.json"):
         try:
             raw = json.loads(path.read_text())
         except Exception:

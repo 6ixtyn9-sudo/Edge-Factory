@@ -44,11 +44,11 @@ Deliberately retained, with no age limit:
   rolling ledgers/state, monthly source archives (*_YYYY-MM.csv.gz),
   warehouse data, and any file whose name does not match a known pattern.
 
-Unknown files are never deleted. Retaining every daily pick archive means
-``localdata`` still grows by about 2 entries per day (picks_DATE.json and
-auto_tickets_DATE.txt) plus non-redundant morning files. That growth is linear
-but slow; compacting those archives would need the replay/audit loaders to
-read a new format first.
+The CLI first rolls older durable daily families into
+``archive/<family>/<year>/<month>/`` without changing their bytes. The same
+30-day hot window is retained at the root; readers support both layouts.
+Unknown files, monthly raw archives and financial state are never relocated.
+The public pruning helpers below retain their existing telemetry contract.
 
 Usage::
 
@@ -70,6 +70,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCALDATA = ROOT / "localdata"
+sys.path.insert(0, str(ROOT / "src"))
 DEFAULT_KEEP_DAYS = 30
 
 _DATE = r"(?P<day>20\d{2}-\d{2}-\d{2})"
@@ -224,6 +225,13 @@ def main(argv: list[str] | None = None) -> int:
                         help="list what would be removed without deleting")
     args = parser.parse_args(argv)
     print(f"Cleaning dated localdata telemetry (keeping {args.keep_days} days) ...")
+    # Archive durable daily families before the old telemetry-pruning pass.
+    # In particular, morning evidence now survives even when parity would
+    # have allowed deletion. Public pruning helpers retain their old contract.
+    from edgefactory.util import archive_dated_artifacts
+    archived = archive_dated_artifacts(args.localdata, keep_days=args.keep_days,
+                                       today=args.today, dry_run=args.dry_run)
+    print(f"  {'would archive' if args.dry_run else 'archived'} {len(archived)} dated artifacts")
     removed = clean_localdata(args.localdata, keep_days=args.keep_days,
                               today=args.today, dry_run=args.dry_run)
     remaining = sum(1 for _ in args.localdata.iterdir()) if args.localdata.exists() else 0

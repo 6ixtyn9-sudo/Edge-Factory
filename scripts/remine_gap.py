@@ -32,9 +32,10 @@ LOCALDATA = ROOT / "localdata"
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.remine import merge_existing_wins, source_row_key  # noqa: E402
+from edgefactory.util import dated_artifact_path
 
 INVENTORY_PATH = LOCALDATA / "coverage_inventory.json"
-AUDIT_PATH = LOCALDATA / f"remine_audit_{date.today().isoformat()}.jsonl"
+AUDIT_PATH = dated_artifact_path(LOCALDATA, f"remine_audit_{date.today().isoformat()}.jsonl")
 CHALLENGE_MARKERS = (
     "captcha",
     "verify you are human",

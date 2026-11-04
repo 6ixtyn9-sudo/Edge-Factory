@@ -25,6 +25,7 @@ DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
 import sys
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.util import dated_artifact_path
 from edgefactory.entities import canonical_team  # noqa: E402
 from edgefactory.settlement import (  # noqa: E402
     is_void_disposition,
@@ -75,10 +76,10 @@ def archived_picks_path(day: str) -> Path:
     safely combines an immutable morning baseline with verified official late
     additions. This helper retains the historic morning-first fallback only.
     """
-    morning = LOCALDATA / f"picks_morning_{day}.json"
+    morning = dated_artifact_path(LOCALDATA, f"picks_morning_{day}.json")
     if morning.exists():
         return morning
-    return LOCALDATA / f"picks_{day}.json"
+    return dated_artifact_path(LOCALDATA, f"picks_{day}.json")
 
 
 def _archive_pick_key(row: dict[str, Any], fallback_day: str) -> tuple[str, str, str, str, str]:
@@ -184,8 +185,8 @@ def load_archived_picks_with_receipt(
         "empty_regular_ledger_dates": [],
     }
     for day in daterange(start, end):
-        morning_path = ld / f"picks_morning_{day}.json"
-        regular_path = ld / f"picks_{day}.json"
+        morning_path = dated_artifact_path(ld, f"picks_morning_{day}.json")
+        regular_path = dated_artifact_path(ld, f"picks_{day}.json")
         morning = _load_archive_rows(morning_path, day) if morning_path.exists() else []
         regular = _load_archive_rows(regular_path, day) if regular_path.exists() else []
 
@@ -2245,8 +2246,8 @@ def build_rule_performance_windows(end: str, warehouse_path: Path, *,
         except (OSError, ValueError):
             return False
     available_dates = {day for day in daterange(history_start, end)
-                       if readable_archive(LOCALDATA / f"picks_morning_{day}.json")
-                       or readable_archive(LOCALDATA / f"picks_{day}.json")}
+                       if readable_archive(dated_artifact_path(LOCALDATA, f"picks_morning_{day}.json"))
+                       or readable_archive(dated_artifact_path(LOCALDATA, f"picks_{day}.json"))}
     cutoff = local_today()
 
     def window(source_rows, start):

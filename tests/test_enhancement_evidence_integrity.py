@@ -7,6 +7,7 @@ import duckdb
 import pandas as pd
 import pytest
 
+from edgefactory.util import dated_artifact_path
 from edgefactory import consensus_contracts as cc
 from edgefactory.enh_registry import enhancement_cohort_evidence
 from enhancement_fixtures import with_evidence
@@ -137,7 +138,7 @@ def test_duplicates_and_another_market_cannot_lend_their_evidence():
 
 def test_actual_roma_archive_is_rejected_without_mutating_its_frozen_artifact():
     root = Path(__file__).resolve().parents[1]
-    source = root / 'localdata/picks_2026-10-20.json'
+    source = dated_artifact_path(root / 'localdata', 'picks_2026-10-20.json')
     if not source.exists():
         pytest.skip('production audit fixture not present')
     roma = next(p for p in json.loads(source.read_text()) if p['home'] == 'AS Roma')
@@ -223,7 +224,7 @@ def test_real_production_quote_has_no_matching_kickoff_witness(monkeypatch):
     root = Path(__file__).resolve().parents[1]
     if not (root / 'localdata/oddspapi_odds_2026-10.csv.gz').exists():
         pytest.skip('production price audit fixture not present')
-    row = next(p for p in json.loads((root / 'localdata/picks_2026-10-20.json').read_text())
+    row = next(p for p in json.loads((dated_artifact_path(root / 'localdata', 'picks_2026-10-20.json')).read_text())
                if p.get('home') == 'AS Roma')
     row = deepcopy(row)
     monkeypatch.setenv('EDGE_FACTORY_ODDSPAPI_PRICES', '1')
