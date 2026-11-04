@@ -43,7 +43,7 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 35,
+      "be_matched": 19,
       "be_raw": 39,
       "be_usable": 39,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
@@ -52,10 +52,10 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 7,
+      "join_matched_rows": 4,
       "join_miss_counts": {
-        "fixture_key_miss": 20,
-        "no_pick_for_fixture": 12
+        "fixture_key_miss": 29,
+        "no_pick_for_fixture": 6
       },
       "reason": null,
       "status": "cache_only"
@@ -156,13 +156,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 1279,
+      "join_matched_rows": 221,
       "join_miss_counts": {
-        "fixture_key_miss": 38217,
+        "fixture_key_miss": 51486,
         "market_unsupported": 22931,
-        "no_pick_for_fixture": 14661
+        "no_pick_for_fixture": 2450
       },
-      "op_matched": 22,
+      "op_matched": 3,
       "op_raw": 77088,
       "op_usable": 77088,
       "reason": null,
@@ -183,12 +183,12 @@
       "coherence_withheld_fixtures": 7,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 12,
+      "join_matched_rows": 8,
       "join_miss_counts": {
-        "fixture_key_miss": 15175,
-        "no_pick_for_fixture": 153
+        "fixture_key_miss": 15217,
+        "no_pick_for_fixture": 115
       },
-      "pa_matched": 51,
+      "pa_matched": 32,
       "pa_raw": 15340,
       "pa_scored": 15340,
       "reason": null,
@@ -267,7 +267,7 @@
           "unsupported_market:correct_score": 78,
           "unsupported_market:double_chance": 3
         },
-        "card_fixture_count": 17,
+        "card_fixture_count": 16,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 27,
@@ -329,12 +329,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 141,
+      "join_matched_rows": 91,
       "join_miss_counts": {
-        "fixture_key_miss": 106,
-        "no_pick_for_fixture": 313
+        "fixture_key_miss": 250,
+        "no_pick_for_fixture": 219
       },
-      "oa_matched": 45,
+      "oa_matched": 26,
       "oa_raw": 560,
       "oa_usable": 560,
       "reason": null,
