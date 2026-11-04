@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 89.4640061792,
   "paper_multiple": 0.894640061792,
-  "paper_committed_units": 4.199872,
-  "paper_free_units": 85.2641341792,
+  "paper_committed_units": 5.213603,
+  "paper_free_units": 84.25040317919999,
   "settled_stake_units": 23.411492,
   "receipt_days": 3,
-  "decision_receipts": 11,
+  "decision_receipts": 13,
   "bet_days": 3,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
@@ -17,8 +17,8 @@
   "wins": 3,
   "losses": 6,
   "hit_rate": 0.3333333333333333,
-  "pending_accas": 2,
-  "unresolved_result_legs": 4,
+  "pending_accas": 3,
+  "unresolved_result_legs": 6,
   "resolved_result_legs": 14,
   "profit_units": -10.535993820799998,
   "roi": -0.4500351289358234,
@@ -26,23 +26,23 @@
   "max_daily_close_drawdown_fraction": 0.10535993820799998,
   "drawdown_basis": "ticket_date_latest_known_result_marks_pending_at_cost_not_settlement_timeline",
   "drawdown_has_pending_results": true,
-  "selected_leg_brier_score": 0.1773835421872946,
+  "selected_leg_brier_score": 0.21281101117092754,
   "calibration": {
     "all_candidates": {
       "resolved_fixtures": 10,
       "resolved_observations": 113,
-      "base_brier": 0.25490053405430924,
-      "base_logloss": 0.6996290118198017,
-      "calibrated_brier": 0.25498560702647677,
-      "calibrated_logloss": 0.7010602055062096
+      "base_brier": 0.25674040333604004,
+      "base_logloss": 0.704165894128822,
+      "calibrated_brier": 0.25682547630820757,
+      "calibrated_logloss": 0.7055970878152299
     },
     "selected_candidates": {
       "resolved_fixtures": 8,
       "resolved_observations": 12,
-      "base_brier": 0.19870395429845683,
-      "base_logloss": 0.5848197834742931,
-      "calibrated_brier": 0.19870395429845683,
-      "calibrated_logloss": 0.5848197834742931
+      "base_brier": 0.26070202501981443,
+      "base_logloss": 0.7208114022755582,
+      "calibrated_brier": 0.26070202501981443,
+      "calibrated_logloss": 0.7208114022755582
     },
     "source_comparison": {
       "basis": "frozen_market_matched_source_forecasts_not_independent_ground_truth",
@@ -53,24 +53,24 @@
         "paired_observations": 84,
         "missing_source_fixtures": 4,
         "missing_source_observations": 29,
-        "base_brier": 0.2655881578432214,
-        "base_logloss": 0.7245565420889777,
-        "model_brier": 0.26483214717503806,
-        "model_logloss": 0.7233842288638701,
-        "source_brier": 0.2507408037705495,
-        "source_logloss": 0.6894811487135032
+        "base_brier": 0.2674280271249522,
+        "base_logloss": 0.7290934243979981,
+        "model_brier": 0.2666720164567689,
+        "model_logloss": 0.7279211111728905,
+        "source_brier": 0.25055900896138145,
+        "source_logloss": 0.6890428471185869
       },
       "selected_candidates": {
         "paired_fixtures": 8,
         "paired_observations": 11,
         "missing_source_fixtures": 1,
         "missing_source_observations": 1,
-        "base_brier": 0.18493342195380186,
-        "base_logloss": 0.5515607081443097,
-        "model_brier": 0.18493342195380186,
-        "model_logloss": 0.5515607081443097,
-        "source_brier": 0.20184889056458138,
-        "source_logloss": 0.586188453532064
+        "base_brier": 0.2469314926751595,
+        "base_logloss": 0.6875523269455748,
+        "model_brier": 0.2469314926751595,
+        "model_logloss": 0.6875523269455748,
+        "source_brier": 0.25265800301546476,
+        "source_logloss": 0.694033139129411
       },
       "by_model_source_gap": {
         "lt_10pp": {
@@ -78,12 +78,12 @@
           "paired_observations": 59,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.19987382104620402,
-          "base_logloss": 0.5803240621281106,
-          "model_brier": 0.19844000770999448,
-          "model_logloss": 0.5781007094598031,
-          "source_brier": 0.19153564545276636,
-          "source_logloss": 0.5654487716262306
+          "base_brier": 0.20294026984908867,
+          "base_logloss": 0.5878855326431444,
+          "model_brier": 0.20150645651287913,
+          "model_logloss": 0.5856621799748368,
+          "source_brier": 0.19123265410415277,
+          "source_logloss": 0.5647182689680369
         },
         "10_to_lt_20pp": {
           "paired_fixtures": 9,
@@ -140,12 +140,12 @@
           "paired_observations": 75,
           "missing_source_fixtures": 3,
           "missing_source_observations": 27,
-          "base_brier": 0.20026292763703682,
-          "base_logloss": 0.5704660170980692,
-          "model_brier": 0.19918291239677505,
-          "model_logloss": 0.568791283919344,
-          "source_brier": 0.1958543018098602,
-          "source_logloss": 0.5717578339666087
+          "base_brier": 0.20289131232522362,
+          "base_logloss": 0.5769472775395268,
+          "model_brier": 0.20181129708496187,
+          "model_logloss": 0.5752725443608016,
+          "source_brier": 0.19559459493962,
+          "source_logloss": 0.5711316888310141
         },
         "WATCHLIST_UNCORROBORATED_PRICE": {
           "paired_fixtures": 1,
@@ -188,8 +188,8 @@
   "by_bucket_market_leg_diagnostics": {
     "bucket:SKIPPED_VETO": {
       "settled": 11,
-      "wins": 7,
-      "profit": 0.3900000000000001
+      "wins": 6,
+      "profit": -0.96
     },
     "market:1x2": {
       "settled": 4,
@@ -213,8 +213,8 @@
     },
     "market:double_chance": {
       "settled": 3,
-      "wins": 3,
-      "profit": 0.9600000000000002
+      "wins": 2,
+      "profit": -0.3899999999999999
     },
     "market:btts_yes": {
       "settled": 1,
@@ -3337,7 +3337,7 @@
           "stake_units": 0.229009,
           "leg_outcomes": [
             false,
-            true,
+            false,
             true
           ],
           "status": "loss",
@@ -4656,43 +4656,243 @@
       "decision_id": "20261103T225158402488Z",
       "captured_at": "2026-11-03T22:51:58.402488+00:00",
       "frozen_at": "2026-11-03T22:52:06.557101+00:00"
+    },
+    {
+      "date": "2026-11-04",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 4.6358999999999995,
+          "stake_units": 1.013731,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Liverpool",
+              "base_probability": 0.2888162054855083,
+              "book": "Betsson",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "292a82cd3d02c65ac68da0125ed1ccd0053b5cc7f4d2f1414d1731657a193e07",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-04",
+              "fixture": [
+                "2026-11-04",
+                "fenerbahce",
+                "liverpool"
+              ],
+              "home": "Fenerbah\u00e7e",
+              "kickoff_utc": "2026-11-04T17:45:00+00:00",
+              "market": "match_under_25",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-04",
+                  "fenerbahce",
+                  "liverpool",
+                  [],
+                  []
+                ],
+                "model_key": "50709f9988c68da90b74e21e73b1ef116657c43690bbe9394c505846a11109c7",
+                "sources": [
+                  "predictz",
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "away_form_btts": 0.4,
+                  "away_form_ga": 1.2,
+                  "away_form_gf": 1.9,
+                  "away_form_over15": 0.7,
+                  "away_form_over25": 0.4,
+                  "away_form_over35": 0.2,
+                  "confidence": 0.6068845274390244,
+                  "forecast_1x2_away_mean": 0.5934422637195123,
+                  "forecast_1x2_away_spread": 0.08376905487804875,
+                  "forecast_1x2_draw_mean": 0.22013719512195123,
+                  "forecast_1x2_draw_spread": 0.06945121951219513,
+                  "forecast_1x2_home_mean": 0.1864205411585366,
+                  "forecast_1x2_home_spread": 0.06431783536585364,
+                  "forecast_btts_yes_mean": 0.625,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8920696452036794,
+                  "forecast_ou_1.5_over_spread": 0.07586070959264135,
+                  "forecast_ou_2.5_over_mean": 0.6572727272727272,
+                  "forecast_ou_2.5_over_spread": 0.13,
+                  "forecast_ou_3.5_over_mean": 0.4618421052631579,
+                  "forecast_ou_3.5_over_spread": 0.023684210526315752,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.4,
+                  "home_form_ga": 1.3,
+                  "home_form_gf": 2.1,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.7,
+                  "home_form_over35": 0.3
+                }
+              },
+              "model_key": "50709f9988c68da90b74e21e73b1ef116657c43690bbe9394c505846a11109c7",
+              "odds": 3.03,
+              "price_age_seconds_at_decision": 11519.64924,
+              "price_age_seconds_at_freeze": 11527.997328,
+              "price_at": "2026-11-03T22:30:41.735860+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.4588485215269339,
+              "selection": "under"
+            },
+            {
+              "away": "Arsenal",
+              "base_probability": 0.8367803825546518,
+              "book": "Betsson",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "e37269ab28d5ad60b511791093db04d6080f8c905e887d8acbfbc8d75a873c83",
+              "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+              "date": "2026-11-04",
+              "fixture": [
+                "2026-11-04",
+                "slaviapraha",
+                "arsenal"
+              ],
+              "home": "Slavia Praha",
+              "kickoff_utc": "2026-11-04T20:00:00+00:00",
+              "market": "match_over_25",
+              "ml_inputs": {
+                "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+                "fixture": [
+                  "2026-11-04",
+                  "slaviapraha",
+                  "arsenal",
+                  [],
+                  []
+                ],
+                "model_key": "3c81bef2c906a1530a5221eaf4c7991ad2cd898d0d33876250a4a2bd4d9bfe33",
+                "sources": [
+                  "bettingclosed",
+                  "scoutingstats",
+                  "vitibet",
+                  "zulubet"
+                ],
+                "values": {
+                  "away_form_btts": 0.3,
+                  "away_form_ga": 0.6,
+                  "away_form_gf": 1.3,
+                  "away_form_over15": 0.6,
+                  "away_form_over25": 0.3,
+                  "away_form_over35": 0.1,
+                  "confidence": 0.81,
+                  "forecast_1x2_away_mean": 0.793052445119251,
+                  "forecast_1x2_away_spread": 0.0808426646422471,
+                  "forecast_1x2_draw_mean": 0.12864933257417602,
+                  "forecast_1x2_draw_spread": 0.045947997722528,
+                  "forecast_1x2_home_mean": 0.07829822230657303,
+                  "forecast_1x2_home_spread": 0.03489466691971911,
+                  "forecast_btts_yes_mean": 0.4800000000000001,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8116883116883116,
+                  "forecast_ou_1.5_over_spread": 0.0,
+                  "forecast_ou_2.5_over_mean": 0.6359223300970874,
+                  "forecast_ou_2.5_over_spread": 0.0,
+                  "forecast_ou_3.5_over_mean": 0.39847715736040606,
+                  "forecast_ou_3.5_over_spread": 0.0,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.4,
+                  "home_form_ga": 0.7,
+                  "home_form_gf": 2.2,
+                  "home_form_over15": 0.8,
+                  "home_form_over25": 0.5,
+                  "home_form_over35": 0.4
+                }
+              },
+              "model_key": "3c81bef2c906a1530a5221eaf4c7991ad2cd898d0d33876250a4a2bd4d9bfe33",
+              "odds": 1.53,
+              "price_age_seconds_at_decision": 11520.694846,
+              "price_age_seconds_at_freeze": 11529.042934,
+              "price_at": "2026-11-03T22:30:40.690254+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.680626336405263,
+              "selection": "over"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261104T014241385100Z",
+      "captured_at": "2026-11-04T01:42:41.385100+00:00",
+      "frozen_at": "2026-11-04T01:42:49.733188+00:00"
+    },
+    {
+      "date": "2026-11-04",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261104T014505565304Z",
+      "captured_at": "2026-11-04T01:45:05.565304+00:00",
+      "frozen_at": "2026-11-04T01:45:12.963614+00:00"
     }
   ],
   "latest_learning": {
     "coef": [
-      0.4470469416024867,
-      -0.01661704799064765,
-      0.010174936644349469,
-      0.006401806655369613,
-      0.03817231009674401,
-      0.006064013909412031,
-      -0.011201765201187415,
-      -0.009083652794649288,
-      -0.0059605028257346164,
-      -0.006864524568933281,
-      0.010271272265167622,
-      0.008177870879809888,
-      0.005225206890736643,
-      0.0037888776660257198,
-      -0.004491750681348388,
-      -0.01316455866939063,
-      0.061968034031364104,
-      0.009649299898625934,
-      -0.006469059120334555,
-      -0.004613482710480698,
-      -0.0038942696613994913,
-      -0.01058045208453962,
-      0.005695518013721089,
-      0.003998537307778251,
-      0.0033546981504175037,
-      0.10418002457698872,
-      -0.4206013143968666,
-      -0.016535762080241084,
-      -0.06028488023591823,
-      -0.11557001995338662,
-      0.36560567705912983,
-      0.009407460785200494,
-      0.05371688876236009
+      0.4367149100551302,
+      -0.016766082307619595,
+      0.009975731855372243,
+      0.006741611973872445,
+      0.03729711944365796,
+      0.006139616055125032,
+      -0.011191020182440326,
+      -0.00912267329086984,
+      -0.006059662939347434,
+      -0.006949251811339432,
+      0.010256183715108828,
+      0.008211581072325416,
+      0.00531324966743144,
+      0.0038894543375427755,
+      -0.004914752802571228,
+      -0.012868679799514435,
+      0.06358433964366683,
+      0.009648977088706014,
+      -0.006560491174150725,
+      -0.004727038358682701,
+      -0.004010906425854519,
+      -0.01058443283779616,
+      0.0057769647838865215,
+      0.004098130934264518,
+      0.0034561967925407925,
+      0.10478802254954607,
+      -0.41655871611795736,
+      -0.016891320426310783,
+      -0.06084480068430162,
+      -0.11631238454752642,
+      0.36115589031733486,
+      0.009717546754010917,
+      0.05421411976514036
     ],
     "columns": [
       "bucket:CAUTION",
@@ -4730,7 +4930,7 @@
     ],
     "evidence_gate": "none_from_first_resolved_prior_day_results_evidence_smoothed",
     "fixtures": 10,
-    "intercept": 0.08039352416042717,
+    "intercept": 0.08102853667316709,
     "learning_policy": "ml_paper_dynamic_calibration_success_tilt",
     "observations": 103,
     "recency_half_life_days": 14.0,
@@ -4739,300 +4939,300 @@
     "status": "fitted_prior_paper_errors",
     "success_tilt": {
       "bucket:CAUTION": {
-        "excess": -0.013080699560849673,
+        "excess": -0.013131338130650927,
         "fixtures": 2,
-        "tilt_logit": -0.026161399121699347,
+        "tilt_logit": -0.026262676261301854,
         "weighted_hit_rate": 0.5,
         "weighted_observations": 1.8574188172745263,
-        "weighted_reference_rate": 0.5130806995608497
+        "weighted_reference_rate": 0.5131313381306509
       },
       "bucket:SKIPPED_VETO": {
-        "excess": -0.0034046222443239182,
+        "excess": -0.003550717353235311,
         "fixtures": 7,
-        "tilt_logit": -0.0068092444886478365,
+        "tilt_logit": -0.007101434706470622,
         "weighted_hit_rate": 0.5285248277760972,
         "weighted_observations": 6.615894582327629,
-        "weighted_reference_rate": 0.5319294500204211
+        "weighted_reference_rate": 0.5320755451293325
       },
       "bucket:WATCHLIST_UNCORROBORATED_PRICE": {
-        "excess": 0.020011295055581746,
+        "excess": 0.02097986678774222,
         "fixtures": 1,
-        "tilt_logit": 0.04002259011116349,
+        "tilt_logit": 0.04195973357548444,
         "weighted_hit_rate": 0.5714285714285714,
         "weighted_observations": 0.9516951530106196,
-        "weighted_reference_rate": 0.5514172763729897
+        "weighted_reference_rate": 0.5504487046408292
       },
       "gap:0_to_10pp": {
-        "excess": -0.06279462928123158,
+        "excess": -0.15200779160375955,
         "fixtures": 6,
-        "tilt_logit": -0.12558925856246317,
-        "weighted_hit_rate": 0.518199171735889,
+        "tilt_logit": -0.3040155832075191,
+        "weighted_hit_rate": 0.42833042939021004,
         "weighted_observations": 1.512833571289266,
-        "weighted_reference_rate": 0.5809938010171206
+        "weighted_reference_rate": 0.5803382209939696
       },
       "gap:10_to_20pp": {
-        "excess": -0.03553593968036295,
+        "excess": -0.03270760423200059,
         "fixtures": 8,
-        "tilt_logit": -0.0710718793607259,
+        "tilt_logit": -0.06541520846400117,
         "weighted_hit_rate": 0.5759764251071986,
         "weighted_observations": 2.185583727348151,
-        "weighted_reference_rate": 0.6115123647875615
+        "weighted_reference_rate": 0.6086840293391992
       },
       "gap:20pp_plus": {
-        "excess": 0.08965532176626922,
+        "excess": 0.09061084958936538,
         "fixtures": 3,
-        "tilt_logit": 0.17931064353253845,
+        "tilt_logit": 0.18122169917873077,
         "weighted_hit_rate": 0.6626262109167945,
         "weighted_observations": 0.5641784772888246,
-        "weighted_reference_rate": 0.5729708891505253
+        "weighted_reference_rate": 0.5720153613274291
       },
       "gap:negative": {
-        "excess": 0.02697234864321768,
+        "excess": 0.05752550706900267,
         "fixtures": 10,
-        "tilt_logit": 0.05394469728643536,
-        "weighted_hit_rate": 0.4907100381716031,
+        "tilt_logit": 0.11505101413800534,
+        "weighted_hit_rate": 0.5231083896751993,
         "weighted_observations": 4.196400252494239,
-        "weighted_reference_rate": 0.4637376895283854
+        "weighted_reference_rate": 0.4655828826061967
       },
       "gap:source_unavailable": {
-        "excess": -0.0195443487354513,
+        "excess": -0.019656240434739236,
         "fixtures": 4,
-        "tilt_logit": -0.0390886974709026,
+        "tilt_logit": -0.03931248086947847,
         "weighted_hit_rate": 0.510708466271049,
         "weighted_observations": 0.966012524192289,
-        "weighted_reference_rate": 0.5302528150065003
+        "weighted_reference_rate": 0.5303647067057883
       },
       "market:1x2": {
-        "excess": 0.01292641749867185,
+        "excess": 0.0119976153084701,
         "fixtures": 4,
-        "tilt_logit": 0.0258528349973437,
+        "tilt_logit": 0.0239952306169402,
         "weighted_hit_rate": 0.5221382925737416,
         "weighted_observations": 1.120139071722406,
-        "weighted_reference_rate": 0.5092118750750697
+        "weighted_reference_rate": 0.5101406772652715
       },
       "market:away_over_05": {
-        "excess": 0.33190778691329204,
+        "excess": 0.33623931375180516,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.668092213086708
+        "weighted_reference_rate": 0.6637606862481948
       },
       "market:away_over_15": {
-        "excess": -0.5552165884282859,
+        "excess": -0.5550192482950226,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.5552165884282859
+        "weighted_reference_rate": 0.5550192482950226
       },
       "market:away_over_25": {
-        "excess": -0.48539185120126077,
+        "excess": -0.48792788683328997,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.48539185120126077
+        "weighted_reference_rate": 0.48792788683328997
       },
       "market:away_over_35": {
-        "excess": -0.375641129159645,
+        "excess": -0.38216510274629795,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.375641129159645
+        "weighted_reference_rate": 0.38216510274629795
       },
       "market:away_under_05": {
-        "excess": -0.4088554601040193,
+        "excess": -0.41424997812248776,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.4088554601040193
+        "weighted_reference_rate": 0.41424997812248776
       },
       "market:away_under_15": {
-        "excess": 0.4727521894334612,
+        "excess": 0.4718539755303347,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.5272478105665388
+        "weighted_reference_rate": 0.5281460244696653
       },
       "market:away_under_25": {
-        "excess": 0.4038811528694022,
+        "excess": 0.40565115781163297,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.5961188471305978
+        "weighted_reference_rate": 0.594348842188367
       },
       "market:away_under_35": {
-        "excess": 0.3017536040329388,
+        "excess": 0.3070295086120156,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.6982463959670612
+        "weighted_reference_rate": 0.6929704913879844
       },
       "market:away_under_45": {
-        "excess": 0.24636479742198814,
+        "excess": 0.2530767973330388,
         "fixtures": 1,
-        "tilt_logit": 0.49272959484397627,
+        "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.7536352025780119
+        "weighted_reference_rate": 0.7469232026669612
       },
       "market:btts_no": {
-        "excess": -0.0021943953661577864,
+        "excess": -0.002555752267312583,
         "fixtures": 5,
-        "tilt_logit": -0.004388790732315573,
+        "tilt_logit": -0.005111504534625166,
         "weighted_hit_rate": 0.4720400313754754,
         "weighted_observations": 0.443105999469923,
-        "weighted_reference_rate": 0.4742344267416332
+        "weighted_reference_rate": 0.474595783642788
       },
       "market:btts_yes": {
-        "excess": -0.038758825894414595,
+        "excess": -0.038483522101047996,
         "fixtures": 5,
-        "tilt_logit": -0.07751765178882919,
+        "tilt_logit": -0.07696704420209599,
         "weighted_hit_rate": 0.5279599686245247,
         "weighted_observations": 0.443105999469923,
-        "weighted_reference_rate": 0.5667187945189393
+        "weighted_reference_rate": 0.5664434907255727
       },
       "market:double_chance": {
-        "excess": 0.054829009998879075,
+        "excess": 0.055929451124274165,
         "fixtures": 5,
-        "tilt_logit": 0.10965801999775815,
+        "tilt_logit": 0.11185890224854833,
         "weighted_hit_rate": 0.6666666666666665,
         "weighted_observations": 1.3293179984097694,
-        "weighted_reference_rate": 0.6118376566677874
+        "weighted_reference_rate": 0.6107372155423924
       },
       "market:home_over_05": {
-        "excess": 0.45234258145294426,
+        "excess": 0.4522446850855787,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.5476574185470557
+        "weighted_reference_rate": 0.5477553149144213
       },
       "market:home_over_15": {
-        "excess": -0.3945180050379762,
+        "excess": -0.4004109153222672,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.3945180050379762
+        "weighted_reference_rate": 0.4004109153222672
       },
       "market:home_over_25": {
-        "excess": -0.32254142041442546,
+        "excess": -0.33064947632225083,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.32254142041442546
+        "weighted_reference_rate": 0.33064947632225083
       },
       "market:home_over_35": {
-        "excess": -0.29169319156506734,
+        "excess": -0.30055878001131037,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.29169319156506734
+        "weighted_reference_rate": 0.30055878001131037
       },
       "market:home_under_05": {
-        "excess": -0.5348583693537832,
+        "excess": -0.5354578060354869,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.5348583693537832
+        "weighted_reference_rate": 0.5354578060354869
       },
       "market:home_under_15": {
-        "excess": 0.3188134183520819,
+        "excess": 0.32356676721855204,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.6811865816479181
+        "weighted_reference_rate": 0.676433232781448
       },
       "market:home_under_25": {
-        "excess": 0.25483545122300666,
+        "excess": 0.26135765147713763,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.7451645487769933
+        "weighted_reference_rate": 0.7386423485228624
       },
       "market:home_under_35": {
-        "excess": 0.22828068147771352,
+        "excess": 0.23535558184081928,
         "fixtures": 1,
-        "tilt_logit": 0.45656136295542704,
+        "tilt_logit": 0.47071116368163857,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.02068902506544825,
-        "weighted_reference_rate": 0.7717193185222865
+        "weighted_reference_rate": 0.7646444181591807
       },
       "market:match_over_15": {
-        "excess": 0.34782465905742066,
+        "excess": 0.3495430776224663,
         "fixtures": 4,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.3071495490398345,
-        "weighted_reference_rate": 0.6521753409425793
+        "weighted_reference_rate": 0.6504569223775337
       },
       "market:match_over_25": {
-        "excess": -0.19488500199904796,
+        "excess": -0.192803795720965,
         "fixtures": 9,
-        "tilt_logit": -0.3897700039980959,
+        "tilt_logit": -0.38560759144193,
         "weighted_hit_rate": 0.3586760707548123,
         "weighted_observations": 2.219277282454738,
-        "weighted_reference_rate": 0.5535610727538602
+        "weighted_reference_rate": 0.5514798664757773
       },
       "market:match_over_35": {
-        "excess": -0.09961595840792759,
+        "excess": -0.10133704934099458,
         "fixtures": 3,
-        "tilt_logit": -0.19923191681585517,
+        "tilt_logit": -0.20267409868198916,
         "weighted_hit_rate": 0.33066595251913666,
         "weighted_observations": 0.17119309860974605,
-        "weighted_reference_rate": 0.43028191092706425
+        "weighted_reference_rate": 0.43200300186013124
       },
       "market:match_over_45": {
-        "excess": -0.3537409216815719,
+        "excess": -0.356261799414086,
         "fixtures": 3,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.17119309860974605,
-        "weighted_reference_rate": 0.3537409216815719
+        "weighted_reference_rate": 0.356261799414086
       },
       "market:match_under_15": {
-        "excess": -0.3851443985244381,
+        "excess": -0.3870251130643551,
         "fixtures": 4,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.3071495490398345,
-        "weighted_reference_rate": 0.3851443985244381
+        "weighted_reference_rate": 0.3870251130643551
       },
       "market:match_under_25": {
-        "excess": 0.1649806067503543,
+        "excess": 0.16274944156976112,
         "fixtures": 9,
-        "tilt_logit": 0.3299612135007086,
+        "tilt_logit": 0.32549888313952224,
         "weighted_hit_rate": 0.6413239292451877,
         "weighted_observations": 2.219277282454738,
-        "weighted_reference_rate": 0.47634332249483335
+        "weighted_reference_rate": 0.47857448767542654
       },
       "market:match_under_35": {
-        "excess": 0.0635262547749762,
+        "excess": 0.06500200450412585,
         "fixtures": 3,
-        "tilt_logit": 0.1270525095499524,
+        "tilt_logit": 0.1300040090082517,
         "weighted_hit_rate": 0.6693340474808632,
         "weighted_observations": 0.17119309860974605,
-        "weighted_reference_rate": 0.605807792705887
+        "weighted_reference_rate": 0.6043320429767374
       },
       "market:match_under_45": {
-        "excess": 0.3211177598820949,
+        "excess": 0.3233387954735081,
         "fixtures": 3,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.17119309860974605,
-        "weighted_reference_rate": 0.6788822401179051
+        "weighted_reference_rate": 0.6766612045264919
       }
     },
     "success_tilt_folds": 5,
@@ -5322,7 +5522,7 @@
         "receipt_sha256": "52c06a771211cd811d94766624b40138374b14f2cdec4c646377611aca9a81ea",
         "score": [
           0,
-          0
+          2
         ]
       },
       {
@@ -5337,7 +5537,7 @@
         "receipt_sha256": "52c06a771211cd811d94766624b40138374b14f2cdec4c646377611aca9a81ea",
         "score": [
           0,
-          0
+          2
         ]
       },
       {
@@ -5352,7 +5552,7 @@
         "receipt_sha256": "52c06a771211cd811d94766624b40138374b14f2cdec4c646377611aca9a81ea",
         "score": [
           0,
-          0
+          2
         ]
       },
       {
@@ -5367,7 +5567,7 @@
         "receipt_sha256": "52c06a771211cd811d94766624b40138374b14f2cdec4c646377611aca9a81ea",
         "score": [
           0,
-          0
+          2
         ]
       },
       {
@@ -5378,11 +5578,11 @@
           "monagas",
           "caracas"
         ],
-        "hit": 1,
+        "hit": 0,
         "receipt_sha256": "52c06a771211cd811d94766624b40138374b14f2cdec4c646377611aca9a81ea",
         "score": [
           0,
-          0
+          2
         ]
       },
       {
@@ -5393,11 +5593,11 @@
           "monagas",
           "caracas"
         ],
-        "hit": 0,
+        "hit": 1,
         "receipt_sha256": "52c06a771211cd811d94766624b40138374b14f2cdec4c646377611aca9a81ea",
         "score": [
           0,
-          0
+          2
         ]
       },
       {
@@ -5412,7 +5612,7 @@
         "receipt_sha256": "52c06a771211cd811d94766624b40138374b14f2cdec4c646377611aca9a81ea",
         "score": [
           0,
-          0
+          2
         ]
       },
       {
@@ -6586,8 +6786,8 @@
         ]
       }
     ],
-    "training_outcomes_sha256": "a552ad4fcd9727f114a01101cd3a2c0ba782ccd2068e42ce9544583df391ee27",
-    "training_sha256": "6b34a3ec259e67349f01788347df18c446a0fe144c062b6b12b0d1aad5463a4a"
+    "training_outcomes_sha256": "8fa022909ec6ec32c3b0d15e49ecfe98a95ded6ddb7a767a3751d14ddce8c38f",
+    "training_sha256": "b71a6fdf27a999d278242c674ec7645adfcbf9b4dc1f0a7dae8e9960a82984c8"
   },
   "payout_basis": "hypothetical_same_book_singles_product_not_confirmed_acca_quote",
   "limitation": "paper forward experiment; no real-money promotion"

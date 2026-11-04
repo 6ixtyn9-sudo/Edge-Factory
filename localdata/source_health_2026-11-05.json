@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 6,
@@ -29,7 +29,7 @@
         "selection_unmapped": 16
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-05' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -178,11 +178,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 14270
+        "out_of_window": 14517
       },
       "pa_matched": 0,
-      "pa_raw": 763,
-      "pa_scored": 14270,
+      "pa_raw": 779,
+      "pa_scored": 14517,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -232,42 +232,46 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 8,
+        "board_fixtures": 7,
         "board_league_count": 5,
         "board_leagues": {
-          "brazil_-_serie_a": 33,
-          "ecuador_-_serie_a": 14,
-          "guatemala_-_liga_nacional": 53,
-          "paraguay_-_primera_division": 27,
-          "venezuela_-_primera_division": 73
+          "afc_-_champions_league": 24,
+          "brazil_-_serie_a": 75,
+          "costa_rica_-_primera_division": 19,
+          "peru_-_primera_division": 81,
+          "venezuela_-_primera_division": 1
         },
-        "board_non_prematch_rows": 200,
+        "board_non_prematch_rows": 176,
         "board_priced_rows": 0,
         "board_rows": 200,
         "board_team_count": 13,
         "board_team_names": {
-          "Caracas": 73,
-          "Chapecoense": 33,
-          "Club Xelaju": 5,
-          "Manta FC": 14,
-          "Marquense": 53,
-          "Mirassol": 33,
-          "Monagas": 66,
-          "Monagas SC": 7,
-          "Mushuc Runa": 14,
-          "Nacional (Par)": 9,
-          "Nacional Asuncion": 18,
-          "Sportivo San Lorenzo": 27,
-          "Xelaju": 48
+          "Academia Puerto Cabello": 1,
+          "Alianza Lima": 81,
+          "Cienciano": 81,
+          "Coritiba": 75,
+          "Deportivo Tachira": 1,
+          "G-Osaka": 24,
+          "Internacional": 60,
+          "Internacional RS": 15,
+          "Municipal Perez Zeledon": 2,
+          "Perez Zeledon": 17,
+          "Pohang Steelers": 24,
+          "Sporting San Jose": 17,
+          "Sporting San Jose FC": 2
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_correct_score": 21,
+          "unknown_market:1st_half_moneyline": 3
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 176
         },
         "requested_limit": 1000
       },
@@ -276,7 +280,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "reason": "all_rows_unmappable",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
