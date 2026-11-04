@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-04
 ==============================================================
-CURRENT PAPER BANK (all dates): 89.464 units · free 84.250 / reserved 5.214
-3 paper accas · 10 publications · times in SAST
+CURRENT PAPER BANK (all dates): 89.464 units · free 78.346 / reserved 11.118
+5 paper accas · 5 ticket publications · 7 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -29,162 +29,38 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
    Slavia Praha vs Arsenal · KICKOFF 2026-11-04 22:00 SAST
       Match Over 2.5 Goals @1.530 · ML 68.1% · SKIPPED_VETO
 
-PUBLICATION & LEG DETAILS
-Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
-P1 · 2026-11-04 00:49:25 SAST · ACCA #1
-   Receipt 20261103T224916872142Z · status paper_accas
-   Frozen at 2026-11-03T22:49:25.114591+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1
-   Decision window 2026-11-03T22:49:16.872142+00:00 → 2026-11-04T22:49:16.872142+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 89.464006 paper units
-   Reserved at decision: 0.000000 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 1.806675 → 1.806675 units · released/idle 0.000000; no refill
-   2026-11-04 alianzalima vs cienciano: new 1.806675 + prior open 0.000000 · unused new budget 2.666525 units
-   2026-11-04 rbleipzig vs manchestercity: new 1.806675 + prior open 0.000000 · unused new budget 2.666525 units
-   Coverage: candidate count: 4799; candidate fixtures: 8; slate rows: 50; status: inputs_available
-   Rejections: data quality: 2; fixture bound ml unavailable: 1; fixture date or prior model unproven: 2; outside rolling window or unproven kickoff: 28; quote or probability unavailable: 298; same time same book price conflict: 102
-   ACCA #1 / leg 1: source forecast 79.7% · gap +0.4 pp · quote age 0.30h at decision
-   ACCA #1 / leg 2: source forecast 34.9% · gap +17.9 pp · quote age 0.31h at decision
-   Learning: fitted_prior_paper_errors
+[PAPER ACCA #4] @19.114 — 4.473200 paper units — bet365
+   Published 2026-11-04 15:26:41 SAST · reference P11/1
+   MC Alger vs MC Oran · KICKOFF 2026-11-04 21:00 SAST
+      Home Team Under 4.5 Goals @1.006 · ML 92.2% · SKIPPED_VETO
 
-P2 · 2026-11-04 00:52:06 SAST · ACCA #2
-   Receipt 20261103T225158402488Z · status paper_accas
-   Frozen at 2026-11-03T22:52:06.557101+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 fb8128eca094b7345ae593052c978566d65d0b460ad20ae2113f010d7869915a
-   Decision window 2026-11-03T22:51:58.402488+00:00 → 2026-11-04T22:51:58.402488+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 87.657331 paper units
-   Reserved at decision: 1.806675 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 2.393197 → 2.393197 units · released/idle 0.000000; no refill
-   2026-11-04 borussiadortmund vs realbetis: new 2.393197 + prior open 0.000000 · unused new budget 2.080003 units
-   2026-11-04 porto vs napoli: new 2.393197 + prior open 0.000000 · unused new budget 2.080003 units
-   Coverage: candidate count: 384; candidate fixtures: 5; slate rows: 19; status: inputs_available
-   Rejections: already ticketed fixture: 3; data quality: 1; fixture bound ml unavailable: 1; fixture date or prior model unproven: 2; outside rolling window or unproven kickoff: 2; quote or probability unavailable: 166
-   ACCA #2 / leg 1: source forecast 37.5% · gap +18.5 pp · quote age 0.35h at decision
-   ACCA #2 / leg 2: source forecast 47.3% · gap +11.5 pp · quote age 0.35h at decision
-   Learning: fitted_prior_paper_errors
+   AEK Athens vs Real Madrid · KICKOFF 2026-11-04 19:45 SAST
+      Away Team Over 3.5 Goals @19.000 · ML 49.3% · SKIPPED_VETO
 
-P3 · 2026-11-04 03:42:49 SAST · ACCA #3
-   Receipt 20261104T014241385100Z · status paper_accas
-   Frozen at 2026-11-04T01:42:49.733188+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 2feab27f46ab7c246a46ab791ca3c6d1d8a6fdb442fbb8d9248dd1d01dedc73b
-   Decision window 2026-11-04T01:42:41.385100+00:00 → 2026-11-05T01:42:41.385100+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 85.264134 paper units
-   Reserved at decision: 4.199872 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 1.013731 → 1.013731 units · released/idle 0.000000; no refill
-   2026-11-04 fenerbahce vs liverpool: new 1.013731 + prior open 0.000000 · unused new budget 3.459469 units
-   2026-11-04 slaviapraha vs arsenal: new 1.013731 + prior open 0.000000 · unused new budget 3.459469 units
-   Coverage: candidate count: 233; candidate fixtures: 4; slate rows: 36; status: inputs_available
-   Rejections: already ticketed fixture: 9; fixture bound ml unavailable: 3; fixture date or prior model unproven: 4; outside rolling window or unproven kickoff: 7; quote or probability unavailable: 195
-   ACCA #3 / leg 1: source forecast 34.3% · gap +11.6 pp · quote age 3.20h at decision
-   ACCA #3 / leg 2: source forecast 63.6% · gap +4.5 pp · quote age 3.20h at decision
-   Learning: fitted_prior_paper_errors
+[PAPER ACCA #5] @10.500 — 1.431429 paper units — bet365.us
+   Published 2026-11-04 15:28:27 SAST · reference P12/1
+   Lens vs Como · KICKOFF 2026-11-04 22:00 SAST
+      Match Under 1.5 Goals @5.000 · ML 34.3% · SKIPPED_VETO
 
-P4 · 2026-11-04 03:45:12 SAST · No additional tickets
-   Receipt 20261104T014505565304Z · status no_paper_bet
-   Frozen at 2026-11-04T01:45:12.963614+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 7313134401408974c8e394cb6fa41813fac7cee1b0deed7f9b32d69e46c62115
-   Decision window 2026-11-04T01:45:05.565304+00:00 → 2026-11-05T01:45:05.565304+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 84.250403 paper units
-   Reserved at decision: 5.213603 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
-   Coverage: candidate count: 41; candidate fixtures: 2; slate rows: 19; status: inputs_available
-   Rejections: already ticketed fixture: 7; fixture bound ml unavailable: 1; fixture date or prior model unproven: 2; outside rolling window or unproven kickoff: 6; quote or probability unavailable: 39
-   Learning: fitted_prior_paper_errors
+   Porto vs Napoli · KICKOFF 2026-11-04 22:00 SAST
+      Match Under 2.5 Goals @2.100 · ML 57.8% · SKIPPED_VETO
 
-P5 · 2026-11-04 06:39:16 SAST · No additional tickets
-   Receipt 20261104T043907913987Z · status no_paper_bet
-   Frozen at 2026-11-04T04:39:16.710573+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 c3bcb356f910008a77b0f7f10e5e91e141bf6c66aa3407b6bc843239b11bf7a5
-   Decision window 2026-11-04T04:39:07.913987+00:00 → 2026-11-05T04:39:07.913987+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 84.250403 paper units
-   Reserved at decision: 5.213603 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
-   Coverage: candidate count: 41; candidate fixtures: 2; slate rows: 36; status: inputs_available
-   Rejections: already ticketed fixture: 16; fixture bound ml unavailable: 2; fixture date or prior model unproven: 4; outside rolling window or unproven kickoff: 7; quote or probability unavailable: 5521
-   Learning: fitted_prior_paper_errors
+Scans without tickets: 7 scan(s); latest empty scan 2026-11-04 12:45:18 SAST.
+Existing tickets are unchanged; empty scans do not cancel positions.
 
-P6 · 2026-11-04 06:41:29 SAST · No additional tickets
-   Receipt 20261104T044121256061Z · status no_paper_bet
-   Frozen at 2026-11-04T04:41:29.505249+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 e911233e3cfefc9233c175568330b9108ff349ac36c0f19969d01ae5c499565e
-   Decision window 2026-11-04T04:41:21.256061+00:00 → 2026-11-05T04:41:21.256061+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 84.250403 paper units
-   Reserved at decision: 5.213603 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
-   Coverage: candidate count: 41; candidate fixtures: 2; slate rows: 19; status: inputs_available
-   Rejections: already ticketed fixture: 7; fixture bound ml unavailable: 1; fixture date or prior model unproven: 2; outside rolling window or unproven kickoff: 6; quote or probability unavailable: 1850
-   Learning: fitted_prior_paper_errors
+PUBLICATION REFERENCES
+P/publication-local index maps each displayed acca to its immutable receipt.
+P1 · 2026-11-04 00:49:25 SAST · ACCA #1 · receipt 20261103T224916872142Z
+P2 · 2026-11-04 00:52:06 SAST · ACCA #2 · receipt 20261103T225158402488Z
+P3 · 2026-11-04 03:42:49 SAST · ACCA #3 · receipt 20261104T014241385100Z
+P11 · 2026-11-04 15:26:41 SAST · ACCA #4 · receipt 20261104T132630796860Z
+P12 · 2026-11-04 15:28:27 SAST · ACCA #5 · receipt 20261104T132820776094Z
 
-P7 · 2026-11-04 09:44:08 SAST · No additional tickets
-   Receipt 20261104T074358803340Z · status no_paper_bet
-   Frozen at 2026-11-04T07:44:08.522630+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 0f75264bc9d3746e71d88acd19552e60c4618c40c4f722399263e3c0f981ad7a
-   Decision window 2026-11-04T07:43:58.803340+00:00 → 2026-11-05T07:43:58.803340+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 84.250403 paper units
-   Reserved at decision: 5.213603 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
-   Coverage: candidate count: 41; candidate fixtures: 2; slate rows: 35; status: inputs_available
-   Rejections: already ticketed fixture: 16; fixture bound ml unavailable: 2; fixture date or prior model unproven: 4; outside rolling window or unproven kickoff: 6; quote or probability unavailable: 5521
-   Learning: fitted_prior_paper_errors
-
-P8 · 2026-11-04 09:46:32 SAST · No additional tickets
-   Receipt 20261104T074623459156Z · status no_paper_bet
-   Frozen at 2026-11-04T07:46:32.725974+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 8e48d9fe3bf4d8ff8d842277ead4175f26eef5368ab0588e2ec285af9aea5473
-   Decision window 2026-11-04T07:46:23.459156+00:00 → 2026-11-05T07:46:23.459156+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 84.250403 paper units
-   Reserved at decision: 5.213603 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
-   Coverage: candidate count: 41; candidate fixtures: 2; slate rows: 19; status: inputs_available
-   Rejections: already ticketed fixture: 7; fixture bound ml unavailable: 1; fixture date or prior model unproven: 2; outside rolling window or unproven kickoff: 6; quote or probability unavailable: 1850
-   Learning: fitted_prior_paper_errors
-
-P9 · 2026-11-04 12:42:51 SAST · No additional tickets
-   Receipt 20261104T104240916928Z · status no_paper_bet
-   Frozen at 2026-11-04T10:42:51.137132+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 844c4b35843581ee44f61eb1305dfbb979ce7fb978754008a65728c0c5c09467
-   Decision window 2026-11-04T10:42:40.916928+00:00 → 2026-11-05T10:42:40.916928+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 84.250403 paper units
-   Reserved at decision: 5.213603 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
-   Coverage: candidate count: 35; candidate fixtures: 1; slate rows: 35; status: inputs_available
-   Rejections: already ticketed fixture: 16; fixture bound ml unavailable: 2; fixture date or prior model unproven: 4; outside rolling window or unproven kickoff: 6; quote or probability unavailable: 5539
-   Learning: fitted_prior_paper_errors
-
-P10 · 2026-11-04 12:45:18 SAST · No additional tickets
-   Receipt 20261104T104508539990Z · status no_paper_bet
-   Frozen at 2026-11-04T10:45:18.238426+00:00 · basis rolling_24h_actual_decision_v1
-   SHA256 fe726baf3584f4a6c92dca8f4f4a0c72995f54f22151f1a23c5c77752ac35afc
-   Decision window 2026-11-04T10:45:08.539990+00:00 → 2026-11-05T10:45:08.539990+00:00
-   Bank at decision: 89.464006 paper units
-   Available at decision: 84.250403 paper units
-   Reserved at decision: 5.213603 paper units
-   Fixture budget: 5.0% of TOTAL bank at decision · 4.473200 units per canonical fixture
-   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
-   Coverage: candidate count: 35; candidate fixtures: 1; slate rows: 19; status: inputs_available
-   Rejections: already ticketed fixture: 7; fixture bound ml unavailable: 1; fixture date or prior model unproven: 2; outside rolling window or unproven kickoff: 6; quote or probability unavailable: 1856
-   Learning: fitted_prior_paper_errors
+Full scan/leg diagnostics: phase5_reconciliation/ml_paper_receipts/reports/autobets_ML_2026-11-04_audit.txt
+Frozen JSON receipts remain alongside that reports directory.
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
 STAKING    Gross fixture exposure counts the full acca stake once per fixture; no netting.
            Fixture subtotals overlap; do not add them to bank commitments.
-           Policy/bank limits are decision-specific above; old positions are not resized.
+           Decision-specific limits are in the audit report; old positions are not resized.
 Paper only. No real-money stakes or automatic promotion.

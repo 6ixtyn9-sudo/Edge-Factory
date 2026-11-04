@@ -1,70 +1,11 @@
 {
   "added": 0,
-  "attempted": 8,
-  "attempted_fixtures": [
-    {
-      "away": "Perez Zeledon",
-      "date": "2026-11-04",
-      "home": "Sporting San Jose",
-      "kickoff": "2026-11-04T02:00:00+01:00",
-      "league": "Costa Rica: Primera Divisi\u00f3n"
-    },
-    {
-      "away": "Cienciano",
-      "date": "2026-11-04",
-      "home": "Alianza Lima",
-      "kickoff": "2026-11-04T01:00:00Z",
-      "league": "Primera Division"
-    },
-    {
-      "away": "Jaguares",
-      "date": "2026-11-04",
-      "home": "Deportivo Pasto",
-      "kickoff": "2026-11-04T00:20:00+01:00",
-      "league": "Colombia: Primera A"
-    },
-    {
-      "away": "Puerto Cabello",
-      "date": "2026-11-04",
-      "home": "Deportivo Tachira FC",
-      "kickoff": "2026-11-04T00:30:00+01:00",
-      "league": "Venezuela: Primera Divisi\u00f3n"
-    },
-    {
-      "away": "MC Oran",
-      "date": "2026-11-04",
-      "home": "MC Alger",
-      "kickoff": "2026-11-04T19:00:00Z",
-      "league": "Ligue 1"
-    },
-    {
-      "away": "Como",
-      "date": "2026-11-04",
-      "home": "Lens",
-      "kickoff": "2026-11-04T20:00:00Z",
-      "league": "Champions League"
-    },
-    {
-      "away": "Cerro Porte\u00f1o",
-      "date": "2026-11-04",
-      "home": "Libertad",
-      "kickoff": "2026-11-04T22:00:00Z",
-      "league": "Division 1"
-    },
-    {
-      "away": "Guaran\u00ed",
-      "date": "2026-11-04",
-      "home": "Sportivo Ameliano",
-      "kickoff": "2026-11-04T22:00:00Z",
-      "league": "Division 1"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 16,
-  "captured_at": "2026-11-04T10:45:33+00:00",
+  "captured_at": "2026-11-04T13:28:43+00:00",
   "date": "2026-11-04",
-  "due_reasons": {
-    "first_at": 8
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -82,7 +23,8 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
-    "priced": 7
+    "priced": 7,
+    "retry_cooldown": 8
   },
   "skipped": [
     "AEK Athens|Real Madrid (priced)",
@@ -91,28 +33,18 @@
     "Fenerbah\u00e7e|Liverpool (priced)",
     "RB Leipzig|Manchester City (priced)",
     "Internacional|Coritiba (priced)",
+    "Sporting San Jose|Perez Zeledon (retry cooldown (6h after failed attempt))",
+    "Alianza Lima|Cienciano (retry cooldown (6h after failed attempt))",
     "Borussia Dortmund|Real Betis (priced)",
-    "Porto|Napoli (priced)"
+    "Deportivo Pasto|Jaguares (retry cooldown (6h after failed attempt))",
+    "Deportivo Tachira FC|Puerto Cabello (retry cooldown (6h after failed attempt))",
+    "MC Alger|MC Oran (retry cooldown (6h after failed attempt))",
+    "Porto|Napoli (priced)",
+    "Lens|Como (retry cooldown (6h after failed attempt))",
+    "Libertad|Cerro Porte\u00f1o (retry cooldown (6h after failed attempt))",
+    "Sportivo Ameliano|Guaran\u00ed (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Sporting San Jose vs Perez Zeledon (league not covered: Costa Rica: Primera Divisi\u00f3n)",
-    "Deportivo Pasto vs Jaguares (league not covered: Colombia: Primera A)",
-    "Deportivo Tachira FC vs Puerto Cabello (league not covered: Venezuela: Primera Divisi\u00f3n)",
-    "MC Alger vs MC Oran (league not covered: Ligue 1)",
-    "Libertad vs Cerro Porte\u00f1o (league not covered: Division 1)",
-    "Sportivo Ameliano vs Guaran\u00ed (league not covered: Division 1)",
-    "Alianza Lima vs Cienciano (no event in soccer_argentina_primera_division)",
-    "Lens vs Como (no event in soccer_uefa_champs_league)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Colombia: Primera A": 1,
-    "league not covered: Costa Rica: Primera Divisi\u00f3n": 1,
-    "league not covered: Division 1": 2,
-    "league not covered: Ligue 1": 1,
-    "league not covered: Venezuela: Primera Divisi\u00f3n": 1,
-    "no event in soccer_argentina_primera_division": 1,
-    "no event in soccer_uefa_champs_league": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
