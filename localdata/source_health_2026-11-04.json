@@ -45,7 +45,7 @@
     "betexplorer": {
       "be_matched": 42,
       "be_raw": 39,
-      "be_usable": 36,
+      "be_usable": 39,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -54,14 +54,14 @@
       "freshness_h": null,
       "join_matched_rows": 7,
       "join_miss_counts": {
-        "fixture_key_miss": 17,
+        "fixture_key_miss": 20,
         "no_pick_for_fixture": 12
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-04' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -156,14 +156,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 237,
       "join_miss_counts": {
-        "fixture_key_miss": 26002,
-        "market_unsupported": 11430
+        "fixture_key_miss": 38217,
+        "market_unsupported": 16074,
+        "no_pick_for_fixture": 2501
       },
-      "op_matched": 0,
-      "op_raw": 37432,
-      "op_usable": 37432,
+      "op_matched": 21,
+      "op_raw": 57029,
+      "op_usable": 57029,
       "reason": null,
       "status": "cache_only"
     },
