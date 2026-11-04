@@ -26,6 +26,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from edgefactory.util import dated_artifact_files, dated_artifact_path
 from edgefactory.identity import source_team_key
 from edgefactory.odds_normalization import (
     canonical_market_selection,
@@ -1066,7 +1067,7 @@ def parse_head_to_head(payload, *, fixture, captured_at):
 
 
 def snapshot_path(day, localdata=None):
-    return (localdata or LOCALDATA) / f"card_enrich_shadow_{day}.json"
+    return dated_artifact_path(localdata or LOCALDATA, f"card_enrich_shadow_{day}.json")
 
 
 def load_snapshots(localdata=None):
@@ -1074,7 +1075,7 @@ def load_snapshots(localdata=None):
     root = localdata or LOCALDATA
     latest: dict[str, dict] = {}
     try:
-        files = sorted(root.glob("card_enrich_shadow_*.json"))
+        files = dated_artifact_files(root, "card_enrich_shadow_*.json")
     except OSError:
         return {}
     for path in files:

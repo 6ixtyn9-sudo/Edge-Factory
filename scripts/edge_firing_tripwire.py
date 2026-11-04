@@ -76,6 +76,9 @@ RULE_NWAY = re.compile(r"(\d+)way", re.I)
 RULE_THRESHOLD = re.compile(r">=\s*([\d.]+)")
 
 
+from edgefactory.util import dated_artifact_files
+
+
 def _source_files(ld: Path, name: str) -> list[Path]:
     """Return only this source's monthly files, with a legacy-file fallback.
 
@@ -184,7 +187,7 @@ def _load_pick_rows(ld: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     seen_files: set[Path] = set()
     for glob in PICKS_GLOBS:
-        for path in sorted(ld.glob(glob)):
+        for path in dated_artifact_files(ld, glob):
             if path in seen_files:
                 continue
             seen_files.add(path)

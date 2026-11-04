@@ -33,6 +33,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
 
 import auto_tickets as at  # noqa: E402
+from edgefactory.util import dated_artifact_path
 from edgefactory import enh_registry  # noqa: E402
 
 import replay_harness as h  # noqa: E402
@@ -261,7 +262,7 @@ def test_the_shipped_selector_recomputes_on_the_real_archived_slate():
     This is the ONLY day in the repository whose slate carries the retained
     model, which is exactly why the report refuses to call the arm an A/B.
     """
-    slate = ROOT / "localdata" / "picks_morning_2026-10-25.json"
+    slate = dated_artifact_path(ROOT / "localdata", "picks_morning_2026-10-25.json")
     if not slate.exists():                                   # pragma: no cover
         pytest.skip("archived 2026-10-25 slate not present")
     rows = json.loads(slate.read_text())

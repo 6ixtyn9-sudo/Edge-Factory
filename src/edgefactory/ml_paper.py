@@ -60,7 +60,7 @@ from .enh_registry import (
 )
 from .identity import source_team_key, squad_marker_mismatch
 from .odds_normalization import parse_zoned_timestamp
-from .util import norm_team
+from .util import dated_artifact_path, norm_team
 
 SCHEMA = "autobets_ML_v2"
 READABLE_SCHEMAS = {"autobets_ML_v1", SCHEMA}
@@ -2694,6 +2694,209 @@ def render_card(receipt):
     return "\n".join(lines) + "\n"
 
 
+
+def _paper_market_label(leg):
+    """Display only: never infer a selection from a market's name."""
+    market, selection = leg["market"], leg["selection"]
+    if market == "1x2" and selection in {"home", "draw", "away"}:
+        return {"home": "Home Win", "draw": "Draw", "away": "Away Win"}[selection] + " (1X2)"
+    if market == "double_chance":
+        label = {"home": "Home or Draw (1X)", "1x": "Home or Draw (1X)",
+                 "away": "Draw or Away (X2)", "x2": "Draw or Away (X2)",
+                 "draw": "No Draw (12)", "12": "No Draw (12)"}.get(selection)
+        if label:
+            return "Double Chance — " + label
+    if market in {"btts_yes", "btts_no"} and selection == market.removeprefix("btts_"):
+        return "Both Teams To Score — " + selection.capitalize()
+    mapped = MARKET_PRICE_MAP.get(market)
+    if mapped and mapped[1] == selection and selection in {"over", "under"}:
+        slot = mapped[0]
+        for prefix, subject in (("ou_", "Match"), ("tt_home_", "Home Team"), ("tt_away_", "Away Team")):
+            if slot.startswith(prefix):
+                return f"{subject} {selection.capitalize()} {slot.removeprefix(prefix)} Goals"
+    return f"{market} {selection}"  # unknown/mismatched contracts stay explicit
+
+
+def _paper_publication_time(receipt):
+    stamp = parse_zoned_timestamp(receipt.get("frozen_at") or receipt.get("persisted_at"))
+    return stamp.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M:%S SAST") if stamp else "time unavailable"
+
+
+def render_daily_card(history, report=None):
+    """One day's rolling publications; labels are views, never receipt identity.
+
+    No deduplication of legs/fixtures, selection, staking or settlement occurs.
+    Full receipt ids and receipt-local indices remain in the publication ledger.
+    Empty scans do not cancel earlier tickets or consume acca numbers.
+    """
+    rows = sorted(history, key=lambda r: (parse_zoned_timestamp(r["captured_at"]), r.get("decision_id", "")))
+    if not rows or len({r["date"] for r in rows}) != 1:
+        raise ValueError("daily card requires receipts for exactly one date")
+    count = sum(len(r["accas"]) for r in rows)
+    lines = [f"autobets_ML TICKETS — {rows[0]['date']}", "=" * 62]
+    if report is not None:
+        lines.append(
+            f"CURRENT PAPER BANK (all dates): {report['paper_bank_units']:.3f} units"
+            f" · free {report['paper_free_units']:.3f} / reserved {report['paper_committed_units']:.3f}"
+        )
+    lines.extend([
+        f"{count} paper accas · {len(rows)} publications · times in SAST",
+        "PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.",
+        "Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.", "",
+    ])
+    if not count:
+        lines.extend(["NO PAPER BET — no tickets published for this date; reasons below.", ""])
+    diagnostics = []
+    number = 1
+    had_tickets = False
+    for publication, row in enumerate(rows, 1):
+        leg_diagnostics = []
+        first = number
+        for original_index, acca in enumerate(row["accas"], 1):
+            lines.extend([
+                f"[PAPER ACCA #{number}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}",
+                f"   Published {_paper_publication_time(row)} · reference P{publication}/{original_index}",
+            ])
+            for leg_index, leg in enumerate(acca["legs"], 1):
+                if leg_index > 1:
+                    lines.append("")
+                kickoff = parse_zoned_timestamp(leg.get("kickoff_utc"))
+                kickoff_text = (kickoff.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M SAST")
+                                if kickoff else "unavailable")
+                lines.extend([
+                    f"   {leg['home']} vs {leg['away']} · KICKOFF {kickoff_text}",
+                    f"      {_paper_market_label(leg)} @{leg['odds']:.3f} · ML {leg['probability']:.1%} · {leg['bucket']}",
+                ])
+                source = source_forecast_probability(leg)
+                comparison = (f"source forecast {source:.1%} · gap {(leg['probability'] - source) * 100:+.1f} pp"
+                              if source is not None else "source forecast unavailable")
+                age = quote_age_at_decision(leg, row)
+                quote_age = f"quote age {age / 3600:.2f}h at decision" if age is not None else "quote age unavailable"
+                leg_diagnostics.append(f"   ACCA #{number} / leg {leg_index}: {comparison} · {quote_age}")
+            lines.append("")
+            number += 1
+        if row["accas"]:
+            result = f"ACCA #{first}" if first == number - 1 else f"ACCA #{first}–#{number - 1}"
+        else:
+            result = "No additional tickets" if had_tickets else "No tickets at this publication"
+        had_tickets = had_tickets or bool(row["accas"])
+        identity = row.get("decision_id") or row.get("sha256") or "legacy daily receipt"
+        diagnostics.extend([
+            f"P{publication} · {_paper_publication_time(row)} · {result}",
+            f"   Receipt {identity} · status {row['status']}",
+            (f"   Frozen at {row.get('frozen_at') or row.get('persisted_at', 'unavailable')}"
+             f" · basis {row.get('freeze_basis', 'legacy daily freeze')}"),
+        ])
+        if row.get("sha256"):
+            diagnostics.append(f"   SHA256 {row['sha256']}")
+        if row.get("window_start") and row.get("window_end"):
+            diagnostics.append(f"   Decision window {row['window_start']} → {row['window_end']}")
+        for field, label in (("paper_bank_at_decision", "Bank at decision"),
+                             ("paper_available_at_decision", "Available at decision"),
+                             ("paper_pending_reserved_at_decision", "Reserved at decision")):
+            if field in row:
+                diagnostics.append(f"   {label}: {row[field]:.6f} paper units")
+        concentration = row.get("fixture_concentration")
+        if concentration is not None:
+            policy = row["policy"]["fixture_concentration"]
+            diagnostics.extend([
+                (f"   Fixture budget: {policy['max_fixture_stake_fraction']:.1%} of TOTAL bank at decision"
+                 f" · {policy['fixture_limit_units']:.6f} units per canonical fixture"),
+                (f"   Reservation {concentration['input_stake_micro_units'] / MICRO_UNITS:.6f}"
+                 f" → {concentration['published_stake_micro_units'] / MICRO_UNITS:.6f} units"
+                 f" · released/idle {concentration['released_stake_micro_units'] / MICRO_UNITS:.6f}; no refill"),
+            ])
+            for entry in concentration["fixtures"]:
+                if entry["input_stake_micro_units"]:
+                    day, home, away = entry["fixture"]
+                    diagnostics.append(
+                        f"   {day} {home} vs {away}: new {entry['published_stake_micro_units'] / MICRO_UNITS:.6f}"
+                        f" + prior open {entry['prior_open_stake_micro_units'] / MICRO_UNITS:.6f}"
+                        f" · unused new budget {entry['idle_budget_micro_units'] / MICRO_UNITS:.6f} units"
+                    )
+        elif row["accas"]:
+            diagnostics.append("   LEGACY STAKING — no fixture-cap policy declared; historical stakes unchanged.")
+        for key in ("coverage", "rejections"):
+            detail = "; ".join(f"{k.replace('_', ' ')}: {v}" for k, v in row.get(key, {}).items())
+            diagnostics.append(f"   {key.capitalize()}: {detail or 'None recorded'}")
+        diagnostics.extend([*leg_diagnostics, f"   Learning: {row['learning']['status']}", ""])
+    lines.extend([
+        "PUBLICATION & LEG DETAILS",
+        "Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.",
+        *diagnostics,
+        "ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.",
+        "STAKING    Gross fixture exposure counts the full acca stake once per fixture; no netting.",
+        "           Fixture subtotals overlap; do not add them to bank commitments.",
+        "           Policy/bank limits are decision-specific above; old positions are not resized.",
+        "Paper only. No real-money stakes or automatic promotion.",
+    ])
+    return "\n".join(lines) + "\n"
+
+
+
+def _paper_performance_history_lines(report):
+    """Group existing marked outcomes for display, not a settlement-time ledger."""
+    base = report["base_paper_units"]
+    if not math.isfinite(base) or base <= 0:
+        raise ValueError("paper performance requires a positive finite base")
+    by_day = defaultdict(list)
+    for publication in report["history"]:
+        for original_index, acca in enumerate(publication["accas"], 1):
+            by_day[publication["date"]].append((publication, original_index, acca))
+    lines = [f"BET-DAYS, oldest first ({len(by_day)} of {len(by_day)})",
+             "  Staked/returned/net cover settled accas only; pending stakes are separate."]
+    bank_mark = base
+    held = []
+    for day, entries in sorted(by_day.items()):
+        settled = [a for _, _, a in entries if a["profit_units"] is not None]
+        pending = [a for _, _, a in entries if a["profit_units"] is None]
+        staked = sum(a["stake_units"] for a in settled)
+        profit = sum(a["profit_units"] for a in settled)
+        returned = staked + profit
+        bank_mark += profit
+        wins = sum(a["status"] == "win" for a in settled)
+        losses = sum(a["status"] == "loss" for a in settled)
+        # Missing returns are not zero returns: a wholly pending day is ungraded.
+        returns_text = f"{100 * returned / base:6.1f}%" if settled else "      —"
+        profit_text = f"{100 * profit / base:+6.1f}%" if settled else "      —"
+        lines.append(
+            f"  {day}   {wins}W/{losses}L   staked {100 * staked / base:6.1f}%"
+            f"   returned {returns_text}   net {profit_text}"
+            f"   pending {100 * sum(a['stake_units'] for a in pending) / base:6.1f}%"
+            f"   bank* {100 * bank_mark / base:6.1f}%"
+        )
+        for daily_index, (publication, original_index, acca) in enumerate(entries, 1):
+            if acca["profit_units"] is not None:
+                continue
+            held.extend([
+                (f"  {day}   ACCA #{daily_index} @{acca['odds']:.3f}"
+                 f"   stake {100 * acca['stake_units'] / base:.1f}%"
+                 f" ({acca['stake_units']:.6f} paper units)   HELD (not settled)"),
+            ])
+            if publication.get("decision_id"):
+                held.append(f"      Receipt {publication['decision_id']} / publication-local ticket {original_index}")
+            for leg in acca["legs"]:
+                kickoff = parse_zoned_timestamp(leg.get("kickoff_utc"))
+                when = (" · " + kickoff.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M SAST")
+                        if kickoff else " · kickoff unavailable")
+                held.extend([
+                    f"      {leg['home']} vs {leg['away']}{when}",
+                    f"         {_paper_market_label(leg)} @{leg['odds']:.3f}",
+                ])
+    if not by_day:
+        lines.append("  No bet days recorded.")
+    lines.extend(["", "HELD (not yet settled; stake counted as committed)", *(held or ["  None."])])
+    lines.extend([
+        "", "NOTES",
+        f"  Percentages of capital use the initial {base:g}-paper-unit base, not today's free bank.",
+        "  bank* is reconstructed from latest known results by ticket date; pending is held at cost.",
+        "  These are not stored historical daily closes or a settlement-time equity curve.",
+        "  A known losing leg settles its acca as a loss even if other leg results are unresolved.",
+        "  All retained history is included; no regime reset or old-loss exclusion.",
+    ])
+    return "\n".join(lines) + "\n"
+
+
 def render_performance(report):
     roi = f"{report['roi']:+.1%}" if report["roi"] is not None else "not measured yet"
     calibration = report.get("calibration", {})
@@ -2714,15 +2917,21 @@ def render_performance(report):
         )
     else:
         evidence += "PAIRED   no resolved market-matched source pairs yet\n"
+    base = report["base_paper_units"]
+    history_text = _paper_performance_history_lines(report)
+    hit_rate = f"{report['hit_rate']:.1%} hit" if report["hit_rate"] is not None else "hit rate not measured yet"
     return (
-        "autobets_ML — performance (paper only; no real stakes)\n" + "=" * 62 + "\n\n"
-        f"BANK     {report['paper_bank_units']:.3f} paper units · x{report['paper_multiple']:.3f} of 100-unit base\n"
-        f"CAPITAL  {report['paper_free_units']:.3f} free / {report['paper_committed_units']:.3f} reserved paper units\n\n"
-        f"RECORD   {report['wins']}W / {report['losses']}L · {report['pending_accas']} pending accas · {report['unresolved_result_legs']} unresolved leg results\n"
-        f"PROFIT   {report['profit_units']:+.3f} paper units · ROI {roi}\n"
+        "autobets_ML — performance, percent of capital (PAPER ONLY)\n" + "=" * 62 + "\n\n"
+        f"BANK     {100 * report['paper_bank_units'] / base:.1f}%   x{report['paper_multiple']:.3f} of the initial base"
+        f" · {report['paper_bank_units']:.3f} paper units\n"
+        f"CAPITAL  {100 * report['paper_free_units'] / base:.1f}% free / {100 * report['paper_committed_units'] / base:.1f}% reserved"
+        f" · {report['paper_free_units']:.3f} free / {report['paper_committed_units']:.3f} reserved paper units\n\n"
+        f"RECORD   {report['wins']}W / {report['losses']}L   ({hit_rate})   over {report['bet_days']} bet-days\n"
+        f"OPEN     {report['pending_accas']} held accas · {report['unresolved_result_legs']} unresolved leg results\n"
+        f"PROFIT   {100 * report['profit_units'] / base:+.1f}% of capital · {report['profit_units']:+.3f} paper units · ROI {roi}\n"
         f"DRAWDOWN {report['max_daily_close_drawdown_units']:.3f} paper units / {report['max_daily_close_drawdown_fraction']:.1%} (ticket-date marks; pending at cost)\n"
         f"DAYS     {report['bet_days']} bet / {report['no_bet_days']} no-bet · {report['missed_freeze_days']} missed freeze\n\n"
-        + evidence + "\n"
+        + history_text + "\nLEARNING & EVIDENCE\n" + evidence + "\n"
         "STAKING  quarter Kelly, own paper bank only; ROI is profit / settled stakes\n"
         f"FIXTURES new publications: gross stake <= {MAX_FIXTURE_STAKE_FRACTION:.1%} of TOTAL paper bank per canonical fixture;\n"
         "         downward-only, no refill; existing frozen positions remain unchanged\n"
@@ -2759,9 +2968,11 @@ def publish(root, score_lookup):
     (root / f"{PREFIX}_performance.txt").write_text(render_performance(report))
     if history:
         latest_day = history[-1]["date"]
-        (root / f"{PREFIX}_{latest_day}.txt").write_text("\n".join(
-            render_card(r) for r in history if r["date"] == latest_day))
+        daily = [r for r in history if r["date"] == latest_day]
+        text = (render_daily_card(daily, report) if any(r.get("freeze_basis") == ROLLING_FREEZE for r in daily)
+                else "\n".join(render_card(r) for r in daily))
+        dated_artifact_path(root, f"{PREFIX}_{latest_day}.txt").write_text(text)
     card = latest_card(root)
     if card is not None and card.get("freeze_basis") != ROLLING_FREEZE:
-        (root / f"{PREFIX}_{card['date']}.txt").write_text(render_card(card))
+        dated_artifact_path(root, f"{PREFIX}_{card['date']}.txt").write_text(render_card(card))
     return report

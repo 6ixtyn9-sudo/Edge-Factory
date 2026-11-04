@@ -44,6 +44,7 @@ LOCAL_TZ = ZoneInfo("Africa/Johannesburg")
 from edgefactory import ml_fade_checkpoint as ckpt
 from edgefactory import ml_fade_research as mfr
 from edgefactory.fade import FADE_FAMILY, PARENT_FAMILY
+from edgefactory.util import dated_artifact_path
 
 REPORT_PREFIX = "ml_fade_research_report_"
 CONTEXTS_OUT_PREFIX = "ml_fade_checkpoint_contexts_"
@@ -117,12 +118,12 @@ def _run_frozen_studies(root: Path, out_dir: Path, today_s: str, timeout: int) -
         (
             "contexts",
             root / "scripts" / "research_ml_fade_contexts.py",
-            out_dir / f"{CONTEXTS_OUT_PREFIX}{today_s}.txt",
+            dated_artifact_path(out_dir, f"{CONTEXTS_OUT_PREFIX}{today_s}.txt"),
         ),
         (
             "price_study",
             root / "scripts" / "research_ml_fade_price_study.py",
-            out_dir / f"{PRICE_OUT_PREFIX}{today_s}.txt",
+            dated_artifact_path(out_dir, f"{PRICE_OUT_PREFIX}{today_s}.txt"),
         ),
     )
     for name, script, out_path in jobs:
@@ -289,7 +290,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     md = ckpt.render_report_md(report)
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    report_path = args.out_dir / f"{REPORT_PREFIX}{today_s}.md"
+    report_path = dated_artifact_path(args.out_dir, f"{REPORT_PREFIX}{today_s}.md")
     report_path.write_text(md)
     print(f"ml-fade research checkpoint report -> {report_path}")
     print(

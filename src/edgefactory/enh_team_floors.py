@@ -18,7 +18,6 @@ answers an empty table, and an empty table means no team leg fires.
 from __future__ import annotations
 
 import difflib
-import glob
 import json
 import os
 import re
@@ -27,6 +26,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from edgefactory.enh_registry import ENHANCEMENT_FLOOR_MARGIN, MIN_PRICED_N, wilson_lb
+from edgefactory.util import dated_artifact_files
 
 TEAM_UNDER_MARKETS = frozenset({
     "home_under_15", "away_under_15",
@@ -86,7 +86,7 @@ def team_under_evidence(root: Path, before: str) -> list[dict]:
     index = _settled_index(root, before)
     seen: set = set()
     rows: list[dict] = []
-    for f in sorted(glob.glob(str(root / "localdata" / "picks_20*.json"))):
+    for f in dated_artifact_files(root / "localdata", "picks_20*.json"):
         day = os.path.basename(f)[6:16]
         if not day or day >= before:
             continue

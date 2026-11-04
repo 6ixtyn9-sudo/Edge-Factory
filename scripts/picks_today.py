@@ -21,6 +21,7 @@ from statistics import mean
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.util import dated_artifact_path
 from edgefactory.entities import (
     canonical_league,
     canonical_team,
@@ -3784,7 +3785,7 @@ def _day_card_fixtures(day: str, picks: list) -> list:
             for p in fresh}
     out = list(fresh)
     try:
-        rows = json.loads((ROOT / "localdata" / f"picks_{day}.json").read_text())
+        rows = json.loads((dated_artifact_path(ROOT / "localdata", f"picks_{day}.json")).read_text())
     except Exception:
         # Missing or unreadable archive must never take the run down: the
         # fresh card is a worse answer, not a fatal one.
@@ -4300,8 +4301,8 @@ def _coverage_receipts(day: str) -> dict[str, dict]:
     day10 = str(day)[:10]
     paths = {
         "betexplorer": LOCALDATA / f"betexplorer_capture_{day10}.json",
-        "oddspapi": LOCALDATA / f"oddspapi_capture_{day10}.json",
-        "theoddsapi": LOCALDATA / f"theoddsapi_capture_{day10}.json",
+        "oddspapi": dated_artifact_path(LOCALDATA, f"oddspapi_capture_{day10}.json"),
+        "theoddsapi": dated_artifact_path(LOCALDATA, f"theoddsapi_capture_{day10}.json"),
     }
     return {name: _read_json_obj(path) for name, path in paths.items()}
 
@@ -7578,7 +7579,7 @@ def main():
         for _match, _market, _why in _enh_quarantined:
             print(f"enhancement withheld {day}: {_match} [{_market}] — {_why}",
                   file=sys.stderr)
-        _day_archive = ROOT / "localdata" / f"picks_{day}.json"
+        _day_archive = dated_artifact_path(ROOT / "localdata", f"picks_{day}.json")
         try:
             _day_archive.parent.mkdir(parents=True, exist_ok=True)
             _existing_rows: list = []

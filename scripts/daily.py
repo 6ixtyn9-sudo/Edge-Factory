@@ -45,6 +45,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.util import dated_artifact_path
 from edgefactory.notifier import format_kickoff  # noqa: E402
 from edgefactory.step_timing import timed, timed_step  # noqa: E402
 from edgefactory.util import (  # noqa: E402
@@ -140,7 +141,7 @@ def result_refresh_cmd(target_date: str) -> str:
 
 
 def archived_picks_file(target_date: str) -> Path:
-    return REPORT_DIR / f"picks_{target_date}.json"
+    return dated_artifact_path(REPORT_DIR, f"picks_{target_date}.json")
 
 
 def get_actual_kickoff_date(pick: dict[str, Any], fallback: str) -> str:
@@ -205,7 +206,7 @@ def archive_picks_by_kickoff(picks: list[dict[str, Any]], fallback_date: str) ->
 
 
 def morning_baseline_file(target_date: str) -> Path:
-    return REPORT_DIR / f"picks_morning_{target_date}.json"
+    return dated_artifact_path(REPORT_DIR, f"picks_morning_{target_date}.json")
 
 
 def official_run_marker_file(target_date: str) -> Path:
@@ -553,7 +554,7 @@ def generate_daily_report(
     metadata_lines: list[str] | None = None,
 ) -> Path | None:
     """Write a human-readable .txt summary of picks_today.json or provided picks."""
-    report_file = output_path or (REPORT_DIR / f"picks_{target_date}.txt")
+    report_file = output_path or (dated_artifact_path(REPORT_DIR, f"picks_{target_date}.txt"))
 
     if source_picks is None and not PICKS_TODAY_FILE.exists():
         print("No picks file found — skipping report")

@@ -43,6 +43,7 @@ import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+from edgefactory.util import dated_artifact_path
 from edgefactory.sources.oddspapi_odds import (
     EXPECTED_PARSE_SKIPS,
     _record_rate_limit,
@@ -150,7 +151,7 @@ def _slate_paths(day: str) -> tuple[Path, ...]:
     local artefacts — no provider search and no fuzzy expansion.
     """
     d = str(day)[:10]
-    return (OUT_DIR / "picks_today.json", OUT_DIR / f"picks_{d}.json")
+    return (OUT_DIR / "picks_today.json", dated_artifact_path(OUT_DIR, f"picks_{d}.json"))
 
 
 def _load_slate_picks(day: str) -> list[dict]:
@@ -271,7 +272,7 @@ def _prioritise_slate_fixtures(fixtures: list[dict], day: str) -> tuple[list[dic
 
 
 def _receipt_path(day: str) -> Path:
-    return OUT_DIR / f"oddspapi_capture_{str(day)[:10]}.json"
+    return dated_artifact_path(OUT_DIR, f"oddspapi_capture_{str(day)[:10]}.json")
 
 
 # Capture state survives between runs. The receipt is rewritten every run, so
