@@ -83,3 +83,78 @@ ADMISSION  CAUTION / SKIPPED_VETO are intentionally paper-eligible; data-quality
 LEARNING  fitted_prior_paper_errors
 
 FREEZE   2026-11-03T22:52:06.557101+00:00 | paper_accas
+
+autobets_ML TICKETS — 2026-11-04
+==============================================================
+PAPER ONLY — own legs, accas and model-sized stakes; no odds band.
+Same-book single-price products; acca acceptance/payout unconfirmed.
+DECISION 20261104T014241385100Z · next 24 hours · frozen on publication
+
+[PAPER ACCA #1] @4.636 — 1.013731 paper units — Betsson
+   Fenerbahçe vs Liverpool · KICKOFF 2026-11-04 19:45 SAST
+      match_under_25 under @3.030 · ML 45.9% · SKIPPED_VETO
+      Source forecast 34.3% · gap +11.6 pp · quote age 3.20h at decision
+
+   Slavia Praha vs Arsenal · KICKOFF 2026-11-04 22:00 SAST
+      match_over_25 over @1.530 · ML 68.1% · SKIPPED_VETO
+      Source forecast 63.6% · gap +4.5 pp · quote age 3.20h at decision
+
+FIXTURE STAKE BUDGET (gross; overlapping exposures are not additive bank commitments)
+   5.0% of TOTAL paper bank at decision · 4.473200 units per canonical fixture
+   Full acca stake counted once per fixture across markets, sides, books and contracts; no netting.
+   Reservation 1.013731 -> 1.013731 units · released/idle 0.000000 units; no refill.
+   2026-11-04 fenerbahce vs liverpool: new 1.013731 + prior open 0.000000 · unused new budget 3.459469 units
+   2026-11-04 slaviapraha vs arsenal: new 1.013731 + prior open 0.000000 · unused new budget 3.459469 units
+   Existing over-cap positions are grandfathered, not resized.
+
+COVERAGE
+   Candidate count: 233
+   Candidate fixtures: 4
+   Slate rows: 36
+   Status: inputs_available
+
+REJECTIONS
+   Already ticketed fixture: 9
+   Fixture bound ml unavailable: 3
+   Fixture date or prior model unproven: 4
+   Outside rolling window or unproven kickoff: 7
+   Quote or probability unavailable: 195
+
+ADMISSION  CAUTION / SKIPPED_VETO are intentionally paper-eligible; data-quality guards remain.
+
+LEARNING  fitted_prior_paper_errors
+
+FREEZE   2026-11-04T01:42:49.733188+00:00 | paper_accas
+
+autobets_ML TICKETS — 2026-11-04
+==============================================================
+PAPER ONLY — own legs, accas and model-sized stakes; no odds band.
+Same-book single-price products; acca acceptance/payout unconfirmed.
+DECISION 20261104T014505565304Z · next 24 hours · frozen on publication
+
+NO PAPER BET — no qualifying model/price/capital combination.
+
+FIXTURE STAKE BUDGET (gross; overlapping exposures are not additive bank commitments)
+   5.0% of TOTAL paper bank at decision · 4.473200 units per canonical fixture
+   Full acca stake counted once per fixture across markets, sides, books and contracts; no netting.
+   Reservation 0.000000 -> 0.000000 units · released/idle 0.000000 units; no refill.
+   Existing over-cap positions are grandfathered, not resized.
+
+COVERAGE
+   Candidate count: 41
+   Candidate fixtures: 2
+   Slate rows: 19
+   Status: inputs_available
+
+REJECTIONS
+   Already ticketed fixture: 7
+   Fixture bound ml unavailable: 1
+   Fixture date or prior model unproven: 2
+   Outside rolling window or unproven kickoff: 6
+   Quote or probability unavailable: 39
+
+ADMISSION  CAUTION / SKIPPED_VETO are intentionally paper-eligible; data-quality guards remain.
+
+LEARNING  fitted_prior_paper_errors
+
+FREEZE   2026-11-04T01:45:12.963614+00:00 | no_paper_bet

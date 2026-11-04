@@ -7,7 +7,7 @@
 - immutable morning-baseline rows: 944
 - late-slate additions (regular-ledger rows not in the morning baseline): 119, of which on days whose regular ledger was rewritten: 91
 - regular-ledger-only legacy rows: 0
-- unsafe regular ledgers ignored: 26
+- unsafe regular ledgers ignored: 27
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 997
 - eligible prior picks: 1018
@@ -418,13 +418,13 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 Scored as probabilistic forecasts per settled pick (each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) — calibration, not a direction call; the retired exact-score field remains in machine history only).
 
-- **Avg Goals forecast**: n=937, MAE=1.483501 goals, bias=-0.167257 (realized − promised), promised avg 3.333746 vs realized 3.166489
+- **Avg Goals forecast**: n=937, MAE=1.481366 goals, bias=-0.165123 (realized − promised), promised avg 3.333746 vs realized 3.168623
 
 ### Per-metric calibration
 
 | metric | n | promised avg | realized | Δ | Brier |
 | --- | --- | --- | --- | --- | --- |
-| Away Over 1.5 | 937 | 34.3% | 33.8% | -0.5% | 0.199489 |
+| Away Over 1.5 | 937 | 34.3% | 33.9% | -0.3% | 0.19993 |
 | BTTS-Yes | 937 | 49.0% | 53.1% | +4.1% | 0.254536 |
 | Home Over 1.5 | 937 | 57.1% | 53.7% | -3.4% | 0.215316 |
 | Over 2.5 | 937 | 64.4% | 60.6% | -3.8% | 0.240906 |
@@ -435,7 +435,7 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 | --- | --- | --- | --- | --- |
 | 0.0-0.1 | 110 | 8.6% | 20.9% | +12.3% |
 | 0.1-0.2 | 365 | 13.4% | 17.0% | +3.6% |
-| 0.2-0.3 | 329 | 24.0% | 26.1% | +2.2% |
+| 0.2-0.3 | 329 | 24.0% | 26.4% | +2.5% |
 | 0.3-0.4 | 126 | 34.5% | 38.1% | +3.6% |
 | 0.4-0.5 | 416 | 42.4% | 49.3% | +6.8% |
 | 0.5-0.6 | 1023 | 55.6% | 57.1% | +1.5% |
@@ -776,12 +776,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 70.7% (Actual: 0 goals)
   - **🔥 Possible Events (graded)**: none recorded on the archived pick
 
-### 2026-11-03: Monagas vs Caracas (Actual Score: **0-0**)
+### 2026-11-03: Monagas vs Caracas (Actual Score: **0-2**)
 - **1X2 Pick**: Selected `HOME` @ 2.1 -> 🔴 LOST (Expected prob: 42.4%)
-  - [🔴 MISS] **Over 2.5 Goals**: expected 55.4% (Actual: 0 goals)
+  - [🔴 MISS] **Over 2.5 Goals**: expected 55.4% (Actual: 2 goals)
   - [🔴 MISS] **BTTS-Yes**: expected 55.4% (Actual: BTTS-No)
   - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 54.5% (Actual: 0 goals)
-  - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 70.7% (Actual: 0 goals)
+  - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 70.7% (Actual: 2 goals)
   - **🔥 Possible Events (graded)**: none recorded on the archived pick
 
 ### 2026-11-03: Montedio Yamagata vs Tokushima Vortis (Actual Score: **1-0**)
