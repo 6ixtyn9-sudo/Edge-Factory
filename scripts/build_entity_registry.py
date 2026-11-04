@@ -33,6 +33,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.identity import AMBIGUOUS_DOMESTIC_LEAGUE_KEYS
 from edgefactory.entities import CONFIG_OVERRIDES_PATH, ENTITY_REGISTRY_PATH, classify_competition  # noqa: E402
 from edgefactory.util import compact_key, norm_entity_team, norm_league  # noqa: E402
 
@@ -65,6 +66,8 @@ GENERIC_LEAGUE_KEYS = {
     "liga 1",
     "liga 2",
 }
+
+GENERIC_LEAGUE_KEYS |= AMBIGUOUS_DOMESTIC_LEAGUE_KEYS
 
 
 def safe_league_alias_merge(a: str, b: str) -> bool:
@@ -286,8 +289,9 @@ def load_existing_registry_aliases(team_dsu: DSU, league_dsu: DSU) -> tuple[int,
         for canonical, info in data.get("leagues", {}).items():
             aliases = info.get("aliases", [])
             for alias in aliases:
-                league_dsu.union(norm_league_cached(canonical), norm_league_cached(alias))
-                loaded_leagues += 1
+                if safe_league_alias_merge(canonical, alias):
+                    league_dsu.union(norm_league_cached(canonical), norm_league_cached(alias))
+                    loaded_leagues += 1
         return loaded_teams, loaded_leagues
     except Exception:
         return 0, 0

@@ -344,3 +344,22 @@ Recent daily outputs remain in `localdata/`; older supported daily evidence is
 preserved byte-for-byte under `localdata/archive/<family>/<year>/<month>/`.
 Rollover runs through the existing cleanup and persistence scripts. See
 [archive layout, compatible readers and cache safeguards](docs/operator/localdata-archives.md).
+
+### ML paper ticket reports
+
+The normal `autobets_ML_DATE.txt` card and the ML card beside ENH grading show
+one daily view: tickets, current paper capital, immutable publication references,
+and a single summary of scans that added no tickets. An empty scan does not
+cancel an earlier ticket. Publication numbers are audit references, not extra bets.
+
+Full hashes, decision-time capital/budgets, source probabilities, quote ages and
+per-scan rejection checks remain in the frozen JSON receipts and the separate
+`localdata/phase5_reconciliation/ml_paper_receipts/reports/autobets_ML_DATE_audit.txt`
+view. The existing publisher writes that derived audit view; no extra capture or
+workflow is required. Rejection counts count checks, not unique fixtures, and can
+repeat across scans.
+
+Pending fixtures can be reused only within the approved combined 5% of total
+paper bank gross-stake budget. Previously booked stakes count first; exhausted
+and settled fixtures do not reopen. Quarter-Kelly and the aggregate exposure
+limit remain unchanged. Existing stakes and receipts are never resized.
