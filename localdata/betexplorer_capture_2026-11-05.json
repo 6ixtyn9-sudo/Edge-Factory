@@ -1,25 +1,15 @@
 {
-  "attempted": 3,
+  "attempted": 2,
   "attempted_fixtures": [
     {
-      "avg_p": 72.17021276595744,
-      "away": "Inter Club d'Escaldes",
+      "avg_p": 81.06935346055255,
+      "away": "Lech Pozna\u0144",
       "date": "2026-11-05",
-      "home": "Crvena Zvezda",
-      "league": "Europa Conference League",
-      "market": "ou_2.5",
-      "pick": "over",
-      "w_score": 0.6681
-    },
-    {
-      "avg_p": 66.63253012048193,
-      "away": "Nordsj\u00e6lland",
-      "date": "2026-11-05",
-      "home": "Monaco",
-      "league": "Europa Conference League",
-      "market": "ou_2.5",
-      "pick": "over",
-      "w_score": 0.6451
+      "home": "Benfica",
+      "league": "Europa League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
     },
     {
       "avg_p": 60.0,
@@ -38,50 +28,40 @@
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 1,
-  "candidate_fixtures": 22,
-  "captured_at": "2026-11-05T04:49:13.474935+00:00",
+  "candidate_fixtures": 18,
+  "captured_at": "2026-11-05T07:29:59.320573+00:00",
   "date": "2026-11-05",
-  "deferred_fixtures": 20,
+  "deferred_fixtures": 16,
   "errors": [],
-  "fixtures_with_rows": 3,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
-  "market_requests": 10,
+  "market_requests": 3,
   "match_detail": {
-    "bookmakers": 42,
+    "bookmakers": 51,
     "challenge_pages": 0,
-    "fixtures": 3,
-    "market_rows": 128,
-    "markets": 14,
-    "named_rows": 128,
+    "fixtures": 4,
+    "market_rows": 165,
+    "markets": 17,
+    "named_rows": 165,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": true,
+  "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 2,
+  "network_attempted": 1,
   "quoted_fixtures": [
     {
-      "avg_p": 72.17021276595744,
-      "away": "Inter Club d'Escaldes",
+      "avg_p": 81.06935346055255,
+      "away": "Lech Pozna\u0144",
       "date": "2026-11-05",
-      "home": "Crvena Zvezda",
-      "league": "Europa Conference League",
-      "market": "ou_2.5",
-      "pick": "over",
-      "w_score": 0.6681
-    },
-    {
-      "avg_p": 66.63253012048193,
-      "away": "Nordsj\u00e6lland",
-      "date": "2026-11-05",
-      "home": "Monaco",
-      "league": "Europa Conference League",
-      "market": "ou_2.5",
-      "pick": "over",
-      "w_score": 0.6451
+      "home": "Benfica",
+      "league": "Europa League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
     },
     {
       "avg_p": 60.0,
@@ -94,8 +74,8 @@
       "w_score": 0.6453
     }
   ],
-  "requests": 17,
-  "rows": 9,
+  "requests": 8,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }

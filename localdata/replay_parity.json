@@ -3345,22 +3345,23 @@
           "bank_total": 16.485449,
           "committed_excluding_target": 0.0,
           "date": "2026-11-05",
-          "decision_status": "draft",
+          "decision_status": "frozen",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "558afea5d171b90588be1f0c6d5e3b998c82016c",
-            "event_sha": "558afea5d171b90588be1f0c6d5e3b998c82016c",
+            "checkout_head_at_capture": "eaf8c9ee9281345e56b7d26c62bd0ecbecb8dda1",
+            "event_sha": "eaf8c9ee9281345e56b7d26c62bd0ecbecb8dda1",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "41965024999",
+            "run_id": "41984147847",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-05_decision.json.gz",
           "free_bank": 16.485449,
-          "ledger": "NOT_COMMITTED",
+          "freeze_time": "MATCH",
+          "ledger": "MATCH",
           "ml_comparison": {
             "added_to_ml_on": 2,
             "arms": {
@@ -3372,23 +3373,23 @@
                         "cohort": 0.7162,
                         "market": "match_over_25",
                         "match": "Trabzonspor vs SC Freiburg",
-                        "model": 0.6237112222722896,
+                        "model": 0.6237112222731657,
                         "odds": 1.55,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
                       {
-                        "cohort": 0.6538,
+                        "cohort": 0.6311,
                         "market": "match_over_25",
                         "match": "AC Milan vs Ferencvarosi TC",
-                        "model": 0.7939943112940359,
+                        "model": 0.6764650344210191,
                         "odds": 1.5,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
                     "odds": 2.33,
@@ -3401,23 +3402,23 @@
                         "cohort": 0.7162,
                         "market": "match_over_25",
                         "match": "Benfica vs Lech Pozna\u0144",
-                        "model": 0.6441346897897439,
+                        "model": 0.6441346897892994,
                         "odds": 1.3,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
                       {
                         "cohort": 0.6748,
                         "market": "match_over_25",
                         "match": "Thun vs Hearts",
-                        "model": 0.6634445849838291,
+                        "model": 0.6634445849960058,
                         "odds": 1.5,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
                     "odds": 1.95,
@@ -3472,14 +3473,19 @@
                   ]
                 ],
                 "mean_acca_odds": 2.14,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "outcome_status": "INCOMPLETE_OUTCOMES",
                 "resolved_legs": 0,
                 "returned": null,
                 "selected_legs": 4,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
                   "capacity_rescue_checked": false,
-                  "dropped": [],
+                  "dropped": [
+                    "Monaco vs FC Nordsjaelland",
+                    "Monaco vs FC Nordsjaelland",
+                    "Monaco vs FC Nordsjaelland",
+                    "Monaco vs FC Nordsjaelland"
+                  ],
                   "ml_ranking_active": false
                 },
                 "total_stake": 4.1214
@@ -3489,26 +3495,26 @@
                   {
                     "legs": [
                       {
-                        "cohort": 0.6538,
+                        "cohort": 0.6311,
                         "market": "match_over_25",
                         "match": "AC Milan vs Ferencvarosi TC",
-                        "model": 0.7939943112940359,
+                        "model": 0.6764650344210191,
                         "odds": 1.55,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
                       {
                         "cohort": 0.6748,
                         "market": "match_over_25",
                         "match": "Thun vs Hearts",
-                        "model": 0.6634445849838291,
+                        "model": 0.6634445849960058,
                         "odds": 1.5,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
                     "odds": 2.33,
@@ -3521,23 +3527,23 @@
                         "cohort": 0.7162,
                         "market": "match_over_25",
                         "match": "Benfica vs Lech Pozna\u0144",
-                        "model": 0.6441346897897439,
+                        "model": 0.6441346897892994,
                         "odds": 1.3,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
                       {
                         "cohort": 0.7162,
                         "market": "match_over_25",
                         "match": "Trabzonspor vs SC Freiburg",
-                        "model": 0.6237112222722896,
+                        "model": 0.6237112222731657,
                         "odds": 1.55,
                         "outcome_source": null,
                         "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
                     "odds": 2.02,
@@ -3592,14 +3598,19 @@
                   ]
                 ],
                 "mean_acca_odds": 2.175,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "outcome_status": "INCOMPLETE_OUTCOMES",
                 "resolved_legs": 0,
                 "returned": null,
                 "selected_legs": 4,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
                   "capacity_rescue_checked": true,
-                  "dropped": [],
+                  "dropped": [
+                    "Monaco vs Nordsj\u00e6lland",
+                    "Monaco vs Nordsj\u00e6lland",
+                    "Monaco vs Nordsj\u00e6lland",
+                    "Monaco vs Nordsj\u00e6lland"
+                  ],
                   "ml_ranking_active": true
                 },
                 "total_stake": 4.1214
@@ -3608,10 +3619,66 @@
             "card_identical": false,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 4,
-            "mean_absolute_disagreement": 0.08041808223240073,
-            "model_below_cohort": 7,
+            "mean_absolute_disagreement": 0.07518591967512606,
+            "model_below_cohort": 8,
             "models": {
-              "5d56f755d114f33c770c824d64937dd7ac9e286d78b51ce52524adcb7297b6ee": {
+              "06cc63a6757fbc64a32c98cd20adfa2426a309854963aa74949937e7aedc71d9": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 41,
+                    "0:1": 27,
+                    "0:2": 11,
+                    "0:3": 6,
+                    "0:4": 1,
+                    "0:5": 1,
+                    "12:1": 1,
+                    "1:0": 88,
+                    "1:1": 71,
+                    "1:2": 24,
+                    "1:3": 11,
+                    "1:4": 2,
+                    "2:0": 111,
+                    "2:1": 100,
+                    "2:2": 52,
+                    "2:3": 8,
+                    "2:4": 2,
+                    "2:5": 1,
+                    "3:0": 74,
+                    "3:1": 56,
+                    "3:2": 40,
+                    "3:3": 6,
+                    "3:4": 2,
+                    "4:0": 46,
+                    "4:1": 36,
+                    "4:2": 11,
+                    "4:3": 4,
+                    "4:4": 3,
+                    "5:0": 31,
+                    "5:1": 18,
+                    "5:2": 10,
+                    "5:3": 3,
+                    "5:4": 2,
+                    "6:0": 14,
+                    "6:1": 10,
+                    "6:2": 5,
+                    "7:0": 6,
+                    "7:2": 4,
+                    "8:0": 2,
+                    "8:1": 2,
+                    "9:0": 2,
+                    "9:1": 1
+                  },
+                  "classes": 42,
+                  "mean_rows_per_class": 22.523809523809526,
+                  "min_class_count": 1,
+                  "n": 946,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2394
+                },
+                "schema": "enh_score_logit_v2"
+              },
+              "4f4487c7e12015916a790d65d824c7141145aa2d9f301630345b5af3ae8d1afb": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -3679,7 +3746,7 @@
                 },
                 "schema": "enh_score_logit_v2"
               },
-              "6bd98646750ac4b6ef2c5d67bc33378799ed3b54e72f70c410d0238af70716c1": {
+              "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -3745,7 +3812,7 @@
                 },
                 "schema": "enh_score_logit_v2"
               },
-              "72df74e43ffee12a10581954578d92ed6f76801c2d673fa3c428efa1fa81eec4": {
+              "cbf40b3e5c932db22dc1a534460093532486aaa7d062899cf67211504b17ee02": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -3795,16 +3862,17 @@
                 "schema": "enh_score_logit_v2"
               }
             },
-            "paired_estimates": 10,
-            "pool_legs": 10,
+            "paired_estimates": 18,
+            "pool_legs": 18,
             "removed_from_ml_off": 2,
             "schemas": {
-              "enh_score_logit_v2": 10
+              "enh_score_logit_v2": 18
             },
-            "scored_legs": 10,
-            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+            "scored_legs": 18,
+            "status": "INCOMPLETE_OUTCOMES"
           },
-          "settlement": "UNAVAILABLE",
+          "open_accas": 2,
+          "settlement": "PENDING",
           "status": "MATCH"
         }
       ],
@@ -4105,23 +4173,25 @@
           "bank_total": 413.282968,
           "committed_excluding_target": 0.0,
           "date": "2026-11-05",
-          "decision_status": "draft",
+          "decision_status": "frozen",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "558afea5d171b90588be1f0c6d5e3b998c82016c",
-            "event_sha": "558afea5d171b90588be1f0c6d5e3b998c82016c",
+            "checkout_head_at_capture": "eaf8c9ee9281345e56b7d26c62bd0ecbecb8dda1",
+            "event_sha": "eaf8c9ee9281345e56b7d26c62bd0ecbecb8dda1",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "41965024999",
+            "run_id": "41984147847",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-11-05_decision.json.gz",
           "free_bank": 413.282968,
-          "ledger": "NOT_COMMITTED",
-          "settlement": "UNAVAILABLE",
+          "freeze_time": "MATCH",
+          "ledger": "MATCH",
+          "open_accas": 2,
+          "settlement": "PENDING",
           "status": "MATCH"
         }
       ],
