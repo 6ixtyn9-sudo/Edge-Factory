@@ -6988,12 +6988,12 @@
                   "source": "theoddsapi",
                   "price": 1.55,
                   "captured_at": "2026-11-04T22:32:26.743689+00:00",
-                  "decision_at": "2026-11-05T06:50:50+02:00",
+                  "decision_at": "2026-11-05T09:30:54+02:00",
                   "kickoff": "2026-11-05T17:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6237112222722896,
-              "ml_model_key": "6bd98646750ac4b6ef2c5d67bc33378799ed3b54e72f70c410d0238af70716c1",
+              "ml_rank_probability": 0.6237112222731657,
+              "ml_model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7111661460828431,
@@ -7014,40 +7014,40 @@
             {
               "match": "AC Milan vs Ferencvarosi TC",
               "pick": "over",
-              "prob": 0.6538,
+              "prob": 0.6311,
               "odds": 1.5,
               "result": null,
               "market": "match_over_25",
               "price_book": "William Hill",
               "price_source": "theoddsapi",
               "cohort_evidence": {
-                "rate": 0.6538,
-                "n": 494,
-                "contract_id": "pfc_fbf508b9c62bae8f281bb6e1",
+                "rate": 0.6311,
+                "n": 946,
+                "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
                 "as_of_exclusive": "2026-11-05",
                 "market": "match_over_25",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 323,
-                "cohort_lower_bound": 0.6108519381888382,
+                "cohort_min_hits": 597,
+                "cohort_lower_bound": 0.5998581599756401,
                 "price_context": {
-                  "contract_id": "pfc_fbf508b9c62bae8f281bb6e1",
+                  "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
                   "selection": "home",
-                  "league": "International,Europa League",
+                  "league": "World: UEFA Europa League",
                   "book": "William Hill",
                   "source": "theoddsapi",
                   "price": 1.5,
                   "captured_at": "2026-11-04T22:32:25.910766+00:00",
-                  "decision_at": "2026-11-05T06:50:50+02:00",
+                  "decision_at": "2026-11-05T09:30:54+02:00",
                   "kickoff": "2026-11-05T17:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.7939943112940359,
-              "ml_model_key": "72df74e43ffee12a10581954578d92ed6f76801c2d673fa3c428efa1fa81eec4",
+              "ml_rank_probability": 0.6764650344210191,
+              "ml_model_key": "06cc63a6757fbc64a32c98cd20adfa2426a309854963aa74949937e7aedc71d9",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7111661460828431,
               "floor_basis": "inherited",
-              "league": "International,Europa League",
+              "league": "World: UEFA Europa League",
               "price_at": "2026-11-04T22:32:25.910766+00:00",
               "price_kickoff": "2026-11-05T17:45:00Z",
               "price_provenance": null,
@@ -7062,7 +7062,12 @@
             }
           ],
           "odds": 2.33,
-          "stake_pct": 2.0607
+          "stake_pct": 2.0607,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -7092,12 +7097,12 @@
                   "source": "theoddsapi",
                   "price": 1.3,
                   "captured_at": "2026-11-04T22:32:25.559642+00:00",
-                  "decision_at": "2026-11-05T06:50:50+02:00",
+                  "decision_at": "2026-11-05T09:30:54+02:00",
                   "kickoff": "2026-11-05T20:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6441346897897439,
-              "ml_model_key": "6bd98646750ac4b6ef2c5d67bc33378799ed3b54e72f70c410d0238af70716c1",
+              "ml_rank_probability": 0.6441346897892994,
+              "ml_model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7111661460828431,
@@ -7141,12 +7146,12 @@
                   "source": "theoddsapi",
                   "price": 1.5,
                   "captured_at": "2026-11-04T22:32:26.865448+00:00",
-                  "decision_at": "2026-11-05T06:50:50+02:00",
+                  "decision_at": "2026-11-05T09:30:54+02:00",
                   "kickoff": "2026-11-05T17:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6634445849838291,
-              "ml_model_key": "5d56f755d114f33c770c824d64937dd7ac9e286d78b51ce52524adcb7297b6ee",
+              "ml_rank_probability": 0.6634445849960058,
+              "ml_model_key": "4f4487c7e12015916a790d65d824c7141145aa2d9f301630345b5af3ae8d1afb",
               "ml_model_schema": "enh_score_logit_v2",
               "label": "Match Over 2.5 Goals",
               "floor": 1.7111661460828431,
@@ -7166,7 +7171,12 @@
             }
           ],
           "odds": 1.95,
-          "stake_pct": 2.0607
+          "stake_pct": 2.0607,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 4.1214
@@ -7280,6 +7290,11 @@
     },
     "2026-11-04": {
       "frozen_at": "2026-11-04T10:00:29+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-05": {
+      "frozen_at": "2026-11-05T09:58:48+02:00",
       "final": true,
       "lock_source": "state"
     }
