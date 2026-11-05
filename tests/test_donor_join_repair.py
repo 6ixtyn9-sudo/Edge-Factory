@@ -357,7 +357,7 @@ def test_oddspapi_extracts_nested_player_prices_with_fixture_identity():
     rows = rows_from_odds_response(
         payload,
         market_type_map={"101": "1x2", "10194": "totals"},
-        home="Croatia", away="England", stats=stats,
+        home="Croatia", away="England", stats=stats, market_catalog={},
     )
     by_selection = {(r["market"], r["selection"]): r for r in rows}
 
@@ -388,7 +388,7 @@ def test_oddspapi_never_labels_an_unnamed_outcome_as_home():
     stats: dict = {}
     rows = rows_from_odds_response(
         payload, market_type_map={"101": "1x2"},
-        home="Croatia", away="England", stats=stats,
+        home="Croatia", away="England", stats=stats, market_catalog={},
     )
     assert rows == []
     assert stats["unresolved_1x2"] == 3
@@ -402,7 +402,7 @@ def test_oddspapi_lookahead_quote_is_refused_at_the_boundary():
     stats: dict = {}
     rows = rows_from_odds_response(
         payload, market_type_map={"101": "1x2"},
-        home="Croatia", away="England", stats=stats,
+        home="Croatia", away="England", stats=stats, market_catalog={},
     )
     assert [r for r in rows if r["market"] == "1x2"] == []
     assert stats["published_after_capture"] == 3
@@ -412,7 +412,7 @@ def test_oddspapi_gets_the_same_per_reason_miss_buckets_as_the_donors():
     payload = _load("oddspapi_odds_fixture.json")
     rows = rows_from_odds_response(
         payload, market_type_map={"101": "1x2", "10194": "totals"},
-        home="Croatia", away="England",
+        home="Croatia", away="England", market_catalog={},
     )
     # A persisted row that lost its fixture identity (the 2026-10-03 shape)
     # must be reported as an identity defect, not an uncovered fixture.
