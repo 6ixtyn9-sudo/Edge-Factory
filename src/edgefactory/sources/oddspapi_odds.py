@@ -280,8 +280,12 @@ def _unpriced_family(label: str) -> str | None:
         return "unsupported_win_to_nil"
     if "corners" in tokens or "corner" in tokens:
         return "unsupported_corners"
-    if "cards" in tokens or "card" in tokens:
+    if tokens & {"cards", "card", "booking", "bookings", "yellow"}:
         return "unsupported_cards"
+    if "2up" in tokens or {"2", "up"} <= tokens or {"early", "payout"} <= tokens:
+        return "unsupported_early_payout"
+    if any(word in str(label).lower() for word in _NON_GOAL):
+        return "unsupported_non_goal"
     return None
 
 
@@ -306,10 +310,13 @@ def _classify_catalog_entry(entry: dict) -> str:
     period = str(entry.get("period") or "").strip().lower()
     if period and period not in {"fulltime", "full_time", "full-time", "ft"}:
         return "unsupported_period"
-    unpriced = _unpriced_family(name)
+    market_type = str(entry.get("marketType") or "").strip().lower()
+    # The catalog path must enforce the SAME goals-only boundary as the
+    # legacy label path. "Bookings - Over Under Team 2" is not team goals;
+    # marketType can carry that evidence even when the name is generic.
+    unpriced = _unpriced_family(f"{name} {market_type}")
     if unpriced:
         return unpriced
-    market_type = str(entry.get("marketType") or "").strip().lower()
     tokens = set(_name_tokens(name))
     if market_type == "1x2":
         return "1x2"
@@ -613,6 +620,13 @@ def rows_from_odds_response(
             mtype = type_map.get(str(mid))
             if not isinstance(mkt, dict):
                 continue
+            entry = _catalog_entry(str(mid), market_catalog)
+            # A stale caller-supplied type map must not overrule explicit
+            # non-goal/unsupported evidence in the retained catalog.
+            if entry:
+                catalog_type = _classify_catalog_entry(entry)
+                if catalog_type.startswith("unsupported"):
+                    mtype = catalog_type
             if not mtype:
                 # Not in the catalog at all: never seen, never classified.
                 _skip("market_id_unknown")
@@ -632,7 +646,6 @@ def rows_from_odds_response(
             outcomes = mkt.get("outcomes") or {}
             if not isinstance(outcomes, dict):
                 continue
-            entry = _catalog_entry(str(mid), market_catalog)
             # mainLine: when a market quotes several lines, only the main one
             # is the comparable price. Prefer it when the provider flags it
             # and keep every outcome when it flags none (observed both ways).
@@ -730,6 +743,10 @@ def rows_from_odds_response(
                     "provider_changed_at": provider_changed_at,
                     "outcome_key": str(outcome_key),
                     "bookmaker_market_id": str(mkt.get("bookmakerMarketId") or ""),
+                    "provider_market_id": str(mid),
+                    "provider_market_name": entry.get("name") or "",
+                    "provider_market_type": entry.get("marketType") or "",
+                    "provider_period": entry.get("period") or "",
                 })
     return rows
 

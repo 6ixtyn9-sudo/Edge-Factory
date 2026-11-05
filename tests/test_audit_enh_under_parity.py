@@ -16,7 +16,7 @@ KICKOFF = datetime(2026, 10, 18, 16, tzinfo=UTC)
 
 def quote(**overrides):
     return {"source": "oddspapi", "bookmaker": "Pinnacle", "market": "ou_3.5",
-            "selection": "under", "odds": "1.40", "schema_version": "3",
+            "selection": "under", "odds": "1.40", "schema_version": "4",
             "captured_at": "2026-10-18T13:59:00+00:00", "kickoff": KICKOFF.isoformat(),
             **overrides}
 
@@ -26,6 +26,7 @@ def quote(**overrides):
     ({"captured_at": "2026-10-18T13:59:00"}, "timestamp_missing"),
     ({"kickoff": "2026-10-18T16:30:00Z"}, "kickoff_mismatch"),
     ({"schema_version": "2"}, "old_schema"),
+    ({"schema_version": "3"}, "old_schema"),
     ({"schema_version": "3.1"}, "old_schema"),
     ({"captured_at": "2026-10-18T09:59:00Z"}, "stale_oddspapi"),
     ({"odds": "nan"}, "invalid_price"),

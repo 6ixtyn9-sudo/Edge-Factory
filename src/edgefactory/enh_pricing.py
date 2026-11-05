@@ -115,7 +115,10 @@ ODDSPAPI_SOURCE = "oddspapi"
 # tests/test_oddspapi_schema_invalidation.py. Generation 1 mislabelled
 # selections; generation 2 wrote no ambiguity check and retained no outcome
 # key, so its rows cannot be re-audited from the CSV.
-ODDSPAPI_MIN_SCHEMA_VERSION = 3
+# Generation 3 can contain bookings incorrectly normalized as goals. Do not
+# rehabilitate old rows or merely trust their normalized market label.
+# Generation 4 is the goals-only catalog parser; old archives stay untouched.
+ODDSPAPI_MIN_SCHEMA_VERSION = 4
 
 DIVERGENCE_MIN_SPREAD = 0.10  # flag when max/min best-source prices differ by >10%
 # Governance N4 (Addendum 27.11, 2026-08-05): max pre-kickoff capture age in
@@ -303,8 +306,25 @@ def _accumulate_unified(path: Path, *, day: str, source_tag: str,
                 if price is None:
                     continue
                 nh, na = norm_team(home), norm_team(away)
+                provenance = None
+                if source_tag == ODDSPAPI_SOURCE:
+                    # Retain the row BEFORE aggregation drops provider outcome/
+                    # market identifiers. This witnesses only our normalized
+                    # archive, NOT the original native response or its mapping.
+                    witness = {k: v for k, v in row.items() if isinstance(k, str)}
+                    provenance = {
+                        "schema": "normalized_odds_quote_v1",
+                        "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                        "archive": path.name,
+                        "row": witness,
+                        "row_sha256": hashlib.sha256(json.dumps(
+                            witness, sort_keys=True, ensure_ascii=False,
+                            separators=(",", ":"), allow_nan=False,
+                        ).encode()).hexdigest(),
+                    }
                 _put(out, nh, na, mkt, sel, price,
-                     row.get("bookmaker") or "", row.get("captured_at") or "", source_tag, kickoff=row.get("kickoff"), fixture_names=(home, away))
+                     row.get("bookmaker") or "", row.get("captured_at") or "", source_tag,
+                     kickoff=row.get("kickoff"), admission=provenance, fixture_names=(home, away))
                 out["names"].setdefault((nh, na), (home, away))
     except Exception:
         return

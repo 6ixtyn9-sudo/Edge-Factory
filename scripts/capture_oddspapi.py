@@ -86,17 +86,22 @@ OUT_DIR = ROOT / "localdata"
 #              rows did not run the ambiguity check and did not retain the
 #              outcome key, so their evidence can no longer be verified from
 #              the CSV - they are superseded (counted stale, never deleted).
+#   4          rejects non-goal catalog families (including bookings totals)
+#              and nonstandard early-payout settlement; preserves the provider
+#              catalog market id/name/type/period. Generation 3 could mislabel
+#              bookings as goals, so it is never supply for a new decision.
 #
 # Blank home/away is only the *symptom* of generation 1; the mislabelled
 # selection is the defect. A reader that bypassed rows on blank participants
 # alone would still trust a generation-1 row that happened to carry teams.
 # Readers therefore gate on the generation, not on the symptom.
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 COLUMNS = ["source", "source_type", "sport", "date", "kickoff", "league",
            "home", "away", "market", "selection", "odds", "bookmaker",
            "captured_at", "published_at", "provider_changed_at",
            "outcome_key", "bookmaker_market_id",
+           "provider_market_id", "provider_market_name", "provider_market_type", "provider_period",
            "schema_version"]
 
 
