@@ -1,17 +1,140 @@
 {
-  "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "added": 154,
+  "attempted": 15,
+  "attempted_fixtures": [
+    {
+      "away": "Deportivo Recoleta",
+      "date": "2026-11-05",
+      "home": "Olimpia",
+      "kickoff": "2026-11-05T00:15:00Z",
+      "league": "Division 1"
+    },
+    {
+      "away": "Inter Club d'Escaldes",
+      "date": "2026-11-05",
+      "home": "Crvena Zvezda",
+      "kickoff": "2026-11-05T17:45:00Z",
+      "league": "Europa Conference League"
+    },
+    {
+      "away": "Juticalpa",
+      "date": "2026-11-05",
+      "home": "CD Olimpia",
+      "kickoff": "2026-11-05T02:30:00+01:00",
+      "league": "Honduras: Liga Nacional"
+    },
+    {
+      "away": "Atl\u00e9tico Mineiro",
+      "date": "2026-11-05",
+      "home": "Botafogo",
+      "kickoff": "2026-11-05T00:30:00Z",
+      "league": "Serie A"
+    },
+    {
+      "away": "Fuerte San Francisco",
+      "date": "2026-11-05",
+      "home": "Municipal Lime\u00f1o",
+      "kickoff": "2026-11-05T02:00:00+01:00",
+      "league": "El Salvador: Primera Division"
+    },
+    {
+      "away": "Be\u015fikta\u015f",
+      "date": "2026-11-05",
+      "home": "Celtic",
+      "kickoff": "2026-11-05T20:00:00Z",
+      "league": "Europa League"
+    },
+    {
+      "away": "Gent",
+      "date": "2026-11-05",
+      "home": "KuPS",
+      "kickoff": "2026-11-05T18:45:00+01:00",
+      "league": "World: UEFA Europa Conference League"
+    },
+    {
+      "away": "Jagiellonia",
+      "date": "2026-11-05",
+      "home": "Levski Sofia",
+      "kickoff": "2026-11-05T18:45:00+01:00",
+      "league": "World: UEFA Europa League"
+    },
+    {
+      "away": "Marseille",
+      "date": "2026-11-05",
+      "home": "Bayer Leverkusen",
+      "kickoff": "2026-11-05T21:00:00+01:00",
+      "league": "World: UEFA Europa League"
+    },
+    {
+      "away": "San Carlos",
+      "date": "2026-11-05",
+      "home": "Puntarenas FC",
+      "kickoff": "2026-11-05T01:00:00+01:00",
+      "league": "Costa Rica: Primera Divisi\u00f3n"
+    },
+    {
+      "away": "Sportivo Luque\u00f1o",
+      "date": "2026-11-05",
+      "home": "Rubio \u00d1\u00fa",
+      "kickoff": "2026-11-05T22:00:00Z",
+      "league": "Division 1"
+    },
+    {
+      "away": "Orl\u00e9ans",
+      "date": "2026-11-05",
+      "home": "Valenciennes",
+      "kickoff": "2026-11-05T19:45:00Z",
+      "league": "Ligue 3"
+    },
+    {
+      "away": "Al Khaleej",
+      "date": "2026-11-05",
+      "home": "Al Kholood",
+      "kickoff": "2026-11-05T13:25:00Z",
+      "league": "Pro League"
+    },
+    {
+      "away": "Corinthians",
+      "date": "2026-11-05",
+      "home": "S\u00e3o Paulo",
+      "kickoff": "2026-11-05T00:30:00Z",
+      "league": "Serie A"
+    },
+    {
+      "away": "Carabobo FC",
+      "date": "2026-11-05",
+      "home": "Metropolitanos FC",
+      "kickoff": "2026-11-05T00:30:00+01:00",
+      "league": "Venezuela: Primera Divisi\u00f3n"
+    }
+  ],
   "candidate_fixtures": 29,
-  "captured_at": "2026-11-05T07:50:25+00:00",
+  "captured_at": "2026-11-05T11:11:41+00:00",
   "date": "2026-11-05",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 15
+  },
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 2,
   "kickoff_mismatch_detail": {
     "kickoff_mismatch_display_fallback_overridden": 1
   },
-  "quoted_fixtures": [],
+  "quoted_fixtures": [
+    {
+      "away": "Jagiellonia Bia\u0142ystok",
+      "date": "2026-11-05",
+      "home": "PFC Levski Sofia",
+      "kickoff": "2026-11-05T17:45:00Z",
+      "league": "World: UEFA Europa League"
+    },
+    {
+      "away": "Marseille",
+      "date": "2026-11-05",
+      "home": "Bayer Leverkusen",
+      "kickoff": "2026-11-05T20:00:00Z",
+      "league": "World: UEFA Europa League"
+    }
+  ],
   "requested_markets": [
     "h2h",
     "totals",
@@ -21,47 +144,57 @@
   "requested_total_points": [
     "2.5"
   ],
-  "rows": 0,
+  "rows": 154,
   "schema": 1,
   "skip_reasons": {
     "kickoff_mismatch": 1,
     "priced": 13,
-    "priced_close_window_not_open": 1,
-    "retry_cooldown": 15
+    "priced_close_window_not_open": 1
   },
   "skipped": [
     "Benfica|Lech Pozna\u0144 (priced)",
-    "Olimpia|Deportivo Recoleta (retry cooldown (6h after failed attempt))",
     "FC Twente|Pafos FC (priced)",
-    "Crvena Zvezda|Inter Club d'Escaldes (retry cooldown (6h after failed attempt))",
-    "CD Olimpia|Juticalpa (retry cooldown (6h after failed attempt))",
+    "Monaco|FC Nordsjaelland (priced)",
     "Lillestr\u00f8m|Viktoria Plze\u0148 (priced)",
     "AC Milan|Ferencvarosi TC (priced)",
-    "Botafogo|Atl\u00e9tico Mineiro (retry cooldown (6h after failed attempt))",
-    "Monaco|FC Nordsjaelland (priced)",
+    "Panathinaikos|CSKA Sofia (priced)",
     "Monaco|Nordsj\u00e6lland (priced)",
-    "Municipal Lime\u00f1o|Fuerte San Francisco (retry cooldown (6h after failed attempt))",
     "Trabzonspor|SC Freiburg (priced)",
     "Thun|Hearts (priced)",
-    "Celtic|Be\u015fikta\u015f (retry cooldown (6h after failed attempt))",
-    "Panathinaikos|CSKA Sofia (priced)",
-    "KuPS|Gent (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch FC Midtjylland|Ajax: pick legacy display says 17:45 SAST, captured rows say 19:45 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "FC Midtjylland|Ajax (priced, close window not open)",
     "Sturm Graz|Celje (priced)",
-    "Bayer Leverkusen|Marseille (retry cooldown (6h after failed attempt))",
-    "Levski Sofia|Jagiellonia (retry cooldown (6h after failed attempt))",
     "Getafe|Brighton (priced)",
     "Sturm Graz|NK Celje (priced)",
-    "Puntarenas FC|San Carlos (retry cooldown (6h after failed attempt))",
-    "Rubio \u00d1\u00fa|Sportivo Luque\u00f1o (retry cooldown (6h after failed attempt))",
-    "Valenciennes|Orl\u00e9ans (retry cooldown (6h after failed attempt))",
-    "Al Kholood|Al Khaleej (retry cooldown (6h after failed attempt))",
-    "Riga|Jablonec (priced)",
-    "S\u00e3o Paulo|Corinthians (retry cooldown (6h after failed attempt))",
-    "Metropolitanos FC|Carabobo FC (retry cooldown (6h after failed attempt))"
+    "Riga|Jablonec (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "ok",
+  "unmatched": [
+    "Olimpia vs Deportivo Recoleta (league not covered: Division 1)",
+    "CD Olimpia vs Juticalpa (league not covered: Honduras: Liga Nacional)",
+    "Botafogo vs Atl\u00e9tico Mineiro (league not covered: Serie A)",
+    "Municipal Lime\u00f1o vs Fuerte San Francisco (league not covered: El Salvador: Primera Division)",
+    "Puntarenas FC vs San Carlos (league not covered: Costa Rica: Primera Divisi\u00f3n)",
+    "Rubio \u00d1\u00fa vs Sportivo Luque\u00f1o (league not covered: Division 1)",
+    "Valenciennes vs Orl\u00e9ans (league not covered: Ligue 3)",
+    "Al Kholood vs Al Khaleej (league not covered: Pro League)",
+    "S\u00e3o Paulo vs Corinthians (league not covered: Serie A)",
+    "Metropolitanos FC vs Carabobo FC (league not covered: Venezuela: Primera Divisi\u00f3n)",
+    "Crvena Zvezda vs Inter Club d'Escaldes (no event in soccer_uefa_europa_conference_league)",
+    "KuPS vs Gent (no event in soccer_uefa_europa_conference_league)",
+    "Celtic vs Be\u015fikta\u015f (no event in soccer_uefa_europa_league)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Costa Rica: Primera Divisi\u00f3n": 1,
+    "league not covered: Division 1": 2,
+    "league not covered: El Salvador: Primera Division": 1,
+    "league not covered: Honduras: Liga Nacional": 1,
+    "league not covered: Ligue 3": 1,
+    "league not covered: Pro League": 1,
+    "league not covered: Serie A": 2,
+    "league not covered: Venezuela: Primera Divisi\u00f3n": 1,
+    "no event in soccer_uefa_europa_conference_league": 2,
+    "no event in soccer_uefa_europa_league": 1
+  }
 }
