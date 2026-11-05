@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 2,
@@ -29,7 +29,7 @@
         "selection_unmapped": 7
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -57,7 +57,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-06' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -176,11 +176,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 14896
+        "out_of_window": 15086
       },
       "pa_matched": 0,
-      "pa_raw": 797,
-      "pa_scored": 14896,
+      "pa_raw": 808,
+      "pa_scored": 15086,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -230,41 +230,31 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 11,
-        "board_league_count": 6,
+        "board_fixtures": 6,
+        "board_league_count": 4,
         "board_leagues": {
-          "brazil_-_serie_a": 77,
-          "chile_-_cup": 9,
-          "england_-_league_1": 10,
-          "paraguay_-_primera_division": 82,
-          "uefa_-_champions_league": 1,
-          "venezuela_-_primera_division": 21
+          "brazil_-_serie_a": 171,
+          "colombia_-_primera_a": 20,
+          "paraguay_-_primera_division": 4,
+          "venezuela_-_primera_division": 5
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 20,
+        "board_team_count": 12,
         "board_team_names": {
-          "Athletico-PR": 52,
-          "Atl Paranaense": 6,
-          "Cerro Porteno": 75,
-          "Coquimbo Unido": 9,
-          "Deportivo La Guaira": 21,
-          "Dortmund": 1,
-          "Flamengo": 19,
-          "Gremio": 11,
-          "Gremio Porto Alegre": 8,
-          "Guarani Asuncion": 7,
-          "Libertad": 67,
-          "Libertad Asuncion": 8,
-          "Oxford United": 10,
-          "Portuguesa FC": 21,
-          "Reading": 10,
-          "Real Betis": 1,
-          "Sportivo Ameliano": 7,
-          "Union La Calera": 9,
-          "Vasco Da Gama": 52,
-          "Vasco da Gama": 6
+          "Atletico MG": 74,
+          "Atletico Mineiro": 22,
+          "Botafogo FR": 74,
+          "Botafogo RJ": 22,
+          "Carabobo": 5,
+          "Corinthians": 75,
+          "Cucuta Deportivo": 20,
+          "Deportivo Recoleta": 4,
+          "FC Metropolitanos": 5,
+          "Olimpia Asuncion": 4,
+          "Santa Fe": 20,
+          "Sao Paulo": 75
         },
         "board_truncated": false,
         "card_fixture_count": 0,
