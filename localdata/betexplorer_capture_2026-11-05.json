@@ -1,6 +1,16 @@
 {
-  "attempted": 1,
+  "attempted": 2,
   "attempted_fixtures": [
+    {
+      "avg_p": 72.17021276595744,
+      "away": "Inter Club d'Escaldes",
+      "date": "2026-11-05",
+      "home": "Crvena Zvezda",
+      "league": "Europa Conference League",
+      "market": "ou_2.5",
+      "pick": "over",
+      "w_score": 0.6681
+    },
     {
       "avg_p": 60.0,
       "away": "Gent",
@@ -13,19 +23,21 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 1,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 25,
-  "captured_at": "2026-11-04T22:33:37.873937+00:00",
+  "cache_only": 1,
+  "candidate_fixtures": 22,
+  "captured_at": "2026-11-05T01:46:57.440671+00:00",
   "date": "2026-11-05",
-  "deferred_fixtures": 24,
-  "errors": [],
+  "deferred_fixtures": 21,
+  "errors": [
+    "BetExplorerCoolingDown"
+  ],
   "fixtures_with_rows": 1,
   "market_budget_stop": false,
-  "market_requests": 3,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 9,
     "challenge_pages": 0,
@@ -39,7 +51,7 @@
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": false,
+  "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
   "network_attempted": 1,
   "quoted_fixtures": [
@@ -54,7 +66,7 @@
       "w_score": 0.6453
     }
   ],
-  "requests": 8,
+  "requests": 3,
   "rows": 3,
   "schema": 1,
   "status": "ok"

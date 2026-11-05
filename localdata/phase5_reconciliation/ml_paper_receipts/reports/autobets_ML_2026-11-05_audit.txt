@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-05
 ==============================================================
-CURRENT PAPER BANK (all dates): 78.346 units · free 75.139 / reserved 3.207
-2 paper accas · 2 ticket publications · 0 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 78.346 units · free 73.289 / reserved 5.057
+4 paper accas · 4 ticket publications · 0 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -20,6 +20,22 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
 
    FC Midtjylland vs Ajax · KICKOFF 2026-11-05 19:45 SAST
       Home Win (1X2) @2.780 · ML 47.2% · SKIPPED_VETO
+
+[PAPER ACCA #3] @3.225 — 0.710310 paper units — 1xBet
+   Published 2026-11-05 04:16:55 SAST · reference P3/1
+   Benfica vs Lech Poznań · KICKOFF 2026-11-05 22:00 SAST
+      Home Win (1X2) @1.160 · ML 86.4% · SKIPPED_VETO
+
+   FC Midtjylland vs Ajax · KICKOFF 2026-11-05 19:45 SAST
+      Home Win (1X2) @2.780 · ML 47.2% · SKIPPED_VETO
+
+[PAPER ACCA #4] @6.076 — 1.139945 paper units — Betsson
+   Published 2026-11-05 04:19:38 SAST · reference P4/1
+   Lillestrøm vs Viktoria Plzeň · KICKOFF 2026-11-05 19:45 SAST
+      Match Under 2.5 Goals @2.450 · ML 48.9% · SKIPPED_VETO
+
+   Thun vs Hearts · KICKOFF 2026-11-05 19:45 SAST
+      Match Under 2.5 Goals @2.480 · ML 49.4% · SKIPPED_VETO
 
 PUBLICATION & LEG DETAILS
 Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
@@ -58,6 +74,42 @@ P2 · 2026-11-05 01:09:52 SAST · ACCA #2
    Rejections: data quality: 4; fixture date or prior model unproven: 1; outside rolling window or unproven kickoff: 1; quote identity unproven: 6161; quote or probability unavailable: 296
    ACCA #2 / leg 1: source forecast 79.8% · gap +6.6 pp · quote age 0.62h at decision
    ACCA #2 / leg 2: source forecast 44.7% · gap +2.6 pp · quote age 0.62h at decision
+   Learning: fitted_prior_paper_errors
+
+P3 · 2026-11-05 04:16:55 SAST · ACCA #3
+   Receipt 20261105T021644689442Z · status paper_accas
+   Frozen at 2026-11-05T02:16:55.858104+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861
+   Decision window 2026-11-05T02:16:44.689442+00:00 → 2026-11-06T02:16:44.689442+00:00
+   Bank at decision: 78.345774 paper units
+   Available at decision: 75.138796 paper units
+   Reserved at decision: 3.206978 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.917288 units per canonical fixture
+   Reservation 1.510166 → 0.710310 units · released/idle 0.799856; no refill
+   2026-11-05 benfica vs lechpoznan: new 0.710310 + prior open 3.206978 · unused new budget 0.000000 units
+   2026-11-05 midtjylland vs ajax: new 0.710310 + prior open 3.206978 · unused new budget 0.000000 units
+   Coverage: candidate count: 208; candidate fixtures: 6; slate rows: 63; status: inputs_available
+   Rejections: data quality: 2; fixture date or prior model unproven: 2; outside rolling window or unproven kickoff: 7; quote identity unproven: 44; quote or probability unavailable: 588
+   ACCA #3 / leg 1: source forecast 79.8% · gap +6.6 pp · quote age 3.74h at decision
+   ACCA #3 / leg 2: source forecast 44.7% · gap +2.5 pp · quote age 0.50h at decision
+   Learning: fitted_prior_paper_errors
+
+P4 · 2026-11-05 04:19:38 SAST · ACCA #4
+   Receipt 20261105T021927430304Z · status paper_accas
+   Frozen at 2026-11-05T02:19:38.206996+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 9680b807175957f17797e808752fc53f2902581a95e8e8ef04dfc9de1bab302c
+   Decision window 2026-11-05T02:19:27.430304+00:00 → 2026-11-06T02:19:27.430304+00:00
+   Bank at decision: 78.345774 paper units
+   Available at decision: 74.428486 paper units
+   Reserved at decision: 3.917288 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.917288 units per canonical fixture
+   Reservation 1.139945 → 1.139945 units · released/idle 0.000000; no refill
+   2026-11-05 lillestrom vs viktoriaplzen: new 1.139945 + prior open 0.000000 · unused new budget 2.777343 units
+   2026-11-05 thun vs hearts: new 1.139945 + prior open 0.000000 · unused new budget 2.777343 units
+   Coverage: candidate count: 103; candidate fixtures: 4; slate rows: 33; status: inputs_available
+   Rejections: data quality: 1; fixture budget exhausted: 3; fixture date or prior model unproven: 1; outside rolling window or unproven kickoff: 7; quote identity unproven: 22; quote or probability unavailable: 221
+   ACCA #4 / leg 1: source forecast 32.4% · gap +16.5 pp · quote age 3.78h at decision
+   ACCA #4 / leg 2: source forecast 38.8% · gap +10.6 pp · quote age 3.78h at decision
    Learning: fitted_prior_paper_errors
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
