@@ -341,22 +341,22 @@ Performance of deep context-derived recommended enhancements overlay:
 - **Overall Hit Rate**: 74.6%
 
 ### Breakdown by Enhancement Type:
-- `away_over_05`: recommended=15, settled=15, hit_rate=86.7% (hits=13/recommended=15), priced_n=1, priced_ROI=0.64 (denominator=1), registry_processed=67, class=priced
-- `away_under_15`: recommended=8, settled=8, hit_rate=87.5% (hits=7/recommended=8), priced_n=7, priced_ROI=1.471429 (denominator=7), registry_processed=16, class=priced
-- `away_under_25`: recommended=11, settled=11, hit_rate=81.8% (hits=9/recommended=11), priced_n=11, priced_ROI=0.348182 (denominator=11), registry_processed=46, class=priced
+- `away_over_05`: recommended=15, settled=15, hit_rate=86.7% (hits=13/recommended=15), priced_n=0, priced_ROI=None (denominator=0), registry_processed=67, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `away_under_15`: recommended=8, settled=8, hit_rate=87.5% (hits=7/recommended=8), priced_n=0, priced_ROI=None (denominator=0), registry_processed=16, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `away_under_25`: recommended=11, settled=11, hit_rate=81.8% (hits=9/recommended=11), priced_n=0, priced_ROI=None (denominator=0), registry_processed=46, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
 - `away_under_35`: recommended=56, settled=56, hit_rate=98.2% (hits=55/recommended=56), priced_n=0, priced_ROI=None (denominator=0), registry_processed=305, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
 - `btts_no`: recommended=8, settled=8, hit_rate=37.5% (hits=3/recommended=8), priced_n=5, priced_ROI=-0.45 (denominator=5), registry_processed=12, class=priced
 - `btts_yes`: recommended=5, settled=5, hit_rate=100.0% (hits=5/recommended=5), priced_n=3, priced_ROI=0.853333 (denominator=3), registry_processed=23, class=priced
-- `home_over_05`: recommended=19, settled=19, hit_rate=84.2% (hits=16/recommended=19), priced_n=2, priced_ROI=0.345 (denominator=2), registry_processed=189, class=priced
-- `home_over_15`: recommended=2, settled=2, hit_rate=100.0% (hits=2/recommended=2), priced_n=1, priced_ROI=1.8 (denominator=1), registry_processed=13, class=priced
-- `home_under_15`: recommended=2, settled=2, hit_rate=100.0% (hits=2/recommended=2), priced_n=2, priced_ROI=0.381 (denominator=2), registry_processed=9, class=priced
-- `home_under_25`: recommended=2, settled=2, hit_rate=0.0% (hits=0/recommended=2), priced_n=2, priced_ROI=-1.0 (denominator=2), registry_processed=62, class=priced
-- `home_under_35`: recommended=20, settled=20, hit_rate=90.0% (hits=18/recommended=20), priced_n=2, priced_ROI=0.33 (denominator=2), registry_processed=77, class=priced
-- `match_over_15`: recommended=21, settled=21, hit_rate=81.0% (hits=17/recommended=21), priced_n=15, priced_ROI=0.189 (denominator=15), registry_processed=75, class=priced
-- `match_over_25`: recommended=190, settled=190, hit_rate=64.2% (hits=122/recommended=190), priced_n=167, priced_ROI=0.041359 (denominator=167), registry_processed=768, class=priced
-- `match_over_35`: recommended=18, settled=18, hit_rate=77.8% (hits=14/recommended=18), priced_n=11, priced_ROI=1.036364 (denominator=11), registry_processed=49, class=priced
+- `home_over_05`: recommended=19, settled=19, hit_rate=84.2% (hits=16/recommended=19), priced_n=0, priced_ROI=None (denominator=0), registry_processed=189, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `home_over_15`: recommended=2, settled=2, hit_rate=100.0% (hits=2/recommended=2), priced_n=0, priced_ROI=None (denominator=0), registry_processed=13, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `home_under_15`: recommended=2, settled=2, hit_rate=100.0% (hits=2/recommended=2), priced_n=0, priced_ROI=None (denominator=0), registry_processed=9, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `home_under_25`: recommended=2, settled=2, hit_rate=0.0% (hits=0/recommended=2), priced_n=0, priced_ROI=None (denominator=0), registry_processed=62, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `home_under_35`: recommended=20, settled=20, hit_rate=90.0% (hits=18/recommended=20), priced_n=0, priced_ROI=None (denominator=0), registry_processed=77, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
+- `match_over_15`: recommended=21, settled=21, hit_rate=81.0% (hits=17/recommended=21), priced_n=14, priced_ROI=0.165 (denominator=14), registry_processed=75, class=priced
+- `match_over_25`: recommended=190, settled=190, hit_rate=64.2% (hits=122/recommended=190), priced_n=167, priced_ROI=0.040659 (denominator=167), registry_processed=768, class=priced
+- `match_over_35`: recommended=18, settled=18, hit_rate=77.8% (hits=14/recommended=18), priced_n=10, priced_ROI=0.937 (denominator=10), registry_processed=49, class=priced
 - `match_under_35`: recommended=8, settled=8, hit_rate=25.0% (hits=2/recommended=8), priced_n=7, priced_ROI=-0.625714 (denominator=7), registry_processed=15, class=priced
-- `match_under_45`: recommended=21, settled=21, hit_rate=85.7% (hits=18/recommended=21), priced_n=10, priced_ROI=0.5243 (denominator=10), registry_processed=35, class=priced
+- `match_under_45`: recommended=21, settled=21, hit_rate=85.7% (hits=18/recommended=21), priced_n=0, priced_ROI=None (denominator=0), registry_processed=35, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
 
 ## Possible Events (🔥) Full-Surface Audit
 
