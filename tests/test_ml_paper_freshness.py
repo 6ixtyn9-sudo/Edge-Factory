@@ -11,6 +11,7 @@ import scripts.auto_tickets as at
 from edgefactory import ml_paper as mp
 from edgefactory.enh_pricing import _betexplorer_asof_index, load_prices_index
 from edgefactory.util import norm_team
+from test_ml_paper import synthetic_oddspapi_provenance
 
 
 def offer(row, source, stamp):
@@ -18,6 +19,7 @@ def offer(row, source, stamp):
         "home": row["home"], "away": row["away"], "market": "1x2", "selection": "home",
         "odds": row["odds"], "bookmaker": row["bookmaker"], "source": source,
         "captured_at": stamp, "kickoff": row["kickoff_utc"],
+        "provenance": row.get("odds_provenance"),
     }
 
 
@@ -80,6 +82,7 @@ def test_oddspapi_aliases_keep_six_hours_at_freeze_on_all_paths(
     row = pick()
     stamp = (FREEZE - age).isoformat()
     row.update(odds_source=source, odds_captured_at=stamp)
+    row["odds_provenance"] = synthetic_oddspapi_provenance(row)
     index = {}
     if path == "board":
         row["price_board"] = [offer(row, source, stamp)]
@@ -87,7 +90,7 @@ def test_oddspapi_aliases_keep_six_hours_at_freeze_on_all_paths(
     elif path == "fixture_index":
         pair = (norm_team(row["home"]), norm_team(row["away"]))
         index = {"fixture_quotes": {pair: {("ou_2.5", "over"): [
-            (2.0, "Pinnacle", stamp, source, row["kickoff_utc"], None,
+            (2.0, "Pinnacle", stamp, source, row["kickoff_utc"], row["odds_provenance"],
              (row["home"], row["away"]))
         ]}}}
         row["odds"] = None
