@@ -49,6 +49,7 @@ from . import price_sources as psrc
 from .enh_pricing import (
     MARKET_PRICE_MAP,
     ODDSPAPI_MAX_AGE_H,
+    ODDSPAPI_MIN_SCHEMA_VERSION,
     _betexplorer_asof_index,
     betexplorer_price_rejection,
     load_prices_index,
@@ -484,6 +485,23 @@ def _quote_max_age(source):
     return QUOTE_MAX_AGE
 
 
+def _quote_generation_ok(source, provenance):
+    """No legacy OddsPapi board/draft bypass of the normalized-store floor.
+
+    This is a parser-generation witness, not native-provider authentication.
+    Missing provenance remains readable in frozen history, never new supply.
+    """
+    if psrc.spec(source).family != psrc.spec("oddspapi").family:
+        return True
+    if not isinstance(provenance, dict) or provenance.get("schema") != "normalized_odds_quote_v1":
+        return False
+    row = provenance.get("row")
+    try:
+        return isinstance(row, dict) and int(str(row.get("schema_version") or 0)) >= ODDSPAPI_MIN_SCHEMA_VERSION
+    except (TypeError, ValueError):
+        return False
+
+
 def _quote_ok(
     row, quote, now, kickoff, source_guard, min_leg_odds, *, market, selection, freeze_at=None, rolling=False
 ):
@@ -497,6 +515,7 @@ def _quote_ok(
         or not psrc.spec(source).named_bookmaker
         or probe.get("enhancement_priced") is not True
         or probe.get("enhancement_price_rejection")
+        or not _quote_generation_ok(source, probe.get("enhancement_price_provenance"))
     ):
         return False
     # The shared live validator expects a same-day decision. In rolling ML
@@ -627,6 +646,7 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
             "source": row.get("odds_source"),
             "captured_at": row.get("odds_captured_at"),
             "kickoff": row.get("kickoff_utc"),
+            "provenance": row.get("odds_provenance"),
         }
         for q in [primary, *(row.get("price_board") or [])]:
             if (
@@ -647,6 +667,7 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
                         q.get("captured_at"),
                         q.get("source"),
                         q.get("kickoff"),
+                        q.get("provenance"),
                     ),
                 )
             )
@@ -654,7 +675,8 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
         pair = (norm_team(row.get("home")), norm_team(row.get("away")))
         for mapping, rows in (index.get("fixture_quotes", {}).get(pair, {}) or {}).items():
             market = (
-                "double_chance"
+                "1x2" if mapping in {("1x2", "home"), ("1x2", "draw"), ("1x2", "away")}
+                else "double_chance"
                 if mapping in {("dc", "1x"), ("dc", "x2"), ("dc", "12")}
                 else inverse.get(mapping)
             )
@@ -1621,6 +1643,9 @@ def _publish_receipt(path, payload):
     validate_record(payload, payload["date"])
     _validate_concentration_record(payload, required=True)
     _require_mutually_exclusive(payload["accas"])
+    if any(not _quote_generation_ok(c.get("price_source"), c.get("price_provenance"))
+           for c in payload["candidates"]):
+        raise ValueError("superseded or unproven OddsPapi parser generation in new publication")
     return _write_once(path, payload)
 
 
@@ -1942,6 +1967,11 @@ def capture(
                     "rejections": {"no_pre_cutoff_draft": 1},
                 }
             else:
+                if any(not _quote_generation_ok(c.get("price_source"), c.get("price_provenance"))
+                       for c in draft["candidates"]):
+                    print("autobets_ML superseded OddsPapi parser-generation draft not sealed; "
+                          "draft preserved, no late replacement or rewritten history")
+                    return None
                 payload = {k: v for k, v in draft.items() if k != "sha256"}
                 payload["draft_sha256"] = draft["sha256"]
                 payload["status"] = "paper_accas" if draft["accas"] else "no_paper_bet"
@@ -2044,6 +2074,7 @@ def capture(
             "status": "draft_not_yet_frozen",
             "policy": {
                 "quote_max_age_hours": QUOTE_MAX_AGE.total_seconds() / 3600,
+                "oddspapi_min_schema_version": ODDSPAPI_MIN_SCHEMA_VERSION,
                 "quote_age_basis": "later_of_decision_and_scheduled_freeze_original_capture",
                 "stricter_source_limits_retained": True,
                 "odds_band": None,
@@ -2313,6 +2344,7 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
                        "max_aggregate_bank_exposure": MAX_PAPER_EXPOSURE, "odds_band": None,
                        "quote_max_age_hours": QUOTE_MAX_AGE.total_seconds() / 3600,
                        "stricter_source_limits_retained": True, "minimum_legs": 2,
+                       "oddspapi_min_schema_version": ODDSPAPI_MIN_SCHEMA_VERSION,
                        "probability_basis": "product_assumes_cross_fixture_independence_not_validated",
                        "fixture_concentration": _fixture_concentration_policy(
                            report["paper_bank_units"])},
@@ -2797,6 +2829,30 @@ def render_daily_card(history, report=None, *, audit=False):
                 age = quote_age_at_decision(leg, row)
                 quote_age = f"quote age {age / 3600:.2f}h at decision" if age is not None else "quote age unavailable"
                 leg_diagnostics.append(f"   ACCA #{number} / leg {leg_index}: {comparison} · {quote_age}")
+                base_p = leg.get("base_probability")
+                lineage = (f"base {base_p:.1%} → adjusted {leg['probability']:.1%}"
+                           f" · learning move {(leg['probability'] - base_p) * 100:+.1f} pp"
+                           if base_p is not None else "base probability unavailable")
+                leg_diagnostics.append(
+                    f"      {lineage} · price break-even {1 / leg['odds']:.1%}"
+                    " (1/odds, not a fair probability or proof of value)"
+                )
+                provenance = leg.get("price_provenance") or {}
+                if provenance.get("schema") == "normalized_odds_quote_v1":
+                    witness = provenance.get("row") or {}
+                    leg_diagnostics.append(
+                        f"      Quote witness: {provenance.get('archive')}"
+                        f" · {witness.get('market')} / {witness.get('selection')}"
+                        f" · bookmaker market {witness.get('bookmaker_market_id') or 'unavailable'}"
+                        f" · outcome {witness.get('outcome_key') or 'unavailable'}"
+                        f" · provider label {witness.get('provider_market_name') or 'unavailable'}"
+                        " · normalized row only; native payload unverified"
+                    )
+                elif not _quote_generation_ok(leg.get("price_source"), provenance):
+                    leg_diagnostics.append(
+                        "      LEGACY OddsPapi quote: superseded/unproven parser generation; "
+                        "bookings/goal mapping not certified. Historical position unchanged."
+                    )
             lines.append("")
             number += 1
         if row["accas"]:
@@ -2961,6 +3017,28 @@ def render_performance(report):
         f"LEARNING last decision: {learning.get('fixtures', 0)} resolved prior-day fixtures; "
         "dynamic calibration + success tilt from first results, not an automatic review/promotion trigger\n"
     )
+    for label, stats in (("POOL", pool), ("SELECTED", selected)):
+        if not stats.get("resolved_observations", 0):
+            evidence += f"FORWARD {label}: no resolved paired base/adjusted errors yet\n"
+            continue
+        base_brier, adjusted_brier = stats["base_brier"], stats["calibrated_brier"]
+        base_logloss, adjusted_logloss = stats["base_logloss"], stats["calibrated_logloss"]
+        changes = (adjusted_brier - base_brier, adjusted_logloss - base_logloss)
+        if all(d > 0 for d in changes):
+            comparison = "adjusted worse on both metrics"
+        elif all(d < 0 for d in changes):
+            comparison = "adjusted better on both metrics"
+        elif all(d == 0 for d in changes):
+            comparison = "unchanged errors"
+        else:
+            comparison = "mixed/tied errors"
+        evidence += (
+            f"FORWARD {label}: Brier {base_brier:.4f} → {adjusted_brier:.4f}"
+            f" · log loss {base_logloss:.4f} → {adjusted_logloss:.4f} (base → adjusted)\n"
+            f"        {comparison}; {stats['resolved_fixtures']} fixtures / "
+            f"{stats['resolved_observations']} observations\n"
+        )
+    evidence += "        Fixture-weighted, overlapping samples; descriptive, not significance or a policy gate.\n"
     if paired.get("paired_observations", 0):
         evidence += (
             f"PAIRED   {paired['paired_fixtures']} fixtures / {paired['paired_observations']} observations · "
@@ -2983,6 +3061,8 @@ def render_performance(report):
         f"DRAWDOWN {report['max_daily_close_drawdown_units']:.3f} paper units / {report['max_daily_close_drawdown_fraction']:.1%} (ticket-date marks; pending at cost)\n"
         f"DAYS     {report['bet_days']} bet / {report['no_bet_days']} no-bet · {report['missed_freeze_days']} missed freeze\n\n"
         + history_text + "\nLEARNING & EVIDENCE\n" + evidence + "\n"
+        "DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.\n"
+        "             Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.\n\n"
         "STAKING  quarter Kelly, own paper bank only; ROI is profit / settled stakes\n"
         f"FIXTURES new publications: gross stake <= {MAX_FIXTURE_STAKE_FRACTION:.1%} of TOTAL paper bank per canonical fixture;\n"
         "         downward-only, no refill; existing frozen positions remain unchanged\n"
