@@ -1,0 +1,71 @@
+autobets_ML TICKETS — 2026-11-06
+==============================================================
+CURRENT PAPER BANK (all dates): 62.677 units · free 60.937 / reserved 1.740
+2 paper accas · 2 ticket publications · 0 scans without tickets · times in SAST
+PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
+Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
+
+[PAPER ACCA #1] @8.360 — 0.876028 paper units — Tipico
+   Published 2026-11-06 00:32:06 SAST · reference P1/1
+   Wisła Kraków vs Cracovia Kraków · KICKOFF 2026-11-06 21:30 SAST
+      Match Under 2.5 Goals @2.200 · ML 52.3% · SKIPPED_VETO
+
+   Motor Lublin vs Wisła Płock · KICKOFF 2026-11-06 19:00 SAST
+      Draw (1X2) @3.800 · ML 41.2% · SKIPPED_VETO
+
+[PAPER ACCA #2] @8.360 — 0.863784 paper units — Tipico
+   Published 2026-11-06 00:34:19 SAST · reference P2/1
+   Wisła Kraków vs Cracovia Kraków · KICKOFF 2026-11-06 21:30 SAST
+      Match Under 2.5 Goals @2.200 · ML 52.3% · SKIPPED_VETO
+
+   Motor Lublin vs Wisła Płock · KICKOFF 2026-11-06 19:00 SAST
+      Draw (1X2) @3.800 · ML 41.2% · SKIPPED_VETO
+
+PUBLICATION & LEG DETAILS
+Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
+Rejection counts are checks, not unique fixtures; checks can recur across scans.
+P1 · 2026-11-06 00:32:06 SAST · ACCA #1
+   Receipt 20261105T223158674729Z · status paper_accas
+   Frozen at 2026-11-05T22:32:06.198075+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 2548d269c4991e5898dc72536f66b46735cc86a0e61e1a6d0cdc3d92e335e16d
+   Decision window 2026-11-05T22:31:58.674729+00:00 → 2026-11-06T22:31:58.674729+00:00
+   Bank at decision: 62.676622 paper units
+   Available at decision: 62.676622 paper units
+   Reserved at decision: 0.000000 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.133831 units per canonical fixture
+   Reservation 0.876028 → 0.876028 units · released/idle 0.000000; no refill
+   2026-11-06 motorlublin vs wislaplock: new 0.876028 + prior open 0.000000 · unused new budget 2.257803 units
+   2026-11-06 wislakrakow vs cracoviakrakow: new 0.876028 + prior open 0.000000 · unused new budget 2.257803 units
+   Coverage: candidate count: 210; candidate fixtures: 3; slate rows: 60; status: inputs_available
+   Rejections: data quality: 5; outside rolling window or unproven kickoff: 34; quote or probability unavailable: 305
+   ACCA #1 / leg 1: source forecast 43.3% · gap +9.0 pp · quote age 0.15h at decision
+      base 44.6% → adjusted 52.3% · learning move +7.7 pp · price break-even 45.5% (1/odds, not a fair probability or proof of value)
+   ACCA #1 / leg 2: source forecast 26.1% · gap +15.2 pp · quote age 0.15h at decision
+      base 36.9% → adjusted 41.2% · learning move +4.3 pp · price break-even 26.3% (1/odds, not a fair probability or proof of value)
+   Learning: fitted_prior_paper_errors
+
+P2 · 2026-11-06 00:34:19 SAST · ACCA #2
+   Receipt 20261105T223412400599Z · status paper_accas
+   Frozen at 2026-11-05T22:34:19.735358+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 e03722ecba73d796de99ff7456d09e785bb8b17bea48bc3b770c3ec27cc07ee8
+   Decision window 2026-11-05T22:34:12.400599+00:00 → 2026-11-06T22:34:12.400599+00:00
+   Bank at decision: 62.676622 paper units
+   Available at decision: 61.800594 paper units
+   Reserved at decision: 0.876028 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.133831 units per canonical fixture
+   Reservation 0.863784 → 0.863784 units · released/idle 0.000000; no refill
+   2026-11-06 motorlublin vs wislaplock: new 0.863784 + prior open 0.876028 · unused new budget 1.394019 units
+   2026-11-06 wislakrakow vs cracoviakrakow: new 0.863784 + prior open 0.876028 · unused new budget 1.394019 units
+   Coverage: candidate count: 210; candidate fixtures: 3; slate rows: 27; status: inputs_available
+   Rejections: data quality: 5; outside rolling window or unproven kickoff: 1; quote or probability unavailable: 305
+   ACCA #2 / leg 1: source forecast 43.3% · gap +9.0 pp · quote age 0.19h at decision
+      base 44.6% → adjusted 52.3% · learning move +7.7 pp · price break-even 45.5% (1/odds, not a fair probability or proof of value)
+   ACCA #2 / leg 2: source forecast 26.1% · gap +15.2 pp · quote age 0.19h at decision
+      base 36.9% → adjusted 41.2% · learning move +4.3 pp · price break-even 26.3% (1/odds, not a fair probability or proof of value)
+   Learning: fitted_prior_paper_errors
+
+ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
+STAKING    Gross fixture exposure counts the full acca stake once per fixture; no netting.
+           Fixture subtotals overlap; do not add them to bank commitments.
+           Decision-specific limits are in the audit report; old positions are not resized.
+Paper only. No real-money stakes or automatic promotion.

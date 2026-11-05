@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-05T21:51:15",
+  "generated_at": "2026-11-06T00:43:53",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 16.485449,
-  "multiple": 0.16485449,
+  "bank_pct": 16.382413999999997,
+  "multiple": 0.16382413999999998,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 22,
+  "bet_days": 23,
   "accas": {
-    "wins": 16,
-    "losses": 31
+    "wins": 17,
+    "losses": 32
   },
-  "open_slips": [
-    {
-      "date": "2026-11-05",
-      "staked_pct": 4.1214
-    }
-  ],
+  "open_slips": [],
   "events": [],
   "history": [
     {
@@ -6970,6 +6965,227 @@
       ],
       "bank_pct": 16.4854,
       "close_pct": 16.4854
+    },
+    {
+      "date": "2026-11-05",
+      "staked_pct": 4.1214,
+      "returned_pct": 4.0184,
+      "accas": [
+        {
+          "odds": 2.33,
+          "won": false,
+          "stake_pct": 2.0607,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Trabzonspor vs SC Freiburg",
+              "pick": "over",
+              "odds": 1.55,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "William Hill",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-04T22:32:26.743689+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-05",
+                "Trabzonspor",
+                "SC Freiburg"
+              ],
+              "prob": 0.7162,
+              "cohort_evidence": {
+                "rate": 0.7162,
+                "n": 740,
+                "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                "as_of_exclusive": "2026-11-05",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 530,
+                "cohort_lower_bound": 0.6826819482528333,
+                "price_context": {
+                  "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                  "selection": "over",
+                  "league": "Europa Conference League",
+                  "book": "William Hill",
+                  "source": "theoddsapi",
+                  "price": 1.55,
+                  "captured_at": "2026-11-04T22:32:26.743689+00:00",
+                  "decision_at": "2026-11-05T09:30:54+02:00",
+                  "kickoff": "2026-11-05T17:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6237112222731657,
+              "ml_model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7111661460828431,
+              "floor_basis": "inherited",
+              "league": "Europa Conference League",
+              "shadow": true,
+              "price_kickoff": "2026-11-05T17:45:00Z"
+            },
+            {
+              "match": "AC Milan vs Ferencvarosi TC",
+              "pick": "over",
+              "odds": 1.5,
+              "result": null,
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "William Hill",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-04T22:32:25.910766+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-05",
+                "AC Milan",
+                "Ferencvarosi TC"
+              ],
+              "prob": 0.6311,
+              "cohort_evidence": {
+                "rate": 0.6311,
+                "n": 946,
+                "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+                "as_of_exclusive": "2026-11-05",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 597,
+                "cohort_lower_bound": 0.5998581599756401,
+                "price_context": {
+                  "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+                  "selection": "home",
+                  "league": "World: UEFA Europa League",
+                  "book": "William Hill",
+                  "source": "theoddsapi",
+                  "price": 1.5,
+                  "captured_at": "2026-11-04T22:32:25.910766+00:00",
+                  "decision_at": "2026-11-05T09:30:54+02:00",
+                  "kickoff": "2026-11-05T17:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6764650344210191,
+              "ml_model_key": "06cc63a6757fbc64a32c98cd20adfa2426a309854963aa74949937e7aedc71d9",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7111661460828431,
+              "floor_basis": "inherited",
+              "league": "World: UEFA Europa League",
+              "shadow": false,
+              "price_kickoff": "2026-11-05T17:45:00Z"
+            }
+          ]
+        },
+        {
+          "odds": 1.95,
+          "won": true,
+          "stake_pct": 2.0607,
+          "returned_pct": 4.0184,
+          "legs": [
+            {
+              "match": "Benfica vs Lech Pozna\u0144",
+              "pick": "over",
+              "odds": 1.3,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "William Hill",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-04T22:32:25.559642+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-05",
+                "Benfica",
+                "Lech Pozna\u0144"
+              ],
+              "prob": 0.7162,
+              "cohort_evidence": {
+                "rate": 0.7162,
+                "n": 740,
+                "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                "as_of_exclusive": "2026-11-05",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 530,
+                "cohort_lower_bound": 0.6826819482528333,
+                "price_context": {
+                  "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                  "selection": "over",
+                  "league": "Europa League",
+                  "book": "William Hill",
+                  "source": "theoddsapi",
+                  "price": 1.3,
+                  "captured_at": "2026-11-04T22:32:25.559642+00:00",
+                  "decision_at": "2026-11-05T09:30:54+02:00",
+                  "kickoff": "2026-11-05T20:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6441346897892994,
+              "ml_model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7111661460828431,
+              "floor_basis": "inherited",
+              "league": "Europa League",
+              "shadow": true,
+              "price_kickoff": "2026-11-05T20:00:00Z"
+            },
+            {
+              "match": "Thun vs Hearts",
+              "pick": "over",
+              "odds": 1.5,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "William Hill",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-04T22:32:26.865448+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-05",
+                "Thun",
+                "Hearts"
+              ],
+              "prob": 0.6748,
+              "cohort_evidence": {
+                "rate": 0.6748,
+                "n": 1393,
+                "contract_id": "pfc_ee214d4f2f00846fa78f56e3",
+                "as_of_exclusive": "2026-11-05",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 940,
+                "cohort_lower_bound": 0.64975104306606,
+                "price_context": {
+                  "contract_id": "pfc_ee214d4f2f00846fa78f56e3",
+                  "selection": "over",
+                  "league": "Europa Conference League",
+                  "book": "William Hill",
+                  "source": "theoddsapi",
+                  "price": 1.5,
+                  "captured_at": "2026-11-04T22:32:26.865448+00:00",
+                  "decision_at": "2026-11-05T09:30:54+02:00",
+                  "kickoff": "2026-11-05T17:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6634445849960058,
+              "ml_model_key": "4f4487c7e12015916a790d65d824c7141145aa2d9f301630345b5af3ae8d1afb",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7111661460828431,
+              "floor_basis": "inherited",
+              "league": "Europa Conference League",
+              "shadow": true,
+              "price_kickoff": "2026-11-05T17:45:00Z"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 16.3824,
+      "close_pct": 16.3824
     }
   ]
 }

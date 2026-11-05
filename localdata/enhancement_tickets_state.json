@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 16.485449,
+  "bank": 16.382413999999997,
   "cycle_base": 100.0,
   "history": [
     {
@@ -6953,24 +6953,35 @@
       ],
       "bank_pct": 16.4854,
       "close_pct": 16.4854
-    }
-  ],
-  "events": [],
-  "open_slips": [
+    },
     {
       "date": "2026-11-05",
+      "staked_pct": 4.1214,
+      "returned_pct": 4.0184,
       "accas": [
         {
+          "odds": 2.33,
+          "won": false,
+          "stake_pct": 2.0607,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "Trabzonspor vs SC Freiburg",
               "pick": "over",
-              "prob": 0.7162,
               "odds": 1.55,
-              "result": null,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "William Hill",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-04T22:32:26.743689+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-05",
+                "Trabzonspor",
+                "SC Freiburg"
+              ],
+              "prob": 0.7162,
               "cohort_evidence": {
                 "rate": 0.7162,
                 "n": 740,
@@ -6995,31 +7006,31 @@
               "ml_rank_probability": 0.6237112222731657,
               "ml_model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.7111661460828431,
               "floor_basis": "inherited",
               "league": "Europa Conference League",
-              "price_at": "2026-11-04T22:32:26.743689+00:00",
-              "price_kickoff": "2026-11-05T17:45:00Z",
-              "price_provenance": null,
               "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-05",
-                "Trabzonspor",
-                "SC Freiburg"
-              ]
+              "price_kickoff": "2026-11-05T17:45:00Z"
             },
             {
               "match": "AC Milan vs Ferencvarosi TC",
               "pick": "over",
-              "prob": 0.6311,
               "odds": 1.5,
               "result": null,
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "William Hill",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-04T22:32:25.910766+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-05",
+                "AC Milan",
+                "Ferencvarosi TC"
+              ],
+              "prob": 0.6311,
               "cohort_evidence": {
                 "rate": 0.6311,
                 "n": 946,
@@ -7044,42 +7055,39 @@
               "ml_rank_probability": 0.6764650344210191,
               "ml_model_key": "06cc63a6757fbc64a32c98cd20adfa2426a309854963aa74949937e7aedc71d9",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.7111661460828431,
               "floor_basis": "inherited",
               "league": "World: UEFA Europa League",
-              "price_at": "2026-11-04T22:32:25.910766+00:00",
-              "price_kickoff": "2026-11-05T17:45:00Z",
-              "price_provenance": null,
               "shadow": false,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-05",
-                "AC Milan",
-                "Ferencvarosi TC"
-              ]
+              "price_kickoff": "2026-11-05T17:45:00Z"
             }
-          ],
-          "odds": 2.33,
-          "stake_pct": 2.0607,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         },
         {
+          "odds": 1.95,
+          "won": true,
+          "stake_pct": 2.0607,
+          "returned_pct": 4.0184,
           "legs": [
             {
               "match": "Benfica vs Lech Pozna\u0144",
               "pick": "over",
-              "prob": 0.7162,
               "odds": 1.3,
-              "result": null,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "William Hill",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-04T22:32:25.559642+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-05",
+                "Benfica",
+                "Lech Pozna\u0144"
+              ],
+              "prob": 0.7162,
               "cohort_evidence": {
                 "rate": 0.7162,
                 "n": 740,
@@ -7104,31 +7112,31 @@
               "ml_rank_probability": 0.6441346897892994,
               "ml_model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.7111661460828431,
               "floor_basis": "inherited",
               "league": "Europa League",
-              "price_at": "2026-11-04T22:32:25.559642+00:00",
-              "price_kickoff": "2026-11-05T20:00:00Z",
-              "price_provenance": null,
               "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-05",
-                "Benfica",
-                "Lech Pozna\u0144"
-              ]
+              "price_kickoff": "2026-11-05T20:00:00Z"
             },
             {
               "match": "Thun vs Hearts",
               "pick": "over",
-              "prob": 0.6748,
               "odds": 1.5,
-              "result": null,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "William Hill",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-04T22:32:26.865448+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-05",
+                "Thun",
+                "Hearts"
+              ],
+              "prob": 0.6748,
               "cohort_evidence": {
                 "rate": 0.6748,
                 "n": 1393,
@@ -7153,35 +7161,23 @@
               "ml_rank_probability": 0.6634445849960058,
               "ml_model_key": "4f4487c7e12015916a790d65d824c7141145aa2d9f301630345b5af3ae8d1afb",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.7111661460828431,
               "floor_basis": "inherited",
               "league": "Europa Conference League",
-              "price_at": "2026-11-04T22:32:26.865448+00:00",
-              "price_kickoff": "2026-11-05T17:45:00Z",
-              "price_provenance": null,
               "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-05",
-                "Thun",
-                "Hearts"
-              ]
+              "price_kickoff": "2026-11-05T17:45:00Z"
             }
-          ],
-          "odds": 1.95,
-          "stake_pct": 2.0607,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         }
       ],
-      "staked_pct": 4.1214
+      "bank_pct": 16.3824,
+      "close_pct": 16.3824
     }
   ],
+  "events": [],
+  "open_slips": [],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,
