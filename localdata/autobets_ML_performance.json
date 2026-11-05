@@ -3,99 +3,99 @@
   "paper_only": true,
   "unit": "model_chosen_paper_stakes_compounding_own_bank",
   "base_paper_units": 100.0,
-  "paper_bank_units": 78.3457741792,
-  "paper_multiple": 0.7834577417920001,
-  "paper_committed_units": 15.669152,
-  "paper_free_units": 62.67662217920001,
-  "settled_stake_units": 34.529724,
-  "receipt_days": 4,
-  "decision_receipts": 33,
-  "bet_days": 4,
+  "paper_bank_units": 62.6766221792,
+  "paper_multiple": 0.626766221792,
+  "paper_committed_units": 1.7398120000000001,
+  "paper_free_units": 60.9368101792,
+  "settled_stake_units": 50.198876,
+  "receipt_days": 5,
+  "decision_receipts": 35,
+  "bet_days": 5,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
-  "settled_accas": 14,
+  "settled_accas": 29,
   "wins": 3,
-  "losses": 11,
-  "hit_rate": 0.21428571428571427,
-  "pending_accas": 15,
-  "unresolved_result_legs": 9,
-  "resolved_result_legs": 24,
-  "profit_units": -21.654225820799997,
-  "roi": -0.627118416029042,
-  "max_daily_close_drawdown_units": 21.6542258208,
-  "max_daily_close_drawdown_fraction": 0.216542258208,
+  "losses": 26,
+  "hit_rate": 0.10344827586206896,
+  "pending_accas": 2,
+  "unresolved_result_legs": 2,
+  "resolved_result_legs": 33,
+  "profit_units": -37.3233778208,
+  "roi": -0.7435102296075314,
+  "max_daily_close_drawdown_units": 37.3233778208,
+  "max_daily_close_drawdown_fraction": 0.37323377820799997,
   "drawdown_basis": "ticket_date_latest_known_result_marks_pending_at_cost_not_settlement_timeline",
   "drawdown_has_pending_results": true,
-  "selected_leg_brier_score": 0.23212376760882028,
+  "selected_leg_brier_score": 0.23684838917812195,
   "calibration": {
     "all_candidates": {
-      "resolved_fixtures": 18,
-      "resolved_observations": 225,
-      "base_brier": 0.21963303074745288,
-      "base_logloss": 0.6255294107682794,
-      "calibrated_brier": 0.23047942356931214,
-      "calibrated_logloss": 0.6507758400525661
+      "resolved_fixtures": 26,
+      "resolved_observations": 394,
+      "base_brier": 0.21682471995258817,
+      "base_logloss": 0.6166275687085881,
+      "calibrated_brier": 0.22438201038539862,
+      "calibrated_logloss": 0.6356000430554813
     },
     "selected_candidates": {
-      "resolved_fixtures": 14,
-      "resolved_observations": 19,
-      "base_brier": 0.2085359872132317,
-      "base_logloss": 0.6063643299628814,
-      "calibrated_brier": 0.2462785795343267,
-      "calibrated_logloss": 0.6879641606844905
+      "resolved_fixtures": 22,
+      "resolved_observations": 38,
+      "base_brier": 0.23708730444081735,
+      "base_logloss": 0.6820269955646358,
+      "calibrated_brier": 0.25699206412680425,
+      "calibrated_logloss": 0.7170484553866286
     },
     "source_comparison": {
       "basis": "frozen_market_matched_source_forecasts_not_independent_ground_truth",
       "weighting": "one_total_weight_per_fixture_within_each_group",
       "limitation": "descriptive_only_overlapping_groups_not_additive_no_significance_or_rule_changes",
       "all_candidates": {
-        "paired_fixtures": 18,
-        "paired_observations": 203,
-        "missing_source_fixtures": 8,
-        "missing_source_observations": 22,
-        "base_brier": 0.21313914480066046,
-        "base_logloss": 0.6095011185971617,
-        "model_brier": 0.22696110311190612,
-        "model_logloss": 0.6432014925926377,
-        "source_brier": 0.2035218884142081,
-        "source_logloss": 0.5876353545396428
+        "paired_fixtures": 26,
+        "paired_observations": 322,
+        "missing_source_fixtures": 11,
+        "missing_source_observations": 72,
+        "base_brier": 0.22114718389679996,
+        "base_logloss": 0.6262204202277956,
+        "model_brier": 0.22851514785162472,
+        "model_logloss": 0.6450776464364154,
+        "source_brier": 0.21559246273318028,
+        "source_logloss": 0.6148204274272899
       },
       "selected_candidates": {
-        "paired_fixtures": 14,
-        "paired_observations": 18,
-        "missing_source_fixtures": 1,
-        "missing_source_observations": 1,
-        "base_brier": 0.20066711158771458,
-        "base_logloss": 0.5873591440600338,
-        "model_brier": 0.23840970390880956,
-        "model_logloss": 0.6689589747816428,
-        "source_brier": 0.19858848741900098,
-        "source_logloss": 0.580506358549721
+        "paired_fixtures": 21,
+        "paired_observations": 32,
+        "missing_source_fixtures": 3,
+        "missing_source_observations": 6,
+        "base_brier": 0.23984971718343845,
+        "base_logloss": 0.6863336114076971,
+        "model_brier": 0.2566062427333667,
+        "model_logloss": 0.7132461772225803,
+        "source_brier": 0.23592104723284818,
+        "source_logloss": 0.671365145921343
       },
       "by_model_source_gap": {
         "lt_10pp": {
-          "paired_fixtures": 14,
-          "paired_observations": 129,
+          "paired_fixtures": 21,
+          "paired_observations": 218,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.17148502186479983,
-          "base_logloss": 0.5189758543397651,
-          "model_brier": 0.18024298772381284,
-          "model_logloss": 0.5428628248407128,
-          "source_brier": 0.17217806403923358,
-          "source_logloss": 0.5221515690267652
+          "base_brier": 0.19542657548821232,
+          "base_logloss": 0.5701684748996042,
+          "model_brier": 0.1963600542165159,
+          "model_logloss": 0.5760189485142624,
+          "source_brier": 0.193184228992,
+          "source_logloss": 0.5685366161351224
         },
         "10_to_lt_20pp": {
-          "paired_fixtures": 16,
-          "paired_observations": 70,
+          "paired_fixtures": 20,
+          "paired_observations": 100,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.2133922360171944,
-          "base_logloss": 0.6062134321503936,
-          "model_brier": 0.23717711530337832,
-          "model_logloss": 0.6605053092304968,
-          "source_brier": 0.19916670385054472,
-          "source_logloss": 0.5772843941423227
+          "base_brier": 0.2264711590357428,
+          "base_logloss": 0.6350412205713809,
+          "model_brier": 0.24066125785262504,
+          "model_logloss": 0.6689096790776776,
+          "source_brier": 0.2235195423382315,
+          "source_logloss": 0.630245886641933
         },
         "ge_20pp": {
           "paired_fixtures": 4,
@@ -112,8 +112,8 @@
         "unavailable": {
           "paired_fixtures": 0,
           "paired_observations": 0,
-          "missing_source_fixtures": 8,
-          "missing_source_observations": 22,
+          "missing_source_fixtures": 11,
+          "missing_source_observations": 72,
           "base_brier": null,
           "base_logloss": null,
           "model_brier": null,
@@ -124,28 +124,28 @@
       },
       "by_board_bucket": {
         "CAUTION": {
-          "paired_fixtures": 3,
-          "paired_observations": 9,
-          "missing_source_fixtures": 0,
-          "missing_source_observations": 0,
-          "base_brier": 0.3695650908502091,
-          "base_logloss": 0.9685610177247684,
-          "model_brier": 0.3627925554963985,
-          "model_logloss": 0.9638963993836073,
-          "source_brier": 0.36201286588728027,
-          "source_logloss": 0.9214497604468791
+          "paired_fixtures": 4,
+          "paired_observations": 15,
+          "missing_source_fixtures": 1,
+          "missing_source_observations": 2,
+          "base_brier": 0.34546016991569806,
+          "base_logloss": 0.9113442043164922,
+          "model_brier": 0.3413578595352719,
+          "model_logloss": 0.9104361654571627,
+          "source_brier": 0.3408109301493274,
+          "source_logloss": 0.8816219454270007
         },
         "SKIPPED_VETO": {
-          "paired_fixtures": 15,
-          "paired_observations": 189,
-          "missing_source_fixtures": 7,
-          "missing_source_observations": 20,
-          "base_brier": 0.1735031479714518,
-          "base_logloss": 0.5176275403303783,
-          "model_brier": 0.18949559962933157,
-          "model_logloss": 0.5566389196420591,
-          "source_brier": 0.16846440442795124,
-          "source_logloss": 0.5123286488229867
+          "paired_fixtures": 23,
+          "paired_observations": 302,
+          "missing_source_fixtures": 10,
+          "missing_source_observations": 68,
+          "base_brier": 0.19637275825861925,
+          "base_logloss": 0.5685469494051695,
+          "model_brier": 0.2042498230707391,
+          "model_logloss": 0.5888591446607512,
+          "source_brier": 0.19430330895766112,
+          "source_logloss": 0.5692532375539462
         },
         "WATCHLIST_UNCORROBORATED_PRICE": {
           "paired_fixtures": 1,
@@ -176,9 +176,9 @@
   },
   "acca_calibration_by_length": {
     "2": {
-      "resolved": 13,
+      "resolved": 28,
       "wins": 3,
-      "predicted_wins": 5.374799576502349
+      "predicted_wins": 8.967229726473063
     },
     "3": {
       "resolved": 1,
@@ -199,14 +199,14 @@
   },
   "by_bucket_market_leg_diagnostics": {
     "bucket:SKIPPED_VETO": {
-      "settled": 21,
-      "wins": 8,
-      "profit": -8.424
+      "settled": 30,
+      "wins": 12,
+      "profit": -3.2840000000000007
     },
     "market:1x2": {
-      "settled": 4,
-      "wins": 2,
-      "profit": 0.5800000000000001
+      "settled": 7,
+      "wins": 4,
+      "profit": 8.14
     },
     "bucket:CAUTION": {
       "settled": 1,
@@ -224,9 +224,9 @@
       "profit": 1.7300000000000002
     },
     "market:double_chance": {
-      "settled": 3,
-      "wins": 2,
-      "profit": -0.3899999999999999
+      "settled": 4,
+      "wins": 3,
+      "profit": -0.26
     },
     "market:btts_yes": {
       "settled": 1,
@@ -239,14 +239,14 @@
       "profit": 0.77
     },
     "market:match_under_25": {
-      "settled": 6,
-      "wins": 0,
-      "profit": -6.0
+      "settled": 8,
+      "wins": 1,
+      "profit": -5.55
     },
     "market:match_over_15": {
-      "settled": 1,
+      "settled": 2,
       "wins": 0,
-      "profit": -1.0
+      "profit": -2.0
     },
     "market:home_under_45": {
       "settled": 1,
@@ -262,6 +262,11 @@
       "settled": 1,
       "wins": 0,
       "profit": -1.0
+    },
+    "market:match_over_45": {
+      "settled": 2,
+      "wins": 0,
+      "profit": -2.0
     }
   },
   "history": [
@@ -5653,11 +5658,11 @@
           "odds": 3.2247999999999997,
           "stake_units": 1.620243,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -1.620243,
           "legs": [
             {
               "away": "Lech Pozna\u0144",
@@ -5845,11 +5850,11 @@
           "odds": 3.2247999999999997,
           "stake_units": 1.586735,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -1.586735,
           "legs": [
             {
               "away": "Lech Pozna\u0144",
@@ -6037,11 +6042,11 @@
           "odds": 3.2247999999999997,
           "stake_units": 0.71031,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.71031,
           "legs": [
             {
               "away": "Lech Pozna\u0144",
@@ -6229,11 +6234,11 @@
           "odds": 6.0760000000000005,
           "stake_units": 1.139945,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -1.139945,
           "legs": [
             {
               "away": "Viktoria Plze\u0148",
@@ -6417,11 +6422,11 @@
           "odds": 6.0760000000000005,
           "stake_units": 1.05493,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -1.05493,
           "legs": [
             {
               "away": "Viktoria Plze\u0148",
@@ -6595,11 +6600,11 @@
           "odds": 22.099999999999998,
           "stake_units": 0.525011,
           "leg_outcomes": [
-            null,
-            null
+            false,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.525011,
           "legs": [
             {
               "away": "Gent",
@@ -7192,11 +7197,11 @@
           "odds": 7.344999999999999,
           "stake_units": 2.414677,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -2.414677,
           "legs": [
             {
               "away": "Nordsj\u00e6lland",
@@ -7794,11 +7799,11 @@
           "odds": 6.0760000000000005,
           "stake_units": 0.997422,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.997422,
           "legs": [
             {
               "away": "Viktoria Plze\u0148",
@@ -7972,11 +7977,11 @@
           "odds": 22.099999999999998,
           "stake_units": 0.4964,
           "leg_outcomes": [
-            null,
-            null
+            false,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.4964,
           "legs": [
             {
               "away": "Gent",
@@ -8569,11 +8574,11 @@
           "odds": 6.0760000000000005,
           "stake_units": 0.724991,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.724991,
           "legs": [
             {
               "away": "Viktoria Plze\u0148",
@@ -8747,11 +8752,11 @@
           "odds": 22.099999999999998,
           "stake_units": 0.4812,
           "leg_outcomes": [
-            null,
-            null
+            false,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.4812,
           "legs": [
             {
               "away": "Gent",
@@ -9344,11 +9349,11 @@
           "odds": 11.092,
           "stake_units": 1.273957,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -1.273957,
           "legs": [
             {
               "away": "Marseille",
@@ -9565,11 +9570,11 @@
           "odds": 11.092,
           "stake_units": 1.249585,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -1.249585,
           "legs": [
             {
               "away": "Marseille",
@@ -9786,11 +9791,11 @@
           "odds": 11.092,
           "stake_units": 1.220871,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -1.220871,
           "legs": [
             {
               "away": "Marseille",
@@ -10007,11 +10012,11 @@
           "odds": 11.092,
           "stake_units": 0.172875,
           "leg_outcomes": [
-            null,
-            null
+            true,
+            false
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -0.172875,
           "legs": [
             {
               "away": "Marseille",
@@ -10219,35 +10224,449 @@
       "decision_id": "20261105T164004140282Z",
       "captured_at": "2026-11-05T16:40:04.140282+00:00",
       "frozen_at": "2026-11-05T16:40:16.592220+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 8.36,
+          "stake_units": 0.876028,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Cracovia Krak\u00f3w",
+              "base_probability": 0.4459951237520496,
+              "book": "Tipico",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "abb142ce4639804f1ee598fe4a0125d22d1808f8eadca5ef9408e350962f32e4",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "wislakrakow",
+                "cracoviakrakow"
+              ],
+              "home": "Wis\u0142a Krak\u00f3w",
+              "kickoff_utc": "2026-11-06T19:30:00+00:00",
+              "market": "match_under_25",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-06",
+                  "wislakrakow",
+                  "cracoviakrakow",
+                  [],
+                  []
+                ],
+                "model_key": "aafc6a21c2778125e1516b0762f6b1487a78b43c763a04333d4ee49a60eb2017",
+                "sources": [
+                  "bettingclosed",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "away_form_btts": 0.9,
+                  "away_form_ga": 2.0,
+                  "away_form_gf": 1.3,
+                  "away_form_over15": 0.9,
+                  "away_form_over25": 0.7,
+                  "away_form_over35": 0.5,
+                  "confidence": 0.5149163027656478,
+                  "forecast_1x2_away_mean": 0.2291460456089277,
+                  "forecast_1x2_away_spread": 0.06,
+                  "forecast_1x2_draw_mean": 0.27090975254730715,
+                  "forecast_1x2_draw_spread": 0.03727074235807859,
+                  "forecast_1x2_home_mean": 0.49994420184376515,
+                  "forecast_1x2_home_spread": 0.04983260553129554,
+                  "forecast_btts_yes_mean": 0.5585106382978724,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.776500904159132,
+                  "forecast_ou_1.5_over_spread": 0.01300180831826403,
+                  "forecast_ou_2.5_over_mean": 0.5671522309711285,
+                  "forecast_ou_2.5_over_spread": 0.0056955380577426995,
+                  "forecast_ou_3.5_over_mean": 0.3273399014778325,
+                  "forecast_ou_3.5_over_spread": 0.05467980295566499,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 1.2,
+                  "home_form_gf": 1.3,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.5,
+                  "home_form_over35": 0.2
+                }
+              },
+              "model_key": "aafc6a21c2778125e1516b0762f6b1487a78b43c763a04333d4ee49a60eb2017",
+              "odds": 2.2,
+              "price_age_seconds_at_decision": 556.981,
+              "price_age_seconds_at_freeze": 564.504346,
+              "price_at": "2026-11-05T22:22:41.693729+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.5230647887931351,
+              "selection": "under"
+            },
+            {
+              "away": "Wis\u0142a P\u0142ock",
+              "base_probability": 0.36928606976590833,
+              "book": "Tipico",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "c3f79136648ad0c1267a47e5febcd5000c23efc08e71fcca513addeda27ae4ee",
+              "contract_id": "pfc_cd84fb2c3ed889c0ae9eb89e",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "motorlublin",
+                "wislaplock"
+              ],
+              "home": "Motor Lublin",
+              "kickoff_utc": "2026-11-06T17:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_cd84fb2c3ed889c0ae9eb89e",
+                "fixture": [
+                  "2026-11-06",
+                  "motorlublin",
+                  "wislaplock",
+                  [],
+                  []
+                ],
+                "model_key": "32762ded01d3a752889bbbb1f1784aa233cd7a50faf7a07116749b222154ede5",
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "away_form_btts": 0.6,
+                  "away_form_ga": 1.2,
+                  "away_form_gf": 1.7,
+                  "away_form_over15": 0.8,
+                  "away_form_over25": 0.6,
+                  "away_form_over35": 0.4,
+                  "confidence": 0.47597754939744297,
+                  "forecast_1x2_away_mean": 0.26371939805468897,
+                  "forecast_1x2_away_spread": 0.008999999999999952,
+                  "forecast_1x2_draw_mean": 0.26063638588120147,
+                  "forecast_1x2_draw_spread": 0.015090842356395628,
+                  "forecast_1x2_home_mean": 0.47597754939744297,
+                  "forecast_1x2_home_spread": 0.012932648192328977,
+                  "forecast_btts_yes_mean": 0.5920026178010471,
+                  "forecast_btts_yes_spread": 0.005994764397905694,
+                  "forecast_ou_1.5_over_mean": 0.8206672694394214,
+                  "forecast_ou_1.5_over_spread": 0.10699819168173597,
+                  "forecast_ou_2.5_over_mean": 0.6161428571428571,
+                  "forecast_ou_2.5_over_spread": 0.12857142857142856,
+                  "forecast_ou_3.5_over_mean": 0.373559934318555,
+                  "forecast_ou_3.5_over_spread": 0.055320197044334996,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.27,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.7,
+                  "forecast_xg_home_spread": 0.0,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.7,
+                  "home_form_ga": 1.5,
+                  "home_form_gf": 1.7,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.7,
+                  "home_form_over35": 0.4
+                }
+              },
+              "model_key": "32762ded01d3a752889bbbb1f1784aa233cd7a50faf7a07116749b222154ede5",
+              "odds": 3.8,
+              "price_age_seconds_at_decision": 556.859719,
+              "price_age_seconds_at_freeze": 564.383065,
+              "price_at": "2026-11-05T22:22:41.815010+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.4122192062669223,
+              "selection": "draw"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261105T223158674729Z",
+      "captured_at": "2026-11-05T22:31:58.674729+00:00",
+      "frozen_at": "2026-11-05T22:32:06.198075+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 8.36,
+          "stake_units": 0.863784,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Cracovia Krak\u00f3w",
+              "base_probability": 0.4459951237520496,
+              "book": "Tipico",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "abb142ce4639804f1ee598fe4a0125d22d1808f8eadca5ef9408e350962f32e4",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "wislakrakow",
+                "cracoviakrakow"
+              ],
+              "home": "Wis\u0142a Krak\u00f3w",
+              "kickoff_utc": "2026-11-06T19:30:00+00:00",
+              "market": "match_under_25",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-06",
+                  "wislakrakow",
+                  "cracoviakrakow",
+                  [],
+                  []
+                ],
+                "model_key": "aafc6a21c2778125e1516b0762f6b1487a78b43c763a04333d4ee49a60eb2017",
+                "sources": [
+                  "bettingclosed",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "away_form_btts": 0.9,
+                  "away_form_ga": 2.0,
+                  "away_form_gf": 1.3,
+                  "away_form_over15": 0.9,
+                  "away_form_over25": 0.7,
+                  "away_form_over35": 0.5,
+                  "confidence": 0.5149163027656478,
+                  "forecast_1x2_away_mean": 0.2291460456089277,
+                  "forecast_1x2_away_spread": 0.06,
+                  "forecast_1x2_draw_mean": 0.27090975254730715,
+                  "forecast_1x2_draw_spread": 0.03727074235807859,
+                  "forecast_1x2_home_mean": 0.49994420184376515,
+                  "forecast_1x2_home_spread": 0.04983260553129554,
+                  "forecast_btts_yes_mean": 0.5585106382978724,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.776500904159132,
+                  "forecast_ou_1.5_over_spread": 0.01300180831826403,
+                  "forecast_ou_2.5_over_mean": 0.5671522309711285,
+                  "forecast_ou_2.5_over_spread": 0.0056955380577426995,
+                  "forecast_ou_3.5_over_mean": 0.3273399014778325,
+                  "forecast_ou_3.5_over_spread": 0.05467980295566499,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 1.2,
+                  "home_form_gf": 1.3,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.5,
+                  "home_form_over35": 0.2
+                }
+              },
+              "model_key": "aafc6a21c2778125e1516b0762f6b1487a78b43c763a04333d4ee49a60eb2017",
+              "odds": 2.2,
+              "price_age_seconds_at_decision": 690.70687,
+              "price_age_seconds_at_freeze": 698.041629,
+              "price_at": "2026-11-05T22:22:41.693729+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.5230647887931351,
+              "selection": "under"
+            },
+            {
+              "away": "Wis\u0142a P\u0142ock",
+              "base_probability": 0.36928606976590833,
+              "book": "Tipico",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "c3f79136648ad0c1267a47e5febcd5000c23efc08e71fcca513addeda27ae4ee",
+              "contract_id": "pfc_cd84fb2c3ed889c0ae9eb89e",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "motorlublin",
+                "wislaplock"
+              ],
+              "home": "Motor Lublin",
+              "kickoff_utc": "2026-11-06T17:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_cd84fb2c3ed889c0ae9eb89e",
+                "fixture": [
+                  "2026-11-06",
+                  "motorlublin",
+                  "wislaplock",
+                  [],
+                  []
+                ],
+                "model_key": "32762ded01d3a752889bbbb1f1784aa233cd7a50faf7a07116749b222154ede5",
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "away_form_btts": 0.6,
+                  "away_form_ga": 1.2,
+                  "away_form_gf": 1.7,
+                  "away_form_over15": 0.8,
+                  "away_form_over25": 0.6,
+                  "away_form_over35": 0.4,
+                  "confidence": 0.47597754939744297,
+                  "forecast_1x2_away_mean": 0.26371939805468897,
+                  "forecast_1x2_away_spread": 0.008999999999999952,
+                  "forecast_1x2_draw_mean": 0.26063638588120147,
+                  "forecast_1x2_draw_spread": 0.015090842356395628,
+                  "forecast_1x2_home_mean": 0.47597754939744297,
+                  "forecast_1x2_home_spread": 0.012932648192328977,
+                  "forecast_btts_yes_mean": 0.5920026178010471,
+                  "forecast_btts_yes_spread": 0.005994764397905694,
+                  "forecast_ou_1.5_over_mean": 0.8206672694394214,
+                  "forecast_ou_1.5_over_spread": 0.10699819168173597,
+                  "forecast_ou_2.5_over_mean": 0.6161428571428571,
+                  "forecast_ou_2.5_over_spread": 0.12857142857142856,
+                  "forecast_ou_3.5_over_mean": 0.373559934318555,
+                  "forecast_ou_3.5_over_spread": 0.055320197044334996,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.27,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.7,
+                  "forecast_xg_home_spread": 0.0,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.7,
+                  "home_form_ga": 1.5,
+                  "home_form_gf": 1.7,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.7,
+                  "home_form_over35": 0.4
+                }
+              },
+              "model_key": "32762ded01d3a752889bbbb1f1784aa233cd7a50faf7a07116749b222154ede5",
+              "odds": 3.8,
+              "price_age_seconds_at_decision": 690.585589,
+              "price_age_seconds_at_freeze": 697.920348,
+              "price_at": "2026-11-05T22:22:41.815010+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.4122192062669223,
+              "selection": "draw"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261105T223412400599Z",
+      "captured_at": "2026-11-05T22:34:12.400599+00:00",
+      "frozen_at": "2026-11-05T22:34:19.735358+00:00"
     }
   ],
   "latest_learning": {
     "coef": [
-      0.6219984943487478,
-      -0.011012684064526376,
-      0.005976274785146213,
-      0.007327211554794723,
-      -0.020059236121626106,
-      -0.10616777149398741,
-      0.09828180745802992,
-      0.06458917871758811,
-      0.1556954807708281,
-      -0.23452694060820364,
-      0.10293405591981146,
-      0.09431338454931174,
-      -0.1610789420577015,
-      0.21506638112426002,
-      -0.10796419984148131,
-      -0.0987923961414153
+      0.6809114833697006,
+      -0.011539610566666438,
+      0.00874570804241322,
+      0.004363297959776908,
+      0.0204662696140606,
+      0.008702628533959,
+      -0.014068288209610952,
+      -0.011377497140303333,
+      -0.007369035313171767,
+      -0.009167820231129121,
+      0.01351150250663752,
+      0.010857217443180937,
+      0.006965217659338047,
+      0.002624870575236313,
+      -0.08440932439554592,
+      0.07412028540331343,
+      0.05045508978936147,
+      -0.023253197851177812,
+      -0.017363443631904396,
+      -0.008243769412631226,
+      -0.00570292319221691,
+      0.022832856993979498,
+      0.01680845894302297,
+      0.0078082618492348495,
+      0.005369079765340785,
+      0.0019378202598320225,
+      0.06441642317707696,
+      -0.29001219556666563,
+      0.008265158942020357,
+      0.030553117218855085,
+      -0.07334626607959056,
+      0.25660310391055213,
+      -0.017683987071239367,
+      -0.0387302190542914
     ],
     "columns": [
       "bucket:CAUTION",
       "bucket:SKIPPED_VETO",
       "bucket:WATCHLIST_UNCORROBORATED_PRICE",
       "market:1x2",
+      "market:away_over_05",
+      "market:away_over_15",
+      "market:away_over_25",
+      "market:away_over_35",
+      "market:away_under_05",
+      "market:away_under_15",
+      "market:away_under_25",
+      "market:away_under_35",
+      "market:away_under_45",
       "market:btts_no",
       "market:btts_yes",
       "market:double_chance",
+      "market:home_over_05",
+      "market:home_over_15",
+      "market:home_over_25",
+      "market:home_over_35",
+      "market:home_under_05",
+      "market:home_under_15",
+      "market:home_under_25",
+      "market:home_under_35",
+      "market:home_under_45",
       "market:match_over_15",
       "market:match_over_25",
       "market:match_over_35",
@@ -10258,174 +10677,318 @@
       "market:match_under_45"
     ],
     "evidence_gate": "none_from_first_resolved_prior_day_results_evidence_smoothed",
-    "fixtures": 18,
-    "intercept": 0.021576338145665442,
+    "fixtures": 26,
+    "intercept": 0.028703095244579722,
     "learning_policy": "ml_paper_dynamic_calibration_success_tilt",
-    "observations": 210,
+    "observations": 375,
     "recency_half_life_days": 14.0,
-    "smoothing_factor": 0.782608695652174,
+    "smoothing_factor": 0.8387096774193549,
     "smoothing_k_fixtures": 5.0,
     "status": "fitted_prior_paper_errors",
     "success_tilt": {
       "bucket:CAUTION": {
-        "excess": -0.005795985342359089,
-        "fixtures": 3,
-        "tilt_logit": -0.011591970684718178,
-        "weighted_hit_rate": 0.4787903618849508,
-        "weighted_observations": 2.2435440620161944,
-        "weighted_reference_rate": 0.48458634722730987
+        "excess": -0.005708304024300337,
+        "fixtures": 4,
+        "tilt_logit": -0.011416608048600674,
+        "weighted_hit_rate": 0.4815339457995142,
+        "weighted_observations": 2.4524017270567766,
+        "weighted_reference_rate": 0.48724224982381453
       },
       "bucket:SKIPPED_VETO": {
-        "excess": -0.009842225168009533,
-        "fixtures": 15,
-        "tilt_logit": -0.019684450336019066,
-        "weighted_hit_rate": 0.49557504991849705,
-        "weighted_observations": 13.434028454410052,
-        "weighted_reference_rate": 0.5054172750865066
+        "excess": -0.0014224296376322831,
+        "fixtures": 23,
+        "tilt_logit": -0.0028448592752645663,
+        "weighted_hit_rate": 0.4890432680251377,
+        "weighted_observations": 20.081429271883433,
+        "weighted_reference_rate": 0.49046569766277
       },
       "bucket:WATCHLIST_UNCORROBORATED_PRICE": {
-        "excess": 0.01565880555090604,
+        "excess": 0.013520787956836644,
         "fixtures": 1,
-        "tilt_logit": 0.03131761110181208,
-        "weighted_hit_rate": 0.5714285714285714,
-        "weighted_observations": 0.9057236642639068,
-        "weighted_reference_rate": 0.5557697658776654
+        "tilt_logit": 0.027041575913673288,
+        "weighted_hit_rate": 0.5714285714285715,
+        "weighted_observations": 0.8619728212469776,
+        "weighted_reference_rate": 0.5579077834717349
       },
       "gap:0_to_10pp": {
-        "excess": -0.07561325364332316,
-        "fixtures": 13,
-        "tilt_logit": -0.15122650728664633,
-        "weighted_hit_rate": 0.5050399510119068,
-        "weighted_observations": 4.00262654087544,
-        "weighted_reference_rate": 0.58065320465523
+        "excess": -0.04009180808162671,
+        "fixtures": 20,
+        "tilt_logit": -0.08018361616325342,
+        "weighted_hit_rate": 0.5387365686826138,
+        "weighted_observations": 5.656061933198326,
+        "weighted_reference_rate": 0.5788283767642405
       },
       "gap:10_to_20pp": {
-        "excess": -0.0591890797898893,
-        "fixtures": 12,
-        "tilt_logit": -0.1183781595797786,
-        "weighted_hit_rate": 0.5929415190068604,
-        "weighted_observations": 2.997568902959947,
-        "weighted_reference_rate": 0.6521305987967497
+        "excess": -0.016844525364899776,
+        "fixtures": 18,
+        "tilt_logit": -0.03368905072979955,
+        "weighted_hit_rate": 0.6331958880810789,
+        "weighted_observations": 4.136839271150156,
+        "weighted_reference_rate": 0.6500404134459786
       },
       "gap:20pp_plus": {
-        "excess": 0.1804328322608617,
+        "excess": 0.16840792092733337,
         "fixtures": 4,
-        "tilt_logit": 0.3608656645217234,
-        "weighted_hit_rate": 0.7509233297469794,
-        "weighted_observations": 0.7272649528708102,
-        "weighted_reference_rate": 0.5704904974861177
+        "tilt_logit": 0.33681584185466673,
+        "weighted_hit_rate": 0.7509233297469795,
+        "weighted_observations": 0.6921345306016468,
+        "weighted_reference_rate": 0.5825154088196461
       },
       "gap:negative": {
-        "excess": 0.02879811307237201,
-        "fixtures": 18,
-        "tilt_logit": 0.05759622614474402,
-        "weighted_hit_rate": 0.4324130849900289,
-        "weighted_observations": 7.746980430554602,
-        "weighted_reference_rate": 0.4036149719176569
+        "excess": 0.01427021450080701,
+        "fixtures": 26,
+        "tilt_logit": 0.02854042900161402,
+        "weighted_hit_rate": 0.3912127463688321,
+        "weighted_observations": 10.830519676460273,
+        "weighted_reference_rate": 0.37694253186802507
       },
       "gap:source_unavailable": {
-        "excess": -0.00476857825832544,
-        "fixtures": 8,
-        "tilt_logit": -0.00953715651665088,
-        "weighted_hit_rate": 0.5,
-        "weighted_observations": 1.1088553534293717,
-        "weighted_reference_rate": 0.5047685782583254
+        "excess": -0.002681821905446191,
+        "fixtures": 11,
+        "tilt_logit": -0.005363643810892382,
+        "weighted_hit_rate": 0.5147577777326859,
+        "weighted_observations": 2.080248408776912,
+        "weighted_reference_rate": 0.5174395996381321
       },
       "market:1x2": {
-        "excess": -0.039986620359496516,
-        "fixtures": 10,
-        "tilt_logit": -0.07997324071899303,
-        "weighted_hit_rate": 0.3906252839271721,
-        "weighted_observations": 3.513092560224753,
-        "weighted_reference_rate": 0.4306119042866686
+        "excess": -0.002023503710798069,
+        "fixtures": 16,
+        "tilt_logit": -0.004047007421596138,
+        "weighted_hit_rate": 0.4000968189239928,
+        "weighted_observations": 6.0367927774757675,
+        "weighted_reference_rate": 0.40212032263479086
       },
-      "market:btts_no": {
-        "excess": -0.1511259997514982,
-        "fixtures": 9,
-        "tilt_logit": -0.3022519995029964,
-        "weighted_hit_rate": 0.2911015848931736,
-        "weighted_observations": 0.6838167716095297,
-        "weighted_reference_rate": 0.4422275846446718
-      },
-      "market:btts_yes": {
-        "excess": 0.13985863501636508,
-        "fixtures": 9,
-        "tilt_logit": 0.27971727003273017,
-        "weighted_hit_rate": 0.7088984151068263,
-        "weighted_observations": 0.6838167716095297,
-        "weighted_reference_rate": 0.5690397800904612
-      },
-      "market:double_chance": {
-        "excess": 0.03223052075638155,
-        "fixtures": 9,
-        "tilt_logit": 0.0644610415127631,
-        "weighted_hit_rate": 0.6666666666666667,
-        "weighted_observations": 2.051450314828588,
-        "weighted_reference_rate": 0.6344361459102852
-      },
-      "market:match_over_15": {
-        "excess": 0.2874698466978045,
-        "fixtures": 8,
+      "market:away_over_05": {
+        "excess": 0.32082774411852655,
+        "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
-        "weighted_observations": 0.5544276767146858,
-        "weighted_reference_rate": 0.7125301533021955
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.6791722558814735
       },
-      "market:match_over_25": {
-        "excess": -0.060647948811988095,
-        "fixtures": 17,
-        "tilt_logit": -0.12129589762397619,
-        "weighted_hit_rate": 0.5395703113142081,
-        "weighted_observations": 3.421055040854513,
-        "weighted_reference_rate": 0.6002182601261962
-      },
-      "market:match_over_35": {
-        "excess": 0.23954623623845422,
-        "fixtures": 7,
-        "tilt_logit": 0.47909247247690845,
-        "weighted_hit_rate": 0.6721659911487536,
-        "weighted_observations": 0.42503858181984194,
-        "weighted_reference_rate": 0.4326197549102994
-      },
-      "market:match_over_45": {
-        "excess": 0.2216906974275134,
-        "fixtures": 7,
-        "tilt_logit": 0.4433813948550268,
-        "weighted_hit_rate": 0.5454167885298464,
-        "weighted_observations": 0.42503858181984194,
-        "weighted_reference_rate": 0.323726091102333
-      },
-      "market:match_under_15": {
-        "excess": -0.29692421872256,
-        "fixtures": 8,
+      "market:away_over_15": {
+        "excess": -0.4707697257068935,
+        "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
-        "weighted_observations": 0.5544276767146858,
-        "weighted_reference_rate": 0.29692421872256
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.4707697257068935
+      },
+      "market:away_over_25": {
+        "excess": -0.3979988104855256,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.3979988104855256
+      },
+      "market:away_over_35": {
+        "excess": -0.2842630682384439,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.2842630682384439
+      },
+      "market:away_under_05": {
+        "excess": -0.33644366849476054,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.33644366849476054
+      },
+      "market:away_under_15": {
+        "excess": 0.4531771017597367,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.5468228982402633
+      },
+      "market:away_under_25": {
+        "excess": 0.38116700768818756,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.6188329923118124
+      },
+      "market:away_under_35": {
+        "excess": 0.27008329974726186,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.7299167002527381
+      },
+      "market:away_under_45": {
+        "excess": 0.1269904447847563,
+        "fixtures": 1,
+        "tilt_logit": 0.2539808895695126,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.8730095552152437
+      },
+      "market:btts_no": {
+        "excess": -0.12093187689022306,
+        "fixtures": 10,
+        "tilt_logit": -0.2418637537804461,
+        "weighted_hit_rate": 0.3230363627351431,
+        "weighted_observations": 0.6814849507336631,
+        "weighted_reference_rate": 0.44396823962536613
+      },
+      "market:btts_yes": {
+        "excess": 0.10434359445869834,
+        "fixtures": 10,
+        "tilt_logit": 0.20868718891739668,
+        "weighted_hit_rate": 0.6769636372648566,
+        "weighted_observations": 0.6814849507336631,
+        "weighted_reference_rate": 0.5726200428061583
+      },
+      "market:double_chance": {
+        "excess": 0.022435397394812484,
+        "fixtures": 10,
+        "tilt_logit": 0.04487079478962497,
+        "weighted_hit_rate": 0.6666666666666671,
+        "weighted_observations": 2.211908544812827,
+        "weighted_reference_rate": 0.6442312692718546
+      },
+      "market:home_over_05": {
+        "excess": -0.7220131218681044,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.7220131218681044
+      },
+      "market:home_over_15": {
+        "excess": -0.5588521369123574,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.5588521369123574
+      },
+      "market:home_over_25": {
+        "excess": -0.3099280278899134,
+        "fixtures": 1,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.3099280278899134
+      },
+      "market:home_over_35": {
+        "excess": -0.23340256052958877,
+        "fixtures": 1,
+        "tilt_logit": -0.46680512105917754,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.23340256052958877
+      },
+      "market:home_under_05": {
+        "excess": 0.7075846387880561,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.2924153612119439
+      },
+      "market:home_under_15": {
+        "excess": 0.5413347989869308,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.4586652010130692
+      },
+      "market:home_under_25": {
+        "excess": 0.2949956823807519,
+        "fixtures": 1,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.7050043176192481
+      },
+      "market:home_under_35": {
+        "excess": 0.22097655493017032,
+        "fixtures": 1,
+        "tilt_logit": 0.44195310986034064,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.7790234450698297
+      },
+      "market:home_under_45": {
+        "excess": 0.10019601010965007,
+        "fixtures": 1,
+        "tilt_logit": 0.20039202021930014,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.030699843645503856,
+        "weighted_reference_rate": 0.8998039898903499
+      },
+      "market:match_over_15": {
+        "excess": 0.08673594008653862,
+        "fixtures": 11,
+        "tilt_logit": 0.17347188017307724,
+        "weighted_hit_rate": 0.8040629490513386,
+        "weighted_observations": 0.76382561157892,
+        "weighted_reference_rate": 0.7173270089648
+      },
+      "market:match_over_25": {
+        "excess": -0.05731682901923707,
+        "fixtures": 25,
+        "tilt_logit": -0.11463365803847414,
+        "weighted_hit_rate": 0.5370542934582266,
+        "weighted_observations": 4.570568819597105,
+        "weighted_reference_rate": 0.5943711224774637
+      },
+      "market:match_over_35": {
+        "excess": 0.003950913548277313,
+        "fixtures": 10,
+        "tilt_logit": 0.007901827096554626,
+        "weighted_hit_rate": 0.42438212246161366,
+        "weighted_observations": 0.640686637115066,
+        "weighted_reference_rate": 0.42043120891333635
+      },
+      "market:match_over_45": {
+        "excess": 0.03843732599973532,
+        "fixtures": 10,
+        "tilt_logit": 0.07687465199947063,
+        "weighted_hit_rate": 0.344357104332089,
+        "weighted_observations": 0.640686637115066,
+        "weighted_reference_rate": 0.3059197783323537
+      },
+      "market:match_under_15": {
+        "excess": -0.09739381383696702,
+        "fixtures": 11,
+        "tilt_logit": -0.19478762767393404,
+        "weighted_hit_rate": 0.1959370509486614,
+        "weighted_observations": 0.76382561157892,
+        "weighted_reference_rate": 0.2933308647856284
       },
       "market:match_under_25": {
-        "excess": 0.0508255918767434,
-        "fixtures": 17,
-        "tilt_logit": 0.1016511837534868,
-        "weighted_hit_rate": 0.46042968868579176,
-        "weighted_observations": 3.421055040854513,
-        "weighted_reference_rate": 0.40960409680904836
+        "excess": 0.04961214547620357,
+        "fixtures": 25,
+        "tilt_logit": 0.09922429095240715,
+        "weighted_hit_rate": 0.4629457065417737,
+        "weighted_observations": 4.570568819597105,
+        "weighted_reference_rate": 0.4133335610655701
       },
       "market:match_under_35": {
-        "excess": -0.2523252593116421,
-        "fixtures": 7,
-        "tilt_logit": -0.5,
-        "weighted_hit_rate": 0.3278340088512462,
-        "weighted_observations": 0.42503858181984194,
-        "weighted_reference_rate": 0.5801592681628883
+        "excess": -0.018201468019688916,
+        "fixtures": 10,
+        "tilt_logit": -0.03640293603937783,
+        "weighted_hit_rate": 0.5756178775383863,
+        "weighted_observations": 0.640686637115066,
+        "weighted_reference_rate": 0.5938193455580753
       },
       "market:match_under_45": {
-        "excess": -0.23275643200874846,
-        "fixtures": 7,
-        "tilt_logit": -0.4655128640174969,
-        "weighted_hit_rate": 0.4545832114701534,
-        "weighted_observations": 0.42503858181984194,
-        "weighted_reference_rate": 0.6873396434789019
+        "excess": -0.05047216718763381,
+        "fixtures": 10,
+        "tilt_logit": -0.10094433437526762,
+        "weighted_hit_rate": 0.655642895667911,
+        "weighted_observations": 0.640686637115066,
+        "weighted_reference_rate": 0.7061150628555448
       }
     },
     "success_tilt_folds": 5,
@@ -10434,15 +10997,15 @@
     "training_admission": {
       "count_basis": "candidate_occurrences_before_outcome_lookup_and_deduplication",
       "excluded_by_reason": {
-        "oddspapi_legacy_or_unproven_quote_generation": 17113
+        "oddspapi_legacy_or_unproven_quote_generation": 17115
       },
-      "excluded_candidate_occurrences": 17113,
-      "excluded_fixture_count": 4,
+      "excluded_candidate_occurrences": 17115,
+      "excluded_fixture_count": 5,
       "historical_receipts_and_finances": "unchanged",
       "oddspapi_min_schema_version": 4,
       "policy": "historical_candidates_existing_oddspapi_generation_floor_v1"
     },
-    "training_last_date": "2026-11-04",
+    "training_last_date": "2026-11-05",
     "training_outcomes": [
       {
         "candidate_id": "9656e691745fb82daaf16e1f8a372c663053dd01b054fe8a6825760f0f1b0b41",
@@ -13593,10 +14156,2485 @@
           1,
           9
         ]
+      },
+      {
+        "candidate_id": "4faddf00765c72e81d12001716aac0cf93cef318d17834f444e28a1503d17519",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "bd2fb3eecf12d0b57babe3f1a51c3d366d70cf1ab1514b402f210d809ece169a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "2c693e11f999fc5993a76ebbeaf30b93ba85f16b0251d96ea4134e4751d0351a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "f28db101ccd83515a0cf901b5c7aa172daa674769d840bb05b6b00b034f44e33",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "31574a133a94591a47fc3310fb764bfc6e3a5429759a8ef4fbe657e180490da7",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "463aae8ad68af3d6d5e3b527c9d8a87a6ddd9f63d0a7f635aeab68c80cf3fb4b",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "0d106b9a93a18400dc4207f697a884321f468962393a6e2c58ab73b7d5db30dc",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "e1078648b3f477423eb08e1ea7d84cdfc965a1cc9f271fb5fe793cedb6ba330d",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "c9c025aa38fcab37ef0e48eb11d672cb8c4854c0e3a971e669f31ad412b4b850",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "20ba89d8ba2c2a29c5cf8bb485c972e9271d65c4f24051e20d905fc222abd98a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "024f4aaff78592da3730dda584a3f54163aec7d090f9693bbd9bc2aaaa6369f9",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "0451924b33de3817e255fa4b45c1bc3d30544af032a940a3d0f09bf28488a2d5",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "67b24c7839653d23f939506188a42255bc184a676661737f9d13d10474fc4ee7",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "22980e3d34596de51450e6cb8d6d37b1bec54cf755a170530af4cb46a46c46f8",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "8a12632f3400d582f4bdc351dbaa16529456b2aad8419147c4a2a66da030fe96",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "57a49e2b7f5f3e85c295e4591d62f5a54aef21376ea1b3b3eb9d3ec7aacbf803",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "e2ab940ff1eea6f5d093432948941a393258cbceeb155ecccd2ae0a0bef78cd1",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "cf6281262fadff8b5c5cd2702480cc90d2ff618363e9bfdb84b412319bfb2b69",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "d1fd947d1aeae451666546115b0d8503fceb97412fb4b1561b18ec9dec5340a0",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "790d0cece3e8810ea384730be076a40c2c367e5cfefdaa4ba4adf1372f0e3c26",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "3ab761cf43ea903a7a3fa7df960f13f5abd90492c3c3c17eb926eb1d965c8284",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "b1dcef3d2ec1fbda2e3fe7005b663a39e1f5f61609c8309f7a846d09c2180e2d",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "43a416eba1bbecfd8280073fb18cc0bc2022aecf300161da350aaa4a22c15429",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "cecfafcb22d6958da9eee96ca8396ead43bf06563ea2c46ac7e7168153d24309",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "6d4528bbe118b4dffa5fb45d6108f5b1fc5645c10401f1bde6316222556aaf02",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "411e7c153a344f989dc6eadae2cf82fb955f81717fb2854a380736ab26461125",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "434d7ad28eb13076fc388a441fadf6dd1d025aa9ddf5161c350ba190fcdcf082",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "b274c7c35a698a234edefed770b8b4102616b97950345d73181f6e2780cafd31",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "9ad4559a5dc52c86b4aa45bc8b94d104fc708c92d6b943f1b900ef47c9c9a794",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "3ab761cf43ea903a7a3fa7df960f13f5abd90492c3c3c17eb926eb1d965c8284",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "19ad3254f21a127653c6444ac6d1f6ef4ea802de88279a93402a19e7d37e222c",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "b1dcef3d2ec1fbda2e3fe7005b663a39e1f5f61609c8309f7a846d09c2180e2d",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "19ad3254f21a127653c6444ac6d1f6ef4ea802de88279a93402a19e7d37e222c",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "43a416eba1bbecfd8280073fb18cc0bc2022aecf300161da350aaa4a22c15429",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "19ad3254f21a127653c6444ac6d1f6ef4ea802de88279a93402a19e7d37e222c",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "cecfafcb22d6958da9eee96ca8396ead43bf06563ea2c46ac7e7168153d24309",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "19ad3254f21a127653c6444ac6d1f6ef4ea802de88279a93402a19e7d37e222c",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "6d4528bbe118b4dffa5fb45d6108f5b1fc5645c10401f1bde6316222556aaf02",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "19ad3254f21a127653c6444ac6d1f6ef4ea802de88279a93402a19e7d37e222c",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "411e7c153a344f989dc6eadae2cf82fb955f81717fb2854a380736ab26461125",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "19ad3254f21a127653c6444ac6d1f6ef4ea802de88279a93402a19e7d37e222c",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "434d7ad28eb13076fc388a441fadf6dd1d025aa9ddf5161c350ba190fcdcf082",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "19ad3254f21a127653c6444ac6d1f6ef4ea802de88279a93402a19e7d37e222c",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "b274c7c35a698a234edefed770b8b4102616b97950345d73181f6e2780cafd31",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "19ad3254f21a127653c6444ac6d1f6ef4ea802de88279a93402a19e7d37e222c",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "4faddf00765c72e81d12001716aac0cf93cef318d17834f444e28a1503d17519",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 1,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "bd2fb3eecf12d0b57babe3f1a51c3d366d70cf1ab1514b402f210d809ece169a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "2c693e11f999fc5993a76ebbeaf30b93ba85f16b0251d96ea4134e4751d0351a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "f28db101ccd83515a0cf901b5c7aa172daa674769d840bb05b6b00b034f44e33",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 1,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "31574a133a94591a47fc3310fb764bfc6e3a5429759a8ef4fbe657e180490da7",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "benfica",
+          "lechpoznan"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "463aae8ad68af3d6d5e3b527c9d8a87a6ddd9f63d0a7f635aeab68c80cf3fb4b",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 1,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "0d106b9a93a18400dc4207f697a884321f468962393a6e2c58ab73b7d5db30dc",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 1,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "e1078648b3f477423eb08e1ea7d84cdfc965a1cc9f271fb5fe793cedb6ba330d",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "c9c025aa38fcab37ef0e48eb11d672cb8c4854c0e3a971e669f31ad412b4b850",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "20ba89d8ba2c2a29c5cf8bb485c972e9271d65c4f24051e20d905fc222abd98a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "024f4aaff78592da3730dda584a3f54163aec7d090f9693bbd9bc2aaaa6369f9",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 1,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "0451924b33de3817e255fa4b45c1bc3d30544af032a940a3d0f09bf28488a2d5",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 1,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "67b24c7839653d23f939506188a42255bc184a676661737f9d13d10474fc4ee7",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "midtjylland",
+          "ajax"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          1,
+          6
+        ]
+      },
+      {
+        "candidate_id": "22980e3d34596de51450e6cb8d6d37b1bec54cf755a170530af4cb46a46c46f8",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "8a12632f3400d582f4bdc351dbaa16529456b2aad8419147c4a2a66da030fe96",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "57a49e2b7f5f3e85c295e4591d62f5a54aef21376ea1b3b3eb9d3ec7aacbf803",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 1,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "e2ab940ff1eea6f5d093432948941a393258cbceeb155ecccd2ae0a0bef78cd1",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 0,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "cf6281262fadff8b5c5cd2702480cc90d2ff618363e9bfdb84b412319bfb2b69",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 1,
+        "receipt_sha256": "69e59c2227bb2e24c06491aaa144f606c7b16e43042f28b662567088bd287861",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "463aae8ad68af3d6d5e3b527c9d8a87a6ddd9f63d0a7f635aeab68c80cf3fb4b",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 1,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "0d106b9a93a18400dc4207f697a884321f468962393a6e2c58ab73b7d5db30dc",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 1,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "e1078648b3f477423eb08e1ea7d84cdfc965a1cc9f271fb5fe793cedb6ba330d",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 0,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "34c78e4dce0d9e2c472664809fe3eaa7831ddeb2845ab30b54cf79d140401345",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "4f9393ffe0714654d014cc1b3b366528511446719c68c5a3975a113ac9b36572",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "8692b6ac18f00b5bbb9004056d85fc6d9cdee0ecbafd8e6efa107e9116078f3e",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "c9e6d046b78246b773d45a75a151b00660e808a7e6b2feca5db9f960be769292",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "d79369bdef258fa35d76ec04daa6403954702c2fba0840b1041d75f4b8ced4c7",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "d012620eecdce331c23bed2dbdd69661905c050756a19c626ce1bbe997f17eb3",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "2e24a82ef8825e9f50a4d2c612f57d4f2acf4efba2f3c2978f547e2bf375593a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "95fc7fc4dda33938ec66fe8ff1e36070b47ccf3a4bf61bcf46bfc19d2c2867ee",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "cdcc649f49fb415b9388e066571d94d3865493b43ee25ecf3eefc73c596de384",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "7782075287c01607baaf3f5812f5ffe06339b96dd7ba8a83b0d92901c257b988",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "1a1356389a60487b62c2218c5469aea91b2775a3c09319f857968e5d2c03b41d",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "8fd4af8e361376c619572356f4504f095b75ca47a53fac895b55a713f4a396d4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "463aae8ad68af3d6d5e3b527c9d8a87a6ddd9f63d0a7f635aeab68c80cf3fb4b",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "0d106b9a93a18400dc4207f697a884321f468962393a6e2c58ab73b7d5db30dc",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "e1078648b3f477423eb08e1ea7d84cdfc965a1cc9f271fb5fe793cedb6ba330d",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "thun",
+          "hearts"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          3,
+          1
+        ]
+      },
+      {
+        "candidate_id": "34c78e4dce0d9e2c472664809fe3eaa7831ddeb2845ab30b54cf79d140401345",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "4f9393ffe0714654d014cc1b3b366528511446719c68c5a3975a113ac9b36572",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "8692b6ac18f00b5bbb9004056d85fc6d9cdee0ecbafd8e6efa107e9116078f3e",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "c9e6d046b78246b773d45a75a151b00660e808a7e6b2feca5db9f960be769292",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "d79369bdef258fa35d76ec04daa6403954702c2fba0840b1041d75f4b8ced4c7",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "d012620eecdce331c23bed2dbdd69661905c050756a19c626ce1bbe997f17eb3",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "2e24a82ef8825e9f50a4d2c612f57d4f2acf4efba2f3c2978f547e2bf375593a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "95fc7fc4dda33938ec66fe8ff1e36070b47ccf3a4bf61bcf46bfc19d2c2867ee",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "cdcc649f49fb415b9388e066571d94d3865493b43ee25ecf3eefc73c596de384",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "7782075287c01607baaf3f5812f5ffe06339b96dd7ba8a83b0d92901c257b988",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "1a1356389a60487b62c2218c5469aea91b2775a3c09319f857968e5d2c03b41d",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "monaco",
+          "nordsjaelland"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          2,
+          0
+        ]
+      },
+      {
+        "candidate_id": "22980e3d34596de51450e6cb8d6d37b1bec54cf755a170530af4cb46a46c46f8",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "8a12632f3400d582f4bdc351dbaa16529456b2aad8419147c4a2a66da030fe96",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "57a49e2b7f5f3e85c295e4591d62f5a54aef21376ea1b3b3eb9d3ec7aacbf803",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "e2ab940ff1eea6f5d093432948941a393258cbceeb155ecccd2ae0a0bef78cd1",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "cf6281262fadff8b5c5cd2702480cc90d2ff618363e9bfdb84b412319bfb2b69",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "lillestrom",
+          "viktoriaplzen"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "d1fd947d1aeae451666546115b0d8503fceb97412fb4b1561b18ec9dec5340a0",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "790d0cece3e8810ea384730be076a40c2c367e5cfefdaa4ba4adf1372f0e3c26",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "3ab761cf43ea903a7a3fa7df960f13f5abd90492c3c3c17eb926eb1d965c8284",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "b1dcef3d2ec1fbda2e3fe7005b663a39e1f5f61609c8309f7a846d09c2180e2d",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "43a416eba1bbecfd8280073fb18cc0bc2022aecf300161da350aaa4a22c15429",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "cecfafcb22d6958da9eee96ca8396ead43bf06563ea2c46ac7e7168153d24309",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "6d4528bbe118b4dffa5fb45d6108f5b1fc5645c10401f1bde6316222556aaf02",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "411e7c153a344f989dc6eadae2cf82fb955f81717fb2854a380736ab26461125",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "434d7ad28eb13076fc388a441fadf6dd1d025aa9ddf5161c350ba190fcdcf082",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 0,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "b274c7c35a698a234edefed770b8b4102616b97950345d73181f6e2780cafd31",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "kups",
+          "gent"
+        ],
+        "hit": 1,
+        "receipt_sha256": "a0a27139aabb6725422ed115b4f8dea9b8faf0edd2691b5aea33d83064317fd4",
+        "score": [
+          0,
+          0
+        ]
+      },
+      {
+        "candidate_id": "42f3f09a09353453d96e7f8c310aa4973ca726831766beda61413ae1ad82a5fa",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "88daf446d0c8b7a8af4ab8c3faadb4aba134bc1f6b35dd0e1dfe4391dc78546c",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "06ca4ff8f4f5f1d83a62a35448caf0dad6ea35c87c627a64ef2b20ae49305926",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "383755f1437a07fb31743bdbcc7a502065bf054579b24e4b32a747693ec3f269",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "7100342792cb083a9c82a5d4e05d03b17ab2fdd18ed08a71159eaee9d635a6b1",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "09bbf245d1fbef6f7b978758169619519132597f933f9cd9bcb5fa87fede42b6",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "16a9369d542a21b702839efaeb63dd2c6001b7321998603239423ecb982b20e1",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "3bf08a9fd886ce0886fa0f93bc9c64d35280f978ccee28b6fdfc00be35e1ffea",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "1cb5dd0b685ae1f5329f61e0ce781eef9745a9fcca0cc2ddc9af72bc2d3b42e1",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "ef902187360ceaa2c8ca306789aaf8abf266ffd2d02724c5abfe65e4dc715e39",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "ed2becdfa75319cb85c380b1a66bfc6dffddff3821da6eb0c6a93dfbec1e94ef",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "f4306f11a2c43ce1f80ee21acdfe2d27f8eb5e08feeb63e4cc03f8d994f4c158",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "4790852af5444f5767cbbd19de368486cfd27f5127d8334af8f6a7c0430d5248",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "0eebe584a903729dffde5977146ca86c9b75bab3d0e87850055cb3e5dcf233d3",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "71fa0898a28d5cb8e4ab30f4cc2930d78185ba11d2ddc1da3192c04f00f5fe09",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "795f209c6f2eea3b4bcdfc923834a5d85753ac6f48ff87377d933273ae722a82",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "49db47c58e91dd9acc92071ccb17fc4beb22a99c9b4d7788df88f63cea731ee7",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "5a567244de578ed5e10a40a3b77cabc7813cd2adecab33b758c35c64f91f9cb5",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "51130923712e0b5467ceee15fb6645ee771819f4b2d997d10dd55584b3e5bb16",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "e61c8550c16e319cb480ed933bf0f2096ac05d18d2904cf718b910c831987cb9",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "a9b8b330db9fa9a3cbe298533e91df2c8f28990c95d20a641104d9821f1f97fc",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "94ca2834755e160acf734159b859b5d9577cf8d5a198a8bf7570feb9c3793395",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "d90335ef2f804f7080d7a7372ea81e3a2a922c3351b771cf5dfc4d12400a1b9c",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "f0676b269bba73aaeb4087e26830400444b820c4d3608c8248777ccd80739a5a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "863c125f74d2f546d03421e12377d562049b3d033ad168af737f7e5f65c1c191",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "f3bf12e67a1f9ad9945c9ebf727ffab880f72e0e31eed7b1bed7e64b3c6f8c73",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "3945dd422db0afa60d25f4a64e8839c25e95606b9ee10b1f4081adf250c0a614",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "de893bcb22fc79efd6e733bd8e59b9bf2c4df506261b86936d238647078e5794",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "0b3d1fe4a7a5aa7680ed59d0bc02f337ab9e89402ca5de13b5698949fd378a6e",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "a817b932408103f28a4815fd49c579686dea7d702e267df9bc1910f5c44d341e",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "ea9d76ba66a29e8bbbf9eed991b5a8b41ea2852de02d86d1126d22bc940ba482",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "671ccf4bbccd8b298471c87adf74edd5db08e6f6feab914998750ad1d155dc40",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "7911804e609d68099b853455dc7bbb3da93cf7e5653c267a5ef787cefb4ab371",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "c9ca86dbfa81abf13c13308705b2a522425afb863211e8095fbf04f9892b395a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "64dd2aef83b62120bca9a40a1ca6ee067ebe7819789e24aa825fb6d6f29515e2",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "42f3f09a09353453d96e7f8c310aa4973ca726831766beda61413ae1ad82a5fa",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "88daf446d0c8b7a8af4ab8c3faadb4aba134bc1f6b35dd0e1dfe4391dc78546c",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "06ca4ff8f4f5f1d83a62a35448caf0dad6ea35c87c627a64ef2b20ae49305926",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "383755f1437a07fb31743bdbcc7a502065bf054579b24e4b32a747693ec3f269",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "7100342792cb083a9c82a5d4e05d03b17ab2fdd18ed08a71159eaee9d635a6b1",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "bayerleverkusen",
+          "marseille"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "09bbf245d1fbef6f7b978758169619519132597f933f9cd9bcb5fa87fede42b6",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "16a9369d542a21b702839efaeb63dd2c6001b7321998603239423ecb982b20e1",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "3bf08a9fd886ce0886fa0f93bc9c64d35280f978ccee28b6fdfc00be35e1ffea",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "1cb5dd0b685ae1f5329f61e0ce781eef9745a9fcca0cc2ddc9af72bc2d3b42e1",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "ef902187360ceaa2c8ca306789aaf8abf266ffd2d02724c5abfe65e4dc715e39",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "ed2becdfa75319cb85c380b1a66bfc6dffddff3821da6eb0c6a93dfbec1e94ef",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "f4306f11a2c43ce1f80ee21acdfe2d27f8eb5e08feeb63e4cc03f8d994f4c158",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "4790852af5444f5767cbbd19de368486cfd27f5127d8334af8f6a7c0430d5248",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "0eebe584a903729dffde5977146ca86c9b75bab3d0e87850055cb3e5dcf233d3",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "71fa0898a28d5cb8e4ab30f4cc2930d78185ba11d2ddc1da3192c04f00f5fe09",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "795f209c6f2eea3b4bcdfc923834a5d85753ac6f48ff87377d933273ae722a82",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "49db47c58e91dd9acc92071ccb17fc4beb22a99c9b4d7788df88f63cea731ee7",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "5a567244de578ed5e10a40a3b77cabc7813cd2adecab33b758c35c64f91f9cb5",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "51130923712e0b5467ceee15fb6645ee771819f4b2d997d10dd55584b3e5bb16",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "e61c8550c16e319cb480ed933bf0f2096ac05d18d2904cf718b910c831987cb9",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "a9b8b330db9fa9a3cbe298533e91df2c8f28990c95d20a641104d9821f1f97fc",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "94ca2834755e160acf734159b859b5d9577cf8d5a198a8bf7570feb9c3793395",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "d90335ef2f804f7080d7a7372ea81e3a2a922c3351b771cf5dfc4d12400a1b9c",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "f0676b269bba73aaeb4087e26830400444b820c4d3608c8248777ccd80739a5a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "863c125f74d2f546d03421e12377d562049b3d033ad168af737f7e5f65c1c191",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "f3bf12e67a1f9ad9945c9ebf727ffab880f72e0e31eed7b1bed7e64b3c6f8c73",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "3945dd422db0afa60d25f4a64e8839c25e95606b9ee10b1f4081adf250c0a614",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "de893bcb22fc79efd6e733bd8e59b9bf2c4df506261b86936d238647078e5794",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "0b3d1fe4a7a5aa7680ed59d0bc02f337ab9e89402ca5de13b5698949fd378a6e",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "a817b932408103f28a4815fd49c579686dea7d702e267df9bc1910f5c44d341e",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "ea9d76ba66a29e8bbbf9eed991b5a8b41ea2852de02d86d1126d22bc940ba482",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 0,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "671ccf4bbccd8b298471c87adf74edd5db08e6f6feab914998750ad1d155dc40",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "7911804e609d68099b853455dc7bbb3da93cf7e5653c267a5ef787cefb4ab371",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
+      },
+      {
+        "candidate_id": "c9ca86dbfa81abf13c13308705b2a522425afb863211e8095fbf04f9892b395a",
+        "date": "2026-11-05",
+        "fixture": [
+          "2026-11-05",
+          "trabzonspor",
+          "freiburg"
+        ],
+        "hit": 1,
+        "receipt_sha256": "d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e",
+        "score": [
+          0,
+          1
+        ]
       }
     ],
-    "training_outcomes_sha256": "6bafd220e0fbaa53764913d467dbd8228f2546727cbf2b260f280d41137bee15",
-    "training_sha256": "fb6da3f4474e1af71e9e4c1233e0336e861363067a64ea1983f0ca095df9f29b"
+    "training_outcomes_sha256": "18473ddb934e00adef388b51f1825039957ca5eebfd633bc46aa825ce97f5882",
+    "training_sha256": "c207bf20781fb2a77929e0433a11516762cc4563d86397a7f8fbc79291202220"
   },
   "payout_basis": "hypothetical_same_book_singles_product_not_confirmed_acca_quote",
   "limitation": "paper forward experiment; no real-money promotion"

@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-05",
+ "generated_at": "2026-11-06",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
-   "hits": 10,
-   "inv_price_sum": 9.385121073039283,
+   "hits": 11,
+   "inv_price_sum": 10.107142733689102,
    "multi_n": 0,
-   "n": 15,
+   "n": 16,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -75,9 +75,10 @@
     "2026-11-02|Los Angeles FC vs Minnesota United|away_over_05@v1",
     "2026-11-02|Cruz Azul vs Leon|away_over_05@v1",
     "2026-11-02|Portland Timbers vs Houston Dynamo|away_over_05@v1",
-    "2026-11-04|Alianza Lima vs Cienciano|away_over_05@v1"
+    "2026-11-04|Alianza Lima vs Cienciano|away_over_05@v1",
+    "2026-11-05|Puntarenas FC vs San Carlos|away_over_05@v1"
    ],
-   "profit": -0.107,
+   "profit": 0.278,
    "records": [
     {
      "away": "Mixco",
@@ -501,6 +502,35 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "San Carlos",
+     "away_key": "sancarlos",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.6063,
+     "date": "2026-11-05",
+     "hit": true,
+     "home": "Puntarenas FC",
+     "home_key": "puntarenas",
+     "league": "Costa Rica: Primera Divisi\u00f3n",
+     "match": "Puntarenas FC vs San Carlos",
+     "multi_source": false,
+     "price": 1.385,
+     "price_context": {
+      "book": "caesars",
+      "captured_at": "2026-11-04T22:32:30.437380+00:00",
+      "contract_id": "pfc_c7c9572806b564198f651cee",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T00:00:00+00:00",
+      "league": "Costa Rica: Primera Divisi\u00f3n",
+      "price": 1.385,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.319402+00:00",
+     "rule": "pfc_c7c9572806b564198f651cee",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -777,10 +807,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 14,
-   "inv_price_sum": 6.502979921498254,
+   "hits": 16,
+   "inv_price_sum": 7.882470388530569,
    "multi_n": 0,
-   "n": 16,
+   "n": 18,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -797,9 +827,11 @@
     "2026-11-02|Los Angeles FC vs Minnesota United|away_under_15@v1",
     "2026-11-02|Portland Timbers vs Houston Dynamo|away_under_15@v1",
     "2026-11-04|Internacional vs Coritiba|away_under_15@v1",
-    "2026-11-04|Alianza Lima vs Cienciano|away_under_15@v1"
+    "2026-11-04|Alianza Lima vs Cienciano|away_under_15@v1",
+    "2026-11-05|Municipal Lime\u00f1o vs Fuerte San Francisco|away_under_15@v1",
+    "2026-11-05|Puntarenas FC vs San Carlos|away_under_15@v1"
    ],
-   "profit": 26.77,
+   "profit": 27.675,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -1202,6 +1234,64 @@
      },
      "recorded_at": "2026-11-04T23:17:22.378831+00:00",
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Fuerte San Francisco",
+     "away_key": "fuertesanfrancisco",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.7788,
+     "date": "2026-11-05",
+     "hit": true,
+     "home": "Municipal Lime\u00f1o",
+     "home_key": "municipallimeno",
+     "league": "El Salvador: Primera Division",
+     "match": "Municipal Lime\u00f1o vs Fuerte San Francisco",
+     "multi_source": false,
+     "price": 1.39,
+     "price_context": {
+      "book": "admiralbet.ba",
+      "captured_at": "2026-11-04T22:33:05.576667+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T01:00:00+00:00",
+      "league": "El Salvador: Primera Division",
+      "price": 1.39,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.260156+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "San Carlos",
+     "away_key": "sancarlos",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.7485,
+     "date": "2026-11-05",
+     "hit": true,
+     "home": "Puntarenas FC",
+     "home_key": "puntarenas",
+     "league": "Costa Rica: Primera Divisi\u00f3n",
+     "match": "Puntarenas FC vs San Carlos",
+     "multi_source": false,
+     "price": 1.515,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-04T22:32:30.437380+00:00",
+      "contract_id": "pfc_c7c9572806b564198f651cee",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T00:00:00+00:00",
+      "league": "Costa Rica: Primera Divisi\u00f3n",
+      "price": 1.515,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.324126+00:00",
+     "rule": "pfc_c7c9572806b564198f651cee",
      "source": "oddspapi",
      "stated": null
     }
@@ -2933,10 +3023,10 @@
    "status_since": "2026-10-16"
   },
   "home_over_15@v1": {
-   "hits": 7,
-   "inv_price_sum": 7.740197815461716,
+   "hits": 8,
+   "inv_price_sum": 9.412668048014183,
    "multi_n": 0,
-   "n": 13,
+   "n": 16,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -2950,9 +3040,12 @@
     "2026-11-02|Los Angeles FC vs Minnesota United|home_over_15@v1",
     "2026-11-02|Sacramento Republic FC vs FC Tulsa|home_over_15@v1",
     "2026-11-02|Cruz Azul vs Leon|home_over_15@v1",
-    "2026-11-04|Internacional vs Coritiba|home_over_15@v1"
+    "2026-11-04|Internacional vs Coritiba|home_over_15@v1",
+    "2026-11-05|Olimpia vs Deportivo Recoleta|home_over_15@v1",
+    "2026-11-05|Municipal Lime\u00f1o vs Fuerte San Francisco|home_over_15@v1",
+    "2026-11-05|Puntarenas FC vs San Carlos|home_over_15@v1"
    ],
-   "profit": -1.274,
+   "profit": -2.845,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -3328,6 +3421,93 @@
      },
      "recorded_at": "2026-11-04T23:17:22.353950+00:00",
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Deportivo Recoleta",
+     "away_key": "deportivorecoleta",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6253,
+     "date": "2026-11-05",
+     "hit": true,
+     "home": "Olimpia",
+     "home_key": "olimpia",
+     "league": "Division 1",
+     "match": "Olimpia vs Deportivo Recoleta",
+     "multi_source": false,
+     "price": 1.429,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-04T22:32:46.563217+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T00:15:00+00:00",
+      "league": "Division 1",
+      "price": 1.429,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.246362+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Fuerte San Francisco",
+     "away_key": "fuertesanfrancisco",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.7005,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "Municipal Lime\u00f1o",
+     "home_key": "municipallimeno",
+     "league": "El Salvador: Primera Division",
+     "match": "Municipal Lime\u00f1o vs Fuerte San Francisco",
+     "multi_source": false,
+     "price": 1.93,
+     "price_context": {
+      "book": "admiralbet.ba",
+      "captured_at": "2026-11-04T22:33:05.576667+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T01:00:00+00:00",
+      "league": "El Salvador: Primera Division",
+      "price": 1.93,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.264748+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "San Carlos",
+     "away_key": "sancarlos",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.6106,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "Puntarenas FC",
+     "home_key": "puntarenas",
+     "league": "Costa Rica: Primera Divisi\u00f3n",
+     "match": "Puntarenas FC vs San Carlos",
+     "multi_source": false,
+     "price": 2.2,
+     "price_context": {
+      "book": "apuestatotal",
+      "captured_at": "2026-11-04T22:32:30.437380+00:00",
+      "contract_id": "pfc_c7c9572806b564198f651cee",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T00:00:00+00:00",
+      "league": "Costa Rica: Primera Divisi\u00f3n",
+      "price": 2.2,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.328767+00:00",
+     "rule": "pfc_c7c9572806b564198f651cee",
      "source": "oddspapi",
      "stated": null
     }
@@ -3793,9 +3973,9 @@
   },
   "home_under_25@v1": {
    "hits": 15,
-   "inv_price_sum": 13.816758384634449,
+   "inv_price_sum": 14.41663840862965,
    "multi_n": 0,
-   "n": 22,
+   "n": 23,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -3858,9 +4038,10 @@
     "2026-11-02|Managua vs UNAN Managua|home_under_25@v1",
     "2026-11-02|Portland Timbers vs Houston Dynamo|home_under_25@v1",
     "2026-11-04|Internacional vs Coritiba|home_under_25@v1",
-    "2026-11-04|Alianza Lima vs Cienciano|home_under_25@v1"
+    "2026-11-04|Alianza Lima vs Cienciano|home_under_25@v1",
+    "2026-11-05|Olimpia vs Deportivo Recoleta|home_under_25@v1"
    ],
-   "profit": 0.584,
+   "profit": -0.416,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -4487,6 +4668,35 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Deportivo Recoleta",
+     "away_key": "deportivorecoleta",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6645,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "Olimpia",
+     "home_key": "olimpia",
+     "league": "Division 1",
+     "match": "Olimpia vs Deportivo Recoleta",
+     "multi_source": false,
+     "price": 1.667,
+     "price_context": {
+      "book": "caesars",
+      "captured_at": "2026-11-04T22:32:46.563217+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T00:15:00+00:00",
+      "league": "Division 1",
+      "price": 1.667,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.255602+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -4496,9 +4706,9 @@
   },
   "home_under_35@v1": {
    "hits": 2,
-   "inv_price_sum": 1.7969526992083382,
+   "inv_price_sum": 2.4772248080518757,
    "multi_n": 0,
-   "n": 3,
+   "n": 4,
    "processed": [
     "2026-08-13|Ilves vs HNK Rijeka|home_under_35@v1",
     "2026-08-13|NSI Runavik vs FC Lugano|home_under_35@v1",
@@ -4576,9 +4786,10 @@
     "2026-10-10|Brusque vs Paysandu|home_under_35@v1",
     "2026-10-23|Dynamo Kyiv vs Kudrivka|home_under_35@v1",
     "2026-10-21|Guadalajara vs Necaxa|home_under_35@v1",
-    "2026-11-02|Managua vs UNAN Managua|home_under_35@v1"
+    "2026-11-02|Managua vs UNAN Managua|home_under_35@v1",
+    "2026-11-05|CD Olimpia vs Juticalpa|home_under_35@v1"
    ],
-   "profit": 1.13,
+   "profit": 0.13,
    "records": [
     {
      "away": "Kudrivka",
@@ -4656,6 +4867,35 @@
      "rule": "pfc_1607fec83282d02c5254c2bf",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Juticalpa",
+     "away_key": "juticalpa",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.7778,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "CD Olimpia",
+     "home_key": "olimpia",
+     "league": "Honduras: Liga Nacional",
+     "match": "CD Olimpia vs Juticalpa",
+     "multi_source": false,
+     "price": 1.47,
+     "price_context": {
+      "book": "netbet",
+      "captured_at": "2026-11-04T22:33:29.211264+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T01:30:00+00:00",
+      "league": "Honduras: Liga Nacional",
+      "price": 1.47,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.310233+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -4665,9 +4905,9 @@
   },
   "match_over_15@v1": {
    "hits": 39,
-   "inv_price_sum": 43.165902692826855,
+   "inv_price_sum": 43.93513346205762,
    "multi_n": 4,
-   "n": 51,
+   "n": 52,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -4743,9 +4983,10 @@
     "2026-10-21|Millonarios vs Once Caldas|match_over_15@v1",
     "2026-10-25|Sagan Tosu vs Vanraure Hachinohe|match_over_15@v1",
     "2026-10-26|Mladost \u017ddralovi vs Jadran LP|match_over_15@v1",
-    "2026-11-02|Sacramento Republic FC vs FC Tulsa|match_over_15@v1"
+    "2026-11-02|Sacramento Republic FC vs FC Tulsa|match_over_15@v1",
+    "2026-11-05|Puntarenas FC vs San Carlos|match_over_15@v1"
    ],
-   "profit": -4.725,
+   "profit": -5.725,
    "records": [
     {
      "away": "Aston Villa",
@@ -5506,6 +5747,35 @@
      "rule": "pfc_54fcf87604b73b87ee6c0a90",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "San Carlos",
+     "away_key": "sancarlos",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.7977,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "Puntarenas FC",
+     "home_key": "puntarenas",
+     "league": "Costa Rica: Primera Divisi\u00f3n",
+     "match": "Puntarenas FC vs San Carlos",
+     "multi_source": false,
+     "price": 1.3,
+     "price_context": {
+      "book": "apuestatotal",
+      "captured_at": "2026-11-04T22:32:30.437380+00:00",
+      "contract_id": "pfc_c7c9572806b564198f651cee",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T00:00:00+00:00",
+      "league": "Costa Rica: Primera Divisi\u00f3n",
+      "price": 1.3,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.314801+00:00",
+     "rule": "pfc_c7c9572806b564198f651cee",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -5514,11 +5784,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 347,
+   "hits": 351,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 341.28324777208303,
+   "inv_price_sum": 346.54302857523675,
    "multi_n": 103,
-   "n": 524,
+   "n": 532,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -6287,9 +6557,17 @@
     "2026-11-03|Atl\u00e9tico Madrid vs FC Bayern M\u00fcnchen|match_over_25@v1",
     "2026-11-03|Villarreal vs Paris Saint Germain|match_over_25@v1",
     "2026-11-04|Fenerbah\u00e7e vs Liverpool|match_over_25@v1",
-    "2026-11-04|RB Leipzig vs Manchester City|match_over_25@v1"
+    "2026-11-04|RB Leipzig vs Manchester City|match_over_25@v1",
+    "2026-11-05|AC Milan vs Ferencvarosi TC|match_over_25@v1",
+    "2026-11-05|Municipal Lime\u00f1o vs Fuerte San Francisco|match_over_25@v1",
+    "2026-11-05|Benfica vs Lech Pozna\u0144|match_over_25@v1",
+    "2026-11-05|Lillestr\u00f8m vs Viktoria Plze\u0148|match_over_25@v1",
+    "2026-11-05|Trabzonspor vs SC Freiburg|match_over_25@v1",
+    "2026-11-05|Thun vs Hearts|match_over_25@v1",
+    "2026-11-05|Sturm Graz vs NK Celje|match_over_25@v1",
+    "2026-11-05|CD Olimpia vs Juticalpa|match_over_25@v1"
    ],
-   "profit": 10.897,
+   "profit": 8.657,
    "records": [
     {
      "away": "Spartak Varna",
@@ -14454,6 +14732,238 @@
      "rule": "pfc_4e8ef1faa47bce63a119fb43",
      "source": "theoddsapi",
      "stated": null
+    },
+    {
+     "away": "Ferencvarosi TC",
+     "away_key": "ferencvarositc",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6538,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "AC Milan",
+     "home_key": "milan",
+     "league": "International,Europa League",
+     "match": "AC Milan vs Ferencvarosi TC",
+     "multi_source": false,
+     "price": 1.55,
+     "price_context": {
+      "book": "Nordic Bet",
+      "captured_at": "2026-11-04T22:32:25.910766+00:00",
+      "contract_id": "pfc_fbf508b9c62bae8f281bb6e1",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T17:45:00+00:00",
+      "league": "International,Europa League",
+      "price": 1.55,
+      "selection": "home",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.239721+00:00",
+     "rule": "pfc_fbf508b9c62bae8f281bb6e1",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Fuerte San Francisco",
+     "away_key": "fuertesanfrancisco",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.6307,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "Municipal Lime\u00f1o",
+     "home_key": "municipallimeno",
+     "league": "El Salvador: Primera Division",
+     "match": "Municipal Lime\u00f1o vs Fuerte San Francisco",
+     "multi_source": false,
+     "price": 1.87,
+     "price_context": {
+      "book": "atg.se",
+      "captured_at": "2026-11-04T22:33:05.576667+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T01:00:00+00:00",
+      "league": "El Salvador: Primera Division",
+      "price": 1.87,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.269360+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Lech Pozna\u0144",
+     "away_key": "lechpoznan",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7162,
+     "date": "2026-11-05",
+     "hit": true,
+     "home": "Benfica",
+     "home_key": "benfica",
+     "league": "Europa League",
+     "match": "Benfica vs Lech Pozna\u0144",
+     "multi_source": false,
+     "price": 1.3,
+     "price_context": {
+      "book": "William Hill",
+      "captured_at": "2026-11-04T22:32:25.559642+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T20:00:00+00:00",
+      "league": "Europa League",
+      "price": 1.3,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.273997+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Viktoria Plze\u0148",
+     "away_key": "viktoriaplzen",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7162,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "Lillestr\u00f8m",
+     "home_key": "lillestrom",
+     "league": "Europa League",
+     "match": "Lillestr\u00f8m vs Viktoria Plze\u0148",
+     "multi_source": false,
+     "price": 1.57,
+     "price_context": {
+      "book": "LeoVegas (SE)",
+      "captured_at": "2026-11-04T22:32:25.799264+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T17:45:00+00:00",
+      "league": "Europa League",
+      "price": 1.57,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.280283+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "SC Freiburg",
+     "away_key": "freiburg",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7162,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "Trabzonspor",
+     "home_key": "trabzonspor",
+     "league": "Europa Conference League",
+     "match": "Trabzonspor vs SC Freiburg",
+     "multi_source": false,
+     "price": 1.55,
+     "price_context": {
+      "book": "William Hill",
+      "captured_at": "2026-11-04T22:32:26.743689+00:00",
+      "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T17:45:00+00:00",
+      "league": "Europa Conference League",
+      "price": 1.55,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.286622+00:00",
+     "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Hearts",
+     "away_key": "hearts",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6748,
+     "date": "2026-11-05",
+     "hit": true,
+     "home": "Thun",
+     "home_key": "thun",
+     "league": "Europa Conference League",
+     "match": "Thun vs Hearts",
+     "multi_source": false,
+     "price": 1.5,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-11-04T22:32:26.865448+00:00",
+      "contract_id": "pfc_ee214d4f2f00846fa78f56e3",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T17:45:00+00:00",
+      "league": "Europa Conference League",
+      "price": 1.5,
+      "selection": "over",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.292961+00:00",
+     "rule": "pfc_ee214d4f2f00846fa78f56e3",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "NK Celje",
+     "away_key": "celje",
+     "bucket": "WATCHLIST_NO_ODDS",
+     "cohort_rate": 0.6361,
+     "date": "2026-11-05",
+     "hit": true,
+     "home": "Sturm Graz",
+     "home_key": "sturmgraz",
+     "league": "International,Europa League",
+     "match": "Sturm Graz vs NK Celje",
+     "multi_source": false,
+     "price": 1.61,
+     "price_context": {
+      "book": "1xBet",
+      "captured_at": "2026-11-04T22:32:26.030221+00:00",
+      "contract_id": "pfc_b0b7a0c1932e3636d2b485d6",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T20:00:00+00:00",
+      "league": "International,Europa League",
+      "price": 1.61,
+      "selection": "home",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.299312+00:00",
+     "rule": "pfc_b0b7a0c1932e3636d2b485d6",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Juticalpa",
+     "away_key": "juticalpa",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.6307,
+     "date": "2026-11-05",
+     "hit": true,
+     "home": "CD Olimpia",
+     "home_key": "olimpia",
+     "league": "Honduras: Liga Nacional",
+     "match": "CD Olimpia vs Juticalpa",
+     "multi_source": false,
+     "price": 1.35,
+     "price_context": {
+      "book": "bet3000",
+      "captured_at": "2026-11-04T22:33:29.211264+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T01:30:00+00:00",
+      "league": "Honduras: Liga Nacional",
+      "price": 1.35,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.305639+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -15525,9 +16035,9 @@
   },
   "match_under_35@v1": {
    "hits": 6,
-   "inv_price_sum": 8.047912560818306,
+   "inv_price_sum": 8.672912560818306,
    "multi_n": 0,
-   "n": 15,
+   "n": 16,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -15543,9 +16053,10 @@
     "2026-11-02|Managua vs UNAN Managua|match_under_35@v1",
     "2026-11-02|Los Angeles FC vs Minnesota United|match_under_35@v1",
     "2026-11-02|Portland Timbers vs Houston Dynamo|match_under_35@v1",
-    "2026-11-04|Alianza Lima vs Cienciano|match_under_35@v1"
+    "2026-11-04|Alianza Lima vs Cienciano|match_under_35@v1",
+    "2026-11-05|Olimpia vs Deportivo Recoleta|match_under_35@v1"
    ],
-   "profit": -1.485,
+   "profit": -2.485,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -15979,6 +16490,35 @@
      },
      "recorded_at": "2026-11-04T23:17:22.400766+00:00",
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Deportivo Recoleta",
+     "away_key": "deportivorecoleta",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6433,
+     "date": "2026-11-05",
+     "hit": false,
+     "home": "Olimpia",
+     "home_key": "olimpia",
+     "league": "Division 1",
+     "match": "Olimpia vs Deportivo Recoleta",
+     "multi_source": false,
+     "price": 1.6,
+     "price_context": {
+      "book": "apuestatotal",
+      "captured_at": "2026-11-04T22:32:46.563217+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-05T00:34:34+02:00",
+      "kickoff": "2026-11-05T00:15:00+00:00",
+      "league": "Division 1",
+      "price": 1.6,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-05T22:38:22.251116+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
      "source": "oddspapi",
      "stated": null
     }

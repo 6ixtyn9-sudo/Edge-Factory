@@ -14,53 +14,53 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 20,
+    "ledger_entries": 39,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
       "reason": "free_listing_present_zero_matches",
       "resolved_pairs": 0
     },
-    "retained_pairs": 11,
+    "retained_pairs": 1,
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "braga|gent",
+        "fixture": "marathon|platense",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "getafe|lugano",
+        "fixture": "famalicao|arouca",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "monaco|freiburg",
+        "fixture": "hbkoge|aalborg",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "boracbanjaluka|kups",
+        "fixture": "sariyer|igdir",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "viktoriaplzen|levskisofia",
+        "fixture": "oxfordcity|leicestercity",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "lechpoznan|sunderland",
+        "fixture": "alarabi|alahlidoha",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -71,16 +71,15 @@
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 23
+      "5b6ed40a": 51
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=23 [pools=2 cap=90 reserve=20 spent=6 month=2026-10] -> approved",
-    "month": "2026-10",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=51 [pools=2 cap=90 reserve=20 spent=5 month=2026-11] -> approved",
+    "month": "2026-11",
     "month_spend_by_key": {
-      "5b6ed40a": 1,
-      "88739ee5": 5
+      "5b6ed40a": 5
     },
     "need_h2h": 0,
     "need_listing": 0,
@@ -91,7 +90,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 23,
+    "spendable": 51,
     "verdict": "approved"
   },
   "provenance": {
@@ -100,7 +99,7 @@
     "point_in_time": "as_of is the capture instant; provider publishes no per-row history timestamp"
   },
   "role": "silent pre-kickoff H2H context capture for the dormant context vocabulary; NOT a price, NOT a vote, NOT a registered rule",
-  "run_date": "2026-10-22",
+  "run_date": "2026-11-06",
   "schema": 1,
   "snapshots": [],
   "source": "boggio_h2h",
