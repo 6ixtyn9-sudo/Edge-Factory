@@ -2620,7 +2620,10 @@ ODDSPAPI_ODDS_SOURCE = "oddspapi_odds"
 # Generation 3 additionally fails closed on outcome-identity ambiguity and
 # retains the provider outcome key; generation-2 rows were written without
 # that check and cannot be re-audited from the CSV, so they are superseded.
-ODDSPAPI_MIN_SCHEMA_VERSION = 3
+# Generation 3 can contain bookings incorrectly normalized as goals. Do not
+# rehabilitate old rows or merely trust their normalized market label.
+# Generation 4 is the goals-only catalog parser; old archives stay untouched.
+ODDSPAPI_MIN_SCHEMA_VERSION = 4
 
 
 def _utc_price_stamp(value: object) -> datetime | None:

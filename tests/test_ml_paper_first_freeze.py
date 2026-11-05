@@ -62,6 +62,8 @@ def test_post_nine_quote_age_is_measured_at_actual_decision_not_scheduled_nine(
     for row in ctx["slate"]:
         row.update(odds_source=source,
                    odds_captured_at=(decision - timedelta(hours=limit, seconds=extra_seconds)).isoformat())
+        from test_ml_paper import synthetic_oddspapi_provenance
+        row["odds_provenance"] = synthetic_oddspapi_provenance(row)
     frozen = run_capture(tmp_path, ctx, now=decision)
     assert bool(frozen["candidates"]) is allowed
     assert bool(frozen["accas"]) is allowed

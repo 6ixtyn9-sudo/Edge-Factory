@@ -126,7 +126,7 @@ def test_documented_101_outcome_keys_resolve_without_any_catalog():
     }
     stats: dict = {}
     rows = rows_from_odds_response(only_101, {"101": "1x2"},
-                                   home="Croatia", away="England", stats=stats)
+                                   home="Croatia", away="England", stats=stats, market_catalog={})
     assert {(r["selection"], r["odds"]) for r in rows} == {
         ("home", 4.3), ("draw", 3.2), ("away", 1.625)}
     assert not stats

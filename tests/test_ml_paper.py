@@ -81,6 +81,17 @@ def pick(i=1, *, bucket="CAUTION", n=60):
     return row
 
 
+
+def synthetic_oddspapi_provenance(row, *, market="1x2", selection="home"):
+    """Synthetic CURRENT-generation witness for admission tests, not provider evidence."""
+    return {"schema": "normalized_odds_quote_v1", "row": {
+        "schema_version": "4", "source": "oddspapi", "market": market,
+        "selection": selection, "date": row["date"], "home": row["home"], "away": row["away"],
+        "kickoff": row["kickoff_utc"], "captured_at": row["odds_captured_at"],
+        "odds": str(row["odds"]), "bookmaker": row["bookmaker"],
+    }}
+
+
 def context(rows):
     return {"lane": "main", "date": DAY, "build_at": NOW.isoformat(), "slate": rows}
 

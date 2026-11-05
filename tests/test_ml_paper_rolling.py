@@ -129,6 +129,8 @@ def test_original_source_quote_age_limits_retained(tmp_path, source, hours, extr
             odds_source=source,
             odds_captured_at=(NOW - timedelta(hours=hours, seconds=extra)).isoformat(),
         )
+        from test_ml_paper import synthetic_oddspapi_provenance
+        row["odds_provenance"] = synthetic_oddspapi_provenance(row)
     assert bool(run(tmp_path, rows=rows)["accas"]) is allowed
 
 

@@ -8,6 +8,7 @@ broad polling. Operational usage should be limited to unmatched same-day picks.
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import time
@@ -203,7 +204,8 @@ _MARKET_CATALOG_ENTRIES: dict[str, dict] = {}
 
 _NON_GOAL = ("corner", "card", "throw", "offside", "shot", "penalt", "foul",
              "booking", "save", "free kick", "goal kick", "red card", "yellow",
-             "inning", "margin", "period", "quarter", "set winner")
+             "inning", "margin", "period", "quarter", "set winner",
+             "overtime", "extra time", "round", "total games", "total sets", "total maps")
 _GOAL_WORDS = ("goal", "btts", "both teams", "total", "over", "under",
                "1x2", "match winner", "full time result", "double chance",
                "correct score", "winner")
@@ -280,8 +282,12 @@ def _unpriced_family(label: str) -> str | None:
         return "unsupported_win_to_nil"
     if "corners" in tokens or "corner" in tokens:
         return "unsupported_corners"
-    if "cards" in tokens or "card" in tokens:
+    if tokens & {"cards", "card", "booking", "bookings", "yellow"}:
         return "unsupported_cards"
+    if "2up" in tokens or {"2", "up"} <= tokens or {"early", "payout"} <= tokens:
+        return "unsupported_early_payout"
+    if any(word in str(label).lower() for word in _NON_GOAL):
+        return "unsupported_non_goal"
     return None
 
 
@@ -289,7 +295,7 @@ def _classify_catalog_entry(entry: dict) -> str:
     """Classify one /markets catalog entry from its DOCUMENTED fields.
 
     Order matters and is deliberately conservative:
-      1. ``playerProp`` -> player props are never priced;
+      1. explicit sport mismatch / ``playerProp`` -> never priced;
       2. ``period`` != fulltime -> a first-half/second-half market is a
          different market even when its marketType says "totals" (e.g. the
          observed "Over Under First Half", id 10262);
@@ -301,36 +307,49 @@ def _classify_catalog_entry(entry: dict) -> str:
          ``market_id_unknown`` and the census artefact names the id).
     """
     name = str(entry.get("name") or entry.get("label") or "")
+    sport = entry.get("sportId")
+    if sport is not None and str(sport) != str(SPORT_ID_SOCCER):
+        return "unsupported_sport"
     if entry.get("playerProp") is True:
         return "unsupported_player_prop"
     period = str(entry.get("period") or "").strip().lower()
     if period and period not in {"fulltime", "full_time", "full-time", "ft"}:
         return "unsupported_period"
-    unpriced = _unpriced_family(name)
+    # A missing (or contradictory full-time) period does not erase an
+    # explicitly named half. The older all-sport snapshot contains these.
+    tokens = _name_tokens(name)
+    if "half" in tokens and any(t in tokens for t in ("first", "second", "1st", "2nd", "1", "2")):
+        return "unsupported_period"
+    if not period and not ("fulltime" in tokens or {"full", "time"} <= set(tokens)):
+        return "unsupported_period"  # no positive full-time witness
+    market_type = str(entry.get("marketType") or "").strip().lower()
+    # The catalog path must enforce the SAME goals-only boundary as the
+    # legacy label path. "Bookings - Over Under Team 2" is not team goals;
+    # marketType can carry that evidence even when the name is generic.
+    unpriced = _unpriced_family(f"{name} {market_type}")
     if unpriced:
         return unpriced
-    market_type = str(entry.get("marketType") or "").strip().lower()
-    tokens = set(_name_tokens(name))
-    if market_type == "1x2":
-        return "1x2"
-    if "both" in tokens and "teams" in tokens and "score" in tokens or "btts" in tokens:
-        return "btts"
-    is_team = "team" in tokens and not ("both" in tokens and "teams" in tokens)
-    if is_team and ("over" in tokens or "under" in tokens or "total" in tokens):
-        if "1" in tokens or "home" in tokens:
-            return "team_totals_home"
-        if "2" in tokens or "away" in tokens:
-            return "team_totals_away"
-        return ""
-    if market_type in {"totals", "overunder", "over_under"} or (
-            {"over", "under"} <= tokens) or "total" in tokens or "totals" in tokens:
-        return "totals"
-    if market_type == "double_chance":
-        return "unsupported_double_chance"
-    if market_type == "handicap":
-        return "unsupported_handicap"
-    # Legacy fallback for catalog entries that carry only a label.
-    return _classify_label(name)
+    # Structured family/side evidence must not be ignored in favour of a
+    # convenient label. Unknown nonempty types are NOT a legacy-label case.
+    declared = {
+        "1x2": "1x2", "bothteamsscore": "btts", "btts": "btts",
+        "teamtotals-team1": "team_totals_home", "teamtotals-team2": "team_totals_away",
+        "totals": "totals", "overunder": "totals", "over_under": "totals",
+    }.get(market_type)
+    if market_type and declared is None:
+        return "unsupported_market_type"
+    labelled = _classify_label(name)
+    if declared and declared != "totals":
+        if labelled and labelled != declared:
+            return "unsupported_catalog_conflict"
+        return declared
+    if declared == "totals":
+        # Older documented catalogs use generic "totals" for BTTS and team
+        # totals as well; their explicit labels provide that specificity.
+        if labelled == "1x2":
+            return "unsupported_catalog_conflict"
+        return labelled if labelled in {"btts", "team_totals_home", "team_totals_away"} else "totals"
+    return labelled  # label-only legacy entry with a positive full-time witness
 
 
 def _market_catalog_map(payload: object) -> dict[str, str]:
@@ -383,6 +402,7 @@ def _market_catalog_entries(payload: object) -> dict[str, dict]:
             "period": item.get("period"),
             "handicap": item.get("handicap"),
             "playerProp": item.get("playerProp"),
+            **({"sportId": item["sportId"]} if "sportId" in item else {}),
             "outcomes": outcomes,
         }
     return out
@@ -442,8 +462,8 @@ def market_catalog_entries() -> dict[str, dict]:
 
 
 def _catalog_entry(market_id: str, catalog: dict[str, dict] | None) -> dict:
-    if catalog and market_id in catalog:
-        return catalog[market_id]
+    if catalog is not None:
+        return catalog.get(market_id, {})  # explicit scope never inherits stale global entries
     return _MARKET_CATALOG_ENTRIES.get(market_id, {})
 # double-chance outcome-name -> selection
 _DC_SELECTION = {
@@ -514,7 +534,7 @@ def _selection_from_name(name: object, home: object, away: object) -> str | None
 
 def _line_from_name(name: str) -> tuple[str | None, str | None]:
     """(side, line) when the outcome name embeds the line ("Over 2.5")."""
-    m = re.search(r"(?i)\b(over|under)\s+([0-9]+(?:\.[0-9]+)?)", str(name or ""))
+    m = re.search(r"(?i)\b(over|under)\s+([+-]?(?:[0-9]+(?:\.[0-9]+)?(?:e[+-]?[0-9]+)?|inf(?:inity)?|nan))(?=$|\s|[)])", str(name or ""))
     if not m:
         return None, None
     return m.group(1).lower(), m.group(2)
@@ -539,6 +559,8 @@ def rows_from_odds_response(
     away: object = None,
     stats: dict | None = None,
     market_catalog: dict[str, dict] | None = None,
+    fixture_id: object = None,
+    expected_kickoff: object = None,
 ) -> list[dict]:
     """Convert OddsPapi odds payload to flat unified-schema rows.
 
@@ -560,6 +582,10 @@ def rows_from_odds_response(
     /markets catalog entries; when absent, the entries from the last
     ``load_market_type_map()`` fetch are used.
 
+    ``fixture_id``/``expected_kickoff`` bind the response to the requested
+    fixture and board kickoff when supplied. Contradictory body identity,
+    sport, status or kickoff is rejected, not overwritten by the caller.
+
     ``home``/``away`` let the caller supply the fixture identity it already
     holds (the /fixtures record) when the /odds payload does not repeat it.
     Fixture identity is REQUIRED: a priced row with no teams can never join
@@ -570,33 +596,64 @@ def rows_from_odds_response(
     def _skip(reason: str) -> None:
         counters[reason] = int(counters.get(reason) or 0) + 1
 
+    # The request/fixtures board supplies identity when /odds omits it, but
+    # may never overrule contradictory identity actually present in /odds.
+    from edgefactory.identity import source_team_key, squad_marker_mismatch
+    from edgefactory.odds_normalization import parse_zoned_timestamp
+
+    if data.get("sportId") is not None and str(data["sportId"]) != str(SPORT_ID_SOCCER):
+        _skip("fixture_sport_mismatch")
+        return []
+    if data.get("statusId") is not None and str(data["statusId"]) != "0":
+        _skip("fixture_not_prematch")
+        return []
+    native_id = data.get("fixtureId")
+    if fixture_id is not None and native_id is not None and str(fixture_id) != str(native_id):
+        _skip("fixture_id_mismatch")
+        return []
+    for supplied, native in ((home, data.get("participant1Name")), (away, data.get("participant2Name"))):
+        if str(supplied or "").strip() and str(native or "").strip():
+            if (not source_team_key(supplied) or source_team_key(supplied) != source_team_key(native)
+                    or squad_marker_mismatch(supplied, native)):
+                _skip("fixture_participant_disagreement")
+                return []
     home = home if str(home or "").strip() else data.get("participant1Name")
     away = away if str(away or "").strip() else data.get("participant2Name")
+    if not str(home or "").strip() or not str(away or "").strip():
+        _skip("fixture_identity_missing")
+        return []
+    if (not source_team_key(home) or not source_team_key(away)
+            or source_team_key(home) == source_team_key(away)):
+        _skip("fixture_identity_invalid")
+        return []
     kickoff = data.get("startTime")
-    day = str(kickoff or "")[:10]
+    kickoff_dt = parse_zoned_timestamp(kickoff)
+    if kickoff_dt is None:
+        _skip("fixture_kickoff_invalid")
+        return []
+    if expected_kickoff is not None and parse_zoned_timestamp(expected_kickoff) != kickoff_dt:
+        _skip("fixture_kickoff_disagreement")
+        return []
+    day = kickoff_dt.date().isoformat()
     league = data.get("tournamentName") or data.get("categoryName")
     # Red-team F2 (fixed 2026-08-05): captured_at is OUR capture time, not
     # the provider's updatedAt (which can be stale by days). Freshness is
     # then meaningful for enh_pricing/CLV. The provider's own stamps are
     # preserved separately as published_at / provider_changed_at.
     from datetime import datetime as _dt, timezone as _tz
-    captured_at = _dt.now(_tz.utc).isoformat()
     captured_dt = _dt.now(_tz.utc)
+    captured_at = captured_dt.isoformat()
     rows: list[dict] = []
     bookmaker_odds = data.get("bookmakerOdds") or {}
     if not isinstance(bookmaker_odds, dict):
         _skip("no_bookmaker_odds")
-        return rows
-    if not str(home or "").strip() or not str(away or "").strip():
-        # Fail closed. Without participants the row has no fixture key, so
-        # it is priced evidence that can never be audited against a pick.
-        _skip("fixture_identity_missing")
         return rows
     type_map = dict(market_type_map) if market_type_map else dict(_MARKET_ID_TO_TYPE)
     if not type_map:
         type_map = dict(_FALLBACK_ID_TO_TYPE)
     for bookmaker, book_data in bookmaker_odds.items():
         if not isinstance(book_data, dict):
+            _skip("bookmaker_shape_invalid")
             continue
         # OddsPapi publishes internal/demo feeds alongside real bookmaker
         # boards (pinnacle+0x / pinnacle+2x / pinnacle+live and "demo" per
@@ -608,11 +665,24 @@ def rows_from_odds_response(
             continue
         markets = book_data.get("markets") or {}
         if not isinstance(markets, dict):
+            _skip("markets_shape_invalid")
             continue
         for mid, mkt in markets.items():
             mtype = type_map.get(str(mid))
             if not isinstance(mkt, dict):
+                _skip("market_shape_invalid")
                 continue
+            entry = _catalog_entry(str(mid), market_catalog)
+            # A stale caller-supplied type map must not overrule explicit
+            # non-goal/unsupported evidence in the retained catalog.
+            if entry:
+                catalog_type = _classify_catalog_entry(entry)
+                if catalog_type:
+                    if mtype and mtype != catalog_type and not catalog_type.startswith("unsupported"):
+                        _skip("market_type_map_disagreement")
+                    mtype = catalog_type
+                elif entry.get("name") or entry.get("marketType"):
+                    mtype = None
             if not mtype:
                 # Not in the catalog at all: never seen, never classified.
                 _skip("market_id_unknown")
@@ -631,14 +701,17 @@ def rows_from_odds_response(
                 continue
             outcomes = mkt.get("outcomes") or {}
             if not isinstance(outcomes, dict):
+                _skip("outcomes_shape_invalid")
                 continue
-            entry = _catalog_entry(str(mid), market_catalog)
             # mainLine: when a market quotes several lines, only the main one
             # is the comparable price. Prefer it when the provider flags it
             # and keep every outcome when it flags none (observed both ways).
             outcome_items = [
                 (key, o) for key, o in outcomes.items() if isinstance(o, dict)
             ]
+            invalid_outcomes = len(outcomes) - len(outcome_items)
+            if invalid_outcomes:
+                counters["outcome_shape_invalid"] = counters.get("outcome_shape_invalid", 0) + invalid_outcomes
             main_line_items = [(key, o) for key, o in outcome_items if _is_main_line(o)]
             if main_line_items:
                 skipped_alt = len(outcome_items) - len(main_line_items)
@@ -650,8 +723,9 @@ def rows_from_odds_response(
                 players = outcome.get("players") or {}
                 player0 = players.get("0") if isinstance(players, dict) else None
                 if not isinstance(player0, dict):
+                    _skip("player_price_node_missing")
                     continue
-                if player0.get("active") is False:
+                if player0.get("active") is False or outcome.get("active") is False:
                     # Provider-documented flag ("whether the odds are
                     # currently active"); a suspended/closed quote is not a
                     # price. Expected skip, reported not as loss.
@@ -660,6 +734,13 @@ def rows_from_odds_response(
                 price = player0.get("price")
                 if price is None:
                     _skip("no_price")
+                    continue
+                try:
+                    price = float(price) if not isinstance(price, bool) else float("nan")
+                except (TypeError, ValueError, OverflowError):
+                    price = float("nan")
+                if not math.isfinite(price) or price <= 1:
+                    _skip("invalid_price")
                     continue
                 published_at = (
                     player0.get("bookmakerChangedAt")
@@ -676,6 +757,9 @@ def rows_from_odds_response(
                     # published after we observed it is an artefact, not a
                     # price. Enforced here, at the boundary.
                     _skip("published_after_capture")
+                    continue
+                if _published_after(provider_changed_at, captured_dt):
+                    _skip("provider_changed_after_capture")
                     continue
                 name = _outcome_name(player0, outcome)
                 market, selection, failure = _market_selection(
@@ -730,6 +814,12 @@ def rows_from_odds_response(
                     "provider_changed_at": provider_changed_at,
                     "outcome_key": str(outcome_key),
                     "bookmaker_market_id": str(mkt.get("bookmakerMarketId") or ""),
+                    "provider_market_id": str(mid),
+                    "provider_market_name": entry.get("name") or "",
+                    "provider_market_type": entry.get("marketType") or "",
+                    "provider_period": entry.get("period") or "",
+                    "provider_fixture_id": str(native_id if native_id is not None else fixture_id or ""),
+                    "provider_sport_id": str(entry.get("sportId") or data.get("sportId") or ""),
                 })
     return rows
 
@@ -753,9 +843,12 @@ def _published_after(published_at: object, captured_dt) -> bool:
     return stamp > captured_dt
 
 
+_LINE_FIELDS = ("line", "point", "value", "handicap", "total")
+
+
 def _line_from(obj: dict) -> object:
     """Read a numeric line from any of the field names providers use."""
-    for k in ("line", "point", "value", "handicap", "total"):
+    for k in _LINE_FIELDS:
         v = obj.get(k)
         if v is not None and v != "":
             return v
@@ -807,7 +900,7 @@ def _market_selection(mtype: str, name: object, home: object, away: object,
         if len(set(evidence)) > 1:
             return None, None, "ambiguous"
         sel = evidence[0] if evidence else None
-        return ("1x2", sel, None) if sel else (None, None, "unresolved")
+        return ("1x2", sel, None) if sel in {"home", "draw", "away"} else (None, None, "unresolved")
     if mtype == "btts":
         from_name = _selection_from_name(name, home, away)
         from_key = _catalog_outcome_selection(entry, outcome_key, btts=True)
@@ -833,8 +926,11 @@ def _market_selection(mtype: str, name: object, home: object, away: object,
         # market id. The /odds payload itself carries no line for most
         # books - which is what made 1010 totals outcomes unresolvable.
         name_side, name_line = _line_from_name(str(name or ""))
-        field_line = _line_from(player0 or {}) or _line_from(outcome or {})
-        catalog_line = _catalog_line(entry)
+        # Every supplied line is evidence, including zero. Do not use `or`:
+        # it discarded 0 and hid player/outcome conflicts behind the catalog.
+        field_lines = [obj[k] for obj in (player0 or {}, outcome or {})
+                       for k in _LINE_FIELDS if obj.get(k) is not None and obj[k] != ""]
+        catalog_value = entry.get("handicap")
         sides = [s for s in (
             name_side,
             _side_from_name(str(name or "")) if not name_side else None,
@@ -843,8 +939,11 @@ def _market_selection(mtype: str, name: object, home: object, away: object,
         if len(set(sides)) > 1:
             return None, None, "ambiguous"
         side = sides[0] if sides else None
-        lines = [str(l) for l in (name_line, field_line, catalog_line) if l is not None and l != ""]
-        if lines and len({_canonical_line(l) for l in lines}) > 1:
+        raw_lines = [v for v in (name_line, *field_lines, catalog_value) if v is not None and v != ""]
+        lines = [_canonical_line(v) for v in raw_lines]
+        if any(v is None for v in lines):
+            return None, None, "unresolved"
+        if len(set(lines)) > 1:
             return None, None, "ambiguous"
         line_val = lines[0] if lines else None
         if side is None or line_val is None:
@@ -887,16 +986,14 @@ def _catalog_line(entry: dict) -> str | None:
     value = entry.get("handicap")
     if value is None or value == "":
         return None
-    try:
-        return f"{float(value):g}"
-    except (TypeError, ValueError):
-        return None
+    return _canonical_line(value)
 
 
 def _canonical_line(value: object) -> str | None:
     try:
-        return f"{float(value):g}"
-    except (TypeError, ValueError):
+        number = float(value)
+        return f"{number:g}" if not isinstance(value, bool) and math.isfinite(number) and number >= 0 else None
+    except (TypeError, ValueError, OverflowError):
         return None
 
 

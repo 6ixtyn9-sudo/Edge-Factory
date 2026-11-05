@@ -930,7 +930,7 @@ def test_alias_lookup_cannot_restore_loader_rejected_odds(tmp_path, monkeypatch,
     _write_month(tmp_path, [_row(**common, home='Palmeiras-SP', away='Fluminense-RJ')],
                  month='2026-10')
     alias = _row(**common, home='SE Palmeiras SP', away='Fluminense FC RJ',
-                 source='oddspapi', schema_version='3', market='tt_home_1.5',
+                 source='oddspapi', schema_version='4', market='tt_home_1.5',
                  selection='over', odds=1.6)
     alias[field] = value
     with gzip.open(tmp_path / 'localdata/oddspapi_odds_2026-10.csv.gz', 'wt', newline='') as fh:
@@ -947,7 +947,7 @@ def test_alias_loader_source_flag_is_still_required(tmp_path, monkeypatch):
     _write_month(tmp_path, [_row(**common, home='Palmeiras-SP', away='Fluminense-RJ')],
                  month='2026-10')
     alias = _row(**common, home='SE Palmeiras SP', away='Fluminense FC RJ',
-                 source='oddspapi', schema_version='3', market='tt_home_1.5',
+                 source='oddspapi', schema_version='4', market='tt_home_1.5',
                  selection='over', odds=1.6)
     with gzip.open(tmp_path / 'localdata/oddspapi_odds_2026-10.csv.gz', 'wt', newline='') as fh:
         writer = csv.DictWriter(fh, fieldnames=list(alias))
@@ -1113,7 +1113,7 @@ def test_primary_swapped_quote_squad_check_uses_pick_orientation(witnessed):
 @pytest.mark.parametrize('witnessed', [False, True])
 def test_retained_oddspapi_srl_cannot_price_real_fixture(tmp_path, monkeypatch, home, away, sim_side, with_real, witnessed):
     monkeypatch.setenv('EDGE_FACTORY_ODDSPAPI_PRICES', '1')
-    real = _row(source='oddspapi', schema_version='3', date='2026-10-22',
+    real = _row(source='oddspapi', schema_version='4', date='2026-10-22',
                 home=home, away=away, market='ou_2.5', selection='under', odds=1.6,
                 kickoff='2026-10-22T00:30:00Z', captured_at='2026-10-21T22:25:00Z')
     simulated = dict(real, odds=2.0, captured_at='2026-10-21T22:26:00Z')
