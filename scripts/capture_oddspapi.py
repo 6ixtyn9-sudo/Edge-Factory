@@ -46,6 +46,7 @@ from pathlib import Path
 from edgefactory.util import dated_artifact_path
 from edgefactory.sources.oddspapi_odds import (
     EXPECTED_PARSE_SKIPS,
+    SPORT_ID_SOCCER,
     _record_rate_limit,
     api_keys,
     fetch_fixtures,
@@ -88,7 +89,8 @@ OUT_DIR = ROOT / "localdata"
 #              the CSV - they are superseded (counted stale, never deleted).
 #   4          rejects non-goal catalog families (including bookings totals)
 #              and nonstandard early-payout settlement; preserves the provider
-#              catalog market id/name/type/period. Generation 3 could mislabel
+#              catalog market/fixture/sport identity and full-time semantics,
+#              with contradictory identity/line evidence rejected. Generation 3 could mislabel
 #              bookings as goals, so it is never supply for a new decision.
 #
 # Blank home/away is only the *symptom* of generation 1; the mislabelled
@@ -101,7 +103,7 @@ COLUMNS = ["source", "source_type", "sport", "date", "kickoff", "league",
            "home", "away", "market", "selection", "odds", "bookmaker",
            "captured_at", "published_at", "provider_changed_at",
            "outcome_key", "bookmaker_market_id",
-           "provider_market_id", "provider_market_name", "provider_market_type", "provider_period",
+           "provider_market_id", "provider_market_name", "provider_market_type", "provider_period", "provider_fixture_id", "provider_sport_id",
            "schema_version"]
 
 
@@ -409,11 +411,8 @@ def _write_markets_cache(spend_day: str, payload: object) -> None:
 
 
 def _parse_utc(value: object) -> datetime | None:
-    try:
-        dt = datetime.fromisoformat(str(value or "").strip().replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    from edgefactory.odds_normalization import parse_zoned_timestamp
+    return parse_zoned_timestamp(value)  # never invent UTC for an unzoned clock
 
 
 def _board_entry(fixture: dict) -> dict:
@@ -423,6 +422,7 @@ def _board_entry(fixture: dict) -> dict:
         "startTime": fixture.get("startTime") or "",
         "participant1Name": fixture.get("participant1Name") or fixture.get("home") or "",
         "participant2Name": fixture.get("participant2Name") or fixture.get("away") or "",
+        **{k: fixture[k] for k in ("sportId", "statusId") if k in fixture},
     }
 
 
@@ -439,6 +439,9 @@ def _pending_fixtures(fixtures: list[dict], state: dict, now: datetime) -> list[
     kickoff, not yet captured, and not yet started."""
     out = []
     for fx in fixtures:
+        if ((fx.get("sportId") is not None and str(fx["sportId"]) != str(SPORT_ID_SOCCER))
+                or (fx.get("statusId") is not None and str(fx["statusId"]) != "0")):
+            continue
         fid = str(fx.get("fixtureId") or fx.get("id") or "")
         start = _parse_utc(fx.get("startTime"))
         if not fid or start is None:
@@ -495,8 +498,9 @@ def _persist_vocabulary_snapshot(day: str, catalog_entries: dict) -> str:
     """Persist the provider's served market vocabulary for source_health.
 
     ``localdata/source_health/odds_vocabulary/<day>+oddspapi.json.gz`` holds
-    the /markets catalog EXACTLY as served (id -> name / marketType /
-    period / handicap / playerProp / outcomes), so a future classification
+    served catalog fields normalized to id -> name / marketType / period /
+    handicap / playerProp / outcomes / sportId (when supplied). This is a
+    field projection, NOT the complete native HTTP body. A future classification
     change is rebuilt from captured evidence, never from guesswork. Content
     -deduped: when the served vocabulary is byte-identical to the newest
     existing snapshot, no new file is written ("unchanged"), so an idle
@@ -750,7 +754,13 @@ def capture(day: str, max_fixtures: int = MAX_FIXTURES_CEILING,
                 fx.get("participant1Name") or fx.get("home"),
                 fx.get("participant2Name") or fx.get("away")))]
         stats["excluded_srl_fixtures"] = len(fixtures) - len(eligible)
-        fixtures = eligible
+        stats["excluded_wrong_sport_fixtures"] = sum(
+            fx.get("sportId") is not None and str(fx["sportId"]) != str(SPORT_ID_SOCCER) for fx in eligible)
+        stats["excluded_nonprematch_fixtures"] = sum(
+            fx.get("statusId") is not None and str(fx["statusId"]) != "0" for fx in eligible)
+        fixtures = [fx for fx in eligible
+                    if (fx.get("sportId") is None or str(fx["sportId"]) == str(SPORT_ID_SOCCER))
+                    and (fx.get("statusId") is None or str(fx["statusId"]) == "0")]
         stats.update(_slate_overlap_diagnostic(fixtures, day))
         pending = _pending_fixtures(fixtures, state, now)
         stats["pending_fixtures"] = len(pending)
@@ -864,6 +874,8 @@ def capture(day: str, max_fixtures: int = MAX_FIXTURES_CEILING,
                 away=fx.get("participant2Name"),
                 stats=parse_stats,
                 market_catalog=catalog_entries,
+                fixture_id=fid,
+                expected_kickoff=fx.get("startTime"),
             ) if odds else []
             for reason, count in parse_stats.items():
                 if reason == "_unresolved_1x2_samples":

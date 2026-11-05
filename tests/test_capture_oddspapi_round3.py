@@ -160,7 +160,7 @@ def test_capture_persists_the_market_census(tmp_path, monkeypatch):
     # production (capture passes the fixture identity into the parser).
     fixture_record = {"fixtureId": "fx2", "participant1Name": "Croatia",
                       "participant2Name": "England",
-                      "startTime": "2026-10-03T19:00:00Z"}
+                      "startTime": _odds_payload()["startTime"]}
     monkeypatch.setattr(cap, "fetch_fixtures", lambda day: [fixture_record])
     monkeypatch.setattr(cap, "fetch_odds", lambda fid: _odds_payload())
     monkeypatch.setattr(cap, "load_market_type_map", lambda: type_map)
@@ -169,7 +169,7 @@ def test_capture_persists_the_market_census(tmp_path, monkeypatch):
     monkeypatch.setattr(cap, "api_keys", lambda: ("k",))
     monkeypatch.setattr(cap, "_append_rows", lambda rows, day: 0)
 
-    # Inside the 6h window before the 19:00Z kickoff.
+    # Inside the 6h window before the same kickoff retained in /odds.
     stats = cap.capture("2026-10-03", max_fixtures=1,
                         now_utc=datetime(2026, 10, 3, 14, 0, tzinfo=timezone.utc))
 
