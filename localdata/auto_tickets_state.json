@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 413.282968,
   "cycle_base": 456.154568,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-05",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "FC Twente vs Pafos FC",
+              "pick": "HOME",
+              "prob": 0.7362117647058823,
+              "odds": 1.339,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-05",
+                "FC Twente",
+                "Pafos FC"
+              ]
+            },
+            {
+              "match": "Panathinaikos vs CSKA Sofia",
+              "pick": "HOME",
+              "prob": 0.6233333333333334,
+              "odds": 1.4762,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-05",
+                "Panathinaikos",
+                "CSKA Sofia"
+              ]
+            }
+          ],
+          "odds": 1.98,
+          "stake_pct": 51.6604
+        },
+        {
+          "legs": [
+            {
+              "match": "AC Milan vs Ferencvarosi TC",
+              "pick": "HOME",
+              "prob": 0.6833333333333332,
+              "odds": 1.39,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-05",
+                "AC Milan",
+                "Ferencvarosi TC"
+              ]
+            },
+            {
+              "match": "Monaco vs FC Nordsjaelland",
+              "pick": "HOME",
+              "prob": 0.6699999999999998,
+              "odds": 1.4464,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-05",
+                "Monaco",
+                "FC Nordsjaelland"
+              ]
+            }
+          ],
+          "odds": 2.01,
+          "stake_pct": 51.6603
+        }
+      ],
+      "staked_pct": 103.3207
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
