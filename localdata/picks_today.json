@@ -1,12 +1,12 @@
 [
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 63.57614213197971,
     "away": "Be\u015fikta\u015f",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_ee214d4f2f00846fa78f56e3",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -14100,13 +14100,13 @@
     "w_score": 0.6001
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 55.00000000000001,
     "away": "Brighton",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_c7c9572806b564198f651cee",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -14114,7 +14114,7 @@
       "comp_type_name": "league",
       "competition_type": "ALLOW",
       "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "CERTIFIED_CLEAN,CAUTION",
+      "duplicate_bucket_sources": "CAUTION",
       "duplicate_event_keys": "getafe vs brighton",
       "home_norm": "getafe",
       "league": "CAUTION",
@@ -14139,15 +14139,13 @@
     "display_rule": "1x2 unanimous[vitibet+zulubet] avg_p>=40",
     "draw_risk_flag": "EXTREME",
     "duplicate_bucket_sources": [
-      "CERTIFIED_CLEAN",
       "CAUTION"
     ],
     "duplicate_matches_collapsed": [
       "Getafe vs Brighton"
     ],
-    "duplicate_rows_collapsed": 3,
+    "duplicate_rows_collapsed": 2,
     "duplicate_rules_collapsed": [
-      "1x2 single[zulubet] avg_p>=55",
       "1x2 unanimous[vitibet+zulubet] avg_p>=0",
       "1x2 unanimous[vitibet+zulubet] avg_p>=35",
       "1x2 unanimous[vitibet+zulubet] avg_p>=40"
@@ -37416,13 +37414,13 @@
     "w_score": 0.5805
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 76.45833333333333,
     "away": "Lech Pozna\u0144",
     "bookmaker": "William Hill",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -79368,13 +79366,13 @@
     "w_score": 0.6681
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 68.0,
     "away": "FC Nordsjaelland",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -79414,9 +79412,8 @@
       "Monaco vs FC Nordsjaelland",
       "Monaco vs Nordsj\u00e6lland"
     ],
-    "duplicate_rows_collapsed": 15,
+    "duplicate_rows_collapsed": 14,
     "duplicate_rules_collapsed": [
-      "1x2 single[zulubet] avg_p>=55",
       "1x2 unanimous[scoutingstats+statarea+vitibet+zulubet] avg_p>=40",
       "1x2 unanimous[scoutingstats+statarea+zulubet] avg_p>=0",
       "1x2 unanimous[scoutingstats+statarea+zulubet] avg_p>=35",
@@ -87965,7 +87962,7 @@
           "kickoff_utc": "2026-11-05T20:00:00+00:00",
           "kind": "betexplorer_pre_cutoff_v1",
           "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-          "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+          "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
           "market": "ou_2.5",
           "price": 1.44,
           "quote_evidence": {
@@ -88033,7 +88030,7 @@
                 "away": "Nordsj\u00e6lland",
                 "csv_data_row": 542,
                 "file": "scoutingstats_2026-11.csv.gz",
-                "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                 "fixture_identity_origin": "provider_participants",
                 "home": "Monaco",
                 "kickoff_origin": "provider_explicit_offset",
@@ -88176,7 +88173,7 @@
               "kickoff_utc": "2026-11-05T20:00:00+00:00",
               "kind": "betexplorer_pre_cutoff_v1",
               "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-              "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+              "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
               "market": "ou_2.5",
               "price": 1.41,
               "quote_evidence": {
@@ -88244,7 +88241,7 @@
                     "away": "Nordsj\u00e6lland",
                     "csv_data_row": 542,
                     "file": "scoutingstats_2026-11.csv.gz",
-                    "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                    "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                     "fixture_identity_origin": "provider_participants",
                     "home": "Monaco",
                     "kickoff_origin": "provider_explicit_offset",
@@ -88387,7 +88384,7 @@
               "kickoff_utc": "2026-11-05T20:00:00+00:00",
               "kind": "betexplorer_pre_cutoff_v1",
               "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-              "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+              "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
               "market": "ou_2.5",
               "price": 1.41,
               "quote_evidence": {
@@ -88455,7 +88452,7 @@
                     "away": "Nordsj\u00e6lland",
                     "csv_data_row": 542,
                     "file": "scoutingstats_2026-11.csv.gz",
-                    "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                    "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                     "fixture_identity_origin": "provider_participants",
                     "home": "Monaco",
                     "kickoff_origin": "provider_explicit_offset",
@@ -88612,7 +88609,7 @@
           "kickoff_utc": "2026-11-05T20:00:00+00:00",
           "kind": "betexplorer_pre_cutoff_v1",
           "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-          "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+          "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
           "market": "ou_4.5",
           "price": 1.3,
           "quote_evidence": {
@@ -88680,7 +88677,7 @@
                 "away": "Nordsj\u00e6lland",
                 "csv_data_row": 542,
                 "file": "scoutingstats_2026-11.csv.gz",
-                "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                 "fixture_identity_origin": "provider_participants",
                 "home": "Monaco",
                 "kickoff_origin": "provider_explicit_offset",
@@ -88823,7 +88820,7 @@
               "kickoff_utc": "2026-11-05T20:00:00+00:00",
               "kind": "betexplorer_pre_cutoff_v1",
               "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-              "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+              "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
               "market": "ou_4.5",
               "price": 1.29,
               "quote_evidence": {
@@ -88891,7 +88888,7 @@
                     "away": "Nordsj\u00e6lland",
                     "csv_data_row": 542,
                     "file": "scoutingstats_2026-11.csv.gz",
-                    "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                    "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                     "fixture_identity_origin": "provider_participants",
                     "home": "Monaco",
                     "kickoff_origin": "provider_explicit_offset",
@@ -96009,13 +96006,13 @@
     "w_score": 0.6453
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 67.5,
     "away": "CSKA Sofia",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -96054,9 +96051,8 @@
     "duplicate_matches_collapsed": [
       "Panathinaikos vs CSKA Sofia"
     ],
-    "duplicate_rows_collapsed": 15,
+    "duplicate_rows_collapsed": 14,
     "duplicate_rules_collapsed": [
-      "1x2 single[zulubet] avg_p>=55",
       "1x2 unanimous[scoutingstats+statarea+vitibet+zulubet] avg_p>=40",
       "1x2 unanimous[scoutingstats+statarea+zulubet] avg_p>=0",
       "1x2 unanimous[scoutingstats+statarea+zulubet] avg_p>=35",
@@ -104487,13 +104483,13 @@
     "w_score": 0.6453
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 66.63253012048193,
     "away": "Nordsj\u00e6lland",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_ee214d4f2f00846fa78f56e3",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -105125,7 +105121,7 @@
       "kickoff_utc": "2026-11-05T20:00:00+00:00",
       "kind": "betexplorer_pre_cutoff_v1",
       "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-      "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+      "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
       "market": "ou_2.5",
       "price": 1.44,
       "quote_evidence": {
@@ -105193,7 +105189,7 @@
             "away": "Nordsj\u00e6lland",
             "csv_data_row": 542,
             "file": "scoutingstats_2026-11.csv.gz",
-            "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+            "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
             "fixture_identity_origin": "provider_participants",
             "home": "Monaco",
             "kickoff_origin": "provider_explicit_offset",
@@ -105337,7 +105333,7 @@
           "kickoff_utc": "2026-11-05T20:00:00+00:00",
           "kind": "betexplorer_pre_cutoff_v1",
           "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-          "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+          "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
           "market": "ou_2.5",
           "price": 1.41,
           "quote_evidence": {
@@ -105405,7 +105401,7 @@
                 "away": "Nordsj\u00e6lland",
                 "csv_data_row": 542,
                 "file": "scoutingstats_2026-11.csv.gz",
-                "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                 "fixture_identity_origin": "provider_participants",
                 "home": "Monaco",
                 "kickoff_origin": "provider_explicit_offset",
@@ -105548,7 +105544,7 @@
           "kickoff_utc": "2026-11-05T20:00:00+00:00",
           "kind": "betexplorer_pre_cutoff_v1",
           "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-          "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+          "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
           "market": "ou_2.5",
           "price": 1.41,
           "quote_evidence": {
@@ -105616,7 +105612,7 @@
                 "away": "Nordsj\u00e6lland",
                 "csv_data_row": 542,
                 "file": "scoutingstats_2026-11.csv.gz",
-                "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                 "fixture_identity_origin": "provider_participants",
                 "home": "Monaco",
                 "kickoff_origin": "provider_explicit_offset",
@@ -105791,7 +105787,7 @@
           "kickoff_utc": "2026-11-05T20:00:00+00:00",
           "kind": "betexplorer_pre_cutoff_v1",
           "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-          "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+          "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
           "market": "ou_2.5",
           "price": 1.44,
           "quote_evidence": {
@@ -105859,7 +105855,7 @@
                 "away": "Nordsj\u00e6lland",
                 "csv_data_row": 542,
                 "file": "scoutingstats_2026-11.csv.gz",
-                "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                 "fixture_identity_origin": "provider_participants",
                 "home": "Monaco",
                 "kickoff_origin": "provider_explicit_offset",
@@ -106002,7 +105998,7 @@
               "kickoff_utc": "2026-11-05T20:00:00+00:00",
               "kind": "betexplorer_pre_cutoff_v1",
               "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-              "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+              "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
               "market": "ou_2.5",
               "price": 1.41,
               "quote_evidence": {
@@ -106070,7 +106066,7 @@
                     "away": "Nordsj\u00e6lland",
                     "csv_data_row": 542,
                     "file": "scoutingstats_2026-11.csv.gz",
-                    "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                    "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                     "fixture_identity_origin": "provider_participants",
                     "home": "Monaco",
                     "kickoff_origin": "provider_explicit_offset",
@@ -106213,7 +106209,7 @@
               "kickoff_utc": "2026-11-05T20:00:00+00:00",
               "kind": "betexplorer_pre_cutoff_v1",
               "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-              "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+              "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
               "market": "ou_2.5",
               "price": 1.41,
               "quote_evidence": {
@@ -106281,7 +106277,7 @@
                     "away": "Nordsj\u00e6lland",
                     "csv_data_row": 542,
                     "file": "scoutingstats_2026-11.csv.gz",
-                    "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                    "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                     "fixture_identity_origin": "provider_participants",
                     "home": "Monaco",
                     "kickoff_origin": "provider_explicit_offset",
@@ -106438,7 +106434,7 @@
           "kickoff_utc": "2026-11-05T20:00:00+00:00",
           "kind": "betexplorer_pre_cutoff_v1",
           "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-          "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+          "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
           "market": "ou_4.5",
           "price": 1.3,
           "quote_evidence": {
@@ -106506,7 +106502,7 @@
                 "away": "Nordsj\u00e6lland",
                 "csv_data_row": 542,
                 "file": "scoutingstats_2026-11.csv.gz",
-                "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                 "fixture_identity_origin": "provider_participants",
                 "home": "Monaco",
                 "kickoff_origin": "provider_explicit_offset",
@@ -106649,7 +106645,7 @@
               "kickoff_utc": "2026-11-05T20:00:00+00:00",
               "kind": "betexplorer_pre_cutoff_v1",
               "ledger_file": "betexplorer_match_detail_2026-11-05.json",
-              "ledger_sha256": "812c104a49c26dd388d7fa86035e6f808280f5767c9b30883253938ad123a920",
+              "ledger_sha256": "2f389a1da05a29a9602b477bdea40667c7187093d975bbe184eccf7425667a88",
               "market": "ou_4.5",
               "price": 1.29,
               "quote_evidence": {
@@ -106717,7 +106713,7 @@
                     "away": "Nordsj\u00e6lland",
                     "csv_data_row": 542,
                     "file": "scoutingstats_2026-11.csv.gz",
-                    "file_sha256": "45207c45d10d676c7391f753d25296b5a96ed08ccd757a20e85d28b274000d91",
+                    "file_sha256": "15d179bde927b4db4673f7846cad04cf07788a5d541ee29befac7ec2131bbec5",
                     "fixture_identity_origin": "provider_participants",
                     "home": "Monaco",
                     "kickoff_origin": "provider_explicit_offset",
@@ -115024,13 +115020,13 @@
     "w_score": 0.6451
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 61.76600985221674,
     "away": "Pafos FC",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_ee214d4f2f00846fa78f56e3",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -130375,13 +130371,13 @@
     "w_score": 0.5846
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 54.50000000000001,
     "away": "Marseille",
     "bookmaker": "Betfair",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_c7c9572806b564198f651cee",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -141181,13 +141177,13 @@
     "w_score": 0.5846
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 81.06935346055255,
     "away": "Lech Pozna\u0144",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -146489,13 +146485,13 @@
     "w_score": 0.5405
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 56.8561967833491,
     "away": "Celje",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -146535,9 +146531,8 @@
     "duplicate_matches_collapsed": [
       "Sturm Graz vs Celje"
     ],
-    "duplicate_rows_collapsed": 14,
+    "duplicate_rows_collapsed": 13,
     "duplicate_rules_collapsed": [
-      "1x2 single[zulubet] avg_p>=55",
       "1x2 unanimous[scoutingstats+statarea+vitibet+zulubet] avg_p>=40",
       "1x2 unanimous[scoutingstats+statarea+zulubet] avg_p>=0",
       "1x2 unanimous[scoutingstats+statarea+zulubet] avg_p>=35",
@@ -150592,13 +150587,13 @@
     "w_score": 0.5405
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 42.405127747007334,
     "away": "Sportivo Luque\u00f1o",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
     "contract_schema": "post_forebet_v1",
     "ctx": {
@@ -171357,13 +171352,13 @@
     "w_score": 0.5405
   },
   {
-    "as_of": "2026-11-05T18:28:09+02:00",
+    "as_of": "2026-11-05T21:26:42+02:00",
     "avg_p": 39.08970727101039,
     "away": "Jablonec",
     "bookmaker": "Pinnacle",
     "bucket": "SKIPPED_VETO",
-    "build_git_sha": "befd750a83135b8d55dfac07ee4c85d7687faa91",
-    "built_at_utc": "2026-11-05T16:35:42.603758+00:00",
+    "build_git_sha": "b34b5b1cb12478fc7a5570f50147ca0012b81310",
+    "built_at_utc": "2026-11-05T19:32:09.768959+00:00",
     "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
     "contract_schema": "post_forebet_v1",
     "ctx": {

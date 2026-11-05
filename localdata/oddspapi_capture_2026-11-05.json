@@ -1,13 +1,7 @@
 {
-  "added": 4635,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "FC Nordsjaelland",
-      "fixture_id": "id1003448074173294",
-      "home": "AS Monaco"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-05",
     "keys": 3,
@@ -16,220 +10,16 @@
     "remaining_today": 0,
     "spent_today": 25
   },
-  "budget_deferred": 65,
-  "captured_at": "2026-11-05T16:26:47+00:00",
+  "captured_at": "2026-11-05T19:25:47+00:00",
   "date": "2026-11-05",
   "errors": [],
-  "excluded_nonprematch_fixtures": 0,
-  "excluded_srl_fixtures": 9,
-  "excluded_wrong_sport_fixtures": 0,
-  "fixtures": 121,
-  "future_slate_fixtures": 0,
+  "fixtures": 0,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 564,
-  "markets": {
-    "1x2": 336,
-    "btts": 220,
-    "ou_0.5": 102,
-    "ou_0.75": 10,
-    "ou_1": 18,
-    "ou_1.25": 20,
-    "ou_1.5": 210,
-    "ou_1.75": 20,
-    "ou_2": 62,
-    "ou_2.25": 22,
-    "ou_2.5": 211,
-    "ou_2.75": 138,
-    "ou_3": 150,
-    "ou_3.25": 150,
-    "ou_3.5": 224,
-    "ou_3.75": 140,
-    "ou_4": 128,
-    "ou_4.25": 118,
-    "ou_4.5": 208,
-    "ou_4.75": 10,
-    "ou_5": 52,
-    "ou_5.25": 10,
-    "ou_5.5": 208,
-    "ou_5.75": 10,
-    "ou_6": 10,
-    "ou_6.25": 10,
-    "ou_6.5": 119,
-    "ou_6.75": 5,
-    "ou_7": 10,
-    "ou_7.25": 10,
-    "ou_7.5": 55,
-    "ou_7.75": 5,
-    "ou_8": 5,
-    "ou_8.25": 5,
-    "ou_8.5": 9,
-    "tt_away_0.5": 198,
-    "tt_away_1.25": 6,
-    "tt_away_1.5": 194,
-    "tt_away_2.5": 170,
-    "tt_away_3.5": 47,
-    "tt_away_4.5": 5,
-    "tt_away_5.5": 3,
-    "tt_home_0.5": 156,
-    "tt_home_1.25": 16,
-    "tt_home_1.5": 194,
-    "tt_home_2": 6,
-    "tt_home_2.5": 198,
-    "tt_home_3.5": 194,
-    "tt_home_4.5": 144,
-    "tt_home_5.5": 84
-  },
-  "markets_source": "cache",
-  "matched": 1,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 2,
-    "market_inactive": 2273,
-    "market_unsupported_cards": 962,
-    "market_unsupported_clean_sheet": 152,
-    "market_unsupported_corners": 2819,
-    "market_unsupported_correct_score": 517,
-    "market_unsupported_double_chance": 216,
-    "market_unsupported_draw_no_bet": 189,
-    "market_unsupported_early_payout": 53,
-    "market_unsupported_handicap": 2961,
-    "market_unsupported_market_type": 1693,
-    "market_unsupported_non_goal": 95,
-    "market_unsupported_odd_even": 482,
-    "market_unsupported_period": 11407,
-    "market_unsupported_win_to_nil": 338,
-    "outcome_inactive": 514
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 2,
-      "market_inactive": 2273,
-      "outcome_inactive": 514
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_cards": 962,
-      "market_unsupported_clean_sheet": 152,
-      "market_unsupported_corners": 2819,
-      "market_unsupported_correct_score": 517,
-      "market_unsupported_double_chance": 216,
-      "market_unsupported_draw_no_bet": 189,
-      "market_unsupported_early_payout": 53,
-      "market_unsupported_handicap": 2961,
-      "market_unsupported_market_type": 1693,
-      "market_unsupported_non_goal": 95,
-      "market_unsupported_odd_even": 482,
-      "market_unsupported_period": 11407,
-      "market_unsupported_win_to_nil": 338
-    }
-  },
-  "pending_fixtures": 66,
-  "quoted_fixtures": [
-    {
-      "away": "FC Nordsjaelland",
-      "fixture_id": "id1003448074173294",
-      "home": "AS Monaco"
-    }
-  ],
-  "reserved_requests": 0,
-  "rows": 4635,
+  "markets": {},
+  "matched": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 19,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 3,
-  "slate_provider_overlap_fixtures": 4,
-  "slate_unmatched_fixtures": [
-    {
-      "away": "Lech Pozna\u0144",
-      "home": "Benfica",
-      "league": "Europa League",
-      "normalized_pair": "benfica|lech poznan"
-    },
-    {
-      "away": "Inter Club d'Escaldes",
-      "home": "Crvena Zvezda",
-      "league": "Europa Conference League",
-      "normalized_pair": "crvena zvezda|inter d'escaldes"
-    },
-    {
-      "away": "Viktoria Plze\u0148",
-      "home": "Lillestr\u00f8m",
-      "league": "Europa League",
-      "normalized_pair": "lillestrom|viktoria plzen"
-    },
-    {
-      "away": "Ferencvarosi TC",
-      "home": "AC Milan",
-      "league": "World: UEFA Europa League",
-      "normalized_pair": "ferencvarosi tc|milan"
-    },
-    {
-      "away": "CSKA Sofia",
-      "home": "Panathinaikos",
-      "league": "World: UEFA Europa Conference League",
-      "normalized_pair": "cska sofia|panathinaikos"
-    },
-    {
-      "away": "Hearts",
-      "home": "Thun",
-      "league": "Europa Conference League",
-      "normalized_pair": "hearts|thun"
-    },
-    {
-      "away": "Be\u015fikta\u015f",
-      "home": "Celtic",
-      "league": "Europa League",
-      "normalized_pair": "besiktas|celtic"
-    },
-    {
-      "away": "Pafos FC",
-      "home": "FC Twente",
-      "league": "Europa Conference League",
-      "normalized_pair": "pafos|twente"
-    },
-    {
-      "away": "Gent",
-      "home": "KuPS",
-      "league": "World: UEFA Europa Conference League",
-      "normalized_pair": "gent|kups"
-    },
-    {
-      "away": "Celje",
-      "home": "Sturm Graz",
-      "league": "Europa League",
-      "normalized_pair": "celje|sturm graz"
-    },
-    {
-      "away": "Jagiellonia",
-      "home": "Levski Sofia",
-      "league": "World: UEFA Europa League",
-      "normalized_pair": "jagiellonia|levski sofia"
-    },
-    {
-      "away": "Brighton",
-      "home": "Getafe",
-      "league": "World: UEFA Europa Conference League",
-      "normalized_pair": "brighton|getafe"
-    },
-    {
-      "away": "Marseille",
-      "home": "Bayer Leverkusen",
-      "league": "World: UEFA Europa League",
-      "normalized_pair": "bayer leverkusen|marseille"
-    },
-    {
-      "away": "Ajax",
-      "home": "FC Midtjylland",
-      "league": "World: UEFA Europa Conference League",
-      "normalized_pair": "ajax|midtjylland"
-    },
-    {
-      "away": "Orl\u00e9ans",
-      "home": "Valenciennes",
-      "league": "Ligue 3",
-      "normalized_pair": "orleans|valenciennes"
-    }
-  ],
   "source": "oddspapi_odds",
   "status": "budget"
 }
