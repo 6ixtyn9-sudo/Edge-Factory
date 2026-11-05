@@ -75,6 +75,7 @@ MAX_PAPER_EXPOSURE = 0.25  # shared aggregate ceiling; legacy free-bank sizing r
 MAX_FIXTURE_STAKE_FRACTION = 0.05  # NEW gross stake per canonical fixture / TOTAL paper bank
 FIXTURE_CONCENTRATION_POLICY = "ml_paper_fixture_gross_stake_cap"
 DYNAMIC_LEARNING_POLICY = "ml_paper_dynamic_calibration_success_tilt"
+LEARNING_QUOTE_POLICY = "historical_candidates_existing_oddspapi_generation_floor_v1"
 RECENCY_HALF_LIFE_DAYS = 14.0  # recency weighting for dynamic learning effects
 SUCCESS_TILT_GROUP_LIMIT_LOGIT = 0.50  # max logit shift from one group effect
 SUCCESS_TILT_TOTAL_LIMIT_LOGIT = 0.50  # correlated groups average, never stack past one group
@@ -797,6 +798,39 @@ def _valid_learning_candidate(candidate):
     )
 
 
+def _learning_quote_rejection(candidate):
+    """Apply the existing supply floor to historical learning, not history itself.
+
+    Frozen receipts remain readable and their stakes/results stay unchanged.
+    A legacy OddsPapi candidate cannot become trusted learning inventory just
+    because it was once published. Filter BEFORE deduplication so an eligible
+    quote of the same forecast can still supply the observation. The witness
+    proves a parser generation, not native-provider authenticity.
+    """
+    source = candidate.get("price_source")
+    if source is not None and not isinstance(source, str):
+        return "malformed_learning_price_source"
+    # A historical spelling/case variant must not bypass the family lookup.
+    # This normalises the lookup only; the frozen source field is untouched.
+    if isinstance(source, str):
+        source = source.strip().casefold()
+    if not _quote_generation_ok(source, candidate.get("price_provenance")):
+        return "oddspapi_legacy_or_unproven_quote_generation"
+    return None
+
+
+def _learning_quote_audit(excluded, fixtures):
+    return {
+        "policy": LEARNING_QUOTE_POLICY,
+        "oddspapi_min_schema_version": ODDSPAPI_MIN_SCHEMA_VERSION,
+        "excluded_candidate_occurrences": sum(excluded.values()),
+        "excluded_fixture_count": len(fixtures),
+        "excluded_by_reason": dict(sorted(excluded.items())),
+        "count_basis": "candidate_occurrences_before_outcome_lookup_and_deduplication",
+        "historical_receipts_and_finances": "unchanged",
+    }
+
+
 def _success_groups(candidate):
     """Groups whose recent success may tilt a candidate's probability."""
     groups = [f"bucket:{candidate['bucket']}", f"market:{candidate['market']}"]
@@ -893,11 +927,16 @@ def learn(history, now, score_lookup):
     hit rate, so heavy favourites cannot look successful merely by hitting.
     Repeated book/market quotes do not manufacture independent games: each
     fixture receives total sample weight one before recency weighting.
-    Never fitted on today's outcomes (prior-day receipts only).
+    Never fitted on today's outcomes (prior-day receipts only). The same
+    OddsPapi parser-generation floor as new supply applies to historical
+    learning candidates. Each decision refits from eligible BASE predictions;
+    old fitted coefficients and adjusted probabilities are not training inputs.
     """
     rows = []
     training_outcomes = []
     training_keys = set()
+    excluded = Counter()
+    excluded_fixtures = set()
     today = now.astimezone(LOCAL_TZ).date().isoformat()
     for receipt in history:
         captured = parse_zoned_timestamp(receipt.get("captured_at"))
@@ -905,6 +944,11 @@ def learn(history, now, score_lookup):
             continue
         for c in receipt.get("candidates") or []:
             if not _valid_learning_candidate(c) or c["date"] >= today:
+                continue
+            reason = _learning_quote_rejection(c)
+            if reason is not None:
+                excluded[reason] += 1
+                excluded_fixtures.add(tuple(c["fixture"]))
                 continue
             score = score_lookup(c)
             if score is None:
@@ -946,6 +990,7 @@ def learn(history, now, score_lookup):
         "training_outcomes_sha256": digest(training_outcomes),
         "training_last_date": max((c["date"] for c, _ in rows), default=None),
         "learning_policy": DYNAMIC_LEARNING_POLICY,
+        "training_admission": _learning_quote_audit(excluded, excluded_fixtures),
         "evidence_gate": "none_from_first_resolved_prior_day_results_evidence_smoothed",
         "smoothing_k_fixtures": LEARNING_SMOOTHING_K_FIXTURES,
         "smoothing_factor": (len(fixtures) / (len(fixtures) + LEARNING_SMOOTHING_K_FIXTURES)
@@ -2453,12 +2498,22 @@ def calibration_diagnostics(history, score_lookup):
     Includes unbet candidates. Repeated books/buckets do not manufacture more
     independent fixtures: each fixture contributes total weight one per day.
     Not a significance test; unresolved records stay absent and counts explicit.
+    The learning quote filter also applies here: an ineligible historical quote
+    is not clean validation evidence. Financial performance still includes every
+    original position; no receipt, price, prediction or settlement is rewritten.
     """
     samples = {}
     comparisons = {}
+    excluded = Counter()
+    excluded_fixtures = set()
     for receipt in history:
         selected = {c["candidate_id"] for a in receipt["accas"] for c in a["legs"]}
         for c in receipt["candidates"]:
+            reason = _learning_quote_rejection(c)
+            if reason is not None:
+                excluded[reason] += 1
+                excluded_fixtures.add(tuple(c["fixture"]))
+                continue
             score = score_lookup(c)
             y = hit(c["market"], c["selection"], *score) if score is not None else None
             if y is None:
@@ -2513,6 +2568,10 @@ def calibration_diagnostics(history, score_lookup):
             stats[field + "_logloss"] = logloss / len(counts) if counts else None
         groups[name] = stats
     groups["source_comparison"] = _source_comparisons(list(comparisons.values()))
+    groups["candidate_admission"] = {
+        **_learning_quote_audit(excluded, excluded_fixtures),
+        "prediction_basis": "original_frozen_predictions_not_a_clean_refit_backtest",
+    }
     return groups
 
 
@@ -3017,6 +3076,14 @@ def render_performance(report):
         f"LEARNING last decision: {learning.get('fixtures', 0)} resolved prior-day fixtures; "
         "dynamic calibration + success tilt from first results, not an automatic review/promotion trigger\n"
     )
+    admission = calibration.get("candidate_admission") or {}
+    excluded = admission.get("excluded_candidate_occurrences", 0)
+    if excluded:
+        evidence += (
+            f"DATA     {excluded} ineligible-quote candidate occurrences excluded from paired errors; "
+            "not a count of independent fixtures\n"
+            "         Historical P&L and frozen predictions unchanged; not a clean-refit backtest.\n"
+        )
     for label, stats in (("POOL", pool), ("SELECTED", selected)):
         if not stats.get("resolved_observations", 0):
             evidence += f"FORWARD {label}: no resolved paired base/adjusted errors yet\n"
