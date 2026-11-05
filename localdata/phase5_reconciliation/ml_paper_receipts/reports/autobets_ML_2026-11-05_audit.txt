@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-05
 ==============================================================
-CURRENT PAPER BANK (all dates): 78.346 units · free 64.070 / reserved 14.275
-13 paper accas · 10 ticket publications · 0 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 78.346 units · free 62.677 / reserved 15.669
+15 paper accas · 12 ticket publications · 0 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -103,6 +103,22 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
 
 [PAPER ACCA #13] @11.092 — 1.249585 paper units — Betsson
    Published 2026-11-05 15:30:44 SAST · reference P10/1
+   Bayer Leverkusen vs Marseille · KICKOFF 2026-11-05 22:00 SAST
+      Away Win (1X2) @9.400 · ML 24.9% · SKIPPED_VETO
+
+   Trabzonspor vs SC Freiburg · KICKOFF 2026-11-05 19:45 SAST
+      Match Over 1.5 Goals @1.180 · ML 85.0% · SKIPPED_VETO
+
+[PAPER ACCA #14] @11.092 — 1.220871 paper units — Betsson
+   Published 2026-11-05 18:37:35 SAST · reference P11/1
+   Bayer Leverkusen vs Marseille · KICKOFF 2026-11-05 22:00 SAST
+      Away Win (1X2) @9.400 · ML 24.9% · SKIPPED_VETO
+
+   Trabzonspor vs SC Freiburg · KICKOFF 2026-11-05 19:45 SAST
+      Match Over 1.5 Goals @1.180 · ML 85.0% · SKIPPED_VETO
+
+[PAPER ACCA #15] @11.092 — 0.172875 paper units — Betsson
+   Published 2026-11-05 18:40:16 SAST · reference P12/1
    Bayer Leverkusen vs Marseille · KICKOFF 2026-11-05 22:00 SAST
       Away Win (1X2) @9.400 · ML 24.9% · SKIPPED_VETO
 
@@ -328,6 +344,48 @@ P10 · 2026-11-05 15:30:44 SAST · ACCA #13
    ACCA #13 / leg 1: source forecast 25.7% · gap -0.7 pp · quote age 2.32h at decision
       base 17.4% → adjusted 24.9% · learning move +7.5 pp · price break-even 10.6% (1/odds, not a fair probability or proof of value)
    ACCA #13 / leg 2: source forecast 87.4% · gap -2.4 pp · quote age 0.16h at decision
+      base 89.5% → adjusted 85.0% · learning move -4.5 pp · price break-even 84.7% (1/odds, not a fair probability or proof of value)
+      Quote witness: oddspapi_odds_2026-11.csv.gz · ou_1.5 / over · bookmaker market m-f-tH4qCe2M3EKOo7fugNt7Xw-MTG2W-1.5 · outcome 108 · provider label Over Under Full Time · normalized row only; native payload unverified
+   Learning: fitted_prior_paper_errors
+
+P11 · 2026-11-05 18:37:35 SAST · ACCA #14
+   Receipt 20261105T163723610309Z · status paper_accas
+   Frozen at 2026-11-05T16:37:35.432411+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 d33ca3279834bf5292b5fcc9fb5a23c27c81bad8b40235abcebd7a552319a06e
+   Decision window 2026-11-05T16:37:23.610309+00:00 → 2026-11-06T16:37:23.610309+00:00
+   Bank at decision: 78.345774 paper units
+   Available at decision: 64.070368 paper units
+   Reserved at decision: 14.275406 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.917288 units per canonical fixture
+   Reservation 1.220871 → 1.220871 units · released/idle 0.000000; no refill
+   2026-11-05 bayerleverkusen vs marseille: new 1.220871 + prior open 2.523542 · unused new budget 0.172875 units
+   2026-11-05 trabzonspor vs freiburg: new 1.220871 + prior open 2.523542 · unused new budget 0.172875 units
+   Coverage: candidate count: 3035; candidate fixtures: 2; slate rows: 56; status: inputs_available
+   Rejections: data quality: 1; fixture budget exhausted: 20; fixture date or prior model unproven: 2; outside rolling window or unproven kickoff: 8; quote identity unproven: 158; quote or probability unavailable: 395
+   ACCA #14 / leg 1: source forecast 25.7% · gap -0.8 pp · quote age 5.43h at decision
+      base 17.4% → adjusted 24.9% · learning move +7.5 pp · price break-even 10.6% (1/odds, not a fair probability or proof of value)
+   ACCA #14 / leg 2: source forecast 87.4% · gap -2.4 pp · quote age 3.28h at decision
+      base 89.5% → adjusted 85.0% · learning move -4.5 pp · price break-even 84.7% (1/odds, not a fair probability or proof of value)
+      Quote witness: oddspapi_odds_2026-11.csv.gz · ou_1.5 / over · bookmaker market m-f-tH4qCe2M3EKOo7fugNt7Xw-MTG2W-1.5 · outcome 108 · provider label Over Under Full Time · normalized row only; native payload unverified
+   Learning: fitted_prior_paper_errors
+
+P12 · 2026-11-05 18:40:16 SAST · ACCA #15
+   Receipt 20261105T164004140282Z · status paper_accas
+   Frozen at 2026-11-05T16:40:16.592220+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 6129527707ed75ed1a6539f38117d36cf901765a2f7f4fe66bd79a3925b8ac94
+   Decision window 2026-11-05T16:40:04.140282+00:00 → 2026-11-06T16:40:04.140282+00:00
+   Bank at decision: 78.345774 paper units
+   Available at decision: 62.849497 paper units
+   Reserved at decision: 15.496277 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.917288 units per canonical fixture
+   Reservation 1.197607 → 0.172875 units · released/idle 1.024732; no refill
+   2026-11-05 bayerleverkusen vs marseille: new 0.172875 + prior open 3.744413 · unused new budget 0.000000 units
+   2026-11-05 trabzonspor vs freiburg: new 0.172875 + prior open 3.744413 · unused new budget 0.000000 units
+   Coverage: candidate count: 3035; candidate fixtures: 2; slate rows: 33; status: inputs_available
+   Rejections: data quality: 1; fixture budget exhausted: 10; fixture date or prior model unproven: 1; outside rolling window or unproven kickoff: 8; quote identity unproven: 79; quote or probability unavailable: 207
+   ACCA #15 / leg 1: source forecast 25.7% · gap -0.8 pp · quote age 5.47h at decision
+      base 17.4% → adjusted 24.9% · learning move +7.5 pp · price break-even 10.6% (1/odds, not a fair probability or proof of value)
+   ACCA #15 / leg 2: source forecast 87.4% · gap -2.4 pp · quote age 3.32h at decision
       base 89.5% → adjusted 85.0% · learning move -4.5 pp · price break-even 84.7% (1/odds, not a fair probability or proof of value)
       Quote witness: oddspapi_odds_2026-11.csv.gz · ou_1.5 / over · bookmaker market m-f-tH4qCe2M3EKOo7fugNt7Xw-MTG2W-1.5 · outcome 108 · provider label Over Under Full Time · normalized row only; native payload unverified
    Learning: fitted_prior_paper_errors

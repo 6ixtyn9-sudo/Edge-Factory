@@ -1,5 +1,5 @@
 {
-  "attempted": 3,
+  "attempted": 4,
   "attempted_fixtures": [
     {
       "avg_p": 81.06935346055255,
@@ -12,11 +12,21 @@
       "w_score": 0.5405
     },
     {
-      "avg_p": 73.62117647058824,
-      "away": "Pafos FC",
+      "avg_p": 67.5,
+      "away": "CSKA Sofia",
       "date": "2026-11-05",
-      "home": "FC Twente",
-      "league": "Europa Conference League",
+      "home": "Panathinaikos",
+      "league": "World: UEFA Europa Conference League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6453
+    },
+    {
+      "avg_p": 56.8561967833491,
+      "away": "Celje",
+      "date": "2026-11-05",
+      "home": "Sturm Graz",
+      "league": "Europa League",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
@@ -38,21 +48,21 @@
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 2,
-  "candidate_fixtures": 16,
-  "captured_at": "2026-11-05T13:20:59.595200+00:00",
+  "candidate_fixtures": 15,
+  "captured_at": "2026-11-05T16:26:47.231610+00:00",
   "date": "2026-11-05",
-  "deferred_fixtures": 13,
+  "deferred_fixtures": 11,
   "errors": [],
-  "fixtures_with_rows": 3,
+  "fixtures_with_rows": 4,
   "market_budget_stop": false,
-  "market_requests": 2,
+  "market_requests": 7,
   "match_detail": {
-    "bookmakers": 57,
+    "bookmakers": 81,
     "challenge_pages": 0,
-    "fixtures": 5,
-    "market_rows": 187,
-    "markets": 19,
-    "named_rows": 187,
+    "fixtures": 7,
+    "market_rows": 258,
+    "markets": 27,
+    "named_rows": 258,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -61,7 +71,7 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "network_attempted": 2,
   "quoted_fixtures": [
     {
       "avg_p": 81.06935346055255,
@@ -74,11 +84,21 @@
       "w_score": 0.5405
     },
     {
-      "avg_p": 73.62117647058824,
-      "away": "Pafos FC",
+      "avg_p": 67.5,
+      "away": "CSKA Sofia",
       "date": "2026-11-05",
-      "home": "FC Twente",
-      "league": "Europa Conference League",
+      "home": "Panathinaikos",
+      "league": "World: UEFA Europa Conference League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6453
+    },
+    {
+      "avg_p": 56.8561967833491,
+      "away": "Celje",
+      "date": "2026-11-05",
+      "home": "Sturm Graz",
+      "league": "Europa League",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
@@ -94,8 +114,8 @@
       "w_score": 0.6453
     }
   ],
-  "requests": 7,
-  "rows": 9,
+  "requests": 14,
+  "rows": 12,
   "schema": 1,
   "status": "ok"
 }

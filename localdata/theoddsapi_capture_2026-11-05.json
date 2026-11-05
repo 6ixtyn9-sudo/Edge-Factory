@@ -3,14 +3,12 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 29,
-  "captured_at": "2026-11-05T13:31:08+00:00",
+  "captured_at": "2026-11-05T16:40:44+00:00",
   "date": "2026-11-05",
   "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
-  "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 1
-  },
+  "kickoff_mismatch_detail": {},
   "quoted_fixtures": [],
   "requested_markets": [
     "h2h",
@@ -24,9 +22,7 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_mismatch": 1,
-    "priced": 15,
-    "priced_close_window_not_open": 1,
+    "priced": 16,
     "retry_cooldown": 13
   },
   "skipped": [
@@ -46,13 +42,12 @@
     "Thun|Hearts (priced)",
     "Celtic|Be\u015fikta\u015f (retry cooldown (6h after failed attempt))",
     "KuPS|Gent (retry cooldown (6h after failed attempt))",
-    "WARN kickoff-mismatch FC Midtjylland|Ajax: pick legacy display says 17:45 SAST, captured rows say 19:45 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "FC Midtjylland|Ajax (priced, close window not open)",
     "Sturm Graz|Celje (priced)",
     "Levski Sofia|Jagiellonia (priced)",
     "Getafe|Brighton (priced)",
     "Sturm Graz|NK Celje (priced)",
     "Bayer Leverkusen|Marseille (priced)",
+    "FC Midtjylland|Ajax (priced)",
     "Puntarenas FC|San Carlos (retry cooldown (6h after failed attempt))",
     "Rubio \u00d1\u00fa|Sportivo Luque\u00f1o (retry cooldown (6h after failed attempt))",
     "Valenciennes|Orl\u00e9ans (retry cooldown (6h after failed attempt))",
