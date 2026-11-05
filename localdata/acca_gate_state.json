@@ -1,5 +1,5 @@
 {
-  "as_of_last": "2026-11-04",
+  "as_of_last": "2026-11-05",
   "blocked": {
     "BETEXPLORER_RESCUE": {
       "since": "2026-10-15",
@@ -15,24 +15,24 @@
   "stats": {
     "APPROVED_DONOR_PRICE": {
       "hit_rate": 1.0,
-      "implied_rate": 0.6733,
-      "n": 2,
-      "roi": 0.486,
-      "z": 0.986
+      "implied_rate": 0.6925,
+      "n": 3,
+      "roi": 0.4467,
+      "z": 1.157
     },
     "NAMED_BOOKMAKER_PRICE": {
-      "hit_rate": 0.6725,
-      "implied_rate": 0.6529,
-      "n": 681,
-      "roi": 0.0388,
-      "z": 1.121
+      "hit_rate": 0.6759,
+      "implied_rate": 0.6504,
+      "n": 685,
+      "roi": 0.0496,
+      "z": 1.455
     },
     "SCOUTINGSTATS_SOLE": {
-      "hit_rate": 0.6813,
-      "implied_rate": 0.6996,
-      "n": 91,
-      "roi": 0.0016,
-      "z": -0.393
+      "hit_rate": 0.6854,
+      "implied_rate": 0.698,
+      "n": 89,
+      "roi": 0.0128,
+      "z": -0.268
     },
     "SOURCE_FALLBACK": {
       "hit_rate": 0.5294,
@@ -42,11 +42,11 @@
       "z": 0.189
     },
     "SUSPECT_ALIAS_FUZZY": {
-      "hit_rate": 0.619,
-      "implied_rate": 0.6267,
-      "n": 21,
-      "roi": -0.0352,
-      "z": -0.076
+      "hit_rate": 0.6,
+      "implied_rate": 0.6283,
+      "n": 20,
+      "roi": -0.071,
+      "z": -0.273
     }
   }
 }

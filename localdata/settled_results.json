@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_at": "2026-11-05T03:12:16",
+ "generated_at": "2026-11-05T06:12:19",
  "window_days": 90,
  "rows": [
   {
@@ -553093,10 +553093,20 @@
    "date": "2026-11-04",
    "home": "Cucuta",
    "away": "Independiente Sa",
-   "hs": 0,
+   "hs": 1,
    "gs": 0,
-   "outcome": "draw",
+   "outcome": "home",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-04",
+   "home": "C\u00facuta Deportivo",
+   "away": "Santa Fe",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "scoutingstats_settled",
+   "status": "FT"
   },
   {
    "date": "2026-11-04",
@@ -553601,13 +553611,12 @@
   },
   {
    "date": "2026-11-04",
-   "home": "Portuguesa",
+   "home": "Portuguesa FC",
    "away": "Deportivo La Guaira",
    "hs": 0,
    "gs": 3,
    "outcome": "away",
-   "src": "scoutingstats_settled",
-   "status": "FT"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-11-04",
@@ -553815,12 +553824,11 @@
   {
    "date": "2026-11-04",
    "home": "Sportivo Ameliano",
-   "away": "Guaran\u00ed",
+   "away": "Club Guarani",
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "scoutingstats_settled",
-   "status": "FT"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-11-04",
@@ -553893,6 +553901,15 @@
    "gs": 2,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-11-04",
+   "home": "Venados FC",
+   "away": "Atletico Morelia",
+   "hs": 1,
+   "gs": 2,
+   "outcome": "away",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-11-04",
@@ -556191,6 +556208,13 @@
   },
   {
    "date": "2026-11-04",
+   "home": "Calvo Sotelo",
+   "away": "Albacete",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-04",
    "home": "Chippa United",
    "away": "Sekhukhune United",
    "disposition": "POSTPONED",
@@ -556200,6 +556224,13 @@
    "date": "2026-11-04",
    "home": "Club Africain",
    "away": "JS Omrane",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-04",
+   "home": "Deportiva Minera",
+   "away": "FC Cartagena",
    "disposition": "POSTPONED",
    "src": "source_status:scoutingstats"
   },
@@ -556261,8 +556292,29 @@
   },
   {
    "date": "2026-11-04",
+   "home": "Portugalete",
+   "away": "Real Uni\u00f3n Club",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-04",
+   "home": "Reddis",
+   "away": "Barakaldo",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-04",
    "home": "Richards Bay",
    "away": "Stellenbosch",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-04",
+   "home": "SD Amorebieta",
+   "away": "UD Logro\u00f1\u00e9s",
    "disposition": "POSTPONED",
    "src": "source_status:scoutingstats"
   },
@@ -556291,6 +556343,13 @@
    "date": "2026-11-04",
    "home": "US Monastir",
    "away": "AS Marsa",
+   "disposition": "POSTPONED",
+   "src": "source_status:scoutingstats"
+  },
+  {
+   "date": "2026-11-04",
+   "home": "Utebo FC",
+   "away": "Sabadell",
    "disposition": "POSTPONED",
    "src": "source_status:scoutingstats"
   }

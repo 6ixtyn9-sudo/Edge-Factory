@@ -3348,14 +3348,14 @@
           "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "83034d4b3f1a1ba03fa7009eea1897ef02a8e7c4",
-            "event_sha": "83034d4b3f1a1ba03fa7009eea1897ef02a8e7c4",
+            "checkout_head_at_capture": "558afea5d171b90588be1f0c6d5e3b998c82016c",
+            "event_sha": "558afea5d171b90588be1f0c6d5e3b998c82016c",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "41945425455",
+            "run_id": "41965024999",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-05_decision.json.gz",
@@ -3812,7 +3812,7 @@
     },
     "main": {
       "counts": {
-        "MATCH": 8
+        "MATCH": 9
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -4097,6 +4097,31 @@
           "open_accas": 0,
           "settled_net": 70.30969999999999,
           "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 2,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 413.282968,
+          "committed_excluding_target": 0.0,
+          "date": "2026-11-05",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "558afea5d171b90588be1f0c6d5e3b998c82016c",
+            "event_sha": "558afea5d171b90588be1f0c6d5e3b998c82016c",
+            "file_sha256": {
+              "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
+            },
+            "run_id": "41965024999",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-11-05_decision.json.gz",
+          "free_bank": 413.282968,
+          "ledger": "NOT_COMMITTED",
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],

@@ -1,5 +1,5 @@
 {
-  "attempted": 2,
+  "attempted": 3,
   "attempted_fixtures": [
     {
       "avg_p": 72.17021276595744,
@@ -10,6 +10,16 @@
       "market": "ou_2.5",
       "pick": "over",
       "w_score": 0.6681
+    },
+    {
+      "avg_p": 66.63253012048193,
+      "away": "Nordsj\u00e6lland",
+      "date": "2026-11-05",
+      "home": "Monaco",
+      "league": "Europa Conference League",
+      "market": "ou_2.5",
+      "pick": "over",
+      "w_score": 0.6451
     },
     {
       "avg_p": 60.0,
@@ -29,22 +39,20 @@
   "be_rows_rejected_reasons": {},
   "cache_only": 1,
   "candidate_fixtures": 22,
-  "captured_at": "2026-11-05T01:46:57.440671+00:00",
+  "captured_at": "2026-11-05T04:49:13.474935+00:00",
   "date": "2026-11-05",
-  "deferred_fixtures": 21,
-  "errors": [
-    "BetExplorerCoolingDown"
-  ],
-  "fixtures_with_rows": 1,
+  "deferred_fixtures": 20,
+  "errors": [],
+  "fixtures_with_rows": 3,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 10,
   "match_detail": {
-    "bookmakers": 9,
+    "bookmakers": 42,
     "challenge_pages": 0,
-    "fixtures": 1,
-    "market_rows": 41,
-    "markets": 3,
-    "named_rows": 41,
+    "fixtures": 3,
+    "market_rows": 128,
+    "markets": 14,
+    "named_rows": 128,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -53,8 +61,28 @@
   "max_fixtures": 12,
   "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "network_attempted": 2,
   "quoted_fixtures": [
+    {
+      "avg_p": 72.17021276595744,
+      "away": "Inter Club d'Escaldes",
+      "date": "2026-11-05",
+      "home": "Crvena Zvezda",
+      "league": "Europa Conference League",
+      "market": "ou_2.5",
+      "pick": "over",
+      "w_score": 0.6681
+    },
+    {
+      "avg_p": 66.63253012048193,
+      "away": "Nordsj\u00e6lland",
+      "date": "2026-11-05",
+      "home": "Monaco",
+      "league": "Europa Conference League",
+      "market": "ou_2.5",
+      "pick": "over",
+      "w_score": 0.6451
+    },
     {
       "avg_p": 60.0,
       "away": "Gent",
@@ -66,8 +94,8 @@
       "w_score": 0.6453
     }
   ],
-  "requests": 3,
-  "rows": 3,
+  "requests": 17,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }
