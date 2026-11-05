@@ -2,10 +2,10 @@ autobets_ML — performance, percent of capital (PAPER ONLY)
 ==============================================================
 
 BANK     78.3%   x0.783 of the initial base · 78.346 paper units
-CAPITAL  66.6% free / 11.8% reserved · 66.594 free / 11.752 reserved paper units
+CAPITAL  64.1% free / 14.3% reserved · 64.070 free / 14.275 reserved paper units
 
 RECORD   3W / 11L   (21.4% hit)   over 4 bet-days
-OPEN     11 held accas · 7 unresolved leg results
+OPEN     13 held accas · 9 unresolved leg results
 PROFIT   -21.7% of capital · -21.654 paper units · ROI -62.7%
 DRAWDOWN 21.654 paper units / 21.7% (ticket-date marks; pending at cost)
 DAYS     4 bet / 0 no-bet · 0 missed freeze
@@ -15,7 +15,7 @@ BET-DAYS, oldest first (4 of 4)
   2026-11-02   0W/1L   staked    8.2%   returned    0.0%   net   -8.2%   pending    0.0%   bank*   91.8%
   2026-11-03   3W/5L   staked   15.2%   returned   12.9%   net   -2.3%   pending    0.0%   bank*   89.5%
   2026-11-04   0W/5L   staked   11.1%   returned    0.0%   net  -11.1%   pending    0.0%   bank*   78.3%
-  2026-11-05   0W/0L   staked    0.0%   returned       —   net       —   pending   11.8%   bank*   78.3%
+  2026-11-05   0W/0L   staked    0.0%   returned       —   net       —   pending   14.3%   bank*   78.3%
 
 HELD (not yet settled; stake counted as committed)
   2026-11-05   ACCA #1 @3.225   stake 1.6% (1.620243 paper units)   HELD (not settled)
@@ -84,6 +84,18 @@ HELD (not yet settled; stake counted as committed)
          Match Over 4.5 Goals @6.500
       Monaco vs Nordsjælland · 2026-11-05 22:00 SAST
          Match Over 4.5 Goals @3.400
+  2026-11-05   ACCA #12 @11.092   stake 1.3% (1.273957 paper units)   HELD (not settled)
+      Receipt 20261105T132819163029Z / publication-local ticket 1
+      Bayer Leverkusen vs Marseille · 2026-11-05 22:00 SAST
+         Away Win (1X2) @9.400
+      Trabzonspor vs SC Freiburg · 2026-11-05 19:45 SAST
+         Match Over 1.5 Goals @1.180
+  2026-11-05   ACCA #13 @11.092   stake 1.2% (1.249585 paper units)   HELD (not settled)
+      Receipt 20261105T133035847511Z / publication-local ticket 1
+      Bayer Leverkusen vs Marseille · 2026-11-05 22:00 SAST
+         Away Win (1X2) @9.400
+      Trabzonspor vs SC Freiburg · 2026-11-05 19:45 SAST
+         Match Over 1.5 Goals @1.180
 
 NOTES
   Percentages of capital use the initial 100-paper-unit base, not today's free bank.
@@ -93,9 +105,19 @@ NOTES
   All retained history is included; no regime reset or old-loss exclusion.
 
 LEARNING & EVIDENCE
-EVIDENCE 22 resolved selected observations / 17 fixtures · pool 20 resolved fixtures
-LEARNING last decision: 20 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
-PAIRED   20 fixtures / 240 observations · Brier model 0.2248 / source 0.2025
+EVIDENCE 19 resolved selected observations / 14 fixtures · pool 18 resolved fixtures
+LEARNING last decision: 18 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
+DATA     17115 ineligible-quote candidate occurrences excluded from paired errors; not a count of independent fixtures
+         Historical P&L and frozen predictions unchanged; not a clean-refit backtest.
+FORWARD POOL: Brier 0.2196 → 0.2305 · log loss 0.6255 → 0.6508 (base → adjusted)
+        adjusted worse on both metrics; 18 fixtures / 225 observations
+FORWARD SELECTED: Brier 0.2085 → 0.2463 · log loss 0.6064 → 0.6880 (base → adjusted)
+        adjusted worse on both metrics; 14 fixtures / 19 observations
+        Fixture-weighted, overlapping samples; descriptive, not significance or a policy gate.
+PAIRED   18 fixtures / 203 observations · Brier model 0.2270 / source 0.2035
+
+DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.
+             Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.
 
 STAKING  quarter Kelly, own paper bank only; ROI is profit / settled stakes
 FIXTURES new publications: gross stake <= 5.0% of TOTAL paper bank per canonical fixture;

@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 78.3457741792,
   "paper_multiple": 0.7834577417920001,
-  "paper_committed_units": 11.751864000000001,
-  "paper_free_units": 66.59391017920001,
+  "paper_committed_units": 14.275406,
+  "paper_free_units": 64.0703681792,
   "settled_stake_units": 34.529724,
   "receipt_days": 4,
-  "decision_receipts": 29,
+  "decision_receipts": 31,
   "bet_days": 4,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
@@ -17,8 +17,8 @@
   "wins": 3,
   "losses": 11,
   "hit_rate": 0.21428571428571427,
-  "pending_accas": 11,
-  "unresolved_result_legs": 7,
+  "pending_accas": 13,
+  "unresolved_result_legs": 9,
   "resolved_result_legs": 24,
   "profit_units": -21.654225820799997,
   "roi": -0.627118416029042,
@@ -29,73 +29,73 @@
   "selected_leg_brier_score": 0.23212376760882028,
   "calibration": {
     "all_candidates": {
-      "resolved_fixtures": 20,
-      "resolved_observations": 340,
-      "base_brier": 0.21563029280224547,
-      "base_logloss": 0.6145488325980568,
-      "calibrated_brier": 0.22348732644924799,
-      "calibrated_logloss": 0.6339207913376398
+      "resolved_fixtures": 18,
+      "resolved_observations": 225,
+      "base_brier": 0.21963303074745288,
+      "base_logloss": 0.6255294107682794,
+      "calibrated_brier": 0.23047942356931214,
+      "calibrated_logloss": 0.6507758400525661
     },
     "selected_candidates": {
-      "resolved_fixtures": 17,
-      "resolved_observations": 22,
-      "base_brier": 0.23140400506198675,
-      "base_logloss": 0.6611568808801436,
-      "calibrated_brier": 0.2551301595428177,
-      "calibrated_logloss": 0.7060077675309657
+      "resolved_fixtures": 14,
+      "resolved_observations": 19,
+      "base_brier": 0.2085359872132317,
+      "base_logloss": 0.6063643299628814,
+      "calibrated_brier": 0.2462785795343267,
+      "calibrated_logloss": 0.6879641606844905
     },
     "source_comparison": {
       "basis": "frozen_market_matched_source_forecasts_not_independent_ground_truth",
       "weighting": "one_total_weight_per_fixture_within_each_group",
       "limitation": "descriptive_only_overlapping_groups_not_additive_no_significance_or_rule_changes",
       "all_candidates": {
-        "paired_fixtures": 20,
-        "paired_observations": 240,
-        "missing_source_fixtures": 11,
-        "missing_source_observations": 100,
-        "base_brier": 0.21480416166054464,
-        "base_logloss": 0.6160084811664547,
-        "model_brier": 0.2248204504890586,
-        "model_logloss": 0.6399951547219626,
-        "source_brier": 0.2024629980206182,
-        "source_logloss": 0.5863868519093534
+        "paired_fixtures": 18,
+        "paired_observations": 203,
+        "missing_source_fixtures": 8,
+        "missing_source_observations": 22,
+        "base_brier": 0.21313914480066046,
+        "base_logloss": 0.6095011185971617,
+        "model_brier": 0.22696110311190612,
+        "model_logloss": 0.6432014925926377,
+        "source_brier": 0.2035218884142081,
+        "source_logloss": 0.5876353545396428
       },
       "selected_candidates": {
-        "paired_fixtures": 15,
-        "paired_observations": 19,
-        "missing_source_fixtures": 3,
-        "missing_source_observations": 3,
-        "base_brier": 0.23726531106731086,
-        "base_logloss": 0.6821055448546708,
-        "model_brier": 0.26522316354649,
-        "model_logloss": 0.7317850784069992,
-        "source_brier": 0.22764350094615524,
-        "source_logloss": 0.6479455157898578
+        "paired_fixtures": 14,
+        "paired_observations": 18,
+        "missing_source_fixtures": 1,
+        "missing_source_observations": 1,
+        "base_brier": 0.20066711158771458,
+        "base_logloss": 0.5873591440600338,
+        "model_brier": 0.23840970390880956,
+        "model_logloss": 0.6689589747816428,
+        "source_brier": 0.19858848741900098,
+        "source_logloss": 0.580506358549721
       },
       "by_model_source_gap": {
         "lt_10pp": {
-          "paired_fixtures": 16,
-          "paired_observations": 162,
+          "paired_fixtures": 14,
+          "paired_observations": 129,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.18067141753522492,
-          "base_logloss": 0.5428644198862639,
-          "model_brier": 0.1841190313264904,
-          "model_logloss": 0.5529150388256927,
-          "source_brier": 0.17672838944990416,
-          "source_logloss": 0.5333908659390946
+          "base_brier": 0.17148502186479983,
+          "base_logloss": 0.5189758543397651,
+          "model_brier": 0.18024298772381284,
+          "model_logloss": 0.5428628248407128,
+          "source_brier": 0.17217806403923358,
+          "source_logloss": 0.5221515690267652
         },
         "10_to_lt_20pp": {
-          "paired_fixtures": 19,
-          "paired_observations": 74,
+          "paired_fixtures": 16,
+          "paired_observations": 70,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.20184867887439917,
-          "base_logloss": 0.5808062391238471,
-          "model_brier": 0.22694613401634373,
-          "model_logloss": 0.6398693454690134,
-          "source_brier": 0.18267960445714027,
-          "source_logloss": 0.5414927678098073
+          "base_brier": 0.2133922360171944,
+          "base_logloss": 0.6062134321503936,
+          "model_brier": 0.23717711530337832,
+          "model_logloss": 0.6605053092304968,
+          "source_brier": 0.19916670385054472,
+          "source_logloss": 0.5772843941423227
         },
         "ge_20pp": {
           "paired_fixtures": 4,
@@ -112,8 +112,8 @@
         "unavailable": {
           "paired_fixtures": 0,
           "paired_observations": 0,
-          "missing_source_fixtures": 11,
-          "missing_source_observations": 100,
+          "missing_source_fixtures": 8,
+          "missing_source_observations": 22,
           "base_brier": null,
           "base_logloss": null,
           "model_brier": null,
@@ -136,16 +136,16 @@
           "source_logloss": 0.9214497604468791
         },
         "SKIPPED_VETO": {
-          "paired_fixtures": 17,
-          "paired_observations": 226,
-          "missing_source_fixtures": 10,
-          "missing_source_observations": 98,
-          "base_brier": 0.18012504978651656,
-          "base_logloss": 0.5360919172668145,
-          "model_brier": 0.19138489107099033,
-          "model_logloss": 0.5630505895530978,
-          "source_brier": 0.17134306090446413,
-          "source_logloss": 0.5197194346363712
+          "paired_fixtures": 15,
+          "paired_observations": 189,
+          "missing_source_fixtures": 7,
+          "missing_source_observations": 20,
+          "base_brier": 0.1735031479714518,
+          "base_logloss": 0.5176275403303783,
+          "model_brier": 0.18949559962933157,
+          "model_logloss": 0.5566389196420591,
+          "source_brier": 0.16846440442795124,
+          "source_logloss": 0.5123286488229867
         },
         "WATCHLIST_UNCORROBORATED_PRICE": {
           "paired_fixtures": 1,
@@ -160,6 +160,18 @@
           "source_logloss": 0.6368846118651413
         }
       }
+    },
+    "candidate_admission": {
+      "policy": "historical_candidates_existing_oddspapi_generation_floor_v1",
+      "oddspapi_min_schema_version": 4,
+      "excluded_candidate_occurrences": 17115,
+      "excluded_fixture_count": 5,
+      "excluded_by_reason": {
+        "oddspapi_legacy_or_unproven_quote_generation": 17115
+      },
+      "count_basis": "candidate_occurrences_before_outcome_lookup_and_deduplication",
+      "historical_receipts_and_finances": "unchanged",
+      "prediction_basis": "original_frozen_predictions_not_a_clean_refit_backtest"
     }
   },
   "acca_calibration_by_length": {
@@ -9323,71 +9335,477 @@
       "decision_id": "20261105T075001763405Z",
       "captured_at": "2026-11-05T07:50:01.763405+00:00",
       "frozen_at": "2026-11-05T07:50:08.297227+00:00"
+    },
+    {
+      "date": "2026-11-05",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 11.092,
+          "stake_units": 1.273957,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Marseille",
+              "base_probability": 0.17410946004212516,
+              "book": "Betsson",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "770019fc78e79bc9e38c65a181b7e9c77a050c83b69bbccc761d23d5a4da28f6",
+              "contract_id": "pfc_c7c9572806b564198f651cee",
+              "date": "2026-11-05",
+              "fixture": [
+                "2026-11-05",
+                "bayerleverkusen",
+                "marseille"
+              ],
+              "home": "Bayer Leverkusen",
+              "kickoff_utc": "2026-11-05T20:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_c7c9572806b564198f651cee",
+                "fixture": [
+                  "2026-11-05",
+                  "bayerleverkusen",
+                  "marseille",
+                  [],
+                  []
+                ],
+                "model_key": "fcddba3a70361e2c9d1192f08dd5703fd49c3157403e7dfaa6f4a39b401c6b30",
+                "sources": [
+                  "bettingclosed",
+                  "predictz",
+                  "statarea",
+                  "vitibet",
+                  "zulubet"
+                ],
+                "values": {
+                  "away_form_btts": 0.5,
+                  "away_form_ga": 1.7,
+                  "away_form_gf": 1.7,
+                  "away_form_over15": 0.7,
+                  "away_form_over25": 0.5,
+                  "away_form_over35": 0.4,
+                  "confidence": 0.545,
+                  "forecast_1x2_away_mean": 0.25666666666666665,
+                  "forecast_1x2_away_spread": 0.27,
+                  "forecast_1x2_draw_mean": 0.18333333333333335,
+                  "forecast_1x2_draw_spread": 0.1,
+                  "forecast_1x2_home_mean": 0.5599999999999999,
+                  "forecast_1x2_home_spread": 0.16999999999999998,
+                  "forecast_btts_yes_mean": null,
+                  "forecast_btts_yes_spread": null,
+                  "forecast_ou_1.5_over_mean": 0.92,
+                  "forecast_ou_1.5_over_spread": 0.0,
+                  "forecast_ou_2.5_over_mean": 0.68,
+                  "forecast_ou_2.5_over_spread": 0.0,
+                  "forecast_ou_3.5_over_mean": 0.4,
+                  "forecast_ou_3.5_over_spread": 0.0,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.5,
+                  "home_form_ga": 1.5,
+                  "home_form_gf": 2.5,
+                  "home_form_over15": 1.0,
+                  "home_form_over25": 0.7,
+                  "home_form_over35": 0.5
+                }
+              },
+              "model_key": "fcddba3a70361e2c9d1192f08dd5703fd49c3157403e7dfaa6f4a39b401c6b30",
+              "odds": 9.4,
+              "price_age_seconds_at_decision": 8198.176192,
+              "price_age_seconds_at_freeze": 8207.173618,
+              "price_at": "2026-11-05T11:11:40.986837+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.24948724752222023,
+              "selection": "away"
+            },
+            {
+              "away": "SC Freiburg",
+              "base_probability": 0.8949663854320472,
+              "book": "betsson",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "a976ae1d2e7b08aa90674b08923c572fd3437f8dfa8721f201bf89e3803ca817",
+              "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+              "date": "2026-11-05",
+              "fixture": [
+                "2026-11-05",
+                "trabzonspor",
+                "freiburg"
+              ],
+              "home": "Trabzonspor",
+              "kickoff_utc": "2026-11-05T17:45:00+00:00",
+              "market": "match_over_15",
+              "ml_inputs": {
+                "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                "fixture": [
+                  "2026-11-05",
+                  "trabzonspor",
+                  "freiburg",
+                  [],
+                  []
+                ],
+                "model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
+                "sources": [
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "away_form_btts": 0.8,
+                  "away_form_ga": 1.8,
+                  "away_form_gf": 2.3,
+                  "away_form_over15": 1.0,
+                  "away_form_over25": 1.0,
+                  "away_form_over35": 0.6,
+                  "confidence": 0.6625,
+                  "forecast_1x2_away_mean": 0.43224719101123593,
+                  "forecast_1x2_away_spread": 0.11325842696629213,
+                  "forecast_1x2_draw_mean": 0.26436329588014984,
+                  "forecast_1x2_draw_spread": 0.026910112359550598,
+                  "forecast_1x2_home_mean": 0.30338951310861423,
+                  "forecast_1x2_home_spread": 0.14016853932584267,
+                  "forecast_btts_yes_mean": 0.645320197044335,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8741566265060241,
+                  "forecast_ou_1.5_over_spread": 0.09168674698795187,
+                  "forecast_ou_2.5_over_mean": 0.6216666666666667,
+                  "forecast_ou_2.5_over_spread": 0.15999999999999992,
+                  "forecast_ou_3.5_over_mean": 0.42128608923884514,
+                  "forecast_ou_3.5_over_spread": 0.0025721784776903678,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.2,
+                  "home_form_ga": 0.7,
+                  "home_form_gf": 2.6,
+                  "home_form_over15": 0.8,
+                  "home_form_over25": 0.5,
+                  "home_form_over35": 0.4
+                }
+              },
+              "model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
+              "odds": 1.18,
+              "price_age_seconds_at_decision": 449.595242,
+              "price_age_seconds_at_freeze": 458.592668,
+              "price_at": "2026-11-05T13:20:49.567787+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "SC Freiburg",
+                  "bookmaker": "betsson",
+                  "bookmaker_market_id": "m-f-tH4qCe2M3EKOo7fugNt7Xw-MTG2W-1.5",
+                  "captured_at": "2026-11-05T13:20:49.567787+00:00",
+                  "date": "2026-11-05",
+                  "home": "Trabzonspor",
+                  "kickoff": "2026-11-05T17:45:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.18",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-05T10:28:13.965Z",
+                  "provider_fixture_id": "id1003448074173292",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "056cb7de6e78b7d21fbb9f2e279d62f694b77c95fcf9f39edf68dc96f8f3a3e1",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.8504271236227411,
+              "selection": "over"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261105T132819163029Z",
+      "captured_at": "2026-11-05T13:28:19.163029+00:00",
+      "frozen_at": "2026-11-05T13:28:28.160455+00:00"
+    },
+    {
+      "date": "2026-11-05",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 11.092,
+          "stake_units": 1.249585,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Marseille",
+              "base_probability": 0.17410946004212516,
+              "book": "Betsson",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "770019fc78e79bc9e38c65a181b7e9c77a050c83b69bbccc761d23d5a4da28f6",
+              "contract_id": "pfc_c7c9572806b564198f651cee",
+              "date": "2026-11-05",
+              "fixture": [
+                "2026-11-05",
+                "bayerleverkusen",
+                "marseille"
+              ],
+              "home": "Bayer Leverkusen",
+              "kickoff_utc": "2026-11-05T20:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_c7c9572806b564198f651cee",
+                "fixture": [
+                  "2026-11-05",
+                  "bayerleverkusen",
+                  "marseille",
+                  [],
+                  []
+                ],
+                "model_key": "fcddba3a70361e2c9d1192f08dd5703fd49c3157403e7dfaa6f4a39b401c6b30",
+                "sources": [
+                  "bettingclosed",
+                  "predictz",
+                  "statarea",
+                  "vitibet",
+                  "zulubet"
+                ],
+                "values": {
+                  "away_form_btts": 0.5,
+                  "away_form_ga": 1.7,
+                  "away_form_gf": 1.7,
+                  "away_form_over15": 0.7,
+                  "away_form_over25": 0.5,
+                  "away_form_over35": 0.4,
+                  "confidence": 0.545,
+                  "forecast_1x2_away_mean": 0.25666666666666665,
+                  "forecast_1x2_away_spread": 0.27,
+                  "forecast_1x2_draw_mean": 0.18333333333333335,
+                  "forecast_1x2_draw_spread": 0.1,
+                  "forecast_1x2_home_mean": 0.5599999999999999,
+                  "forecast_1x2_home_spread": 0.16999999999999998,
+                  "forecast_btts_yes_mean": null,
+                  "forecast_btts_yes_spread": null,
+                  "forecast_ou_1.5_over_mean": 0.92,
+                  "forecast_ou_1.5_over_spread": 0.0,
+                  "forecast_ou_2.5_over_mean": 0.68,
+                  "forecast_ou_2.5_over_spread": 0.0,
+                  "forecast_ou_3.5_over_mean": 0.4,
+                  "forecast_ou_3.5_over_spread": 0.0,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.5,
+                  "home_form_ga": 1.5,
+                  "home_form_gf": 2.5,
+                  "home_form_over15": 1.0,
+                  "home_form_over25": 0.7,
+                  "home_form_over35": 0.5
+                }
+              },
+              "model_key": "fcddba3a70361e2c9d1192f08dd5703fd49c3157403e7dfaa6f4a39b401c6b30",
+              "odds": 9.4,
+              "price_age_seconds_at_decision": 8334.860674,
+              "price_age_seconds_at_freeze": 8343.105948,
+              "price_at": "2026-11-05T11:11:40.986837+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.24948724752222023,
+              "selection": "away"
+            },
+            {
+              "away": "SC Freiburg",
+              "base_probability": 0.8949663854320472,
+              "book": "betsson",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "a976ae1d2e7b08aa90674b08923c572fd3437f8dfa8721f201bf89e3803ca817",
+              "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+              "date": "2026-11-05",
+              "fixture": [
+                "2026-11-05",
+                "trabzonspor",
+                "freiburg"
+              ],
+              "home": "Trabzonspor",
+              "kickoff_utc": "2026-11-05T17:45:00+00:00",
+              "market": "match_over_15",
+              "ml_inputs": {
+                "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
+                "fixture": [
+                  "2026-11-05",
+                  "trabzonspor",
+                  "freiburg",
+                  [],
+                  []
+                ],
+                "model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
+                "sources": [
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "away_form_btts": 0.8,
+                  "away_form_ga": 1.8,
+                  "away_form_gf": 2.3,
+                  "away_form_over15": 1.0,
+                  "away_form_over25": 1.0,
+                  "away_form_over35": 0.6,
+                  "confidence": 0.6625,
+                  "forecast_1x2_away_mean": 0.43224719101123593,
+                  "forecast_1x2_away_spread": 0.11325842696629213,
+                  "forecast_1x2_draw_mean": 0.26436329588014984,
+                  "forecast_1x2_draw_spread": 0.026910112359550598,
+                  "forecast_1x2_home_mean": 0.30338951310861423,
+                  "forecast_1x2_home_spread": 0.14016853932584267,
+                  "forecast_btts_yes_mean": 0.645320197044335,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8741566265060241,
+                  "forecast_ou_1.5_over_spread": 0.09168674698795187,
+                  "forecast_ou_2.5_over_mean": 0.6216666666666667,
+                  "forecast_ou_2.5_over_spread": 0.15999999999999992,
+                  "forecast_ou_3.5_over_mean": 0.42128608923884514,
+                  "forecast_ou_3.5_over_spread": 0.0025721784776903678,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.2,
+                  "home_form_ga": 0.7,
+                  "home_form_gf": 2.6,
+                  "home_form_over15": 0.8,
+                  "home_form_over25": 0.5,
+                  "home_form_over35": 0.4
+                }
+              },
+              "model_key": "c26acbea86ba88a9c82a557d9dc5af4e16a6bd6a6bebf2315fd5962419f1e76c",
+              "odds": 1.18,
+              "price_age_seconds_at_decision": 586.279724,
+              "price_age_seconds_at_freeze": 594.524998,
+              "price_at": "2026-11-05T13:20:49.567787+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "SC Freiburg",
+                  "bookmaker": "betsson",
+                  "bookmaker_market_id": "m-f-tH4qCe2M3EKOo7fugNt7Xw-MTG2W-1.5",
+                  "captured_at": "2026-11-05T13:20:49.567787+00:00",
+                  "date": "2026-11-05",
+                  "home": "Trabzonspor",
+                  "kickoff": "2026-11-05T17:45:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.18",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-05T10:28:13.965Z",
+                  "provider_fixture_id": "id1003448074173292",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "056cb7de6e78b7d21fbb9f2e279d62f694b77c95fcf9f39edf68dc96f8f3a3e1",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.8504271236227411,
+              "selection": "over"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261105T133035847511Z",
+      "captured_at": "2026-11-05T13:30:35.847511+00:00",
+      "frozen_at": "2026-11-05T13:30:44.092785+00:00"
     }
   ],
   "latest_learning": {
     "coef": [
-      0.6404156730168903,
-      -0.011229740979247898,
-      0.005791632323724889,
-      0.006592343108349937,
-      -0.019876722658396007,
-      -0.025720015760975684,
-      -0.02256235553321731,
-      -0.005010376245682651,
-      -0.020066108738526718,
-      0.024399548534526017,
-      0.02125649304899683,
-      0.004008694664793255,
-      0.017895569056863538,
-      0.010384829307584127,
-      -0.0768366484111591,
-      0.06793381184240108,
-      0.05854350910602153,
-      0.037847947854026766,
-      0.012732040967558046,
-      -0.02868733610978754,
-      -0.01732611892218004,
-      -0.0391420174683598,
-      -0.014089882091173976,
-      0.027566515560886518,
-      0.016560249790076843,
-      0.0085690147739389,
-      0.13767926173785158,
-      -0.28988313435319535,
-      0.10083763272739198,
-      0.10250270278673139,
-      -0.14377084822634525,
-      0.27007351517621775,
-      -0.1068306206497818,
-      -0.10783491731425819
+      0.6219984943487481,
+      -0.01101268406452577,
+      0.005976274785146325,
+      0.007327211554794852,
+      -0.02005923612162534,
+      -0.10616777149398696,
+      0.09828180745802949,
+      0.06458917871758817,
+      0.15569548077082704,
+      -0.23452694060820473,
+      0.10293405591981009,
+      0.09431338454931004,
+      -0.16107894205770043,
+      0.21506638112426119,
+      -0.10796419984147991,
+      -0.09879239614141358
     ],
     "columns": [
       "bucket:CAUTION",
       "bucket:SKIPPED_VETO",
       "bucket:WATCHLIST_UNCORROBORATED_PRICE",
       "market:1x2",
-      "market:away_over_05",
-      "market:away_over_15",
-      "market:away_over_25",
-      "market:away_over_35",
-      "market:away_under_05",
-      "market:away_under_15",
-      "market:away_under_25",
-      "market:away_under_35",
-      "market:away_under_45",
       "market:btts_no",
       "market:btts_yes",
       "market:double_chance",
-      "market:home_over_05",
-      "market:home_over_15",
-      "market:home_over_25",
-      "market:home_over_35",
-      "market:home_under_05",
-      "market:home_under_15",
-      "market:home_under_25",
-      "market:home_under_35",
-      "market:home_under_45",
       "market:match_over_15",
       "market:match_over_25",
       "market:match_over_35",
@@ -9398,323 +9816,190 @@
       "market:match_under_45"
     ],
     "evidence_gate": "none_from_first_resolved_prior_day_results_evidence_smoothed",
-    "fixtures": 20,
-    "intercept": 0.023187081906120528,
+    "fixtures": 18,
+    "intercept": 0.021576338145664686,
     "learning_policy": "ml_paper_dynamic_calibration_success_tilt",
-    "observations": 315,
+    "observations": 210,
     "recency_half_life_days": 14.0,
-    "smoothing_factor": 0.8,
+    "smoothing_factor": 0.782608695652174,
     "smoothing_k_fixtures": 5.0,
     "status": "fitted_prior_paper_errors",
     "success_tilt": {
       "bucket:CAUTION": {
-        "excess": -0.005538739357013489,
+        "excess": -0.005795985342359089,
         "fixtures": 3,
-        "tilt_logit": -0.011077478714026978,
+        "tilt_logit": -0.011591970684718178,
         "weighted_hit_rate": 0.4787903618849508,
         "weighted_observations": 2.2435440620161944,
-        "weighted_reference_rate": 0.48432910124196427
+        "weighted_reference_rate": 0.48458634722730987
       },
       "bucket:SKIPPED_VETO": {
-        "excess": -0.005043303249139042,
-        "fixtures": 17,
-        "tilt_logit": -0.010086606498278083,
-        "weighted_hit_rate": 0.4984005310480487,
-        "weighted_observations": 15.33741876043126,
-        "weighted_reference_rate": 0.5034438342971878
+        "excess": -0.009842225168009533,
+        "fixtures": 15,
+        "tilt_logit": -0.019684450336019066,
+        "weighted_hit_rate": 0.49557504991849705,
+        "weighted_observations": 13.434028454410052,
+        "weighted_reference_rate": 0.5054172750865066
       },
       "bucket:WATCHLIST_UNCORROBORATED_PRICE": {
-        "excess": 0.01723874062515396,
+        "excess": 0.01565880555090604,
         "fixtures": 1,
-        "tilt_logit": 0.03447748125030792,
+        "tilt_logit": 0.03131761110181208,
         "weighted_hit_rate": 0.5714285714285714,
         "weighted_observations": 0.9057236642639068,
-        "weighted_reference_rate": 0.5541898308034174
+        "weighted_reference_rate": 0.5557697658776654
       },
       "gap:0_to_10pp": {
-        "excess": -0.07068953135662093,
-        "fixtures": 16,
-        "tilt_logit": -0.14137906271324185,
-        "weighted_hit_rate": 0.5092709563189488,
-        "weighted_observations": 4.246509778813111,
-        "weighted_reference_rate": 0.5799604876755697
+        "excess": -0.07561325364332316,
+        "fixtures": 13,
+        "tilt_logit": -0.15122650728664633,
+        "weighted_hit_rate": 0.5050399510119068,
+        "weighted_observations": 4.00262654087544,
+        "weighted_reference_rate": 0.58065320465523
       },
       "gap:10_to_20pp": {
-        "excess": -0.1276840547203768,
-        "fixtures": 13,
-        "tilt_logit": -0.2553681094407536,
-        "weighted_hit_rate": 0.5245437487885876,
-        "weighted_observations": 2.731670785125464,
-        "weighted_reference_rate": 0.6522278035089644
+        "excess": -0.0591890797898893,
+        "fixtures": 12,
+        "tilt_logit": -0.1183781595797786,
+        "weighted_hit_rate": 0.5929415190068604,
+        "weighted_observations": 2.997568902959947,
+        "weighted_reference_rate": 0.6521305987967497
       },
       "gap:20pp_plus": {
-        "excess": 0.17462326912315884,
+        "excess": 0.1804328322608617,
         "fixtures": 4,
-        "tilt_logit": 0.3492465382463177,
+        "tilt_logit": 0.3608656645217234,
         "weighted_hit_rate": 0.7509233297469794,
         "weighted_observations": 0.7272649528708102,
-        "weighted_reference_rate": 0.5763000606238206
+        "weighted_reference_rate": 0.5704904974861177
       },
       "gap:negative": {
-        "excess": 0.058589045514474525,
-        "fixtures": 20,
-        "tilt_logit": 0.11717809102894905,
-        "weighted_hit_rate": 0.45403476715403734,
-        "weighted_observations": 7.597525431106542,
-        "weighted_reference_rate": 0.3954457216395628
+        "excess": 0.02879811307237201,
+        "fixtures": 18,
+        "tilt_logit": 0.05759622614474402,
+        "weighted_hit_rate": 0.4324130849900289,
+        "weighted_observations": 7.746980430554602,
+        "weighted_reference_rate": 0.4036149719176569
       },
       "gap:source_unavailable": {
-        "excess": 0.0008421974050112357,
-        "fixtures": 11,
-        "tilt_logit": 0.0016843948100224715,
-        "weighted_hit_rate": 0.5166150831513024,
-        "weighted_observations": 3.1837155387954756,
-        "weighted_reference_rate": 0.5157728857462912
+        "excess": -0.00476857825832544,
+        "fixtures": 8,
+        "tilt_logit": -0.00953715651665088,
+        "weighted_hit_rate": 0.5,
+        "weighted_observations": 1.1088553534293717,
+        "weighted_reference_rate": 0.5047685782583254
       },
       "market:1x2": {
-        "excess": -0.02637838356149269,
-        "fixtures": 13,
-        "tilt_logit": -0.05275676712298538,
-        "weighted_hit_rate": 0.39034886689943415,
-        "weighted_observations": 3.530124385464804,
-        "weighted_reference_rate": 0.41672725046092685
-      },
-      "market:away_over_05": {
-        "excess": -0.20012364176394176,
-        "fixtures": 4,
-        "tilt_logit": -0.4002472835278835,
-        "weighted_hit_rate": 0.42075424576505244,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.6208778875289942
-      },
-      "market:away_over_15": {
-        "excess": -0.21121094222229278,
-        "fixtures": 4,
-        "tilt_logit": -0.42242188444458556,
-        "weighted_hit_rate": 0.24404058410867038,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.45525152633096316
-      },
-      "market:away_over_25": {
-        "excess": -0.07430224755109585,
-        "fixtures": 4,
-        "tilt_logit": -0.1486044951021917,
-        "weighted_hit_rate": 0.24404058410867038,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.31834283165976623
-      },
-      "market:away_over_35": {
-        "excess": -0.2157348822132174,
-        "fixtures": 4,
-        "tilt_logit": -0.4314697644264348,
-        "weighted_hit_rate": 0.0,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.2157348822132174
-      },
-      "market:away_under_05": {
-        "excess": 0.18183935169180282,
-        "fixtures": 4,
-        "tilt_logit": 0.36367870338360564,
-        "weighted_hit_rate": 0.5792457542349475,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.3974064025431447
-      },
-      "market:away_under_15": {
-        "excess": 0.19246428576253072,
-        "fixtures": 4,
-        "tilt_logit": 0.38492857152506144,
-        "weighted_hit_rate": 0.7559594158913296,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.5634951301287989
-      },
-      "market:away_under_25": {
-        "excess": 0.05768238946901039,
-        "fixtures": 4,
-        "tilt_logit": 0.11536477893802077,
-        "weighted_hit_rate": 0.7559594158913296,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.6982770264223193
-      },
-      "market:away_under_35": {
-        "excess": 0.2539938893285464,
-        "fixtures": 3,
-        "tilt_logit": 0.5,
-        "weighted_hit_rate": 1.0,
-        "weighted_observations": 0.07860410672834067,
-        "weighted_reference_rate": 0.7460061106714536
-      },
-      "market:away_under_45": {
-        "excess": 0.28528922467156614,
-        "fixtures": 2,
-        "tilt_logit": 0.5,
-        "weighted_hit_rate": 1.0,
-        "weighted_observations": 0.04688093496132002,
-        "weighted_reference_rate": 0.7147107753284339
+        "excess": -0.03998662035949663,
+        "fixtures": 10,
+        "tilt_logit": -0.07997324071899325,
+        "weighted_hit_rate": 0.3906252839271721,
+        "weighted_observations": 3.513092560224753,
+        "weighted_reference_rate": 0.43061190428666873
       },
       "market:btts_no": {
-        "excess": -0.09883228529886579,
-        "fixtures": 12,
-        "tilt_logit": -0.19766457059773157,
-        "weighted_hit_rate": 0.3537042288177573,
-        "weighted_observations": 0.7452565463576946,
-        "weighted_reference_rate": 0.4525365141166231
+        "excess": -0.1511259997514982,
+        "fixtures": 9,
+        "tilt_logit": -0.3022519995029964,
+        "weighted_hit_rate": 0.2911015848931736,
+        "weighted_observations": 0.6838167716095297,
+        "weighted_reference_rate": 0.4422275846446718
       },
       "market:btts_yes": {
-        "excess": 0.08765419275453301,
-        "fixtures": 12,
-        "tilt_logit": 0.17530838550906602,
-        "weighted_hit_rate": 0.6462957711822426,
-        "weighted_observations": 0.7452565463576946,
-        "weighted_reference_rate": 0.5586415784277096
+        "excess": 0.13985863501636508,
+        "fixtures": 9,
+        "tilt_logit": 0.27971727003273017,
+        "weighted_hit_rate": 0.7088984151068263,
+        "weighted_observations": 0.6838167716095297,
+        "weighted_reference_rate": 0.5690397800904612
       },
       "market:double_chance": {
-        "excess": 0.03057031026654522,
+        "excess": 0.03223052075638155,
         "fixtures": 9,
-        "tilt_logit": 0.06114062053309044,
-        "weighted_hit_rate": 0.6666666666666669,
-        "weighted_observations": 1.9605750307887315,
-        "weighted_reference_rate": 0.6360963564001216
-      },
-      "market:home_over_05": {
-        "excess": 0.36322334016553337,
-        "fixtures": 4,
-        "tilt_logit": 0.5,
-        "weighted_hit_rate": 1.0,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.6367766598344666
-      },
-      "market:home_over_15": {
-        "excess": 0.08634368103531526,
-        "fixtures": 4,
-        "tilt_logit": 0.1726873620706305,
-        "weighted_hit_rate": 0.5385723235501692,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.4522286425148539
-      },
-      "market:home_over_25": {
-        "excess": -0.3158789391486952,
-        "fixtures": 4,
-        "tilt_logit": -0.5,
-        "weighted_hit_rate": 0.0,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.3158789391486952
-      },
-      "market:home_over_35": {
-        "excess": -0.21780709805250195,
-        "fixtures": 4,
-        "tilt_logit": -0.4356141961050039,
-        "weighted_hit_rate": 0.0,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.21780709805250195
-      },
-      "market:home_under_05": {
-        "excess": -0.3820680023038562,
-        "fixtures": 4,
-        "tilt_logit": -0.5,
-        "weighted_hit_rate": 0.0,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.3820680023038562
-      },
-      "market:home_under_15": {
-        "excess": -0.10508686818633017,
-        "fixtures": 4,
-        "tilt_logit": -0.21017373637266035,
-        "weighted_hit_rate": 0.46142767644983085,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.566514544636161
-      },
-      "market:home_under_25": {
-        "excess": 0.2995676282814195,
-        "fixtures": 4,
-        "tilt_logit": 0.5,
-        "weighted_hit_rate": 1.0,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.7004323717185805
-      },
-      "market:home_under_35": {
-        "excess": 0.2050997483904392,
-        "fixtures": 4,
-        "tilt_logit": 0.4101994967808784,
-        "weighted_hit_rate": 1.0,
-        "weighted_observations": 0.11142118097008617,
-        "weighted_reference_rate": 0.7949002516095608
-      },
-      "market:home_under_45": {
-        "excess": 0.14206882822159583,
-        "fixtures": 3,
-        "tilt_logit": 0.28413765644319167,
-        "weighted_hit_rate": 1.0,
-        "weighted_observations": 0.09173153609478385,
-        "weighted_reference_rate": 0.8579311717784042
+        "tilt_logit": 0.0644610415127631,
+        "weighted_hit_rate": 0.6666666666666667,
+        "weighted_observations": 2.051450314828588,
+        "weighted_reference_rate": 0.6344361459102852
       },
       "market:match_over_15": {
-        "excess": 0.23158284132703577,
-        "fixtures": 11,
-        "tilt_logit": 0.46316568265407154,
-        "weighted_hit_rate": 0.9484902608642987,
-        "weighted_observations": 0.6158674514628508,
-        "weighted_reference_rate": 0.7169074195372629
+        "excess": 0.2874698466978045,
+        "fixtures": 8,
+        "tilt_logit": 0.5,
+        "weighted_hit_rate": 1.0,
+        "weighted_observations": 0.5544276767146858,
+        "weighted_reference_rate": 0.7125301533021955
       },
       "market:match_over_25": {
-        "excess": -0.09330394607623782,
-        "fixtures": 19,
-        "tilt_logit": -0.18660789215247564,
-        "weighted_hit_rate": 0.5001301531268963,
-        "weighted_observations": 3.2196456781045066,
-        "weighted_reference_rate": 0.5934340992031342
+        "excess": -0.060647948811988095,
+        "fixtures": 17,
+        "tilt_logit": -0.12129589762397619,
+        "weighted_hit_rate": 0.5395703113142081,
+        "weighted_observations": 3.421055040854513,
+        "weighted_reference_rate": 0.6002182601261962
       },
       "market:match_over_35": {
-        "excess": 0.20986105201645394,
-        "fixtures": 10,
-        "tilt_logit": 0.4197221040329079,
-        "weighted_hit_rate": 0.6431689416128681,
-        "weighted_observations": 0.48647835656800686,
-        "weighted_reference_rate": 0.43330788959641414
+        "excess": 0.23954623623845422,
+        "fixtures": 7,
+        "tilt_logit": 0.47909247247690845,
+        "weighted_hit_rate": 0.6721659911487536,
+        "weighted_observations": 0.42503858181984194,
+        "weighted_reference_rate": 0.4326197549102994
       },
       "market:match_over_45": {
-        "excess": 0.21205003049622334,
-        "fixtures": 10,
-        "tilt_logit": 0.4241000609924467,
-        "weighted_hit_rate": 0.5324275271170621,
-        "weighted_observations": 0.48647835656800686,
-        "weighted_reference_rate": 0.32037749662083875
+        "excess": 0.22169069742751335,
+        "fixtures": 7,
+        "tilt_logit": 0.4433813948550267,
+        "weighted_hit_rate": 0.5454167885298464,
+        "weighted_observations": 0.42503858181984194,
+        "weighted_reference_rate": 0.3237260911023331
       },
       "market:match_under_15": {
-        "excess": -0.2406100078371603,
-        "fixtures": 11,
-        "tilt_logit": -0.4812200156743206,
-        "weighted_hit_rate": 0.05150973913570134,
-        "weighted_observations": 0.6158674514628508,
-        "weighted_reference_rate": 0.29211974697286164
+        "excess": -0.29692421872256,
+        "fixtures": 8,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.0,
+        "weighted_observations": 0.5544276767146858,
+        "weighted_reference_rate": 0.29692421872256
       },
       "market:match_under_25": {
-        "excess": 0.08554374031630807,
-        "fixtures": 19,
-        "tilt_logit": 0.17108748063261614,
-        "weighted_hit_rate": 0.4998698468731036,
-        "weighted_observations": 3.2196456781045066,
-        "weighted_reference_rate": 0.4143261065567955
+        "excess": 0.0508255918767434,
+        "fixtures": 17,
+        "tilt_logit": 0.1016511837534868,
+        "weighted_hit_rate": 0.46042968868579176,
+        "weighted_observations": 3.421055040854513,
+        "weighted_reference_rate": 0.40960409680904836
       },
       "market:match_under_35": {
-        "excess": -0.22202266321656944,
-        "fixtures": 10,
-        "tilt_logit": -0.4440453264331389,
-        "weighted_hit_rate": 0.35683105838713186,
-        "weighted_observations": 0.48647835656800686,
-        "weighted_reference_rate": 0.5788537216037013
+        "excess": -0.2523252593116421,
+        "fixtures": 7,
+        "tilt_logit": -0.5,
+        "weighted_hit_rate": 0.3278340088512462,
+        "weighted_observations": 0.42503858181984194,
+        "weighted_reference_rate": 0.5801592681628883
       },
       "market:match_under_45": {
-        "excess": -0.22258310113840446,
-        "fixtures": 10,
-        "tilt_logit": -0.4451662022768089,
-        "weighted_hit_rate": 0.46757247288293774,
-        "weighted_observations": 0.48647835656800686,
-        "weighted_reference_rate": 0.6901555740213422
+        "excess": -0.23275643200874846,
+        "fixtures": 7,
+        "tilt_logit": -0.4655128640174969,
+        "weighted_hit_rate": 0.4545832114701534,
+        "weighted_observations": 0.42503858181984194,
+        "weighted_reference_rate": 0.6873396434789019
       }
     },
     "success_tilt_folds": 5,
     "success_tilt_reference": "cross_fitted_calibration_out_of_sample",
     "success_tilt_total_limit_logit": 0.5,
+    "training_admission": {
+      "count_basis": "candidate_occurrences_before_outcome_lookup_and_deduplication",
+      "excluded_by_reason": {
+        "oddspapi_legacy_or_unproven_quote_generation": 17113
+      },
+      "excluded_candidate_occurrences": 17113,
+      "excluded_fixture_count": 4,
+      "historical_receipts_and_finances": "unchanged",
+      "oddspapi_min_schema_version": 4,
+      "policy": "historical_candidates_existing_oddspapi_generation_floor_v1"
+    },
     "training_last_date": "2026-11-04",
     "training_outcomes": [
       {
@@ -10963,756 +11248,6 @@
         ]
       },
       {
-        "candidate_id": "1ba5db3ba5f29599c8b384c8eaa5d533e4f960e714a0de3419af73062191a382",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "f0dcfdd2fb669dd6cddd76a1ef443a02a101fd1629cc78cbf61fc713599f81eb",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "9e012ae9e1a8602c1d643770267a92580cc4714a5b7ed67880a688c9ec737de8",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "865b6d1753176b575f2f1d131f47e29503a67be92779ca635e98ccc288995fca",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "df24badd06883b651adb3d782c7d5778a1b558be27e568efac8cf61bbac8a5c2",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "2ee17e1b5ef8ca7621e2ee9847e6d59dc10a44c933c1f02633993c14f7242b18",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "8ae803255547a4cab3aa8380925c00b1030c8287e758fd0eebb64bc7aac29105",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "a0bb8d2c5a0a9bfadbb7aa1e3c08aff54e4355e6045f0c882938cd6b0b3746c5",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "283acb2d3849a8c1167ada8c7096f16716b19435149a8405ce55949803b23970",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "b00e1c09fed58a0f70144d9bea9794436311083fa10278c4a9b0a7cc57013fbe",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "74089f4bf6d14e934b97649c2f6bc6c269b32461f5518d707d0cab4820431fb4",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "44bc4a31197d6af1d93084d7514e48405e5aad46ee70b54ad9e7f37b332f0054",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "cd926c575e15ed1be0aa9e4be43e0b50268210b58231dc4dacece8c43faf7ff9",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "69050d8e127e6d128ac71012ddf8f0a5919eec7d3e511e694a1f311168167c89",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "2ddd722c48ba829bb002e7a80f64794661ac8087332cc4c9cad2fca9acc51021",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "7b4e1373bd7ed6ca03eb4fe2f664575db14179d5714dd7171d8b051cb12ec30c",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "43733dc791fce8f5cb2186a34058a630c7b525550d01534fcb9b563839f3b02c",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "3c349e5207cd8bb4b4f1707e9240369ba181a75de9ac6db56407ea044c6ab0cf",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 0,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "5b22f081cb686831da598051367f48b80607c817bf5881a42798902abd5961fe",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "6641dfcd9602b098c26d59328af389a31bb537ff41666d36591b95c86ab260f6",
-        "date": "2026-11-03",
-        "fixture": [
-          "2026-11-03",
-          "pogonsiedlce",
-          "ruchchorzow"
-        ],
-        "hit": 1,
-        "receipt_sha256": "8541cb197f6022c0b0fe36d0cf4dcc5e6e3b49ec2cb2297f961d9566a6ea23e0",
-        "score": [
-          1,
-          1
-        ]
-      },
-      {
-        "candidate_id": "a4c52a452bc37dd98b97392e8723a711ea540b40ac39d5c807f200a000758a9b",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "f47de966109a4a54dc6d04d09ab317daaa8583622e479b78e1e2c1df0574312d",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "0a634462c35992a0a7b2b2b12fc49ccf896f41387eb0a76d48ec88bd5da756e6",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "f3ecaba28fac3c5b78c0a478333173850501bb487444cb9eda5c13d6f7793651",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "1fd5993869e3f2c51e57a4ac2a937f1174b762a737e87595e86f52d9c386c6cf",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "21d0f54c1445630aab2eeb179bddf7aa0e3bf27e03f5b349e7d8ac11f8279629",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "0a8423d73b5678490b8f15266174f122d37870e2ac78ac94067bbd59313ec000",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "1965b6ee88239570b3455611498ed8b27c06f5167565bcee0ee2414aaefe9d0f",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "da9fde0ffd5eaef38a6e4ac1ea36738d79d6ae0b95030e27342f5165fa06e933",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "b72de6dfe3ad8c6d440a20acdd5d9c9aa797b4f42145518bbef07b77351fb9f0",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "566ead61ff2911301c70a3304beaa2ad0d433dacc878355735b213eb053ef9e5",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "b57002052e8e499f0102d682a09e551f23d4af6674378785f504de3041f9063f",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "710e50ae0837935595012d39c533694a2c65265d3a5cc2b7fa36f43af8bffac6",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "30806b7ac9ee5e23909062f22695856b31bd67740238ee6c2e38765e36bb14dd",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "64b90f45b21d37cc1d986d8930bc8938caf753d5b1dc53146c16613af164609a",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "6ce0ba56f1f0f78cc4a698e00dbd1aa1e8e2fda3f48e1ec7e8a07053285a4151",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "cac34d58fd59c3aa47cf577f8ff28fa146b4d06e6202deb1f9ab513ff5ff87c5",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "b352dd7e268dee82d479d6b6034cf3f7de307281a861d7c32edd5127e070a28b",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "87a99724ee22696f0139bcf9c594bc6bef7ddd1eade7a6c8e5ac56fc51f9c64c",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "cf90541e1d34cadccde4e82cc3d47b1fa6ad97339bf506d2719af5b7298e9858",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "1b0dde67c2d97c643dfe36bcf0915f1ad196a882db1771e2dffea9d0a35341f0",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "fa850e8cb9759a8911ec92baf544c767155d362a97e71e319657a64804e4e927",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "582b8b8e8a5449e3c7ebad79a8c5f85cdc262619107823b1075a4fda04f8bdbe",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "b258a9941f55f9ffd04b32ae1f86d5209349c4d51093ff3062fc7baf81415a39",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "982a059598f8b99862ce57909b884507a620da8f3924404bdbbf68865b3b222e",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "004cfbbdc4a34a08bf2c9680e2e8454e7d5c0753d84c8ada45cb7efe50586efe",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "2efe81a611ee3bcdc756797ac954f34264369e5b935b0a26d576f8518806ee95",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "9ad97068239297fdcfda14020589a67f42369c5280622cf25f682e36f31f84d2",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "7871f90696a72e43f29aef857323da4e93850c9f2ece010986dc3cac0f229746",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 0,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
-        "candidate_id": "569dd5f396d63e670b43036b032d9cd85257fc8bd68925d8f2791eb63868c3bf",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "alianzalima",
-          "cienciano"
-        ],
-        "hit": 1,
-        "receipt_sha256": "6849ce8e5230054c974698ce00466669faf2a0d4d03bf5d3e4781e293b9d01b1",
-        "score": [
-          1,
-          0
-        ]
-      },
-      {
         "candidate_id": "f2cde40816158216d78fa80b120c5240fe7d4b4263c31a141f4edded6a66cb4c",
         "date": "2026-11-04",
         "fixture": [
@@ -12838,441 +12373,6 @@
         ]
       },
       {
-        "candidate_id": "a6b52106c8ba7ab13591deeb5680c60ce816b40b3745039b891c8fde34523fef",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "e6bd825e104b2c67b058d13a744e81909b37c9294aa12549eba6f56bc7648974",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "7a7293df0b15dae2a1ad5682906985b3949dd8adf3288c2eb7163c4d3286dc8d",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "1f0663be1a9c36c499043375b23111c74ad9cca26a1dc35d94c1fd3fc56f3fc5",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "d45bbb6e629fe752acf5b497a0f561d9535040369ecff72251feb57040ab9ce2",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "b4339db7402cb00ef92042c3a8e5408437692381495c5bb9bfeed285a11347dd",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "b71c915c25c7363a8ccf2d2d58d322142f5dc12cc0b6a4f943a601aaf4e62cde",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "297b2b436b46ad107873a80fd7cac8e53b9f4c93faae21fe25338ecdfde555e9",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "4581cb6c3a2040b194f0e42c58d251a58f3bc389282ecf8a1c1b02e4f195716e",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "5f081b0572cac320ec870fe387650bf5b9c2deeb82b3bded26d57debe88a17f5",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "86b03010893a5c44ebd60d0afc647d4047e20970e53c8133191f94e623248c84",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "50ef29fe7ad87185a649bf23db85ddb2a52e33892d7695902e13546a1b58f297",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "9b8f9111b822ed6bc4c37ce17f1519a6aee979d6208add12245f6326796e1436",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "a46fa2c19c24b2b1567ec1e615d48d8d07143aa3242fc6b0a8eeebd5474e5d2a",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "7bb46e5166c7ed9979f78e548260fed8ba1713173809e6d56983f0d28784c281",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "87d8f191826f437462c39bfc43f435df90aa1cda0975813fd93cc34322d2f4b5",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "77e96263fab82f070fc5e40be338d79ffdae3bccf716e3e989edaa96a91a97bc",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "5e0cb7dc36a74458b35e3710f00bb1b75503ca9317dd02339e90ad0fef353933",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "704d07488768211667fcda476836ad5cb45f67c37fd393d80a535e9fdc9ad5e0",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "8e78bd79ae0c088681175810e1a2927ef3568c2cb4efc9063df33456a0051d9b",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "031dd46e78dc5341e23901b24d9446aa5bba26ba6e9426d258fdac01ab91fab3",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "f1405916e6eca51ae2aebdb29ec171925647881c8ffbef703587ac0d69298a89",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "2455d949f6cad8a6ec5dd81b5a27abe195d220cb78929716c2993d27c2dc8447",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "2ea28ee7770b6a749c16a432c65c21d4f19378b2f5701f378efa04b8c81af34b",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "9dcf944373db76ea13ba8ee06f03ee56325d102214a8a5f07e18fa0c10f105a3",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "eb6d336fc0af512031ca5182294465870318bf6c3814309b40e625c6f6d00188",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "8ee02f5a7883282696832f43b41e4ec0a9bf1892d1bd3e3e2bc94aef351d1781",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "9aba1854e5d75c26ad657b7d3c73f88c4286ccab271e9a96dacce41f90e75928",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
-        "candidate_id": "51457d35cef5235eda14ecdafe499b8b2ffda3b68745c916668af83fed9889c7",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "mcalger",
-          "mcoran"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          0
-        ]
-      },
-      {
         "candidate_id": "f8740e17fc9c8e491c8d39155146bf278aa9589bae5ffb4f8128205d144eeae7",
         "date": "2026-11-04",
         "fixture": [
@@ -14051,400 +13151,10 @@
           1,
           9
         ]
-      },
-      {
-        "candidate_id": "16192d3a0f974ccdb9c4c3bee46f2c28022d3e1555aa787cac6ae2c47acbf4ea",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "70f6b80d090e47aef1faedef55f552dce1b30a74b523111ad4883a8cc11e162e",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "b68982535110a66ead9b484a01918da453418cefba264e2b1247ae8f9f30468b",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "a6dff0f96b432bae87a204dbb1db8464201c95516bcac75488accb193e1be57a",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "1846822827c6abc7e9b145084be53dd61c7c4fd246a8494c9f2c6e3b9775be85",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "635256040f4e8e5e95e46351f380e3c845ed5c973ea1fa952431b1c744165489",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "315a2bb884e2cd2b9ed62941af9699ee1e62d0a2be761898b0d5116c0bb99ac9",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "d754a9d6eb22384d4d4d38b24a0541d9e23145866312127451ef56f8c4e86b93",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "4338b6870577b48128b3d6e261106a290a49ff550301dfac4d514f9a3b4d97bb",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "b77fe6183ee8f2558f02597e8f09ff4bed4015dd9283054ac517fc402968ba96",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "60a02123268b6c34089ed7dea94feed1448a5d54a5bbda6327d2b8e4cbd79131",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "6d2718109828faa3e5c03ef1ae7b1ea54a87c0ccd9499473a6bb7f166dd85941",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "049344021efcf3b1ed81754db087f152e1919d04c496cf722afd927a25fd4417",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "5e74080329532aa15fe9a03a15fb7bd23a8fdf7fe53b6a949ec6b01ff90da6f4",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "9cfdc7940d19f78db15c660eb64015be8b8f70d521be680017b45c7768cf7550",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "930d73aec45f99b47c5a07a49699336ff01a6802adaf51cc65a95ce987dc913f",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "e945e8144c3767245c082699474e68d91f1fd65427bed1d310279611ff0a17e1",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "3897d7b95848139e24fd61ddd85d09b9842b2fbd34347754f164b4e2d95ffb18",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "df68ab0297462205382fd834f3953092b390245d9c4566c5d0e46cc9c716197e",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "df7e686a57d47cf39f75d83a487006fd2f874fce20bf3c1e2117f804feec0a23",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "067a5750158a506b60a8cb401343db5df94b34a9c094c828eff35c5f400b5be4",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "324820147e85a31a31a7210fbb89df965206a460ccd66406ff349e25534d8a24",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "bdf9328a8c88886ce71e560b1e282b82ceb07b3c1d4ac36f0c20be5dc85f5d8f",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "cae297369c7b2b9c7d01a4f60ffbf201884a9957a73914a6c09ce8bab0caf82c",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 0,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "a63cf0846d68fdb9aebd5596e4aefc01cfb0bb7fd962de840c5e2700093656b0",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
-      },
-      {
-        "candidate_id": "2be4cf27a2a8ffaad5e3c8cbd3ad7925bdc13c6336eb4760793209bc3a8a8901",
-        "date": "2026-11-04",
-        "fixture": [
-          "2026-11-04",
-          "aekathens",
-          "realmadrid"
-        ],
-        "hit": 1,
-        "receipt_sha256": "d2f54c768a5ea8ed7cc7d2d93f2ca39a933bbab7186ba314c689be4e78cd389a",
-        "score": [
-          2,
-          3
-        ]
       }
     ],
-    "training_outcomes_sha256": "501da7048106e58c66e67b69a5bcf7408ad10479078498237990682e9d382744",
-    "training_sha256": "11963f74cc40565ff93182bee81719902d11a5e56f5bc05265ee659b7b417ba1"
+    "training_outcomes_sha256": "6bafd220e0fbaa53764913d467dbd8228f2546727cbf2b260f280d41137bee15",
+    "training_sha256": "fb6da3f4474e1af71e9e4c1233e0336e861363067a64ea1983f0ca095df9f29b"
   },
   "payout_basis": "hypothetical_same_book_singles_product_not_confirmed_acca_quote",
   "limitation": "paper forward experiment; no real-money promotion"
