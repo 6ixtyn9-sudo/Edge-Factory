@@ -9,7 +9,7 @@
   "paper_free_units": 56.4089601792,
   "settled_stake_units": 50.198876,
   "receipt_days": 5,
-  "decision_receipts": 39,
+  "decision_receipts": 41,
   "bet_days": 5,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
@@ -11622,44 +11622,62 @@
       "decision_id": "20261106T044844477485Z",
       "captured_at": "2026-11-06T04:48:44.477485+00:00",
       "frozen_at": "2026-11-06T04:48:57.559971+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261106T073539843355Z",
+      "captured_at": "2026-11-06T07:35:39.843355+00:00",
+      "frozen_at": "2026-11-06T07:35:51.527510+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261106T073808827495Z",
+      "captured_at": "2026-11-06T07:38:08.827495+00:00",
+      "frozen_at": "2026-11-06T07:38:20.179214+00:00"
     }
   ],
   "latest_learning": {
     "coef": [
       0.6809114833697006,
-      -0.011539610566666442,
-      0.008745708042413154,
-      0.004363297959776939,
-      0.020466269614060676,
-      0.008702628533959008,
-      -0.014068288209610964,
-      -0.011377497140303344,
-      -0.00736903531317177,
-      -0.00916782023112913,
-      0.01351150250663753,
-      0.010857217443180946,
-      0.006965217659338054,
-      0.002624870575236312,
-      -0.08440932439554598,
-      0.07412028540331346,
-      0.05045508978936155,
-      -0.023253197851177836,
-      -0.017363443631904413,
+      -0.011539610566666438,
+      0.00874570804241322,
+      0.004363297959776908,
+      0.0204662696140606,
+      0.008702628533959,
+      -0.014068288209610952,
+      -0.011377497140303333,
+      -0.007369035313171767,
+      -0.009167820231129121,
+      0.01351150250663752,
+      0.010857217443180937,
+      0.006965217659338047,
+      0.002624870575236313,
+      -0.08440932439554592,
+      0.07412028540331343,
+      0.05045508978936147,
+      -0.023253197851177812,
+      -0.017363443631904396,
       -0.008243769412631226,
-      -0.005702923192216913,
-      0.02283285699397952,
-      0.016808458943022977,
-      0.0078082618492348555,
-      0.0053690797653407904,
-      0.0019378202598320212,
-      0.06441642317707691,
-      -0.2900121955666658,
-      0.008265158942020392,
-      0.030553117218855137,
-      -0.07334626607959062,
-      0.2566031039105522,
-      -0.01768398707123941,
-      -0.03873021905429143
+      -0.00570292319221691,
+      0.022832856993979498,
+      0.01680845894302297,
+      0.0078082618492348495,
+      0.005369079765340785,
+      0.0019378202598320225,
+      0.06441642317707696,
+      -0.29001219556666563,
+      0.008265158942020357,
+      0.030553117218855085,
+      -0.07334626607959056,
+      0.25660310391055213,
+      -0.017683987071239367,
+      -0.0387302190542914
     ],
     "columns": [
       "bucket:CAUTION",
@@ -11698,7 +11716,7 @@
     ],
     "evidence_gate": "none_from_first_resolved_prior_day_results_evidence_smoothed",
     "fixtures": 26,
-    "intercept": 0.028703095244579827,
+    "intercept": 0.028703095244579722,
     "learning_policy": "ml_paper_dynamic_calibration_success_tilt",
     "observations": 375,
     "recency_half_life_days": 14.0,
@@ -11707,12 +11725,12 @@
     "status": "fitted_prior_paper_errors",
     "success_tilt": {
       "bucket:CAUTION": {
-        "excess": -0.005708304024300448,
+        "excess": -0.005708304024300337,
         "fixtures": 4,
-        "tilt_logit": -0.011416608048600896,
+        "tilt_logit": -0.011416608048600674,
         "weighted_hit_rate": 0.4815339457995142,
         "weighted_observations": 2.4524017270567766,
-        "weighted_reference_rate": 0.48724224982381464
+        "weighted_reference_rate": 0.48724224982381453
       },
       "bucket:SKIPPED_VETO": {
         "excess": -0.0014224296376322831,
@@ -11731,12 +11749,12 @@
         "weighted_reference_rate": 0.5579077834717349
       },
       "gap:0_to_10pp": {
-        "excess": -0.04009180808162682,
+        "excess": -0.04009180808162671,
         "fixtures": 20,
-        "tilt_logit": -0.08018361616325365,
+        "tilt_logit": -0.08018361616325342,
         "weighted_hit_rate": 0.5387365686826138,
         "weighted_observations": 5.656061933198326,
-        "weighted_reference_rate": 0.5788283767642406
+        "weighted_reference_rate": 0.5788283767642405
       },
       "gap:10_to_20pp": {
         "excess": -0.016844525364899776,
@@ -11779,52 +11797,52 @@
         "weighted_reference_rate": 0.40212032263479086
       },
       "market:away_over_05": {
-        "excess": 0.32082774411852666,
+        "excess": 0.32082774411852655,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.6791722558814733
+        "weighted_reference_rate": 0.6791722558814735
       },
       "market:away_over_15": {
-        "excess": -0.4707697257068936,
+        "excess": -0.4707697257068935,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.4707697257068936
+        "weighted_reference_rate": 0.4707697257068935
       },
       "market:away_over_25": {
-        "excess": -0.39799881048552566,
+        "excess": -0.3979988104855256,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.39799881048552566
+        "weighted_reference_rate": 0.3979988104855256
       },
       "market:away_over_35": {
-        "excess": -0.2842630682384441,
+        "excess": -0.2842630682384439,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.2842630682384441
+        "weighted_reference_rate": 0.2842630682384439
       },
       "market:away_under_05": {
-        "excess": -0.3364436684947607,
+        "excess": -0.33644366849476054,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.3364436684947607
+        "weighted_reference_rate": 0.33644366849476054
       },
       "market:away_under_15": {
-        "excess": 0.4531771017597366,
+        "excess": 0.4531771017597367,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.5468228982402634
+        "weighted_reference_rate": 0.5468228982402633
       },
       "market:away_under_25": {
         "excess": 0.38116700768818756,
@@ -11851,20 +11869,20 @@
         "weighted_reference_rate": 0.8730095552152437
       },
       "market:btts_no": {
-        "excess": -0.12093187689022311,
+        "excess": -0.12093187689022306,
         "fixtures": 10,
-        "tilt_logit": -0.24186375378044622,
+        "tilt_logit": -0.2418637537804461,
         "weighted_hit_rate": 0.3230363627351431,
         "weighted_observations": 0.6814849507336631,
-        "weighted_reference_rate": 0.4439682396253662
+        "weighted_reference_rate": 0.44396823962536613
       },
       "market:btts_yes": {
-        "excess": 0.10434359445869823,
+        "excess": 0.10434359445869834,
         "fixtures": 10,
-        "tilt_logit": 0.20868718891739646,
+        "tilt_logit": 0.20868718891739668,
         "weighted_hit_rate": 0.6769636372648566,
         "weighted_observations": 0.6814849507336631,
-        "weighted_reference_rate": 0.5726200428061584
+        "weighted_reference_rate": 0.5726200428061583
       },
       "market:double_chance": {
         "excess": 0.022435397394812484,
@@ -11875,12 +11893,12 @@
         "weighted_reference_rate": 0.6442312692718546
       },
       "market:home_over_05": {
-        "excess": -0.7220131218681043,
+        "excess": -0.7220131218681044,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.7220131218681043
+        "weighted_reference_rate": 0.7220131218681044
       },
       "market:home_over_15": {
         "excess": -0.5588521369123574,
@@ -11891,28 +11909,28 @@
         "weighted_reference_rate": 0.5588521369123574
       },
       "market:home_over_25": {
-        "excess": -0.3099280278899135,
+        "excess": -0.3099280278899134,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.3099280278899135
+        "weighted_reference_rate": 0.3099280278899134
       },
       "market:home_over_35": {
-        "excess": -0.23340256052958894,
+        "excess": -0.23340256052958877,
         "fixtures": 1,
-        "tilt_logit": -0.4668051210591779,
+        "tilt_logit": -0.46680512105917754,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.23340256052958894
+        "weighted_reference_rate": 0.23340256052958877
       },
       "market:home_under_05": {
-        "excess": 0.707584638788056,
+        "excess": 0.7075846387880561,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.292415361211944
+        "weighted_reference_rate": 0.2924153612119439
       },
       "market:home_under_15": {
         "excess": 0.5413347989869308,
@@ -11920,15 +11938,15 @@
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.45866520101306923
+        "weighted_reference_rate": 0.4586652010130692
       },
       "market:home_under_25": {
-        "excess": 0.29499568238075213,
+        "excess": 0.2949956823807519,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.7050043176192479
+        "weighted_reference_rate": 0.7050043176192481
       },
       "market:home_under_35": {
         "excess": 0.22097655493017032,
@@ -11955,12 +11973,12 @@
         "weighted_reference_rate": 0.7173270089648
       },
       "market:match_over_25": {
-        "excess": -0.05731682901923718,
+        "excess": -0.05731682901923707,
         "fixtures": 25,
-        "tilt_logit": -0.11463365803847436,
+        "tilt_logit": -0.11463365803847414,
         "weighted_hit_rate": 0.5370542934582266,
         "weighted_observations": 4.570568819597105,
-        "weighted_reference_rate": 0.5943711224774638
+        "weighted_reference_rate": 0.5943711224774637
       },
       "market:match_over_35": {
         "excess": 0.003950913548277313,
@@ -11971,12 +11989,12 @@
         "weighted_reference_rate": 0.42043120891333635
       },
       "market:match_over_45": {
-        "excess": 0.03843732599973526,
+        "excess": 0.03843732599973532,
         "fixtures": 10,
-        "tilt_logit": 0.07687465199947052,
+        "tilt_logit": 0.07687465199947063,
         "weighted_hit_rate": 0.344357104332089,
         "weighted_observations": 0.640686637115066,
-        "weighted_reference_rate": 0.30591977833235373
+        "weighted_reference_rate": 0.3059197783323537
       },
       "market:match_under_15": {
         "excess": -0.09739381383696702,

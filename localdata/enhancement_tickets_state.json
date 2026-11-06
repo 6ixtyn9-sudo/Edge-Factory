@@ -7185,46 +7185,46 @@
           "legs": [
             {
               "match": "Maccabi Tel Aviv vs Maccabi Petah Tikva",
-              "pick": "yes",
-              "prob": 0.6134,
-              "odds": 1.76,
+              "pick": "under",
+              "prob": 0.7208,
+              "odds": 1.4,
               "result": null,
-              "market": "btts_yes",
-              "price_book": "Stake.com",
+              "market": "match_under_45",
+              "price_book": "bet365.us",
               "price_source": "betexplorer",
               "cohort_evidence": {
-                "rate": 0.6134,
+                "rate": 0.7208,
                 "n": 745,
                 "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
                 "as_of_exclusive": "2026-11-06",
-                "market": "btts_yes",
+                "market": "match_under_45",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 457,
-                "cohort_lower_bound": 0.5779581498736827,
+                "cohort_min_hits": 537,
+                "cohort_lower_bound": 0.6875223397096172,
                 "price_context": {
                   "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
                   "selection": "over",
                   "league": "Ligat ha'Al",
-                  "book": "Stake.com",
+                  "book": "bet365.us",
                   "source": "betexplorer",
-                  "price": 1.76,
+                  "price": 1.4,
                   "captured_at": "2026-11-06T04:31:58.379635+00:00",
-                  "decision_at": "2026-11-06T06:33:22+02:00",
+                  "decision_at": "2026-11-06T09:25:42+02:00",
                   "kickoff": "2026-11-06T12:00:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6009220317896009,
-              "ml_model_key": "f183aee47cf6c59e83ec6bab311bc6d4cf02e4a2f32c1b8cc33778db6c1c1f8d",
+              "ml_rank_probability": 0.8332066971851805,
+              "ml_model_key": "24755cabc1f84cb2855222ee881772a019cfbb627021e67f648b68dc95bbf724",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Both Teams to Score - Yes (BTTS-Yes)",
-              "floor": 1.85,
+              "label": "Match Under 4.5 Goals",
+              "floor": null,
               "floor_basis": "inherited",
               "league": "Ligat ha'Al",
               "price_at": "2026-11-06T04:31:58.379635+00:00",
               "price_kickoff": "2026-11-06T12:00:00+00:00",
               "price_provenance": {
                 "away": "Maccabi Petah Tikva",
-                "bookmaker": "Stake.com",
+                "bookmaker": "bet365.us",
                 "captured_at": "2026-11-06T04:31:58.379635+00:00",
                 "data_dt": [
                   6,
@@ -7239,41 +7239,41 @@
                 "kickoff_utc": "2026-11-06T12:00:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-06.json",
-                "ledger_sha256": "b9db64ef951e25c65c09d2a81b12fbaa3bfe0f26985d8329eb7a7460f53d80d2",
-                "market": "btts",
-                "price": 1.76,
+                "ledger_sha256": "d0102e499695b2960e87e3439545fbe9fddfd3721544f6748be735de2451f678",
+                "market": "ou_4.5",
+                "price": 1.4,
                 "quote_evidence": {
-                  "column_index": 0,
+                  "column_index": 1,
                   "columns": [
-                    "Yes",
-                    "No"
+                    "Over",
+                    "Under"
                   ],
-                  "market_slug": "bts",
+                  "market_slug": "ou",
                   "row": {
-                    "best": false,
-                    "bookmaker": "Stake.com",
-                    "bookmaker_id": "1089",
+                    "best": true,
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
                     "created": [
-                      "2026-11-05T14:10",
-                      "2026-11-05T14:10"
+                      "2026-11-05T12:04",
+                      "2026-11-05T12:04"
                     ],
-                    "line": "0",
+                    "line": "4.50",
                     "movement": [
                       "up",
                       "down"
                     ],
                     "odds": [
-                      1.76,
-                      1.88
+                      2.75,
+                      1.4
                     ],
                     "pos": [
-                      "y",
-                      "n"
+                      "1",
+                      "2"
                     ],
                     "source": "all"
                   },
-                  "row_index": 2,
-                  "row_sha256": "1e4143a3fc27b7cbc049f774303fabddeb6b7876e94db4dfb7b2f1660f33db73"
+                  "row_index": 15,
+                  "row_sha256": "96f173d9a9220245819196664601383fbaddff46602ab7f97d2dbbe4bac7f5e6"
                 },
                 "raw_kickoff": "13:00",
                 "resolution": {
@@ -7282,7 +7282,7 @@
                     "inferred_fixed_utc_plus_1"
                   ],
                   "kickoff_utc": "2026-11-06T12:00:00+00:00",
-                  "late_witness_records": 0,
+                  "late_witness_records": 1,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
@@ -7291,7 +7291,7 @@
                       "away": "Maccabi Petah Tikva",
                       "csv_data_row": 640,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "1f16f287287d466d12290826939dc6eb52930e5fcdc07e8e726b148ece07ced0",
+                      "file_sha256": "559253a82ecc0de3006ff3cc6e0915c06eaacf67afd14ba15e15a8d15fa0ffae",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Maccabi Tel Aviv",
                       "kickoff_origin": "provider_explicit_offset",
@@ -7342,7 +7342,7 @@
                       "away": "Maccabi Petah Tikva",
                       "csv_data_row": 2321,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "4c962cb5eb9b65b400e89e4978a0dd79fc0e28de24420d324620e9264061834d",
+                      "file_sha256": "59869ae6c4db2b75864620ca44ac4e682c9915ddf5c929a3a7d5d2015063886e",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Maccabi Tel Aviv FC",
                       "kickoff_origin": "provider_explicit_offset",
@@ -7381,7 +7381,7 @@
                       "csv_data_row": 2321,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "4c962cb5eb9b65b400e89e4978a0dd79fc0e28de24420d324620e9264061834d",
+                      "file_sha256": "59869ae6c4db2b75864620ca44ac4e682c9915ddf5c929a3a7d5d2015063886e",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Maccabi Tel Aviv FC",
                       "kickoff_origin": "provider_explicit_offset",
@@ -7415,7 +7415,7 @@
                         "statusId": 0
                       },
                       "file": "oddspapi_fixture_state.json",
-                      "file_sha256": "14e2b46040c585ffedad63d61494e199bb987bc7ff97dfa10dcea1f0cb0aba97",
+                      "file_sha256": "20057ebdfe144e401d69ca446dfe2768a11ad00a71734741c3a5a36fe1571b05",
                       "fixture_identity_origin": "provider_participants",
                       "home": "Maccabi Tel Aviv FC",
                       "json_pointer": "/boards/2026-11-06/fixtures/52",
@@ -7428,8 +7428,8 @@
                     }
                   ]
                 },
-                "selection": "yes",
-                "site_best": false
+                "selection": "under",
+                "site_best": true
               },
               "shadow": false,
               "ml_ordering_active": false,
@@ -7441,242 +7441,270 @@
               ]
             },
             {
-              "match": "Al-Arabi SC vs Al-Ahli Doha",
-              "pick": "yes",
-              "prob": 0.6134,
-              "odds": 1.39,
+              "match": "Oxford City vs Leicester City",
+              "pick": "over",
+              "prob": 0.7141,
+              "odds": 1.5,
               "result": null,
-              "market": "btts_yes",
-              "price_book": "Stake.com",
+              "market": "match_over_25",
+              "price_book": "bet365.us",
               "price_source": "betexplorer",
               "cohort_evidence": {
-                "rate": 0.6134,
+                "rate": 0.7141,
                 "n": 745,
                 "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
                 "as_of_exclusive": "2026-11-06",
-                "market": "btts_yes",
+                "market": "match_over_25",
                 "basis": "cohort_payout_bound",
-                "cohort_min_hits": 457,
-                "cohort_lower_bound": 0.5779581498736827,
+                "cohort_min_hits": 532,
+                "cohort_lower_bound": 0.6806145230021472,
                 "price_context": {
                   "contract_id": "pfc_4e8ef1faa47bce63a119fb43",
                   "selection": "over",
-                  "league": "Stars League",
-                  "book": "Stake.com",
+                  "league": "FA Cup",
+                  "book": "bet365.us",
                   "source": "betexplorer",
-                  "price": 1.39,
-                  "captured_at": "2026-11-06T04:33:01.130454+00:00",
-                  "decision_at": "2026-11-06T06:33:22+02:00",
-                  "kickoff": "2026-11-06T14:15:00+00:00"
+                  "price": 1.5,
+                  "captured_at": "2026-11-06T04:33:22.274755+00:00",
+                  "decision_at": "2026-11-06T09:25:42+02:00",
+                  "kickoff": "2026-11-06T19:45:00+00:00"
                 }
               },
-              "ml_rank_probability": 0.6984243120903382,
-              "ml_model_key": "f183aee47cf6c59e83ec6bab311bc6d4cf02e4a2f32c1b8cc33778db6c1c1f8d",
+              "ml_rank_probability": 0.7470986328582346,
+              "ml_model_key": "24755cabc1f84cb2855222ee881772a019cfbb627021e67f648b68dc95bbf724",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Both Teams to Score - Yes (BTTS-Yes)",
-              "floor": 1.85,
-              "floor_basis": "inherited",
-              "league": "Stars League",
-              "price_at": "2026-11-06T04:33:01.130454+00:00",
-              "price_kickoff": "2026-11-06T14:15:00+00:00",
+              "label": "Match Over 2.5 Goals",
+              "floor": 1.7168220417781943,
+              "floor_basis": "market",
+              "league": "FA Cup",
+              "price_at": "2026-11-06T04:33:22.274755+00:00",
+              "price_kickoff": "2026-11-06T19:45:00+00:00",
               "price_provenance": {
-                "away": "Al Ahli Doha",
-                "bookmaker": "Stake.com",
-                "captured_at": "2026-11-06T04:33:01.130454+00:00",
+                "away": "Leicester",
+                "bookmaker": "bet365.us",
+                "captured_at": "2026-11-06T04:33:22.274755+00:00",
                 "data_dt": [
                   6,
                   11,
                   2026,
-                  15,
-                  15
+                  20,
+                  45
                 ],
                 "decision_cutoff_utc": "2026-11-06T07:00:00+00:00",
                 "decision_day": "2026-11-06",
-                "home": "Al Arabi",
-                "kickoff_utc": "2026-11-06T14:15:00+00:00",
+                "home": "Oxford City",
+                "kickoff_utc": "2026-11-06T19:45:00+00:00",
                 "kind": "betexplorer_pre_cutoff_v1",
                 "ledger_file": "betexplorer_match_detail_2026-11-06.json",
-                "ledger_sha256": "b9db64ef951e25c65c09d2a81b12fbaa3bfe0f26985d8329eb7a7460f53d80d2",
-                "market": "btts",
-                "price": 1.39,
+                "ledger_sha256": "d0102e499695b2960e87e3439545fbe9fddfd3721544f6748be735de2451f678",
+                "market": "ou_2.5",
+                "price": 1.5,
                 "quote_evidence": {
                   "column_index": 0,
                   "columns": [
-                    "Yes",
-                    "No"
+                    "Over",
+                    "Under"
                   ],
-                  "market_slug": "bts",
+                  "market_slug": "ou",
                   "row": {
                     "best": true,
-                    "bookmaker": "Stake.com",
-                    "bookmaker_id": "1089",
+                    "bookmaker": "bet365.us",
+                    "bookmaker_id": "1105",
                     "created": [
-                      "2026-11-04T15:15",
-                      "2026-11-04T15:15"
+                      "2026-11-03T20:46",
+                      "2026-10-31T17:35"
                     ],
-                    "line": "0",
+                    "line": "2.50",
                     "movement": [
                       null,
                       null
                     ],
                     "odds": [
-                      1.39,
-                      2.6
+                      1.5,
+                      2.63
                     ],
                     "pos": [
-                      "y",
-                      "n"
+                      "1",
+                      "2"
                     ],
                     "source": "all"
                   },
-                  "row_index": 0,
-                  "row_sha256": "a0147dde090e8c4c90ea40fd06e322359c8dd6effa044303c6855b915f1f6e8b"
+                  "row_index": 7,
+                  "row_sha256": "4fd3048543a887451dfbd91db0f6619b2bf9fd0dd4da629cb872d4e0592bc4bd"
                 },
-                "raw_kickoff": "15:15",
+                "raw_kickoff": "20:45",
                 "resolution": {
                   "interpretations": [
                     "inferred_europe_prague",
                     "inferred_fixed_utc_plus_1"
                   ],
-                  "kickoff_utc": "2026-11-06T14:15:00+00:00",
+                  "kickoff_utc": "2026-11-06T19:45:00+00:00",
                   "late_witness_records": 0,
                   "provenance": "witness_corroborated_aware_iso",
                   "reason": "independent_pre_cutoff_schedule_witness",
                   "status": "corroborated",
                   "witnesses": [
                     {
-                      "away": "Al-Ahli Doha",
-                      "csv_data_row": 582,
+                      "away": "Leicester City",
+                      "csv_data_row": 650,
                       "file": "scoutingstats_2026-11.csv.gz",
-                      "file_sha256": "1f16f287287d466d12290826939dc6eb52930e5fcdc07e8e726b148ece07ced0",
+                      "file_sha256": "559253a82ecc0de3006ff3cc6e0915c06eaacf67afd14ba15e15a8d15fa0ffae",
                       "fixture_identity_origin": "provider_participants",
-                      "home": "Al-Arabi SC",
+                      "home": "Oxford City",
                       "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-06T14:15:00+00:00",
-                      "league": "Stars League",
+                      "kickoff_utc": "2026-11-06T19:45:00+00:00",
+                      "league": "FA Cup",
                       "observed_at_utc": "2026-11-05T22:06:28+00:00",
                       "provider_commence_time": null,
                       "provider_event_id": null,
-                      "row_sha256": "33dd74341da2312a3f76b39193c281886e47f87581ed2bb92d86e77922e286ba",
+                      "row_sha256": "16f82ee0791bebd987cfed7d5a260b2876694af63f85f01c674308863cbcffda",
                       "schedule_row": {
-                        "away": "Al-Ahli Doha",
+                        "away": "Leicester City",
                         "captured_at": "2026-11-05T22:06:28+00:00",
-                        "country": "Qatar",
+                        "country": "England",
                         "date": "2026-11-06",
                         "fixture_identity_origin": "provider_participants",
                         "gs": "",
-                        "home": "Al-Arabi SC",
+                        "home": "Oxford City",
                         "hs": "",
-                        "kickoff": "2026-11-06T14:15:00Z",
+                        "kickoff": "2026-11-06T19:45:00Z",
                         "kickoff_origin": "provider_explicit_offset",
-                        "league": "Stars League",
-                        "odd1": "1.95",
-                        "odd2": "2.9",
-                        "odd_gg": "1.4",
-                        "odd_ng": "2.75",
-                        "odd_o15": "1.12",
+                        "league": "FA Cup",
+                        "odd1": "7.0",
+                        "odd2": "1.36",
+                        "odd_gg": "1.8",
+                        "odd_ng": "1.95",
+                        "odd_o15": "1.14",
                         "odd_o25": "1.44",
-                        "odd_o35": "2.0",
+                        "odd_o35": "2.2",
                         "odd_u15": "5.5",
                         "odd_u25": "2.62",
-                        "odd_u35": "1.72",
-                        "oddx": "3.7",
-                        "p1": "45.465023494990696",
-                        "p2": "30.57008600053196",
-                        "p_gg": "66.26506024096386",
-                        "p_ng": "33.734939759036145",
-                        "p_o15": "83.08157099697885",
+                        "odd_u35": "1.61",
+                        "oddx": "5.5",
+                        "p1": "13.50151171579743",
+                        "p2": "69.32161753590326",
+                        "p_gg": "52.0",
+                        "p_ng": "48.00000000000001",
+                        "p_o15": "82.83132530120481",
                         "p_o25": "64.5320197044335",
-                        "p_o35": "46.23655913978495",
-                        "px": "23.964890504477353",
+                        "p_o35": "42.257217847769034",
+                        "px": "17.17687074829932",
                         "schedule_history": "[]",
                         "source": "scoutingstats",
-                        "status": "14:15"
+                        "status": "19:45"
                       },
                       "source": "scoutingstats"
                     },
                     {
-                      "away": "Al Ahli Doha",
-                      "csv_data_row": 2134,
+                      "away": "Leicester",
+                      "csv_data_row": 2356,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "4c962cb5eb9b65b400e89e4978a0dd79fc0e28de24420d324620e9264061834d",
+                      "file_sha256": "59869ae6c4db2b75864620ca44ac4e682c9915ddf5c929a3a7d5d2015063886e",
                       "fixture_identity_origin": "provider_participants",
-                      "home": "Al-Arabi SC",
+                      "home": "Oxford City",
                       "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-06T14:15:00+00:00",
-                      "league": "Qatar: Stars League",
+                      "kickoff_utc": "2026-11-06T19:45:00+00:00",
+                      "league": "England: FA Cup",
                       "observed_at_utc": "2026-11-05T22:06:05+00:00",
                       "provider_commence_time": null,
                       "provider_event_id": null,
-                      "row_sha256": "62af2d38b26976ed4d7670a52b0fc4f583c2655548c540c82c7805267d2de6ad",
+                      "row_sha256": "4db487644693301e8bde7122d0af8e54cfa4860fc0ebc77ee5e26207e8f98281",
                       "schedule_row": {
-                        "away": "Al Ahli Doha",
+                        "away": "Leicester",
                         "captured_at": "2026-11-05T22:06:05+00:00",
                         "date": "2026-11-06",
                         "fixture_identity_origin": "provider_participants",
                         "gs": "",
-                        "home": "Al-Arabi SC",
+                        "home": "Oxford City",
                         "hs": "",
-                        "index": "",
-                        "kickoff": "2026-11-06T15:15:00+01:00",
+                        "index": "-2.71",
+                        "kickoff": "2026-11-06T20:45:00+01:00",
                         "kickoff_origin": "provider_explicit_offset",
-                        "league": "Qatar: Stars League",
-                        "p1": "",
-                        "p2": "",
+                        "league": "England: FA Cup",
+                        "p1": "12.0",
+                        "p2": "69.0",
                         "pred_gs": "",
                         "pred_hs": "",
-                        "px": "",
-                        "schedule_history": "[{\"away\": \"Al Ahli Doha\", \"captured_at\": \"2026-11-04T22:08:36+00:00\", \"date\": \"2026-11-06\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Al-Arabi SC\", \"kickoff\": \"2026-11-06T15:15:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
+                        "px": "19.0",
+                        "schedule_history": "[{\"away\": \"Leicester\", \"captured_at\": \"2026-11-04T22:08:36+00:00\", \"date\": \"2026-11-06\", \"fixture_identity_origin\": \"provider_participants\", \"home\": \"Oxford City\", \"kickoff\": \"2026-11-06T20:45:00+01:00\", \"kickoff_origin\": \"provider_explicit_offset\", \"source\": \"vitibet\"}]",
                         "source": "vitibet",
                         "status": "scheduled",
-                        "tip": ""
+                        "tip": "2"
                       },
                       "source": "vitibet"
                     },
                     {
-                      "away": "Al Ahli Doha",
-                      "csv_data_row": 2134,
+                      "away": "Leicester",
+                      "csv_data_row": 2356,
                       "csv_history_index": 0,
                       "file": "vitibet_2026-11.csv.gz",
-                      "file_sha256": "4c962cb5eb9b65b400e89e4978a0dd79fc0e28de24420d324620e9264061834d",
+                      "file_sha256": "59869ae6c4db2b75864620ca44ac4e682c9915ddf5c929a3a7d5d2015063886e",
                       "fixture_identity_origin": "provider_participants",
-                      "home": "Al-Arabi SC",
+                      "home": "Oxford City",
                       "kickoff_origin": "provider_explicit_offset",
-                      "kickoff_utc": "2026-11-06T14:15:00+00:00",
+                      "kickoff_utc": "2026-11-06T19:45:00+00:00",
                       "league": null,
                       "observed_at_utc": "2026-11-04T22:08:36+00:00",
                       "provider_commence_time": null,
                       "provider_event_id": null,
-                      "row_sha256": "3a9f59ea7981f59e43a68c43b8054c56010c66a526aeb056204242cfd0e89ce4",
+                      "row_sha256": "f83977b5e9f1cd808ed32924323d93a2cb7e49be806e0fb125f54d7881e30a45",
                       "schedule_row": {
-                        "away": "Al Ahli Doha",
+                        "away": "Leicester",
                         "captured_at": "2026-11-04T22:08:36+00:00",
                         "date": "2026-11-06",
                         "fixture_identity_origin": "provider_participants",
-                        "home": "Al-Arabi SC",
-                        "kickoff": "2026-11-06T15:15:00+01:00",
+                        "home": "Oxford City",
+                        "kickoff": "2026-11-06T20:45:00+01:00",
                         "kickoff_origin": "provider_explicit_offset",
                         "source": "vitibet"
                       },
                       "source": "vitibet"
+                    },
+                    {
+                      "away": "Leicester City",
+                      "board_fetched_at": "2026-11-06T04:30:39+00:00",
+                      "board_fixture": {
+                        "fixtureId": "id1000001975802970",
+                        "participant1Name": "Oxford City",
+                        "participant2Name": "Leicester City",
+                        "sportId": 10,
+                        "startTime": "2026-11-06T19:45:00.000Z",
+                        "statusId": 0
+                      },
+                      "file": "oddspapi_fixture_state.json",
+                      "file_sha256": "20057ebdfe144e401d69ca446dfe2768a11ad00a71734741c3a5a36fe1571b05",
+                      "fixture_identity_origin": "provider_participants",
+                      "home": "Oxford City",
+                      "json_pointer": "/boards/2026-11-06/fixtures/313",
+                      "kickoff_origin": "provider_startTime",
+                      "kickoff_utc": "2026-11-06T19:45:00+00:00",
+                      "observed_at_utc": "2026-11-06T04:30:39+00:00",
+                      "provider_event_id": "id1000001975802970",
+                      "row_sha256": "86efeeae8af4742805d93dbe1e92f09c8cba5e5c3edc54da8ad0ec8a82e21010",
+                      "source": "oddspapi"
                     }
                   ]
                 },
-                "selection": "yes",
+                "selection": "over",
                 "site_best": true
               },
-              "shadow": false,
+              "shadow": true,
               "ml_ordering_active": false,
               "ranking_basis": "cohort",
               "fixture_key": [
                 "2026-11-06",
-                "Al-Arabi SC",
-                "Al-Ahli Doha"
+                "Oxford City",
+                "Leicester City"
               ]
             }
           ],
-          "odds": 2.45,
-          "stake_pct": 2.0478
+          "odds": 2.1,
+          "stake_pct": 2.0478,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 2.0478
@@ -7795,6 +7823,11 @@
     },
     "2026-11-05": {
       "frozen_at": "2026-11-05T09:58:48+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-06": {
+      "frozen_at": "2026-11-06T09:49:24+02:00",
       "final": true,
       "lock_source": "state"
     }
