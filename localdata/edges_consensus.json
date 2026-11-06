@@ -4664,26 +4664,27 @@
     },
     {
       "activated_as_of": "2026-11-03",
+      "benched_at": "2026-11-06",
       "contract_id": "pfc_48e25c370ae15b7d58d6b0d8",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
+        "baseline_lb": 0.5706,
+        "bench": true,
+        "bench_min_priced_n": 30,
+        "bench_reason": "recent_roi",
         "checked_at": "2026-11-06",
         "recent": {
-          "n": 37,
-          "wins": 22,
-          "n_priced": 37,
           "hit": 0.5946,
+          "n": 37,
+          "n_priced": 37,
+          "roi": -0.0014,
           "wilson_lb": 0.4349,
-          "roi": -0.0014
+          "wins": 22
         },
-        "baseline_lb": 0.5706,
         "recent_lb": 0.4349,
         "recent_ub": 0.7365,
-        "bench": true,
-        "bench_reason": "recent_roi",
-        "bench_min_priced_n": 30
+        "verdict": "WATCH",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -4727,31 +4728,31 @@
         "wins": 179
       },
       "view": "pfc_48e25c370ae15b7d58d6b0d8",
-      "where": "1=1",
-      "benched_at": "2026-11-06"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-11-03",
+      "benched_at": "2026-11-06",
       "contract_id": "pfc_ed44334de1c8307f22b510ab",
       "contract_schema": "post_forebet_v1",
       "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
+        "baseline_lb": 0.5854,
+        "bench": true,
+        "bench_min_priced_n": 30,
+        "bench_reason": "verdict_decaying",
         "checked_at": "2026-11-06",
         "recent": {
-          "n": 34,
-          "wins": 20,
-          "n_priced": 34,
           "hit": 0.5882,
+          "n": 34,
+          "n_priced": 34,
+          "roi": -0.0556,
           "wilson_lb": 0.4222,
-          "roi": -0.0556
+          "wins": 20
         },
-        "baseline_lb": 0.5854,
         "recent_lb": 0.4222,
         "recent_ub": 0.7363,
-        "bench": true,
-        "bench_reason": "verdict_decaying",
-        "bench_min_priced_n": 30
+        "verdict": "DECAYING",
+        "window_days": 30
       },
       "follow_source": null,
       "holds": [],
@@ -4795,8 +4796,7 @@
         "wins": 169
       },
       "view": "pfc_ed44334de1c8307f22b510ab",
-      "where": "1=1",
-      "benched_at": "2026-11-06"
+      "where": "1=1"
     },
     {
       "activated_as_of": "2026-11-03",

@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 412.24985999999996,
   "cycle_base": 456.154568,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-06",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Oxford City vs Leicester City",
+              "pick": "AWAY",
+              "prob": 0.6410540438397581,
+              "odds": 1.3571,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-06",
+                "Oxford City",
+                "Leicester City"
+              ]
+            },
+            {
+              "match": "Antalyaspor vs Bursaspor",
+              "pick": "AWAY",
+              "prob": 0.48986912330975196,
+              "odds": 1.7813,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-06",
+                "Antalyaspor",
+                "Bursaspor"
+              ]
+            }
+          ],
+          "odds": 2.42,
+          "stake_pct": 51.5312
+        },
+        {
+          "legs": [
+            {
+              "match": "Hammarby IF vs IF Elfsborg",
+              "pick": "HOME",
+              "prob": 0.6310194924865324,
+              "odds": 1.45,
+              "result": null,
+              "market": "1x2",
+              "price_book": "GTbets",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-06",
+                "Hammarby IF",
+                "IF Elfsborg"
+              ]
+            },
+            {
+              "match": "Wis\u0142a Krak\u00f3w vs Cracovia Krak\u00f3w",
+              "pick": "HOME",
+              "prob": 0.5149163027656478,
+              "odds": 1.85,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-06",
+                "Wis\u0142a Krak\u00f3w",
+                "Cracovia Krak\u00f3w"
+              ]
+            }
+          ],
+          "odds": 2.68,
+          "stake_pct": 51.5312
+        }
+      ],
+      "staked_pct": 103.0624
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",

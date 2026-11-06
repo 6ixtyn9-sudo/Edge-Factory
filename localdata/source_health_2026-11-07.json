@@ -157,13 +157,8 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
@@ -173,18 +168,18 @@
       "coherence_reason_counts": null,
       "coherence_withheld_fixtures": 0,
       "event_type": "prematch",
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 20263
       },
       "pa_matched": 0,
-      "pa_raw": 1113,
+      "pa_raw": 20263,
       "pa_scored": 20263,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -228,50 +223,68 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
         "board_fixtures": 5,
         "board_league_count": 3,
         "board_leagues": {
-          "brazil_-_serie_a": 83,
-          "colombia_-_primera_b": 41,
-          "mexico_-_liga_de_expansion_mx": 76
+          "australia_-_a-league_women": 127,
+          "mexico_-_liga_de_expansion_mx": 67,
+          "mexico_-_liga_mx_women": 6
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 73,
+        "board_priced_rows": 17,
         "board_rows": 200,
-        "board_team_count": 8,
+        "board_team_count": 10,
         "board_team_names": {
-          "Bahia": 83,
-          "Cancun FC": 76,
-          "Cruzeiro": 53,
-          "Cruzeiro MG": 30,
-          "Independiente Yumbo": 41,
-          "Piratas F.C": 22,
-          "Piratas FC": 54,
-          "Union Magdalena": 41
+          "Adelaide United (W)": 98,
+          "Adelaide United [W]": 29,
+          "Alacranes de Durango": 66,
+          "Club Tijuana (W)": 6,
+          "Durango": 1,
+          "Santos Laguna (W)": 6,
+          "Universidad Guadalajara": 66,
+          "Universidad de Guadalajara": 1,
+          "Wellington Phoenix (W)": 98,
+          "Wellington Phoenix [W]": 29
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_correct_score": 21,
+          "unknown_market:1st_half_moneyline": 6,
+          "unknown_market:1st_half_total_goals": 1,
+          "unknown_market:2nd_half_total_goals": 1,
+          "unknown_market:both_halves_goal_scored": 2,
+          "unknown_market:point_spread": 2,
+          "unsupported_market:correct_score": 68,
+          "unsupported_market:double_chance": 3,
+          "unsupported_market:draw_no_bet": 2,
+          "unsupported_market:team_total_points_odd_even": 4
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 73
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 17
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 2,
+      "sa_scored": 17,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
