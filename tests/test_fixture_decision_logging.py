@@ -4,7 +4,8 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import json
 import random
-import subprocess
+import hashlib
+from pathlib import Path
 
 import pytest
 
@@ -199,12 +200,11 @@ def test_calendar_routing_reconciles_target_day_not_entire_scan(tmp_path):
 
 
 def test_300_seeded_outputs_equal_immutable_prelogging_selector(monkeypatch):
-    """Compare entire pick dicts, vetoes, counts and research records to git HEAD."""
-    try:
-        source = subprocess.check_output(["git", "show", "9e52ed25086113e32e1a7c8f6f7f2e9b283a36a6:scripts/picks_today.py"],
-                                         text=True, stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        pytest.skip("immutable baseline commit unavailable in this shallow checkout")
+    """Compare whole outputs to the checksum-pinned prelogging selector."""
+    # Exact function bytes from the immutable prelogging commit. A depth-one
+    # CI checkout must run the comparison too, not silently skip it.
+    source = (Path(__file__).parent / "fixtures" / "prelogging_eval_1x2_9e52ed2.txt").read_text()
+    assert hashlib.sha256(source.encode()).hexdigest() == "7e99cee321a47049bf219c46c7d61d261ba9df2018d10b60b6ff8899b79d2f40"
     node = next(n for n in ast.parse(source).body if isinstance(n, ast.FunctionDef) and n.name == "eval_1x2")
     rng = random.Random(20261019)
     for i in range(300):
