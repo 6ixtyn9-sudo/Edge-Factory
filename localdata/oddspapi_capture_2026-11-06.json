@@ -1,51 +1,202 @@
 {
-  "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "added": 18709,
+  "attempted": 6,
+  "attempted_fixtures": [
+    {
+      "away": "Energie Cottbus",
+      "fixture_id": "id1000004472513974",
+      "home": "Eintracht Braunschweig"
+    },
+    {
+      "away": "IF Elfsborg",
+      "fixture_id": "id1000004067126872",
+      "home": "Hammarby IF"
+    },
+    {
+      "away": "Bursaspor",
+      "fixture_id": "id1000009872735892",
+      "home": "Antalyaspor"
+    },
+    {
+      "away": "Unia Skierniewice",
+      "fixture_id": "id1000022972230854",
+      "home": "Odra Opole"
+    },
+    {
+      "away": "Miedz Legnica",
+      "fixture_id": "id1000022972230860",
+      "home": "Puszcza Niepolomice"
+    },
+    {
+      "away": "Igdir FK",
+      "fixture_id": "id1000009872735896",
+      "home": "Sariyer SK"
+    }
+  ],
   "budget": {
     "day": "2026-11-06",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 142,
-    "remaining_today": 8,
-    "spent_today": 17
+    "month_spent": 148,
+    "remaining_today": 2,
+    "spent_today": 23
   },
-  "budget_deferred": 141,
-  "captured_at": "2026-11-06T10:32:54+00:00",
+  "budget_deferred": 194,
+  "captured_at": "2026-11-06T13:31:24+00:00",
   "date": "2026-11-06",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
   "excluded_srl_fixtures": 2,
   "excluded_wrong_sport_fixtures": 0,
   "fixtures": 349,
-  "future_slate_fixtures": 9,
+  "future_slate_fixtures": 3,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 0,
-  "markets": {},
-  "markets_source": "cache",
-  "matched": 0,
-  "odds_vocabulary": "unchanged",
-  "parse_skips_classified": {
-    "expected": {},
-    "loss_or_diagnosis": {}
+  "market_census_distinct": 578,
+  "markets": {
+    "1x2": 1927,
+    "btts": 1347,
+    "ou_0.5": 527,
+    "ou_0.75": 122,
+    "ou_1": 160,
+    "ou_1.25": 126,
+    "ou_1.5": 1157,
+    "ou_1.75": 184,
+    "ou_2": 336,
+    "ou_2.25": 370,
+    "ou_2.5": 1262,
+    "ou_2.75": 498,
+    "ou_3": 562,
+    "ou_3.25": 476,
+    "ou_3.5": 1246,
+    "ou_3.75": 322,
+    "ou_4": 366,
+    "ou_4.25": 130,
+    "ou_4.5": 835,
+    "ou_4.75": 118,
+    "ou_5": 196,
+    "ou_5.25": 126,
+    "ou_5.5": 552,
+    "ou_5.75": 98,
+    "ou_6": 60,
+    "ou_6.25": 60,
+    "ou_6.5": 178,
+    "ou_6.75": 40,
+    "ou_7": 40,
+    "ou_7.25": 40,
+    "ou_7.5": 56,
+    "ou_7.75": 30,
+    "ou_8": 30,
+    "ou_8.25": 30,
+    "ou_8.5": 38,
+    "tt_away_0.5": 730,
+    "tt_away_1.25": 6,
+    "tt_away_1.5": 947,
+    "tt_away_1.75": 6,
+    "tt_away_2": 2,
+    "tt_away_2.25": 4,
+    "tt_away_2.5": 520,
+    "tt_away_3": 2,
+    "tt_away_3.5": 160,
+    "tt_away_4.5": 24,
+    "tt_away_5.5": 4,
+    "tt_home_0.5": 570,
+    "tt_home_0.75": 2,
+    "tt_home_1": 22,
+    "tt_home_1.5": 941,
+    "tt_home_2": 16,
+    "tt_home_2.5": 643,
+    "tt_home_3": 16,
+    "tt_home_3.25": 16,
+    "tt_home_3.5": 332,
+    "tt_home_4": 18,
+    "tt_home_4.5": 75,
+    "tt_home_5.5": 8
   },
-  "pending_fixtures": 141,
-  "quoted_fixtures": [],
-  "reserved_requests": 8,
-  "rows": 0,
-  "schema": 1,
-  "slate_candidate_fixtures": 20,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 0,
-  "slate_provider_overlap_fixtures": 10,
-  "slate_unmatched_fixtures": [
-    {
-      "away": "Veres",
-      "home": "Polissya Zhytomyr",
-      "league": "Premier League",
-      "normalized_pair": "polissya zhytomyr|veres"
+  "markets_source": "cache",
+  "matched": 6,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 15,
+    "market_inactive": 9714,
+    "market_unsupported_cards": 355,
+    "market_unsupported_clean_sheet": 732,
+    "market_unsupported_corners": 6863,
+    "market_unsupported_correct_score": 2446,
+    "market_unsupported_double_chance": 1232,
+    "market_unsupported_draw_no_bet": 1045,
+    "market_unsupported_early_payout": 132,
+    "market_unsupported_handicap": 11046,
+    "market_unsupported_market_type": 7932,
+    "market_unsupported_non_goal": 466,
+    "market_unsupported_odd_even": 2230,
+    "market_unsupported_period": 38915,
+    "market_unsupported_win_to_nil": 1370,
+    "outcome_inactive": 2904
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 15,
+      "market_inactive": 9714,
+      "outcome_inactive": 2904
     },
+    "loss_or_diagnosis": {
+      "market_unsupported_cards": 355,
+      "market_unsupported_clean_sheet": 732,
+      "market_unsupported_corners": 6863,
+      "market_unsupported_correct_score": 2446,
+      "market_unsupported_double_chance": 1232,
+      "market_unsupported_draw_no_bet": 1045,
+      "market_unsupported_early_payout": 132,
+      "market_unsupported_handicap": 11046,
+      "market_unsupported_market_type": 7932,
+      "market_unsupported_non_goal": 466,
+      "market_unsupported_odd_even": 2230,
+      "market_unsupported_period": 38915,
+      "market_unsupported_win_to_nil": 1370
+    }
+  },
+  "pending_fixtures": 208,
+  "quoted_fixtures": [
+    {
+      "away": "Energie Cottbus",
+      "fixture_id": "id1000004472513974",
+      "home": "Eintracht Braunschweig"
+    },
+    {
+      "away": "IF Elfsborg",
+      "fixture_id": "id1000004067126872",
+      "home": "Hammarby IF"
+    },
+    {
+      "away": "Bursaspor",
+      "fixture_id": "id1000009872735892",
+      "home": "Antalyaspor"
+    },
+    {
+      "away": "Unia Skierniewice",
+      "fixture_id": "id1000022972230854",
+      "home": "Odra Opole"
+    },
+    {
+      "away": "Miedz Legnica",
+      "fixture_id": "id1000022972230860",
+      "home": "Puszcza Niepolomice"
+    },
+    {
+      "away": "Igdir FK",
+      "fixture_id": "id1000009872735896",
+      "home": "Sariyer SK"
+    }
+  ],
+  "reserved_requests": 2,
+  "rows": 18709,
+  "schema": 1,
+  "slate_candidate_fixtures": 18,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 6,
+  "slate_provider_overlap_fixtures": 9,
+  "slate_unmatched_fixtures": [
     {
       "away": "Al-Ahli Doha",
       "home": "Al-Arabi SC",

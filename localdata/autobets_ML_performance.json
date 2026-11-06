@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 62.6766221792,
   "paper_multiple": 0.626766221792,
-  "paper_committed_units": 6.267662,
-  "paper_free_units": 56.4089601792,
+  "paper_committed_units": 7.2555819999999995,
+  "paper_free_units": 55.421040179200006,
   "settled_stake_units": 50.198876,
   "receipt_days": 5,
-  "decision_receipts": 43,
+  "decision_receipts": 45,
   "bet_days": 5,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
@@ -17,8 +17,8 @@
   "wins": 3,
   "losses": 26,
   "hit_rate": 0.10344827586206896,
-  "pending_accas": 5,
-  "unresolved_result_legs": 4,
+  "pending_accas": 6,
+  "unresolved_result_legs": 6,
   "resolved_result_legs": 33,
   "profit_units": -37.3233778208,
   "roi": -0.7435102296075314,
@@ -11658,14 +11658,272 @@
       "decision_id": "20261106T104843427194Z",
       "captured_at": "2026-11-06T10:48:43.427194+00:00",
       "frozen_at": "2026-11-06T10:48:57.426339+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 5.062679999999999,
+          "stake_units": 0.98792,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Bursaspor",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.3437360795200143
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.2483686218321841
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.4078952986478016
+                ]
+              ],
+              "base_probability": 0.3437360795200143,
+              "book": "pin88",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "120e31486a4ded2bcd019da533d397438c8019c46716794bb47b05e1adbfb625",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "antalyaspor",
+                "bursaspor"
+              ],
+              "forecast_model_key": "49fb208ab9ae52dea4b142651fa2135e480235780a82e813cd271a7bea66d196",
+              "home": "Antalyaspor",
+              "kickoff_utc": "2026-11-06T17:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-06",
+                  "antalyaspor",
+                  "bursaspor",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "bzzoiro",
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.4078952986478016,
+                  "forecast_1x2_away_spread": 0.4574764932390078,
+                  "forecast_1x2_draw_mean": 0.2483686218321841,
+                  "forecast_1x2_draw_spread": 0.07,
+                  "forecast_1x2_home_mean": 0.3437360795200143,
+                  "forecast_1x2_home_spread": 0.5133196023999284,
+                  "forecast_btts_yes_mean": 0.5368172043010753,
+                  "forecast_btts_yes_spread": 0.0016344086021505833,
+                  "forecast_ou_1.5_over_mean": 0.7910945083014048,
+                  "forecast_ou_1.5_over_spread": 0.053716475095785365,
+                  "forecast_ou_2.5_over_mean": 0.570078947368421,
+                  "forecast_ou_2.5_over_spread": 0.09368421052631581,
+                  "forecast_ou_3.5_over_mean": 0.33178313253012043,
+                  "forecast_ou_3.5_over_spread": 0.01799999999999996,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 2.07,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 0.91,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "eaa8c61c4cd3b04dc33f982c97626c375c6904afdb415ab48a5400c39f1fce05",
+              "odds": 4.41,
+              "pre_normalized_probability": 0.3437360795200143,
+              "price_age_seconds_at_decision": 1090.243343,
+              "price_age_seconds_at_freeze": 1111.663268,
+              "price_at": "2026-11-06T13:31:01.958731+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Bursaspor",
+                  "bookmaker": "pin88",
+                  "bookmaker_market_id": "line/29/2578/1639677606/3795214695/0/moneyline",
+                  "captured_at": "2026-11-06T13:31:01.958731+00:00",
+                  "date": "2026-11-06",
+                  "home": "Antalyaspor",
+                  "kickoff": "2026-11-06T17:00:00.000Z",
+                  "league": "",
+                  "market": "1x2",
+                  "odds": "4.41",
+                  "outcome_key": "101",
+                  "provider_changed_at": "2026-11-06T13:04:04.406Z",
+                  "provider_fixture_id": "id1000009872735892",
+                  "provider_market_id": "101",
+                  "provider_market_name": "Full Time Result",
+                  "provider_market_type": "1x2",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-06T13:04:03.947Z",
+                  "schema_version": "4",
+                  "selection": "home",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "6240bb9216502fd0f84e6b4b24269886f46fe6e6efbe250b25e553911923ba67",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.3437360795200143,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "home"
+            },
+            {
+              "away": "Energie Cottbus",
+              "base_partition": [
+                [
+                  "match_over_15",
+                  "over",
+                  0.8752322097378277
+                ],
+                [
+                  "match_under_15",
+                  "under",
+                  0.12476779026217233
+                ]
+              ],
+              "base_probability": 0.8752322097378277,
+              "book": "pin88",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "7e2770633e71a42a6fbb000bb1d45cd4f1236e3d63c7126b48f78689c22f5256",
+              "contract_id": "pfc_226efd387e217a9d58a11f79",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "eintrachtbraunschweig",
+                "energiecottbus"
+              ],
+              "forecast_model_key": "49fb208ab9ae52dea4b142651fa2135e480235780a82e813cd271a7bea66d196",
+              "home": "Eintracht Braunschweig",
+              "kickoff_utc": "2026-11-06T17:30:00+00:00",
+              "market": "match_over_15",
+              "ml_inputs": {
+                "contract_id": "pfc_226efd387e217a9d58a11f79",
+                "fixture": [
+                  "2026-11-06",
+                  "eintrachtbraunschweig",
+                  "energiecottbus",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.2783525286083426,
+                  "forecast_1x2_away_spread": 0.02999999999999997,
+                  "forecast_1x2_draw_mean": 0.2502235142118863,
+                  "forecast_1x2_draw_spread": 0.032,
+                  "forecast_1x2_home_mean": 0.47142395717977115,
+                  "forecast_1x2_home_spread": 0.06,
+                  "forecast_btts_yes_mean": 0.6491600985221675,
+                  "forecast_btts_yes_spread": 0.0076798029556650604,
+                  "forecast_ou_1.5_over_mean": 0.8752322097378277,
+                  "forecast_ou_1.5_over_spread": 0.09730337078651663,
+                  "forecast_ou_2.5_over_mean": 0.6958835341365462,
+                  "forecast_ou_2.5_over_spread": 0.11499999999999999,
+                  "forecast_ou_3.5_over_mean": 0.4571631205673759,
+                  "forecast_ou_3.5_over_spread": 0.04999999999999999,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.42,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.79,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "089eba0ed332b23400833b900b9a0fbc2f3878c6e72927bc14fbafbb29f72ce4",
+              "odds": 1.148,
+              "pre_normalized_probability": 0.8752322097378277,
+              "price_age_seconds_at_decision": 1102.164226,
+              "price_age_seconds_at_freeze": 1123.584151,
+              "price_at": "2026-11-06T13:30:50.037848+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Energie Cottbus",
+                  "bookmaker": "pin88",
+                  "bookmaker_market_id": "altLine/29/1843/1639099814/3795232875/57552962375/0/totals",
+                  "captured_at": "2026-11-06T13:30:50.037848+00:00",
+                  "date": "2026-11-06",
+                  "home": "Eintracht Braunschweig",
+                  "kickoff": "2026-11-06T17:30:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.148",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-06T13:26:15.288Z",
+                  "provider_fixture_id": "id1000004472513974",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-06T13:26:14.763Z",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "419fea0fb9eefd52ea9141656b24e6d40b922d4cf40574af07c1124f651a1cce",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.8752322097378277,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "over"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_temperature",
+      "decision_id": "20261106T134912202074Z",
+      "captured_at": "2026-11-06T13:49:12.202074+00:00",
+      "frozen_at": "2026-11-06T13:49:33.621999+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_source_market_temperature",
+      "decision_id": "20261106T135221865749Z",
+      "captured_at": "2026-11-06T13:52:21.865749+00:00",
+      "frozen_at": "2026-11-06T13:52:42.739028+00:00"
     }
   ],
   "latest_learning": {
-    "as_of": "2026-11-06T10:48:43.427194+00:00",
+    "as_of": "2026-11-06T13:52:21.865749+00:00",
     "fixtures": 26,
     "learning_policy": "fixture_balanced_source_market_temperature",
     "method": "source_market",
-    "model_key": "0414046a13b5b1ed82106d5c5d7b019a7b068580db98a4210a5f8d244ab3336b",
+    "model_key": "a85c836b89c3a53f09da82171ed5ca91dbd0592bf0a033ba14004c928b2418cd",
     "observations": 76,
     "parameters": 1,
     "power": 1.0,
