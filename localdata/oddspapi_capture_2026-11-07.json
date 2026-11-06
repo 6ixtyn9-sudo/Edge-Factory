@@ -1,0 +1,426 @@
+{
+  "added": 7025,
+  "attempted": 2,
+  "attempted_fixtures": [
+    {
+      "away": "Adr Jicaral",
+      "fixture_id": "id1002776776409630",
+      "home": "Guadalupe FC"
+    },
+    {
+      "away": "FC Juarez",
+      "fixture_id": "id1002746472055298",
+      "home": "Atletico San Luis"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-07",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 154,
+    "remaining_today": 21,
+    "spent_today": 4
+  },
+  "budget_deferred": 35,
+  "captured_at": "2026-11-06T22:37:03+00:00",
+  "date": "2026-11-07",
+  "errors": [],
+  "excluded_nonprematch_fixtures": 0,
+  "excluded_srl_fixtures": 28,
+  "excluded_wrong_sport_fixtures": 0,
+  "fixtures": 1285,
+  "future_slate_fixtures": 49,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 523,
+  "markets": {
+    "1x2": 914,
+    "btts": 394,
+    "ou_0.5": 237,
+    "ou_0.75": 28,
+    "ou_1": 78,
+    "ou_1.25": 46,
+    "ou_1.5": 472,
+    "ou_1.75": 80,
+    "ou_2": 132,
+    "ou_2.25": 124,
+    "ou_2.5": 553,
+    "ou_2.75": 202,
+    "ou_3": 232,
+    "ou_3.25": 156,
+    "ou_3.5": 456,
+    "ou_3.75": 46,
+    "ou_4": 78,
+    "ou_4.25": 28,
+    "ou_4.5": 300,
+    "ou_4.75": 28,
+    "ou_5": 34,
+    "ou_5.25": 28,
+    "ou_5.5": 225,
+    "ou_5.75": 20,
+    "ou_6": 20,
+    "ou_6.25": 20,
+    "ou_6.5": 121,
+    "ou_6.75": 10,
+    "ou_7": 10,
+    "ou_7.25": 10,
+    "ou_7.5": 26,
+    "ou_7.75": 10,
+    "ou_8": 10,
+    "ou_8.25": 10,
+    "ou_8.5": 18,
+    "tt_away_0.5": 284,
+    "tt_away_0.75": 2,
+    "tt_away_1": 2,
+    "tt_away_1.25": 2,
+    "tt_away_1.5": 250,
+    "tt_away_1.75": 2,
+    "tt_away_2": 2,
+    "tt_away_2.25": 2,
+    "tt_away_2.5": 217,
+    "tt_away_2.75": 2,
+    "tt_away_3.5": 73,
+    "tt_away_4.5": 6,
+    "tt_away_5.5": 5,
+    "tt_home_0.5": 224,
+    "tt_home_0.75": 2,
+    "tt_home_1": 2,
+    "tt_home_1.25": 2,
+    "tt_home_1.5": 298,
+    "tt_home_1.75": 2,
+    "tt_home_2": 8,
+    "tt_home_2.25": 2,
+    "tt_home_2.5": 236,
+    "tt_home_3.25": 2,
+    "tt_home_3.5": 150,
+    "tt_home_3.75": 2,
+    "tt_home_4": 2,
+    "tt_home_4.5": 82,
+    "tt_home_5.5": 6
+  },
+  "markets_source": "fetch",
+  "matched": 2,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 9,
+    "market_inactive": 1915,
+    "market_unsupported_cards": 585,
+    "market_unsupported_clean_sheet": 202,
+    "market_unsupported_corners": 2555,
+    "market_unsupported_correct_score": 676,
+    "market_unsupported_double_chance": 386,
+    "market_unsupported_draw_no_bet": 269,
+    "market_unsupported_early_payout": 48,
+    "market_unsupported_handicap": 3187,
+    "market_unsupported_market_type": 2040,
+    "market_unsupported_non_goal": 117,
+    "market_unsupported_odd_even": 583,
+    "market_unsupported_period": 10831,
+    "market_unsupported_win_to_nil": 388,
+    "outcome_inactive": 295
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 9,
+      "market_inactive": 1915,
+      "outcome_inactive": 295
+    },
+    "loss_or_diagnosis": {
+      "market_unsupported_cards": 585,
+      "market_unsupported_clean_sheet": 202,
+      "market_unsupported_corners": 2555,
+      "market_unsupported_correct_score": 676,
+      "market_unsupported_double_chance": 386,
+      "market_unsupported_draw_no_bet": 269,
+      "market_unsupported_early_payout": 48,
+      "market_unsupported_handicap": 3187,
+      "market_unsupported_market_type": 2040,
+      "market_unsupported_non_goal": 117,
+      "market_unsupported_odd_even": 583,
+      "market_unsupported_period": 10831,
+      "market_unsupported_win_to_nil": 388
+    }
+  },
+  "pending_fixtures": 37,
+  "quoted_fixtures": [
+    {
+      "away": "Adr Jicaral",
+      "fixture_id": "id1002776776409630",
+      "home": "Guadalupe FC"
+    },
+    {
+      "away": "FC Juarez",
+      "fixture_id": "id1002746472055298",
+      "home": "Atletico San Luis"
+    }
+  ],
+  "reserved_requests": 21,
+  "rows": 7025,
+  "schema": 1,
+  "slate_candidate_fixtures": 92,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 3,
+  "slate_provider_overlap_fixtures": 49,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Atvidabergs FF",
+      "home": "Eskilsminne",
+      "league": "Sweden Ettan - S\u00f6dra",
+      "normalized_pair": "atvidabergs|eskilsminne"
+    },
+    {
+      "away": "FC Bayern M\u00fcnchen",
+      "home": "FSV Mainz 05",
+      "league": "Bundesliga",
+      "normalized_pair": "bayern munchen|fsv mainz 05"
+    },
+    {
+      "away": "Monterrey W",
+      "home": "Ju\u00e1rez W",
+      "league": "Mexico Liga MX Femenil",
+      "normalized_pair": "juarez w|monterrey w"
+    },
+    {
+      "away": "Harborough Town",
+      "home": "Leyton Orient",
+      "league": "FA Cup",
+      "normalized_pair": "harborough town|leyton orient"
+    },
+    {
+      "away": "Al Sailiya",
+      "home": "Al Shamal SC",
+      "league": "Stars League",
+      "normalized_pair": "al sailiya|al shamal"
+    },
+    {
+      "away": "Rangers",
+      "home": "St. Mirren",
+      "league": "Premiership",
+      "normalized_pair": "rangers|st. mirren"
+    },
+    {
+      "away": "Bohemians 1905 II",
+      "home": "Loko Vltav\u00edn",
+      "league": "Czech-Republic 3. liga - CFL A",
+      "normalized_pair": "bohemians 1905|loko vltavin"
+    },
+    {
+      "away": "Quindio",
+      "home": "Tigres FC",
+      "league": "Colombia Primera B",
+      "normalized_pair": "quindio|tigres"
+    },
+    {
+      "away": "Corvinul Hunedoara",
+      "home": "FCSB",
+      "league": "Superliga",
+      "normalized_pair": "corvinul hunedoara|fcsb"
+    },
+    {
+      "away": "Universitatea Cluj",
+      "home": "Csikszereda",
+      "league": "Superliga",
+      "normalized_pair": "csikszereda|universitatea cluj"
+    },
+    {
+      "away": "S\u00fcdtirol",
+      "home": "Pisa",
+      "league": "Serie B",
+      "normalized_pair": "pisa|sudtirol"
+    },
+    {
+      "away": "Manisa FK",
+      "home": "Ke\u00e7i\u00f6reng\u00fcc\u00fc",
+      "league": "1. Lig",
+      "normalized_pair": "keciorengucu|manisa"
+    },
+    {
+      "away": "Radni\u010dki Ni\u0161",
+      "home": "\u010cukari\u010dki",
+      "league": "Super Liga",
+      "normalized_pair": "cukaricki|radnicki nis"
+    },
+    {
+      "away": "Radomiak Radom",
+      "home": "Korona Kielce",
+      "league": "Ekstraklasa",
+      "normalized_pair": "korona kielce|radomiak radom"
+    },
+    {
+      "away": "Gwangju",
+      "home": "Jeju United",
+      "league": "K League 1",
+      "normalized_pair": "gwangju|jeju united"
+    },
+    {
+      "away": "Casa Pia",
+      "home": "Alverca",
+      "league": "Liga Portugal",
+      "normalized_pair": "alverca|casa pia"
+    },
+    {
+      "away": "Sant Andreu",
+      "home": "FC Cartagena",
+      "league": "Primera Division RFEF: Group 2",
+      "normalized_pair": "cartagena|sant andreu"
+    },
+    {
+      "away": "Real Ja\u00e9n",
+      "home": "Alcorc\u00f3n",
+      "league": "Primera Division RFEF: Group 2",
+      "normalized_pair": "alcorcon|real jaen"
+    },
+    {
+      "away": "Lecce",
+      "home": "Torino",
+      "league": "Serie A",
+      "normalized_pair": "lecce|torino"
+    },
+    {
+      "away": "Daegu",
+      "home": "Seongnam",
+      "league": "K League 2",
+      "normalized_pair": "daegu|seongnam"
+    },
+    {
+      "away": "Hwaseong",
+      "home": "Gimhae City",
+      "league": "K League 2",
+      "normalized_pair": "gimhae city|hwaseong"
+    },
+    {
+      "away": "Tenerife",
+      "home": "Granada",
+      "league": "La Liga 2",
+      "normalized_pair": "granada|tenerife"
+    },
+    {
+      "away": "Avellino",
+      "home": "Benevento",
+      "league": "Serie B",
+      "normalized_pair": "avellino|benevento"
+    },
+    {
+      "away": "Albacete",
+      "home": "Legan\u00e9s",
+      "league": "La Liga 2",
+      "normalized_pair": "albacete|leganes"
+    },
+    {
+      "away": "Amarante",
+      "home": "Acad\u00e9mica",
+      "league": "Liga Portugal 2",
+      "normalized_pair": "academica|amarante"
+    },
+    {
+      "away": "Arezzo",
+      "home": "Juve Stabia",
+      "league": "Serie B",
+      "normalized_pair": "arezzo|juve stabia"
+    },
+    {
+      "away": "Bologna",
+      "home": "Parma",
+      "league": "Serie A",
+      "normalized_pair": "bologna|parma"
+    },
+    {
+      "away": "Paris",
+      "home": "Auxerre",
+      "league": "Ligue 1",
+      "normalized_pair": "auxerre|paris"
+    },
+    {
+      "away": "Athletic Club",
+      "home": "Osasuna",
+      "league": "La Liga",
+      "normalized_pair": "athletic|osasuna"
+    },
+    {
+      "away": "Podbeskidzie",
+      "home": "Arka Gdynia",
+      "league": "1. Liga",
+      "normalized_pair": "arka gdynia|podbeskidzie"
+    },
+    {
+      "away": "Catanzaro",
+      "home": "Cesena",
+      "league": "Serie B",
+      "normalized_pair": "catanzaro|cesena"
+    },
+    {
+      "away": "Sivasspor",
+      "home": "Vanspor FK",
+      "league": "1. Lig",
+      "normalized_pair": "sivasspor|vanspor"
+    },
+    {
+      "away": "Norrby",
+      "home": "Brage",
+      "league": "Superettan",
+      "normalized_pair": "brage|norrby"
+    },
+    {
+      "away": "Eintracht Frankfurt",
+      "home": "Paderborn",
+      "league": "Bundesliga",
+      "normalized_pair": "eintracht frankfurt|paderborn"
+    },
+    {
+      "away": "Fagiano Okayama",
+      "home": "Yokohama F. Marinos",
+      "league": "J1 League",
+      "normalized_pair": "fagiano okayama|yokohama f. marinos"
+    },
+    {
+      "away": "Real Uni\u00f3n Club",
+      "home": "Barakaldo",
+      "league": "Primera Division RFEF: Group 1",
+      "normalized_pair": "barakaldo|real union"
+    },
+    {
+      "away": "Livingston",
+      "home": "Inverness CT",
+      "league": "Championship",
+      "normalized_pair": "inverness ct|livingston"
+    },
+    {
+      "away": "Lausanne Sport",
+      "home": "Grasshopper",
+      "league": "Super League",
+      "normalized_pair": "grasshopper|lausanne sport"
+    },
+    {
+      "away": "Piast Gliwice",
+      "home": "\u015al\u0105sk Wroc\u0142aw",
+      "league": "Ekstraklasa",
+      "normalized_pair": "piast gliwice|slask wroclaw"
+    },
+    {
+      "away": "Rapid Bucuresti",
+      "home": "Farul Constan\u021ba",
+      "league": "Superliga",
+      "normalized_pair": "farul constanta|rapid bucuresti"
+    },
+    {
+      "away": "La Roche",
+      "home": "Paris 13 Atletico",
+      "league": "Ligue 3",
+      "normalized_pair": "la roche|paris 13 atletico"
+    },
+    {
+      "away": "Olimpia",
+      "home": "Guaran\u00ed",
+      "league": "Division 1",
+      "normalized_pair": "guarani|olimpia"
+    },
+    {
+      "away": "Deportivo La Coru\u00f1a",
+      "home": "Espanyol",
+      "league": "La Liga",
+      "normalized_pair": "deportivo la coruna|espanyol"
+    }
+  ],
+  "source": "oddspapi_odds",
+  "status": "reserved"
+}

@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-06",
+ "generated_at": "2026-11-07",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -808,9 +808,9 @@
   },
   "away_under_15@v1": {
    "hits": 16,
-   "inv_price_sum": 7.882470388530569,
+   "inv_price_sum": 8.549137055197235,
    "multi_n": 0,
-   "n": 18,
+   "n": 19,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -829,9 +829,10 @@
     "2026-11-04|Internacional vs Coritiba|away_under_15@v1",
     "2026-11-04|Alianza Lima vs Cienciano|away_under_15@v1",
     "2026-11-05|Municipal Lime\u00f1o vs Fuerte San Francisco|away_under_15@v1",
-    "2026-11-05|Puntarenas FC vs San Carlos|away_under_15@v1"
+    "2026-11-05|Puntarenas FC vs San Carlos|away_under_15@v1",
+    "2026-11-06|Cruzeiro vs Bahia|away_under_15@v1"
    ],
-   "profit": 27.675,
+   "profit": 26.675,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -1292,6 +1293,35 @@
      },
      "recorded_at": "2026-11-05T22:38:22.324126+00:00",
      "rule": "pfc_c7c9572806b564198f651cee",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Bahia",
+     "away_key": "bahia",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7677,
+     "date": "2026-11-06",
+     "hit": false,
+     "home": "Cruzeiro",
+     "home_key": "cruzeiro",
+     "league": "Serie A",
+     "match": "Cruzeiro vs Bahia",
+     "multi_source": false,
+     "price": 1.5,
+     "price_context": {
+      "book": "pokerstars",
+      "captured_at": "2026-11-05T22:22:55.264984+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-06T00:24:09+02:00",
+      "kickoff": "2026-11-06T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.5,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-06T23:05:44.644322+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
      "source": "oddspapi",
      "stated": null
     }
@@ -3023,10 +3053,10 @@
    "status_since": "2026-10-16"
   },
   "home_over_15@v1": {
-   "hits": 8,
-   "inv_price_sum": 9.412668048014183,
+   "hits": 10,
+   "inv_price_sum": 10.7410391007952,
    "multi_n": 0,
-   "n": 16,
+   "n": 18,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -3043,9 +3073,11 @@
     "2026-11-04|Internacional vs Coritiba|home_over_15@v1",
     "2026-11-05|Olimpia vs Deportivo Recoleta|home_over_15@v1",
     "2026-11-05|Municipal Lime\u00f1o vs Fuerte San Francisco|home_over_15@v1",
-    "2026-11-05|Puntarenas FC vs San Carlos|home_over_15@v1"
+    "2026-11-05|Puntarenas FC vs San Carlos|home_over_15@v1",
+    "2026-11-06|Cruzeiro vs Bahia|home_over_15@v1",
+    "2026-11-06|CD Marathon vs Platense FC|home_over_15@v1"
    ],
-   "profit": -2.845,
+   "profit": -1.804,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -3508,6 +3540,64 @@
      },
      "recorded_at": "2026-11-05T22:38:22.328767+00:00",
      "rule": "pfc_c7c9572806b564198f651cee",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Bahia",
+     "away_key": "bahia",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6292,
+     "date": "2026-11-06",
+     "hit": true,
+     "home": "Cruzeiro",
+     "home_key": "cruzeiro",
+     "league": "Serie A",
+     "match": "Cruzeiro vs Bahia",
+     "multi_source": false,
+     "price": 1.671,
+     "price_context": {
+      "book": "asports.bet",
+      "captured_at": "2026-11-05T22:22:55.264984+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-06T00:24:09+02:00",
+      "kickoff": "2026-11-06T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.671,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-06T23:05:44.652268+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Platense FC",
+     "away_key": "platense",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.7014,
+     "date": "2026-11-06",
+     "hit": true,
+     "home": "CD Marathon",
+     "home_key": "marathon",
+     "league": "Honduras: Liga Nacional",
+     "match": "CD Marathon vs Platense FC",
+     "multi_source": false,
+     "price": 1.37,
+     "price_context": {
+      "book": "bcgame",
+      "captured_at": "2026-11-05T22:23:07.049961+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-06T00:24:09+02:00",
+      "kickoff": "2026-11-06T01:30:00+00:00",
+      "league": "Honduras: Liga Nacional",
+      "price": 1.37,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-06T23:05:44.667304+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
      "source": "oddspapi",
      "stated": null
     }
@@ -3973,9 +4063,9 @@
   },
   "home_under_25@v1": {
    "hits": 15,
-   "inv_price_sum": 14.41663840862965,
+   "inv_price_sum": 15.116428471610755,
    "multi_n": 0,
-   "n": 23,
+   "n": 24,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -4039,9 +4129,10 @@
     "2026-11-02|Portland Timbers vs Houston Dynamo|home_under_25@v1",
     "2026-11-04|Internacional vs Coritiba|home_under_25@v1",
     "2026-11-04|Alianza Lima vs Cienciano|home_under_25@v1",
-    "2026-11-05|Olimpia vs Deportivo Recoleta|home_under_25@v1"
+    "2026-11-05|Olimpia vs Deportivo Recoleta|home_under_25@v1",
+    "2026-11-06|Cruzeiro vs Bahia|home_under_25@v1"
    ],
-   "profit": -0.416,
+   "profit": -1.416,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -4694,6 +4785,35 @@
       "source": "oddspapi"
      },
      "recorded_at": "2026-11-05T22:38:22.255602+00:00",
+     "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Bahia",
+     "away_key": "bahia",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6635,
+     "date": "2026-11-06",
+     "hit": false,
+     "home": "Cruzeiro",
+     "home_key": "cruzeiro",
+     "league": "Serie A",
+     "match": "Cruzeiro vs Bahia",
+     "multi_source": false,
+     "price": 1.429,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-05T22:22:55.264984+00:00",
+      "contract_id": "pfc_a7ba6711aeb15b9804a94f06",
+      "decision_at": "2026-11-06T00:24:09+02:00",
+      "kickoff": "2026-11-06T00:30:00+00:00",
+      "league": "Serie A",
+      "price": 1.429,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-06T23:05:44.659817+00:00",
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
      "source": "oddspapi",
      "stated": null
@@ -5784,11 +5904,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 351,
+   "hits": 352,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 346.54302857523675,
+   "inv_price_sum": 347.1278238968742,
    "multi_n": 103,
-   "n": 532,
+   "n": 533,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -6565,9 +6685,10 @@
     "2026-11-05|Trabzonspor vs SC Freiburg|match_over_25@v1",
     "2026-11-05|Thun vs Hearts|match_over_25@v1",
     "2026-11-05|Sturm Graz vs NK Celje|match_over_25@v1",
-    "2026-11-05|CD Olimpia vs Juticalpa|match_over_25@v1"
+    "2026-11-05|CD Olimpia vs Juticalpa|match_over_25@v1",
+    "2026-11-06|CD Marathon vs Platense FC|match_over_25@v1"
    ],
-   "profit": 8.657,
+   "profit": 9.367,
    "records": [
     {
      "away": "Spartak Varna",
@@ -14961,6 +15082,35 @@
       "source": "oddspapi"
      },
      "recorded_at": "2026-11-05T22:38:22.305639+00:00",
+     "rule": "pfc_54fcf87604b73b87ee6c0a90",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Platense FC",
+     "away_key": "platense",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.6306,
+     "date": "2026-11-06",
+     "hit": true,
+     "home": "CD Marathon",
+     "home_key": "marathon",
+     "league": "Honduras: Liga Nacional",
+     "match": "CD Marathon vs Platense FC",
+     "multi_source": false,
+     "price": 1.71,
+     "price_context": {
+      "book": "unibet.co.uk",
+      "captured_at": "2026-11-05T22:23:07.049961+00:00",
+      "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+      "decision_at": "2026-11-06T00:24:09+02:00",
+      "kickoff": "2026-11-06T01:30:00+00:00",
+      "league": "Honduras: Liga Nacional",
+      "price": 1.71,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-06T23:05:44.674813+00:00",
      "rule": "pfc_54fcf87604b73b87ee6c0a90",
      "source": "oddspapi",
      "stated": null
