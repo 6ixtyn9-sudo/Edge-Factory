@@ -1,16 +1,6 @@
 {
-  "attempted": 6,
+  "attempted": 7,
   "attempted_fixtures": [
-    {
-      "avg_p": 48.986912330975194,
-      "away": "Bursaspor",
-      "date": "2026-11-06",
-      "home": "Antalyaspor",
-      "league": "Trendyol 1. Lig",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.557
-    },
     {
       "avg_p": 70.01375067848743,
       "away": "Veres",
@@ -30,6 +20,26 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.557
+    },
+    {
+      "avg_p": 51.491630276564784,
+      "away": "Cracovia Krak\u00f3w",
+      "date": "2026-11-06",
+      "home": "Wis\u0142a Krak\u00f3w",
+      "league": "Ekstraklasa",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 51.373824661950394,
+      "away": "Bursaspor",
+      "date": "2026-11-06",
+      "home": "Antalyaspor",
+      "league": "1. Lig",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
     },
     {
       "avg_p": 47.14239571797712,
@@ -63,19 +73,21 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 3,
+  "be_cached": 6,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 3,
+  "cache_only": 6,
   "candidate_fixtures": 19,
-  "captured_at": "2026-11-06T07:24:01.356391+00:00",
+  "captured_at": "2026-11-06T10:32:54.371201+00:00",
   "date": "2026-11-06",
-  "deferred_fixtures": 13,
-  "errors": [],
+  "deferred_fixtures": 12,
+  "errors": [
+    "BetExplorerCoolingDown"
+  ],
   "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 10,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 78,
     "challenge_pages": 0,
@@ -91,18 +103,8 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 3,
+  "network_attempted": 1,
   "quoted_fixtures": [
-    {
-      "avg_p": 48.986912330975194,
-      "away": "Bursaspor",
-      "date": "2026-11-06",
-      "home": "Antalyaspor",
-      "league": "Trendyol 1. Lig",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.557
-    },
     {
       "avg_p": 70.01375067848743,
       "away": "Veres",
@@ -111,6 +113,16 @@
       "league": "Premier League",
       "market": "1x2",
       "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 51.373824661950394,
+      "away": "Bursaspor",
+      "date": "2026-11-06",
+      "home": "Antalyaspor",
+      "league": "1. Lig",
+      "market": "1x2",
+      "pick": "away",
       "w_score": 0.5405
     },
     {
@@ -144,7 +156,7 @@
       "w_score": 0.557
     }
   ],
-  "requests": 18,
+  "requests": 3,
   "rows": 15,
   "schema": 1,
   "status": "ok"
