@@ -1,11 +1,147 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 19,
+  "attempted_fixtures": [
+    {
+      "away": "Maccabi Petah Tikva",
+      "date": "2026-11-06",
+      "home": "Maccabi Tel Aviv",
+      "kickoff": "2026-11-06T12:00:00Z",
+      "league": "Ligat ha'Al"
+    },
+    {
+      "away": "Energie Cottbus",
+      "date": "2026-11-06",
+      "home": "Eintracht Braunschweig",
+      "kickoff": "2026-11-06T17:30:00Z",
+      "league": "2. Bundesliga"
+    },
+    {
+      "away": "Veres",
+      "date": "2026-11-06",
+      "home": "Polissya Zhytomyr",
+      "kickoff": "2026-11-06T11:00:00Z",
+      "league": "Premier League"
+    },
+    {
+      "away": "Al-Ahli Doha",
+      "date": "2026-11-06",
+      "home": "Al-Arabi SC",
+      "kickoff": "2026-11-06T14:15:00Z",
+      "league": "Stars League"
+    },
+    {
+      "away": "Leicester City",
+      "date": "2026-11-06",
+      "home": "Oxford City",
+      "kickoff": "2026-11-06T19:45:00Z",
+      "league": "FA Cup"
+    },
+    {
+      "away": "Bahia",
+      "date": "2026-11-06",
+      "home": "Cruzeiro",
+      "kickoff": "2026-11-06T00:30:00Z",
+      "league": "Serie A"
+    },
+    {
+      "away": "Platense FC",
+      "date": "2026-11-06",
+      "home": "CD Marathon",
+      "kickoff": "2026-11-06T02:30:00+01:00",
+      "league": "Honduras: Liga Nacional"
+    },
+    {
+      "away": "Bursaspor",
+      "date": "2026-11-06",
+      "home": "Antalyaspor",
+      "kickoff": "2026-11-06T17:00:00Z",
+      "league": "1. Lig"
+    },
+    {
+      "away": "Deportivo Alav\u00e9s",
+      "date": "2026-11-06",
+      "home": "Sevilla",
+      "kickoff": "2026-11-06T20:00:00Z",
+      "league": "La Liga"
+    },
+    {
+      "away": "Metz",
+      "date": "2026-11-06",
+      "home": "Montpellier",
+      "kickoff": "2026-11-06T19:00:00Z",
+      "league": "Ligue 2"
+    },
+    {
+      "away": "Unia Skierniewice",
+      "date": "2026-11-06",
+      "home": "Odra Opole",
+      "kickoff": "2026-11-06T19:30:00Z",
+      "league": "1. Liga"
+    },
+    {
+      "away": "SpVgg Greuther F\u00fcrth",
+      "date": "2026-11-06",
+      "home": "Dynamo Dresden",
+      "kickoff": "2026-11-06T17:30:00Z",
+      "league": "2. Bundesliga"
+    },
+    {
+      "away": "Strasbourg",
+      "date": "2026-11-06",
+      "home": "Toulouse",
+      "kickoff": "2026-11-06T19:45:00Z",
+      "league": "Ligue 1"
+    },
+    {
+      "away": "FC Arouca",
+      "date": "2026-11-06",
+      "home": "Famalic\u00e3o",
+      "kickoff": "2026-11-06T20:45:00Z",
+      "league": "Liga Portugal Betclic"
+    },
+    {
+      "away": "Mied\u017a Legnica",
+      "date": "2026-11-06",
+      "home": "Puszcza Niepo\u0142omice",
+      "kickoff": "2026-11-06T17:00:00Z",
+      "league": "1. Liga"
+    },
+    {
+      "away": "Borussia M'gladbach",
+      "date": "2026-11-06",
+      "home": "Hamburger SV",
+      "kickoff": "2026-11-06T19:30:00Z",
+      "league": "Bundesliga"
+    },
+    {
+      "away": "Lugo",
+      "date": "2026-11-06",
+      "home": "Cacere\u00f1o",
+      "kickoff": "2026-11-06T18:00:00Z",
+      "league": "Primera Division RFEF: Group 1"
+    },
+    {
+      "away": "I\u011fd\u0131r FK",
+      "date": "2026-11-06",
+      "home": "Sar\u0131yer SK",
+      "kickoff": "2026-11-06T17:00:00Z",
+      "league": "1. Lig"
+    },
+    {
+      "away": "Aalborg BK",
+      "date": "2026-11-06",
+      "home": "HB K\u00f8ge",
+      "kickoff": "2026-11-06T18:00:00Z",
+      "league": "First Division"
+    }
+  ],
   "candidate_fixtures": 23,
-  "captured_at": "2026-11-06T13:53:25+00:00",
+  "captured_at": "2026-11-06T16:37:37+00:00",
   "date": "2026-11-06",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 19
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -23,35 +159,53 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
-    "priced": 3,
-    "retry_cooldown": 19
+    "priced": 3
   },
   "skipped": [
-    "Maccabi Tel Aviv|Maccabi Petah Tikva (retry cooldown (6h after failed attempt))",
-    "Eintracht Braunschweig|Energie Cottbus (retry cooldown (6h after failed attempt))",
-    "Polissya Zhytomyr|Veres (retry cooldown (6h after failed attempt))",
-    "Al-Arabi SC|Al-Ahli Doha (retry cooldown (6h after failed attempt))",
     "Hapoel Ironi Karmiel|Ironi Baka El Garbiya (kickoff already passed)",
-    "Oxford City|Leicester City (retry cooldown (6h after failed attempt))",
     "Hammarby IF|IF Elfsborg (priced)",
-    "Cruzeiro|Bahia (retry cooldown (6h after failed attempt))",
-    "CD Marathon|Platense FC (retry cooldown (6h after failed attempt))",
     "Wis\u0142a Krak\u00f3w|Cracovia Krak\u00f3w (priced)",
-    "Antalyaspor|Bursaspor (retry cooldown (6h after failed attempt))",
-    "Sevilla|Deportivo Alav\u00e9s (retry cooldown (6h after failed attempt))",
-    "Motor Lublin|Wis\u0142a P\u0142ock (priced)",
-    "Montpellier|Metz (retry cooldown (6h after failed attempt))",
-    "Odra Opole|Unia Skierniewice (retry cooldown (6h after failed attempt))",
-    "Dynamo Dresden|SpVgg Greuther F\u00fcrth (retry cooldown (6h after failed attempt))",
-    "Toulouse|Strasbourg (retry cooldown (6h after failed attempt))",
-    "Famalic\u00e3o|FC Arouca (retry cooldown (6h after failed attempt))",
-    "Puszcza Niepo\u0142omice|Mied\u017a Legnica (retry cooldown (6h after failed attempt))",
-    "Hamburger SV|Borussia M'gladbach (retry cooldown (6h after failed attempt))",
-    "Cacere\u00f1o|Lugo (retry cooldown (6h after failed attempt))",
-    "Sar\u0131yer SK|I\u011fd\u0131r FK (retry cooldown (6h after failed attempt))",
-    "HB K\u00f8ge|Aalborg BK (retry cooldown (6h after failed attempt))"
+    "Motor Lublin|Wis\u0142a P\u0142ock (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Maccabi Tel Aviv vs Maccabi Petah Tikva (league not covered: Ligat ha'Al)",
+    "Eintracht Braunschweig vs Energie Cottbus (league not covered: 2. Bundesliga)",
+    "Polissya Zhytomyr vs Veres (league not covered: Premier League)",
+    "Al-Arabi SC vs Al-Ahli Doha (league not covered: Stars League)",
+    "Oxford City vs Leicester City (league not covered: FA Cup)",
+    "Cruzeiro vs Bahia (league not covered: Serie A)",
+    "CD Marathon vs Platense FC (league not covered: Honduras: Liga Nacional)",
+    "Antalyaspor vs Bursaspor (league not covered: 1. Lig)",
+    "Sevilla vs Deportivo Alav\u00e9s (league not covered: La Liga)",
+    "Montpellier vs Metz (league not covered: Ligue 2)",
+    "Odra Opole vs Unia Skierniewice (league not covered: 1. Liga)",
+    "Dynamo Dresden vs SpVgg Greuther F\u00fcrth (league not covered: 2. Bundesliga)",
+    "Toulouse vs Strasbourg (league not covered: Ligue 1)",
+    "Famalic\u00e3o vs FC Arouca (league not covered: Liga Portugal Betclic)",
+    "Puszcza Niepo\u0142omice vs Mied\u017a Legnica (league not covered: 1. Liga)",
+    "Cacere\u00f1o vs Lugo (league not covered: Primera Division RFEF: Group 1)",
+    "Sar\u0131yer SK vs I\u011fd\u0131r FK (league not covered: 1. Lig)",
+    "HB K\u00f8ge vs Aalborg BK (league not covered: First Division)",
+    "Hamburger SV vs Borussia M'gladbach (no event in soccer_austria_bundesliga)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: 1. Lig": 2,
+    "league not covered: 1. Liga": 2,
+    "league not covered: 2. Bundesliga": 2,
+    "league not covered: FA Cup": 1,
+    "league not covered: First Division": 1,
+    "league not covered: Honduras: Liga Nacional": 1,
+    "league not covered: La Liga": 1,
+    "league not covered: Liga Portugal Betclic": 1,
+    "league not covered: Ligat ha'Al": 1,
+    "league not covered: Ligue 1": 1,
+    "league not covered: Ligue 2": 1,
+    "league not covered: Premier League": 1,
+    "league not covered: Primera Division RFEF: Group 1": 1,
+    "league not covered: Serie A": 1,
+    "league not covered: Stars League": 1,
+    "no event in soccer_austria_bundesliga": 1
+  }
 }

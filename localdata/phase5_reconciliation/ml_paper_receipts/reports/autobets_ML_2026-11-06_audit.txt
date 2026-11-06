@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-06
 ==============================================================
-CURRENT PAPER BANK (all dates): 62.677 units · free 55.421 / reserved 7.256
-6 paper accas · 6 ticket publications · 6 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 62.677 units · free 54.245 / reserved 8.432
+7 paper accas · 7 ticket publications · 7 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -52,6 +52,14 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
 
    Eintracht Braunschweig vs Energie Cottbus · KICKOFF 2026-11-06 19:30 SAST
       Match Over 1.5 Goals @1.148 · ML 87.5% · SKIPPED_VETO
+
+[PAPER ACCA #7] @3.789 — 1.176247 paper units — betsson
+   Published 2026-11-06 18:34:17 SAST · reference P13/1
+   Hammarby IF vs IF Elfsborg · KICKOFF 2026-11-06 20:00 SAST
+      Both Teams To Score — No @2.650 · ML 47.5% · SKIPPED_VETO
+
+   Sevilla vs Deportivo Alavés · KICKOFF 2026-11-06 22:00 SAST
+      Match Over 1.5 Goals @1.430 · ML 71.1% · SKIPPED_VETO
 
 PUBLICATION & LEG DETAILS
 Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
@@ -265,6 +273,45 @@ P12 · 2026-11-06 15:52:42 SAST · No additional tickets
    Coverage: candidate count: 6823; candidate fixtures: 6; slate rows: 27; status: inputs_available
    Rejections: data quality: 1; fixture budget exhausted: 4; outside rolling window or unproven kickoff: 8; quote or probability unavailable: 9436
    Exact opportunity replay: 1 acca(s) not republished; 0.970618 units left idle, no refill
+   Learning: fitted_source_market_temperature
+
+P13 · 2026-11-06 18:34:17 SAST · ACCA #7
+   Receipt 20261106T163400762757Z · status paper_accas
+   Frozen at 2026-11-06T16:34:17.844077+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 a0a500f1e65df4b7d1365f2fc90bc8eae73d6c4dd5cae9e3d02d16acd2b2dc03
+   Decision window 2026-11-06T16:34:00.762757+00:00 → 2026-11-07T16:34:00.762757+00:00
+   Bank at decision: 62.676622 paper units
+   Available at decision: 55.421040 paper units
+   Reserved at decision: 7.255582 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.133831 units per canonical fixture
+   Reservation 1.176247 → 1.176247 units · released/idle 0.000000; no refill
+   2026-11-06 hammarby vs elfsborg: new 1.176247 + prior open 0.000000 · unused new budget 1.957584 units
+   2026-11-06 sevilla vs deportivoalaves: new 1.176247 + prior open 0.000000 · unused new budget 1.957584 units
+   Coverage: candidate count: 4595; candidate fixtures: 4; slate rows: 46; status: inputs_available
+   Rejections: data quality: 2; fixture budget exhausted: 6; outside rolling window or unproven kickoff: 16; quote or probability unavailable: 14973
+   ACCA #7 / leg 1: source forecast 47.5% · gap +0.0 pp · quote age 3.05h at decision
+      base 47.5% → adjusted 47.5% · learning move +0.0 pp · price break-even 37.7% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 47.5% → partition-normalized 47.5% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · btts / no · bookmaker market m-f-6CelxjpjAUWCoYkn8DXaog-GIBN · outcome 105 · provider label Both Teams To Score · normalized row only; native payload unverified
+   ACCA #7 / leg 2: source forecast 71.1% · gap +0.0 pp · quote age 0.19h at decision
+      base 71.1% → adjusted 71.1% · learning move +0.0 pp · price break-even 69.9% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 71.1% → partition-normalized 71.1% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · ou_1.5 / over · bookmaker market m-f-cEd19liLTUep42avjlL5Kg-MTG2W-1.5 · outcome 108 · provider label Over Under Full Time · normalized row only; native payload unverified
+   Learning: fitted_source_market_temperature
+
+P14 · 2026-11-06 18:36:59 SAST · No additional tickets
+   Receipt 20261106T163641957681Z · status no_paper_bet
+   Frozen at 2026-11-06T16:36:59.259332+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 09572166f16d5ccb048f7ed6e416cd0cd0f87a2e0ca488ee1129d592b36f7d6d
+   Decision window 2026-11-06T16:36:41.957681+00:00 → 2026-11-07T16:36:41.957681+00:00
+   Bank at decision: 62.676622 paper units
+   Available at decision: 54.244793 paper units
+   Reserved at decision: 8.431829 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.133831 units per canonical fixture
+   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
+   Coverage: candidate count: 4595; candidate fixtures: 4; slate rows: 27; status: inputs_available
+   Rejections: data quality: 1; fixture budget exhausted: 3; outside rolling window or unproven kickoff: 12; quote or probability unavailable: 7488
+   Exact opportunity replay: 1 acca(s) not republished; 1.151282 units left idle, no refill
    Learning: fitted_source_market_temperature
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.

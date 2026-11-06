@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 62.6766221792,
   "paper_multiple": 0.626766221792,
-  "paper_committed_units": 7.2555819999999995,
-  "paper_free_units": 55.421040179200006,
+  "paper_committed_units": 8.431829,
+  "paper_free_units": 54.2447931792,
   "settled_stake_units": 50.198876,
   "receipt_days": 5,
-  "decision_receipts": 45,
+  "decision_receipts": 47,
   "bet_days": 5,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
@@ -17,8 +17,8 @@
   "wins": 3,
   "losses": 26,
   "hit_rate": 0.10344827586206896,
-  "pending_accas": 6,
-  "unresolved_result_legs": 6,
+  "pending_accas": 7,
+  "unresolved_result_legs": 8,
   "resolved_result_legs": 33,
   "profit_units": -37.3233778208,
   "roi": -0.7435102296075314,
@@ -11916,14 +11916,265 @@
       "decision_id": "20261106T135221865749Z",
       "captured_at": "2026-11-06T13:52:21.865749+00:00",
       "frozen_at": "2026-11-06T13:52:42.739028+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 3.7895,
+          "stake_units": 1.176247,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "IF Elfsborg",
+              "base_partition": [
+                [
+                  "btts_yes",
+                  "yes",
+                  0.525
+                ],
+                [
+                  "btts_no",
+                  "no",
+                  0.475
+                ]
+              ],
+              "base_probability": 0.475,
+              "book": "betsson",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "720f34dd21bf77d0d941029a9ce55d40727ae6ce02c8a3f9dac250081ca4ac99",
+              "contract_id": "pfc_226efd387e217a9d58a11f79",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "hammarby",
+                "elfsborg"
+              ],
+              "forecast_model_key": "ee51dc07d7ce2e2928b8f5cfac184070474fd165efa63985f696786ece96b35b",
+              "home": "Hammarby IF",
+              "kickoff_utc": "2026-11-06T18:00:00+00:00",
+              "market": "btts_no",
+              "ml_inputs": {
+                "contract_id": "pfc_226efd387e217a9d58a11f79",
+                "fixture": [
+                  "2026-11-06",
+                  "hammarby",
+                  "elfsborg",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.13559610622814477,
+                  "forecast_1x2_away_spread": 0.13,
+                  "forecast_1x2_draw_mean": 0.21158829978262922,
+                  "forecast_1x2_draw_spread": 0.05105850108685378,
+                  "forecast_1x2_home_mean": 0.652815593989226,
+                  "forecast_1x2_home_spread": 0.17999999999999994,
+                  "forecast_btts_yes_mean": 0.525,
+                  "forecast_btts_yes_spread": 0.010000000000000009,
+                  "forecast_ou_1.5_over_mean": 0.7892294372294372,
+                  "forecast_ou_1.5_over_spread": 0.06168831168831157,
+                  "forecast_ou_2.5_over_mean": 0.5817513089005235,
+                  "forecast_ou_2.5_over_spread": 0.04799999999999993,
+                  "forecast_ou_3.5_over_mean": 0.36010256410256414,
+                  "forecast_ou_3.5_over_spread": 0.06230769230769234,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 0.98,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.67,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "4b4acd8af1555397be94ad4b79dfdf5ecf77268f03c3ef06cf21521888a1b472",
+              "odds": 2.65,
+              "pre_normalized_probability": 0.475,
+              "price_age_seconds_at_decision": 10984.632454,
+              "price_age_seconds_at_freeze": 11001.713774,
+              "price_at": "2026-11-06T13:30:56.130303+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "IF Elfsborg",
+                  "bookmaker": "betsson",
+                  "bookmaker_market_id": "m-f-6CelxjpjAUWCoYkn8DXaog-GIBN",
+                  "captured_at": "2026-11-06T13:30:56.130303+00:00",
+                  "date": "2026-11-06",
+                  "home": "Hammarby IF",
+                  "kickoff": "2026-11-06T18:00:00.000Z",
+                  "league": "",
+                  "market": "btts",
+                  "odds": "2.65",
+                  "outcome_key": "105",
+                  "provider_changed_at": "2026-11-06T13:20:39.604Z",
+                  "provider_fixture_id": "id1000004067126872",
+                  "provider_market_id": "104",
+                  "provider_market_name": "Both Teams To Score",
+                  "provider_market_type": "bothteamsscore",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "no",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "5c066e00946fa0b0a623bae360784798400f80d4cd88963844d088b956b6fe74",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.475,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "no"
+            },
+            {
+              "away": "Deportivo Alav\u00e9s",
+              "base_partition": [
+                [
+                  "match_over_15",
+                  "over",
+                  0.7105847953216374
+                ],
+                [
+                  "match_under_15",
+                  "under",
+                  0.28941520467836257
+                ]
+              ],
+              "base_probability": 0.7105847953216374,
+              "book": "betsson",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "7301713b9b139788ec16596249deaa73d8a29d5c87dabe9d88bf511540098671",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "sevilla",
+                "deportivoalaves"
+              ],
+              "forecast_model_key": "ee51dc07d7ce2e2928b8f5cfac184070474fd165efa63985f696786ece96b35b",
+              "home": "Sevilla",
+              "kickoff_utc": "2026-11-06T20:00:00+00:00",
+              "market": "match_over_15",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-06",
+                  "sevilla",
+                  "deportivoalaves",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.2306534528865817,
+                  "forecast_1x2_away_spread": 0.016000000000000014,
+                  "forecast_1x2_draw_mean": 0.28321849929211895,
+                  "forecast_1x2_draw_spread": 0.030344502123643202,
+                  "forecast_1x2_home_mean": 0.4861280478212993,
+                  "forecast_1x2_home_spread": 0.014384143463898047,
+                  "forecast_btts_yes_mean": 0.48300000000000004,
+                  "forecast_btts_yes_spread": 0.005999999999999894,
+                  "forecast_ou_1.5_over_mean": 0.7105847953216374,
+                  "forecast_ou_1.5_over_spread": 0.050000000000000044,
+                  "forecast_ou_2.5_over_mean": 0.4335259067357513,
+                  "forecast_ou_2.5_over_spread": 0.006948186528497491,
+                  "forecast_ou_3.5_over_mean": 0.252031746031746,
+                  "forecast_ou_3.5_over_spread": 0.031904761904761963,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.25,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.43,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "ddd525168fd2defa38580bacf9efb79f40d0dcb3c1d6e73a17b74ffed242f97c",
+              "odds": 1.43,
+              "pre_normalized_probability": 0.7105847953216374,
+              "price_age_seconds_at_decision": 681.191587,
+              "price_age_seconds_at_freeze": 698.272907,
+              "price_at": "2026-11-06T16:22:39.571170+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Deportivo Alaves",
+                  "bookmaker": "betsson",
+                  "bookmaker_market_id": "m-f-cEd19liLTUep42avjlL5Kg-MTG2W-1.5",
+                  "captured_at": "2026-11-06T16:22:39.571170+00:00",
+                  "date": "2026-11-06",
+                  "home": "Sevilla FC",
+                  "kickoff": "2026-11-06T20:00:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.43",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-06T16:21:25.218Z",
+                  "provider_fixture_id": "id1000000872478700",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "27e1e4882ca2b3bb715992e374eda219820c1b940851a794fac5bd59c1a12b95",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.7105847953216374,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "over"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_temperature",
+      "decision_id": "20261106T163400762757Z",
+      "captured_at": "2026-11-06T16:34:00.762757+00:00",
+      "frozen_at": "2026-11-06T16:34:17.844077+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_source_market_temperature",
+      "decision_id": "20261106T163641957681Z",
+      "captured_at": "2026-11-06T16:36:41.957681+00:00",
+      "frozen_at": "2026-11-06T16:36:59.259332+00:00"
     }
   ],
   "latest_learning": {
-    "as_of": "2026-11-06T13:52:21.865749+00:00",
+    "as_of": "2026-11-06T16:36:41.957681+00:00",
     "fixtures": 26,
     "learning_policy": "fixture_balanced_source_market_temperature",
     "method": "source_market",
-    "model_key": "a85c836b89c3a53f09da82171ed5ca91dbd0592bf0a033ba14004c928b2418cd",
+    "model_key": "30da7857c31b58b81e2a9db3628072219e9feb62d4271be38f4aeaea8e3c441c",
     "observations": 76,
     "parameters": 1,
     "power": 1.0,
