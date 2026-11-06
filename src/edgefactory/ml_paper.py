@@ -464,6 +464,29 @@ def probability(weights, market, selection):
     return sum(w for value, w in outcomes if value) / sum(w for _, w in outcomes)
 
 
+def _partition_outcomes(market):
+    """Complete outcome space from the bound score model, never the quote board.
+
+    Missing prices must not change a probability denominator. Double chance
+    derives from the same three-way partition rather than a fourth event fit.
+    This enforces within-partition identities, not a joint score recalibration.
+    """
+    if market in {"1x2", "double_chance"}:
+        outcomes = [("1x2", side) for side in ("home", "draw", "away")]
+    elif market in {"btts_yes", "btts_no"}:
+        outcomes = [("btts_yes", "yes"), ("btts_no", "no")]
+    else:
+        family, direction, line = market.rsplit("_", 2)
+        if family not in {"match", "home", "away"} or direction not in {"over", "under"}:
+            raise ValueError("unsupported paper probability partition")
+        outcomes = [(f"{family}_over_{line}", "over"), (f"{family}_under_{line}", "under")]
+    return outcomes
+
+
+def _base_partition(weights, market):
+    return [[m, side, probability(weights, m, side)] for m, side in _partition_outcomes(market)]
+
+
 def _same(a, b):
     return (
         bool(a)
@@ -755,6 +778,7 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
                 "kickoff_utc": kickoff.isoformat(),
                 "price_provenance": q.get("enhancement_price_provenance"),
                 "base_probability": p,
+                "base_partition": _base_partition(weights, market),
                 "probability": p,
                 "model_key": model["model_key"],
                 "contract_id": row["contract_id"],
@@ -1064,35 +1088,71 @@ def _vector(c, columns):
     ]
 
 
-def apply_learning(rows, model):
-    """Calibration layer first, then the bounded success tilt, both dynamic.
-
-    The combined dynamic shift (calibration move + success tilt) is scaled by
-    the evidence smoothing factor fixtures/(fixtures+K): early wins/losses
-    move probabilities gently, full strength only as evidence accumulates.
-    Learner records without a smoothing factor (older receipts) apply at 1.0.
-    """
+def _adjusted_probability(c, model):
+    """The existing scalar calibrator/tilt, before partition normalization."""
+    base = c["base_probability"]
     tilt = model.get("success_tilt") or {}
     fitted = model.get("status") == "fitted_prior_paper_errors"
-    if not fitted and not tilt:
+    if not (fitted or tilt) or base in (0, 1):
+        return base
+    base_logit = math.log(base / (1 - base))
+    p = _reference_probability(c, model) if fitted else base
+    group_tilts = [tilt[key]["tilt_logit"] for key in _success_groups(c) if key in tilt]
+    shift = sum(group_tilts) / len(group_tilts) if group_tilts else 0.0
+    shift = max(-SUCCESS_TILT_TOTAL_LIMIT_LOGIT, min(SUCCESS_TILT_TOTAL_LIMIT_LOGIT, shift))
+    dynamic_shift = (math.log(p / (1 - p)) - base_logit) + shift
+    if not dynamic_shift:
+        return base
+    z = base_logit + model.get("smoothing_factor", 1.0) * dynamic_shift
+    return 1 / (1 + math.exp(-max(-700.0, min(700.0, z))))
+
+
+def apply_learning(rows, model):
+    """Existing calibration/tilt, normalized over each complete outcome partition.
+
+    Production candidates retain all mutually exclusive base outcomes from
+    their bound score model, including unquoted sides. Adjust each of those
+    outcomes with the existing learner, then normalize once. DC is a sum of
+    normalized 1X2 outcomes. Historical/helper rows without a partition keep
+    their scalar behavior; frozen receipts are never recalculated or rewritten.
+    This does not establish cross-market joint calibration or a profitable edge.
+    """
+    if model.get("status") != "fitted_prior_paper_errors" and not model.get("success_tilt"):
         return
-    smoothing = model.get("smoothing_factor", 1.0)
     for c in rows:
         if not _valid_learning_candidate(c):
             continue
-        base_logit = math.log(c["base_probability"] / (1 - c["base_probability"]))
-        p = _reference_probability(c, model) if fitted else c["base_probability"]
-        # Bucket/market/gap tilts are driven by largely the same fixtures, so
-        # they are averaged, not summed: correlated evidence cannot stack.
-        group_tilts = [tilt[key]["tilt_logit"] for key in _success_groups(c) if key in tilt]
-        shift = sum(group_tilts) / len(group_tilts) if group_tilts else 0.0
-        shift = max(-SUCCESS_TILT_TOTAL_LIMIT_LOGIT,
-                    min(SUCCESS_TILT_TOTAL_LIMIT_LOGIT, shift))
-        dynamic_shift = (math.log(p / (1 - p)) - base_logit) + shift
-        if not dynamic_shift:
+        raw = _adjusted_probability(c, model)
+        partition = c.get("base_partition")
+        if partition is None:
+            c["probability"] = raw
             continue
-        z = base_logit + smoothing * dynamic_shift
-        c["probability"] = 1 / (1 + math.exp(-max(-700.0, min(700.0, z))))
+        adjusted = {}
+        for market, side, base in partition:
+            if type(base) not in (int, float) or not math.isfinite(base) or not 0 <= base <= 1:
+                raise ValueError("invalid base probability partition")
+            virtual = dict(c, market=market, selection=side, base_probability=base)
+            adjusted[market, side] = _adjusted_probability(virtual, model)
+        if (len(adjusted) != len(partition)
+                or set(adjusted) != set(_partition_outcomes(c["market"]))
+                or not math.isclose(math.fsum(p for _, _, p in partition), 1.0,
+                                    rel_tol=0, abs_tol=1e-12)):
+            raise ValueError("incomplete base probability partition")
+        total = math.fsum(adjusted.values())
+        if c["market"] == "double_chance":
+            sides = {"1x": ("home", "draw"), "x2": ("draw", "away"), "12": ("home", "away")}[c["selection"]]
+            value = math.fsum(adjusted["1x2", side] for side in sides)
+        else:
+            value = adjusted[c["market"], c["selection"]]
+        base_value = (math.fsum(p for m, side, p in partition if side in sides)
+                      if c["market"] == "double_chance"
+                      else next(p for m, side, p in partition
+                                if (m, side) == (c["market"], c["selection"])))
+        if not math.isclose(base_value, c["base_probability"], rel_tol=0, abs_tol=1e-12):
+            raise ValueError("candidate differs from base probability partition")
+        c["pre_normalized_probability"] = raw
+        c["probability"] = value / total
+        c["probability_normalization"] = "complete_score_model_partition_v1"
 
 
 def _kelly(p, odds):
@@ -1561,6 +1621,37 @@ def _scale_aggregate_stakes(accas, audit, *, bank, committed, available):
     return published, audit
 
 
+def _acca_opportunity_key(acca):
+    """Same exact quote/forecast opportunity, independent of scan and stake.
+
+    Quote timestamps remain part of the evidence: a genuinely new admitted
+    quote or changed prediction may reuse a fixture's residual budget. Merely
+    changing free cash, scan counts, quote age or receipt IDs cannot do so.
+    """
+    fields = ("fixture", "market", "selection", "book", "odds", "price_source",
+              "price_at", "kickoff_utc", "model_key", "contract_id", "ml_inputs",
+              "base_probability", "probability", "bucket")
+    legs = []
+    for c in acca["legs"]:
+        leg = {k: c.get(k) for k in fields}
+        leg["book"] = str(leg["book"]).strip().casefold()
+        legs.append(digest(leg))
+    return digest(sorted(legs))
+
+
+def _without_replayed_accas(plan, report, diagnostics):
+    prior = {_acca_opportunity_key(a) for day in report["history"] for a in day["accas"]
+             if a["profit_units"] is None}
+    kept = [a for a in plan if _acca_opportunity_key(a) not in prior]
+    diagnostics["opportunity_replay"] = {
+        "rule": "same_frozen_quotes_and_forecasts_not_republished_no_refill",
+        "dropped_acca_count": len(plan) - len(kept),
+        "released_stake_units": math.fsum(a["stake_units"] for a in plan
+                                         if _acca_opportunity_key(a) in prior),
+    }
+    return kept
+
+
 def _size_publication_accas(rows, report, diagnostics):
     """All fresh-production sizing: allocator -> fixture projection -> aggregate."""
     bank, committed = report["paper_bank_units"], report["paper_committed_units"]
@@ -1572,6 +1663,9 @@ def _size_publication_accas(rows, report, diagnostics):
     if _aggregate_headroom_micro_units(bank, committed) > 0 and available > 0:
         plan = select_accas(rows, available, diagnostics=diagnostics, concentration=concentration)
         audit = diagnostics.pop("fixture_concentration")
+        fresh = _without_replayed_accas(plan, report, diagnostics)
+        if len(fresh) != len(plan):
+            plan, audit = project_fixture_stakes(fresh, **concentration)
     else:
         plan, audit = project_fixture_stakes([], **concentration)
     return _scale_aggregate_stakes(
@@ -1600,6 +1694,8 @@ def _concentrate_sealed_draft(payload, history, score_lookup):
     bank, committed = report["paper_bank_units"], report["paper_committed_units"]
     available = max(0.0, report["paper_free_units"])
     exclusive_accas, exclusivity_dropped = _mutually_exclusive_accas(payload["accas"])
+    replay_diagnostics = {}
+    exclusive_accas = _without_replayed_accas(exclusive_accas, report, replay_diagnostics)
     plan, audit = project_fixture_stakes(
         exclusive_accas, total_bank_units=bank,
         prior_open_fixture_micro_units=_prior_open_fixture_micro_units(report),
@@ -1613,6 +1709,7 @@ def _concentrate_sealed_draft(payload, history, score_lookup):
         search=dict(payload.get("search") or {},
                     diagnostics_scope="unconstrained_pre_projection_solver_not_published_optimality",
                     published_portfolio_optimality_proven=False,
+                    **replay_diagnostics,
                     mutual_exclusivity={"rule": "pairwise_fixture_disjoint_highest_stake_first_no_refill",
                                         "dropped_acca_count": exclusivity_dropped}),
     )
@@ -2896,6 +2993,12 @@ def render_daily_card(history, report=None, *, audit=False):
                     f"      {lineage} · price break-even {1 / leg['odds']:.1%}"
                     " (1/odds, not a fair probability or proof of value)"
                 )
+                if leg.get("probability_normalization"):
+                    leg_diagnostics.append(
+                        f"      Scalar adjustment {leg['pre_normalized_probability']:.1%}"
+                        f" → partition-normalized {leg['probability']:.1%}"
+                        " · includes unquoted outcomes; not proof of calibration"
+                    )
                 provenance = leg.get("price_provenance") or {}
                 if provenance.get("schema") == "normalized_odds_quote_v1":
                     witness = provenance.get("row") or {}
@@ -2964,6 +3067,12 @@ def render_daily_card(history, report=None, *, audit=False):
         for key in ("coverage", "rejections"):
             detail = "; ".join(f"{k.replace('_', ' ')}: {v}" for k, v in row.get(key, {}).items())
             diagnostics.append(f"   {key.capitalize()}: {detail or 'None recorded'}")
+        replay = (row.get("search") or {}).get("opportunity_replay") or {}
+        if replay.get("dropped_acca_count"):
+            diagnostics.append(
+                f"   Exact opportunity replay: {replay['dropped_acca_count']} acca(s) not republished;"
+                f" {replay['released_stake_units']:.6f} units left idle, no refill"
+            )
         diagnostics.extend([*leg_diagnostics, f"   Learning: {row['learning']['status']}", ""])
     if audit:
         lines.extend([
