@@ -36,7 +36,7 @@ def test_legacy_family_cannot_reenter_learning_via_frozen_receipts(source, gener
     learner = mp.learn(history, NOW, forbidden_lookup)
     assert learner["observations"] == learner["fixtures"] == 0
     assert learner["status"] == "awaiting_prior_paper_results"
-    assert learner["success_tilt"] == {}
+    assert not {"success_tilt", "coef", "intercept"} & learner.keys()
     audit = learner["training_admission"]
     assert audit["excluded_candidate_occurrences"] == audit["excluded_fixture_count"] == 1
     assert audit["excluded_by_reason"] == {REASON: 1}
@@ -70,7 +70,7 @@ def test_unaffected_sources_keep_both_wins_and_losses(source):
     learner = mp.learn([receipt(DAY, cs)], NOW, lambda c: (2, 0) if c["candidate_id"] == "1" else (0, 2))
     assert learner["observations"] == 2
     assert {x["hit"] for x in learner["training_outcomes"]} == {0, 1}
-    assert learner["status"] == "fitted_prior_paper_errors"
+    assert learner["status"] == "fitted_source_market_temperature"
 
 
 @pytest.mark.parametrize("source", [42, True, [], {}])
@@ -82,7 +82,7 @@ def test_malformed_source_metadata_is_excluded_not_a_lane_failure(source):
 
 
 def without_audit(model):
-    return {k: v for k, v in model.items() if k != "training_admission"}
+    return {k: v for k, v in model.items() if k not in {"training_admission", "model_key"}}
 
 
 def test_filter_precedes_dedup_and_does_not_discard_an_eligible_companion():
@@ -111,9 +111,8 @@ def test_refit_recomputes_fixture_weights_columns_smoothing_and_crossfit_from_el
     learner = mp.learn(history, NOW, lookup)
     expected = mp.learn([receipt(DAY, good)], NOW, lookup)
     assert without_audit(learner) == without_audit(expected)
-    assert learner["fixtures"] == 2 and learner["smoothing_factor"] == 2 / 7
-    assert "bucket:BAD_ONLY" not in learner["columns"]
-    assert "bucket:BAD_ONLY" not in learner["success_tilt"]
+    assert learner["fixtures"] == 2 and learner["parameters"] == 1
+    assert not {"columns", "success_tilt", "smoothing_factor"} & learner.keys()
     assert learner["training_admission"]["excluded_candidate_occurrences"] == 2
     assert history == before
 
@@ -143,16 +142,16 @@ def test_old_adjusted_predictions_and_stored_coefficients_are_not_carried_into_r
     cs = [quoted(1, p=0.8), quoted(2, p=0.7)]
     history = [receipt(DAY, cs)]
     changed = deepcopy(history)
-    changed[0]["learning"].update(status="fitted_prior_paper_errors", coef=[9999], intercept=-9999)
+    changed[0]["learning"].update(status="fitted_source_market_temperature", coef=[9999], intercept=-9999)
     for c in changed[0]["candidates"]:
         c["probability"] = 0.00001
     lookup = lambda c: (2, 0) if c["candidate_id"] == "1" else (0, 2)
     a = mp.learn(history, NOW, lookup)
     b = mp.learn(changed, NOW, lookup)
-    # The full-input digest truthfully records changed historical bytes; the
-    # estimator/tilt uses base probabilities, never the old adjusted values.
-    assert a["training_sha256"] != b["training_sha256"]
-    for field in ("coef", "intercept", "columns", "success_tilt", "smoothing_factor", "training_outcomes"):
+    # Only source partitions and outcomes define training; old fitted outputs
+    # and adjusted predictions are not model inputs or training-hash inputs.
+    assert a["training_sha256"] == b["training_sha256"]
+    for field in ("power", "training_outcomes", "training_outcomes_sha256"):
         assert a[field] == b[field]
 
 

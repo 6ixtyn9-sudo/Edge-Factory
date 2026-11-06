@@ -72,8 +72,10 @@ def test_learning_reduced_not_created_this_extreme_forecast(evidence):
     before = deepcopy(evidence)
     c = deepcopy(evidence['candidate'])
     c['probability'] = c['base_probability']
-    mp.apply_learning([c], evidence['learning'])
-    assert c['probability'] == pytest.approx(evidence['candidate']['probability'], abs=1e-12)
+    # Old fitted functions are removed, but their frozen effect remains evidence.
+    with pytest.raises(ValueError, match='invalid source market model'):
+        mp.apply_learning([c], evidence['learning'])
+    c['probability'] = evidence['candidate']['probability']
     assert c['probability'] < c['base_probability']
     assert c['base_probability'] > 9 * (1 / c['odds'])
     assert evidence == before
@@ -123,7 +125,8 @@ def test_current_goals_quote_retains_provider_lineage_without_altering_price(tmp
         [row], row['date'], datetime.fromisoformat(row['as_of']), index,
         kickoff_fn=at.parse_kickoff_proven, source_guard=at.execution_source_rejection, min_leg_odds=1.0,
     )
-    assert {c['market']: c['odds'] for c in cs} == {'match_over_35': 2.2, 'away_over_35': 19.0}, rejected
+    assert {c['market']: c['odds'] for c in cs} == {'match_over_35': 2.2}, rejected
+    assert rejected['quote_or_probability_unavailable'] >= 1  # no matched team-total source forecast
     for c in cs:
         proof = c['price_provenance']
         witness = proof['row']

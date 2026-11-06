@@ -101,13 +101,9 @@ def test_no_future_or_unproven_inputs_rescued_by_tomorrows_date(tmp_path, field)
     rows = slate(now, kickoff=(now + timedelta(days=1)).replace(hour=3))
     for row in rows:
         if field == "model":
-            model = row["statistical_profile"]["ml_model"]
-            model["train_last_date"] = DAY
-            model.pop("model_key")
-            model["model_key"] = hashlib.sha256(
-                json.dumps(model, sort_keys=True, allow_nan=False).encode()
-            ).hexdigest()
-            row["statistical_profile"]["ml_inputs"]["model_key"] = model["model_key"]
+            # The replacement has no ENH training-date dependency. An unbound
+            # source snapshot must still fail even on a next-day slate.
+            row["statistical_profile"]["ml_inputs"]["fixture"][0] = DAY
         elif field == "unproven":
             row.pop("kickoff_utc")
         elif field == "ambiguous_date":
