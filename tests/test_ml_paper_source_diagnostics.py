@@ -100,6 +100,7 @@ def test_paired_metrics_use_identical_resolved_observations_and_explicit_missing
     win = with_source(1, model=0.7, source=0.4)
     loss = with_source(2, model=0.3, source=0.6, bucket="CAUTION")
     missing = candidate(3)
+    missing.pop("ml_inputs")
     pending = with_source(4)
     rows = [win, loss, missing, pending]
     r = receipt(DAY, rows)

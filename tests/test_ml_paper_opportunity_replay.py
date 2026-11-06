@@ -64,7 +64,7 @@ def test_new_evidence_can_reuse_remaining_fixture_budget(tmp_path, change):
             row["odds"] += .01
     else:
         for row in updated:
-            row["statistical_profile"]["ml_inputs"]["values"]["home_form_gf"] = 2.1
+            row["statistical_profile"]["ml_inputs"]["values"]["forecast_1x2_home_mean"] = .56
     second = run(tmp_path, NOW + timedelta(minutes=2), updated)
     assert second and second["accas"]
     assert all(e["prior_open_stake_micro_units"] > 0 for e in second["fixture_concentration"]["fixtures"])

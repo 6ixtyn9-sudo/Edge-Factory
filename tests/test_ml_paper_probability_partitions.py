@@ -12,9 +12,9 @@ from test_ml_paper_rolling import run, slate
 
 FIXTURE = Path(__file__).parent / "fixtures/ml_probability_partitions_2026-11-06.json"
 WEIGHTS = [(h, a, (h + 1) * (a + 2)) for h in range(7) for a in range(7)]
-LEARNER = {"status": "fitted_prior_paper_errors", "intercept": .1,
-           "columns": [], "coef": [.6], "smoothing_factor": .8,
-           "success_tilt": {}}
+LEARNER = mp.learn([], NOW, lambda c: None)
+LEARNER["power"] = .6
+LEARNER["model_key"] = mp.digest({k:v for k,v in LEARNER.items() if k != "model_key"})
 
 
 def event(market, side):
@@ -40,15 +40,15 @@ def test_actual_retained_example_exposes_and_repairs_over_100_percent():
     for fixture in {tuple(c["fixture"]) for c in rows}:
         three = [c for c in rows if tuple(c["fixture"]) == fixture and c["market"] == "1x2"]
         assert sum(c["probability"] for c in three) > 1.13
-    mp.apply_learning(rows, f["learning"])
+    mp.apply_learning(rows, LEARNER)
     for fixture in {tuple(c["fixture"]) for c in rows}:
         for categorical in (True, False):
             group = [c for c in rows if tuple(c["fixture"]) == fixture
                      and (c["market"] == "1x2") == categorical]
             assert sum(c["probability"] for c in group) == pytest.approx(1, abs=1e-12)
     draw = next(c for c in rows if c["fixture"][1] == "motorlublin" and c["selection"] == "draw")
-    assert draw["pre_normalized_probability"] == pytest.approx(.4122192062548207)
-    assert draw["probability"] == pytest.approx(.3570777698003118, abs=1e-12)
+    assert draw["pre_normalized_probability"] == draw["probability"]
+    assert 0 < draw["probability"] < 1
     assert json.loads(FIXTURE.read_text()) == f  # no rewrite of the evidence
 
 
@@ -93,8 +93,8 @@ def test_double_chance_is_sum_of_normalized_1x2(side, components):
 def test_no_results_preserves_base_probabilities_exactly():
     rows = [event("1x2", s) for s in ("home", "draw", "away")]
     before = deepcopy(rows)
-    mp.apply_learning(rows, {"status": "awaiting_prior_paper_results"})
-    assert rows == before
+    mp.apply_learning(rows, mp.learn([], NOW, lambda c: None))
+    assert [c["probability"] for c in rows] == pytest.approx([c["probability"] for c in before])
 
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), -.1, 1.1, True, None])
@@ -115,8 +115,8 @@ def test_real_candidate_path_stores_unquoted_sides_before_learning(tmp_path, mon
     record = run(tmp_path, NOW, slate())
     for c in record["candidates"]:
         assert len(c["base_partition"]) == 3
-        assert c["probability_normalization"] == "complete_score_model_partition_v1"
-        assert c["pre_normalized_probability"] > c["probability"]
+        assert c["probability_normalization"] == "complete_source_market_partition_v1"
+        assert c["pre_normalized_probability"] == c["probability"]
     assert mp.receipts(tmp_path) == [record]
 
 

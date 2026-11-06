@@ -306,10 +306,10 @@ def test_selected_leg_cannot_diverge_from_retained_candidate_evidence(tmp_path):
 
 def test_malformed_one_row_model_cannot_disable_other_valid_fixtures(tmp_path):
     bad = pick(3)
-    bad["statistical_profile"]["ml_model"]["n"] = None
+    bad["statistical_profile"]["ml_inputs"]["sources"] = None
     r = capture(tmp_path, [pick(1), bad, pick(2), None])
     assert r["accas"] and len(r["candidates"]) == 2
-    assert r["rejections"]["fixture_bound_ml_unavailable"] == 2
+    assert r["rejections"]["fixture_bound_source_inputs_unavailable"] == 2
 
 
 @pytest.mark.parametrize("future", [False, True])
@@ -350,6 +350,7 @@ def test_book_replication_cannot_reweight_calibration_towards_one_market():
     cs = []
     for i in range(40):
         home = candidate(i, date="2026-11-01")
+        home["ml_inputs"]["values"]["forecast_btts_yes_mean"] = .6
         btts = dict(home, candidate_id=f"btts{i}", market="btts_no", selection="no")
         cs.extend([home, btts])
     original = mp.learn([receipt("2026-11-01", cs)], NOW, lambda c: (2, 1))
@@ -360,6 +361,6 @@ def test_book_replication_cannot_reweight_calibration_towards_one_market():
         for j in range(20)
     ]
     replicated = mp.learn([receipt("2026-11-01", cs + duplicates)], NOW, lambda c: (2, 1))
-    assert original["status"] == "fitted_prior_paper_errors"
+    assert original["status"] == "fitted_source_market_temperature"
     assert replicated == original
     assert replicated["observations"] == 80 and replicated["fixtures"] == 40
