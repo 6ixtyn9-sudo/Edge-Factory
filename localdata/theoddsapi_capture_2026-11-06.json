@@ -3,7 +3,7 @@
   "attempted": 0,
   "attempted_fixtures": [],
   "candidate_fixtures": 23,
-  "captured_at": "2026-11-06T04:49:23+00:00",
+  "captured_at": "2026-11-06T07:38:42+00:00",
   "date": "2026-11-06",
   "due_reasons": {},
   "errors": [],
@@ -22,15 +22,16 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 1,
     "priced": 3,
-    "retry_cooldown": 20
+    "retry_cooldown": 19
   },
   "skipped": [
     "Maccabi Tel Aviv|Maccabi Petah Tikva (retry cooldown (6h after failed attempt))",
     "Eintracht Braunschweig|Energie Cottbus (retry cooldown (6h after failed attempt))",
     "Polissya Zhytomyr|Veres (retry cooldown (6h after failed attempt))",
     "Al-Arabi SC|Al-Ahli Doha (retry cooldown (6h after failed attempt))",
-    "Hapoel Ironi Karmiel|Ironi Baka El Garbiya (retry cooldown (6h after failed attempt))",
+    "Hapoel Ironi Karmiel|Ironi Baka El Garbiya (kickoff already passed)",
     "Oxford City|Leicester City (retry cooldown (6h after failed attempt))",
     "Hammarby IF|IF Elfsborg (priced)",
     "Cruzeiro|Bahia (retry cooldown (6h after failed attempt))",

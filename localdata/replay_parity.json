@@ -3882,53 +3882,54 @@
           "bank_total": 16.382413999999997,
           "committed_excluding_target": 0.0,
           "date": "2026-11-06",
-          "decision_status": "draft",
+          "decision_status": "frozen",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "fddf9114af65f460d856700e51577899149817bf",
-            "event_sha": "fddf9114af65f460d856700e51577899149817bf",
+            "checkout_head_at_capture": "b80a89a6ecfdec6b93199a37f6e36e0bd2b14684",
+            "event_sha": "b80a89a6ecfdec6b93199a37f6e36e0bd2b14684",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "42159843225",
+            "run_id": "42177974958",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-06_decision.json.gz",
           "free_bank": 16.382413999999997,
-          "ledger": "NOT_COMMITTED",
+          "freeze_time": "MATCH",
+          "ledger": "MATCH",
           "ml_comparison": {
-            "added_to_ml_on": 0,
+            "added_to_ml_on": 2,
             "arms": {
               "ml_off": {
                 "accas": [
                   {
                     "legs": [
                       {
-                        "cohort": 0.6134,
-                        "market": "btts_yes",
+                        "cohort": 0.7208,
+                        "market": "match_under_45",
                         "match": "Maccabi Tel Aviv vs Maccabi Petah Tikva",
-                        "model": 0.6009220317896009,
-                        "odds": 1.76,
+                        "model": 0.8332066971851805,
+                        "odds": 1.4,
                         "outcome_source": null,
-                        "pick": "yes",
+                        "pick": "under",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
                       {
-                        "cohort": 0.6134,
-                        "market": "btts_yes",
-                        "match": "Al-Arabi SC vs Al-Ahli Doha",
-                        "model": 0.6984243120903382,
-                        "odds": 1.39,
+                        "cohort": 0.7141,
+                        "market": "match_over_25",
+                        "match": "Oxford City vs Leicester City",
+                        "model": 0.7470986328582346,
+                        "odds": 1.5,
                         "outcome_source": null,
-                        "pick": "yes",
+                        "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
-                    "odds": 2.45,
+                    "odds": 2.1,
                     "returned": null,
                     "stake": 2.0478
                   }
@@ -3937,28 +3938,28 @@
                   [
                     [
                       [
-                        "Al-Arabi SC vs Al-Ahli Doha",
-                        "btts_yes",
-                        "YES",
-                        1.39,
-                        "Stake.com",
+                        "Maccabi Tel Aviv vs Maccabi Petah Tikva",
+                        "match_under_45",
+                        "UNDER",
+                        1.4,
+                        "bet365.us",
                         "betexplorer"
                       ],
                       [
-                        "Maccabi Tel Aviv vs Maccabi Petah Tikva",
-                        "btts_yes",
-                        "YES",
-                        1.76,
-                        "Stake.com",
+                        "Oxford City vs Leicester City",
+                        "match_over_25",
+                        "OVER",
+                        1.5,
+                        "bet365.us",
                         "betexplorer"
                       ]
                     ],
-                    2.45,
+                    2.1,
                     2.0478
                   ]
                 ],
-                "mean_acca_odds": 2.45,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "mean_acca_odds": 2.1,
+                "outcome_status": "INCOMPLETE_OUTCOMES",
                 "resolved_legs": 0,
                 "returned": null,
                 "selected_legs": 2,
@@ -3975,29 +3976,29 @@
                   {
                     "legs": [
                       {
-                        "cohort": 0.6134,
-                        "market": "btts_yes",
-                        "match": "Al-Arabi SC vs Al-Ahli Doha",
-                        "model": 0.6984243120903382,
-                        "odds": 1.39,
+                        "cohort": 0.7141,
+                        "market": "match_over_25",
+                        "match": "Maccabi Tel Aviv vs Maccabi Petah Tikva",
+                        "model": 0.911824349815944,
+                        "odds": 1.33,
                         "outcome_source": null,
-                        "pick": "yes",
+                        "pick": "over",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       },
                       {
-                        "cohort": 0.6134,
-                        "market": "btts_yes",
-                        "match": "Maccabi Tel Aviv vs Maccabi Petah Tikva",
-                        "model": 0.6009220317896009,
-                        "odds": 1.76,
+                        "cohort": 0.6304,
+                        "market": "match_under_35",
+                        "match": "Oxford City vs Leicester City",
+                        "model": 0.8560158590575874,
+                        "odds": 1.62,
                         "outcome_source": null,
-                        "pick": "yes",
+                        "pick": "under",
                         "result": null,
-                        "unresolved_reason": "no_retained_outcome"
+                        "unresolved_reason": "missing_final_score"
                       }
                     ],
-                    "odds": 2.45,
+                    "odds": 2.15,
                     "returned": null,
                     "stake": 2.0478
                   }
@@ -4006,28 +4007,28 @@
                   [
                     [
                       [
-                        "Al-Arabi SC vs Al-Ahli Doha",
-                        "btts_yes",
-                        "YES",
-                        1.39,
-                        "Stake.com",
+                        "Maccabi Tel Aviv vs Maccabi Petah Tikva",
+                        "match_over_25",
+                        "OVER",
+                        1.33,
+                        "bet365.us",
                         "betexplorer"
                       ],
                       [
-                        "Maccabi Tel Aviv vs Maccabi Petah Tikva",
-                        "btts_yes",
-                        "YES",
-                        1.76,
-                        "Stake.com",
+                        "Oxford City vs Leicester City",
+                        "match_under_35",
+                        "UNDER",
+                        1.62,
+                        "bet365.us",
                         "betexplorer"
                       ]
                     ],
-                    2.45,
+                    2.15,
                     2.0478
                   ]
                 ],
-                "mean_acca_odds": 2.45,
-                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "mean_acca_odds": 2.15,
+                "outcome_status": "INCOMPLETE_OUTCOMES",
                 "resolved_legs": 0,
                 "returned": null,
                 "selected_legs": 2,
@@ -4040,13 +4041,13 @@
                 "total_stake": 2.0478
               }
             },
-            "card_identical": true,
+            "card_identical": false,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
-            "execution_leg_symmetric_difference": 0,
-            "mean_absolute_disagreement": 0.09284003884067354,
-            "model_below_cohort": 3,
+            "execution_leg_symmetric_difference": 4,
+            "mean_absolute_disagreement": 0.11352882244076169,
+            "model_below_cohort": 241,
             "models": {
-              "f183aee47cf6c59e83ec6bab311bc6d4cf02e4a2f32c1b8cc33778db6c1c1f8d": {
+              "24755cabc1f84cb2855222ee881772a019cfbb627021e67f648b68dc95bbf724": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -4111,18 +4112,61 @@
                   "stored_coefficients": 2964
                 },
                 "schema": "enh_score_logit_v2"
+              },
+              "c1910493fa3364aba8c3119d03cfd59ada5ed0ed54b5552d0d225fa02944d090": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 9,
+                    "0:1": 19,
+                    "0:2": 15,
+                    "0:3": 16,
+                    "0:4": 7,
+                    "0:5": 2,
+                    "0:6": 1,
+                    "0:7": 1,
+                    "1:0": 11,
+                    "1:1": 16,
+                    "1:2": 17,
+                    "1:3": 9,
+                    "1:4": 5,
+                    "1:5": 3,
+                    "2:0": 3,
+                    "2:1": 9,
+                    "2:2": 11,
+                    "2:3": 8,
+                    "2:4": 2,
+                    "2:5": 5,
+                    "3:0": 1,
+                    "3:1": 4,
+                    "3:3": 1,
+                    "3:4": 2,
+                    "3:5": 1,
+                    "4:1": 2,
+                    "4:2": 2,
+                    "4:3": 2
+                  },
+                  "classes": 28,
+                  "mean_rows_per_class": 6.571428571428571,
+                  "min_class_count": 1,
+                  "n": 184,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 1596
+                },
+                "schema": "enh_score_logit_v2"
               }
             },
-            "paired_estimates": 8,
-            "pool_legs": 8,
-            "removed_from_ml_off": 0,
+            "paired_estimates": 413,
+            "pool_legs": 413,
+            "removed_from_ml_off": 2,
             "schemas": {
-              "enh_score_logit_v2": 8
+              "enh_score_logit_v2": 413
             },
-            "scored_legs": 8,
-            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+            "scored_legs": 413,
+            "status": "INCOMPLETE_OUTCOMES"
           },
-          "settlement": "UNAVAILABLE",
+          "open_accas": 1,
+          "settlement": "PENDING",
           "status": "MATCH"
         }
       ],
@@ -4451,23 +4495,25 @@
           "bank_total": 412.24985999999996,
           "committed_excluding_target": 0.0,
           "date": "2026-11-06",
-          "decision_status": "draft",
+          "decision_status": "frozen",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "fddf9114af65f460d856700e51577899149817bf",
-            "event_sha": "fddf9114af65f460d856700e51577899149817bf",
+            "checkout_head_at_capture": "b80a89a6ecfdec6b93199a37f6e36e0bd2b14684",
+            "event_sha": "b80a89a6ecfdec6b93199a37f6e36e0bd2b14684",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "42159843225",
+            "run_id": "42177974958",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-11-06_decision.json.gz",
           "free_bank": 412.24985999999996,
-          "ledger": "NOT_COMMITTED",
-          "settlement": "UNAVAILABLE",
+          "freeze_time": "MATCH",
+          "ledger": "MATCH",
+          "open_accas": 2,
+          "settlement": "PENDING",
           "status": "MATCH"
         }
       ],
