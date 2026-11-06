@@ -203,6 +203,40 @@ def test_source_model_method_downgrade_tampering_rejected(tmp_path, method_tampe
         mp.receipts(tmp_path)
 
 
+@pytest.mark.parametrize('retained_marker', ['only_schema', 'only_normalization'])
+def test_source_model_markers_rejected_independently(tmp_path, retained_marker):
+    rows = [emitted(1), emitted(2)]
+    r = capture(tmp_path, rows)
+    tampered = deepcopy(r)
+    tampered['learning']['method'] = 'legacy_score'
+
+    if retained_marker == 'only_schema':
+        # Retain source_market_v1 in models; clear probability_normalization on candidates and legs
+        for c in tampered['candidates']:
+            c['probability_normalization'] = None
+        for acca in tampered['accas']:
+            for leg in acca['legs']:
+                leg['probability_normalization'] = None
+    elif retained_marker == 'only_normalization':
+        # Retain complete_source_market_partition_v1; remove or replace source_market_v1 in models
+        tampered['models'] = {
+            k: {**v, 'schema': 'legacy_score_v1'} for k, v in tampered['models'].items()
+        }
+
+    tampered['candidates'][0]['probability'] = 0.999
+    for acca in tampered['accas']:
+        for leg in acca['legs']:
+            if leg['candidate_id'] == tampered['candidates'][0]['candidate_id']:
+                leg['probability'] = 0.999
+    tampered['sha256'] = mp.digest({k: v for k, v in tampered.items() if k != 'sha256'})
+
+    p = mp.receipt_path(tmp_path, tampered['date'])
+    p.write_text(mp.json.dumps(tampered))
+
+    with pytest.raises(ValueError, match="source model evidence requires source_market learning method"):
+        mp.receipts(tmp_path)
+
+
 def test_source_model_method_downgrade_rejected_in_rolling_reader(tmp_path):
     r = run(tmp_path, now=NOW, rows=slate(NOW))
     tampered = deepcopy(r)
