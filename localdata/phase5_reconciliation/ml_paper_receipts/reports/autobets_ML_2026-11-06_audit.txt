@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-06
 ==============================================================
-CURRENT PAPER BANK (all dates): 62.677 units · free 59.543 / reserved 3.134
-4 paper accas · 4 ticket publications · 0 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 62.677 units · free 56.409 / reserved 6.268
+5 paper accas · 5 ticket publications · 1 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -36,6 +36,14 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
 
    Motor Lublin vs Wisła Płock · KICKOFF 2026-11-06 19:00 SAST
       Draw (1X2) @3.800 · ML 41.2% · SKIPPED_VETO
+
+[PAPER ACCA #5] @4.088 — 3.133831 paper units — BetMGM.us
+   Published 2026-11-06 06:46:11 SAST · reference P5/1
+   Oxford City vs Leicester City · KICKOFF 2026-11-06 21:45 SAST
+      Match Over 4.5 Goals @3.750 · ML 57.2% · SKIPPED_VETO
+
+   Maccabi Tel Aviv vs Maccabi Petah Tikva · KICKOFF 2026-11-06 14:00 SAST
+      Match Over 1.5 Goals @1.090 · ML 89.6% · WATCHLIST_UNKNOWN_CTX
 
 PUBLICATION & LEG DETAILS
 Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
@@ -118,6 +126,42 @@ P4 · 2026-11-06 03:44:51 SAST · ACCA #4
       base 44.6% → adjusted 52.3% · learning move +7.7 pp · price break-even 45.5% (1/odds, not a fair probability or proof of value)
    ACCA #4 / leg 2: source forecast 26.1% · gap +15.2 pp · quote age 3.37h at decision
       base 36.9% → adjusted 41.2% · learning move +4.3 pp · price break-even 26.3% (1/odds, not a fair probability or proof of value)
+   Learning: fitted_prior_paper_errors
+
+P5 · 2026-11-06 06:46:11 SAST · ACCA #5
+   Receipt 20261106T044557571480Z · status paper_accas
+   Frozen at 2026-11-06T04:46:11.278224+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 6664c5f2cfebfec27d33c82b0698996a7ac21b86db419e8ed9ee1e03debf326d
+   Decision window 2026-11-06T04:45:57.571480+00:00 → 2026-11-07T04:45:57.571480+00:00
+   Bank at decision: 62.676622 paper units
+   Available at decision: 59.542791 paper units
+   Reserved at decision: 3.133831 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.133831 units per canonical fixture
+   Reservation 3.812595 → 3.133831 units · released/idle 0.678764; no refill
+   2026-11-06 maccabitelaviv vs maccabipetahtikva: new 3.133831 + prior open 0.000000 · unused new budget 0.000000 units
+   2026-11-06 oxfordcity vs leicestercity: new 3.133831 + prior open 0.000000 · unused new budget 0.000000 units
+   Coverage: candidate count: 127; candidate fixtures: 4; slate rows: 51; status: inputs_available
+   Rejections: data quality: 7; fixture budget exhausted: 4; outside rolling window or unproven kickoff: 4; quote or probability unavailable: 463
+   ACCA #5 / leg 1: source forecast unavailable · quote age 0.21h at decision
+      base 58.1% → adjusted 57.2% · learning move -0.9 pp · price break-even 26.7% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 57.8% → partition-normalized 57.2% · includes unquoted outcomes; not proof of calibration
+   ACCA #5 / leg 2: source forecast 91.6% · gap -2.0 pp · quote age 0.23h at decision
+      base 94.2% → adjusted 89.6% · learning move -4.6 pp · price break-even 91.7% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 89.7% → partition-normalized 89.6% · includes unquoted outcomes; not proof of calibration
+   Learning: fitted_prior_paper_errors
+
+P6 · 2026-11-06 06:48:57 SAST · No additional tickets
+   Receipt 20261106T044844477485Z · status no_paper_bet
+   Frozen at 2026-11-06T04:48:57.559971+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 8c7b4235e3dccec65d73747890a807a42ceb167d393361db6a2c4eaf4e1063f6
+   Decision window 2026-11-06T04:48:44.477485+00:00 → 2026-11-07T04:48:44.477485+00:00
+   Bank at decision: 62.676622 paper units
+   Available at decision: 56.408960 paper units
+   Reserved at decision: 6.267662 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.133831 units per canonical fixture
+   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
+   Coverage: candidate count: 74; candidate fixtures: 2; slate rows: 27; status: inputs_available
+   Rejections: data quality: 3; fixture budget exhausted: 6; outside rolling window or unproven kickoff: 3; quote or probability unavailable: 197
    Learning: fitted_prior_paper_errors
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
