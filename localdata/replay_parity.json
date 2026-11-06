@@ -3386,10 +3386,10 @@
                         "match": "AC Milan vs Ferencvarosi TC",
                         "model": 0.6764650344210191,
                         "odds": 1.5,
-                        "outcome_source": null,
+                        "outcome_source": "shared_settlement_facts",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 2.33,
@@ -3474,7 +3474,7 @@
                 ],
                 "mean_acca_odds": 2.14,
                 "outcome_status": "RESOLVED",
-                "resolved_legs": 3,
+                "resolved_legs": 4,
                 "returned": 4.0184,
                 "selected_legs": 4,
                 "selector_trace": {
@@ -3500,10 +3500,10 @@
                         "match": "AC Milan vs Ferencvarosi TC",
                         "model": 0.6764650344210191,
                         "odds": 1.55,
-                        "outcome_source": null,
+                        "outcome_source": "shared_settlement_facts",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "loss",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.6748,
@@ -3518,7 +3518,7 @@
                       }
                     ],
                     "odds": 2.33,
-                    "returned": null,
+                    "returned": 0.0,
                     "stake": 2.0607
                   },
                   {
@@ -3598,9 +3598,9 @@
                   ]
                 ],
                 "mean_acca_odds": 2.175,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 3,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 4,
+                "returned": 0.0,
                 "selected_legs": 4,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -3869,7 +3869,7 @@
               "enh_score_logit_v2": 18
             },
             "scored_legs": 18,
-            "status": "INCOMPLETE_OUTCOMES"
+            "status": "RESOLVED"
           },
           "open_accas": 0,
           "settled_net": -0.10300000000000065,
@@ -3885,14 +3885,14 @@
           "decision_status": "no_bet",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "257c22c34b885d3c621bc31c4c765265275073d1",
-            "event_sha": "257c22c34b885d3c621bc31c4c765265275073d1",
+            "checkout_head_at_capture": "9a8f5c6ec2faec60dc049c790a63061ad622935c",
+            "event_sha": "9a8f5c6ec2faec60dc049c790a63061ad622935c",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "42117642478",
+            "run_id": "42140799276",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-06_decision.json.gz",
