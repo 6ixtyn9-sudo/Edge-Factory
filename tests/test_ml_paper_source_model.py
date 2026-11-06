@@ -178,3 +178,45 @@ def test_unused_form_confidence_recipe_noise_does_not_mint_opportunity(tmp_path)
     second=run(tmp_path,NOW+timedelta(minutes=2),rows)
     assert second is not None and not second['accas']
     assert mp.performance(mp.receipts(tmp_path),lambda c:None)['paper_committed_units'] == stake
+
+
+@pytest.mark.parametrize('method_tampering', [None, 'legacy_score', 'dynamic_logistic_v1'])
+def test_source_model_method_downgrade_tampering_rejected(tmp_path, method_tampering):
+    rows = [emitted(1), emitted(2)]
+    r = capture(tmp_path, rows)
+    tampered = deepcopy(r)
+    if method_tampering is None:
+        tampered['learning'].pop('method', None)
+    else:
+        tampered['learning']['method'] = method_tampering
+    tampered['candidates'][0]['probability'] = 0.999
+    for acca in tampered['accas']:
+        for leg in acca['legs']:
+            if leg['candidate_id'] == tampered['candidates'][0]['candidate_id']:
+                leg['probability'] = 0.999
+    tampered['sha256'] = mp.digest({k: v for k, v in tampered.items() if k != 'sha256'})
+
+    p = mp.receipt_path(tmp_path, tampered['date'])
+    p.write_text(mp.json.dumps(tampered))
+
+    with pytest.raises(ValueError, match="source model evidence requires source_market learning method"):
+        mp.receipts(tmp_path)
+
+
+def test_source_model_method_downgrade_rejected_in_rolling_reader(tmp_path):
+    r = run(tmp_path, now=NOW, rows=slate(NOW))
+    tampered = deepcopy(r)
+    tampered['learning']['method'] = 'legacy_score'
+    tampered['candidates'][0]['probability'] = 0.999
+    for acca in tampered['accas']:
+        for leg in acca['legs']:
+            if leg['candidate_id'] == tampered['candidates'][0]['candidate_id']:
+                leg['probability'] = 0.999
+    tampered['sha256'] = mp.digest({k: v for k, v in tampered.items() if k != 'sha256'})
+
+    p = mp.rolling_receipt_path(tmp_path, tampered)
+    p.write_text(mp.json.dumps(tampered))
+
+    with pytest.raises(ValueError, match="source model evidence requires source_market learning method"):
+        mp.receipts(tmp_path)
+

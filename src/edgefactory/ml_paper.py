@@ -169,6 +169,14 @@ def _validate_bets(row):
         raise ValueError("paper stakes exceed frozen available capital")
     if row.get("schema") == SCHEMA and stake_total > (available or 0) * MAX_PAPER_EXPOSURE + 1e-6:
         raise ValueError("paper stakes exceed declared v2 exposure limit")
+    has_source_evidence = any(
+        c.get("probability_normalization") == "complete_source_market_partition_v1"
+        or (isinstance(row.get("models", {}).get(c.get("model_key")), dict)
+            and row["models"][c["model_key"]].get("schema") == "source_market_v1")
+        for c in row["candidates"]
+    )
+    if has_source_evidence and row.get("learning", {}).get("method") != "source_market":
+        raise ValueError("source model evidence requires source_market learning method")
     if row.get("learning", {}).get("method") == "source_market":
         from .consensus_contracts import enhancement_fixture_identity
         copied = []
