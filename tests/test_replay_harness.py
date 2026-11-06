@@ -305,8 +305,31 @@ def test_slot_table_respects_the_floor_and_the_rank_order():
 def test_parse_spec_accepts_leagues_and_still_rejects_unknown_keys():
     assert rh.parse_spec("leagues=EPL|Sc1") == {"leagues": "EPL|Sc1"}
     assert rh.parse_spec("floor=1.3,leagues=EPL") == {"floor": 1.3, "leagues": "EPL"}
+    assert rh.parse_spec("floor=1.3,cup_floor=1.4") == {"floor": 1.3, "cup_floor": 1.4}
     with pytest.raises(SystemExit):
         rh.parse_spec("nonsense=1")
+
+
+def test_cup_floor_filter_elevates_hurdle_on_cup_matches():
+    def leg(tag, lg, odds):
+        return {"match": f"T{tag} vs O{tag}", "pick": "HOME", "prob": 0.75,
+                "odds": odds, "result": "win", "row": {"league": lg}}
+    pool = at.rank_legs([
+        leg("league_low", "England Premier League", 1.32),
+        leg("cup_low", "world: uefa champions league", 1.35),
+        leg("cup_high", "world: uefa europa league", 1.45),
+    ])
+    # Baseline: no cup_floor filter applied
+    base_kept = rh._filtered_pool(pool, {"floor": 1.30})
+    assert len(base_kept) == 3
+
+    # Differential cup floor: cup matches below 1.40 are filtered out, league 1.32 kept
+    cup_kept = rh._filtered_pool(pool, {"floor": 1.30, "cup_floor": 1.40})
+    assert len(cup_kept) == 2
+    matches = [l["match"] for l in cup_kept]
+    assert "Tleague_low vs Oleague_low" in matches
+    assert "Tcup_high vs Ocup_high" in matches
+    assert "Tcup_low vs Ocup_low" not in matches
 
 
 def test_leagues_filter_shrinks_the_pool_before_the_live_selector_sees_it():
