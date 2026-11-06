@@ -104,7 +104,7 @@ SIZING_KEYS = {"stake_frac", "stake_mode", "stake_per_acca", "weights"}
 PLAN_KEYS = {"min_prob", "addon_floor", "addon_ceiling", "addon_min_prob", "addon_rank", "model_min_prob"}
 ENGINE_KEYS = SELECTION_KEYS | SIZING_KEYS | PLAN_KEYS
 FLOAT_KEYS = {"floor", "volume_min", "stake_frac", "stake_per_acca", "min_prob",
-              "addon_floor", "addon_ceiling", "addon_min_prob"}
+              "addon_floor", "addon_ceiling", "addon_min_prob", "cup_floor"}
 INT_KEYS = {"max_accas", "min_accas", "legs_per_acca", "volume_pool", "saturated_accas"}
 BOOL_KEYS = {"fallback"}
 
@@ -181,7 +181,7 @@ def parse_spec(text):
             spec[k] = float(v)
         else:
             spec[k] = v
-    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules"}
+    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules", "cup_floor"}
     if unknown:
         raise SystemExit(f"unknown spec key(s): {sorted(unknown)}")
     # Two no-op pairings, refused rather than reported: caps the chosen rank
@@ -399,12 +399,26 @@ def rule_roi_table(u, min_legs=0):
             for r, v in acc.items() if v[0] >= min_legs}
 
 
+def is_cup_match(leg_or_row: dict) -> bool:
+    """Detect cup/knockout/continental tournaments from league string or match text."""
+    row = (leg_or_row.get("row") or {}) if isinstance(leg_or_row, dict) else {}
+    league = str(row.get("league") or leg_or_row.get("league") or "").lower()
+    match = str(leg_or_row.get("match") or "").lower()
+    cup_tokens = (
+        "cup", "copa", "coppa", "coupe", "pokal", "trophy", "shield", "fa cup",
+        "champions league", "europa league", "conference league", "beker", "taça",
+        "kupa", "ko-runde", "play-offs", "playoffs", "tournament", "sudamericana", "libertadores"
+    )
+    return any(tok in league for tok in cup_tokens) or any(tok in match for tok in (" cup", " copa", " pokal"))
+
+
 def _filtered_pool(pool, spec):
     """Apply the harness-only filters before entering the live engine.
 
-    ``min_prob``, ``leagues`` and ``rules`` never reach the engine: they shrink
+    ``min_prob``, ``cup_floor``, ``leagues`` and ``rules`` never reach the engine: they shrink
     the pool the LIVE selector then sees, so selection and sizing stay one code
-    path. ``leagues`` is a |-separated list of case-insensitive substrings
+    path. ``cup_floor`` enforces an elevated price floor on cup/continental fixtures.
+    ``leagues`` is a |-separated list of case-insensitive substrings
     matched against the archived row's league tag (concentration experiments).
     ``rules`` is a |-separated list of miner-rule tokens: a bare token matches
     a rule name exactly ("ml-meta avg_p>=55"), ``fam:`` matches a rule family
@@ -412,6 +426,9 @@ def _filtered_pool(pool, spec):
     tokens apply first, then excludes. Rule names contain no commas, so the
     comma-separated spec syntax survives them.
     """
+    cf = spec.get("cup_floor")
+    if cf is not None:
+        pool = [l for l in pool if not is_cup_match(l) or l["odds"] >= cf]
     mp = spec.get("min_prob")
     if mp is not None:
         pool = [l for l in pool if l["prob"] >= mp]
@@ -1998,8 +2015,11 @@ def cmd_battery(universe):
     print("--- baseline ---")
     b = print_variant(universe, base, "live settings")
     print("\n--- min leg odds floor ---")
-    for f in (1.10, 1.15, 1.20, 1.25, 1.30):
+    for f in (1.10, 1.15, 1.20, 1.25, 1.30, 1.35, 1.40, 1.45, 1.50):
         print_variant(universe, {"floor": f}, f"floor {f:.2f}", baseline=b)
+    print("\n--- differential cup floor (protect against rotation/cup variance) ---")
+    for cf in (1.35, 1.40, 1.45, 1.50):
+        print_variant(universe, {"floor": 1.30, "cup_floor": cf}, f"floor 1.30 + cup_floor {cf:.2f}", baseline=b)
     print("\n--- accas per day (checkpoint ①) ---")
     for k in (3, 4, 5, 6):
         print_variant(universe, {"max_accas": k}, f"max {k} accas/day", baseline=b)
