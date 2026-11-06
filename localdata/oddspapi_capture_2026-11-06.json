@@ -1,58 +1,7 @@
 {
-  "added": 23831,
-  "attempted": 10,
-  "attempted_fixtures": [
-    {
-      "away": "Independiente Valle Del Cauca",
-      "fixture_id": "id1000123876174020",
-      "home": "Union Magdalena"
-    },
-    {
-      "away": "Mount Pleasant FC",
-      "fixture_id": "id1000189276448306",
-      "home": "Arnett Gardens FC"
-    },
-    {
-      "away": "Delfin SC",
-      "fixture_id": "id1002920875235020",
-      "home": "CSD Independiente del Valle"
-    },
-    {
-      "away": "EC Bahia BA",
-      "fixture_id": "id1000032566887148",
-      "home": "Cruzeiro EC MG"
-    },
-    {
-      "away": "Piratas Veracruz",
-      "fixture_id": "id1002738276367026",
-      "home": "Cancun FC"
-    },
-    {
-      "away": "Deportivo Toluca FC",
-      "fixture_id": "id1002895373204700",
-      "home": "Queretaro FC"
-    },
-    {
-      "away": "Platense FC Puerto Cortes",
-      "fixture_id": "id1002741476124632",
-      "home": "CD Marathon San Pedro Sula"
-    },
-    {
-      "away": "Deportivo Saprissa San Jose",
-      "fixture_id": "id1002709272053682",
-      "home": "CS Herediano"
-    },
-    {
-      "away": "Leones Negros UDEG",
-      "fixture_id": "id1002738276388270",
-      "home": "Alacranes de Durango"
-    },
-    {
-      "away": "Club Tijuana de Caliente",
-      "fixture_id": "id1002895373204702",
-      "home": "Club Santos Laguna"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-06",
     "keys": 3,
@@ -61,182 +10,22 @@
     "remaining_today": 13,
     "spent_today": 12
   },
-  "captured_at": "2026-11-05T22:23:21+00:00",
+  "captured_at": "2026-11-06T01:29:32+00:00",
   "date": "2026-11-06",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
   "excluded_srl_fixtures": 7,
   "excluded_wrong_sport_fixtures": 0,
   "fixtures": 357,
-  "future_slate_fixtures": 10,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 636,
-  "markets": {
-    "1x2": 3027,
-    "btts": 1751,
-    "ou_0.5": 687,
-    "ou_0.75": 86,
-    "ou_1": 141,
-    "ou_1.25": 116,
-    "ou_1.5": 1552,
-    "ou_1.75": 192,
-    "ou_2": 364,
-    "ou_2.25": 398,
-    "ou_2.5": 1884,
-    "ou_2.75": 500,
-    "ou_3": 644,
-    "ou_3.25": 430,
-    "ou_3.5": 1863,
-    "ou_3.75": 358,
-    "ou_4": 336,
-    "ou_4.25": 136,
-    "ou_4.5": 1137,
-    "ou_4.75": 116,
-    "ou_5": 203,
-    "ou_5.25": 118,
-    "ou_5.5": 530,
-    "ou_5.75": 81,
-    "ou_6": 65,
-    "ou_6.25": 60,
-    "ou_6.5": 192,
-    "ou_6.75": 55,
-    "ou_7": 50,
-    "ou_7.25": 50,
-    "ou_7.5": 83,
-    "ou_7.75": 40,
-    "ou_8": 40,
-    "ou_8.25": 40,
-    "ou_8.5": 58,
-    "tt_away_0.5": 926,
-    "tt_away_0.75": 6,
-    "tt_away_1": 6,
-    "tt_away_1.5": 1122,
-    "tt_away_1.75": 16,
-    "tt_away_2": 16,
-    "tt_away_2.25": 2,
-    "tt_away_2.5": 616,
-    "tt_away_2.75": 18,
-    "tt_away_3.5": 212,
-    "tt_away_4.5": 23,
-    "tt_away_5.5": 12,
-    "tt_home_0.5": 894,
-    "tt_home_1": 44,
-    "tt_home_1.5": 1158,
-    "tt_home_1.75": 6,
-    "tt_home_2": 38,
-    "tt_home_2.25": 22,
-    "tt_home_2.5": 740,
-    "tt_home_3": 38,
-    "tt_home_3.25": 16,
-    "tt_home_3.5": 360,
-    "tt_home_3.75": 4,
-    "tt_home_4": 18,
-    "tt_home_4.5": 109,
-    "tt_home_5.5": 26
-  },
-  "markets_source": "fetch",
-  "matched": 10,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 12,
-    "market_inactive": 11134,
-    "market_unsupported_cards": 1499,
-    "market_unsupported_clean_sheet": 758,
-    "market_unsupported_corners": 6362,
-    "market_unsupported_correct_score": 2825,
-    "market_unsupported_double_chance": 1801,
-    "market_unsupported_draw_no_bet": 1344,
-    "market_unsupported_early_payout": 120,
-    "market_unsupported_handicap": 11857,
-    "market_unsupported_market_type": 8521,
-    "market_unsupported_non_goal": 368,
-    "market_unsupported_odd_even": 2615,
-    "market_unsupported_period": 41500,
-    "market_unsupported_win_to_nil": 1434,
-    "outcome_inactive": 859
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 12,
-      "market_inactive": 11134,
-      "outcome_inactive": 859
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_cards": 1499,
-      "market_unsupported_clean_sheet": 758,
-      "market_unsupported_corners": 6362,
-      "market_unsupported_correct_score": 2825,
-      "market_unsupported_double_chance": 1801,
-      "market_unsupported_draw_no_bet": 1344,
-      "market_unsupported_early_payout": 120,
-      "market_unsupported_handicap": 11857,
-      "market_unsupported_market_type": 8521,
-      "market_unsupported_non_goal": 368,
-      "market_unsupported_odd_even": 2615,
-      "market_unsupported_period": 41500,
-      "market_unsupported_win_to_nil": 1434
-    }
-  },
-  "pending_fixtures": 10,
-  "quoted_fixtures": [
-    {
-      "away": "Independiente Valle Del Cauca",
-      "fixture_id": "id1000123876174020",
-      "home": "Union Magdalena"
-    },
-    {
-      "away": "Mount Pleasant FC",
-      "fixture_id": "id1000189276448306",
-      "home": "Arnett Gardens FC"
-    },
-    {
-      "away": "Delfin SC",
-      "fixture_id": "id1002920875235020",
-      "home": "CSD Independiente del Valle"
-    },
-    {
-      "away": "EC Bahia BA",
-      "fixture_id": "id1000032566887148",
-      "home": "Cruzeiro EC MG"
-    },
-    {
-      "away": "Piratas Veracruz",
-      "fixture_id": "id1002738276367026",
-      "home": "Cancun FC"
-    },
-    {
-      "away": "Deportivo Toluca FC",
-      "fixture_id": "id1002895373204700",
-      "home": "Queretaro FC"
-    },
-    {
-      "away": "Platense FC Puerto Cortes",
-      "fixture_id": "id1002741476124632",
-      "home": "CD Marathon San Pedro Sula"
-    },
-    {
-      "away": "Deportivo Saprissa San Jose",
-      "fixture_id": "id1002709272053682",
-      "home": "CS Herediano"
-    },
-    {
-      "away": "Leones Negros UDEG",
-      "fixture_id": "id1002738276388270",
-      "home": "Alacranes de Durango"
-    },
-    {
-      "away": "Club Tijuana de Caliente",
-      "fixture_id": "id1002895373204702",
-      "home": "Club Santos Laguna"
-    }
-  ],
-  "reserved_requests": 10,
-  "rows": 23831,
+  "markets": {},
+  "matched": 0,
+  "pending_fixtures": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 23,
+  "slate_candidate_fixtures": 21,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 0,
   "slate_provider_overlap_fixtures": 10,
   "slate_unmatched_fixtures": [
     {
@@ -256,18 +45,6 @@
       "home": "Hapoel Ironi Karmiel",
       "league": "Israel Liga Alef",
       "normalized_pair": "hapoel ironi karmiel|ironi baka el garbiya"
-    },
-    {
-      "away": "Bahia",
-      "home": "Cruzeiro",
-      "league": "Serie A",
-      "normalized_pair": "bahia|cruzeiro"
-    },
-    {
-      "away": "Platense FC",
-      "home": "CD Marathon",
-      "league": "Honduras: Liga Nacional",
-      "normalized_pair": "cd marathon|platense"
     },
     {
       "away": "Cracovia Krak\u00f3w",
@@ -318,5 +95,6 @@
       "normalized_pair": "aalborg|hb koge"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "nothing_pending"
 }

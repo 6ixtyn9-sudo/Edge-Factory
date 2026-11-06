@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 62.6766221792,
   "paper_multiple": 0.626766221792,
-  "paper_committed_units": 1.7398120000000001,
-  "paper_free_units": 60.9368101792,
+  "paper_committed_units": 3.133831,
+  "paper_free_units": 59.5427911792,
   "settled_stake_units": 50.198876,
   "receipt_days": 5,
-  "decision_receipts": 35,
+  "decision_receipts": 37,
   "bet_days": 5,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
@@ -17,7 +17,7 @@
   "wins": 3,
   "losses": 26,
   "hit_rate": 0.10344827586206896,
-  "pending_accas": 2,
+  "pending_accas": 4,
   "unresolved_result_legs": 2,
   "resolved_result_legs": 33,
   "profit_units": -37.3233778208,
@@ -10602,44 +10602,422 @@
       "decision_id": "20261105T223412400599Z",
       "captured_at": "2026-11-05T22:34:12.400599+00:00",
       "frozen_at": "2026-11-05T22:34:19.735358+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 8.36,
+          "stake_units": 0.851735,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Cracovia Krak\u00f3w",
+              "base_probability": 0.4459985000137796,
+              "book": "Tipico",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "abb142ce4639804f1ee598fe4a0125d22d1808f8eadca5ef9408e350962f32e4",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "wislakrakow",
+                "cracoviakrakow"
+              ],
+              "home": "Wis\u0142a Krak\u00f3w",
+              "kickoff_utc": "2026-11-06T19:30:00+00:00",
+              "market": "match_under_25",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-06",
+                  "wislakrakow",
+                  "cracoviakrakow",
+                  [],
+                  []
+                ],
+                "model_key": "c900684cb80adc8cf64e59a8bc2be237f7490ad3bb786c814f4dd4de38d16406",
+                "sources": [
+                  "bettingclosed",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "away_form_btts": 0.9,
+                  "away_form_ga": 2.0,
+                  "away_form_gf": 1.3,
+                  "away_form_over15": 0.9,
+                  "away_form_over25": 0.7,
+                  "away_form_over35": 0.5,
+                  "confidence": 0.5149163027656478,
+                  "forecast_1x2_away_mean": 0.2291460456089277,
+                  "forecast_1x2_away_spread": 0.06,
+                  "forecast_1x2_draw_mean": 0.27090975254730715,
+                  "forecast_1x2_draw_spread": 0.03727074235807859,
+                  "forecast_1x2_home_mean": 0.49994420184376515,
+                  "forecast_1x2_home_spread": 0.04983260553129554,
+                  "forecast_btts_yes_mean": 0.5585106382978724,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.776500904159132,
+                  "forecast_ou_1.5_over_spread": 0.01300180831826403,
+                  "forecast_ou_2.5_over_mean": 0.5671522309711285,
+                  "forecast_ou_2.5_over_spread": 0.0056955380577426995,
+                  "forecast_ou_3.5_over_mean": 0.3273399014778325,
+                  "forecast_ou_3.5_over_spread": 0.05467980295566499,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 1.2,
+                  "home_form_gf": 1.3,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.5,
+                  "home_form_over35": 0.2
+                }
+              },
+              "model_key": "c900684cb80adc8cf64e59a8bc2be237f7490ad3bb786c814f4dd4de38d16406",
+              "odds": 2.2,
+              "price_age_seconds_at_decision": 11948.99662,
+              "price_age_seconds_at_freeze": 11962.001409,
+              "price_at": "2026-11-05T22:22:41.693729+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.5230672853518142,
+              "selection": "under"
+            },
+            {
+              "away": "Wis\u0142a P\u0142ock",
+              "base_probability": 0.36928606975002437,
+              "book": "Tipico",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "c3f79136648ad0c1267a47e5febcd5000c23efc08e71fcca513addeda27ae4ee",
+              "contract_id": "pfc_cd84fb2c3ed889c0ae9eb89e",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "motorlublin",
+                "wislaplock"
+              ],
+              "home": "Motor Lublin",
+              "kickoff_utc": "2026-11-06T17:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_cd84fb2c3ed889c0ae9eb89e",
+                "fixture": [
+                  "2026-11-06",
+                  "motorlublin",
+                  "wislaplock",
+                  [],
+                  []
+                ],
+                "model_key": "0da7078295b599cca51ccbb5b778363b799913c679938e176bd785ff5d61ff9b",
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "away_form_btts": 0.6,
+                  "away_form_ga": 1.2,
+                  "away_form_gf": 1.7,
+                  "away_form_over15": 0.8,
+                  "away_form_over25": 0.6,
+                  "away_form_over35": 0.4,
+                  "confidence": 0.47597754939744297,
+                  "forecast_1x2_away_mean": 0.26371939805468897,
+                  "forecast_1x2_away_spread": 0.008999999999999952,
+                  "forecast_1x2_draw_mean": 0.26063638588120147,
+                  "forecast_1x2_draw_spread": 0.015090842356395628,
+                  "forecast_1x2_home_mean": 0.47597754939744297,
+                  "forecast_1x2_home_spread": 0.012932648192328977,
+                  "forecast_btts_yes_mean": 0.5920026178010471,
+                  "forecast_btts_yes_spread": 0.005994764397905694,
+                  "forecast_ou_1.5_over_mean": 0.8206672694394214,
+                  "forecast_ou_1.5_over_spread": 0.10699819168173597,
+                  "forecast_ou_2.5_over_mean": 0.6161428571428571,
+                  "forecast_ou_2.5_over_spread": 0.12857142857142856,
+                  "forecast_ou_3.5_over_mean": 0.373559934318555,
+                  "forecast_ou_3.5_over_spread": 0.055320197044334996,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.27,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.7,
+                  "forecast_xg_home_spread": 0.0,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.7,
+                  "home_form_ga": 1.5,
+                  "home_form_gf": 1.7,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.7,
+                  "home_form_over35": 0.4
+                }
+              },
+              "model_key": "0da7078295b599cca51ccbb5b778363b799913c679938e176bd785ff5d61ff9b",
+              "odds": 3.8,
+              "price_age_seconds_at_decision": 11948.875339,
+              "price_age_seconds_at_freeze": 11961.880128,
+              "price_at": "2026-11-05T22:22:41.815010+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.4122192062548207,
+              "selection": "draw"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261106T014150690349Z",
+      "captured_at": "2026-11-06T01:41:50.690349+00:00",
+      "frozen_at": "2026-11-06T01:42:03.695138+00:00"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 8.36,
+          "stake_units": 0.542284,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Cracovia Krak\u00f3w",
+              "base_probability": 0.4459985000137796,
+              "book": "Tipico",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "abb142ce4639804f1ee598fe4a0125d22d1808f8eadca5ef9408e350962f32e4",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "wislakrakow",
+                "cracoviakrakow"
+              ],
+              "home": "Wis\u0142a Krak\u00f3w",
+              "kickoff_utc": "2026-11-06T19:30:00+00:00",
+              "market": "match_under_25",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-06",
+                  "wislakrakow",
+                  "cracoviakrakow",
+                  [],
+                  []
+                ],
+                "model_key": "c900684cb80adc8cf64e59a8bc2be237f7490ad3bb786c814f4dd4de38d16406",
+                "sources": [
+                  "bettingclosed",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "away_form_btts": 0.9,
+                  "away_form_ga": 2.0,
+                  "away_form_gf": 1.3,
+                  "away_form_over15": 0.9,
+                  "away_form_over25": 0.7,
+                  "away_form_over35": 0.5,
+                  "confidence": 0.5149163027656478,
+                  "forecast_1x2_away_mean": 0.2291460456089277,
+                  "forecast_1x2_away_spread": 0.06,
+                  "forecast_1x2_draw_mean": 0.27090975254730715,
+                  "forecast_1x2_draw_spread": 0.03727074235807859,
+                  "forecast_1x2_home_mean": 0.49994420184376515,
+                  "forecast_1x2_home_spread": 0.04983260553129554,
+                  "forecast_btts_yes_mean": 0.5585106382978724,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.776500904159132,
+                  "forecast_ou_1.5_over_spread": 0.01300180831826403,
+                  "forecast_ou_2.5_over_mean": 0.5671522309711285,
+                  "forecast_ou_2.5_over_spread": 0.0056955380577426995,
+                  "forecast_ou_3.5_over_mean": 0.3273399014778325,
+                  "forecast_ou_3.5_over_spread": 0.05467980295566499,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 1.2,
+                  "home_form_gf": 1.3,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.5,
+                  "home_form_over35": 0.2
+                }
+              },
+              "model_key": "c900684cb80adc8cf64e59a8bc2be237f7490ad3bb786c814f4dd4de38d16406",
+              "odds": 2.2,
+              "price_age_seconds_at_decision": 12117.131271,
+              "price_age_seconds_at_freeze": 12129.843559,
+              "price_at": "2026-11-05T22:22:41.693729+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.5230672853518142,
+              "selection": "under"
+            },
+            {
+              "away": "Wis\u0142a P\u0142ock",
+              "base_probability": 0.36928606975002437,
+              "book": "Tipico",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "c3f79136648ad0c1267a47e5febcd5000c23efc08e71fcca513addeda27ae4ee",
+              "contract_id": "pfc_cd84fb2c3ed889c0ae9eb89e",
+              "date": "2026-11-06",
+              "fixture": [
+                "2026-11-06",
+                "motorlublin",
+                "wislaplock"
+              ],
+              "home": "Motor Lublin",
+              "kickoff_utc": "2026-11-06T17:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_cd84fb2c3ed889c0ae9eb89e",
+                "fixture": [
+                  "2026-11-06",
+                  "motorlublin",
+                  "wislaplock",
+                  [],
+                  []
+                ],
+                "model_key": "0da7078295b599cca51ccbb5b778363b799913c679938e176bd785ff5d61ff9b",
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "away_form_btts": 0.6,
+                  "away_form_ga": 1.2,
+                  "away_form_gf": 1.7,
+                  "away_form_over15": 0.8,
+                  "away_form_over25": 0.6,
+                  "away_form_over35": 0.4,
+                  "confidence": 0.47597754939744297,
+                  "forecast_1x2_away_mean": 0.26371939805468897,
+                  "forecast_1x2_away_spread": 0.008999999999999952,
+                  "forecast_1x2_draw_mean": 0.26063638588120147,
+                  "forecast_1x2_draw_spread": 0.015090842356395628,
+                  "forecast_1x2_home_mean": 0.47597754939744297,
+                  "forecast_1x2_home_spread": 0.012932648192328977,
+                  "forecast_btts_yes_mean": 0.5920026178010471,
+                  "forecast_btts_yes_spread": 0.005994764397905694,
+                  "forecast_ou_1.5_over_mean": 0.8206672694394214,
+                  "forecast_ou_1.5_over_spread": 0.10699819168173597,
+                  "forecast_ou_2.5_over_mean": 0.6161428571428571,
+                  "forecast_ou_2.5_over_spread": 0.12857142857142856,
+                  "forecast_ou_3.5_over_mean": 0.373559934318555,
+                  "forecast_ou_3.5_over_spread": 0.055320197044334996,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.27,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.7,
+                  "forecast_xg_home_spread": 0.0,
+                  "h2h_btts": null,
+                  "h2h_ga": null,
+                  "h2h_gf": null,
+                  "h2h_over15": null,
+                  "h2h_over25": null,
+                  "h2h_over35": null,
+                  "home_form_btts": 0.7,
+                  "home_form_ga": 1.5,
+                  "home_form_gf": 1.7,
+                  "home_form_over15": 0.9,
+                  "home_form_over25": 0.7,
+                  "home_form_over35": 0.4
+                }
+              },
+              "model_key": "0da7078295b599cca51ccbb5b778363b799913c679938e176bd785ff5d61ff9b",
+              "odds": 3.8,
+              "price_age_seconds_at_decision": 12117.00999,
+              "price_age_seconds_at_freeze": 12129.722278,
+              "price_at": "2026-11-05T22:22:41.815010+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.4122192062548207,
+              "selection": "draw"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_prior_paper_errors",
+      "decision_id": "20261106T014438825000Z",
+      "captured_at": "2026-11-06T01:44:38.825000+00:00",
+      "frozen_at": "2026-11-06T01:44:51.537288+00:00"
     }
   ],
   "latest_learning": {
     "coef": [
       0.6809114833697006,
-      -0.011539610566666438,
-      0.00874570804241322,
-      0.004363297959776908,
-      0.0204662696140606,
-      0.008702628533959,
-      -0.014068288209610952,
-      -0.011377497140303333,
-      -0.007369035313171767,
-      -0.009167820231129121,
-      0.01351150250663752,
-      0.010857217443180937,
-      0.006965217659338047,
-      0.002624870575236313,
-      -0.08440932439554592,
-      0.07412028540331343,
-      0.05045508978936147,
-      -0.023253197851177812,
-      -0.017363443631904396,
+      -0.011539610566666442,
+      0.008745708042413154,
+      0.004363297959776939,
+      0.020466269614060676,
+      0.008702628533959008,
+      -0.014068288209610964,
+      -0.011377497140303344,
+      -0.00736903531317177,
+      -0.00916782023112913,
+      0.01351150250663753,
+      0.010857217443180946,
+      0.006965217659338054,
+      0.002624870575236312,
+      -0.08440932439554598,
+      0.07412028540331346,
+      0.05045508978936155,
+      -0.023253197851177836,
+      -0.017363443631904413,
       -0.008243769412631226,
-      -0.00570292319221691,
-      0.022832856993979498,
-      0.01680845894302297,
-      0.0078082618492348495,
-      0.005369079765340785,
-      0.0019378202598320225,
-      0.06441642317707696,
-      -0.29001219556666563,
-      0.008265158942020357,
-      0.030553117218855085,
-      -0.07334626607959056,
-      0.25660310391055213,
-      -0.017683987071239367,
-      -0.0387302190542914
+      -0.005702923192216913,
+      0.02283285699397952,
+      0.016808458943022977,
+      0.0078082618492348555,
+      0.0053690797653407904,
+      0.0019378202598320212,
+      0.06441642317707691,
+      -0.2900121955666658,
+      0.008265158942020392,
+      0.030553117218855137,
+      -0.07334626607959062,
+      0.2566031039105522,
+      -0.01768398707123941,
+      -0.03873021905429143
     ],
     "columns": [
       "bucket:CAUTION",
@@ -10678,7 +11056,7 @@
     ],
     "evidence_gate": "none_from_first_resolved_prior_day_results_evidence_smoothed",
     "fixtures": 26,
-    "intercept": 0.028703095244579722,
+    "intercept": 0.028703095244579827,
     "learning_policy": "ml_paper_dynamic_calibration_success_tilt",
     "observations": 375,
     "recency_half_life_days": 14.0,
@@ -10687,12 +11065,12 @@
     "status": "fitted_prior_paper_errors",
     "success_tilt": {
       "bucket:CAUTION": {
-        "excess": -0.005708304024300337,
+        "excess": -0.005708304024300448,
         "fixtures": 4,
-        "tilt_logit": -0.011416608048600674,
+        "tilt_logit": -0.011416608048600896,
         "weighted_hit_rate": 0.4815339457995142,
         "weighted_observations": 2.4524017270567766,
-        "weighted_reference_rate": 0.48724224982381453
+        "weighted_reference_rate": 0.48724224982381464
       },
       "bucket:SKIPPED_VETO": {
         "excess": -0.0014224296376322831,
@@ -10711,12 +11089,12 @@
         "weighted_reference_rate": 0.5579077834717349
       },
       "gap:0_to_10pp": {
-        "excess": -0.04009180808162671,
+        "excess": -0.04009180808162682,
         "fixtures": 20,
-        "tilt_logit": -0.08018361616325342,
+        "tilt_logit": -0.08018361616325365,
         "weighted_hit_rate": 0.5387365686826138,
         "weighted_observations": 5.656061933198326,
-        "weighted_reference_rate": 0.5788283767642405
+        "weighted_reference_rate": 0.5788283767642406
       },
       "gap:10_to_20pp": {
         "excess": -0.016844525364899776,
@@ -10759,52 +11137,52 @@
         "weighted_reference_rate": 0.40212032263479086
       },
       "market:away_over_05": {
-        "excess": 0.32082774411852655,
+        "excess": 0.32082774411852666,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.6791722558814735
+        "weighted_reference_rate": 0.6791722558814733
       },
       "market:away_over_15": {
-        "excess": -0.4707697257068935,
+        "excess": -0.4707697257068936,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.4707697257068935
+        "weighted_reference_rate": 0.4707697257068936
       },
       "market:away_over_25": {
-        "excess": -0.3979988104855256,
+        "excess": -0.39799881048552566,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.3979988104855256
+        "weighted_reference_rate": 0.39799881048552566
       },
       "market:away_over_35": {
-        "excess": -0.2842630682384439,
+        "excess": -0.2842630682384441,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.2842630682384439
+        "weighted_reference_rate": 0.2842630682384441
       },
       "market:away_under_05": {
-        "excess": -0.33644366849476054,
+        "excess": -0.3364436684947607,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.33644366849476054
+        "weighted_reference_rate": 0.3364436684947607
       },
       "market:away_under_15": {
-        "excess": 0.4531771017597367,
+        "excess": 0.4531771017597366,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.5468228982402633
+        "weighted_reference_rate": 0.5468228982402634
       },
       "market:away_under_25": {
         "excess": 0.38116700768818756,
@@ -10831,20 +11209,20 @@
         "weighted_reference_rate": 0.8730095552152437
       },
       "market:btts_no": {
-        "excess": -0.12093187689022306,
+        "excess": -0.12093187689022311,
         "fixtures": 10,
-        "tilt_logit": -0.2418637537804461,
+        "tilt_logit": -0.24186375378044622,
         "weighted_hit_rate": 0.3230363627351431,
         "weighted_observations": 0.6814849507336631,
-        "weighted_reference_rate": 0.44396823962536613
+        "weighted_reference_rate": 0.4439682396253662
       },
       "market:btts_yes": {
-        "excess": 0.10434359445869834,
+        "excess": 0.10434359445869823,
         "fixtures": 10,
-        "tilt_logit": 0.20868718891739668,
+        "tilt_logit": 0.20868718891739646,
         "weighted_hit_rate": 0.6769636372648566,
         "weighted_observations": 0.6814849507336631,
-        "weighted_reference_rate": 0.5726200428061583
+        "weighted_reference_rate": 0.5726200428061584
       },
       "market:double_chance": {
         "excess": 0.022435397394812484,
@@ -10855,12 +11233,12 @@
         "weighted_reference_rate": 0.6442312692718546
       },
       "market:home_over_05": {
-        "excess": -0.7220131218681044,
+        "excess": -0.7220131218681043,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.7220131218681044
+        "weighted_reference_rate": 0.7220131218681043
       },
       "market:home_over_15": {
         "excess": -0.5588521369123574,
@@ -10871,28 +11249,28 @@
         "weighted_reference_rate": 0.5588521369123574
       },
       "market:home_over_25": {
-        "excess": -0.3099280278899134,
+        "excess": -0.3099280278899135,
         "fixtures": 1,
         "tilt_logit": -0.5,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.3099280278899134
+        "weighted_reference_rate": 0.3099280278899135
       },
       "market:home_over_35": {
-        "excess": -0.23340256052958877,
+        "excess": -0.23340256052958894,
         "fixtures": 1,
-        "tilt_logit": -0.46680512105917754,
+        "tilt_logit": -0.4668051210591779,
         "weighted_hit_rate": 0.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.23340256052958877
+        "weighted_reference_rate": 0.23340256052958894
       },
       "market:home_under_05": {
-        "excess": 0.7075846387880561,
+        "excess": 0.707584638788056,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.2924153612119439
+        "weighted_reference_rate": 0.292415361211944
       },
       "market:home_under_15": {
         "excess": 0.5413347989869308,
@@ -10900,15 +11278,15 @@
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.4586652010130692
+        "weighted_reference_rate": 0.45866520101306923
       },
       "market:home_under_25": {
-        "excess": 0.2949956823807519,
+        "excess": 0.29499568238075213,
         "fixtures": 1,
         "tilt_logit": 0.5,
         "weighted_hit_rate": 1.0,
         "weighted_observations": 0.030699843645503856,
-        "weighted_reference_rate": 0.7050043176192481
+        "weighted_reference_rate": 0.7050043176192479
       },
       "market:home_under_35": {
         "excess": 0.22097655493017032,
@@ -10935,12 +11313,12 @@
         "weighted_reference_rate": 0.7173270089648
       },
       "market:match_over_25": {
-        "excess": -0.05731682901923707,
+        "excess": -0.05731682901923718,
         "fixtures": 25,
-        "tilt_logit": -0.11463365803847414,
+        "tilt_logit": -0.11463365803847436,
         "weighted_hit_rate": 0.5370542934582266,
         "weighted_observations": 4.570568819597105,
-        "weighted_reference_rate": 0.5943711224774637
+        "weighted_reference_rate": 0.5943711224774638
       },
       "market:match_over_35": {
         "excess": 0.003950913548277313,
@@ -10951,12 +11329,12 @@
         "weighted_reference_rate": 0.42043120891333635
       },
       "market:match_over_45": {
-        "excess": 0.03843732599973532,
+        "excess": 0.03843732599973526,
         "fixtures": 10,
-        "tilt_logit": 0.07687465199947063,
+        "tilt_logit": 0.07687465199947052,
         "weighted_hit_rate": 0.344357104332089,
         "weighted_observations": 0.640686637115066,
-        "weighted_reference_rate": 0.3059197783323537
+        "weighted_reference_rate": 0.30591977833235373
       },
       "market:match_under_15": {
         "excess": -0.09739381383696702,

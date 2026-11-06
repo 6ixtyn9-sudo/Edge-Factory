@@ -7,7 +7,7 @@
 - immutable morning-baseline rows: 997
 - late-slate additions (regular-ledger rows not in the morning baseline): 106, of which on days whose regular ledger was rewritten: 83
 - regular-ledger-only legacy rows: 0
-- unsafe regular ledgers ignored: 27
+- unsafe regular ledgers ignored: 28
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 1028
 - eligible prior picks: 1050
@@ -39,7 +39,7 @@ Last 30 days: 2026-10-08 to 2026-11-06; same-day inclusion: False (local cutoff 
 | 1x2 single[scoutingstats] avg_p>=65 | 2026-10-25 / benched | ROI +0.1%; hit 80.3% (110/137); 106 priced; coverage 77.4% | ROI +0.1%; hit 80.3% (110/137); 106 priced; coverage 77.4% | 12/12 / 29/29 | pfc_fdade2e70df4d4bb78a8cd6e |
 | ou_2.5 unanimous[bzzoiro+scoutingstats+statarea] avg_p>=55 | 2026-10-23 / benched | ROI -2.0%; hit 61.9% (52/84); 79 priced; coverage 94.0% | ROI -2.0%; hit 61.9% (52/84); 79 priced; coverage 94.0% | 14/14 / 29/29 | pfc_27e0f725859bc708f95c58a3 |
 | 1x2 single[scoutingstats] avg_p>=50 | 2026-10-20 / benched | ROI -5.1%; hit 60.7% (150/247); 196 priced; coverage 79.4% | ROI -5.1%; hit 60.7% (150/247); 196 priced; coverage 79.4% | 17/17 / 29/29 | pfc_439097cb9bb700e9996c0b07 |
-| 1x2 unanimous[statarea+vitibet+zulubet] avg_p>=45 | 2026-11-03 / certified | ROI +102.0%; hit 100.0% (1/1); 1 priced; coverage 100.0%; provisional | ROI +102.0%; hit 100.0% (1/1); 1 priced; coverage 100.0%; provisional | 3/3 / 29/29 | pfc_ed44334de1c8307f22b510ab |
+| 1x2 unanimous[statarea+vitibet+zulubet] avg_p>=45 | 2026-11-03 / benched | ROI +102.0%; hit 100.0% (1/1); 1 priced; coverage 100.0%; provisional | ROI +102.0%; hit 100.0% (1/1); 1 priced; coverage 100.0%; provisional | 3/3 / 29/29 | pfc_ed44334de1c8307f22b510ab |
 | 1x2 single[zulubet] avg_p>=50 | 2026-10-20 / benched | ROI +90.0%; hit 50.0% (2/4); 2 priced; coverage 50.0%; provisional | ROI +90.0%; hit 50.0% (2/4); 2 priced; coverage 50.0%; provisional | 17/17 / 29/29 | pfc_4cf3df8552488297d7ccf526 |
 | 1x2 unanimous[statarea+vitibet+zulubet] avg_p>=0 | 2026-11-02 / certified | ROI +73.0%; hit 100.0% (1/1); 1 priced; coverage 100.0%; provisional | ROI +73.0%; hit 100.0% (1/1); 1 priced; coverage 100.0%; provisional | 4/4 / 29/29 | pfc_642ac9053223500b638e3451 |
 | 1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=0 | 2026-10-20 / benched | ROI +55.2%; hit 75.0% (3/4); 4 priced; coverage 100.0%; provisional | ROI +55.2%; hit 75.0% (3/4); 4 priced; coverage 100.0%; provisional | 17/17 / 29/29 | pfc_0ad08cd1b2e75a2c9051189e |
@@ -85,7 +85,7 @@ Last 30 days: 2026-10-08 to 2026-11-06; same-day inclusion: False (local cutoff 
 | 1x2 single[zulubet] avg_p>=0 | 2026-10-20 / benched | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | 17/17 / 29/29 | pfc_3dc0fa6511953bf09bc4c845 |
 | 1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=50 | 2026-10-20 / benched | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | 17/17 / 29/29 | pfc_3fbabd0ade3f89853e43fb10 |
 | 1x2 unanimous[scoutingstats+zulubet] avg_p>=60 | 2026-10-20 / benched | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | 17/17 / 29/29 | pfc_40b163633fc01fd0ff7d0ef1 |
-| 1x2 unanimous[statarea+vitibet+zulubet] avg_p>=40 | 2026-11-03 / certified | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | 3/3 / 29/29 | pfc_48e25c370ae15b7d58d6b0d8 |
+| 1x2 unanimous[statarea+vitibet+zulubet] avg_p>=40 | 2026-11-03 / benched | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | 3/3 / 29/29 | pfc_48e25c370ae15b7d58d6b0d8 |
 | ou_1.5 unanimous[scoutingstats+statarea] avg_p>=55 | 2026-10-20 / candidate | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | 17/17 / 29/29 | pfc_4e2583010bf805466e33c2d0 |
 | ou_1.5 unanimous[scoutingstats+statarea] avg_p>=0 | 2026-10-20 / candidate | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | 17/17 / 29/29 | pfc_4f2df06575151e798727a6b0 |
 | 1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=55 | 2026-10-20 / benched | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | ROI unavailable; hit unavailable (0/0); 0 priced; coverage unavailable; provisional | 17/17 / 29/29 | pfc_527524a94e98cff9740d499c |
@@ -343,7 +343,7 @@ Fixture-level secondary rates below score the fixture behind every settled pick;
 ## Secondary Market Realized Rates
 
 Metrics scored against actual outcomes of the settled consensus picks in this window:
-- **Over 2.5 Goals**: occurred in 549 / 918 matches (59.8%)
+- **Over 2.5 Goals**: occurred in 550 / 918 matches (59.9%)
 - **Both Teams to Score (BTTS)**: occurred in 491 / 918 matches (53.5%)
 - **Selected Team Over 1.5 Goals**: occurred in 590 / 914 matches (64.6%)
 
@@ -438,16 +438,16 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 Scored as probabilistic forecasts per settled pick (each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) — calibration, not a direction call; the retired exact-score field remains in machine history only).
 
-- **Avg Goals forecast**: n=968, MAE=1.494091 goals, bias=-0.15343 (realized − promised), promised avg 3.31562 vs realized 3.16219
+- **Avg Goals forecast**: n=968, MAE=1.493244 goals, bias=-0.148264 (realized − promised), promised avg 3.31562 vs realized 3.167355
 
 ### Per-metric calibration
 
 | metric | n | promised avg | realized | Δ | Brier |
 | --- | --- | --- | --- | --- | --- |
-| Away Over 1.5 | 968 | 34.4% | 33.8% | -0.7% | 0.200153 |
+| Away Over 1.5 | 968 | 34.4% | 33.9% | -0.6% | 0.200581 |
 | BTTS-Yes | 968 | 49.5% | 53.6% | +4.1% | 0.253363 |
 | Home Over 1.5 | 968 | 56.8% | 53.6% | -3.1% | 0.21855 |
-| Over 2.5 | 968 | 64.1% | 60.1% | -4.0% | 0.242241 |
+| Over 2.5 | 968 | 64.1% | 60.2% | -3.9% | 0.242127 |
 
 ### Promised-vs-realized calibration (all 📊 metrics pooled)
 
@@ -455,10 +455,10 @@ Scored as probabilistic forecasts per settled pick (each active metric is scored
 | --- | --- | --- | --- | --- |
 | 0.0-0.1 | 103 | 8.7% | 20.4% | +11.7% |
 | 0.1-0.2 | 352 | 13.5% | 17.0% | +3.5% |
-| 0.2-0.3 | 366 | 24.2% | 26.0% | +1.7% |
+| 0.2-0.3 | 366 | 24.2% | 26.2% | +2.0% |
 | 0.3-0.4 | 124 | 34.4% | 37.9% | +3.5% |
 | 0.4-0.5 | 413 | 42.5% | 49.4% | +6.9% |
-| 0.5-0.6 | 1115 | 55.5% | 57.0% | +1.5% |
+| 0.5-0.6 | 1115 | 55.5% | 57.1% | +1.6% |
 | 0.6-0.7 | 785 | 64.4% | 59.1% | -5.3% |
 | 0.7-0.8 | 287 | 74.7% | 71.1% | -3.6% |
 | 0.8-0.9 | 291 | 84.9% | 65.3% | -19.6% |
@@ -494,7 +494,7 @@ ROI uses priced rows only; hit rate uses all settled rows. The 30-priced-row cut
 
 | Rule | Priced ROI | Priced sample | Hit rate | Evidence | Registry context | Stored rule ID/key |
 | --- | ---: | ---: | --- | --- | --- | --- |
-| 1x2 unanimous[statarea+vitibet+zulubet] avg_p>=45 | +102.0% | 1 priced | 100.0% (1/1 settled) | PROVISIONAL: 1 priced < 30 | contract · certified, activated 2026-11-03, certified valid n=262 | pfc_ed44334de1c8307f22b510ab |
+| 1x2 unanimous[statarea+vitibet+zulubet] avg_p>=45 | +102.0% | 1 priced | 100.0% (1/1 settled) | PROVISIONAL: 1 priced < 30 | contract · benched, activated 2026-11-03, certified valid n=262 | pfc_ed44334de1c8307f22b510ab |
 | 1x2 single[zulubet] avg_p>=50 | +90.0% | 2 priced | 50.0% (2/4 settled) | PROVISIONAL: 2 priced < 30 | contract · benched, activated 2026-10-20, certified valid n=1241 | pfc_4cf3df8552488297d7ccf526 |
 | 1x2 unanimous[statarea+vitibet+zulubet] avg_p>=0 | +73.0% | 1 priced | 100.0% (1/1 settled) | PROVISIONAL: 1 priced < 30 | contract · certified, activated 2026-11-02, certified valid n=271 | pfc_642ac9053223500b638e3451 |
 | 1x2 unanimous[scoutingstats+statarea+vitibet] avg_p>=0 | +55.2% | 4 priced | 75.0% (3/4 settled) | PROVISIONAL: 4 priced < 30 | contract · benched, activated 2026-10-20, certified valid n=438 | pfc_0ad08cd1b2e75a2c9051189e |
@@ -865,12 +865,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 70.7% (Actual: 3 goals)
   - **🔥 Possible Events (graded)**: none recorded on the archived pick
 
-### 2026-11-05: Rubio Ñú vs Sportivo Luqueño (Actual Score: **0-0**)
+### 2026-11-05: Rubio Ñú vs Sportivo Luqueño (Actual Score: **0-5**)
 - **1X2 Pick**: Selected `HOME` @ 2.17 -> 🔴 LOST (Expected prob: 42.4%)
-  - [🔴 MISS] **Over 2.5 Goals**: expected 55.5% (Actual: 0 goals)
+  - [🟢 HIT] **Over 2.5 Goals**: expected 55.5% (Actual: 5 goals)
   - [🔴 MISS] **BTTS-Yes**: expected 55.3% (Actual: BTTS-No)
   - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 54.5% (Actual: 0 goals)
-  - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 70.7% (Actual: 0 goals)
+  - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 70.7% (Actual: 5 goals)
   - **🔥 Possible Events (graded)**: none recorded on the archived pick
 
 ### 2026-11-05: Valenciennes vs Orléans (Actual Score: **2-2**)
