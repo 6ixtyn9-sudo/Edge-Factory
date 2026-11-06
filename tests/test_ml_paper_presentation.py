@@ -10,6 +10,7 @@ from edgefactory import ml_paper as mp
 
 def card():
     first = candidate(1, odds=2.12, p=0.696, bucket="SKIPPED_VETO")
+    first.pop("ml_inputs")  # legacy card intentionally has no source witness
     first.update(home="Radomiak Radom", away="Śląsk Wrocław")
     second = candidate(2, odds=1.35, p=0.808, market="match_over_25")
     second.update(home="Benfica", away="Alverca", selection="over")

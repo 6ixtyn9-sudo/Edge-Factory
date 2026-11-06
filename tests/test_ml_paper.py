@@ -68,7 +68,12 @@ def pick(i=1, *, bucket="CAUTION", n=60):
         "fixture": enhancement_fixture_identity(row),
         "contract_id": row["contract_id"],
         "model_key": model["model_key"],
-        "values": {"confidence": 0.75, "home_form_gf": 2.0},
+        "sources": ["statarea"],
+        "values": {"confidence": 0.75, "home_form_gf": 2.0,
+                   "forecast_1x2_home_mean": .7, "forecast_1x2_draw_mean": .1,
+                   "forecast_1x2_away_mean": .2, "forecast_ou_1.5_over_mean": .5,
+                   "forecast_ou_2.5_over_mean": .5, "forecast_ou_3.5_over_mean": .1,
+                   "forecast_ou_4.5_over_mean": .05, "forecast_btts_yes_mean": .5},
     }
     row["statistical_profile"] = {
         "ml_model": model,
@@ -122,21 +127,22 @@ def capture(tmp_path, rows=None, **kwargs):
 
 
 def candidate(i, *, odds=2.0, p=0.7, market="1x2", bucket="CAUTION", book="Pinnacle", date=DAY):
-    return {
-        "candidate_id": str(i),
-        "kickoff_utc": date + "T12:00:00+00:00",
-        "date": date,
-        "home": f"Home Club {i}",
-        "away": f"Away Club {i}",
-        "fixture": [date, f"homeclub{i}", f"awayclub{i}"],
-        "market": market,
-        "selection": "home",
-        "bucket": bucket,
-        "odds": odds,
-        "base_probability": p,
-        "probability": p,
-        "book": book,
+    c = {
+        "candidate_id": str(i), "kickoff_utc": date + "T12:00:00+00:00", "date": date,
+        "home": f"Home Club {i}", "away": f"Away Club {i}",
+        "market": market, "selection": "home", "bucket": bucket,
+        "odds": odds, "base_probability": p, "probability": p, "book": book,
+        "contract_id": "synthetic-source-contract", "model_key": "synthetic-source-binding",
     }
+    c["fixture"] = enhancement_fixture_identity(c)[:3]
+    c["ml_inputs"] = {"fixture": enhancement_fixture_identity(c), "contract_id": c["contract_id"],
+                      "sources": ["statarea"], "model_key": c["model_key"],
+                      "values": {"forecast_1x2_home_mean": p,
+                                 "forecast_1x2_draw_mean": (1-p)/3,
+                                 "forecast_1x2_away_mean": (1-p)*2/3}}
+    c["base_partition"] = mp._base_partition(c["ml_inputs"], "1x2")
+    return c
+
 
 
 def receipt(day, cs, accas=None):
@@ -252,11 +258,11 @@ def test_invalid_price_identity_or_time_never_gets_paper_legs(tmp_path, field, v
     assert r["accas"] == [] and r["status"] == "no_paper_bet"
 
 
-def test_missing_borrowed_tampered_or_future_model_has_no_fallback(tmp_path):
+def test_missing_borrowed_tampered_source_inputs_have_no_old_model_fallback(tmp_path):
     rows = [pick(i) for i in range(1, 5)]
     rows[0]["statistical_profile"]["ml_inputs"]["fixture"][1] = "wrongteam"
-    rows[1]["statistical_profile"]["ml_model"]["train_last_date"] = DAY
-    rows[2]["statistical_profile"]["ml_model"]["coef"][0][0] = 1.0
+    rows[1]["statistical_profile"]["ml_inputs"]["sources"] = []
+    rows[2]["statistical_profile"]["ml_inputs"]["contract_id"] = "borrowed"
     rows[3]["statistical_profile"] = {}
     assert capture(tmp_path, rows)["candidates"] == []
 
@@ -288,7 +294,7 @@ def test_secondary_totals_btts_and_team_totals_require_full_quote_identity(tmp_p
             ("tt_home_1.5", "over"): [q],
         }
     r = capture(tmp_path, rows, index=index)
-    assert {"1x2", "match_over_25", "btts_no", "home_over_15"} == {
+    assert {"1x2", "match_over_25", "btts_no"} == {
         c["market"] for c in r["candidates"]
     }
     assert any(c["market"] != "1x2" for a in r["accas"] for c in a["legs"])
@@ -348,7 +354,7 @@ def test_learning_uses_own_prior_results_and_fixture_weights_not_quote_count():
     history = [receipt(yesterday, cs), receipt(DAY, [candidate(999)])]
     lookup = lambda c: (2, 0) if int(c["candidate_id"]) % 4 == 0 else (0, 2)
     learner = mp.learn(history, NOW, lookup)
-    assert learner["status"] == "fitted_prior_paper_errors"
+    assert learner["status"] == "fitted_source_market_temperature"
     assert learner["fixtures"] == 40 and learner["training_last_date"] == yesterday
     before = deepcopy(history)
     next_rows = [candidate(50, p=0.8)]
@@ -359,12 +365,12 @@ def test_learning_uses_own_prior_results_and_fixture_weights_not_quote_count():
     # Dynamic learning fits from the first resolved fixtures, but duplicated
     # book quotes still dedupe to the same two observations, not 200.
     dup_model = mp.learn(duplicate, NOW, lookup)
-    assert dup_model["status"] == "fitted_prior_paper_errors" and dup_model["observations"] == 2
+    assert dup_model["status"] == "fitted_source_market_temperature" and dup_model["observations"] == 2
     assert mp.learn([history[1]], NOW, lookup)["fixtures"] == 0
     assert mp.learn(history, NOW, lambda c: None)["fixtures"] == 0
 
 
-def test_learning_bucket_and_market_columns_use_any_unique_fixture_evidence():
+def test_learning_has_one_parameter_and_does_not_fit_bucket_market_effects():
     yesterday = "2026-11-01"
     cs = [
         candidate(i, date=yesterday, p=0.8, bucket="CAUTION" if i < 35 else "RARE")
@@ -373,8 +379,8 @@ def test_learning_bucket_and_market_columns_use_any_unique_fixture_evidence():
     model = mp.learn(
         [receipt(yesterday, cs)], NOW, lambda c: (2, 0) if int(c["candidate_id"]) % 2 else (0, 1)
     )
-    assert "bucket:CAUTION" in model["columns"]
-    assert "bucket:RARE" in model["columns"]  # dynamic: no 30-fixture column gate
+    assert model["parameters"] == 1
+    assert not {"columns", "success_tilt", "coef", "intercept"} & model.keys()
     assert model["observations"] == 40
 
 
@@ -491,7 +497,7 @@ def test_receipts_are_persistable_but_not_pick_archives(tmp_path):
     assert not mp.receipt_path(tmp_path, DAY).name.startswith("picks_")
 
 
-def test_prior_mistakes_can_change_bucket_preference_without_touching_live_rules():
+def test_bucket_labels_cannot_change_forecasts_or_live_rules():
     yesterday = "2026-11-01"
     cs = [
         candidate(i, date=yesterday, p=0.7, bucket="CAUTION" if i < 40 else "CERTIFIED_CLEAN")
@@ -506,7 +512,7 @@ def test_prior_mistakes_can_change_bucket_preference_without_touching_live_rules
     next_rows = [candidate(100, bucket="CAUTION"), candidate(101, bucket="CERTIFIED_CLEAN")]
     live_options = deepcopy(at.ticket_planner_options("main"))
     mp.apply_learning(next_rows, model)
-    assert next_rows[0]["probability"] > next_rows[1]["probability"]
+    assert next_rows[0]["probability"] == next_rows[1]["probability"]
     assert at.ticket_planner_options("main") == live_options
 
 

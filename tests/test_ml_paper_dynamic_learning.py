@@ -1,162 +1,129 @@
-"""Dynamic probability engine: calibration + success tilt from first results."""
-
+"""Single low-dimensional source market learner; no old calibration or tilt."""
 from copy import deepcopy
+from datetime import timedelta
+import math
 
 import pytest
 from test_ml_paper import NOW, candidate, receipt
-
 from edgefactory import ml_paper as mp
 
-YESTERDAY = "2026-11-01"
+DAY = "2026-11-01"
 
 
-def test_calibration_fits_from_first_resolved_fixtures_no_gate():
-    cs = [candidate(i, date=YESTERDAY, p=0.8) for i in range(4)]
-    lookup = lambda c: (2, 0) if int(c["candidate_id"]) % 4 == 0 else (0, 2)
-    learner = mp.learn([receipt(YESTERDAY, cs)], NOW, lookup)
-    assert learner["status"] == "fitted_prior_paper_errors"
-    assert learner["fixtures"] == 4
-    assert learner["learning_policy"] == mp.DYNAMIC_LEARNING_POLICY
-    assert learner["evidence_gate"] == "none_from_first_resolved_prior_day_results_evidence_smoothed"
-    rows = [candidate(50, p=0.8)]
-    mp.apply_learning(rows, learner)
-    assert rows[0]["probability"] < 0.8  # 80% predictions were wrong 75% of the time
+def model(power=.8):
+    m = mp.learn([], NOW, lambda c: None)
+    m['power'] = power
+    m['model_key'] = mp.digest({k:v for k,v in m.items() if k != 'model_key'})
+    return m
 
 
-def test_success_tilt_only_before_both_outcome_classes_seen():
-    cs = [candidate(i, date=YESTERDAY, p=0.5) for i in range(2)]
-    learner = mp.learn([receipt(YESTERDAY, cs)], NOW, lambda c: (2, 0))
-    assert learner["status"] == "dynamic_success_tilt_only"
-    assert learner["success_tilt"]["bucket:CAUTION"]["tilt_logit"] > 0
-    rows = [candidate(50, p=0.5)]
-    mp.apply_learning(rows, learner)
-    assert 0.5 < rows[0]["probability"] < 0.70  # bounded total tilt (<=0.75 logit)
+def test_one_parameter_fit_from_first_resolved_fixture_and_prior_day_only():
+    cs = [candidate(i, date=DAY, p=.8) for i in range(4)]
+    l = mp.learn([receipt(DAY,cs)],NOW,lambda c:(0,2))
+    assert l['status'] == 'fitted_source_market_temperature'
+    assert l['parameters'] == 1 and l['fixtures'] == l['observations'] == 4
+    assert 0 < l['power'] < 1
+    c = candidate(8,p=.8)
+    mp.apply_learning([c],l)
+    assert 1/3 < c['probability'] < .8
+    assert mp.learn([receipt(NOW.date().isoformat(),cs)],NOW,lambda c:(0,2))['fixtures'] == 0
 
 
-def test_success_tilt_moves_away_from_losing_groups():
-    cs = [candidate(i, date=YESTERDAY, p=0.5) for i in range(2)]
-    learner = mp.learn([receipt(YESTERDAY, cs)], NOW, lambda c: (0, 2))
-    assert learner["success_tilt"]["bucket:CAUTION"]["tilt_logit"] < 0
-    rows = [candidate(50, p=0.5)]
-    mp.apply_learning(rows, learner)
-    assert rows[0]["probability"] < 0.5
+@pytest.mark.parametrize('p',[.05,.2,.5,.8,.99])
+@pytest.mark.parametrize('power',[0.,.25,.5,.75,1.])
+def test_temperature_cannot_sharpen_or_reverse_complete_partition(p,power):
+    c=candidate(8,p=p)
+    before=deepcopy(c)
+    mp.apply_learning([c],model(power))
+    weights=[v**power for _,_,v in before['base_partition']]
+    assert c['probability'] == pytest.approx(weights[0]/sum(weights))
+    if power == 1: assert c['probability'] == pytest.approx(p)
+    if power == 0: assert c['probability'] == pytest.approx(1/3)
+    assert c['base_probability'] == before['base_probability']
 
 
-def test_success_tilt_is_bounded_and_auditable():
-    cs = [candidate(i, date=YESTERDAY, p=0.9) for i in range(3)]
-    learner = mp.learn([receipt(YESTERDAY, cs)], NOW, lambda c: (2, 0))
-    for entry in learner["success_tilt"].values():
-        assert -mp.SUCCESS_TILT_GROUP_LIMIT_LOGIT <= entry["tilt_logit"] <= mp.SUCCESS_TILT_GROUP_LIMIT_LOGIT
-        assert entry["weighted_hit_rate"] == 1.0
-        assert entry["excess"] > 0
-    rows = [candidate(50, p=0.9)]
-    mp.apply_learning(rows, learner)
-    assert rows[0]["probability"] < 0.95  # total tilt clamped, never runaway
+def test_no_results_uses_source_anchor_not_old_base_or_neutral_prediction():
+    c=candidate(1)
+    l=mp.learn([],NOW,lambda c:None)
+    assert l['power'] == 1 and l['observations'] == 0
+    mp.apply_learning([c],l)
+    assert c['probability'] == pytest.approx(.7)
+    assert not {'coef','success_tilt','smoothing_factor','columns'} & l.keys()
 
 
-def test_recency_weighting_discounts_old_results():
-    old = [candidate(1, date="2026-10-18", p=0.5)]
-    fresh = [candidate(2, date=YESTERDAY, p=0.5)]
-    old_model = mp.learn([receipt("2026-10-18", old)], NOW, lambda c: (2, 0))
-    fresh_model = mp.learn([receipt(YESTERDAY, fresh)], NOW, lambda c: (2, 0))
-    old_weight = old_model["success_tilt"]["bucket:CAUTION"]["weighted_observations"]
-    fresh_weight = fresh_model["success_tilt"]["bucket:CAUTION"]["weighted_observations"]
-    assert old_weight < fresh_weight < 1.0
+def test_book_bucket_confidence_old_probabilities_do_not_enter_fit():
+    cs=[candidate(i,date=DAY,p=.8) for i in range(6)]
+    changed=deepcopy(cs)
+    for c in changed:
+        c.update(base_probability=.01,probability=.99,bucket='different',odds=99)
+        c['ml_inputs']['values'].update(confidence=.01,home_form_gf=999)
+    lookup=lambda c:(2,0) if int(c['candidate_id'])%2 else (0,2)
+    a=mp.learn([receipt(DAY,cs)],NOW,lookup)
+    b=mp.learn([receipt(DAY,changed)],NOW,lookup)
+    assert a == b
+    duplicated=deepcopy(cs)+[dict(c,book='Other') for c in cs]
+    assert mp.learn([receipt(DAY,duplicated)],NOW,lookup) == a
 
 
-def test_no_results_retains_existing_model_probability():
-    learner = mp.learn([], NOW, lambda c: None)
-    assert learner["status"] == "awaiting_prior_paper_results"
-    assert learner["success_tilt"] == {}
-    rows = [candidate(50, p=0.7)]
-    before = deepcopy(rows)
-    mp.apply_learning(rows, learner)
-    assert rows == before
+def test_missing_source_never_uses_old_base_as_fallback():
+    c=candidate(1,date=DAY)
+    c.pop('ml_inputs')
+    l=mp.learn([receipt(DAY,[c])],NOW,lambda c:(2,0))
+    assert l['fixtures'] == 0
+    assert l['training_admission']['excluded_by_reason'] == {'source_partition_unavailable_or_unbound':1}
 
 
-def test_learning_never_trains_on_todays_outcomes():
-    today_cs = [candidate(i, date="2026-11-02", p=0.5) for i in range(2)]
-    learner = mp.learn([receipt("2026-11-02", today_cs)], NOW, lambda c: (2, 0))
-    assert learner["fixtures"] == 0
-    assert learner["status"] == "awaiting_prior_paper_results"
+@pytest.mark.parametrize('score',[None,(1,None),(True,2),(-1,2),(1.5,2),(1,2,3)])
+def test_invalid_or_unresolved_regulation_labels_are_not_invented(score):
+    l=mp.learn([receipt(DAY,[candidate(1,date=DAY)])],NOW,lambda c:score)
+    assert l['fixtures'] == l['observations'] == 0
 
 
-def test_evidence_smoothing_softens_early_swings():
-    few = [candidate(i, date=YESTERDAY, p=0.5) for i in range(2)]
-    many = [candidate(i, date=YESTERDAY, p=0.5) for i in range(40)]
-    few_model = mp.learn([receipt(YESTERDAY, few)], NOW, lambda c: (2, 0))
-    many_model = mp.learn([receipt(YESTERDAY, many)], NOW,
-                          lambda c: (2, 0) if int(c["candidate_id"]) % 4 else (0, 2))
-    assert few_model["smoothing_factor"] == 2 / 7
-    assert many_model["smoothing_factor"] == 40 / 45
-    few_rows, many_rows = [candidate(90, p=0.5)], [candidate(91, p=0.5)]
-    mp.apply_learning(few_rows, few_model)
-    mp.apply_learning(many_rows, many_model)
-    # Same direction, but the thin-evidence shift is much gentler.
-    assert 0.5 < few_rows[0]["probability"] < many_rows[0]["probability"]
+def test_earliest_conflicting_partitions_are_not_selected_by_outcome_or_old_model_n():
+    a=candidate(1,date=DAY,p=.8)
+    b=deepcopy(a);b['candidate_id']='other'
+    b['ml_inputs']['values'].update(forecast_1x2_home_mean=.6,forecast_1x2_draw_mean=.2,forecast_1x2_away_mean=.2)
+    l=mp.learn([receipt(DAY,[a,b])],NOW,lambda c:(2,0))
+    assert l['fixtures'] == 0
+    assert l['training_admission']['excluded_by_reason'] == {'conflicting_earliest_source_partition':1}
 
 
-def test_missing_sklearn_degrades_to_tilt_only_not_lane_failure(monkeypatch):
-    import sys
-
-    for name in ("sklearn", "sklearn.exceptions", "sklearn.linear_model"):
-        monkeypatch.setitem(sys.modules, name, None)
-    cs = [candidate(1, date=YESTERDAY, p=0.5, bucket="CAUTION"),
-          candidate(2, date=YESTERDAY, p=0.5, bucket="RARE")]
-    lookup = lambda c: (2, 0) if c["bucket"] == "CAUTION" else (0, 2)
-    learner = mp.learn([receipt(YESTERDAY, cs)], NOW, lookup)
-    assert learner["status"] == "learning_fit_unavailable_existing_model_retained"
-    assert learner["success_tilt"]["bucket:CAUTION"]["tilt_logit"] > 0
-    rows = [candidate(50, p=0.5, bucket="CAUTION")]
-    mp.apply_learning(rows, learner)
-    assert rows[0]["probability"] > 0.5  # success tilt still applies
+def test_later_snapshots_cannot_replace_earliest_training_inputs():
+    a=receipt(DAY,[candidate(1,date=DAY,p=.8)])
+    b=receipt(DAY,[candidate(1,date=DAY,p=.6)])
+    b['captured_at']=DAY+'T06:30:00+00:00'
+    l=mp.learn([b,a],NOW,lambda c:(2,0))
+    assert l == mp.learn([a],NOW,lambda c:(2,0))
 
 
-def test_broken_sklearn_module_degrades_to_tilt_only(monkeypatch):
-    import sys
-    import types
-
-    broken = types.ModuleType("sklearn")
-    broken.__path__ = []
-    monkeypatch.setitem(sys.modules, "sklearn", broken)
-    monkeypatch.delitem(sys.modules, "sklearn.exceptions", raising=False)
-    monkeypatch.delitem(sys.modules, "sklearn.linear_model", raising=False)
-    cs = [candidate(1, date=YESTERDAY, p=0.5), candidate(2, date=YESTERDAY, p=0.5)]
-    learner = mp.learn([receipt(YESTERDAY, cs)], NOW,
-                       lambda c: (2, 0) if c["candidate_id"] == "1" else (0, 2))
-    assert learner["status"] in (
-        "learning_fit_unavailable_existing_model_retained", "dynamic_success_tilt_only")
-    assert learner["observations"] == 2
+def test_no_model_choice_and_fit_failure_never_reverts_to_legacy(monkeypatch):
+    import scipy.optimize
+    class Failed:
+        success=False
+        x=.5
+    monkeypatch.setattr(scipy.optimize,'minimize_scalar',lambda *a,**kw:Failed())
+    with pytest.raises(ValueError,match='no old-model fallback'):
+        mp.learn([receipt(DAY,[candidate(1,date=DAY)])],NOW,lambda c:(2,0))
+    with pytest.raises(TypeError):
+        mp.learn([],NOW,lambda c:None,method='poisson')
+    with pytest.raises(ValueError,match='aware'):
+        mp.learn([],NOW.replace(tzinfo=None),lambda c:None)
 
 
-def test_success_tilt_uses_crossfit_not_insample_reference():
-    cs = [candidate(1, date=YESTERDAY, p=0.5, bucket="CAUTION"),
-          candidate(2, date=YESTERDAY, p=0.5, bucket="RARE")]
-    learner = mp.learn([receipt(YESTERDAY, cs)], NOW,
-                       lambda c: (2, 0) if c["bucket"] == "CAUTION" else (0, 2))
-    # One fixture per bucket: in-sample calibration could memorise the bucket
-    # and erase the residual; cross-fitting cannot, so the tilt survives.
-    assert learner["success_tilt_reference"] in (
-        "cross_fitted_calibration_out_of_sample", "base_probability")
-    assert learner["success_tilt"]["bucket:CAUTION"]["tilt_logit"] > 0.4
-    assert learner["success_tilt"]["bucket:RARE"]["tilt_logit"] < -0.4
+@pytest.mark.parametrize('bad',[True,-.1,1.1,float('nan'),float('inf'),None,'0.5'])
+def test_invalid_or_tampered_single_parameter_model_fails_closed(bad):
+    m=model();m['power']=bad
+    with pytest.raises((ValueError,TypeError)):
+        mp.apply_learning([candidate(1)],m)
 
 
-def test_correlated_group_tilts_average_not_stack():
-    model = {"status": "awaiting_prior_paper_results", "smoothing_factor": 1.0,
-             "success_tilt": {"bucket:CAUTION": {"tilt_logit": 0.5},
-                              "market:1x2": {"tilt_logit": 0.5},
-                              "gap:source_unavailable": {"tilt_logit": 0.5}}}
-    rows = [candidate(50, p=0.5)]
-    mp.apply_learning(rows, model)
-    assert rows[0]["probability"] == pytest.approx(0.622459, abs=1e-6)
-
-
-def test_malformed_historical_candidates_are_skipped_not_fatal():
-    good = candidate(1, date=YESTERDAY, p=0.5)
-    bad = candidate(2, date=YESTERDAY, p=0.5)
-    bad.pop("bucket")
-    worse = candidate(3, date=YESTERDAY, p=0.5)
-    worse["base_probability"] = 1.5
-    learner = mp.learn([receipt(YESTERDAY, [good, bad, worse])], NOW, lambda c: (2, 0))
-    assert learner["fixtures"] == 1 and learner["observations"] == 1
+def test_json_serialization_and_atomic_batch_rejection():
+    import json
+    m=json.loads(json.dumps(model()))
+    a,b=candidate(1),candidate(2)
+    b['base_partition'][0][2]=1.1
+    before=deepcopy([a,b])
+    with pytest.raises(ValueError):mp.apply_learning([a,b],m)
+    assert [a,b] == before
+    mp.apply_learning([a],m)
+    assert a['forecast_model_key'] == m['model_key']
