@@ -15,13 +15,10 @@ from edgefactory import ml_paper as mp
 def modest_edge_slate(now=NOW):
     rows = slate(now)
     for row in rows:
-        model = row['statistical_profile']['ml_model']
-        # Native model fixture: 55% home rather than 70%, preserving all guards.
-        model['intercept'] = [math.log(p) for p in (.2, .2, .35, .25)]
-        model.pop('model_key')
-        model['model_key'] = hashlib.sha256(
-            json.dumps(model, sort_keys=True, allow_nan=False).encode()).hexdigest()
-        row['statistical_profile']['ml_inputs']['model_key'] = model['model_key']
+        # Same modest 55% home forecast as before, now supplied directly by
+        # source observations rather than fabricated score-class intercepts.
+        row['statistical_profile']['ml_inputs']['values'].update(
+            forecast_1x2_home_mean=.55, forecast_1x2_draw_mean=.2, forecast_1x2_away_mean=.25)
     return rows
 
 
