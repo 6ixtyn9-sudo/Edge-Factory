@@ -19,7 +19,7 @@ from edgefactory.sources import oddspapi_odds as op
 
 @pytest.fixture
 def evidence():
-    return json.loads((Path(__file__).parent / 'fixtures/ml_outlier_2026-11-04.json').read_text())
+    return json.loads((Path(__file__).parent / 'fixtures/oddspapi_bookings_2026-11-04.json').read_text())
 
 
 def entry_from_census(row):
@@ -111,7 +111,7 @@ def test_actual_generation_three_quotes_are_counted_stale_in_main_reader(tmp_pat
 
 def test_appending_new_generation_never_promotes_legacy_rows(tmp_path, monkeypatch, evidence):
     monkeypatch.setattr(cap, 'OUT_DIR', tmp_path)
-    day = evidence['candidate']['date']
+    day = evidence['date']
     path = tmp_path / 'oddspapi_odds_2026-11.csv.gz'
     rows = evidence['normalized_quote_witnesses']
     with gzip.open(path, 'wt', encoding='utf-8', newline='') as fh:

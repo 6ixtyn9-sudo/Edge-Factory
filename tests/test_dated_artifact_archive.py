@@ -59,7 +59,7 @@ def test_boundary_future_unknown_monthly_state_and_special_receipts_stay(tmp_pat
 
 
 def test_latest_human_card_is_kept_even_after_a_long_gap(tmp_path):
-    for prefix in ("auto_tickets", "autobets_enh_tickets", "autobets_ML"):
+    for prefix in ("auto_tickets", "autobets_enh_tickets"):
         older = put(tmp_path, f"{prefix}_2026-08-01.txt")
         latest = put(tmp_path, f"{prefix}_2026-08-02.txt")
         archive_dated_artifacts(tmp_path, today=TODAY)

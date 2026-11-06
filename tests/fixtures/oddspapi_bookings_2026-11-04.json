@@ -1,0 +1,466 @@
+{
+  "description": "Exact source-only subset retained for existing shared OddsPapi schema/market regressions. No ML models, forecasts, learned state or accounting.",
+  "provenance": {
+    "source_git_blob": "d6d2178462cd9a5bab10a9b7ea186e4e928e298c",
+    "extraction": "market_census and normalized_quote_witnesses copied unchanged; date from original candidate.date"
+  },
+  "date": "2026-11-04",
+  "market_census": {
+    "101022": {
+      "catalog": true,
+      "count": 52,
+      "handicap": 0.5,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101024": {
+      "catalog": true,
+      "count": 1,
+      "handicap": 1.0,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101026": {
+      "catalog": true,
+      "count": 201,
+      "handicap": 1.5,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101028": {
+      "catalog": true,
+      "count": 10,
+      "handicap": 2.0,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101030": {
+      "catalog": true,
+      "count": 282,
+      "handicap": 2.5,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101032": {
+      "catalog": true,
+      "count": 1,
+      "handicap": 3.0,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101034": {
+      "catalog": true,
+      "count": 144,
+      "handicap": 3.5,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101038": {
+      "catalog": true,
+      "count": 39,
+      "handicap": 4.5,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101042": {
+      "catalog": true,
+      "count": 26,
+      "handicap": 5.5,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101046": {
+      "catalog": true,
+      "count": 12,
+      "handicap": 6.5,
+      "label": "Bookings - Over Under Team 1",
+      "market_type": "teamtotals-bookings-team1",
+      "period": "fulltime",
+      "type": "team_totals_home"
+    },
+    "101062": {
+      "catalog": true,
+      "count": 32,
+      "handicap": 0.5,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101064": {
+      "catalog": true,
+      "count": 4,
+      "handicap": 1.0,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101066": {
+      "catalog": true,
+      "count": 153,
+      "handicap": 1.5,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101068": {
+      "catalog": true,
+      "count": 1,
+      "handicap": 2.0,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101070": {
+      "catalog": true,
+      "count": 232,
+      "handicap": 2.5,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101072": {
+      "catalog": true,
+      "count": 2,
+      "handicap": 3.0,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101074": {
+      "catalog": true,
+      "count": 244,
+      "handicap": 3.5,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101076": {
+      "catalog": true,
+      "count": 1,
+      "handicap": 4.0,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101078": {
+      "catalog": true,
+      "count": 110,
+      "handicap": 4.5,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101082": {
+      "catalog": true,
+      "count": 28,
+      "handicap": 5.5,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101086": {
+      "catalog": true,
+      "count": 15,
+      "handicap": 6.5,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101090": {
+      "catalog": true,
+      "count": 3,
+      "handicap": 7.5,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "101094": {
+      "catalog": true,
+      "count": 3,
+      "handicap": 8.5,
+      "label": "Bookings - Over Under Team 2",
+      "market_type": "teamtotals-bookings-team2",
+      "period": "fulltime",
+      "type": "team_totals_away"
+    },
+    "10761": {
+      "catalog": true,
+      "count": 12,
+      "handicap": 0.0,
+      "label": "2Up - Full Time Result",
+      "market_type": "2up",
+      "period": "fulltime",
+      "type": "1x2"
+    },
+    "10914": {
+      "catalog": true,
+      "count": 18,
+      "handicap": 0.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10918": {
+      "catalog": true,
+      "count": 41,
+      "handicap": 1.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10920": {
+      "catalog": true,
+      "count": 8,
+      "handicap": 2.0,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10922": {
+      "catalog": true,
+      "count": 133,
+      "handicap": 2.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10924": {
+      "catalog": true,
+      "count": 19,
+      "handicap": 3.0,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10926": {
+      "catalog": true,
+      "count": 192,
+      "handicap": 3.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10928": {
+      "catalog": true,
+      "count": 22,
+      "handicap": 4.0,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10930": {
+      "catalog": true,
+      "count": 251,
+      "handicap": 4.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10932": {
+      "catalog": true,
+      "count": 49,
+      "handicap": 5.0,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10934": {
+      "catalog": true,
+      "count": 354,
+      "handicap": 5.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10936": {
+      "catalog": true,
+      "count": 45,
+      "handicap": 6.0,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10938": {
+      "catalog": true,
+      "count": 250,
+      "handicap": 6.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10940": {
+      "catalog": true,
+      "count": 19,
+      "handicap": 7.0,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10942": {
+      "catalog": true,
+      "count": 201,
+      "handicap": 7.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10944": {
+      "catalog": true,
+      "count": 8,
+      "handicap": 8.0,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10946": {
+      "catalog": true,
+      "count": 66,
+      "handicap": 8.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10950": {
+      "catalog": true,
+      "count": 34,
+      "handicap": 9.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10954": {
+      "catalog": true,
+      "count": 16,
+      "handicap": 10.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10958": {
+      "catalog": true,
+      "count": 16,
+      "handicap": 11.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10962": {
+      "catalog": true,
+      "count": 6,
+      "handicap": 12.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10966": {
+      "catalog": true,
+      "count": 6,
+      "handicap": 13.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    },
+    "10970": {
+      "catalog": true,
+      "count": 6,
+      "handicap": 14.5,
+      "label": "Bookings - Over Under Full Time",
+      "market_type": "totals-bookings",
+      "period": "fulltime",
+      "type": "totals"
+    }
+  },
+  "normalized_quote_witnesses": [
+    {
+      "away": "Real Madrid",
+      "bookmaker": "bet365",
+      "bookmaker_market_id": "10896",
+      "captured_at": "2026-11-04T13:18:30.522185+00:00",
+      "date": "2026-11-04",
+      "home": "AEK Athens",
+      "kickoff": "2026-11-04T17:45:00.000Z",
+      "league": "",
+      "market": "ou_3.5",
+      "odds": "2.2",
+      "outcome_key": "10926",
+      "provider_changed_at": "2026-11-04T10:57:45.492Z",
+      "published_at": "",
+      "schema_version": "3",
+      "selection": "over",
+      "source": "oddspapi",
+      "source_type": "odds",
+      "sport": "soccer"
+    },
+    {
+      "away": "Real Madrid",
+      "bookmaker": "bet365",
+      "bookmaker_market_id": "10904",
+      "captured_at": "2026-11-04T13:18:30.522185+00:00",
+      "date": "2026-11-04",
+      "home": "AEK Athens",
+      "kickoff": "2026-11-04T17:45:00.000Z",
+      "league": "",
+      "market": "tt_away_3.5",
+      "odds": "19.0",
+      "outcome_key": "101074",
+      "provider_changed_at": "2026-11-04T10:12:41.313Z",
+      "published_at": "",
+      "schema_version": "3",
+      "selection": "over",
+      "source": "oddspapi",
+      "source_type": "odds",
+      "sport": "soccer"
+    }
+  ]
+}

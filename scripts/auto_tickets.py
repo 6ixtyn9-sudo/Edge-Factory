@@ -4124,73 +4124,8 @@ def write_decision_receipt(context, plan, *, frozen=False):
         print(f"::warning::DECISION RECEIPT NOT PERSISTED: {type(exc).__name__}: {exc}", file=sys.stderr)
 
 
-def ml_paper_score_lookup(scores, *, now=None):
-    """Exact regulation results on the leg's SAST kickoff day, never card day.
-
-    No +/-day, truncated-name or receipt-date rescue. The shared result store
-    is date/pair keyed, not provider-event keyed: that remaining limitation is
-    explicit, and ambiguous exact aliases stay unresolved. UTC/SAST calendar
-    boundaries stay unresolved until stronger donor event/timezone evidence
-    exists. A future kickoff cannot settle against an already-present score.
-    """
-    from datetime import UTC
-
-    from edgefactory.odds_normalization import parse_zoned_timestamp
-    def lookup(candidate):
-        kickoff = parse_zoned_timestamp(candidate.get('kickoff_utc'))
-        at = now if now is not None else datetime.now(TZ)
-        if kickoff is None or at.tzinfo is None or kickoff >= at:
-            return None
-        if kickoff.astimezone(UTC).date() != kickoff.astimezone(TZ).date():
-            return None  # donor calendar basis is unproven; never guess
-        day = kickoff.astimezone(TZ).date().isoformat()
-        values = {scores[(day, hk, ak)]
-                  for hk, ak, narrow in _result_write_key_specs(
-                      candidate['home'], candidate['away'])
-                  if not narrow and (day, hk, ak) in scores}
-        return next(iter(values)) if len(values) == 1 else None
-    return lookup
 
 
-def _run_ml_paper():
-    """Independent paper lifecycle; never read/write live state or live plans."""
-    if os.environ.get('EDGE_FACTORY_ML_PAPER', '1') != '1':
-        return
-    try:
-        from edgefactory import ml_paper
-        now = datetime.now(TZ)
-        history = ml_paper.receipts(LOCALDATA)
-        lookup = ml_paper_score_lookup(load_settled_scores() if history else {})
-        # Consume only existing, timestamped model/forecast rows. The future
-        # planner is the existing engine, not a new feed or a future-data fill.
-        slate, found = [], False
-        for path in [LOCALDATA / "picks_today.json", *sorted(LOCALDATA.glob("picks_next_*days.json"))]:
-            if not path.exists():
-                continue
-            rows = json.loads(path.read_text())
-            if not isinstance(rows, list):
-                raise TypeError(f"invalid ML forecast slate: {path.name}")
-            slate.extend(rows)
-            found = True
-        if found:
-            row = ml_paper.capture_rolling({"build_at": now.isoformat(), "slate": slate},
-                root=LOCALDATA, score_lookup=lookup, kickoff_fn=parse_kickoff_proven,
-                source_guard=execution_source_rejection, min_leg_odds=1.0)
-        else:
-            ml_paper.migrate_receipts(LOCALDATA)
-            row = None  # absent input is not a fabricated NO BET decision
-        ml_paper.publish(LOCALDATA, lookup)
-        card = row or ml_paper.latest_card(LOCALDATA)
-        if card is not None:
-            # Report the complete day's immutable publications, not merely a
-            # last NO BET/addition that could hide earlier outstanding tickets.
-            daily_card = LOCALDATA / f"{ml_paper.PREFIX}_{card['date']}.txt"
-            print(daily_card.read_text())
-        return True
-    except Exception as exc:
-        print(f"::warning::autobets_ML unavailable; live lanes unchanged: "
-              f"{type(exc).__name__}: {exc}", file=sys.stderr)
-        return False
 
 
 # ---------------- settlement + take-profit notification ----------------
@@ -6489,13 +6424,7 @@ def main():
                          "operator-verified final score (Config/verified_results.json)")
     ap.add_argument("--enhancements", action="store_true",
                     help=f"the enhancement lane's own slip (needs {ENH_BOARD_FLAG}=1)")
-    ap.add_argument("--autobets-ml", action="store_true",
-                    help="independent paper draft/freeze/report only; never touch live financial state")
     args = ap.parse_args()
-    if args.autobets_ml:
-        if len(sys.argv) != 2:
-            ap.error("--autobets-ml is standalone; no live lane/reset/backfill/force arguments")
-        return 1 if _run_ml_paper() is False else 0
     if args.rebuild_unplaced and (not args.enhancements or args.force or args.reset
                                  or args.backfill or args.settle or args.status
                                  or args.apply_unplaced_resets):

@@ -56,32 +56,6 @@ def _score_pair(row, prefix=""):
         v is not None and v >= 0 and v.is_integer() for v in pair) else None
 
 
-def _betexplorer_score_is_competition_metadata(row, pair):
-    """Reject evidenced URL-year contamination, not a guessed soccer score cap.
-
-    Retained BE rows contain scores such as 2025:2026 and 19:2026, matching
-    the competition/season slug rather than a result. Restrict the evidence to
-    the football competition segment of an actual BE URL; team/event IDs,
-    query strings and another provider's URL are not score evidence.
-    This is used only by prospective regulation cohorts/form, not settlement
-    or the Main remine path. Raw donors and frozen predictions stay untouched.
-    """
-    import re
-    from urllib.parse import urlsplit
-
-    try:
-        url = urlsplit(str(row.get('match_url') or ''))
-        parts = url.path.strip('/').split('/')
-        if (url.scheme not in ('http', 'https')
-                or url.hostname not in ('betexplorer.com', 'www.betexplorer.com')
-                or len(parts) < 5 or parts[0] != 'football'):
-            return False
-        years = {int(v) for v in re.findall(r'(?<!\d)(\d{4})(?!\d)', parts[2])}
-        return any(value in years for value in pair)
-    except ValueError:
-        return False
-
-
 def _remine_key(row):
     home, away = source_team_key(row.get("home")), source_team_key(row.get("away"))
     if min(len(home), len(away)) < 4 or home == away:
@@ -214,7 +188,6 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
     donors = {"zulubet", "statarea", "vitibet", "scoutingstats", "prosoccer",
               "bettingclosed", "betexplorer"}
     blocked = set()
-    metadata_scores = []
     for source in donors:
         for row in source_rows.get(source, []):
             key = _remine_key(row)
@@ -232,22 +205,9 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
                     continue
                 pair = _score_pair(row, prefix)
                 if pair is not None:
-                    if (regulation_only and source == 'betexplorer'
-                            and _betexplorer_score_is_competition_metadata(row, pair)):
-                        metadata_scores.append(dict(fixture=list(key), period=period,
-                            score=list(pair), match_url=str(row['match_url'])))
-                        continue  # omit this donor/period, not a clean independent score
                     scores[key][period].add(pair)
                     if include_form_names and period == 'ft':
                         form_names[key].add((str(row['home']), str(row['away'])))
-    if regulation_only and 'betexplorer' in source_rows:
-        evidence = sorted(metadata_scores, key=lambda r: json.dumps(r, sort_keys=True))
-        coverage['betexplorer']['score_admission'] = dict(
-            policy='betexplorer_competition_year_score_excluded_v1',
-            excluded_donor_period_occurrences=len(evidence),
-            excluded_fixtures=len({tuple(r['fixture']) for r in evidence}),
-            excluded_by_period=dict(sorted(Counter(r['period'] for r in evidence).items())),
-            evidence_sha256=hashlib.sha256(json.dumps(evidence, sort_keys=True).encode()).hexdigest())
     resolved = {key: {period: next(iter(values)) for period, values in periods.items()
                       if len(values) == 1} for key, periods in scores.items()
                 if key not in blocked}
@@ -714,9 +674,6 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
               'contract_id': identity, 'as_of_exclusive': as_of,
               'window_start': start, 'selection': selection,
               'parent_hits': parent_hits, 'parent_hit_rate': parent_hits / n}
-    if 'score_admission' in snapshot[0].get('betexplorer', {}):
-        # Outside the signed fit: unchanged clean training keeps its model key.
-        result['result_score_admission'] = dict(snapshot[0]['betexplorer']['score_admission'])
     for goals in (2, 3, 4, 5):
         result[f'over{goals - 1}5'] = rate(lambda h, a: h + a >= goals)
     result['btts'] = rate(lambda h, a: h > 0 and a > 0)

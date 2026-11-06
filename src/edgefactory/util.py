@@ -1130,7 +1130,7 @@ def freeze_timestamp_matches(frozen_at, build_at):
 # financial state are deliberately outside this exact daily-family allowlist.
 DATED_ARCHIVE_FAMILIES = {
     "picks": {"json", "txt"}, "picks_morning": {"json"},
-    "auto_tickets": {"txt"}, "autobets_enh_tickets": {"txt"}, "autobets_ML": {"txt"},
+    "auto_tickets": {"txt"}, "autobets_enh_tickets": {"txt"},
     "source_health": {"json"}, "betminer_probe": {"json"},
     "oddspapi_capture": {"json"}, "theoddsapi_capture": {"json"},
     "card_enrich_shadow": {"json"}, "remine_audit": {"jsonl"},
@@ -1230,7 +1230,7 @@ def archive_dated_artifacts(localdata, *, today=None, keep_days=DATED_ARCHIVE_KE
     latest_cards = {}
     for path in base.iterdir():
         match = _DATED_ARTIFACT_RE.fullmatch(path.name)
-        if (match and match["family"] in {"auto_tickets", "autobets_enh_tickets", "autobets_ML"}
+        if (match and match["family"] in {"auto_tickets", "autobets_enh_tickets"}
                 and match["ext"] == "txt" and dated_archive_path(base, path.name) is not None):
             family = match["family"]
             latest_cards[family] = max(latest_cards.get(family, ""), path.name)

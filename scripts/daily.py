@@ -350,12 +350,8 @@ def capture_theodds_snapshot(target_date: str, trigger: str) -> None:
     first snapshot once per fixture
     per day, close snapshot once per fixture inside the pre-kickoff window;
     0 credits otherwise. Key rotation + monthly budget live in the adapter."""
-    # Only the existing candidate-price capture may request the bounded ML
-    # refresh; CLV/end-of-run calls retain their historical zero-extra-cost due rules.
-    ml_flag = " --ml-precutoff" if (trigger == "candidate_price_snapshot"
-                                    and os.environ.get("EDGE_FACTORY_ML_PAPER", "1") == "1") else ""
     run_soft(
-        f"PYTHONPATH=src python3 scripts/capture_theodds.py --date {target_date} --auto{ml_flag}",
+        f"PYTHONPATH=src python3 scripts/capture_theodds.py --date {target_date} --auto",
         f"theoddsapi capture {target_date} [{trigger}]",
     )
 
@@ -390,11 +386,9 @@ def capture_betexplorer_snapshot(target_date: str, trigger: str) -> None:
         max_fixtures = max(1, min(24, int(os.environ.get("EDGE_FACTORY_BETEXPLORER_MAX_FIXTURES", "12"))))
     except (TypeError, ValueError):
         max_fixtures = 12
-    ml_flag = " --ml-precutoff" if (trigger == "candidate_price_snapshot"
-                                    and os.environ.get("EDGE_FACTORY_ML_PAPER", "1") == "1") else ""
     run_soft(
         f"PYTHONPATH=src python3 scripts/capture_betexplorer.py --date {target_date} "
-        f"--max-fixtures {max_fixtures}{ml_flag}",
+        f"--max-fixtures {max_fixtures}",
         f"betexplorer bounded capture {target_date} [{trigger}]",
     )
 
@@ -440,18 +434,9 @@ def finalize_priced_candidate_slate(target_date: str, *, phase5_shadow: bool = F
         f"scripts/picks_today.py {target_date}",
         f"picks_today {target_date} (final priced card)",
     )
-    # Consume the fresh final card NOW, before archive stacking, notifications,
-    # future planning, CLV and audits can delay/replace it. ML paper freezes
-    # each new rolling decision immediately; Main/ENH clocks are unchanged.
-    run_ml_paper()
     return priced_as_of
 
 
-def run_ml_paper():
-    run_soft(
-        "PYTHONPATH=src python3 scripts/auto_tickets.py --autobets-ml",
-        "autobets_ML PAPER (rolling next 24h; immutable publication)",
-    )
 
 
 def run(cmd: str, label: str | None = None) -> None:
@@ -733,7 +718,6 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
         )
     )
     write_future_outputs(all_picks, days, run_as_of)
-    run_ml_paper()  # newly available overnight rows; never revise prior tickets
 
 
 def generate_forecast_report(target_date: str, flabel: str, picks: list[dict[str, Any]]) -> Path | None:
@@ -1053,7 +1037,6 @@ def run_pipeline(
             target_picks_text = target_archive.read_text()
             restore_target_picks(target_picks_text)
             save_morning_baseline(target_date, target_picks_text, overwrite=False)
-            run_ml_paper()  # seal/report even when the official card is reused
             print(f"  reused archive: {target_archive}")
         else:
             if target_archive.exists() and not target_is_frozen:

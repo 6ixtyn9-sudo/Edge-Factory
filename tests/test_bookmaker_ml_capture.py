@@ -1,8 +1,6 @@
-"""Existing bookmaker-price collection through to ML admission. Offline only."""
+"""Existing bookmaker-price collection guards. Offline only; retired ML is not scheduled."""
 
-import hashlib
 import json
-from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -191,7 +189,7 @@ def test_cli_flag_outside_window_keeps_default_candidate_scope(tmp_path, now):
     assert receipt["candidate_fixtures"] == receipt["network_attempted"] == 0
 
 
-def test_only_candidate_pass_requests_new_refresh(monkeypatch):
+def test_daily_capture_never_requests_retired_ml_refresh(monkeypatch):
     commands = []
     monkeypatch.setattr(daily, "run_soft", lambda command, label: commands.append(command))
     monkeypatch.setenv("EDGE_FACTORY_ML_PAPER", "1")
@@ -199,82 +197,5 @@ def test_only_candidate_pass_requests_new_refresh(monkeypatch):
     daily.capture_betexplorer_snapshot(DAY, "end_of_run")
     monkeypatch.setenv("EDGE_FACTORY_ML_PAPER", "0")
     daily.capture_betexplorer_snapshot(DAY, "candidate_price_snapshot")
-    assert "--ml-precutoff" in commands[0]
-    assert all("--ml-precutoff" not in command for command in commands[1:])
-
-
-def test_actual_collector_refresh_reaches_ml_without_quote_or_gate_shortcuts(tmp_path, monkeypatch):
-    from test_betexplorer_board_admission import board_only
-    from test_enh_pricing import BE_DAY, _be_pick, _write_be_ledger
-    from test_ml_paper import pick as model_pick
-
-    import scripts.auto_tickets as at
-    from edgefactory import ml_paper as mp
-    from edgefactory.consensus_contracts import enhancement_fixture_identity
-    from edgefactory.enh_pricing import load_prices_index
-
-    monkeypatch.setenv("EDGE_FACTORY_ENH_BOARD", "1")
-    _, fixture = board_only(tmp_path)
-    row = _be_pick("match_over_25")
-    model_row = model_pick()
-    row.update(statistical_profile=deepcopy(model_row["statistical_profile"]), avg_p=75,
-               bucket="CAUTION", contract_id=model_row["contract_id"], pick="home",
-               market="ou_2.5", league=fixture["league"],
-               kickoff_utc=f"{BE_DAY}T20:00:00Z", as_of=f"{BE_DAY}T06:30:00Z")
-    profile = row["statistical_profile"]
-    model = profile["ml_model"]
-    model.update(as_of_exclusive=BE_DAY, train_last_date="2026-10-11")
-    model["model_key"] = hashlib.sha256(json.dumps(
-        {k: v for k, v in model.items() if k != "model_key"}, sort_keys=True,
-        allow_nan=False).encode()).hexdigest()
-    profile["as_of_exclusive"] = BE_DAY
-    profile["ml_inputs"].update(fixture=enhancement_fixture_identity(row), model_key=model["model_key"])
-    now = datetime.fromisoformat(row["as_of"])
-    freeze = now.replace(hour=7, minute=0)
-
-    class Clock(datetime):
-        @classmethod
-        def now(cls, tz=None):
-            return now.astimezone(tz) if tz else now.replace(tzinfo=None)
-
-    monkeypatch.setattr(be, "datetime", Clock)
-    localdata = tmp_path / "localdata"
-    monkeypatch.setattr(capture, "LOCALDATA", localdata)
-    monkeypatch.setattr(be, "LOCALDATA", localdata)
-    old = (now - timedelta(hours=13)).isoformat()
-    fixture["captured_at"] = old
-    _write_be_ledger(tmp_path, {"event": fixture})
-    # Keep ONLY the independent schedule witness, not its odds.
-    (localdata / "oddspapi_odds_2026-10.csv.gz").unlink()
-    (localdata / "picks_today.json").write_text(json.dumps([row]))
-    quote = dict(row, market="1x2", selection="home", odds=3.1,
-                 kickoff=row["kickoff_utc"], captured_at=old)
-    be._write_fixture_cache(row, BE_DAY, [quote], detail=True)
-
-    def admitted():
-        return mp.candidates([row], BE_DAY, now, load_prices_index(tmp_path, BE_DAY),
-                             kickoff_fn=at.parse_kickoff_proven,
-                             source_guard=at.execution_source_rejection,
-                             min_leg_odds=1.0, freeze_at=freeze)[0]
-
-    assert admitted() == []  # actual twelve-hour ML gate rejects stale named quotes
-    calls = []
-    matched = dict(fixture, date=BE_DAY, kickoff_utc=row["kickoff_utc"])
-    monkeypatch.setattr(be, "fetch_day_matches", lambda day: [matched])
-
-    def fetch_odds(url, event):
-        calls.append(event)
-        be.LAST_MATCH_DETAIL = {"markets": fixture["markets"], "page": None,
-                                "page_param": "1", "captured_at": now.isoformat()}
-        return fixture["best_1x2"]
-
-    monkeypatch.setattr(be, "fetch_match_odds", fetch_odds)
-    receipt = capture.capture(BE_DAY, max_fixtures=1, ml_precutoff=True, now=now)
-    assert receipt["ml_refresh_attempted"] == receipt["network_attempted"] == 1
-    candidates = admitted()
-    assert any(c["market"] == "btts_no" and c["price_source"] == "betexplorer"
-               for c in candidates)
-    assert all(c["price_provenance"]["kind"] == "betexplorer_pre_cutoff_v1" for c in candidates)
-    assert len(calls) == 1
-    capture.capture(BE_DAY, max_fixtures=1, ml_precutoff=True, now=now)
-    assert len(calls) == 1
+    assert len(commands) == 3
+    assert all("--ml-precutoff" not in command for command in commands)

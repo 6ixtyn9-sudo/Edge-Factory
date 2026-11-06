@@ -1191,3 +1191,69 @@ def test_batched_checkout_failure_is_not_reported_as_success(tmp_path, monkeypat
     monkeypatch.setattr(module, '_run', failing)
     with pytest.raises(RuntimeError, match='could not restore committed localdata batch'):
         module.restore_committed_localdata(repo)
+
+
+@pytest.mark.parametrize('operation', ['restore', 'persist'])
+def test_existing_persistence_drops_deleted_ml_cache_without_touching_shared_data(tmp_path, monkeypatch, operation):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    shared = {
+        'localdata/archive/auto_tickets/2026/09/auto_tickets_2026-09-01.txt': b'Main frozen card\n',
+        'localdata/archive/autobets_enh_tickets/2026/09/autobets_enh_tickets_2026-09-01.txt': b'ENH frozen card\n',
+        'localdata/phase5_reconciliation/shared_reference.bin': b'shared evidence\x00',
+        'localdata/statarea.csv.gz': b'unchanged raw source bytes',
+    }
+    for relative, blob in shared.items():
+        path = repo / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(blob)
+    _git(repo, 'add', '-f', '--', *shared)
+    _git(repo, 'commit', '-qm', 'shared evidence')
+    head = _git(repo, 'rev-parse', 'HEAD').stdout
+    deleted = [
+        'localdata/autobets_ML_state.json',
+        'localdata/autobets_ML_performance.json',
+        'localdata/autobets_ML_2026-11-06.txt',
+        'localdata/autobets_ML_conflicts/old.json',
+        'localdata/phase5_reconciliation/ml_paper_receipts/old.json',
+        'localdata/phase5_reconciliation/ml_paper_receipts/reports/old.txt',
+        'localdata/archive/autobets_ML/2026/09/autobets_ML_2026-09-01.txt',
+    ]
+    for relative in deleted:
+        path = repo / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b'old experiment cache, not a new bankroll')
+        assert _git(repo, 'check-ignore', '-q', relative, check=False).returncode == 0
+    module = _persistence_module()
+    run = module._run
+    def local_only(repo, *args, **kwargs):
+        assert args[0] not in {'push', 'pull', 'fetch'}
+        return run(repo, *args, **kwargs)
+    monkeypatch.setattr(module, '_run', local_only)
+    if operation == 'restore':
+        module.restore_committed_localdata(repo)
+    else:
+        assert module.persist_localdata(repo) == {'status': 'no_changes'}
+    assert all(not (repo / p).exists() for p in deleted)
+    assert all((repo / p).read_bytes() == blob for p, blob in shared.items())
+    assert _git(repo, 'rev-parse', 'HEAD').stdout == head
+    assert _git(repo, 'status', '--porcelain').stdout == ''
+
+
+def test_existing_git_cleanup_does_not_follow_deleted_ml_cache_symlinks(tmp_path):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    _seed_repo(repo)
+    outside = tmp_path / 'outside'
+    outside.mkdir()
+    evidence = outside / 'keep.bin'
+    evidence.write_bytes(b'outside scope')
+    old = repo / 'localdata/phase5_reconciliation/ml_paper_receipts'
+    old.parent.mkdir(parents=True, exist_ok=True)
+    old.symlink_to(outside, target_is_directory=True)
+    root_link = repo / 'localdata/autobets_ML_state.json'
+    root_link.symlink_to(evidence)
+    _persistence_module().restore_committed_localdata(repo)
+    assert not old.is_symlink() and not root_link.is_symlink()
+    assert evidence.read_bytes() == b'outside scope'

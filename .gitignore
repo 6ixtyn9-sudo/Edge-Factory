@@ -221,28 +221,11 @@ localdata/prediction_history_keys.json.gz
 localdata/auto_tickets_????-??-??_decision*.json
 localdata/autobets_enh_tickets_????-??-??_decision*.json
 
-# Independent forward autobets_ML lane: immutable predictions and own performance.
-# Separate prefix; never consumed as a Main/ENH picks or financial-state file.
-# Daily human cards are TXT only; frozen JSON lives under phase5_reconciliation.
-localdata/autobets_ML_20??-??-??.json
-!localdata/autobets_ML_20??-??-??.txt
-!localdata/autobets_ML_performance.json
-!localdata/autobets_ML_performance.txt
-
-# Mutable lane state, matching the Main/ENH state-file convention.
-!localdata/autobets_ML_state.json
-
-# Preserve conflicting paper evidence for review; never silently reset a paper bank.
-!localdata/autobets_ML_integrity_block.json
-!localdata/autobets_ML_conflicts/
-!localdata/autobets_ML_conflicts/**
-
 # Byte-preserving cold daily evidence; current outputs stay at the root.
 !localdata/archive/
 localdata/archive/**
 !localdata/archive/**/
 !localdata/archive/auto_tickets/????/??/auto_tickets_????-??-??.txt
-!localdata/archive/autobets_ML/????/??/autobets_ML_????-??-??.txt
 !localdata/archive/autobets_enh_tickets/????/??/autobets_enh_tickets_????-??-??.txt
 !localdata/archive/betminer_probe/????/??/betminer_probe_????-??-??.json
 !localdata/archive/card_enrich_shadow/????/??/card_enrich_shadow_????-??-??.json
@@ -256,3 +239,8 @@ localdata/archive/**
 !localdata/archive/remine_audit/????/??/remine_audit_????-??-??.jsonl
 !localdata/archive/source_health/????/??/source_health_????-??-??.json
 !localdata/archive/theoddsapi_capture/????/??/theoddsapi_capture_????-??-??.json
+
+# Retired standalone ML experiment: never re-stage stale runner cache artifacts.
+/localdata/autobets_ML*
+/localdata/phase5_reconciliation/ml_paper_receipts/
+/localdata/archive/autobets_ML/
