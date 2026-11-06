@@ -14,7 +14,7 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 39,
+    "ledger_entries": 40,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -53,14 +53,14 @@
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "alarabi|alahlidoha",
+        "fixture": "cacereno|lugo",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "cacereno|lugo",
+        "fixture": "puszczaniepolomice|miedzlegnica",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -71,12 +71,12 @@
   },
   "preflight": {
     "allowance_by_key": {
-      "5b6ed40a": 51
+      "5b6ed40a": 45
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=51 [pools=2 cap=90 reserve=20 spent=5 month=2026-11] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=45 [pools=2 cap=90 reserve=20 spent=5 month=2026-11] -> approved",
     "month": "2026-11",
     "month_spend_by_key": {
       "5b6ed40a": 5
@@ -90,7 +90,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 51,
+    "spendable": 45,
     "verdict": "approved"
   },
   "provenance": {
