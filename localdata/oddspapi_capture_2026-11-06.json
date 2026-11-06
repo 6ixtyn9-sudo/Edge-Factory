@@ -1,18 +1,7 @@
 {
-  "added": 8017,
-  "attempted": 2,
-  "attempted_fixtures": [
-    {
-      "away": "Leicester City",
-      "fixture_id": "id1000001975802970",
-      "home": "Oxford City"
-    },
-    {
-      "away": "Deportivo Alaves",
-      "fixture_id": "id1000000872478700",
-      "home": "Sevilla FC"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-06",
     "keys": 3,
@@ -21,194 +10,16 @@
     "remaining_today": 0,
     "spent_today": 25
   },
-  "budget_deferred": 186,
-  "captured_at": "2026-11-06T16:22:43+00:00",
+  "captured_at": "2026-11-06T19:27:47+00:00",
   "date": "2026-11-06",
   "errors": [],
-  "excluded_nonprematch_fixtures": 0,
-  "excluded_srl_fixtures": 2,
-  "excluded_wrong_sport_fixtures": 0,
-  "fixtures": 349,
-  "future_slate_fixtures": 0,
+  "fixtures": 0,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 667,
-  "markets": {
-    "1x2": 632,
-    "btts": 404,
-    "ou_0.5": 228,
-    "ou_0.75": 30,
-    "ou_1": 44,
-    "ou_1.25": 48,
-    "ou_1.5": 389,
-    "ou_1.75": 180,
-    "ou_2": 234,
-    "ou_2.25": 188,
-    "ou_2.5": 424,
-    "ou_2.75": 278,
-    "ou_3": 310,
-    "ou_3.25": 300,
-    "ou_3.5": 406,
-    "ou_3.75": 170,
-    "ou_4": 130,
-    "ou_4.25": 68,
-    "ou_4.5": 376,
-    "ou_4.75": 34,
-    "ou_5": 91,
-    "ou_5.25": 29,
-    "ou_5.5": 279,
-    "ou_5.75": 15,
-    "ou_6": 17,
-    "ou_6.25": 15,
-    "ou_6.5": 69,
-    "ou_6.75": 17,
-    "ou_7": 15,
-    "ou_7.25": 15,
-    "ou_7.5": 26,
-    "ou_7.75": 10,
-    "ou_8": 10,
-    "ou_8.25": 10,
-    "ou_8.5": 14,
-    "tt_away_0.5": 258,
-    "tt_away_0.75": 2,
-    "tt_away_1": 18,
-    "tt_away_1.5": 360,
-    "tt_away_2": 18,
-    "tt_away_2.25": 2,
-    "tt_away_2.5": 351,
-    "tt_away_3": 16,
-    "tt_away_3.5": 180,
-    "tt_away_4": 18,
-    "tt_away_4.25": 2,
-    "tt_away_4.5": 76,
-    "tt_away_4.75": 2,
-    "tt_away_5": 2,
-    "tt_away_5.25": 2,
-    "tt_away_5.5": 14,
-    "tt_home_0.5": 368,
-    "tt_home_1.5": 360,
-    "tt_home_2": 2,
-    "tt_home_2.25": 2,
-    "tt_home_2.5": 258,
-    "tt_home_2.75": 4,
-    "tt_home_3": 18,
-    "tt_home_3.25": 2,
-    "tt_home_3.5": 160,
-    "tt_home_3.75": 2,
-    "tt_home_4.5": 10,
-    "tt_home_5.5": 5
-  },
-  "markets_source": "cache",
-  "matched": 2,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "market_inactive": 3672,
-    "market_unsupported_cards": 2384,
-    "market_unsupported_clean_sheet": 289,
-    "market_unsupported_corners": 5232,
-    "market_unsupported_correct_score": 907,
-    "market_unsupported_double_chance": 414,
-    "market_unsupported_draw_no_bet": 365,
-    "market_unsupported_early_payout": 91,
-    "market_unsupported_handicap": 5365,
-    "market_unsupported_market_type": 3115,
-    "market_unsupported_non_goal": 188,
-    "market_unsupported_odd_even": 880,
-    "market_unsupported_period": 19765,
-    "market_unsupported_win_to_nil": 607,
-    "outcome_inactive": 1086
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "market_inactive": 3672,
-      "outcome_inactive": 1086
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_cards": 2384,
-      "market_unsupported_clean_sheet": 289,
-      "market_unsupported_corners": 5232,
-      "market_unsupported_correct_score": 907,
-      "market_unsupported_double_chance": 414,
-      "market_unsupported_draw_no_bet": 365,
-      "market_unsupported_early_payout": 91,
-      "market_unsupported_handicap": 5365,
-      "market_unsupported_market_type": 3115,
-      "market_unsupported_non_goal": 188,
-      "market_unsupported_odd_even": 880,
-      "market_unsupported_period": 19765,
-      "market_unsupported_win_to_nil": 607
-    }
-  },
-  "pending_fixtures": 188,
-  "quoted_fixtures": [
-    {
-      "away": "Leicester City",
-      "fixture_id": "id1000001975802970",
-      "home": "Oxford City"
-    },
-    {
-      "away": "Deportivo Alaves",
-      "fixture_id": "id1000000872478700",
-      "home": "Sevilla FC"
-    }
-  ],
-  "reserved_requests": 0,
-  "rows": 8017,
+  "markets": {},
+  "matched": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 17,
-  "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 3,
-  "slate_provider_overlap_fixtures": 9,
-  "slate_unmatched_fixtures": [
-    {
-      "away": "Cracovia Krak\u00f3w",
-      "home": "Wis\u0142a Krak\u00f3w",
-      "league": "Ekstraklasa",
-      "normalized_pair": "cracovia krakow|wisla krakow"
-    },
-    {
-      "away": "Wis\u0142a P\u0142ock",
-      "home": "Motor Lublin",
-      "league": "Ekstraklasa",
-      "normalized_pair": "motor lublin|wisla plock"
-    },
-    {
-      "away": "Metz",
-      "home": "Montpellier",
-      "league": "Ligue 2",
-      "normalized_pair": "metz|montpellier"
-    },
-    {
-      "away": "SpVgg Greuther F\u00fcrth",
-      "home": "Dynamo Dresden",
-      "league": "2. Bundesliga",
-      "normalized_pair": "dynamo dresden|spvgg greuther furth"
-    },
-    {
-      "away": "Strasbourg",
-      "home": "Toulouse",
-      "league": "Ligue 1",
-      "normalized_pair": "strasbourg|toulouse"
-    },
-    {
-      "away": "Borussia M'gladbach",
-      "home": "Hamburger SV",
-      "league": "Bundesliga",
-      "normalized_pair": "borussia m'gladbach|hamburger sv"
-    },
-    {
-      "away": "Lugo",
-      "home": "Cacere\u00f1o",
-      "league": "Primera Division RFEF: Group 1",
-      "normalized_pair": "cacereno|lugo"
-    },
-    {
-      "away": "Aalborg BK",
-      "home": "HB K\u00f8ge",
-      "league": "First Division",
-      "normalized_pair": "aalborg|hb koge"
-    }
-  ],
   "source": "oddspapi_odds",
   "status": "budget"
 }
