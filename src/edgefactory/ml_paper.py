@@ -458,6 +458,44 @@ def hit(market, selection, hs, gs):
 
 
 def probability(weights, market, selection):
+    if isinstance(weights, dict) and "goal_means" in weights:
+        from scipy.stats import poisson, skellam
+        goals = weights["goal_means"]
+        if (not isinstance(goals, (list, tuple)) or len(goals) != 2
+                or any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in goals)):
+            raise ValueError("invalid positive finite goal means")
+        home, away = goals
+        if market in {"1x2", "double_chance"}:
+            ps = {"home": float(skellam.sf(0, home, away)),
+                  "draw": float(skellam.pmf(0, home, away)),
+                  "away": float(skellam.cdf(-1, home, away))}
+            if market == "1x2":
+                return ps.get(selection)
+            sides = {"1x": ("home", "draw"), "x2": ("draw", "away"),
+                     "12": ("home", "away")}.get(selection)
+            return math.fsum(ps[k] for k in sides) if sides else None
+        if market in {"btts_yes", "btts_no"}:
+            yes = (-math.expm1(-home)) * (-math.expm1(-away))
+            return yes if market == "btts_yes" else 1.0 - yes
+        # Exact Poisson CDF/SF, not a truncated score grid or renormalized tail.
+        parts = market.split("_")
+        if (len(parts) == 3 and parts[0] in {"match", "home", "away"}
+                and parts[1] in {"over", "under"} and parts[2] in {"05", "15", "25", "35", "45"}
+                and hit(market, selection, 0, 0) is not None):
+            mean = home + away if parts[0] == "match" else home if parts[0] == "home" else away
+            function = poisson.sf if parts[1] == "over" else poisson.cdf
+            return float(function(int(parts[2]) // 10, mean))
+        if hit(market, selection, 0, 0) is not None:
+            if market.startswith("exact_"):
+                return float(poisson.pmf(int(market.split("_")[1]), home + away))
+            if market.startswith("goal_range_"):
+                bounds = market.split("_")[2:]
+                if bounds[-1] == "plus":
+                    return float(poisson.sf(int(bounds[0]) - 1, home + away))
+                return float(poisson.pmf(list(range(int(bounds[0]), int(bounds[1]) + 1)), home + away).sum())
+            if market in {"team_over_05", "team_over_15"} and selection in {"home", "away"}:
+                return float(poisson.sf(int(market[-2:]) // 10, home if selection == "home" else away))
+        return None
     outcomes = [(hit(market, selection, h, a), w) for h, a, w in weights]
     if any(value is None for value, _ in outcomes):
         return None
@@ -933,8 +971,19 @@ def _crossfit_references(rows, weights, columns):
     return references, used
 
 
-def learn(history, now, score_lookup):
-    """Dynamic learning on this lane's immutable, prior-day forward observations.
+def learn(history, now, score_lookup, *, method="calibration"):
+    """Learn from this lane's immutable, prior-day forward observations.
+
+    ``method="poisson"`` is an OFFLINE replacement, not used by capture. It
+    fits two regularised goal regressions from frozen source/form inputs with
+    one earliest coherent row per fixture. It does not consume legacy model
+    predictions, confidence, prices, buckets, calibration or success tilts.
+    Source aggregates are reusable evidence, NOT a reconstructed raw warehouse;
+    historical result-publication times remain unproven by the current lookup.
+    Fit preprocessing only on admitted training fixtures. No live activation,
+    old-model fallback, hyperparameter/ROI search or probability clipping.
+
+    The default preserves the existing production learning behaviour below.
 
     Two separately auditable layers, refit at every decision from the first
     resolved prior-day results (no evidence gate):
@@ -956,6 +1005,141 @@ def learn(history, now, score_lookup):
     learning candidates. Each decision refits from eligible BASE predictions;
     old fitted coefficients and adjusted probabilities are not training inputs.
     """
+    if method not in {"calibration", "poisson"}:
+        raise ValueError("unknown paper learning method")
+    if method == "poisson":
+        if now.tzinfo is None or now.utcoffset() is None:
+            raise ValueError("goal learning requires an aware decision timestamp")
+        # Offline replacement core. Neither capture path opts into this method.
+        # Fit goals, NOT old score-class probabilities/confidence/tilts/prices.
+        # Retained inputs are aggregate observations, not reconstructed raw feeds.
+        from .consensus_contracts import (
+            ENH_OPTIONAL_FEATURES, REMINE_SOURCES, _enhancement_feature_valid,
+            enhancement_fixture_identity,
+        )
+        import warnings
+        from sklearn.exceptions import ConvergenceWarning
+        from sklearn.linear_model import PoissonRegressor
+
+        today = now.astimezone(LOCAL_TZ).date().isoformat()
+        observations = defaultdict(list)
+        excluded = Counter()
+        for record in history:
+            captured = parse_zoned_timestamp(record.get("captured_at"))
+            published = parse_zoned_timestamp(record.get("persisted_at"))
+            if captured is None or published is None or not captured <= published < now:
+                excluded["unavailable_receipt_time"] += 1
+                continue
+            if record.get("date", today) >= today:
+                continue
+            # Corrupt evidence is an error, not permission to fit a smaller set.
+            validate_record(record, record["date"])
+            for c in record.get("candidates") or []:
+                try:
+                    fixture = _fixture_key(c.get("fixture"))
+                    identity = enhancement_fixture_identity(c)
+                except (AttributeError, KeyError, TypeError, ValueError):
+                    excluded["invalid_fixture"] += 1
+                    continue
+                kickoff = parse_zoned_timestamp(c.get("kickoff_utc"))
+                if (fixture != tuple(identity[:3]) or c["date"] >= today
+                        or kickoff is None or not published + MIN_LEAD <= kickoff < now
+                        or kickoff.astimezone(LOCAL_TZ).date().isoformat() != c["date"]):
+                    excluded["unavailable_fixture_time"] += 1
+                    continue
+                reason = _learning_quote_rejection(c)
+                if reason:
+                    excluded[reason] += 1
+                    continue
+                inputs = c.get("ml_inputs")
+                if not isinstance(inputs, dict):
+                    excluded["missing_source_inputs"] += 1
+                    continue
+                values, sources = inputs.get("values"), inputs.get("sources")
+                if (inputs.get("fixture") != identity
+                        or not isinstance(c.get("model_key"), str) or not c["model_key"]
+                        or inputs.get("model_key") != c["model_key"]
+                        or not isinstance(c.get("contract_id"), str) or not c["contract_id"]
+                        or inputs.get("contract_id") != c["contract_id"]
+                        or not isinstance(sources, list) or not sources
+                        or any(not isinstance(v, str) or v not in REMINE_SOURCES for v in sources)
+                        or sources != sorted(set(sources))
+                        or not isinstance(values, dict)
+                        or any(values.get(k) is not None and not _enhancement_feature_valid(k, values[k])
+                               for k in ENH_OPTIONAL_FEATURES)
+                        or not any(values.get(k) is not None for k in ENH_OPTIONAL_FEATURES)):
+                    excluded["invalid_source_input_binding_or_values"] += 1
+                    continue
+                features = {k: values.get(k) for k in ENH_OPTIONAL_FEATURES}
+                observations[fixture].append((captured, published, digest([features, sources]), c, record))
+        rows = []
+        outcomes = []
+        for fixture, variants in sorted(observations.items()):
+            # Earliest eligible frozen state; quotes/markets/books do not add rows.
+            first = min(v[0] for v in variants)
+            earliest = [v for v in variants if v[0] == first]
+            if len({v[2] for v in earliest}) != 1:
+                excluded["conflicting_earliest_fixture_inputs"] += 1
+                continue
+            _, published, _, c, record = min(
+                earliest, key=lambda v: (v[1], v[4]["sha256"], v[3]["candidate_id"]))
+            # The caller supplies the existing exact regulation-result resolver.
+            # Replay cannot establish historical result-publication timestamps.
+            score = score_lookup(c)
+            if (not isinstance(score, (tuple, list)) or len(score) != 2
+                    or any(type(v) is not int or v < 0 for v in score)):
+                excluded["unresolved_or_invalid_regulation_score"] += 1
+                continue
+            rows.append(c)
+            outcomes.append({"fixture": list(fixture), "score": list(score),
+                             "receipt_sha256": record["sha256"], "candidate_id": c["candidate_id"],
+                             "captured_at": record["captured_at"], "persisted_at": published.isoformat(),
+                             "kickoff_utc": c["kickoff_utc"],
+                             "sources": c["ml_inputs"]["sources"],
+                             "values": {k: c["ml_inputs"]["values"].get(k) for k in ENH_OPTIONAL_FEATURES}})
+        columns = [k for k in ENH_OPTIONAL_FEATURES
+                   if any(c["ml_inputs"]["values"].get(k) is not None for c in rows)]
+        means, scales = [], []
+        for k in columns:
+            observed = [c["ml_inputs"]["values"][k] for c in rows
+                        if c["ml_inputs"]["values"].get(k) is not None]
+            mean = math.fsum(observed) / len(observed)
+            means.append(mean)
+            scales.append(math.sqrt(math.fsum((v - mean) ** 2 for v in observed) / len(observed)) or 1.0)
+        result = {"method": "poisson", "status": "awaiting_prior_goal_results",
+                  "offline_only": True, "as_of": now.isoformat(),
+                  "fixtures": len(rows), "observations": len(rows),
+                  "columns": columns, "means": means, "scales": scales,
+                  "training_last_date": max((c["date"] for c in rows), default=None),
+                  "training_outcomes": outcomes, "training_sha256": digest(outcomes),
+                  "training_admission": dict(sorted(excluded.items())),
+                  "training_policy": "earliest_frozen_input_per_fixture_unit_weight_prior_day",
+                  "result_availability": "caller_as_of_lookup_historical_publication_unproven",
+                  "alpha": 1.0, "max_iter": 1000,
+                  "target": ["regulation_home_goals", "regulation_away_goals"],
+                  "assumption": "conditionally_independent_poisson_goals"}
+        # A zero-mean Poisson target has no finite log-link intercept. Do not
+        # fabricate an epsilon, a score prior, or an old-model fallback.
+        if rows and all(sum(o["score"][side] for o in outcomes) > 0 for side in (0, 1)):
+            x = [_vector(c, columns, means=means, scales=scales) for c in rows]
+            try:
+                fitted = []
+                with warnings.catch_warnings():
+                    warnings.simplefilter("error", ConvergenceWarning)
+                    for side in (0, 1):
+                        estimator = PoissonRegressor(alpha=1.0, max_iter=1000)
+                        estimator.fit(x, [o["score"][side] for o in outcomes])
+                        fitted.append(estimator)
+                result.update(status="fitted_prior_goal_results",
+                              coef=[e.coef_.tolist() for e in fitted],
+                              intercept=[float(e.intercept_) for e in fitted])
+            except (ValueError, ArithmeticError, ConvergenceWarning):
+                result["status"] = "goal_fit_unavailable"
+        elif rows:
+            result["status"] = "zero_mean_goal_target"
+        result["model_key"] = digest(result)
+        return result
+
     rows = []
     training_outcomes = []
     training_keys = set()
@@ -1080,7 +1264,32 @@ def learn(history, now, score_lookup):
     return result
 
 
-def _vector(c, columns):
+def _vector(c, columns, *, means=None, scales=None):
+    if means is not None:
+        from .consensus_contracts import (
+            REMINE_SOURCES, _enhancement_feature_valid, enhancement_fixture_identity,
+        )
+        inputs = c.get("ml_inputs")
+        identity = enhancement_fixture_identity(c)
+        if (not isinstance(inputs, dict) or inputs.get("fixture") != identity
+                or c.get("fixture") != identity[:3]
+                or not isinstance(c.get("model_key"), str) or not c["model_key"]
+                or inputs.get("model_key") != c["model_key"]
+                or not isinstance(c.get("contract_id"), str) or not c["contract_id"]
+                or inputs.get("contract_id") != c["contract_id"]
+                or not isinstance(inputs.get("sources"), list) or not inputs["sources"]
+                or any(not isinstance(v, str) or v not in REMINE_SOURCES for v in inputs["sources"])
+                or inputs["sources"] != sorted(set(inputs["sources"]))
+                or not isinstance(inputs.get("values"), dict)):
+            raise ValueError("invalid goal forecast input binding")
+        values = [inputs["values"].get(k) for k in columns]
+        if (not any(v is not None for v in values)
+                or any(v is not None and not _enhancement_feature_valid(k, v) for k, v in zip(columns, values))):
+            raise ValueError("invalid goal forecast feature")
+        # Training-only mean imputation with explicit missingness; no confidence,
+        # old base probabilities, odds, bucket, market or fitted state in x.
+        return [0.0 if v is None else (v - m) / scale
+                for v, m, scale in zip(values, means, scales)] + [float(v is None) for v in values]
     p = c["base_probability"]
     return [
         math.log(p / (1 - p)),
@@ -1108,7 +1317,16 @@ def _adjusted_probability(c, model):
 
 
 def apply_learning(rows, model):
-    """Existing calibration/tilt, normalized over each complete outcome partition.
+    """Apply a fitted learner; explicit Poisson method is offline-only for now.
+
+    The replacement changes only ``probability`` and its forecast attribution;
+    legacy ``base_probability``/``base_partition``/``model_key`` remain reference
+    evidence, not the replacement's predictive inputs. It rejects an unfitted,
+    malformed or non-forward model, never silently retaining the old forecast.
+    Neither production capture path selects this method. Candidate collection
+    still depends on legacy ENH supply, so this is not an independent rollout.
+
+    Existing calibration/tilt is normalized over each complete outcome partition.
 
     Production candidates retain all mutually exclusive base outcomes from
     their bound score model, including unquoted sides. Adjust each of those
@@ -1117,6 +1335,56 @@ def apply_learning(rows, model):
     their scalar behavior; frozen receipts are never recalculated or rewritten.
     This does not establish cross-market joint calibration or a profitable edge.
     """
+    if (model.get("status") in {"fitted_prior_goal_results", "awaiting_prior_goal_results",
+                                 "zero_mean_goal_target", "goal_fit_unavailable"}
+            and model.get("method") != "poisson"):
+        raise ValueError("goal forecast model method missing or invalid")
+    if model.get("method") == "poisson":
+        from .consensus_contracts import ENH_OPTIONAL_FEATURES
+        columns = model.get("columns")
+        size = len(columns) if isinstance(columns, list) else 0
+        if (model.get("model_key") != digest({k: v for k, v in model.items() if k != "model_key"})
+                or not columns or any(not isinstance(k, str) for k in columns)
+                or len(set(columns)) != size or any(k not in ENH_OPTIONAL_FEATURES for k in columns)
+                or any(not isinstance(model.get(k), list) or len(model[k]) != size
+                       for k in ("means", "scales"))
+                or any(type(v) not in (int, float) or not math.isfinite(v)
+                       for k in ("means", "scales") for v in model[k])
+                or any(v <= 0 for v in model["scales"])
+                or model.get("status") != "fitted_prior_goal_results"
+                or not isinstance(model.get("coef"), list) or len(model["coef"]) != 2
+                or any(not isinstance(v, list) or len(v) != 2 * size for v in model["coef"])
+                or not isinstance(model.get("intercept"), list) or len(model["intercept"]) != 2
+                or any(type(v) not in (int, float) or not math.isfinite(v)
+                       for v in [*model["intercept"], *model["coef"][0], *model["coef"][1]])):
+            raise ValueError("invalid or unavailable goal forecast model")
+        as_of = parse_zoned_timestamp(model.get("as_of"))
+        last = model.get("training_last_date")
+        if (as_of is None or not isinstance(last, str)
+                or last >= as_of.astimezone(LOCAL_TZ).date().isoformat()):
+            raise ValueError("non-prior goal forecast training")
+        updates = []
+        for c in rows:
+            kickoff = parse_zoned_timestamp(c.get("kickoff_utc"))
+            if (kickoff is None or kickoff < as_of + MIN_LEAD
+                    or kickoff.astimezone(LOCAL_TZ).date().isoformat() != c["date"]
+                    or c["date"] <= model["training_last_date"]):
+                raise ValueError("goal forecast is not forward of its training cutoff")
+            x = _vector(c, columns, means=model["means"], scales=model["scales"])
+            try:
+                goals = [math.exp(b + math.fsum(w * v for w, v in zip(coef, x)))
+                         for b, coef in zip(model["intercept"], model["coef"])]
+            except OverflowError as exc:
+                raise ValueError("non-finite goal forecast") from exc
+            p = probability({"goal_means": goals}, c["market"], c["selection"])
+            if p is None or not math.isfinite(p) or not 0 < p < 1:
+                raise ValueError("unsupported or degenerate goal probability")
+            updates.append((c, p, goals))
+        # Validate the whole batch first: no partially replaced candidate board.
+        for c, p, goals in updates:
+            c.update(probability=p, forecast_model_key=model["model_key"],
+                     forecast_goal_means=goals, probability_normalization="independent_poisson_goals")
+        return
     if model.get("status") != "fitted_prior_paper_errors" and not model.get("success_tilt"):
         return
     for c in rows:
