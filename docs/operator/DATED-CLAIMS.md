@@ -44,7 +44,7 @@ recollection.
 | `scripts/picks_today.py` | 2026-10-03 TheOddsAPI receipt, cross-reference to the exact-key aliases | OPERATOR-RELAYED |
 | `scripts/picks_today.py` | on 2026-10-03 every zone-free renderer observed | RUNTIME-OBSERVED |
 | `tests/test_kickoff_guard_direction.py` | renderings verbatim from the 2026-10-03 picks file | `localdata/archive/picks/2026/10/picks_2026-10-03.json` |
-| `tests/test_team_identity_transliteration.py` | 2026-10-07 SharpAPI receipt: the vendor's long-form spelling must not fall through to the bigram matcher | `localdata/source_health_2026-10-07.json` |
+| `tests/test_team_identity_transliteration.py` | 2026-10-07 SharpAPI receipt: the vendor's long-form spelling must not fall through to the bigram matcher | `localdata/archive/source_health/2026/10/source_health_2026-10-07.json` |
 | `scripts/picks_today.py` | 2026-10-07 correction to the Urawa fold: 17 of 157 curated pairs were alias-bridged across a squad marker (all released by the guard); the key space is marker-blind for 145 of 150 marked names in the live populations, so the exact tier now also requires the raw names to agree on squad markers | `docs/operator/URAWA-LONG-FORM-FOLD-2026-10-07.md` |
 | `src/edgefactory/sources/theoddsapi.py` | comma-form league labels observed in the 2026-10-10 attempt ledger; sport keys verified against the provider catalogue captured the same run | `tests/data/theoddsapi_sports_2026-10-10.json` |
 | `src/edgefactory/sources/theoddsapi.py` | Scotland,Championship containment hit on the EFL Championship title observed in the 2026-10-10 capture receipt | `localdata/theoddsapi_capture_2026-10-10.json` |
