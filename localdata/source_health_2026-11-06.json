@@ -43,19 +43,19 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 28,
-      "be_raw": 18,
-      "be_usable": 18,
+      "be_matched": 48,
+      "be_raw": 33,
+      "be_usable": 33,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 5,
+      "join_matched_rows": 9,
       "join_miss_counts": {
-        "fixture_key_miss": 5,
-        "no_pick_for_fixture": 8
+        "fixture_key_miss": 12,
+        "no_pick_for_fixture": 12
       },
       "reason": null,
       "status": "cache_only"
@@ -156,15 +156,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 205,
+      "join_matched_rows": 750,
       "join_miss_counts": {
-        "fixture_key_miss": 20381,
-        "market_unsupported": 7944,
-        "no_pick_for_fixture": 1919
+        "fixture_key_miss": 22505,
+        "market_unsupported": 13008,
+        "no_pick_for_fixture": 12895
       },
-      "op_matched": 3,
-      "op_raw": 30449,
-      "op_usable": 30449,
+      "op_matched": 31,
+      "op_raw": 49158,
+      "op_usable": 49158,
       "reason": null,
       "status": "cache_only"
     },
@@ -181,12 +181,12 @@
       "coherence_withheld_fixtures": 0,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 21,
+      "join_matched_rows": 19,
       "join_miss_counts": {
-        "fixture_key_miss": 14794,
-        "no_pick_for_fixture": 271
+        "fixture_key_miss": 14815,
+        "no_pick_for_fixture": 252
       },
-      "pa_matched": 84,
+      "pa_matched": 81,
       "pa_raw": 15086,
       "pa_scored": 15086,
       "reason": null,
