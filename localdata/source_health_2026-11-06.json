@@ -43,19 +43,19 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 48,
+      "be_matched": 13,
       "be_raw": 39,
-      "be_usable": 36,
+      "be_usable": 39,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 9,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 15,
-        "no_pick_for_fixture": 12
+        "fixture_key_miss": 33,
+        "no_pick_for_fixture": 4
       },
       "reason": null,
       "status": "cache_only"
@@ -156,13 +156,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 1064,
+      "join_matched_rows": 107,
       "join_miss_counts": {
-        "fixture_key_miss": 22505,
+        "fixture_key_miss": 38852,
         "market_unsupported": 15520,
-        "no_pick_for_fixture": 18086
+        "no_pick_for_fixture": 2696
       },
-      "op_matched": 45,
+      "op_matched": 5,
       "op_raw": 57175,
       "op_usable": 57175,
       "reason": null,
@@ -181,12 +181,12 @@
       "coherence_withheld_fixtures": 0,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 17,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 14817,
-        "no_pick_for_fixture": 252
+        "fixture_key_miss": 15046,
+        "no_pick_for_fixture": 38
       },
-      "pa_matched": 78,
+      "pa_matched": 13,
       "pa_raw": 15086,
       "pa_scored": 15086,
       "reason": null,
@@ -267,7 +267,7 @@
           "unsupported_market:correct_score": 135,
           "unsupported_market:double_chance": 3
         },
-        "card_fixture_count": 27,
+        "card_fixture_count": 24,
         "league_filter_requested": false,
         "requested_limit": 1000
       },
@@ -325,11 +325,11 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 60,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "no_pick_for_fixture": 174
+        "fixture_key_miss": 234
       },
-      "oa_matched": 15,
+      "oa_matched": 0,
       "oa_raw": 234,
       "oa_usable": 234,
       "reason": null,
