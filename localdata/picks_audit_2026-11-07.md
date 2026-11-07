@@ -374,8 +374,8 @@ Performance of deep context-derived recommended enhancements overlay:
 - `home_under_15`: recommended=2, settled=2, hit_rate=100.0% (hits=2/recommended=2), priced_n=0, priced_ROI=None (denominator=0), registry_processed=9, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
 - `home_under_25`: recommended=2, settled=2, hit_rate=0.0% (hits=0/recommended=2), priced_n=0, priced_ROI=None (denominator=0), registry_processed=64, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
 - `home_under_35`: recommended=19, settled=19, hit_rate=89.5% (hits=17/recommended=19), priced_n=0, priced_ROI=None (denominator=0), registry_processed=78, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window
-- `match_over_15`: recommended=22, settled=22, hit_rate=77.3% (hits=17/recommended=22), priced_n=14, priced_ROI=0.165 (denominator=14), registry_processed=76, class=priced
-- `match_over_25`: recommended=192, settled=192, hit_rate=64.6% (hits=124/recommended=192), priced_n=169, priced_ROI=0.026923 (denominator=169), registry_processed=777, class=priced
+- `match_over_15`: recommended=22, settled=22, hit_rate=77.3% (hits=17/recommended=22), priced_n=13, priced_ROI=0.154615 (denominator=13), registry_processed=76, class=priced
+- `match_over_25`: recommended=192, settled=192, hit_rate=64.6% (hits=124/recommended=192), priced_n=168, priced_ROI=0.03256 (denominator=168), registry_processed=777, class=priced
 - `match_over_35`: recommended=18, settled=18, hit_rate=77.8% (hits=14/recommended=18), priced_n=10, priced_ROI=0.937 (denominator=10), registry_processed=49, class=priced
 - `match_under_35`: recommended=8, settled=8, hit_rate=25.0% (hits=2/recommended=8), priced_n=7, priced_ROI=-0.625714 (denominator=7), registry_processed=16, class=priced
 - `match_under_45`: recommended=21, settled=21, hit_rate=85.7% (hits=18/recommended=21), priced_n=0, priced_ROI=None (denominator=0), registry_processed=35, class=no_price_observed — hit-rate only: a mapped feed quoted no price for it in this window

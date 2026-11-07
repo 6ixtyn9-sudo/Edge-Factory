@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-07
 ==============================================================
 CURRENT PAPER BANK (all dates): 67.054 units · free 60.389 / reserved 6.665
-9 paper accas · 5 ticket publications · 3 scans without tickets · times in SAST
+9 paper accas · 5 ticket publications · 5 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -291,6 +291,34 @@ P8 · 2026-11-07 10:29:09 SAST · ACCA #8–#9
       Scalar adjustment 63.5% → partition-normalized 63.5% · includes unquoted outcomes; not proof of calibration
       Quote witness: oddspapi_odds_2026-11.csv.gz · ou_2.5 / over · bookmaker market unavailable · outcome 1010 · provider label Over Under Full Time · normalized row only; native payload unverified
    Learning: fitted_source_market_temperature
+
+P9 · 2026-11-07 19:07:53 SAST · No additional tickets
+   Receipt 20261107T170700147238Z · status no_paper_bet
+   Frozen at 2026-11-07T17:07:53.008321+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 ee9f56b8e4a9d3db3596d65379cda0502d687b37192d7db2dbdd6fa8dd8aff55
+   Decision window 2026-11-07T17:07:00.147238+00:00 → 2026-11-08T17:07:00.147238+00:00
+   Bank at decision: 67.054327 paper units
+   Available at decision: 60.388924 paper units
+   Reserved at decision: 6.665403 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.352716 units per canonical fixture
+   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
+   Coverage: candidate count: 7166; candidate fixtures: 6; slate rows: 119; status: inputs_available
+   Rejections: data quality: 3; fixture date unproven: 3; outside rolling window or unproven kickoff: 79; quote or probability unavailable: 20098
+   Learning: fitted_source_market_context
+
+P10 · 2026-11-07 19:14:17 SAST · No additional tickets
+   Receipt 20261107T171313920214Z · status no_paper_bet
+   Frozen at 2026-11-07T17:14:17.512995+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 bceab9ab1d6ee363acb2100d85b598f13f307c3f2fc2ead9507cd2875437201f
+   Decision window 2026-11-07T17:13:13.920214+00:00 → 2026-11-08T17:13:13.920214+00:00
+   Bank at decision: 67.054327 paper units
+   Available at decision: 60.388924 paper units
+   Reserved at decision: 6.665403 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.352716 units per canonical fixture
+   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
+   Coverage: candidate count: 7166; candidate fixtures: 6; slate rows: 94; status: inputs_available
+   Rejections: data quality: 2; fixture date unproven: 1; outside rolling window or unproven kickoff: 74; quote or probability unavailable: 10227
+   Learning: fitted_source_market_context
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
 STAKING    Gross fixture exposure counts the full acca stake once per fixture; no netting.
