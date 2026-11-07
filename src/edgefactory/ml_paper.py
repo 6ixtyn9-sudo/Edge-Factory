@@ -7,7 +7,10 @@ Complete source partitions preserve complements and 1X2/DC identities regardless
 of quote coverage. Missing source markets are unavailable, never guessed.
 
 Same-book paper accas choose their own leg count, card count and stakes.
-No odds band, fixed stake or artificial acca/leg-count cap is imposed.
+No fixed win-probability/odds eligibility floor or artificial leg-count cap is
+imposed. New decisions require local market/price evidence, conservative leg
+admission and a Frechet joint envelope; unsupported forecasts remain recorded
+without stakes. Older decisions keep their original read/replay semantics.
 CAUTION and SKIPPED_VETO strategy labels are intentionally paper-eligible
 (test_lower_probability_and_caution_bucket_can_win_paper_search); identity,
 price-quality and timing guards still apply. This never overrides live gates.
@@ -80,6 +83,11 @@ QUOTE_MAX_AGE = timedelta(hours=12)
 ACTUAL_RUN_FREEZE = "first_run_actual_decision_v1"
 ROLLING_FREEZE = "rolling_24h_actual_decision_v1"
 MIN_LEAD = timedelta(minutes=30)
+# Release boundary, not an ROI-selected date: older decisions replay unchanged.
+ADMISSION_ACTIVATED_AS_OF = "2026-11-07"
+ADMISSION_POLICY = "source_market_price_evidence_v1"
+ADMISSION_JOINT_BASIS = "frechet_leg_admission_lower_envelope_v1"
+ADMISSION_ALPHA = 0.05  # statistical error budget, NOT a minimum win probability
 
 
 def digest(value):
@@ -172,7 +180,7 @@ def _validate_bets(row):
     has_source_evidence = any(
         c.get("probability_normalization") == "complete_source_market_partition_v1"
         or (isinstance(row.get("models", {}).get(c.get("model_key")), dict)
-            and row["models"][c["model_key"]].get("schema") in {"source_market_v1", "source_market_context_v1"})
+            and row["models"][c["model_key"]].get("schema") in {"source_market_v1", "source_market_context_v1", "source_market_context_v2"})
         for c in row["candidates"]
     )
     if has_source_evidence and row.get("learning", {}).get("method") != "source_market":
@@ -191,11 +199,11 @@ def _validate_bets(row):
             expected = {"schema": "source_market_v1", "contract_id": c["contract_id"],
                         "fixture": inputs.get("fixture"), "sources": inputs.get("sources"),
                         "values": {k: v for k, v in inputs.get("values", {}).items() if k.startswith("forecast_")}}
-            if "context" in c or (isinstance(model, dict) and model.get("schema") == "source_market_context_v1"):
+            if "context" in c or (isinstance(model, dict) and model.get("schema") in {"source_market_context_v1", "source_market_context_v2"}):
                 if ("context" not in c or learner.get("learning_policy") != "fixture_balanced_source_market_context"
                         or "context_model" not in learner):
                     raise ValueError("context model evidence requires context learning policy")
-                expected.update(schema="source_market_context_v1", context=c["context"])
+                expected.update(schema=c["context"].get("schema"), context=c["context"])
             expected["model_key"] = digest(expected)
             if (model != expected or c["model_key"] != expected["model_key"]
                     or inputs.get("fixture") != enhancement_fixture_identity(c)
@@ -377,6 +385,7 @@ def validate_record(row, day, *, draft=False):
         raise ValueError("paper receipt status/positions disagree")
     _validate_bets(row)
     _validate_concentration_record(row)
+    _validate_admission(row)
 
 
 def receipts(root):
@@ -711,7 +720,7 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
             ambiguous_fixtures.add(fixture_key)
         profile = row.get("statistical_profile") or {}
         weights = profile["ml_inputs"]
-        model = {"schema": "source_market_context_v1", "contract_id": row["contract_id"],
+        model = {"schema": row["ml_context"]["schema"], "contract_id": row["contract_id"],
                  "fixture": weights["fixture"], "sources": weights["sources"],
                  "context": row["ml_context"],
                  "values": {k: v for k, v in weights["values"].items() if k.startswith("forecast_")}}
@@ -962,7 +971,9 @@ def _candidate_context(row, now):
                                 row.get("enhancement_country") if witnessed else None)]
     countries = {fold_league_identity(v): v for v in labels if v}
     country = next(iter(countries.values())) if len(countries) == 1 else None
-    return {"schema": "source_market_context_v1", "as_of": now.isoformat(),
+    schema = ("source_market_context_v2" if now.astimezone(LOCAL_TZ).date().isoformat()
+              >= ADMISSION_ACTIVATED_AS_OF else "source_market_context_v1")
+    return {"schema": schema, "as_of": now.isoformat(),
             "league": label(ctx.get("league_key")) or label(ctx.get("league_raw")) or label(row.get("league")),
             "country": country, "country_sources": country_sources if country and witnessed else [],
             "parent_confidence": confidence,
@@ -971,8 +982,8 @@ def _candidate_context(row, now):
             "form_values": forms}
 
 
-def _context_prices(rows, at):
-    """Median latest witnessed price per outcome, not a book-count training weight.
+def _context_prices(rows, at, *, per_book=False):
+    """Latest witnessed prices per outcome; median context or actual book values.
 
     Missing complements stay missing. Never turn 1/odds into a fair probability.
     Historical quote generations and original source age limits still apply.
@@ -981,6 +992,7 @@ def _context_prices(rows, at):
     latest, conflicts = {}, set()
     for c in rows:
         if (not _valid_learning_candidate(c) or _learning_quote_rejection(c)
+                or c.get("fixture") != [c.get("date"), source_team_key(c.get("home")), source_team_key(c.get("away"))]
                 or not psrc.known(c.get("price_source"))
                 or psrc.spec(c.get("price_source")).role != psrc.ROLE_NAMED_BOOKMAKER):
             continue
@@ -1000,7 +1012,7 @@ def _context_prices(rows, at):
     for key, (_, price) in latest.items():
         if key not in conflicts:
             prices[key[:-1]].append(price)
-    return {key: median(values) for key, values in prices.items()}
+    return {key: sorted(set(values)) if per_book else median(values) for key, values in prices.items()}
 
 
 def _context_features(c, partition, archive, at, prices, cache=None):
@@ -1018,7 +1030,7 @@ def _context_features(c, partition, archive, at, prices, cache=None):
         if (not isinstance(context, dict) or set(context) != {
                     "schema", "as_of", "league", "country", "country_sources", "parent_confidence", "parent_selection",
                     "form_as_of_exclusive", "form_values"}
-                or context.get("schema") != "source_market_context_v1"
+                or context.get("schema") not in {"source_market_context_v1", "source_market_context_v2"}
                 or parse_zoned_timestamp(context.get("as_of")) is None
                 or parse_zoned_timestamp(context["as_of"]) > at
                 or any(v is not None and not isinstance(v, str)
@@ -1149,7 +1161,7 @@ def learn(history, now, score_lookup):
             family = tuple((m, side) for m, side, _ in partition)
             observations[fixture, family].append((captured, published, c, record, partition))
     rows, outcomes, context_rows, chosen_candidates = [], [], [], []
-    price_indexes = {}
+    price_indexes, admission_prices = {}, {}
     for (fixture, family), variants in sorted(observations.items()):
         first = min(v[0] for v in variants)
         earliest = [v for v in variants if v[0] == first]
@@ -1205,6 +1217,16 @@ def learn(history, now, score_lookup):
         features = _context_features(c, partition, archive, stamp, price_indexes[key], feature_cache)
         context_rows.append(features)
         outcome["context_features"] = features
+        if today >= ADMISSION_ACTIVATED_AS_OF:
+            if key not in admission_prices:
+                admission_prices[key] = _context_prices(record["candidates"], stamp, per_book=True)
+            allowed = {(m, side) for m, side, _ in partition}
+            if allowed == {("1x2", s) for s in ("home", "draw", "away")}:
+                allowed.update(("double_chance", side) for side in ("1x", "x2", "12"))
+            outcome["source_cohort"] = c["ml_inputs"]["sources"]
+            outcome["admission_prices"] = sorted(
+                [m, side, price] for (day, home, away, m, side), values in admission_prices[key].items()
+                if [day, home, away] == c["fixture"] and (m, side) in allowed for price in values)
     counts = Counter(f for f, _, _ in rows)
     result = {"method": "source_market", "status": "awaiting_prior_paper_results",
               "power": 1.0, "as_of": now.isoformat(), "fixtures": len(counts),
@@ -1289,6 +1311,8 @@ def learn(history, now, score_lookup):
         "form_policy": "existing_squad_aware_last10_min_history_prior_local_day_only",
     }
     result["parameters"] = 1 + len(columns)
+    if today >= ADMISSION_ACTIVATED_AS_OF:
+        result["admission"] = _admission_model(outcomes, now)
     result["model_key"] = digest(result)
     return result
 
@@ -1403,6 +1427,200 @@ def apply_learning(rows, model):
                  probability_normalization="complete_source_market_partition_v1")
 
 
+def _admission_probability(values, offset=0):
+    """Declared decimal lower-envelope arithmetic, converted outward to float.
+
+    Binary cancellation at zero must never manufacture an edge at huge odds.
+    Reuse the lane's Decimal machinery; forecasts themselves are not rounded.
+    """
+    value = max(Decimal(0), sum((Decimal(str(v)) for v in values), Decimal(str(offset))))
+    result = float(value)
+    return math.nextafter(result, 0.) if Decimal.from_float(result) > value else result
+
+
+def _admission_cell(market, selection, sources, probability, odds):
+    """Fixed reporting deciles and existing odds bands, not ROI-selected floors."""
+    from .scored_candidate_segments import odds_band
+    from .consensus_contracts import REMINE_SOURCES
+    if (not isinstance(sources, list) or not sources
+            or any(not isinstance(s, str) or s not in REMINE_SOURCES for s in sources)
+            or sources != sorted(set(sources))
+            or type(probability) not in (int, float) or not math.isfinite(probability)
+            or not 0 < probability < 1 or type(odds) not in (int, float)
+            or not math.isfinite(odds) or odds <= 1):
+        raise ValueError("invalid admission cell inputs")
+    cell = {"market": market, "selection": selection, "sources": sources,
+            "probability_decile": min(9, int(probability * 10)), "odds_band": odds_band(odds)}
+    return digest(cell), cell
+
+
+def _admission_model(outcomes, as_of):
+    """Evidence inside the ONE learner, not another fitted forecast model.
+
+    Test frozen source forecasts, never current in-sample fitted probabilities.
+    Each fixture supplies one binary observation per exact cell. No pooling
+    pseudo-count can certify a sparse local cell. All forecast inventory counts,
+    including abstentions; unresolved/same-day labels do not.
+    """
+    from .consensus_contracts import REMINE_SOURCES
+    from .scored_candidate_segments import _ODDS_BANDS
+    events = {("1x2", s) for s in ("home", "draw", "away")}
+    events.update(("double_chance", s) for s in ("1x", "x2", "12"))
+    for m, mapping in MARKET_PRICE_MAP.items():
+        if mapping is not None:
+            events.update(_partition_outcomes(m))
+    # Union budget over every possible cell, not only winning/observed cells.
+    # This is the v1 namespace: registry expansion requires a new policy and
+    # retention of these original v1 replay semantics, not a silent budget edit.
+    cell_budget = len(events) * 10 * (len(_ODDS_BANDS) + 1) * (2 ** len(REMINE_SOURCES) - 1)
+    samples, descriptions, fixture_scores = defaultdict(dict), {}, {}
+    today = as_of.astimezone(LOCAL_TZ).date().isoformat()
+    for o in outcomes:
+        captured = parse_zoned_timestamp(o.get("captured_at"))
+        persisted = parse_zoned_timestamp(o.get("persisted_at"))
+        if (not isinstance(o.get("date"), str) or not o["date"] < today
+                or captured is None or persisted is None or not captured <= persisted < as_of):
+            raise ValueError("non-prior admission evidence")
+        fixture = _fixture_key(o.get("fixture"))
+        if fixture[0] != o["date"]:
+            raise ValueError("admission fixture date mismatch")
+        score = o.get("score")
+        if (not isinstance(score, list) or len(score) != 2
+                or any(type(v) is not int or v < 0 for v in score)):
+            raise ValueError("invalid admission regulation score")
+        if fixture in fixture_scores and fixture_scores[fixture] != score:
+            raise ValueError("conflicting admission fixture scores")
+        fixture_scores[fixture] = score
+        part = o.get("source_partition")
+        if (not isinstance(part, list) or not part
+                or any(not isinstance(v, (list, tuple)) or len(v) != 3 for v in part)
+                or any(type(p) not in (int, float) or not math.isfinite(p) or not 0 < p < 1 for _, _, p in part)
+                or len({(m, s) for m, s, _ in part}) != len(part)
+                or not math.isclose(math.fsum(p for _, _, p in part), 1., abs_tol=1e-12, rel_tol=0)):
+            raise ValueError("invalid admission source partition")
+        prices = o.get("admission_prices")
+        if not isinstance(prices, list):
+            raise ValueError("missing frozen admission quotes")
+        for quote in prices:
+            if not isinstance(quote, list) or len(quote) != 3:
+                raise ValueError("invalid frozen admission quote")
+            market, side, odds = quote
+            if (market, side) not in events or set(_partition_outcomes(market)) != {(m, s) for m, s, _ in part}:
+                raise ValueError("admission quote differs from source market")
+            if market == "double_chance":
+                sides = {"1x": ("home", "draw"), "x2": ("draw", "away"), "12": ("home", "away")}[side]
+                p = math.fsum(v for _, s, v in part if s in sides)
+            else:
+                p = next(v for m, s, v in part if (m, s) == (market, side))
+            key, desc = _admission_cell(market, side, o.get("source_cohort"), p, odds)
+            y = hit(market, side, *score)
+            if type(y) is not bool:
+                raise ValueError("unresolved admission outcome")
+            descriptions[key] = desc
+            if fixture in samples[key] and samples[key][fixture] != int(y):
+                raise ValueError("conflicting admission outcomes")
+            samples[key][fixture] = int(y)
+    cells = {key: dict(descriptions[key], fixtures=len(values), wins=sum(values.values()))
+             for key, values in sorted(samples.items())}
+    return {"policy": ADMISSION_POLICY, "alpha": ADMISSION_ALPHA, "cell_budget": cell_budget,
+            "cells": cells, "evidence_sha256": digest(outcomes),
+            "basis": "earliest_frozen_source_forecasts_real_quotes_not_in_sample_fit",
+            "uncertainty": "one_sided_clopper_pearson_cell_and_n_spending",
+            "assumptions": "stable_iid_cell_outcomes_and_transferable_calibration_offset_not_verified_not_individual_probability_guarantee",
+            "availability": "prior_local_day_caller_result_publication_timestamps_unproven"}
+
+
+def apply_admission(rows, model):
+    """Price-aware abstention; do not overwrite the learned point probabilities.
+
+    A cohort hit-rate lower estimate is shifted DOWN by the full decile width
+    when necessary. It is a conservative admission envelope under the stated
+    cohort assumptions, not a calibrated new forecast or a promise of profit.
+    The alpha/n(n+1) spending also covers repeated looks at a cell's sample size.
+    """
+    from scipy.stats import beta
+    as_of = parse_zoned_timestamp(model.get("as_of"))
+    if (as_of is None or model.get("model_key") != digest({k: v for k, v in model.items() if k != "model_key"})
+            or digest(model.get("admission")) != digest(_admission_model(model.get("training_outcomes", []), as_of))):
+        raise ValueError("invalid admission evidence/model binding")
+    evidence = model["admission"]
+    evidence_key = digest(evidence)
+    lower_cache, updates = {}, []
+    for c in rows:
+        if c.get("forecast_model_key") != model["model_key"]:
+            raise ValueError("admission forecast belongs to another model")
+        p = probability(c.get("ml_inputs"), c["market"], c["selection"])
+        point, odds = c.get("probability"), c.get("odds")
+        if (type(point) not in (int, float) or not math.isfinite(point) or not 0 < point < 1
+                or type(c.get("base_probability")) not in (int, float)
+                or p is None or not math.isclose(p, c["base_probability"], abs_tol=1e-12, rel_tol=0)):
+            raise ValueError("admission source/point probability invalid")
+        key, desc = _admission_cell(c["market"], c["selection"], c["ml_inputs"]["sources"], p, odds)
+        cell = evidence["cells"].get(key)
+        n, wins = (cell["fixtures"], cell["wins"]) if cell else (0, 0)
+        if key not in lower_cache:
+            alpha = ADMISSION_ALPHA / (evidence["cell_budget"] * n * (n + 1)) if n else 0.
+            lower = float(beta.ppf(alpha, wins, n - wins + 1)) if wins else 0.
+            if not math.isfinite(lower) or not 0 <= lower <= 1:
+                raise ValueError("admission uncertainty unavailable; no permissive fallback")
+            lower_cache[key] = math.floor(lower * 1e12) / 1e12  # outward-only rounding
+        lower = lower_cache[key]
+        band_upper = (desc["probability_decile"] + 1) / 10
+        envelope = min(point, p, _admission_probability((p, lower),
+                       -Decimal(desc["probability_decile"] + 1) / 10))
+        break_even = 1. / odds
+        allowed = envelope > break_even
+        updates.append((c, {"policy": ADMISSION_POLICY, "evidence_sha256": evidence_key,
+                            "cell": key, "fixtures": n, "wins": wins,
+                            "source_probability": p, "lower_hit_rate": lower,
+                            "required_source_probability": max(break_even, band_upper + break_even - lower),
+                            "required_model_probability": break_even,
+                            "probability_lower": envelope,
+                            "status": "eligible" if allowed else "abstain",
+                            "reason": "positive_conservative_edge" if allowed else
+                                      "no_local_evidence" if not n else "edge_not_supported"}))
+    for c, admission in updates:
+        c["admission"] = admission
+
+
+def _validate_admission(row, *, required=False):
+    """Independent read/publication replay; declaration stripping cannot bypass it."""
+    learner = row.get("learning") or {}
+    policy = (row.get("policy") or {}).get("admission")
+    witness = ("admission" in learner or policy is not None
+               or any((c.get("context") or {}).get("schema") == "source_market_context_v2"
+                      for c in row["candidates"])
+               or any(m.get("schema") == "source_market_context_v2" for m in row.get("models", {}).values())
+               or any("admission" in c for c in row["candidates"])
+               or any(a.get("probability_basis") == ADMISSION_JOINT_BASIS for a in row["accas"]))
+    if not required and not witness:
+        return  # immutable pre-policy receipts remain readable, never rewritten
+    if not witness and not row["candidates"] and not row["accas"]:
+        return  # missed-freeze/no-forecast records do not create a position
+    if policy != ADMISSION_POLICY or "admission" not in learner:
+        raise ValueError("new admission evidence requires declared policy")
+    copied = [dict(c) for c in row["candidates"]]
+    apply_admission(copied, learner)
+    if any(digest(a.get("admission")) != digest(b.get("admission")) for a, b in zip(copied, row["candidates"])):
+        raise ValueError("candidate admission differs from frozen evidence")
+    for a in row["accas"]:
+        if any(c["admission"]["status"] != "eligible" for c in a["legs"]):
+            raise ValueError("unadmitted leg in new paper ticket")
+        p = _admission_probability((c["admission"]["probability_lower"] for c in a["legs"]),
+                                   1 - len(a["legs"]))
+        decision = _kelly(p, a["odds"])
+        fields = ("probability_estimate", "model_probability_estimate", "estimated_ev",
+                  "model_kelly_fraction", "estimated_log_growth")
+        if (decision is None or any(type(a.get(k)) not in (int, float) or not math.isfinite(a[k]) for k in fields)
+                or a.get("probability_basis") != ADMISSION_JOINT_BASIS
+                or a.get("probability_estimate") != p
+                or a.get("model_probability_estimate") != math.prod(c["probability"] for c in a["legs"])
+                or a.get("estimated_ev") != p * a["odds"] - 1
+                or a.get("model_kelly_fraction") != decision[0]
+                or a.get("estimated_log_growth") != decision[1]):
+            raise ValueError("ticket admission/joint risk arithmetic invalid")
+
+
 def _kelly(p, odds):
     """Model-implied log-bank growth; uncertainty is NOT a guaranteed edge."""
     if not (math.isfinite(p) and math.isfinite(odds) and 0 < p < 1 and odds > 1):
@@ -1417,13 +1635,30 @@ def _kelly(p, odds):
 def acca_proposals(rows, *, beam_width=SEARCH_BEAM_WIDTH, diagnostics=None):
     """Exact small-universe enumeration; bounded beam for larger universes.
 
-    Negative-EV singles and prefixes remain searchable. Only completed accas
-    need positive joint Kelly. The bound below prunes only prefixes that cannot
+    Legacy helpers retain negative-EV prefix search. Gated production admits
+    only supported positive-edge legs and requires positive conservative joint
+    Kelly, using a Frechet envelope rather than an independence assumption.
+    The bound below prunes only prefixes that cannot
     possibly become positive even if every remaining favourable leg is added.
     No greedy removal of teams/fixtures across proposals or across accas.
     """
+    gated = any("admission" in c for c in rows)
+    if gated and any(not isinstance(c.get("admission"), dict)
+                     or c["admission"].get("policy") != ADMISSION_POLICY for c in rows):
+        raise ValueError("mixed declared/undeclared admission candidates")
+    if gated:
+        for c in rows:
+            admission = c["admission"]
+            lower = admission.get("probability_lower")
+            if (admission.get("status") not in {"eligible", "abstain"}
+                    or type(lower) not in (int, float) or not math.isfinite(lower)
+                    or not 0 <= lower <= c["probability"]
+                    or (admission["status"] == "eligible" and lower * c["odds"] <= 1)):
+                raise ValueError("invalid candidate admission envelope")
     books = defaultdict(list)
     for c in sorted(rows, key=lambda c: c["candidate_id"]):
+        if gated and c["admission"].get("status") != "eligible":
+            continue
         if (
             type(c["odds"]) in (int, float)
             and type(c["probability"]) in (int, float)
@@ -1463,7 +1698,11 @@ def acca_proposals(rows, *, beam_width=SEARCH_BEAM_WIDTH, diagnostics=None):
                     if optimistic_ev <= 0:
                         continue
                     ix = (*indices, j)
-                    decision = _kelly(p, d)
+                    risk_p = (_admission_probability((book_rows[k]["admission"]["probability_lower"] for k in ix),
+                                                     1 - len(ix)) if gated else p)
+                    if gated and risk_p <= 0:
+                        continue  # the Frechet lower envelope cannot recover by adding legs
+                    decision = _kelly(risk_p, d)
                     growth = decision[1] if decision else 0.0
                     # Search breadth is computational, not a cap on acca size.
                     rank = (
@@ -1483,7 +1722,9 @@ def acca_proposals(rows, *, beam_width=SEARCH_BEAM_WIDTH, diagnostics=None):
                     break
             beam = [node for _, node in sorted(expanded, reverse=True)]
             for ix, _, d, p in beam:
-                decision = _kelly(p, d)
+                risk_p = (_admission_probability((book_rows[k]["admission"]["probability_lower"] for k in ix),
+                                                 1 - len(ix)) if gated else p)
+                decision = _kelly(risk_p, d)
                 if len(ix) < 2 or decision is None:
                     continue
                 f, growth = decision
@@ -1491,14 +1732,17 @@ def acca_proposals(rows, *, beam_width=SEARCH_BEAM_WIDTH, diagnostics=None):
                 a = {
                     "legs": legs,
                     "odds": d,
-                    "probability_estimate": p,
-                    "estimated_ev": p * d - 1,
+                    "probability_estimate": risk_p,
+                    "estimated_ev": risk_p * d - 1,
                     "estimated_log_growth": growth,
                     "model_kelly_fraction": f,
                     "book": legs[0]["book"],
                     "odds_basis": "hypothetical_product_of_same_book_single_quotes",
-                    "probability_basis": "product_assumes_cross_fixture_independence_not_validated",
+                    "probability_basis": (ADMISSION_JOINT_BASIS if gated else
+                                          "product_assumes_cross_fixture_independence_not_validated"),
                 }
+                if gated:
+                    a["model_probability_estimate"] = math.prod(c["probability"] for c in legs)
                 rank = (growth, tuple(c["candidate_id"] for c in legs))
                 if exact:
                     retained.append((rank, a))
@@ -1528,8 +1772,9 @@ def allocate_portfolio(proposals):
 
     For fixed acca win marginals, comonotonic payouts minimise expected log
     wealth: this deliberately does NOT assume independent overlapping accas.
-    Marginals inside each acca still assume cross-fixture independence. A
-    simplex Frank-Wolfe solve reports its remaining dual gap; neither beam nor
+    New gated ticket marginals are Frechet admission envelopes; historical
+    ungated helpers retain independence products. A simplex Frank-Wolfe solve
+    reports its remaining dual gap; neither beam nor
     numerical optimisation is represented as a global strategy optimum.
     """
     import numpy as np
@@ -1932,6 +2177,8 @@ def _attach_concentration_policy(payload, audit):
                              fixture_concentration=_fixture_concentration_policy(
                                  payload["paper_bank_at_decision"]))
     payload["fixture_concentration"] = audit
+    if "admission" in (payload.get("learning") or {}):
+        payload["policy"]["admission"] = ADMISSION_POLICY
     return payload
 
 
@@ -1982,7 +2229,8 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
     preserves the old helper's unconstrained semantics, not production policy.
     With concentration supplied (production), accas are additionally mutually
     exclusive: pairwise fixture-disjoint, highest allocated stake wins
-    (canonical tiebreak), no refill. No leverage, confidence gate or change to the allocator/oracle.
+    (canonical tiebreak), no refill. Admission envelopes feed the unchanged
+    allocator; old ungated helper/replay semantics remain readable.
     """
     if concentration is not None:
         if (not isinstance(concentration, dict)
@@ -2039,6 +2287,9 @@ def _publish_receipt(path, payload):
     validate_record(payload, payload["date"])
     _validate_concentration_record(payload, required=True)
     _require_mutually_exclusive(payload["accas"])
+    captured = parse_zoned_timestamp(payload.get("captured_at"))
+    _validate_admission(payload, required=(captured is not None and
+                        captured.astimezone(LOCAL_TZ).date().isoformat() >= ADMISSION_ACTIVATED_AS_OF))
     if any(not _quote_generation_ok(c.get("price_source"), c.get("price_provenance"))
            for c in payload["candidates"]):
         raise ValueError("superseded or unproven OddsPapi parser generation in new publication")
@@ -2443,6 +2694,8 @@ def capture(
         )
         learner = learn(history, captured, score_lookup)
         apply_learning(rows, learner)
+        if captured.astimezone(LOCAL_TZ).date().isoformat() >= ADMISSION_ACTIVATED_AS_OF:
+            apply_admission(rows, learner)
         # Neither training nor stake capital may use future-dated receipts.
         prior = [
             r
@@ -2602,15 +2855,15 @@ def _validate_rolling_record(row, captured):
         kickoff = parse_zoned_timestamp(c.get("kickoff_utc"))
         quote = parse_zoned_timestamp(c.get("price_at"))
         model = row["models"].get(c.get("model_key"), {})
-        if model.get("schema") in {"source_market_v1", "source_market_context_v1"}:
+        if model.get("schema") in {"source_market_v1", "source_market_context_v1", "source_market_context_v2"}:
             inputs = c.get("ml_inputs") or {}
             expected = {"schema": "source_market_v1", "contract_id": c["contract_id"],
                         "fixture": inputs.get("fixture"), "sources": inputs.get("sources"),
                         "values": {k: v for k, v in inputs.get("values", {}).items() if k.startswith("forecast_")}}
-            if model.get("schema") == "source_market_context_v1":
+            if model.get("schema") in {"source_market_context_v1", "source_market_context_v2"}:
                 if "context" not in c or row.get("learning", {}).get("learning_policy") != "fixture_balanced_source_market_context":
                     raise ValueError("rolling context evidence requires context learning policy")
-                expected.update(schema="source_market_context_v1", context=c["context"])
+                expected.update(schema=c["context"].get("schema"), context=c["context"])
             expected["model_key"] = digest(expected)
             if model != expected or model["model_key"] != c["model_key"]:
                 raise ValueError("rolling source model binding invalid")
@@ -2697,6 +2950,8 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
             rejected.update(failures)
         learner = learn(history, captured, score_lookup)
         apply_learning(rows, learner)
+        if captured.astimezone(LOCAL_TZ).date().isoformat() >= ADMISSION_ACTIVATED_AS_OF:
+            apply_admission(rows, learner)
         available = max(0.0, report["paper_free_units"])
         if not rows and history:
             return None  # no new eligible opportunity, not another daily seal
@@ -2753,6 +3008,7 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
             "coverage": {"candidate_count": len(rows), "candidate_fixtures": len({tuple(c["fixture"]) for c in rows}),
                          "slate_rows": len(context["slate"]), "status": "inputs_available" if rows else "input_starved_not_strategy_selectivity"},
             "policy": {"window_hours": 24, "kelly_multiplier": KELLY_MULTIPLIER,
+                       **({"admission": ADMISSION_POLICY} if "admission" in learner else {}),
                        "max_aggregate_bank_exposure": MAX_PAPER_EXPOSURE, "odds_band": None,
                        "quote_max_age_hours": QUOTE_MAX_AGE.total_seconds() / 3600,
                        "stricter_source_limits_retained": True, "minimum_legs": 2,
@@ -3002,9 +3258,9 @@ def performance(history, score_lookup):
                 group = acca_calibration[str(len(outcomes))]
                 group["resolved"] += 1
                 group["wins"] += int(all(outcomes))
-                group["predicted_wins"] += acca.get(
+                group["predicted_wins"] += acca.get("model_probability_estimate", acca.get(
                     "probability_estimate", math.prod(c["probability"] for c in acca["legs"])
-                )
+                ))
         # Ticket-date marks of latest known results; pending stakes held at
         # cost. Never omit a known loss just because another acca is pending.
         # This is NOT observed settlement-time or intraday drawdown.
@@ -3101,6 +3357,9 @@ def render_card(receipt):
         lines.append(
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
+        if acca.get("probability_basis") == ADMISSION_JOINT_BASIS:
+            lines.append(f"   Joint admission envelope {acca['probability_estimate']:.1%}"
+                         f" · independence-based model product {acca['model_probability_estimate']:.1%} (unvalidated)")
         for leg_index, c in enumerate(acca["legs"]):
             if leg_index:
                 lines.append("")  # one blank line between legs
@@ -3120,8 +3379,18 @@ def render_card(receipt):
                  f" · ML {c['probability']:.1%} · {c['bucket']}"),
                 f"      {comparison} · {quote_age}",
             ])
+            if "admission" in c:
+                a = c["admission"]
+                leg_lines.append(f"      Admission envelope {a['probability_lower']:.1%}"
+                                 f" · required source probability {a['required_source_probability']:.1%}"
+                                 f" · {a['fixtures']} distinct fixture observations (independence unverified)")
             lines.extend(leg_lines)
         lines.append("")
+    if (receipt.get("learning") or {}).get("admission"):
+        counts = Counter(c["admission"]["reason"] for c in receipt["candidates"])
+        lines.extend(["EVIDENCE ADMISSION — no fixed 60% rule; no local evidence means abstention.",
+                      "   " + "; ".join(f"{k}: {v}" for k, v in sorted(counts.items())),
+                      "   Cohort uncertainty assumes stable independent outcomes and transferable calibration; not an individual win-probability guarantee.", ""])
     concentration = receipt.get("fixture_concentration")
     if concentration is not None:
         policy = receipt["policy"]["fixture_concentration"]
