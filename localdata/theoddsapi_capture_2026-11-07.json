@@ -1,11 +1,28 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 92,
-  "captured_at": "2026-11-06T22:58:55+00:00",
+  "attempted": 2,
+  "attempted_fixtures": [
+    {
+      "away": "CF Pachuca",
+      "date": "2026-11-07",
+      "home": "Atlas FC",
+      "kickoff": "2026-11-07T23:00:00Z",
+      "league": "Liga MX Apertura"
+    },
+    {
+      "away": "Santos Laguna",
+      "date": "2026-11-07",
+      "home": "Atlante FC",
+      "kickoff": "2026-11-07T03:00:00Z",
+      "league": "Liga MX Apertura"
+    }
+  ],
+  "candidate_fixtures": 94,
+  "captured_at": "2026-11-07T02:01:58+00:00",
   "date": "2026-11-07",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 2
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -24,18 +41,21 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 2,
     "kickoff_mismatch": 1,
-    "priced": 11,
+    "priced": 12,
     "priced_close_window_not_open": 1,
-    "retry_cooldown": 80
+    "retry_cooldown": 77
   },
   "skipped": [
     "WARN kickoff-mismatch Arsenal|Hull City: pick legacy display says 15:00 SAST, captured rows say 17:00 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Arsenal|Hull City (priced, close window not open)",
     "Sporting CP|Moreirense (retry cooldown (6h after failed attempt))",
+    "Rosenborg BK|IK Start (priced)",
     "Valencia|Real Madrid (retry cooldown (6h after failed attempt))",
     "Eskilsminne|Atvidabergs FF (retry cooldown (6h after failed attempt))",
     "RB Leipzig|FC Augsburg (retry cooldown (6h after failed attempt))",
+    "Barnsley|Aldershot Town (retry cooldown (6h after failed attempt))",
     "Ironi Tiberias|Beitar Jerusalem (retry cooldown (6h after failed attempt))",
     "Port Vale|Scunthorpe United (retry cooldown (6h after failed attempt))",
     "Salisbury|Sholing (retry cooldown (6h after failed attempt))",
@@ -43,7 +63,7 @@
     "Port FC|Chonburi FC (retry cooldown (6h after failed attempt))",
     "FSV Mainz 05|FC Bayern M\u00fcnchen (retry cooldown (6h after failed attempt))",
     "Philadelphia Union|Toronto (retry cooldown (6h after failed attempt))",
-    "Ju\u00e1rez W|Monterrey W (retry cooldown (6h after failed attempt))",
+    "Ju\u00e1rez W|Monterrey W (kickoff already passed)",
     "Leyton Orient|Harborough Town (retry cooldown (6h after failed attempt))",
     "Al Shamal SC|Al Sailiya (retry cooldown (6h after failed attempt))",
     "Inter Miami|Charlotte (retry cooldown (6h after failed attempt))",
@@ -53,7 +73,7 @@
     "G\u00f3rnik Zabrze|Wieczysta Krak\u00f3w (priced)",
     "FCSB|Corvinul Hunedoara (retry cooldown (6h after failed attempt))",
     "Csikszereda|Universitatea Cluj (retry cooldown (6h after failed attempt))",
-    "Guadalupe FC|ADR Jicaral (retry cooldown (6h after failed attempt))",
+    "Guadalupe FC|ADR Jicaral (kickoff already passed)",
     "Atl\u00e9tico San Luis|Ju\u00e1rez (retry cooldown (6h after failed attempt))",
     "Pisa|S\u00fcdtirol (retry cooldown (6h after failed attempt))",
     "Ke\u00e7i\u00f6reng\u00fcc\u00fc|Manisa FK (retry cooldown (6h after failed attempt))",
@@ -105,11 +125,9 @@
     "Kashiwa Reysol|Kawasaki Frontale (retry cooldown (6h after failed attempt))",
     "Yokohama F. Marinos|Fagiano Okayama (retry cooldown (6h after failed attempt))",
     "Barakaldo|Real Uni\u00f3n Club (retry cooldown (6h after failed attempt))",
-    "Atlas|Pachuca (retry cooldown (6h after failed attempt))",
     "Avispa Fukuoka|V-Varen Nagasaki (retry cooldown (6h after failed attempt))",
     "Inverness CT|Livingston (retry cooldown (6h after failed attempt))",
     "Grasshopper|Lausanne Sport (retry cooldown (6h after failed attempt))",
-    "Atlante|Santos Laguna (retry cooldown (6h after failed attempt))",
     "Hradec Kr\u00e1lov\u00e9|Sigma Olomouc (retry cooldown (6h after failed attempt))",
     "M\u00e1laga|Racing Santander (retry cooldown (6h after failed attempt))",
     "Warta Pozna\u0144|Polonia Warszawa (retry cooldown (6h after failed attempt))",
@@ -125,6 +143,12 @@
     "Espanyol|Deportivo La Coru\u00f1a (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Atlas FC vs CF Pachuca (league not covered: Liga MX Apertura)",
+    "Atlante FC vs Santos Laguna (league not covered: Liga MX Apertura)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Liga MX Apertura": 2
+  }
 }

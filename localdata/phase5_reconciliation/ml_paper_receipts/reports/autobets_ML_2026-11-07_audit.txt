@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-07
 ==============================================================
-CURRENT PAPER BANK (all dates): 67.054 units · free 65.287 / reserved 1.767
-2 paper accas · 1 ticket publications · 1 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 67.054 units · free 64.605 / reserved 2.449
+4 paper accas · 2 ticket publications · 2 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -20,6 +20,22 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
 
    Alverca vs Casa Pia · KICKOFF 2026-11-07 20:00 SAST
       Away Win (1X2) @4.700 · ML 28.3% · SKIPPED_VETO
+
+[PAPER ACCA #3] @3.510 — 0.418621 paper units — piwi247-ex
+   Published 2026-11-07 03:57:14 SAST · reference P3/1
+   Kashiwa Reysol vs Kawasaki Frontale · KICKOFF 2026-11-07 09:00 SAST
+      Match Over 1.5 Goals @1.170 · ML 87.4% · SKIPPED_VETO
+
+   FC Tokyo vs Kashima Antlers · KICKOFF 2026-11-07 08:00 SAST
+      Match Over 3.5 Goals @3.000 · ML 37.7% · SKIPPED_VETO
+
+[PAPER ACCA #4] @11.750 — 0.263121 paper units — Unibet (SE)
+   Published 2026-11-07 03:57:14 SAST · reference P3/2
+   Alverca vs Casa Pia · KICKOFF 2026-11-07 20:00 SAST
+      Away Win (1X2) @4.700 · ML 28.3% · SKIPPED_VETO
+
+   Degerfors vs GAIS · KICKOFF 2026-11-07 18:30 SAST
+      Away Win (1X2) @2.500 · ML 42.7% · SKIPPED_VETO
 
 PUBLICATION & LEG DETAILS
 Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
@@ -69,6 +85,53 @@ P2 · 2026-11-07 00:57:52 SAST · No additional tickets
    Coverage: candidate count: 2702; candidate fixtures: 13; slate rows: 92; status: inputs_available
    Rejections: data quality: 11; outside rolling window or unproven kickoff: 2; quote or probability unavailable: 4727
    Exact opportunity replay: 2 acca(s) not republished; 1.720556 units left idle, no refill
+   Learning: fitted_source_market_temperature
+
+P3 · 2026-11-07 03:57:14 SAST · ACCA #3–#4
+   Receipt 20261107T015648751025Z · status paper_accas
+   Frozen at 2026-11-07T01:57:14.546356+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 72cae4795124ca5fcbf99e13c3a160a16b380b4563710e5dd193f57484c801c3
+   Decision window 2026-11-07T01:56:48.751025+00:00 → 2026-11-08T01:56:48.751025+00:00
+   Bank at decision: 67.054327 paper units
+   Available at decision: 65.287201 paper units
+   Reserved at decision: 1.767126 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.352716 units per canonical fixture
+   Reservation 0.681742 → 0.681742 units · released/idle 0.000000; no refill
+   2026-11-07 alverca vs casapia: new 0.263121 + prior open 0.127272 · unused new budget 2.962323 units
+   2026-11-07 degerfors vs gais: new 0.263121 + prior open 0.000000 · unused new budget 3.089595 units
+   2026-11-07 kashiwareysol vs kawasakifrontale: new 0.418621 + prior open 0.000000 · unused new budget 2.934095 units
+   2026-11-07 tokyo vs kashimaantlers: new 0.418621 + prior open 0.000000 · unused new budget 2.934095 units
+   Coverage: candidate count: 4319; candidate fixtures: 15; slate rows: 185; status: inputs_available
+   Rejections: data quality: 22; fixture date unproven: 3; outside rolling window or unproven kickoff: 3; quote or probability unavailable: 11149
+   ACCA #3 / leg 1: source forecast 87.4% · gap +0.0 pp · quote age 0.37h at decision
+      base 87.4% → adjusted 87.4% · learning move +0.0 pp · price break-even 85.5% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 87.4% → partition-normalized 87.4% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · ou_1.5 / over · bookmaker market 1.264875869 · outcome 108 · provider label Over Under Full Time · normalized row only; native payload unverified
+   ACCA #3 / leg 2: source forecast 37.7% · gap +0.0 pp · quote age 0.37h at decision
+      base 37.7% → adjusted 37.7% · learning move +0.0 pp · price break-even 33.3% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 37.7% → partition-normalized 37.7% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · ou_3.5 / over · bookmaker market 1.264831950 · outcome 1012 · provider label Over Under Full Time · normalized row only; native payload unverified
+   ACCA #4 / leg 1: source forecast 28.3% · gap +0.0 pp · quote age 3.33h at decision
+      base 28.3% → adjusted 28.3% · learning move +0.0 pp · price break-even 21.3% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 28.3% → partition-normalized 28.3% · includes unquoted outcomes; not proof of calibration
+   ACCA #4 / leg 2: source forecast 42.7% · gap -0.0 pp · quote age 3.33h at decision
+      base 42.7% → adjusted 42.7% · learning move +0.0 pp · price break-even 40.0% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 42.7% → partition-normalized 42.7% · includes unquoted outcomes; not proof of calibration
+   Learning: fitted_source_market_temperature
+
+P4 · 2026-11-07 04:00:54 SAST · No additional tickets
+   Receipt 20261107T020028748938Z · status no_paper_bet
+   Frozen at 2026-11-07T02:00:54.434463+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 3608a9c8370e5178172168b7a40b16cc4af0dbc9c15375e49a5158ab05ef7a99
+   Decision window 2026-11-07T02:00:28.748938+00:00 → 2026-11-08T02:00:28.748938+00:00
+   Bank at decision: 67.054327 paper units
+   Available at decision: 64.605459 paper units
+   Reserved at decision: 2.448868 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.352716 units per canonical fixture
+   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
+   Coverage: candidate count: 4319; candidate fixtures: 15; slate rows: 94; status: inputs_available
+   Rejections: data quality: 11; fixture date unproven: 1; outside rolling window or unproven kickoff: 3; quote or probability unavailable: 5907
+   Exact opportunity replay: 2 acca(s) not republished; 0.674623 units left idle, no refill
    Learning: fitted_source_market_temperature
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.

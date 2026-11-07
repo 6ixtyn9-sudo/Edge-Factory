@@ -44,20 +44,22 @@
     "betexplorer": {
       "be_matched": 0,
       "be_raw": 3,
-      "be_usable": 0,
-      "blocker": "no pre-build BetExplorer rows",
+      "be_usable": 3,
+      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_miss_counts": {
+        "fixture_key_miss": 3
+      },
       "reason": null,
-      "status": "empty"
+      "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-07' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -89,9 +91,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 1,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 3,
+        "fixture_key_miss": 4,
         "selection_unsupported": 4
       },
       "reason": null,
@@ -153,14 +155,15 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 304,
+      "join_matched_rows": 331,
       "join_miss_counts": {
-        "market_unsupported": 1869,
-        "no_pick_for_fixture": 4852
+        "fixture_key_miss": 5156,
+        "market_unsupported": 5221,
+        "no_pick_for_fixture": 7116
       },
-      "op_matched": 3,
-      "op_raw": 7025,
-      "op_usable": 7025,
+      "op_matched": 12,
+      "op_raw": 17824,
+      "op_usable": 17824,
       "reason": null,
       "status": "cache_only"
     },
@@ -177,12 +180,12 @@
       "coherence_withheld_fixtures": 0,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 92,
+      "join_matched_rows": 91,
       "join_miss_counts": {
-        "fixture_key_miss": 18727,
-        "no_pick_for_fixture": 1444
+        "fixture_key_miss": 18746,
+        "no_pick_for_fixture": 1426
       },
-      "pa_matched": 192,
+      "pa_matched": 294,
       "pa_raw": 20263,
       "pa_scored": 20263,
       "reason": null,
@@ -270,7 +273,7 @@
           "unsupported_market:draw_no_bet": 2,
           "unsupported_market:team_total_points_odd_even": 4
         },
-        "card_fixture_count": 97,
+        "card_fixture_count": 118,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 73
@@ -331,15 +334,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 232,
+      "join_matched_rows": 278,
       "join_miss_counts": {
-        "fixture_key_miss": 46,
-        "market_unsupported": 4,
-        "no_pick_for_fixture": 658
+        "market_unsupported": 8,
+        "no_pick_for_fixture": 808
       },
-      "oa_matched": 34,
-      "oa_raw": 940,
-      "oa_usable": 940,
+      "oa_matched": 60,
+      "oa_raw": 1094,
+      "oa_usable": 1094,
       "reason": null,
       "status": "cache_only"
     },
