@@ -1,15 +1,45 @@
 {
-  "attempted": 18,
+  "attempted": 8,
   "attempted_fixtures": [
     {
-      "avg_p": 59.0,
-      "away": "Quindio",
+      "avg_p": 60.40524099204493,
+      "away": "Rangers",
       "date": "2026-11-07",
-      "home": "Tigres FC",
-      "league": "Colombia Primera B",
+      "home": "St. Mirren",
+      "league": "Premiership",
       "market": "1x2",
       "pick": "away",
-      "w_score": 0.6134
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 49.21650055370985,
+      "away": "Tenerife",
+      "date": "2026-11-07",
+      "home": "Granada",
+      "league": "La Liga 2",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 45.411474675033624,
+      "away": "Deportivo T\u00e1chira",
+      "date": "2026-11-07",
+      "home": "Monagas",
+      "league": "Primera Division",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 42.64176974310181,
+      "away": "Pachuca",
+      "date": "2026-11-07",
+      "home": "Atlas",
+      "league": "Liga MX",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
     },
     {
       "avg_p": 76.47956197488908,
@@ -22,31 +52,11 @@
       "w_score": 0.5405
     },
     {
-      "avg_p": 74.27716003005258,
-      "away": "IK Start",
-      "date": "2026-11-07",
-      "home": "Rosenborg BK",
-      "league": "Eliteserien",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5273
-    },
-    {
       "avg_p": 71.76791615522615,
       "away": "Real Madrid",
       "date": "2026-11-07",
       "home": "Valencia",
       "league": "La Liga",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 65.25975414216995,
-      "away": "Beitar Jerusalem",
-      "date": "2026-11-07",
-      "home": "Ironi Tiberias",
-      "league": "Ligat ha'Al",
       "market": "1x2",
       "pick": "away",
       "w_score": 0.5405
@@ -70,7 +80,39 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
-    },
+    }
+  ],
+  "be_429": 2,
+  "be_cached": 6,
+  "be_cooling_down": true,
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "cache_only": 6,
+  "candidate_fixtures": 12,
+  "captured_at": "2026-11-07T19:28:44.841054+00:00",
+  "date": "2026-11-07",
+  "deferred_fixtures": 4,
+  "errors": [],
+  "fixtures_with_rows": 5,
+  "market_budget_stop": false,
+  "market_requests": 8,
+  "match_detail": {
+    "bookmakers": 226,
+    "challenge_pages": 0,
+    "fixtures": 16,
+    "market_rows": 623,
+    "markets": 83,
+    "named_rows": 623,
+    "standings_rows": 0,
+    "with_h2h": 0,
+    "with_last_results": 0,
+    "with_standings": 0
+  },
+  "max_fixtures": 12,
+  "ml_precutoff_active": false,
+  "ml_refresh_attempted": 0,
+  "network_attempted": 2,
+  "quoted_fixtures": [
     {
       "avg_p": 60.40524099204493,
       "away": "Rangers",
@@ -79,66 +121,6 @@
       "league": "Premiership",
       "market": "1x2",
       "pick": "away",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 58.084863020016606,
-      "away": "Corvinul Hunedoara",
-      "date": "2026-11-07",
-      "home": "FCSB",
-      "league": "Superliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 55.03444360333081,
-      "away": "Manchester City",
-      "date": "2026-11-07",
-      "home": "Nottingham Forest",
-      "league": "Premier League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 54.848167539267024,
-      "away": "Werder Bremen",
-      "date": "2026-11-07",
-      "home": "VfB Stuttgart",
-      "league": "Bundesliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 52.4405334087268,
-      "away": "S\u00e3o Bernardo",
-      "date": "2026-11-07",
-      "home": "Ava\u00ed",
-      "league": "Serie B",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6001
-    },
-    {
-      "avg_p": 52.31621926037169,
-      "away": "Casa Pia",
-      "date": "2026-11-07",
-      "home": "Alverca",
-      "league": "Liga Portugal",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 51.552915766738664,
-      "away": "Sant Andreu",
-      "date": "2026-11-07",
-      "home": "FC Cartagena",
-      "league": "Primera Division RFEF: Group 2",
-      "market": "1x2",
-      "pick": "home",
       "w_score": 0.5405
     },
     {
@@ -152,67 +134,25 @@
       "w_score": 0.5405
     },
     {
-      "avg_p": 48.994032515741004,
-      "away": "Avellino",
+      "avg_p": 45.411474675033624,
+      "away": "Deportivo T\u00e1chira",
       "date": "2026-11-07",
-      "home": "Benevento",
-      "league": "Serie B",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 48.91502750069917,
-      "away": "Albacete",
-      "date": "2026-11-07",
-      "home": "Legan\u00e9s",
-      "league": "La Liga 2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 47.89463692453726,
-      "away": "Bologna",
-      "date": "2026-11-07",
-      "home": "Parma",
-      "league": "Serie A",
+      "home": "Monagas",
+      "league": "Primera Division",
       "market": "1x2",
       "pick": "away",
       "w_score": 0.5405
-    }
-  ],
-  "be_429": 0,
-  "be_cached": 6,
-  "be_cooling_down": false,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "cache_only": 6,
-  "candidate_fixtures": 29,
-  "captured_at": "2026-11-07T16:44:24.484531+00:00",
-  "date": "2026-11-07",
-  "deferred_fixtures": 11,
-  "errors": [],
-  "fixtures_with_rows": 12,
-  "market_budget_stop": false,
-  "market_requests": 60,
-  "match_detail": {
-    "bookmakers": 210,
-    "challenge_pages": 0,
-    "fixtures": 14,
-    "market_rows": 566,
-    "markets": 74,
-    "named_rows": 566,
-    "standings_rows": 0,
-    "with_h2h": 0,
-    "with_last_results": 0,
-    "with_standings": 0
-  },
-  "max_fixtures": 12,
-  "ml_precutoff_active": false,
-  "ml_refresh_attempted": 0,
-  "network_attempted": 12,
-  "quoted_fixtures": [
+    },
+    {
+      "avg_p": 42.64176974310181,
+      "away": "Pachuca",
+      "date": "2026-11-07",
+      "home": "Atlas",
+      "league": "Liga MX",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
     {
       "avg_p": 60.782633371169126,
       "away": "Charlotte",
@@ -222,120 +162,10 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
-    },
-    {
-      "avg_p": 60.40524099204493,
-      "away": "Rangers",
-      "date": "2026-11-07",
-      "home": "St. Mirren",
-      "league": "Premiership",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 58.084863020016606,
-      "away": "Corvinul Hunedoara",
-      "date": "2026-11-07",
-      "home": "FCSB",
-      "league": "Superliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 55.03444360333081,
-      "away": "Manchester City",
-      "date": "2026-11-07",
-      "home": "Nottingham Forest",
-      "league": "Premier League",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 54.848167539267024,
-      "away": "Werder Bremen",
-      "date": "2026-11-07",
-      "home": "VfB Stuttgart",
-      "league": "Bundesliga",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 52.4405334087268,
-      "away": "S\u00e3o Bernardo",
-      "date": "2026-11-07",
-      "home": "Ava\u00ed",
-      "league": "Serie B",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6001
-    },
-    {
-      "avg_p": 52.31621926037169,
-      "away": "Casa Pia",
-      "date": "2026-11-07",
-      "home": "Alverca",
-      "league": "Liga Portugal",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 51.552915766738664,
-      "away": "Sant Andreu",
-      "date": "2026-11-07",
-      "home": "FC Cartagena",
-      "league": "Primera Division RFEF: Group 2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 49.21650055370985,
-      "away": "Tenerife",
-      "date": "2026-11-07",
-      "home": "Granada",
-      "league": "La Liga 2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 48.994032515741004,
-      "away": "Avellino",
-      "date": "2026-11-07",
-      "home": "Benevento",
-      "league": "Serie B",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 48.91502750069917,
-      "away": "Albacete",
-      "date": "2026-11-07",
-      "home": "Legan\u00e9s",
-      "league": "La Liga 2",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 47.89463692453726,
-      "away": "Bologna",
-      "date": "2026-11-07",
-      "home": "Parma",
-      "league": "Serie A",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
     }
   ],
-  "requests": 86,
-  "rows": 36,
+  "requests": 16,
+  "rows": 15,
   "schema": 1,
   "status": "ok"
 }

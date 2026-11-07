@@ -42,19 +42,19 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 35,
-      "be_raw": 42,
-      "be_usable": 39,
+      "be_matched": 6,
+      "be_raw": 45,
+      "be_usable": 45,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 11,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 10,
-        "no_pick_for_fixture": 18
+        "fixture_key_miss": 41,
+        "no_pick_for_fixture": 2
       },
       "reason": null,
       "status": "cache_only"
@@ -156,13 +156,13 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 977,
+      "join_matched_rows": 464,
       "join_miss_counts": {
-        "fixture_key_miss": 26299,
+        "fixture_key_miss": 39699,
         "market_unsupported": 23585,
-        "no_pick_for_fixture": 25430
+        "no_pick_for_fixture": 12543
       },
-      "op_matched": 31,
+      "op_matched": 16,
       "op_raw": 76291,
       "op_usable": 76291,
       "reason": null,
@@ -181,12 +181,12 @@
       "coherence_withheld_fixtures": 0,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 26,
+      "join_matched_rows": 7,
       "join_miss_counts": {
-        "fixture_key_miss": 19837,
-        "no_pick_for_fixture": 400
+        "fixture_key_miss": 20126,
+        "no_pick_for_fixture": 130
       },
-      "pa_matched": 81,
+      "pa_matched": 26,
       "pa_raw": 20263,
       "pa_scored": 20263,
       "reason": null,
@@ -274,7 +274,7 @@
           "unsupported_market:draw_no_bet": 2,
           "unsupported_market:team_total_points_odd_even": 4
         },
-        "card_fixture_count": 103,
+        "card_fixture_count": 98,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 73
@@ -335,13 +335,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 56,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 858,
-        "market_unsupported": 8,
-        "no_pick_for_fixture": 172
+        "fixture_key_miss": 1086,
+        "market_unsupported": 8
       },
-      "oa_matched": 12,
+      "oa_matched": 0,
       "oa_raw": 1094,
       "oa_usable": 1094,
       "reason": null,
