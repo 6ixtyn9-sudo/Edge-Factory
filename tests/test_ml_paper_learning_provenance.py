@@ -70,7 +70,7 @@ def test_unaffected_sources_keep_both_wins_and_losses(source):
     learner = mp.learn([receipt(DAY, cs)], NOW, lambda c: (2, 0) if c["candidate_id"] == "1" else (0, 2))
     assert learner["observations"] == 2
     assert {x["hit"] for x in learner["training_outcomes"]} == {0, 1}
-    assert learner["status"] == "fitted_source_market_temperature"
+    assert learner["status"] == "fitted_source_market_context"
 
 
 @pytest.mark.parametrize("source", [42, True, [], {}])
@@ -111,7 +111,7 @@ def test_refit_recomputes_fixture_weights_columns_smoothing_and_crossfit_from_el
     learner = mp.learn(history, NOW, lookup)
     expected = mp.learn([receipt(DAY, good)], NOW, lookup)
     assert without_audit(learner) == without_audit(expected)
-    assert learner["fixtures"] == 2 and learner["parameters"] == 1
+    assert learner["fixtures"] == 2 and learner["parameters"] == 1 + len(learner["context_model"]["feature_cols"])
     assert not {"columns", "success_tilt", "smoothing_factor"} & learner.keys()
     assert learner["training_admission"]["excluded_candidate_occurrences"] == 2
     assert history == before
@@ -142,7 +142,7 @@ def test_old_adjusted_predictions_and_stored_coefficients_are_not_carried_into_r
     cs = [quoted(1, p=0.8), quoted(2, p=0.7)]
     history = [receipt(DAY, cs)]
     changed = deepcopy(history)
-    changed[0]["learning"].update(status="fitted_source_market_temperature", coef=[9999], intercept=-9999)
+    changed[0]["learning"].update(status="fitted_source_market_context", coef=[9999], intercept=-9999)
     for c in changed[0]["candidates"]:
         c["probability"] = 0.00001
     lookup = lambda c: (2, 0) if c["candidate_id"] == "1" else (0, 2)

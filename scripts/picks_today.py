@@ -1386,6 +1386,8 @@ def eval_post_forebet(day, registry, fixture_audit=None):
                 "avg_p": row["avg_p"],
                 "enhancement_source_features": row["enhancement_source_features"],
                 "enhancement_feature_sources": row["enhancement_feature_sources"],
+                "enhancement_country": row.get("enhancement_country"),
+                "enhancement_country_sources": row.get("enhancement_country_sources", []),
                 "enhancement_input_status": row.get("enhancement_input_status", "available"),
                 "probability_available": row["avg_p"] is not None,
                 "w_score": float(edge["valid"]["wilson_lb"]),

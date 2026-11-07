@@ -256,6 +256,8 @@ def collect_observations(con, *, start, as_of, include_snapshot=False,
                         conflicts.update(f for f in ENH_FORECAST_FIELDS
                                          if _enhancement_forecast_number(previous["row"].get(f))
                                          != _enhancement_forecast_number(row.get(f)))
+                        if str(previous["row"].get("country") or "").strip().casefold() != str(row.get("country") or "").strip().casefold():
+                            conflicts.add("country")
                         vote["row"]["_enh_conflicts"] = sorted(conflicts)
                         vote["row"]["_enh_timing_blocked"] = (
                             not _enhancement_forecast_eligible(previous["row"])
@@ -391,6 +393,15 @@ def contract_rows(observations, ambiguous, resolved, edge, *, settled=True, enha
                 emitted['enhancement_source_features'] = None
                 emitted['enhancement_input_status'] = 'unavailable'
             emitted['enhancement_feature_sources'] = sorted(votes)
+            # Optional country evidence, not a country inferred from a league
+            # title or a new voter/admission rule. Conflicts stay unavailable.
+            countries = {s: v['row']['country'].strip() for s, v in votes.items()
+                         if _enhancement_forecast_eligible(v['row'])
+                         and 'country' not in v['row'].get('_enh_conflicts', [])
+                         and isinstance(v['row'].get('country'), str) and v['row']['country'].strip()}
+            agreed = len({v.casefold() for v in countries.values()}) == 1
+            emitted['enhancement_country'] = countries[min(countries)] if agreed else None
+            emitted['enhancement_country_sources'] = sorted(countries) if agreed else []
         yield emitted
 
 
