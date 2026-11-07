@@ -1220,3 +1220,66 @@ def test_redteam_nonexact_shortlist_cannot_hide_valid_quote_behind_nine_char_col
         match_fn=(lambda *_: True) if permissive_caller else None)
     assert row['enhancement_price'] == 1.6
     assert row['enhancement_price_book'] == 'RightBook'
+
+
+def test_alias_market_hole_skips_buckets_without_requested_or_reversed_slot(monkeypatch):
+    from edgefactory.sources import theoddsapi
+    calls = []
+    original = theoddsapi._team_names_match
+
+    def counted(a, b, **kwargs):
+        if str(b).startswith(('Unrelated', 'Different')):
+            calls.append((a, b))
+        return original(a, b, **kwargs)
+
+    monkeypatch.setattr(theoddsapi, '_team_names_match', counted)
+    irrelevant = [_alias_offer(home='Unrelated Town', away='Different United',
+                    slot=('1x2', 'home'), book=f'Book {i}') for i in range(300)]
+    index = _alias_index(_alias_offer(), *irrelevant)
+    result = attach_enhancement_price(_alias_pick(), index)
+    assert result['enhancement_price'] == 1.6
+    assert not calls  # no matching work can contribute the requested team total
+
+
+def test_duplicate_quote_names_do_not_multiply_identity_comparisons(monkeypatch):
+    from edgefactory.sources import theoddsapi
+    calls = []
+    original = theoddsapi._team_names_match
+
+    def counted(a, b, **kwargs):
+        if str(b).startswith(('Unrelated', 'Different')):
+            calls.append((a, b))
+        return original(a, b, **kwargs)
+
+    monkeypatch.setattr(theoddsapi, '_team_names_match', counted)
+    irrelevant = [_alias_offer(home='Unrelated Town', away='Different United',
+                    book=f'Book {i}') for i in range(300)]
+    result = attach_enhancement_price(_alias_pick(), _alias_index(_alias_offer(), *irrelevant))
+    assert result['enhancement_price'] == 1.6
+    assert len(calls) <= 2  # each full-name orientation once, not every book/quote
+
+
+def test_identity_memoization_does_not_survive_quote_or_pick_mutation():
+    index = _alias_index(_alias_offer())
+    assert attach_enhancement_price(_alias_pick(), index)['enhancement_priced']
+    for slots in index['fixture_quotes'].values():
+        for slot, quotes in slots.items():
+            slots[slot] = [(*q[:6], (q[6][0]+' Women', q[6][1]+' Women')) for q in quotes]
+    assert not attach_enhancement_price(_alias_pick(), index)['enhancement_priced']
+    assert not attach_enhancement_price(_alias_pick(home='Manchester City'), index)['enhancement_priced']
+
+
+def test_identity_shortlist_deduplication_keeps_every_bookmaker_offer():
+    offers = [_alias_offer(book=f'Book {i}') for i in range(60)]
+    result = attach_enhancement_price(_alias_pick(), _alias_index(*offers))
+    books = {result['enhancement_price_book']}
+    books.update(q['enhancement_price_book'] for q in result['enhancement_quote_alternatives'])
+    assert books == {f'Book {i}' for i in range(60)}
+    assert len(result['enhancement_quote_alternatives']) == 59
+
+
+def test_shortlist_cache_cannot_override_custom_identity_veto():
+    index = _alias_index(_alias_offer())
+    assert attach_enhancement_price(_alias_pick(), index)['enhancement_priced']
+    assert not attach_enhancement_price(_alias_pick(), index,
+                                       match_fn=lambda a, b: False)['enhancement_priced']
