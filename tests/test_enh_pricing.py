@@ -1167,3 +1167,42 @@ def test_all_named_book_alternatives_survive_json_and_live_pairing(tmp_path, mon
     assert len(plan) == 1 and len(plan[0]['legs']) == 2
     assert {l['price_book'] for l in plan[0]['legs']} == {'Common Book'}
     assert all(l['cohort_evidence']['price_context']['source'] == source for l in plan[0]['legs'])
+
+
+@pytest.mark.parametrize('home,wrong_home', [
+    ('Paris', 'Paris 13 Atletico'),
+    ('Paris 13 Atletico', 'Paris 14 Atletico'),
+])
+@pytest.mark.parametrize('wrong_first', [True, False])
+@pytest.mark.parametrize('with_valid_quote', [True, False])
+@pytest.mark.parametrize('witnessed', [True, False])
+def test_each_quote_keeps_club_number_identity_in_colliding_bucket(
+        home, wrong_home, wrong_first, with_valid_quote, witnessed):
+    # All three Paris spellings share norm_team == "paris". Neither the first
+    # bucket display names nor a higher quote may erase the club number.
+    valid = _alias_offer(home=home, away='La Roche', price=1.6, book='RightBook')
+    wrong = _alias_offer(home=wrong_home, away='La Roche', price=2.0, book='WrongBook')
+    offers = ([wrong, valid] if wrong_first else [valid, wrong]) if with_valid_quote else [wrong]
+    index = _alias_index(*offers)
+    updates = {} if witnessed else dict(kickoff_utc=None, contract_schema=None)
+    row = attach_enhancement_price(_alias_pick(home=home, away='La Roche', **updates), index)
+    assert row['enhancement_price'] == (1.6 if with_valid_quote else None)
+    assert row['enhancement_price_book'] == ('RightBook' if with_valid_quote else None)
+
+
+@pytest.mark.parametrize('suffix', ['Women', 'U23', 'SRL'])
+@pytest.mark.parametrize('wrong_first', [True, False])
+def test_nonexact_lookup_finds_valid_quote_after_other_squad_display_name(suffix, wrong_first):
+    from edgefactory.util import norm_team
+    valid = _alias_offer(price=1.6, book='RightBook')
+    wrong = _alias_offer(home='SE Palmeiras SP '+suffix, away='Fluminense FC RJ '+suffix,
+                         price=2.0, book='WrongBook')
+    index = _alias_index(*([wrong, valid] if wrong_first else [valid, wrong]))
+    # No exact pair: exercise the original fuzzy bucket lookup, not the
+    # exact-key market-hole path covered by the existing production tests.
+    anchor = norm_team('Palmeiras-SP'), norm_team('Fluminense-RJ')
+    for field in ('pairs', 'fixture_quotes', 'names'):
+        index[field].pop(anchor)
+    row = attach_enhancement_price(_alias_pick(), index)
+    assert row['enhancement_price'] == 1.6
+    assert row['enhancement_price_book'] == 'RightBook'

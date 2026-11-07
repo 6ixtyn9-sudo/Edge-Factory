@@ -68,8 +68,15 @@ except Exception:  # pragma: no cover - standalone use
     _ef_norm_team = None
 
 
-from edgefactory.identity import AMBIGUOUS_DOMESTIC_LEAGUE_KEYS
-from edgefactory.util import dated_artifact_path
+from edgefactory.identity import (
+    AMBIGUOUS_DOMESTIC_LEAGUE_KEYS,
+    TEAM_KEY_ALIASES,
+    club_initial_words_for_comparison,
+    source_team_key,
+    source_team_key_base,
+    squad_marker_mismatch,
+)
+from edgefactory.util import dated_artifact_path, strip_squad_markers
 
 
 def _parse_keys() -> tuple[str, ...]:
@@ -937,13 +944,27 @@ def _pick_kickoff_utc(pick: dict) -> datetime | None:
 
 
 def _team_names_match(a: object, b: object, *, allow_truncated: bool = True) -> bool:
-    """Cross-feed team-name equivalence: exact/9-char keys, prefix containment,
-    or significant-token subset (affix drops like IK Sirius vs Sirius).
+    """Cross-feed equivalence with squad and club-number vetoes before fuzz.
 
-    New price-alias admission disables the 9-char-only shortcut: unrelated
-    clubs can share that prefix. Existing callers keep their current policy.
+    Keep existing affix/subset relations (IK Sirius / Sirius). New price-alias
+    admission still disables the nine-character shortcut. Neither shortcut,
+    letter-only equality nor token dropping may erase a distinct squad or
+    club number (Paris / Paris 13 Atletico, B 1903 / B 1908).
     """
-    a_full, b_full = _norm_full(a), _norm_full(b)
+    if squad_marker_mismatch(a, b):
+        return False
+    a_words = club_initial_words_for_comparison(a)
+    b_words = club_initial_words_for_comparison(b)
+    # Numeric squad suffixes are already checked above; 2 / II must remain
+    # compatible. A missing/different CLUB number needs an existing curated
+    # same-club alias, never an inference from a shared letter-only prefix.
+    a_digits = re.findall(r"\d+", strip_squad_markers(a_words))
+    b_digits = re.findall(r"\d+", strip_squad_markers(b_words))
+    if a_digits != b_digits:
+        ka, kb = source_team_key_base(a), source_team_key_base(b)
+        return ((ka in TEAM_KEY_ALIASES or kb in TEAM_KEY_ALIASES)
+                and source_team_key(a) == source_team_key(b))
+    a_full, b_full = _norm_full(a_words), _norm_full(b_words)
     if not a_full or not b_full:
         return False
     if a_full == b_full:

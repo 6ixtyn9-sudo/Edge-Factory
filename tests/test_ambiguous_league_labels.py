@@ -14,6 +14,12 @@ from scripts import build_entity_registry as builder
     ('Primera Division', 'argentina primera division'),
     ('Primera División', 'argentina primera division'),
     ('Serie A', 'italy serie a'),
+    ('Bundesliga', 'austria bundesliga'),
+    ('Bundesliga 2', 'germany bundesliga 2'),
+    ('2. Bundesliga', 'germany bundesliga 2'),
+    ('Superliga', 'denmark superliga'),
+    ('Super Lig', 'turkey super lig'),
+    ('Super Liga', 'serbia super liga'),
 ])
 def test_stale_learned_alias_cannot_invent_country(monkeypatch, raw, target):
     monkeypatch.setattr(entities, 'load_overrides', dict)
@@ -28,6 +34,13 @@ def test_stale_learned_alias_cannot_invent_country(monkeypatch, raw, target):
     ('Ligue 1', 'France Ligue 1'), ('Ligue 1', 'Algeria Ligue 1'),
     ('Primera Division', 'Argentina Primera Division'),
     ('Primera División', 'Peru Primera División'),
+    ('Bundesliga', 'Germany Bundesliga'),
+    ('Bundesliga', 'Austria Bundesliga'),
+    ('Bundesliga 2', 'Germany Bundesliga 2'),
+    ('2. Bundesliga', 'Germany Bundesliga 2'),
+    ('Superliga', 'Denmark Superliga'),
+    ('Super Lig', 'Turkey Super Lig'),
+    ('Super Liga', 'Serbia Super Liga'),
 ])
 def test_builder_never_merges_generic_domestic_label(raw, qualified):
     assert builder.is_generic_league_label(raw)
