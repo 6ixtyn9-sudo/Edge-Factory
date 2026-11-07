@@ -14,6 +14,7 @@ from datetime import date
 from edgefactory.identity import source_team_key, squad_markers
 from edgefactory.market_registry import get_bettable_markets
 from edgefactory.settlement import terminal_event_disposition
+from edgefactory.step_timing import timed_step
 
 SCHEMA = "post_forebet_v1"
 POST_FOREBET_START = "2026-06-13"
@@ -542,7 +543,10 @@ def _enhancement_snapshot(con, start, as_of, cache):
     key = ('observations', con, start, as_of, 'enh_regulation')
     if cache is not None and key in cache:
         return cache[key]
-    snapshot = collect_observations(con, start=start, as_of=as_of, regulation_only=True, include_form_names=True)
+    timing_label = f"enhancement source snapshot {start}..{as_of}"
+    print(f"STEP_START label={timing_label}", flush=True)
+    with timed_step(timing_label):
+        snapshot = collect_observations(con, start=start, as_of=as_of, regulation_only=True, include_form_names=True)
     if cache is not None:
         cache[key] = snapshot
     return snapshot
@@ -698,17 +702,20 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
         from edgefactory.enh_registry import MIN_COHORT_N
         result['ml_status'] = 'insufficient_or_constant_training_data'
         try:
-            archive = _enhancement_archive(con, start, as_of, resolved, cache)
-            feature_cache = cache if cache is not None else {}
-            enriched = []
-            for key, probability, label, row in training:
-                votes = observations[(key, edge['market'])]
-                context = [v['row'] for source, v in votes.items()
-                           if (key, edge['market'], source) not in ambiguous]
-                row = dict(row, enhancement_source_features=enhancement_source_features(context))
-                enriched.append((key, probability, label,
-                                 enhancement_model_features(row, archive, feature_cache)))
-            training = enriched
+            timing_label = f"enhancement features {identity} {selection} {as_of} n={len(training)}"
+            print(f"STEP_START label={timing_label}", flush=True)
+            with timed_step(timing_label):
+                archive = _enhancement_archive(con, start, as_of, resolved, cache)
+                feature_cache = cache if cache is not None else {}
+                enriched = []
+                for key, probability, label, row in training:
+                    votes = observations[(key, edge['market'])]
+                    context = [v['row'] for source, v in votes.items()
+                               if (key, edge['market'], source) not in ambiguous]
+                    row = dict(row, enhancement_source_features=enhancement_source_features(context))
+                    enriched.append((key, probability, label,
+                                     enhancement_model_features(row, archive, feature_cache)))
+                training = enriched
         except (ImportError, KeyError, TypeError, ValueError, AttributeError, ArithmeticError):
             # An optional training feature failure must not erase measured rates
             # or quietly train on a different, partial population.
@@ -735,8 +742,11 @@ def enhancement_cohort(con, edge, *, as_of, selection, min_n=100, cache=None, fi
                     feature_spec = dict(feature_cols=cols, feature_means=means, feature_scales=scales,
                         feature_observed_n={c: len(observed[c]) for c in cols}, n=len(training))
                     model = LogisticRegression(C=1.0, max_iter=1000, random_state=42)
-                    model.fit([enhancement_feature_vector(r[3], feature_spec) for r in training],
-                              [r[2] for r in training])
+                    timing_label = f"enhancement fit {identity} {selection} {as_of} n={len(training)} cols={len(cols)}"
+                    print(f"STEP_START label={timing_label}", flush=True)
+                    with timed_step(timing_label):
+                        model.fit([enhancement_feature_vector(r[3], feature_spec) for r in training],
+                                  [r[2] for r in training])
                 payload = dict(schema='enh_score_logit_v2', contract_id=identity,
                     feature_basis='observed_forecasts_and_prior_regulation_form',
                     train_window_start=start, form_window=10,

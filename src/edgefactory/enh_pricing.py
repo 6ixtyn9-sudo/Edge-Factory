@@ -178,7 +178,14 @@ def _default_match_fn(*, allow_truncated: bool = True) -> Callable[[object, obje
         from .sources.theoddsapi import _team_names_match
         from .identity import TEAM_KEY_ALIASES, source_team_key, source_team_key_base
 
+        # This closure belongs to ONE attachment, never a persisted index or
+        # another decision. Many book/market rows repeat the same full names.
+        compared = {}
+
         def match(a, b):
+            key = (a, b) if isinstance(a, str) and isinstance(b, str) else None
+            if key is not None and key in compared:
+                return compared[key]
             # Reuse ONLY curated same-club aliases already accepted by fixture
             # corroboration (e.g. Basaksehir / İstanbul Başakşehir). Do not
             # broaden token fuzz or trust a shared truncated identity prefix.
@@ -186,7 +193,10 @@ def _default_match_fn(*, allow_truncated: bool = True) -> Callable[[object, obje
             alias = ((ka in TEAM_KEY_ALIASES or kb in TEAM_KEY_ALIASES)
                      and source_team_key(a) == source_team_key(b)
                      and not squad_marker_mismatch(a, b))
-            return alias or _team_names_match(a, b, allow_truncated=allow_truncated)
+            result = alias or _team_names_match(a, b, allow_truncated=allow_truncated)
+            if key is not None:
+                compared[key] = result
+            return result
         return match
     except Exception:
         return None
@@ -857,6 +867,24 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
         index = _betexplorer_asof_index(index, parse_iso_utc(pick.get("as_of")))
         pairs = index.get("pairs") or {}
         names = index.get("names") or {}
+
+        def raw_fixture_pairs(key, display):
+            # Shortlist identities, not quotes. Do not remove any bookmaker,
+            # price, clock or provenance evidence from the actual slot below.
+            raw_pairs = [display]
+            seen = {display} if all(isinstance(v, str) for v in display) else set()
+            for quotes in index.get("fixture_quotes", {}).get(key, {}).values():
+                for quote in quotes:
+                    if len(quote) <= 6 or not isinstance(quote[6], (tuple, list)) or len(quote[6]) != 2:
+                        continue
+                    raw = tuple(quote[6])
+                    if all(isinstance(v, str) for v in raw):
+                        if raw in seen:
+                            continue
+                        seen.add(raw)
+                    raw_pairs.append(raw)
+            return raw_pairs
+
         hit_key = (norm_team(pick.get("home")), norm_team(pick.get("away")))
         swapped = False
         exact_pair = hit_key in pairs
@@ -875,11 +903,7 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
                     # A legacy short-key bucket can contain several squads.
                     # Its first display pair must not hide a later valid quote
                     # now that the shared matcher vetoes squad mismatches.
-                    raw_pairs = [(raw_h, raw_a), *(
-                        q[6] for quotes in index.get("fixture_quotes", {}).get((nh, na), {}).values()
-                        for q in quotes if len(q) > 6
-                        and isinstance(q[6], (tuple, list)) and len(q[6]) == 2
-                    )]
+                    raw_pairs = raw_fixture_pairs((nh, na), (raw_h, raw_a))
                     both = any(mfn(pick.get("home"), h) and mfn(pick.get("away"), a)
                                for h, a in raw_pairs)
                     swap = any(mfn(pick.get("home"), a) and mfn(pick.get("away"), h)
@@ -957,17 +981,20 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
                     strict_mfn = mfn
                     mfn = lambda a, b: strict_mfn(a, b) and match_fn(a, b)
                 if mfn:
+                    possible_slots = {mapping}
+                    if mapping[0].startswith("tt_home_"):
+                        possible_slots.add(("tt_away_" + mapping[0][len("tt_home_"):], mapping[1]))
+                    elif mapping[0].startswith("tt_away_"):
+                        possible_slots.add(("tt_home_" + mapping[0][len("tt_away_"):], mapping[1]))
+                    elif mapping[0] == "dc":
+                        possible_slots.add(("dc", {"1x": "x2", "x2": "1x"}.get(mapping[1], mapping[1])))
                     for key, (raw_h, raw_a) in sorted(names.items()):
-                        if key == hit_key:
-                            continue
+                        if key == hit_key or not possible_slots.intersection(index["fixture_quotes"].get(key, {})):
+                            continue  # impossible in BOTH orientations; no identity scan needed
                         # Shortlist using per-quote names too: the bucket's
                         # first display pair may belong to another squad.
                         # Each admitted quote is still checked below itself.
-                        raw_pairs = [(raw_h, raw_a), *(
-                            q[6] for quotes in index["fixture_quotes"].get(key, {}).values()
-                            for q in quotes if len(q) > 6
-                            and isinstance(q[6], (tuple, list)) and len(q[6]) == 2
-                        )]
+                        raw_pairs = raw_fixture_pairs(key, (raw_h, raw_a))
                         both = any(mfn(pick.get("home"), h) and mfn(pick.get("away"), a)
                                    for h, a in raw_pairs)
                         swap = any(mfn(pick.get("home"), a) and mfn(pick.get("away"), h)

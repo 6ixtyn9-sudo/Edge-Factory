@@ -1374,3 +1374,16 @@ def test_fit_support_diagnostics_are_descriptive_and_outside_model_hash():
     assert profile['ml_model']==model
     plain=cc.enhancement_cohort(connection(ml_observations()),edge(),as_of='2026-10-20',selection='home')
     assert 'ml_fit_adequacy' not in plain
+
+
+def test_cohort_runtime_phases_are_visible_and_cache_hits_do_not_refit(capsys):
+    con, cache = connection(ml_observations()), {}
+    kwargs = dict(as_of='2026-10-20', selection='home', fit_ml=True, cache=cache)
+    result = cc.enhancement_cohort(con, edge(), **kwargs)
+    assert result['ml_status'] == 'fitted'
+    out = capsys.readouterr().out
+    for phase in ('source snapshot', 'features', 'fit'):
+        assert f'STEP_START label=enhancement {phase}' in out
+        assert f'STEP_TIMING label=enhancement {phase}' in out
+    assert cc.enhancement_cohort(con, edge(), **kwargs) == result
+    assert capsys.readouterr().out == ''
