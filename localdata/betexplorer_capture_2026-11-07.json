@@ -1,31 +1,141 @@
 {
-  "attempted": 1,
+  "attempted": 12,
   "attempted_fixtures": [
     {
-      "avg_p": 63.0,
-      "away": "Monterrey W",
+      "avg_p": 59.0,
+      "away": "Quindio",
       "date": "2026-11-07",
-      "home": "Ju\u00e1rez W",
-      "league": "Mexico Liga MX Femenil",
+      "home": "Tigres FC",
+      "league": "Colombia Primera B",
       "market": "1x2",
       "pick": "away",
       "w_score": 0.6134
+    },
+    {
+      "avg_p": 88.0,
+      "away": "Hull City",
+      "date": "2026-11-07",
+      "home": "Arsenal",
+      "league": "England Premier League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 76.47956197488908,
+      "away": "Moreirense",
+      "date": "2026-11-07",
+      "home": "Sporting CP",
+      "league": "Liga Portugal",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 74.27716003005258,
+      "away": "IK Start",
+      "date": "2026-11-07",
+      "home": "Rosenborg BK",
+      "league": "Eliteserien",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5273
+    },
+    {
+      "avg_p": 71.76791615522615,
+      "away": "Real Madrid",
+      "date": "2026-11-07",
+      "home": "Valencia",
+      "league": "La Liga",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 69.0,
+      "away": "Atvidabergs FF",
+      "date": "2026-11-07",
+      "home": "Eskilsminne",
+      "league": "Sweden Ettan - S\u00f6dra",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 68.64388489208633,
+      "away": "FC Augsburg",
+      "date": "2026-11-07",
+      "home": "RB Leipzig",
+      "league": "Bundesliga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 68.64115421002838,
+      "away": "Aldershot Town",
+      "date": "2026-11-07",
+      "home": "Barnsley",
+      "league": "FA Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5273
+    },
+    {
+      "avg_p": 65.25975414216995,
+      "away": "Beitar Jerusalem",
+      "date": "2026-11-07",
+      "home": "Ironi Tiberias",
+      "league": "Ligat ha'Al",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 65.21799421047717,
+      "away": "Scunthorpe United",
+      "date": "2026-11-07",
+      "home": "Port Vale",
+      "league": "FA Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 64.38474481211442,
+      "away": "Sholing",
+      "date": "2026-11-07",
+      "home": "Salisbury",
+      "league": "FA Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 64.36526157320286,
+      "away": "Swindon Town",
+      "date": "2026-11-07",
+      "home": "Milton Keynes Dons",
+      "league": "FA Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
     }
   ],
-  "be_429": 2,
+  "be_429": 0,
   "be_cached": 0,
-  "be_cooling_down": true,
+  "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 0,
-  "candidate_fixtures": 92,
-  "captured_at": "2026-11-06T22:37:03.250171+00:00",
+  "candidate_fixtures": 93,
+  "captured_at": "2026-11-07T01:34:52.645630+00:00",
   "date": "2026-11-07",
-  "deferred_fixtures": 91,
+  "deferred_fixtures": 81,
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 0,
   "market_budget_stop": false,
-  "market_requests": 1,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 1,
     "challenge_pages": 0,
@@ -39,23 +149,12 @@
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": false,
+  "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
-  "quoted_fixtures": [
-    {
-      "avg_p": 63.0,
-      "away": "Monterrey W",
-      "date": "2026-11-07",
-      "home": "Ju\u00e1rez W",
-      "league": "Mexico Liga MX Femenil",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.6134
-    }
-  ],
-  "requests": 6,
-  "rows": 3,
+  "network_attempted": 12,
+  "quoted_fixtures": [],
+  "requests": 3,
+  "rows": 0,
   "schema": 1,
-  "status": "ok"
+  "status": "empty"
 }

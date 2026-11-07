@@ -4179,14 +4179,14 @@
           "decision_status": "no_bet",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "e7e092bba18e5c9fb279a5686383b880ad768614",
-            "event_sha": "e7e092bba18e5c9fb279a5686383b880ad768614",
+            "checkout_head_at_capture": "78027c4164f6127408d639f14427a0a4840fbc94",
+            "event_sha": "78027c4164f6127408d639f14427a0a4840fbc94",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "42301235397",
+            "run_id": "42321560367",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-07_decision.json.gz",
@@ -4231,10 +4231,72 @@
             "card_identical": true,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
             "execution_leg_symmetric_difference": 0,
-            "mean_absolute_disagreement": 0.004333367791859222,
-            "model_below_cohort": 0,
+            "mean_absolute_disagreement": 0.05174433304357193,
+            "model_below_cohort": 48,
             "models": {
-              "dc4508e767a50a2604d94dcb6e0fcbdb266fa2562380450b0ebdac13d207f802": {
+              "0be1217270395c44dfdc49c7cf36a759d3f644b9a38a91d18bf6e3eb5e2d0866": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 177,
+                    "0:1": 163,
+                    "0:2": 81,
+                    "0:3": 37,
+                    "0:4": 5,
+                    "0:5": 1,
+                    "1:0": 269,
+                    "1:1": 274,
+                    "1:2": 144,
+                    "1:3": 48,
+                    "1:4": 18,
+                    "1:5": 2,
+                    "1:6": 2,
+                    "2:0": 235,
+                    "2:1": 283,
+                    "2:2": 153,
+                    "2:3": 47,
+                    "2:4": 18,
+                    "2:5": 3,
+                    "3:0": 134,
+                    "3:1": 155,
+                    "3:2": 98,
+                    "3:3": 33,
+                    "3:4": 9,
+                    "3:5": 1,
+                    "4:0": 57,
+                    "4:1": 67,
+                    "4:2": 39,
+                    "4:3": 12,
+                    "4:4": 4,
+                    "4:5": 1,
+                    "5:0": 29,
+                    "5:1": 30,
+                    "5:2": 15,
+                    "5:3": 7,
+                    "5:4": 2,
+                    "6:0": 9,
+                    "6:1": 13,
+                    "6:2": 4,
+                    "6:3": 2,
+                    "7:0": 4,
+                    "7:1": 3,
+                    "7:2": 2,
+                    "8:0": 2,
+                    "8:1": 1,
+                    "8:3": 1,
+                    "9:0": 1,
+                    "9:1": 2
+                  },
+                  "classes": 48,
+                  "mean_rows_per_class": 56.1875,
+                  "min_class_count": 1,
+                  "n": 2697,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2736
+                },
+                "schema": "enh_score_logit_v2"
+              },
+              "527337a820eba277f7ebb391920446f8b46e5fb585821b04fba9eaa4a1a95258": {
                 "fit_adequacy": {
                   "assessment": "descriptive_only_not_validation",
                   "class_counts": {
@@ -4255,7 +4317,7 @@
                     "1:4": 11,
                     "1:5": 2,
                     "2:0": 215,
-                    "2:1": 221,
+                    "2:1": 222,
                     "2:2": 94,
                     "2:3": 29,
                     "2:4": 6,
@@ -4290,22 +4352,22 @@
                     "9:1": 1
                   },
                   "classes": 50,
-                  "mean_rows_per_class": 43.48,
+                  "mean_rows_per_class": 43.5,
                   "min_class_count": 1,
-                  "n": 2174,
+                  "n": 2175,
                   "served_dimensions": 57,
                   "stored_coefficients": 2850
                 },
                 "schema": "enh_score_logit_v2"
               }
             },
-            "paired_estimates": 2,
-            "pool_legs": 2,
+            "paired_estimates": 50,
+            "pool_legs": 50,
             "removed_from_ml_off": 0,
             "schemas": {
-              "enh_score_logit_v2": 2
+              "enh_score_logit_v2": 50
             },
-            "scored_legs": 2,
+            "scored_legs": 50,
             "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
           },
           "settlement": "UNAVAILABLE",
