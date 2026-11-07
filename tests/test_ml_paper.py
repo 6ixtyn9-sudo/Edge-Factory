@@ -354,7 +354,7 @@ def test_learning_uses_own_prior_results_and_fixture_weights_not_quote_count():
     history = [receipt(yesterday, cs), receipt(DAY, [candidate(999)])]
     lookup = lambda c: (2, 0) if int(c["candidate_id"]) % 4 == 0 else (0, 2)
     learner = mp.learn(history, NOW, lookup)
-    assert learner["status"] == "fitted_source_market_temperature"
+    assert learner["status"] == "fitted_source_market_context"
     assert learner["fixtures"] == 40 and learner["training_last_date"] == yesterday
     before = deepcopy(history)
     next_rows = [candidate(50, p=0.8)]
@@ -365,12 +365,12 @@ def test_learning_uses_own_prior_results_and_fixture_weights_not_quote_count():
     # Dynamic learning fits from the first resolved fixtures, but duplicated
     # book quotes still dedupe to the same two observations, not 200.
     dup_model = mp.learn(duplicate, NOW, lookup)
-    assert dup_model["status"] == "fitted_source_market_temperature" and dup_model["observations"] == 2
+    assert dup_model["status"] == "fitted_source_market_context" and dup_model["observations"] == 2
     assert mp.learn([history[1]], NOW, lookup)["fixtures"] == 0
     assert mp.learn(history, NOW, lambda c: None)["fixtures"] == 0
 
 
-def test_learning_has_one_parameter_and_does_not_fit_bucket_market_effects():
+def test_conditional_learning_does_not_fit_untrusted_bucket_effects():
     yesterday = "2026-11-01"
     cs = [
         candidate(i, date=yesterday, p=0.8, bucket="CAUTION" if i < 35 else "RARE")
@@ -379,7 +379,9 @@ def test_learning_has_one_parameter_and_does_not_fit_bucket_market_effects():
     model = mp.learn(
         [receipt(yesterday, cs)], NOW, lambda c: (2, 0) if int(c["candidate_id"]) % 2 else (0, 1)
     )
-    assert model["parameters"] == 1
+    assert model["parameters"] == 1 + len(model["context_model"]["feature_cols"])
+    assert model["parameters"] > 1
+    assert not any(k.startswith("bucket:") for k in model["context_model"]["feature_cols"])
     assert not {"columns", "success_tilt", "coef", "intercept"} & model.keys()
     assert model["observations"] == 40
 
