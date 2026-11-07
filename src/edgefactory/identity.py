@@ -95,6 +95,11 @@ AMBIGUOUS_DOMESTIC_LEAGUE_KEYS = frozenset({
     "division 1", "division 2", "division 3", "first division", "second division",
     "third division", "league one", "league two", "serie a", "serie b",
     "liga 1", "liga 2", "ligue 1", "ligue 2", "primera division",
+    # November 7: catalogue containment sent German Bundesliga fixtures to
+    # Austria and Romanian/Turkish/Serbian Superliga variants to Denmark.
+    # Neither a global learned alias nor a lone catalogue hit proves country.
+    "bundesliga", "bundesliga 2", "2 bundesliga",
+    "superliga", "super lig", "super liga",
 })
 
 

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from edgefactory.sources import theoddsapi
 
 
@@ -675,3 +677,89 @@ def test_market_defaults_and_pending_workflow_changes_are_explicit():
     example = dict(line.split('=', 1) for line in (root / '.env.example').read_text().splitlines()
                    if line.startswith(('ODDS_API_MARKETS=', 'ODDS_API_TOTAL_POINTS=')))
     assert example == desired
+
+
+@pytest.mark.parametrize('label', [
+    'Bundesliga', ' BUNDESLIGA ', 'Bundesliga 2', '2. Bundesliga',
+    'Superliga', 'Super Liga', 'Super-Liga', 'Super Lig', 'Süper Lig',
+])
+@pytest.mark.parametrize('catalogue_mode', ['full', 'reversed', 'single_wrong', 'empty'])
+def test_november_7_bare_competition_labels_never_invent_country(label, catalogue_mode):
+    # November 7: German fixtures went to Austria and Romanian/Turkish/Serbian
+    # fixtures went to Denmark. A catalogue match cannot supply missing country
+    # evidence, even if only one provider key is currently available.
+    sports = [
+        {'key': 'soccer_austria_bundesliga', 'title': 'Austrian Bundesliga', 'active': True},
+        {'key': 'soccer_germany_bundesliga', 'title': 'Bundesliga - Germany', 'active': True},
+        {'key': 'soccer_germany_bundesliga2', 'title': 'Bundesliga 2 - Germany', 'active': True},
+        {'key': 'soccer_denmark_superliga', 'title': 'Superliga - Denmark', 'active': True},
+        {'key': 'soccer_turkey_super_league', 'title': 'Super Lig', 'active': True},
+    ]
+    if catalogue_mode == 'reversed':
+        sports.reverse()
+    elif catalogue_mode == 'single_wrong':
+        sports = [sports[0] if 'bundesliga' in label.lower() else sports[3]]
+    elif catalogue_mode == 'empty':
+        sports = []
+    assert theoddsapi.sport_key_for_league(label, sports) is None
+
+
+def test_november_7_country_and_code_evidence_still_routes_correctly():
+    expected = {
+        'Germany Bundesliga': 'soccer_germany_bundesliga',
+        'Germany,Bundesliga': 'soccer_germany_bundesliga',
+        'De1': 'soccer_germany_bundesliga',
+        'Germany Bundesliga 2': 'soccer_germany_bundesliga2',
+        'De2': 'soccer_germany_bundesliga2',
+        'Austria Bundesliga': 'soccer_austria_bundesliga',
+        'At1': 'soccer_austria_bundesliga',
+        'Denmark Superliga': 'soccer_denmark_superliga',
+        'Dk1': 'soccer_denmark_superliga',
+        'Turkey Super Lig': 'soccer_turkey_super_league',
+        'Tr1': 'soccer_turkey_super_league',
+        'Romania,Superliga': None,
+        'Serbia,Super Liga': None,
+    }
+    for label, key in expected.items():
+        assert theoddsapi.sport_key_for_league(label, CATALOGUE_2026_10_10) == key, label
+
+
+@pytest.mark.parametrize('allow_truncated', [True, False])
+@pytest.mark.parametrize('left,right', [
+    ('Paris', 'Paris 13 Atletico'),
+    ('Paris 13 Atletico', 'Paris 14 Atletico'),
+    ('B 1903', 'B 1908'),
+    ('Arsenal', 'Arsenal Women'),
+    ('Arsenal U21', 'Arsenal U23'),
+    ('FC Porto', 'FC Porto II'),
+    ('FC Porto B', 'FC Porto III'),
+    ('Alanyaspor', 'Alanyaspor SRL'),
+    ('Arsenal', 'Arsenal (Bookings)'),
+])
+def test_team_matching_preserves_club_numbers_and_squad_identity(left, right, allow_truncated):
+    assert not theoddsapi._team_names_match(left, right, allow_truncated=allow_truncated)
+    assert not theoddsapi._team_names_match(right, left, allow_truncated=allow_truncated)
+
+
+@pytest.mark.parametrize('allow_truncated', [True, False])
+@pytest.mark.parametrize('left,right', [
+    ('Paris 13 Atletico', 'Paris 13 Atletico'),
+    ('Halmstad', 'Halmstads BK'),
+    ('Sirius', 'IK Sirius'),
+    ('Arsenal Women', 'Arsenal W'),
+    ('FC Porto II', 'FC Porto 2'),
+    ('Iraklis 1908', 'Iraklis FC'),
+    ('1. FC Heidenheim', 'FC Heidenheim'),
+])
+def test_team_identity_guards_preserve_evidenced_variants(left, right, allow_truncated):
+    assert theoddsapi._team_names_match(left, right, allow_truncated=allow_truncated)
+    assert theoddsapi._team_names_match(right, left, allow_truncated=allow_truncated)
+
+
+def test_match_event_cannot_attach_paris13_or_other_squads_price():
+    pick = dict(PICK, home='Paris', away='La Roche')
+    wrong = dict(EVENTS[1], id='paris13', home_team='Paris 13 Atletico', away_team='La Roche')
+    assert theoddsapi.match_event(pick, [wrong]) is None
+    right = dict(wrong, id='paris', home_team='Paris')
+    assert theoddsapi.match_event(pick, [wrong, right]) is right
+    assert theoddsapi.match_event(dict(pick, home='Arsenal'), [dict(wrong, home_team='Arsenal W')]) is None

@@ -869,8 +869,18 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
                     # quote bucket. It must not hide a later priced alias.
                     if (nh, na) not in pairs:
                         continue
-                    both = (mfn(pick.get("home"), raw_h) and mfn(pick.get("away"), raw_a))
-                    swap = (mfn(pick.get("home"), raw_a) and mfn(pick.get("away"), raw_h))
+                    # A legacy short-key bucket can contain several squads.
+                    # Its first display pair must not hide a later valid quote
+                    # now that the shared matcher vetoes squad mismatches.
+                    raw_pairs = [(raw_h, raw_a), *(
+                        q[6] for quotes in index.get("fixture_quotes", {}).get((nh, na), {}).values()
+                        for q in quotes if len(q) > 6
+                        and isinstance(q[6], (tuple, list)) and len(q[6]) == 2
+                    )]
+                    both = any(mfn(pick.get("home"), h) and mfn(pick.get("away"), a)
+                               for h, a in raw_pairs)
+                    swap = any(mfn(pick.get("home"), a) and mfn(pick.get("away"), h)
+                               for h, a in raw_pairs)
                     if both or swap:
                         hit_key = (nh, na)
                         swapped = bool(swap and not both)
@@ -887,9 +897,12 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
         got = pairs.get(hit_key, {}).get(mapping)
         matched_quotes = None
 
+        identity_match = _default_match_fn(allow_truncated=False)
+
         def quote_squad_matches(quote, reverse):
-            # Identity-bearing quotes must not borrow the first display names
-            # of a truncated bucket. Leave historical 5/6-tuples unchanged.
+            # Identity-bearing quotes must prove BOTH full names, including
+            # club numbers and squads, not borrow a truncated bucket's names.
+            # Leave historical 5/6-tuples unchanged.
             if len(quote) <= 6:
                 return True
             raw = quote[6]
@@ -897,8 +910,9 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
                     or not all(isinstance(name, str) and name.strip() for name in raw)):
                 return False
             qh, qa = reversed(raw) if reverse else raw
-            return (not squad_marker_mismatch(pick.get("home"), qh)
-                    and not squad_marker_mismatch(pick.get("away"), qa))
+            return (identity_match is not None
+                    and identity_match(pick.get("home"), qh)
+                    and identity_match(pick.get("away"), qa))
 
         if not pick.get("kickoff_utc") and pick.get("contract_schema") != "post_forebet_v1":
             # Legacy aggregate lookup may still serve OTHER sources, never BE.
@@ -943,10 +957,18 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
                     for key, (raw_h, raw_a) in sorted(names.items()):
                         if key == hit_key:
                             continue
-                        # Bucket names only shortlist; each quote below must
-                        # independently match BOTH raw names and squad classes.
-                        both = (mfn(pick.get("home"), raw_h) and mfn(pick.get("away"), raw_a))
-                        swap = (mfn(pick.get("home"), raw_a) and mfn(pick.get("away"), raw_h))
+                        # Shortlist using per-quote names too: the bucket's
+                        # first display pair may belong to another squad.
+                        # Each admitted quote is still checked below itself.
+                        raw_pairs = [(raw_h, raw_a), *(
+                            q[6] for quotes in index["fixture_quotes"].get(key, {}).values()
+                            for q in quotes if len(q) > 6
+                            and isinstance(q[6], (tuple, list)) and len(q[6]) == 2
+                        )]
+                        both = any(mfn(pick.get("home"), h) and mfn(pick.get("away"), a)
+                                   for h, a in raw_pairs)
+                        swap = any(mfn(pick.get("home"), a) and mfn(pick.get("away"), h)
+                                   for h, a in raw_pairs)
                         for reverse in ([False] if both else []) + ([True] if swap else []):
                             slot = mapping
                             if reverse:
