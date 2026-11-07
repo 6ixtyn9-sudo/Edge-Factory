@@ -40,7 +40,12 @@
             }
           ],
           "odds": 2.22,
-          "stake_pct": 55.9114
+          "stake_pct": 55.9114,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
@@ -76,7 +81,12 @@
             }
           ],
           "odds": 2.12,
-          "stake_pct": 55.9114
+          "stake_pct": 55.9114,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 111.8228
@@ -2306,6 +2316,11 @@
     },
     "2026-11-06": {
       "frozen_at": "2026-11-06T09:46:00+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-07": {
+      "frozen_at": "2026-11-07T10:39:54+02:00",
       "final": true,
       "lock_source": "state"
     }

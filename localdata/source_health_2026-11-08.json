@@ -103,14 +103,14 @@
       "status": "ok"
     },
     "bzzoiro_odds": {
-      "blocker": "bzz status=auth; quota_hint=auth_or_quota",
-      "can_fetch_today": false,
-      "can_price": false,
+      "blocker": null,
+      "can_fetch_today": true,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "http_403_plan_or_auth",
-      "status": "auth"
+      "freshness_h": 0.0,
+      "reason": null,
+      "status": "ok"
     },
     "forebet": {
       "blocker": "historical-only post-2026-06-12; no production pricing or weighting",
