@@ -1,4 +1,4 @@
-"""Single low-dimensional source market learner; no old calibration or tilt."""
+"""Single conditional source learner; retain temperature-only replay coverage."""
 from copy import deepcopy
 from datetime import timedelta
 import math
@@ -17,11 +17,12 @@ def model(power=.8):
     return m
 
 
-def test_one_parameter_fit_from_first_resolved_fixture_and_prior_day_only():
+def test_conditional_fit_from_first_resolved_fixture_and_prior_day_only():
     cs = [candidate(i, date=DAY, p=.8) for i in range(4)]
     l = mp.learn([receipt(DAY,cs)],NOW,lambda c:(0,2))
-    assert l['status'] == 'fitted_source_market_temperature'
-    assert l['parameters'] == 1 and l['fixtures'] == l['observations'] == 4
+    assert l['status'] == 'fitted_source_market_context'
+    assert l['parameters'] == 1 + len(l['context_model']['feature_cols'])
+    assert l['parameters'] > 1 and l['fixtures'] == l['observations'] == 4
     assert 0 < l['power'] < 1
     c = candidate(8,p=.8)
     mp.apply_learning([c],l)

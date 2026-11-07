@@ -361,6 +361,6 @@ def test_book_replication_cannot_reweight_calibration_towards_one_market():
         for j in range(20)
     ]
     replicated = mp.learn([receipt("2026-11-01", cs + duplicates)], NOW, lambda c: (2, 1))
-    assert original["status"] == "fitted_source_market_temperature"
+    assert original["status"] == "fitted_source_market_context"
     assert replicated == original
     assert replicated["observations"] == 80 and replicated["fixtures"] == 40

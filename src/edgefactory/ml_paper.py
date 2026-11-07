@@ -1,7 +1,7 @@
 """Independent autobets_ML PAPER lane; no live state, real stakes, registry or network access.
 
-Uses fixture-bound, market-matched source forecasts and one shared, regularized
-market temperature fitted on prior-day outcomes. No exact-score forecasting,
+Uses fixture-bound, market-matched source forecasts with a shared temperature
+and strongly regularized outcome-specific context, fitted on prior-day outcomes. No exact-score forecasting,
 calibration of old base predictions, success tilt or alternative Poisson model.
 Complete source partitions preserve complements and 1X2/DC identities regardless
 of quote coverage. Missing source markets are unavailable, never guessed.
@@ -34,7 +34,7 @@ import math
 import os
 import tempfile
 from collections import Counter, defaultdict
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from heapq import heappush, heapreplace
 from pathlib import Path
@@ -172,7 +172,7 @@ def _validate_bets(row):
     has_source_evidence = any(
         c.get("probability_normalization") == "complete_source_market_partition_v1"
         or (isinstance(row.get("models", {}).get(c.get("model_key")), dict)
-            and row["models"][c["model_key"]].get("schema") == "source_market_v1")
+            and row["models"][c["model_key"]].get("schema") in {"source_market_v1", "source_market_context_v1"})
         for c in row["candidates"]
     )
     if has_source_evidence and row.get("learning", {}).get("method") != "source_market":
@@ -191,6 +191,11 @@ def _validate_bets(row):
             expected = {"schema": "source_market_v1", "contract_id": c["contract_id"],
                         "fixture": inputs.get("fixture"), "sources": inputs.get("sources"),
                         "values": {k: v for k, v in inputs.get("values", {}).items() if k.startswith("forecast_")}}
+            if "context" in c or (isinstance(model, dict) and model.get("schema") == "source_market_context_v1"):
+                if ("context" not in c or learner.get("learning_policy") != "fixture_balanced_source_market_context"
+                        or "context_model" not in learner):
+                    raise ValueError("context model evidence requires context learning policy")
+                expected.update(schema="source_market_context_v1", context=c["context"])
             expected["model_key"] = digest(expected)
             if (model != expected or c["model_key"] != expected["model_key"]
                     or inputs.get("fixture") != enhancement_fixture_identity(c)
@@ -659,7 +664,8 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
         if not valid:
             rejected["fixture_bound_source_inputs_unavailable"] += 1
             continue
-        eligible.append(dict(row, statistical_profile=dict(profile or {}, ml_inputs=inputs)))
+        eligible.append(dict(row, ml_context=_candidate_context(row, now),
+                             statistical_profile=dict(profile or {}, ml_inputs=inputs)))
     ordered = sorted(eligible, key=lambda r: (-len(r["statistical_profile"]["ml_inputs"]["sources"]),
                                              str(r.get("contract_id") or "")))
     fixture_kickoffs = {}
@@ -705,8 +711,9 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
             ambiguous_fixtures.add(fixture_key)
         profile = row.get("statistical_profile") or {}
         weights = profile["ml_inputs"]
-        model = {"schema": "source_market_v1", "contract_id": row["contract_id"],
+        model = {"schema": "source_market_context_v1", "contract_id": row["contract_id"],
                  "fixture": weights["fixture"], "sources": weights["sources"],
+                 "context": row["ml_context"],
                  "values": {k: v for k, v in weights["values"].items() if k.startswith("forecast_")}}
         model["model_key"] = digest(model)
         key = (day, source_team_key(row.get("home")), source_team_key(row.get("away")))
@@ -844,6 +851,7 @@ def candidates(slate, day, now, index, *, kickoff_fn, source_guard, min_leg_odds
                 "model_key": model["model_key"],
                 "contract_id": row["contract_id"],
                 "ml_inputs": profile.get("ml_inputs"),
+                "context": row["ml_context"],
             }
             candidate["candidate_id"] = digest(identity)
             result[identity] = candidate
@@ -916,19 +924,184 @@ def _learning_quote_audit(excluded, fixtures):
 
 
 
-def learn(history, now, score_lookup):
-    """One source-anchored market model, never an exact-score or tilt model.
+def _candidate_context(row, now):
+    """Freeze observed context only; never infer a country from a bare league."""
+    from .consensus_contracts import ENH_OPTIONAL_FEATURES, _enhancement_feature_valid
+    ctx = row.get("ctx") if isinstance(row.get("ctx"), dict) else {}
+    profile = row.get("statistical_profile") if isinstance(row.get("statistical_profile"), dict) else {}
+    supplied = profile.get("ml_inputs") if isinstance(profile.get("ml_inputs"), dict) else {}
+    cutoff = profile.get("as_of_exclusive")
+    forms = {}
+    try:
+        valid_cutoff = isinstance(cutoff, str) and date.fromisoformat(cutoff).isoformat() == cutoff
+    except ValueError:
+        valid_cutoff = False
+    if (valid_cutoff and cutoff <= now.astimezone(LOCAL_TZ).date().isoformat()
+            and supplied.get("contract_id") == row.get("contract_id")):
+        from .consensus_contracts import enhancement_fixture_identity
+        if supplied.get("fixture") == enhancement_fixture_identity(row):
+            values = supplied.get("values") if isinstance(supplied.get("values"), dict) else {}
+            forms = {k: v for k, v in values.items()
+                     if k in ENH_OPTIONAL_FEATURES and not k.startswith("forecast_")
+                     and v is not None and _enhancement_feature_valid(k, v)}
+    if not forms:
+        cutoff = None
+    confidence = row.get("avg_p")
+    confidence = (confidence / 100 if type(confidence) in (int, float)
+                  and math.isfinite(confidence) and 0 <= confidence <= 100 else None)
+    def label(value):
+        return value.strip() if isinstance(value, str) and value.strip() else None
+    from .identity import fold_league_identity
+    country_sources = row.get("enhancement_country_sources")
+    declared_sources = (row.get("enhancement_feature_sources") if "enhancement_source_features" in row
+                        else supplied.get("sources"))
+    witnessed = (isinstance(declared_sources, list) and isinstance(country_sources, list) and bool(country_sources)
+                 and all(isinstance(s, str) and s in declared_sources for s in country_sources)
+                 and country_sources == sorted(set(country_sources)))
+    labels = [label(v) for v in (row.get("country"), ctx.get("country"), ctx.get("country_name"),
+                                row.get("enhancement_country") if witnessed else None)]
+    countries = {fold_league_identity(v): v for v in labels if v}
+    country = next(iter(countries.values())) if len(countries) == 1 else None
+    return {"schema": "source_market_context_v1", "as_of": now.isoformat(),
+            "league": label(ctx.get("league_key")) or label(ctx.get("league_raw")) or label(row.get("league")),
+            "country": country, "country_sources": country_sources if country and witnessed else [],
+            "parent_confidence": confidence,
+            "parent_selection": row.get("pick") if row.get("pick") in {"home", "draw", "away"} else None,
+            "form_as_of_exclusive": cutoff,
+            "form_values": forms}
 
-    Fit a SINGLE shared temperature power in [0, 1]: source probabilities may
-    flatten but cannot sharpen or reverse outcome rankings. The objective is
-    fixture-balanced categorical log loss plus a fixed unit quadratic penalty
-    toward the source anchor (power=1). No odds, bucket, confidence, old model
-    probabilities, score-class coefficients or ROI search enter this fit.
-    Quote duplicates/complements supply one earliest complete partition, not
-    extra labels. Fit only prior-local-day fixtures published before decision.
-    Historical result-publication times remain the caller resolver's limitation.
+
+def _context_prices(rows, at):
+    """Median latest witnessed price per outcome, not a book-count training weight.
+
+    Missing complements stay missing. Never turn 1/odds into a fair probability.
+    Historical quote generations and original source age limits still apply.
     """
-    from scipy.optimize import minimize_scalar
+    from statistics import median
+    latest, conflicts = {}, set()
+    for c in rows:
+        if (not _valid_learning_candidate(c) or _learning_quote_rejection(c)
+                or not psrc.known(c.get("price_source"))
+                or psrc.spec(c.get("price_source")).role != psrc.ROLE_NAMED_BOOKMAKER):
+            continue
+        price, stamp = c.get("odds"), parse_zoned_timestamp(c.get("price_at"))
+        if (type(price) not in (int, float) or not math.isfinite(price) or price <= 1
+                or stamp is None or not stamp <= at
+                or at - stamp > _quote_max_age(c.get("price_source"))
+                or not isinstance(c.get("book"), str) or not c["book"].strip()):
+            continue
+        key = (*c["fixture"], c["market"], c["selection"], c["book"].strip().casefold())
+        if key not in latest or stamp > latest[key][0]:
+            latest[key] = (stamp, price)
+            conflicts.discard(key)
+        elif stamp == latest[key][0] and price != latest[key][1]:
+            conflicts.add(key)
+    prices = defaultdict(list)
+    for key, (_, price) in latest.items():
+        if key not in conflicts:
+            prices[key[:-1]].append(price)
+    return {key: median(values) for key, values in prices.items()}
+
+
+def _context_features(c, partition, archive, at, prices, cache=None):
+    """One sparse, outcome-specific feature meaning in fitting and serving.
+
+    Full partitions preserve complements/DC. Categories are pooled by the
+    same ridge prior; missing numeric observations have explicit indicators.
+    Continuous inputs use fixed bounded transforms, not ROI-fitted cutoffs.
+    """
+    from .consensus_contracts import enhancement_model_features
+    from .identity import fold_league_identity
+    from .scored_candidate_segments import odds_band
+    context = c.get("context")
+    if context is not None:
+        if (not isinstance(context, dict) or set(context) != {
+                    "schema", "as_of", "league", "country", "country_sources", "parent_confidence", "parent_selection",
+                    "form_as_of_exclusive", "form_values"}
+                or context.get("schema") != "source_market_context_v1"
+                or parse_zoned_timestamp(context.get("as_of")) is None
+                or parse_zoned_timestamp(context["as_of"]) > at
+                or any(v is not None and not isinstance(v, str)
+                       for v in (context.get("league"), context.get("country")))):
+            raise ValueError("invalid frozen ML context")
+    context = context or {}
+    country_sources = context.get("country_sources", [])
+    if (not isinstance(country_sources, list)
+            or any(not isinstance(s, str) or s not in c["ml_inputs"]["sources"] for s in country_sources)
+            or country_sources != sorted(set(country_sources))):
+        raise ValueError("invalid country source witness")
+    cutoff = min(c["date"], at.astimezone(LOCAL_TZ).date().isoformat())
+    # Existing last-ten/min-history/squad-aware builder, without an ENH fit.
+    features = enhancement_model_features(
+        dict(c, date=cutoff, enhancement_source_features=c["ml_inputs"]["values"],
+             avg_p=None), archive, cache)
+    if context.get("form_values"):
+        from .consensus_contracts import ENH_OPTIONAL_FEATURES, _enhancement_feature_valid
+        form_cut = context.get("form_as_of_exclusive")
+        if (not isinstance(form_cut, str) or date.fromisoformat(form_cut).isoformat() != form_cut
+                or form_cut > cutoff):
+            raise ValueError("future form context")
+        for name, value in context["form_values"].items():
+            if (name not in ENH_OPTIONAL_FEATURES or name.startswith("forecast_")
+                    or not _enhancement_feature_valid(name, value)):
+                raise ValueError("invalid form context value")
+            features[name] = value
+    confidence = context.get("parent_confidence")
+    if confidence is not None and (type(confidence) not in (int, float)
+                                  or not math.isfinite(confidence) or not 0 <= confidence <= 1):
+        raise ValueError("invalid source confidence context")
+    parent_side = context.get("parent_selection")
+    if parent_side is not None and parent_side not in {"home", "draw", "away"}:
+        raise ValueError("invalid parent confidence selection")
+    for side in ("home", "draw", "away"):
+        features["parent_confidence_" + side] = confidence if side == parent_side else None
+    features.pop("confidence", None)  # Never substitute parent confidence for a market forecast.
+    features["source_count"] = len(c["ml_inputs"]["sources"])
+    for prefix in ("home_form", "away_form", "h2h"):
+        gf, ga = features.get(prefix + "_gf"), features.get(prefix + "_ga")
+        features[prefix + "_goal_difference"] = gf - ga if gf is not None and ga is not None else None
+    xh, xa = features.get("forecast_xg_home_mean"), features.get("forecast_xg_away_mean")
+    features["forecast_goal_difference"] = xh - xa if xh is not None and xa is not None else None
+    result = []
+    for market, side, _ in partition:
+        role = market + ":" + side
+        values = {"role:" + role: 1.0}
+        for source in c["ml_inputs"]["sources"]:
+            values["source:" + source + ":" + role] = 1.0
+        for name in ("league", "country"):
+            label = context.get(name)
+            values[name + ":" + (fold_league_identity(label) if label else "<missing>") + ":" + role] = 1.0
+        for name, value in sorted(features.items()):
+            if value is None:
+                values["missing:" + name + ":" + role] = 1.0
+            elif type(value) in (int, float) and math.isfinite(value):
+                values["value:" + name + ":" + role] = value / (1 + abs(value))
+            else:
+                raise ValueError("invalid context feature")
+        price = prices.get((*c["fixture"], market, side))
+        if price is None:
+            values["odds:<missing>:" + role] = 1.0
+        else:
+            values["odds:" + odds_band(price) + ":" + role] = 1.0
+            values["value:log_odds:" + role] = math.log(price) / (1 + math.log(price))
+        result.append(values)
+    return result
+
+
+def learn(history, now, score_lookup):
+    """Fit the sole source-anchored conditional market model.
+
+    Fixture-balanced categorical log loss learns shared source temperature
+    plus outcome-specific context corrections. Zero-centred ridge priors pool
+    sparse source/league/country effects; no team-ID or bucket/ROI fitting.
+    Quote duplicates/complements supply one earliest complete partition, not
+    extra labels. Goal form reuses the existing squad-aware, last-ten/minimum-
+    history builder, strictly before each original local decision day.
+    Frozen context cannot be reconstructed from today's enrichment. Historical
+    result-publication times remain the caller resolver's explicit limitation.
+    """
+    from scipy.optimize import minimize_scalar, minimize
+    from .form_intel import ResultsArchive
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("market learning requires an aware decision timestamp")
     today = now.astimezone(LOCAL_TZ).date().isoformat()
@@ -975,7 +1148,8 @@ def learn(history, now, score_lookup):
                 continue
             family = tuple((m, side) for m, side, _ in partition)
             observations[fixture, family].append((captured, published, c, record, partition))
-    rows, outcomes = [], []
+    rows, outcomes, context_rows, chosen_candidates = [], [], [], []
+    price_indexes = {}
     for (fixture, family), variants in sorted(observations.items()):
         first = min(v[0] for v in variants)
         earliest = [v for v in variants if v[0] == first]
@@ -983,7 +1157,8 @@ def learn(history, now, score_lookup):
             excluded["conflicting_earliest_source_partition"] += 1
             excluded_fixtures.add(fixture)
             continue
-        _, _, c, record, partition = min(earliest, key=lambda v: (v[1], str(v[2].get("candidate_id"))))
+        _, _, c, record, partition = min(earliest, key=lambda v: (
+            v[1], -len(v[2]["ml_inputs"]["sources"]), str(v[2].get("contract_id")), str(v[2].get("candidate_id"))))
         score = score_lookup(c)
         if (not isinstance(score, (tuple, list)) or len(score) != 2
                 or any(type(v) is not int or v < 0 for v in score)):
@@ -993,18 +1168,50 @@ def learn(history, now, score_lookup):
             continue
         target = labels.index(True)
         rows.append((fixture, [v for _, _, v in partition], target))
+        chosen_candidates.append((c, record, partition))
         outcomes.append({"receipt_sha256": record.get("sha256"), "candidate_id": c["candidate_id"],
                          "date": c["date"], "fixture": list(fixture), "score": list(score),
                          "hit": int(hit(c["market"], c["selection"], *score)),
                          "captured_at": record["captured_at"], "persisted_at": record["persisted_at"],
                          "source_partition": partition, "outcome_index": target})
+    # A fixture has one regulation score, irrespective of market or book.
+    score_sets = defaultdict(set)
+    for outcome in outcomes:
+        score_sets[tuple(outcome["fixture"])].add(tuple(outcome["score"]))
+    score_conflicts = {f for f, scores in score_sets.items() if len(scores) > 1}
+    if score_conflicts:
+        excluded["conflicting_resolved_fixture_scores"] += sum(f in score_conflicts for f, _, _ in rows)
+        excluded_fixtures.update(score_conflicts)
+        keep = [i for i, (f, _, _) in enumerate(rows) if f not in score_conflicts]
+        rows, outcomes, chosen_candidates = ([values[i] for i in keep]
+                                             for values in (rows, outcomes, chosen_candidates))
+    form_rows, form_conflicts = {}, set()
+    for (c, record, _), outcome in zip(chosen_candidates, outcomes):
+        key = tuple(c["fixture"])
+        form = {"date": c["date"], "home": c["home"], "away": c["away"],
+                "hs": outcome["score"][0], "gs": outcome["score"][1],
+                "league": (c.get("context") or {}).get("league") or ""}
+        if key in form_rows and form_rows[key] != form:
+            form_conflicts.add(key)
+        form_rows[key] = form
+    form_history = [v for k, v in sorted(form_rows.items()) if k not in form_conflicts]
+    archive = ResultsArchive(form_history)
+    feature_cache = {}
+    for (c, record, partition), outcome in zip(chosen_candidates, outcomes):
+        stamp = parse_zoned_timestamp(record["captured_at"])
+        key = record.get("sha256") or digest(record)
+        if key not in price_indexes:
+            price_indexes[key] = _context_prices(record["candidates"], stamp)
+        features = _context_features(c, partition, archive, stamp, price_indexes[key], feature_cache)
+        context_rows.append(features)
+        outcome["context_features"] = features
     counts = Counter(f for f, _, _ in rows)
     result = {"method": "source_market", "status": "awaiting_prior_paper_results",
               "power": 1.0, "as_of": now.isoformat(), "fixtures": len(counts),
-              "observations": len(rows), "training_sha256": digest(rows),
+              "observations": len(rows), "training_sha256": digest([rows, context_rows]),
               "training_outcomes": outcomes, "training_outcomes_sha256": digest(outcomes),
               "training_last_date": max((o["date"] for o in outcomes), default=None),
-              "learning_policy": "fixture_balanced_source_market_temperature",
+              "learning_policy": "fixture_balanced_source_market_context",
               "training_admission": _learning_quote_audit(excluded, excluded_fixtures),
               "regularization": 1.0, "parameters": 1,
               "result_availability": "caller_exact_resolver_historical_publication_unproven"}
@@ -1025,6 +1232,63 @@ def learn(history, now, score_lookup):
         # otherwise never returns an endpoint even when it is the optimum.
         result["power"] = float(min((0.0, float(fitted.x), 1.0), key=objective))
         result["status"] = "fitted_source_market_temperature"
+    columns = sorted({k for family in context_rows for values in family for k in values})
+    # An all-missing or constant-within-outcome factor has no conditional
+    # evidence. Do not multiply the role intercept's prior by copying it into
+    # dozens of unobserved form/missing/league columns.
+    flat = [values for family in context_rows for values in family]
+    def varying(name):
+        role = name.rsplit(":", 2)[-2:]
+        role_key = "role:" + ":".join(role)
+        observed = {values.get(name, 0.0) for values in flat if role_key in values}
+        return name.startswith("role:") or len(observed) > 1
+    columns = [k for k in columns if varying(k)]
+    # Total prior contextual logit variance stays bounded as feature count
+    # grows; evidence, unlike a fixed averaged penalty, accumulates by fixture.
+    ridge = max(1, len(columns)) / max(1, len(counts))
+    coefficients = [0.0] * len(columns)
+    if rows and columns:
+        import numpy as np
+        matrices = [np.asarray([[values.get(k, 0.0) for k in columns] for values in family])
+                    for family in context_rows]
+        logs = [np.log(probs) for _, probs, _ in rows]
+        def context_objective(theta):
+            loss = 0.5 * float((theta[0] - 1) ** 2 + ridge * (theta[1:] @ theta[1:]))
+            gradient = np.r_[theta[0] - 1, ridge * theta[1:].copy()]
+            for (fixture, _, target), matrix, lp in zip(rows, matrices, logs):
+                logits = theta[0] * lp + matrix @ theta[1:]
+                peak = float(logits.max())
+                weights = np.exp(logits - peak)
+                probs = weights / weights.sum()
+                weight = 1.0 / (len(counts) * counts[fixture])
+                loss += weight * (peak + math.log(float(weights.sum())) - float(logits[target]))
+                residual = probs.copy()
+                residual[target] -= 1
+                gradient[0] += weight * float(residual @ lp)
+                gradient[1:] += weight * (matrix.T @ residual)
+            return loss, gradient
+        fitted_context = minimize(context_objective, np.r_[result["power"], coefficients],
+                                  jac=True, method="L-BFGS-B", bounds=[(0., 1.)] + [(None, None)] * len(columns),
+                                  options={"ftol": 1e-12, "gtol": 1e-8, "maxiter": 500})
+        if not fitted_context.success or not np.isfinite(fitted_context.x).all():
+            raise ValueError("source context fit unavailable; no old-model fallback")
+        result["power"] = float(fitted_context.x[0])
+        coefficients = [float(v) for v in fitted_context.x[1:]]
+        result["status"] = "fitted_source_market_context"
+    result["context_model"] = {
+        "schema": "source_market_context_v1", "feature_cols": columns, "coef": coefficients,
+        "feature_fixture_counts": {k: len({fixture for (fixture, _, _), family in zip(rows, context_rows)
+                                         if any(k in values for values in family)}) for k in columns},
+        "form_history": form_history, "regularization": ridge,
+        "regularization_policy": "feature_count_prior_precision_per_independent_fixture",
+        "factor_coverage": {name: len({fixture for (fixture, _, _), family in zip(rows, context_rows)
+                                      if any(any(k.startswith(name + ":") and "<missing>" not in k
+                                                 for k in values) for values in family)})
+                            for name in ("league", "country", "odds")},
+        "country_policy": "explicit_frozen_country_only_no_bare_league_inference",
+        "form_policy": "existing_squad_aware_last10_min_history_prior_local_day_only",
+    }
+    result["parameters"] = 1 + len(columns)
     result["model_key"] = digest(result)
     return result
 
@@ -1032,9 +1296,9 @@ def learn(history, now, score_lookup):
 def apply_learning(rows, model):
     """Apply the sole source-market model to full partitions, never quote sides.
 
-    Old serialized forecasts remain readable evidence, not callable models.
-    Validate the whole batch before changing any probabilities. DC sums the
-    same normalized 1X2 partition; binary complements share one temperature.
+    Historical temperature models replay for frozen evidence only, never as
+    an active fit fallback. Validate the whole batch before changing any
+    probabilities. DC and complements share the same contextual partition.
     """
     if (model.get("method") != "source_market"
             or model.get("model_key") != digest({k: v for k, v in model.items() if k != "model_key"})
@@ -1043,10 +1307,55 @@ def apply_learning(rows, model):
         raise ValueError("invalid source market model")
     as_of = parse_zoned_timestamp(model.get("as_of"))
     last = model.get("training_last_date")
-    if (as_of is None or model.get("status") not in {"awaiting_prior_paper_results", "fitted_source_market_temperature"}
+    if (as_of is None or model.get("status") not in {"awaiting_prior_paper_results", "fitted_source_market_temperature", "fitted_source_market_context"}
             or (last is not None and (not isinstance(last, str)
                                       or last >= as_of.astimezone(LOCAL_TZ).date().isoformat()))):
         raise ValueError("invalid source model training cutoff")
+    context_model = model.get("context_model")
+    archive, prices = None, {}
+    if context_model is not None:
+        from .form_intel import ResultsArchive
+        if (model.get("learning_policy") != "fixture_balanced_source_market_context"
+                or not isinstance(context_model, dict) or context_model.get("schema") != "source_market_context_v1"):
+            raise ValueError("invalid source context model")
+        cols, coef = context_model.get("feature_cols"), context_model.get("coef")
+        if (not isinstance(cols, list) or cols != sorted(set(cols))
+                or any(not isinstance(k, str) for k in cols)
+                or not isinstance(coef, list) or len(coef) != len(cols)
+                or any(type(v) not in (int, float) or not math.isfinite(v) for v in coef)):
+            raise ValueError("invalid source context coefficients")
+        if (model.get("parameters") != 1 + len(cols)
+                or type(context_model.get("regularization")) not in (int, float)
+                or not math.isfinite(context_model["regularization"]) or context_model["regularization"] <= 0
+                or context_model.get("regularization_policy") != "feature_count_prior_precision_per_independent_fixture"):
+            raise ValueError("invalid source context regularization contract")
+        forms = context_model.get("form_history")
+        if not isinstance(forms, list):
+            raise ValueError("invalid source form history")
+        for r in forms:
+            if (not isinstance(r, dict) or set(r) != {"date", "home", "away", "hs", "gs", "league"}
+                    or not isinstance(r["date"], str) or date.fromisoformat(r["date"]).isoformat() != r["date"]
+                    or r["date"] >= as_of.astimezone(LOCAL_TZ).date().isoformat()
+                    or not isinstance(r["league"], str)
+                    or any(not isinstance(r[k], str) or not r[k].strip() for k in ("home", "away"))
+                    or any(type(r[k]) is not int or r[k] < 0 for k in ("hs", "gs"))):
+                raise ValueError("future or malformed source form history")
+        archive = ResultsArchive(forms)
+        prices = _context_prices(rows, as_of)
+    elif (model.get("learning_policy") == "fixture_balanced_source_market_context"
+          or any("context" in c for c in rows)):
+        raise ValueError("missing source context model")
+    owners = {}
+    for c in rows:
+        try:
+            key = (tuple(c.get("fixture", [])), digest(sorted(c.get("base_partition"))))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("invalid complete source probability partition") from exc
+        rank = (-len((c.get("ml_inputs") or {}).get("sources", [])),
+                str(c.get("contract_id")), str(c.get("candidate_id")))
+        if key not in owners or rank < owners[key][0]:
+            owners[key] = (rank, c)
+    feature_cache = {}
     updates = []
     for c in rows:
         partition = c.get("base_partition")
@@ -1068,8 +1377,25 @@ def apply_learning(rows, model):
         base = math.fsum(partition[i][2] for i in chosen)
         if not math.isclose(base, c["base_probability"], abs_tol=1e-12, rel_tol=0):
             raise ValueError("candidate differs from base probability partition")
-        adjusted = [v ** model["power"] for _, _, v in partition]
+        logits = [model["power"] * math.log(v) for _, _, v in partition]
+        if context_model is not None:
+            owner = owners[(tuple(c["fixture"]), digest(sorted(partition)))][1]
+            features = _context_features(c, partition, archive, as_of, prices, feature_cache)
+            if owner is not c:
+                features = _context_features(owner, partition, archive, as_of, prices, feature_cache)
+            logits = [value + math.fsum(weight * values.get(name, 0.0)
+                                       for name, weight in zip(cols, coef))
+                      for value, values in zip(logits, features)]
+        if context_model is None:
+            # Frozen temperature receipts compare floats exactly. Preserve
+            # their original power arithmetic, not an equivalent log/exp path.
+            adjusted = [v ** model["power"] for _, _, v in partition]
+        else:
+            peak = max(logits)
+            adjusted = [math.exp(v - peak) for v in logits]
         value = math.fsum(adjusted[i] for i in chosen) / math.fsum(adjusted)
+        if not math.isfinite(value) or not 0 < value < 1:
+            raise ValueError("invalid adjusted probability partition")
         updates.append((c, value))
     for c, value in updates:
         c.update(probability=value, forecast_model_key=model["model_key"],
@@ -2276,11 +2602,15 @@ def _validate_rolling_record(row, captured):
         kickoff = parse_zoned_timestamp(c.get("kickoff_utc"))
         quote = parse_zoned_timestamp(c.get("price_at"))
         model = row["models"].get(c.get("model_key"), {})
-        if model.get("schema") == "source_market_v1":
+        if model.get("schema") in {"source_market_v1", "source_market_context_v1"}:
             inputs = c.get("ml_inputs") or {}
             expected = {"schema": "source_market_v1", "contract_id": c["contract_id"],
                         "fixture": inputs.get("fixture"), "sources": inputs.get("sources"),
                         "values": {k: v for k, v in inputs.get("values", {}).items() if k.startswith("forecast_")}}
+            if model.get("schema") == "source_market_context_v1":
+                if "context" not in c or row.get("learning", {}).get("learning_policy") != "fixture_balanced_source_market_context":
+                    raise ValueError("rolling context evidence requires context learning policy")
+                expected.update(schema="source_market_context_v1", context=c["context"])
             expected["model_key"] = digest(expected)
             if model != expected or model["model_key"] != c["model_key"]:
                 raise ValueError("rolling source model binding invalid")

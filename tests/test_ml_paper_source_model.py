@@ -27,7 +27,8 @@ def test_raw_emitted_sources_collect_and_publish_without_any_enh_model(tmp_path)
     r=capture(tmp_path,rows)
     assert rows == before
     assert r['accas'] and r['learning']['method'] == 'source_market'
-    assert all(m['schema'] == 'source_market_v1' for m in r['models'].values())
+    assert all(m['schema'] == 'source_market_context_v1' for m in r['models'].values())
+    assert all(m['context']['as_of'] == NOW.isoformat() for m in r['models'].values())
     assert all(c['probability'] == pytest.approx(.7) for c in r['candidates'])
     assert mp.receipts(tmp_path) == [r]
 
