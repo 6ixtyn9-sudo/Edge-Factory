@@ -862,7 +862,10 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
         exact_pair = hit_key in pairs
         if not exact_pair:
             hit_key = None
-            mfn = match_fn or _default_match_fn()
+            mfn = _default_match_fn(allow_truncated=False)
+            if mfn and match_fn is not None:
+                strict_mfn = mfn
+                mfn = lambda a, b: strict_mfn(a, b) and match_fn(a, b)
             if mfn:
                 for (nh, na), (raw_h, raw_a) in names.items():
                     # A schedule-only source contributes display names but no

@@ -763,3 +763,33 @@ def test_match_event_cannot_attach_paris13_or_other_squads_price():
     right = dict(wrong, id='paris', home_team='Paris')
     assert theoddsapi.match_event(pick, [wrong, right]) is right
     assert theoddsapi.match_event(dict(pick, home='Arsenal'), [dict(wrong, home_team='Arsenal W')]) is None
+
+
+@pytest.mark.parametrize('label', ['Bundes-Liga', 'Bun.desliga', 'SuperLig', 'Super.Liga'])
+def test_redteam_punctuation_cannot_bypass_ambiguous_competition_guard(label):
+    assert theoddsapi.sport_key_for_league(label, CATALOGUE_2026_10_10) is None
+
+
+@pytest.mark.parametrize('label', ['Germany Bundesliga 3', 'Germany Bundesliga 20',
+                                   'England League 10', 'Spain La Liga 3'])
+def test_redteam_unknown_numeric_tier_cannot_inherit_alias_prefix(label):
+    assert theoddsapi.sport_key_for_league(label, CATALOGUE_2026_10_10) is None
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_redteam_event_admission_cannot_use_nine_character_club_collision(reverse):
+    pick = dict(PICK, home='Manchester United', away='Rangers')
+    wrong = dict(EVENTS[1], id='city', home_team='Manchester City', away_team='Rangers')
+    right = dict(wrong, id='united', home_team='Manchester United')
+    assert theoddsapi.match_event(pick, [wrong]) is None
+    assert theoddsapi.match_event(pick, [right, wrong] if reverse else [wrong, right]) is right
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_redteam_equally_plausible_event_identities_do_not_depend_on_provider_order(reverse):
+    pick = dict(PICK, home='Manchester', away='Rangers')
+    city = dict(EVENTS[1], id='city', home_team='Manchester City', away_team='Rangers')
+    united = dict(city, id='united', home_team='Manchester United')
+    assert theoddsapi.match_event(pick, [united, city] if reverse else [city, united]) is None
+    # Repeated identical provider rows are not a distinct competing identity.
+    assert theoddsapi.match_event(dict(pick, home='Manchester United'), [united, dict(united)]) is united

@@ -742,10 +742,11 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
     """
     if not str(league_raw or "").strip():
         return None
-    # Catalogue containment proves lexical overlap, not a missing country.
-    if " ".join(re.findall(r"[a-z0-9]+", _ascii_fold(league_raw))) in AMBIGUOUS_DOMESTIC_LEAGUE_KEYS:
-        return None
+    # Use the SAME fold as alias/containment matching: punctuation or lost
+    # spaces (Bundes-Liga / SuperLig) must not bypass missing-country guards.
     code = _league_code(league_raw)
+    if code in {_league_code(label) for label in AMBIGUOUS_DOMESTIC_LEAGUE_KEYS}:
+        return None
     if code in SHORT_LEAGUE_KEYS:
         return _first_listed(SHORT_LEAGUE_KEYS[code], sports)
     if len(code) < 4:
@@ -754,6 +755,11 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
     womens_label = _looks_womens_league(league_raw)
     for frag, keys in _ALIAS_FRAGS:
         if frag in code:
+            # A known tier fragment cannot prove an unknown longer tier:
+            # Bundesliga 3 != Bundesliga; League 10 != League 1. Longest-first
+            # still preserves explicit supported tiers and deliberate dead ends.
+            if re.search(re.escape(frag) + r"\d", code):
+                return None
             if womens_label and not any("women" in key for key in keys):
                 return None
             return _first_listed(keys, sports)  # wins-or-None; never falls through
@@ -986,7 +992,9 @@ def _team_names_match(a: object, b: object, *, allow_truncated: bool = True) -> 
 
 def match_event(pick: dict, events: list[dict]) -> dict | None:
     """Find the API event for a pick fixture. Pair-constrained matching:
-    home must match home AND away match away; kickoff breaks ties."""
+    Full names must match in order; short-key collisions never prove a club.
+    Kickoff ranks matches; equally plausible distinct events are unavailable.
+    """
     kickoff = _pick_kickoff_utc(pick)
 
     def event_dt(ev: dict) -> datetime | None:
@@ -997,9 +1005,9 @@ def match_event(pick: dict, events: list[dict]) -> dict | None:
 
     scored = []
     for ev in events:
-        if not _team_names_match(pick.get("home"), ev.get("home_team")):
+        if not _team_names_match(pick.get("home"), ev.get("home_team"), allow_truncated=False):
             continue
-        if not _team_names_match(pick.get("away"), ev.get("away_team")):
+        if not _team_names_match(pick.get("away"), ev.get("away_team"), allow_truncated=False):
             continue
         dt = event_dt(ev)
         delta = abs((dt - kickoff).total_seconds()) if (dt and kickoff) else 86_400
@@ -1009,6 +1017,8 @@ def match_event(pick: dict, events: list[dict]) -> dict | None:
     if not scored:
         return None
     scored.sort(key=lambda x: x[0])
+    if any(delta == scored[0][0] and event != scored[0][1] for delta, event in scored[1:]):
+        return None  # A provider's row order is not fixture-identity evidence.
     return scored[0][1]
 
 

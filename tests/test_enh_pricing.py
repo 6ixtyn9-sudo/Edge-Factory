@@ -1206,3 +1206,17 @@ def test_nonexact_lookup_finds_valid_quote_after_other_squad_display_name(suffix
     row = attach_enhancement_price(_alias_pick(), index)
     assert row['enhancement_price'] == 1.6
     assert row['enhancement_price_book'] == 'RightBook'
+
+
+@pytest.mark.parametrize('permissive_caller', [False, True])
+def test_redteam_nonexact_shortlist_cannot_hide_valid_quote_behind_nine_char_collision(permissive_caller):
+    wrong = _alias_offer(home='Manchester City', away='CD Rangers Talca',
+                         price=2.0, book='WrongBook')
+    right = _alias_offer(home='Man Utd', away='CD Rangers Talca',
+                         price=1.6, book='RightBook')
+    index = _alias_index(wrong, right)
+    row = attach_enhancement_price(
+        _alias_pick(home='Manchester United', away='Rangers'), index,
+        match_fn=(lambda *_: True) if permissive_caller else None)
+    assert row['enhancement_price'] == 1.6
+    assert row['enhancement_price_book'] == 'RightBook'
