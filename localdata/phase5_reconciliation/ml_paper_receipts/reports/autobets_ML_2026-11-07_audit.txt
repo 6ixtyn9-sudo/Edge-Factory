@@ -1,7 +1,7 @@
 autobets_ML TICKETS — 2026-11-07
 ==============================================================
-CURRENT PAPER BANK (all dates): 67.054 units · free 64.605 / reserved 2.449
-4 paper accas · 2 ticket publications · 2 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 67.054 units · free 62.571 / reserved 4.483
+6 paper accas · 3 ticket publications · 3 scans without tickets · times in SAST
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
@@ -33,6 +33,28 @@ Rolling publications use the next 24 hours; frozen tickets retain their original
    Published 2026-11-07 03:57:14 SAST · reference P3/2
    Alverca vs Casa Pia · KICKOFF 2026-11-07 20:00 SAST
       Away Win (1X2) @4.700 · ML 28.3% · SKIPPED_VETO
+
+   Degerfors vs GAIS · KICKOFF 2026-11-07 18:30 SAST
+      Away Win (1X2) @2.500 · ML 42.7% · SKIPPED_VETO
+
+[PAPER ACCA #5] @5.286 — 2.026981 paper units — polymarket
+   Published 2026-11-07 07:00:15 SAST · reference P5/1
+   Eyüpspor vs Kocaelispor · KICKOFF 2026-11-07 12:30 SAST
+      Home Win (1X2) @4.545 · ML 36.6% · SKIPPED_VETO
+
+   Kashiwa Reysol vs Kawasaki Frontale · KICKOFF 2026-11-07 09:00 SAST
+      Match Over 1.5 Goals @1.163 · ML 87.4% · SKIPPED_VETO
+
+[PAPER ACCA #6] @518.175 — 0.007498 paper units — Unibet (SE)
+   Published 2026-11-07 07:00:15 SAST · reference P5/2
+   Alverca vs Casa Pia · KICKOFF 2026-11-07 20:00 SAST
+      Away Win (1X2) @4.700 · ML 28.3% · SKIPPED_VETO
+
+   Aberdeen vs Hibernian · KICKOFF 2026-11-07 19:45 SAST
+      Match Under 2.5 Goals @2.100 · ML 48.3% · SKIPPED_VETO
+
+   Arsenal vs Hull City · KICKOFF 2026-11-07 17:00 SAST
+      Away Win (1X2) @21.000 · ML 8.4% · SKIPPED_VETO
 
    Degerfors vs GAIS · KICKOFF 2026-11-07 18:30 SAST
       Away Win (1X2) @2.500 · ML 42.7% · SKIPPED_VETO
@@ -132,6 +154,61 @@ P4 · 2026-11-07 04:00:54 SAST · No additional tickets
    Coverage: candidate count: 4319; candidate fixtures: 15; slate rows: 94; status: inputs_available
    Rejections: data quality: 11; fixture date unproven: 1; outside rolling window or unproven kickoff: 3; quote or probability unavailable: 5907
    Exact opportunity replay: 2 acca(s) not republished; 0.674623 units left idle, no refill
+   Learning: fitted_source_market_temperature
+
+P5 · 2026-11-07 07:00:15 SAST · ACCA #5–#6
+   Receipt 20261107T045948498421Z · status paper_accas
+   Frozen at 2026-11-07T05:00:15.716274+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 61a649ad18cfbfd16944d616f2e8f3ca880cce400644bfcf94446032df1bf327
+   Decision window 2026-11-07T04:59:48.498421+00:00 → 2026-11-08T04:59:48.498421+00:00
+   Bank at decision: 67.054327 paper units
+   Available at decision: 64.605459 paper units
+   Reserved at decision: 2.448868 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.352716 units per canonical fixture
+   Reservation 2.034479 → 2.034479 units · released/idle 0.000000; no refill
+   2026-11-07 aberdeen vs hibernian: new 0.007498 + prior open 0.000000 · unused new budget 3.345218 units
+   2026-11-07 alverca vs casapia: new 0.007498 + prior open 0.390393 · unused new budget 2.954825 units
+   2026-11-07 arsenal vs hullcity: new 0.007498 + prior open 0.127272 · unused new budget 3.217946 units
+   2026-11-07 degerfors vs gais: new 0.007498 + prior open 0.263121 · unused new budget 3.082097 units
+   2026-11-07 eyupspor vs kocaelispor: new 2.026981 + prior open 0.000000 · unused new budget 1.325735 units
+   2026-11-07 kashiwareysol vs kawasakifrontale: new 2.026981 + prior open 0.418621 · unused new budget 0.907114 units
+   Coverage: candidate count: 4237; candidate fixtures: 14; slate rows: 181; status: inputs_available
+   Rejections: data quality: 22; fixture date unproven: 3; outside rolling window or unproven kickoff: 8; quote or probability unavailable: 13420
+   ACCA #5 / leg 1: source forecast 36.6% · gap +0.0 pp · quote age 0.37h at decision
+      base 36.6% → adjusted 36.6% · learning move +0.0 pp · price break-even 22.0% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 36.6% → partition-normalized 36.6% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · 1x2 / home · bookmaker market 6139412 · outcome 101 · provider label Full Time Result · normalized row only; native payload unverified
+   ACCA #5 / leg 2: source forecast 87.4% · gap +0.0 pp · quote age 3.42h at decision
+      base 87.4% → adjusted 87.4% · learning move +0.0 pp · price break-even 86.0% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 87.4% → partition-normalized 87.4% · includes unquoted outcomes; not proof of calibration
+      Quote witness: oddspapi_odds_2026-11.csv.gz · ou_1.5 / over · bookmaker market 6200764 · outcome 108 · provider label Over Under Full Time · normalized row only; native payload unverified
+   ACCA #6 / leg 1: source forecast 28.3% · gap +0.0 pp · quote age 6.38h at decision
+      base 28.3% → adjusted 28.3% · learning move +0.0 pp · price break-even 21.3% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 28.3% → partition-normalized 28.3% · includes unquoted outcomes; not proof of calibration
+   ACCA #6 / leg 2: source forecast 48.3% · gap +0.0 pp · quote age 6.38h at decision
+      base 48.3% → adjusted 48.3% · learning move +0.0 pp · price break-even 47.6% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 48.3% → partition-normalized 48.3% · includes unquoted outcomes; not proof of calibration
+   ACCA #6 / leg 3: source forecast 8.4% · gap -0.0 pp · quote age 3.42h at decision
+      base 8.4% → adjusted 8.4% · learning move +0.0 pp · price break-even 4.8% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 8.4% → partition-normalized 8.4% · includes unquoted outcomes; not proof of calibration
+   ACCA #6 / leg 4: source forecast 42.7% · gap -0.0 pp · quote age 6.38h at decision
+      base 42.7% → adjusted 42.7% · learning move +0.0 pp · price break-even 40.0% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 42.7% → partition-normalized 42.7% · includes unquoted outcomes; not proof of calibration
+   Learning: fitted_source_market_temperature
+
+P6 · 2026-11-07 07:03:51 SAST · No additional tickets
+   Receipt 20261107T050324003295Z · status no_paper_bet
+   Frozen at 2026-11-07T05:03:51.328328+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 1631d61d26b217681fae3d28860f3bcc25ea7ae8e4e07872d0e2766ce024d909
+   Decision window 2026-11-07T05:03:24.003295+00:00 → 2026-11-08T05:03:24.003295+00:00
+   Bank at decision: 67.054327 paper units
+   Available at decision: 62.570980 paper units
+   Reserved at decision: 4.483347 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 3.352716 units per canonical fixture
+   Reservation 0.000000 → 0.000000 units · released/idle 0.000000; no refill
+   Coverage: candidate count: 4237; candidate fixtures: 14; slate rows: 94; status: inputs_available
+   Rejections: data quality: 11; fixture date unproven: 1; outside rolling window or unproven kickoff: 8; quote or probability unavailable: 6977
+   Exact opportunity replay: 2 acca(s) not republished; 0.914376 units left idle, no refill
    Learning: fitted_source_market_temperature
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
