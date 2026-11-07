@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 67.0543273917,
   "paper_multiple": 0.670543273917,
-  "paper_committed_units": 4.483347,
-  "paper_free_units": 62.5709803917,
+  "paper_committed_units": 6.665403,
+  "paper_free_units": 60.3889243917,
   "settled_stake_units": 58.630705,
   "receipt_days": 6,
-  "decision_receipts": 53,
+  "decision_receipts": 55,
   "bet_days": 6,
   "no_bet_days": 0,
   "missed_freeze_days": 0,
@@ -17,8 +17,8 @@
   "wins": 4,
   "losses": 32,
   "hit_rate": 0.1111111111111111,
-  "pending_accas": 6,
-  "unresolved_result_legs": 13,
+  "pending_accas": 9,
+  "unresolved_result_legs": 19,
   "resolved_result_legs": 40,
   "profit_units": -32.9456726083,
   "roi": -0.5619184113221903,
@@ -13660,14 +13660,684 @@
       "decision_id": "20261107T050324003295Z",
       "captured_at": "2026-11-07T05:03:24.003295+00:00",
       "frozen_at": "2026-11-07T05:03:51.328328+00:00"
+    },
+    {
+      "date": "2026-11-07",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 5.6502,
+          "stake_units": 1.325735,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Kocaelispor",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.3662476717790847
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.24024401602537618
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.3935083121955392
+                ]
+              ],
+              "base_probability": 0.3662476717790847,
+              "book": "ps3838",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "37bb8077789f6114659e0b961a47c468d1a617b0a8ae0cc8f4c05df063adb3a0",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-07",
+              "fixture": [
+                "2026-11-07",
+                "eyupspor",
+                "kocaelispor"
+              ],
+              "forecast_model_key": "57cae0bd8a3eb89444e79514b756124e2a32cfc27e45349b2f0940ad8d4ffbd4",
+              "home": "Ey\u00fcpspor",
+              "kickoff_utc": "2026-11-07T10:30:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-07",
+                  "eyupspor",
+                  "kocaelispor",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.3934296105331001,
+                  "forecast_1x2_away_spread": 0.49000000000000005,
+                  "forecast_1x2_draw_mean": 0.2401959672221711,
+                  "forecast_1x2_draw_spread": 0.09199999999999997,
+                  "forecast_1x2_home_mean": 0.36617442224472885,
+                  "forecast_1x2_home_spread": 0.55,
+                  "forecast_btts_yes_mean": 0.48674324324324325,
+                  "forecast_btts_yes_spread": 0.000513513513513586,
+                  "forecast_ou_1.5_over_mean": 0.7350244648318043,
+                  "forecast_ou_1.5_over_spread": 0.1429999999999999,
+                  "forecast_ou_2.5_over_mean": 0.5349238845144357,
+                  "forecast_ou_2.5_over_spread": 0.20600000000000002,
+                  "forecast_ou_3.5_over_mean": 0.27057215836526183,
+                  "forecast_ou_3.5_over_spread": 0.12199999999999997,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 1.31,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.09,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "ed7f0220fb0ab8f3a8cf540ea2c1a82db046a413af83a620717799821a01d441",
+              "odds": 4.3,
+              "pre_normalized_probability": 0.3662476717790847,
+              "price_age_seconds_at_decision": 13577.348333,
+              "price_age_seconds_at_freeze": 13619.739561,
+              "price_at": "2026-11-07T04:37:19.830613+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Kocaelispor",
+                  "bookmaker": "ps3838",
+                  "bookmaker_market_id": "line/29/2592/1639647402/3796067396/0/moneyline",
+                  "captured_at": "2026-11-07T04:37:19.830613+00:00",
+                  "date": "2026-11-07",
+                  "home": "Eyupspor",
+                  "kickoff": "2026-11-07T10:30:00.000Z",
+                  "league": "",
+                  "market": "1x2",
+                  "odds": "4.3",
+                  "outcome_key": "101",
+                  "provider_changed_at": "2026-11-07T04:31:48.096Z",
+                  "provider_fixture_id": "id1000005272723306",
+                  "provider_market_id": "101",
+                  "provider_market_name": "Full Time Result",
+                  "provider_market_type": "1x2",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-07T04:31:47.870Z",
+                  "schema_version": "4",
+                  "selection": "home",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "1b22d0c119312a8cb24d3cc49e81c24f9a784c9fe51f1699b8e4a3967629ca85",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.3662476717790847,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "home"
+            },
+            {
+              "away": "Bastia",
+              "base_partition": [
+                [
+                  "match_over_15",
+                  "over",
+                  0.7610725244072524
+                ],
+                [
+                  "match_under_15",
+                  "under",
+                  0.23892747559274763
+                ]
+              ],
+              "base_probability": 0.7610725244072524,
+              "book": "ps3838",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "eead911f929d8ec01190612299de6bd4e1e5b8bc6acaeb1156893fa1ad612c7f",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-07",
+              "fixture": [
+                "2026-11-07",
+                "rouen",
+                "bastia"
+              ],
+              "forecast_model_key": "57cae0bd8a3eb89444e79514b756124e2a32cfc27e45349b2f0940ad8d4ffbd4",
+              "home": "Rouen",
+              "kickoff_utc": "2026-11-07T13:45:00+00:00",
+              "market": "match_over_15",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-07",
+                  "rouen",
+                  "bastia",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.20456013253335723,
+                  "forecast_1x2_away_spread": 0.0069999999999999785,
+                  "forecast_1x2_draw_mean": 0.26728103638697354,
+                  "forecast_1x2_draw_spread": 0.03415689083907941,
+                  "forecast_1x2_home_mean": 0.5281588310796693,
+                  "forecast_1x2_home_spread": 0.027476493239007804,
+                  "forecast_btts_yes_mean": 0.47918279569892475,
+                  "forecast_btts_yes_spread": 0.0336344086021505,
+                  "forecast_ou_1.5_over_mean": 0.7610725244072524,
+                  "forecast_ou_1.5_over_spread": 0.129,
+                  "forecast_ou_2.5_over_mean": 0.4749473684210526,
+                  "forecast_ou_2.5_over_spread": 0.028842105263158058,
+                  "forecast_ou_3.5_over_mean": 0.2627976710334789,
+                  "forecast_ou_3.5_over_spread": 0.052393013100436675,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 0.83,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.67,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "9a27df8560e005d1f895c8433e6b159d28d712a6bfe29c876ff01ac7ab6e37be",
+              "odds": 1.314,
+              "pre_normalized_probability": 0.7610725244072524,
+              "price_age_seconds_at_decision": 1927.935815,
+              "price_age_seconds_at_freeze": 1970.327043,
+              "price_at": "2026-11-07T07:51:29.243131+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "SC Bastia",
+                  "bookmaker": "ps3838",
+                  "bookmaker_market_id": "altLine/29/2027/1639715463/3796126960/57559597422/0/totals",
+                  "captured_at": "2026-11-07T07:51:29.243131+00:00",
+                  "date": "2026-11-07",
+                  "home": "FC Rouen",
+                  "kickoff": "2026-11-07T13:45:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.314",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-07T05:49:11.679Z",
+                  "provider_fixture_id": "id1000018372524022",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-07T05:49:11.323Z",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "165c9447f578f6826b8525fc6cc7dfae80c9afaaedcd25b69de1fdebb4d99829",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.7610725244072524,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "over"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_temperature",
+      "decision_id": "20261107T082337178946Z",
+      "captured_at": "2026-11-07T08:23:37.178946+00:00",
+      "frozen_at": "2026-11-07T08:24:19.570174+00:00"
+    },
+    {
+      "date": "2026-11-07",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 6.175800000000001,
+          "stake_units": 0.701425,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Bastia",
+              "base_partition": [
+                [
+                  "match_over_15",
+                  "over",
+                  0.7610725244072524
+                ],
+                [
+                  "match_under_15",
+                  "under",
+                  0.23892747559274763
+                ]
+              ],
+              "base_probability": 0.7610725244072524,
+              "book": "pinnacle",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "4a856d274f8e8366637551c48947841331c4387860c083913564f3aaf2ab6a08",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-07",
+              "fixture": [
+                "2026-11-07",
+                "rouen",
+                "bastia"
+              ],
+              "forecast_model_key": "1b3a4377e8a0343622292157ac171fe4653084b4aac55632da8c26d0ca393a11",
+              "home": "Rouen",
+              "kickoff_utc": "2026-11-07T13:45:00+00:00",
+              "market": "match_over_15",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-07",
+                  "rouen",
+                  "bastia",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.20456013253335723,
+                  "forecast_1x2_away_spread": 0.0069999999999999785,
+                  "forecast_1x2_draw_mean": 0.26728103638697354,
+                  "forecast_1x2_draw_spread": 0.03415689083907941,
+                  "forecast_1x2_home_mean": 0.5281588310796693,
+                  "forecast_1x2_home_spread": 0.027476493239007804,
+                  "forecast_btts_yes_mean": 0.47918279569892475,
+                  "forecast_btts_yes_spread": 0.0336344086021505,
+                  "forecast_ou_1.5_over_mean": 0.7610725244072524,
+                  "forecast_ou_1.5_over_spread": 0.129,
+                  "forecast_ou_2.5_over_mean": 0.4749473684210526,
+                  "forecast_ou_2.5_over_spread": 0.028842105263158058,
+                  "forecast_ou_3.5_over_mean": 0.2627976710334789,
+                  "forecast_ou_3.5_over_spread": 0.052393013100436675,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 0.83,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.67,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "9a27df8560e005d1f895c8433e6b159d28d712a6bfe29c876ff01ac7ab6e37be",
+              "odds": 1.314,
+              "pre_normalized_probability": 0.7610725244072524,
+              "price_age_seconds_at_decision": 2218.551971,
+              "price_age_seconds_at_freeze": 2260.065263,
+              "price_at": "2026-11-07T07:51:29.243131+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "SC Bastia",
+                  "bookmaker": "pinnacle",
+                  "bookmaker_market_id": "altLine/29/2027/1639715463/3796126960/57559597422/0/totals",
+                  "captured_at": "2026-11-07T07:51:29.243131+00:00",
+                  "date": "2026-11-07",
+                  "home": "FC Rouen",
+                  "kickoff": "2026-11-07T13:45:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.314",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-07T05:49:11.679Z",
+                  "provider_fixture_id": "id1000018372524022",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-07T05:49:11.323Z",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "695409ecf1cf47dc8a0523b3819224b3a699c4127aa90fd13084a7d62a9dadd4",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.7610725244072524,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "over"
+            },
+            {
+              "away": "Casa Pia",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.4618648770414867
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.25480867279894875
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.2833264501595645
+                ]
+              ],
+              "base_probability": 0.2833264501595645,
+              "book": "Pinnacle",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "9a9a28a58ca06302fd6e5b2cb5e57627fa8d313c07f5abfe629f46566fa8ce74",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-07",
+              "fixture": [
+                "2026-11-07",
+                "alverca",
+                "casapia"
+              ],
+              "forecast_model_key": "1b3a4377e8a0343622292157ac171fe4653084b4aac55632da8c26d0ca393a11",
+              "home": "Alverca",
+              "kickoff_utc": "2026-11-07T18:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-07",
+                  "alverca",
+                  "casapia",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bzzoiro",
+                  "prosoccer",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.2833264501595645,
+                  "forecast_1x2_away_spread": 0.41,
+                  "forecast_1x2_draw_mean": 0.25480867279894875,
+                  "forecast_1x2_draw_spread": 0.030000000000000027,
+                  "forecast_1x2_home_mean": 0.4618648770414867,
+                  "forecast_1x2_home_spread": 0.42999999999999994,
+                  "forecast_btts_yes_mean": 0.506,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.7777391910739192,
+                  "forecast_ou_1.5_over_spread": 0.139,
+                  "forecast_ou_2.5_over_mean": 0.5187105263157895,
+                  "forecast_ou_2.5_over_spread": 0.09315789473684194,
+                  "forecast_ou_3.5_over_mean": 0.2971985815602837,
+                  "forecast_ou_3.5_over_spread": 0.065,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 0.93,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 1.6,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "30df5f5439b6b252b894c31f0ff8d68770c9b5645d8e5dbbccff9e6492e95fd7",
+              "odds": 4.7,
+              "pre_normalized_probability": 0.2833264501595645,
+              "price_age_seconds_at_decision": 35502.493247,
+              "price_age_seconds_at_freeze": 35544.006539,
+              "price_at": "2026-11-06T22:36:45.301855+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.2833264501595645,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "away"
+            }
+          ]
+        },
+        {
+          "odds": 34.562,
+          "stake_units": 0.154896,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "away": "Hull City",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.7742300572833153
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.1417245690162791
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.08404537370040553
+                ]
+              ],
+              "base_probability": 0.08404537370040553,
+              "book": "Coolbet",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "740d9ebf25cd8db47e0fba30096381ae439efe0e0f3134060af5c680082183a5",
+              "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+              "date": "2026-11-07",
+              "fixture": [
+                "2026-11-07",
+                "arsenal",
+                "hullcity"
+              ],
+              "forecast_model_key": "1b3a4377e8a0343622292157ac171fe4653084b4aac55632da8c26d0ca393a11",
+              "home": "Arsenal",
+              "kickoff_utc": "2026-11-07T15:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
+                "fixture": [
+                  "2026-11-07",
+                  "arsenal",
+                  "hullcity",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "bzzoiro",
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet",
+                  "zulubet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.08421346444780635,
+                  "forecast_1x2_away_spread": 0.1,
+                  "forecast_1x2_draw_mean": 0.14200801815431166,
+                  "forecast_1x2_draw_spread": 0.1,
+                  "forecast_1x2_home_mean": 0.775778517397882,
+                  "forecast_1x2_home_spread": 0.20999999999999996,
+                  "forecast_btts_yes_mean": 0.3936538461538462,
+                  "forecast_btts_yes_spread": 0.0026923076923076605,
+                  "forecast_ou_1.5_over_mean": 0.8448961038961039,
+                  "forecast_ou_1.5_over_spread": 0.08831168831168845,
+                  "forecast_ou_2.5_over_mean": 0.6489741100323624,
+                  "forecast_ou_2.5_over_spread": 0.06899999999999995,
+                  "forecast_ou_3.5_over_mean": 0.37649238578680205,
+                  "forecast_ou_3.5_over_spread": 0.04847715736040609,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": 0.75,
+                  "forecast_xg_away_spread": 0.0,
+                  "forecast_xg_home_mean": 2.02,
+                  "forecast_xg_home_spread": 0.0
+                }
+              },
+              "model_key": "b8b0e1cf33d913ed2796fc937d0c438afdcd959041ebb2bdede97c43ffdae183",
+              "odds": 22.0,
+              "pre_normalized_probability": 0.08404537370040555,
+              "price_age_seconds_at_decision": 24834.941122,
+              "price_age_seconds_at_freeze": 24876.454414,
+              "price_at": "2026-11-07T01:34:32.853980+00:00",
+              "price_provenance": null,
+              "price_source": "theoddsapi",
+              "probability": 0.08404537370040555,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "away"
+            },
+            {
+              "away": "Chonburi FC",
+              "base_partition": [
+                [
+                  "match_over_25",
+                  "over",
+                  0.6347448979591837
+                ],
+                [
+                  "match_under_25",
+                  "under",
+                  0.36525510204081635
+                ]
+              ],
+              "base_probability": 0.6347448979591837,
+              "book": "coolbet",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "e198472d178c44401c5c511a61463a6e70248d4054c0bb38581756fc9eb50065",
+              "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+              "date": "2026-11-07",
+              "fixture": [
+                "2026-11-07",
+                "port",
+                "chonburi"
+              ],
+              "forecast_model_key": "1b3a4377e8a0343622292157ac171fe4653084b4aac55632da8c26d0ca393a11",
+              "home": "Port FC",
+              "kickoff_utc": "2026-11-07T12:00:00+00:00",
+              "market": "match_over_25",
+              "ml_inputs": {
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "fixture": [
+                  "2026-11-07",
+                  "port",
+                  "chonburi",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "scoutingstats",
+                  "statarea",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.15053538720235415,
+                  "forecast_1x2_away_spread": 0.04160616160706243,
+                  "forecast_1x2_draw_mean": 0.20656997868059937,
+                  "forecast_1x2_draw_spread": 0.01970993604179805,
+                  "forecast_1x2_home_mean": 0.6428946341170465,
+                  "forecast_1x2_home_spread": 0.06131609764886048,
+                  "forecast_btts_yes_mean": 0.5376344086021506,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8225265017667844,
+                  "forecast_ou_1.5_over_spread": 0.054946996466430975,
+                  "forecast_ou_2.5_over_mean": 0.6347448979591837,
+                  "forecast_ou_2.5_over_spread": 0.07051020408163267,
+                  "forecast_ou_3.5_over_mean": 0.4061538461538462,
+                  "forecast_ou_3.5_over_spread": 0.027692307692307627,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null
+                }
+              },
+              "model_key": "110eb1952a207a0a7d8b0d786ebb8acb792acaa5451efa96c40634d132e58b33",
+              "odds": 1.571,
+              "pre_normalized_probability": 0.6347448979591837,
+              "price_age_seconds_at_decision": 2224.735325,
+              "price_age_seconds_at_freeze": 2266.248617,
+              "price_at": "2026-11-07T07:51:23.059777+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Chonburi FC",
+                  "bookmaker": "coolbet",
+                  "bookmaker_market_id": "",
+                  "captured_at": "2026-11-07T07:51:23.059777+00:00",
+                  "date": "2026-11-07",
+                  "home": "Port FC",
+                  "kickoff": "2026-11-07T12:00:00.000Z",
+                  "league": "",
+                  "market": "ou_2.5",
+                  "odds": "1.571",
+                  "outcome_key": "1010",
+                  "provider_changed_at": "2026-11-06T14:34:17.199Z",
+                  "provider_fixture_id": "id1000103272942560",
+                  "provider_market_id": "1010",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-06T14:34:14.084Z",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "86d2fbe1504aa1b566a985484a35d152f6b71dfc95959dc88065654e796ef4d6",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.6347448979591837,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "over"
+            }
+          ]
+        }
+      ],
+      "learning_status": "fitted_source_market_temperature",
+      "decision_id": "20261107T082827795102Z",
+      "captured_at": "2026-11-07T08:28:27.795102+00:00",
+      "frozen_at": "2026-11-07T08:29:09.308394+00:00"
     }
   ],
   "latest_learning": {
-    "as_of": "2026-11-07T05:03:24.003295+00:00",
+    "as_of": "2026-11-07T08:28:27.795102+00:00",
     "fixtures": 37,
     "learning_policy": "fixture_balanced_source_market_temperature",
     "method": "source_market",
-    "model_key": "62b9d8e7e5dbcaa7363df47171ed3b9dec55a79438bd239e6fb3c22904fa33e5",
+    "model_key": "1b3a4377e8a0343622292157ac171fe4653084b4aac55632da8c26d0ca393a11",
     "observations": 121,
     "parameters": 1,
     "power": 1.0,

@@ -1,5 +1,5 @@
 {
-  "attempted": 13,
+  "attempted": 15,
   "attempted_fixtures": [
     {
       "avg_p": 59.0,
@@ -9,16 +9,6 @@
       "league": "Colombia Primera B",
       "market": "1x2",
       "pick": "away",
-      "w_score": 0.6134
-    },
-    {
-      "avg_p": 88.0,
-      "away": "Hull City",
-      "date": "2026-11-07",
-      "home": "Arsenal",
-      "league": "England Premier League",
-      "market": "1x2",
-      "pick": "home",
       "w_score": 0.6134
     },
     {
@@ -130,22 +120,52 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
+    },
+    {
+      "avg_p": 63.71700628451724,
+      "away": "FC Bayern M\u00fcnchen",
+      "date": "2026-11-07",
+      "home": "FSV Mainz 05",
+      "league": "Bundesliga",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 63.17316751460336,
+      "away": "Toronto",
+      "date": "2026-11-07",
+      "home": "Philadelphia Union",
+      "league": "Major League Soccer",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 77.5,
+      "away": "Hull City",
+      "date": "2026-11-07",
+      "home": "Arsenal",
+      "league": "England: Premier League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6523
     }
   ],
   "be_429": 2,
-  "be_cached": 12,
+  "be_cached": 13,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 12,
-  "candidate_fixtures": 91,
-  "captured_at": "2026-11-07T04:37:24.305492+00:00",
+  "cache_only": 13,
+  "candidate_fixtures": 82,
+  "captured_at": "2026-11-07T07:51:40.296530+00:00",
   "date": "2026-11-07",
-  "deferred_fixtures": 78,
+  "deferred_fixtures": 67,
   "errors": [],
   "fixtures_with_rows": 1,
   "market_budget_stop": false,
-  "market_requests": 1,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 2,
     "challenge_pages": 0,
@@ -159,9 +179,9 @@
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": true,
+  "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "network_attempted": 2,
   "quoted_fixtures": [
     {
       "avg_p": 63.93419511755698,
@@ -174,7 +194,7 @@
       "w_score": 0.5405
     }
   ],
-  "requests": 6,
+  "requests": 5,
   "rows": 3,
   "schema": 1,
   "status": "ok"
