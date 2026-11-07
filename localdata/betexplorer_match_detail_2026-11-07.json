@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-11-06T22:37:51.032934+00:00",
+  "captured_at": "2026-11-07T04:38:12.628273+00:00",
   "date": "2026-11-07",
   "fixtures": {
     "2026-11-07|jurezw|monterreyw": {
@@ -93,6 +93,103 @@
         "last_results_rows": [],
         "page_bytes": 109959,
         "page_sha256": "189463e9d1b9a76b0b5971471ef2e97c9cc066b62e5212579e96537eb3d8be9d",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    },
+    "2026-11-07|portfc|chonburifc": {
+      "away": "Chonburi",
+      "best_1x2": {
+        "odd1": 1.46,
+        "odd2": 5.4,
+        "oddx": 4.3
+      },
+      "captured_at": "2026-11-07T04:38:12.628047+00:00",
+      "data_dt": [
+        7,
+        11,
+        2026,
+        13,
+        0
+      ],
+      "event_id": "KjRBDuk5",
+      "home": "Port MTI FC",
+      "kickoff": "13:00",
+      "kickoff_date": "2026-11-07",
+      "league": "Thailand: Thai League 1",
+      "market_failures": [
+        "ou"
+      ],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.46,
+            4.3,
+            5.4
+          ],
+          "average_by_line": {
+            "0": [
+              1.46,
+              4.3,
+              5.4
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-07T05:04",
+                "2026-11-07T05:04",
+                "2026-11-07T05:04"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up",
+                "up"
+              ],
+              "odds": [
+                1.46,
+                4.3,
+                5.4
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/thailand/thai-league-1/port-mti-fc-chonburi/KjRBDuk5/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110005,
+        "page_sha256": "2c90368b4b74a4920afdc1ac4a114c9cb02a5b639bda5cacc1da354723043508",
         "standings_columns": [],
         "standings_rows": [],
         "standings_rows_count": 0

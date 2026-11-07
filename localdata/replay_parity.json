@@ -4171,68 +4171,174 @@
           "status": "MATCH"
         },
         {
-          "accas": 0,
+          "accas": 1,
           "bank_reconciliation": "MATCH",
           "bank_total": 18.634994,
           "committed_excluding_target": 0.0,
           "date": "2026-11-07",
-          "decision_status": "no_bet",
+          "decision_status": "draft",
           "engine_changed": false,
           "execution_provenance": {
-            "checkout_head_at_capture": "78027c4164f6127408d639f14427a0a4840fbc94",
-            "event_sha": "78027c4164f6127408d639f14427a0a4840fbc94",
+            "checkout_head_at_capture": "5aa53b8c3857d3aa80483a0fac34ebc73353d9a2",
+            "event_sha": "5aa53b8c3857d3aa80483a0fac34ebc73353d9a2",
             "file_sha256": {
               "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
               "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
               "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
             },
-            "run_id": "42321560367",
+            "run_id": "42336459009",
             "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
           },
           "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-07_decision.json.gz",
           "free_bank": 18.634994,
           "ledger": "NOT_COMMITTED",
           "ml_comparison": {
-            "added_to_ml_on": 0,
+            "added_to_ml_on": 2,
             "arms": {
               "ml_off": {
-                "accas": [],
-                "card_identity": [],
-                "mean_acca_odds": null,
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.8213,
+                        "market": "match_under_45",
+                        "match": "Kashiwa Reysol vs Kawasaki Frontale",
+                        "model": 0.7447578998798471,
+                        "odds": 1.316,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.7923,
+                        "market": "match_over_15",
+                        "match": "Ey\u00fcpspor vs Kocaelispor",
+                        "model": 0.8100103670485383,
+                        "odds": 1.389,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.83,
+                    "returned": null,
+                    "stake": 2.3294
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Ey\u00fcpspor vs Kocaelispor",
+                        "match_over_15",
+                        "OVER",
+                        1.389,
+                        "polymarket",
+                        "oddspapi"
+                      ],
+                      [
+                        "Kashiwa Reysol vs Kawasaki Frontale",
+                        "match_under_45",
+                        "UNDER",
+                        1.316,
+                        "polymarket",
+                        "oddspapi"
+                      ]
+                    ],
+                    1.83,
+                    2.3294
+                  ]
+                ],
+                "mean_acca_odds": 1.83,
                 "outcome_status": "UNSETTLED_OR_UNPROVEN",
                 "resolved_legs": 0,
                 "returned": null,
-                "selected_legs": 0,
+                "selected_legs": 2,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
                   "capacity_rescue_checked": false,
                   "dropped": [],
                   "ml_ranking_active": false
                 },
-                "total_stake": 0
+                "total_stake": 2.3294
               },
               "ml_on": {
-                "accas": [],
-                "card_identity": [],
-                "mean_acca_odds": null,
+                "accas": [
+                  {
+                    "legs": [
+                      {
+                        "cohort": 0.7923,
+                        "market": "match_over_15",
+                        "match": "Ey\u00fcpspor vs Kocaelispor",
+                        "model": 0.8100103670485383,
+                        "odds": 1.39,
+                        "outcome_source": null,
+                        "pick": "over",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      },
+                      {
+                        "cohort": 0.8213,
+                        "market": "match_under_45",
+                        "match": "Kashiwa Reysol vs Kawasaki Frontale",
+                        "model": 0.7447578998798471,
+                        "odds": 1.31,
+                        "outcome_source": null,
+                        "pick": "under",
+                        "result": null,
+                        "unresolved_reason": "no_retained_outcome"
+                      }
+                    ],
+                    "odds": 1.82,
+                    "returned": null,
+                    "stake": 2.3294
+                  }
+                ],
+                "card_identity": [
+                  [
+                    [
+                      [
+                        "Ey\u00fcpspor vs Kocaelispor",
+                        "match_over_15",
+                        "OVER",
+                        1.39,
+                        "fair999-ex",
+                        "oddspapi"
+                      ],
+                      [
+                        "Kashiwa Reysol vs Kawasaki Frontale",
+                        "match_under_45",
+                        "UNDER",
+                        1.31,
+                        "fair999-ex",
+                        "oddspapi"
+                      ]
+                    ],
+                    1.82,
+                    2.3294
+                  ]
+                ],
+                "mean_acca_odds": 1.82,
                 "outcome_status": "UNSETTLED_OR_UNPROVEN",
                 "resolved_legs": 0,
                 "returned": null,
-                "selected_legs": 0,
+                "selected_legs": 2,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
-                  "capacity_rescue_checked": false,
+                  "capacity_rescue_checked": true,
                   "dropped": [],
                   "ml_ranking_active": true
                 },
-                "total_stake": 0
+                "total_stake": 2.3294
               }
             },
-            "card_identical": true,
+            "card_identical": false,
             "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
-            "execution_leg_symmetric_difference": 0,
-            "mean_absolute_disagreement": 0.05174433304357193,
-            "model_below_cohort": 48,
+            "execution_leg_symmetric_difference": 4,
+            "mean_absolute_disagreement": 0.0338242199222945,
+            "model_below_cohort": 53,
             "models": {
               "0be1217270395c44dfdc49c7cf36a759d3f644b9a38a91d18bf6e3eb5e2d0866": {
                 "fit_adequacy": {
@@ -4293,6 +4399,59 @@
                   "n": 2697,
                   "served_dimensions": 57,
                   "stored_coefficients": 2736
+                },
+                "schema": "enh_score_logit_v2"
+              },
+              "3295fd9b8457092f561c8bc2ffb25adb2f92d14b9b930e910ca062593279f811": {
+                "fit_adequacy": {
+                  "assessment": "descriptive_only_not_validation",
+                  "class_counts": {
+                    "0:0": 58,
+                    "0:1": 89,
+                    "0:2": 76,
+                    "0:3": 62,
+                    "0:4": 31,
+                    "0:5": 10,
+                    "0:6": 4,
+                    "0:7": 4,
+                    "1:0": 43,
+                    "1:1": 114,
+                    "1:2": 94,
+                    "1:3": 44,
+                    "1:4": 18,
+                    "1:5": 6,
+                    "1:6": 2,
+                    "1:7": 1,
+                    "1:9": 1,
+                    "2:0": 35,
+                    "2:1": 50,
+                    "2:2": 36,
+                    "2:3": 30,
+                    "2:4": 11,
+                    "2:5": 9,
+                    "2:6": 3,
+                    "3:0": 7,
+                    "3:1": 18,
+                    "3:2": 12,
+                    "3:3": 12,
+                    "3:4": 9,
+                    "3:5": 2,
+                    "3:6": 1,
+                    "4:0": 5,
+                    "4:1": 6,
+                    "4:2": 4,
+                    "4:3": 3,
+                    "4:4": 2,
+                    "5:5": 1,
+                    "6:1": 1,
+                    "6:2": 1
+                  },
+                  "classes": 39,
+                  "mean_rows_per_class": 23.46153846153846,
+                  "min_class_count": 1,
+                  "n": 915,
+                  "served_dimensions": 57,
+                  "stored_coefficients": 2223
                 },
                 "schema": "enh_score_logit_v2"
               },
@@ -4361,13 +4520,13 @@
                 "schema": "enh_score_logit_v2"
               }
             },
-            "paired_estimates": 50,
-            "pool_legs": 50,
-            "removed_from_ml_off": 0,
+            "paired_estimates": 247,
+            "pool_legs": 247,
+            "removed_from_ml_off": 2,
             "schemas": {
-              "enh_score_logit_v2": 50
+              "enh_score_logit_v2": 247
             },
-            "scored_legs": 50,
+            "scored_legs": 247,
             "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
           },
           "settlement": "UNAVAILABLE",
@@ -4378,7 +4537,7 @@
     },
     "main": {
       "counts": {
-        "MATCH": 10
+        "MATCH": 11
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -4719,6 +4878,31 @@
           "open_accas": 0,
           "settled_net": 35.0412,
           "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 2,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 447.291076,
+          "committed_excluding_target": 0.0,
+          "date": "2026-11-07",
+          "decision_status": "draft",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "5aa53b8c3857d3aa80483a0fac34ebc73353d9a2",
+            "event_sha": "5aa53b8c3857d3aa80483a0fac34ebc73353d9a2",
+            "file_sha256": {
+              "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
+              "src/edgefactory/consensus_contracts.py": "3a3891929d888ffcae7d766ab834646c1eb57657a80034a489f083a264693ae2",
+              "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
+            },
+            "run_id": "42336459009",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/auto_tickets_2026-11-07_decision.json.gz",
+          "free_bank": 447.291076,
+          "ledger": "NOT_COMMITTED",
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],

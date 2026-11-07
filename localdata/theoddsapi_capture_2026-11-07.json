@@ -1,28 +1,11 @@
 {
   "added": 0,
-  "attempted": 2,
-  "attempted_fixtures": [
-    {
-      "away": "CF Pachuca",
-      "date": "2026-11-07",
-      "home": "Atlas FC",
-      "kickoff": "2026-11-07T23:00:00Z",
-      "league": "Liga MX Apertura"
-    },
-    {
-      "away": "Santos Laguna",
-      "date": "2026-11-07",
-      "home": "Atlante FC",
-      "kickoff": "2026-11-07T03:00:00Z",
-      "league": "Liga MX Apertura"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 94,
-  "captured_at": "2026-11-07T02:01:58+00:00",
+  "captured_at": "2026-11-07T05:04:57+00:00",
   "date": "2026-11-07",
-  "due_reasons": {
-    "first_at": 2
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -45,7 +28,7 @@
     "kickoff_mismatch": 1,
     "priced": 12,
     "priced_close_window_not_open": 1,
-    "retry_cooldown": 77
+    "retry_cooldown": 79
   },
   "skipped": [
     "WARN kickoff-mismatch Arsenal|Hull City: pick legacy display says 15:00 SAST, captured rows say 17:00 SAST (\u0394=120m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
@@ -125,7 +108,9 @@
     "Kashiwa Reysol|Kawasaki Frontale (retry cooldown (6h after failed attempt))",
     "Yokohama F. Marinos|Fagiano Okayama (retry cooldown (6h after failed attempt))",
     "Barakaldo|Real Uni\u00f3n Club (retry cooldown (6h after failed attempt))",
+    "Atlas FC|CF Pachuca (retry cooldown (6h after failed attempt))",
     "Avispa Fukuoka|V-Varen Nagasaki (retry cooldown (6h after failed attempt))",
+    "Atlante FC|Santos Laguna (retry cooldown (6h after failed attempt))",
     "Inverness CT|Livingston (retry cooldown (6h after failed attempt))",
     "Grasshopper|Lausanne Sport (retry cooldown (6h after failed attempt))",
     "Hradec Kr\u00e1lov\u00e9|Sigma Olomouc (retry cooldown (6h after failed attempt))",
@@ -143,12 +128,6 @@
     "Espanyol|Deportivo La Coru\u00f1a (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Atlas FC vs CF Pachuca (league not covered: Liga MX Apertura)",
-    "Atlante FC vs Santos Laguna (league not covered: Liga MX Apertura)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Liga MX Apertura": 2
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
