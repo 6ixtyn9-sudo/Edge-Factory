@@ -68,8 +68,15 @@ except Exception:  # pragma: no cover - standalone use
     _ef_norm_team = None
 
 
-from edgefactory.identity import AMBIGUOUS_DOMESTIC_LEAGUE_KEYS
-from edgefactory.util import dated_artifact_path
+from edgefactory.identity import (
+    AMBIGUOUS_DOMESTIC_LEAGUE_KEYS,
+    TEAM_KEY_ALIASES,
+    club_initial_words_for_comparison,
+    source_team_key,
+    source_team_key_base,
+    squad_marker_mismatch,
+)
+from edgefactory.util import dated_artifact_path, strip_squad_markers
 
 
 def _parse_keys() -> tuple[str, ...]:
@@ -735,10 +742,11 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
     """
     if not str(league_raw or "").strip():
         return None
-    # Catalogue containment proves lexical overlap, not a missing country.
-    if " ".join(re.findall(r"[a-z0-9]+", _ascii_fold(league_raw))) in AMBIGUOUS_DOMESTIC_LEAGUE_KEYS:
-        return None
+    # Use the SAME fold as alias/containment matching: punctuation or lost
+    # spaces (Bundes-Liga / SuperLig) must not bypass missing-country guards.
     code = _league_code(league_raw)
+    if code in {_league_code(label) for label in AMBIGUOUS_DOMESTIC_LEAGUE_KEYS}:
+        return None
     if code in SHORT_LEAGUE_KEYS:
         return _first_listed(SHORT_LEAGUE_KEYS[code], sports)
     if len(code) < 4:
@@ -747,6 +755,11 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
     womens_label = _looks_womens_league(league_raw)
     for frag, keys in _ALIAS_FRAGS:
         if frag in code:
+            # A known tier fragment cannot prove an unknown longer tier:
+            # Bundesliga 3 != Bundesliga; League 10 != League 1. Longest-first
+            # still preserves explicit supported tiers and deliberate dead ends.
+            if re.search(re.escape(frag) + r"\d", code):
+                return None
             if womens_label and not any("women" in key for key in keys):
                 return None
             return _first_listed(keys, sports)  # wins-or-None; never falls through
@@ -937,13 +950,27 @@ def _pick_kickoff_utc(pick: dict) -> datetime | None:
 
 
 def _team_names_match(a: object, b: object, *, allow_truncated: bool = True) -> bool:
-    """Cross-feed team-name equivalence: exact/9-char keys, prefix containment,
-    or significant-token subset (affix drops like IK Sirius vs Sirius).
+    """Cross-feed equivalence with squad and club-number vetoes before fuzz.
 
-    New price-alias admission disables the 9-char-only shortcut: unrelated
-    clubs can share that prefix. Existing callers keep their current policy.
+    Keep existing affix/subset relations (IK Sirius / Sirius). New price-alias
+    admission still disables the nine-character shortcut. Neither shortcut,
+    letter-only equality nor token dropping may erase a distinct squad or
+    club number (Paris / Paris 13 Atletico, B 1903 / B 1908).
     """
-    a_full, b_full = _norm_full(a), _norm_full(b)
+    if squad_marker_mismatch(a, b):
+        return False
+    a_words = club_initial_words_for_comparison(a)
+    b_words = club_initial_words_for_comparison(b)
+    # Numeric squad suffixes are already checked above; 2 / II must remain
+    # compatible. A missing/different CLUB number needs an existing curated
+    # same-club alias, never an inference from a shared letter-only prefix.
+    a_digits = re.findall(r"\d+", strip_squad_markers(a_words))
+    b_digits = re.findall(r"\d+", strip_squad_markers(b_words))
+    if a_digits != b_digits:
+        ka, kb = source_team_key_base(a), source_team_key_base(b)
+        return ((ka in TEAM_KEY_ALIASES or kb in TEAM_KEY_ALIASES)
+                and source_team_key(a) == source_team_key(b))
+    a_full, b_full = _norm_full(a_words), _norm_full(b_words)
     if not a_full or not b_full:
         return False
     if a_full == b_full:
@@ -965,7 +992,9 @@ def _team_names_match(a: object, b: object, *, allow_truncated: bool = True) -> 
 
 def match_event(pick: dict, events: list[dict]) -> dict | None:
     """Find the API event for a pick fixture. Pair-constrained matching:
-    home must match home AND away match away; kickoff breaks ties."""
+    Full names must match in order; short-key collisions never prove a club.
+    Kickoff ranks matches; equally plausible distinct events are unavailable.
+    """
     kickoff = _pick_kickoff_utc(pick)
 
     def event_dt(ev: dict) -> datetime | None:
@@ -976,9 +1005,9 @@ def match_event(pick: dict, events: list[dict]) -> dict | None:
 
     scored = []
     for ev in events:
-        if not _team_names_match(pick.get("home"), ev.get("home_team")):
+        if not _team_names_match(pick.get("home"), ev.get("home_team"), allow_truncated=False):
             continue
-        if not _team_names_match(pick.get("away"), ev.get("away_team")):
+        if not _team_names_match(pick.get("away"), ev.get("away_team"), allow_truncated=False):
             continue
         dt = event_dt(ev)
         delta = abs((dt - kickoff).total_seconds()) if (dt and kickoff) else 86_400
@@ -988,6 +1017,8 @@ def match_event(pick: dict, events: list[dict]) -> dict | None:
     if not scored:
         return None
     scored.sort(key=lambda x: x[0])
+    if any(delta == scored[0][0] and event != scored[0][1] for delta, event in scored[1:]):
+        return None  # A provider's row order is not fixture-identity evidence.
     return scored[0][1]
 
 
