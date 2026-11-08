@@ -1,0 +1,486 @@
+{
+  "added": 13605,
+  "attempted": 4,
+  "attempted_fixtures": [
+    {
+      "away": "El Paso Locomotive FC",
+      "fixture_id": "id1002816376363624",
+      "home": "Sacramento Republic FC"
+    },
+    {
+      "away": "Hartford Athletic",
+      "fixture_id": "id1002816376363620",
+      "home": "Charleston Battery"
+    },
+    {
+      "away": "Colorado Rapids",
+      "fixture_id": "id1000024266299806",
+      "home": "FC Dallas"
+    },
+    {
+      "away": "Portland Timbers",
+      "fixture_id": "id1000024266299804",
+      "home": "Austin FC"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-08",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 181,
+    "remaining_today": 19,
+    "spent_today": 6
+  },
+  "budget_deferred": 51,
+  "captured_at": "2026-11-07T22:51:48+00:00",
+  "date": "2026-11-08",
+  "errors": [],
+  "excluded_nonprematch_fixtures": 0,
+  "excluded_srl_fixtures": 45,
+  "excluded_wrong_sport_fixtures": 0,
+  "fixtures": 1161,
+  "future_slate_fixtures": 36,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 612,
+  "markets": {
+    "1x2": 1372,
+    "btts": 894,
+    "ou_0.5": 424,
+    "ou_0.75": 68,
+    "ou_1": 56,
+    "ou_1.25": 88,
+    "ou_1.5": 730,
+    "ou_1.75": 180,
+    "ou_2": 230,
+    "ou_2.25": 284,
+    "ou_2.5": 838,
+    "ou_2.75": 358,
+    "ou_3": 386,
+    "ou_3.25": 402,
+    "ou_3.5": 834,
+    "ou_3.75": 236,
+    "ou_4": 264,
+    "ou_4.25": 130,
+    "ou_4.5": 630,
+    "ou_4.75": 118,
+    "ou_5": 64,
+    "ou_5.25": 72,
+    "ou_5.5": 406,
+    "ou_5.75": 74,
+    "ou_6": 44,
+    "ou_6.25": 36,
+    "ou_6.5": 251,
+    "ou_6.75": 15,
+    "ou_7": 15,
+    "ou_7.25": 15,
+    "ou_7.5": 78,
+    "ou_7.75": 15,
+    "ou_8": 15,
+    "ou_8.25": 15,
+    "ou_8.5": 42,
+    "tt_away_0.5": 576,
+    "tt_away_0.75": 8,
+    "tt_away_1": 6,
+    "tt_away_1.5": 484,
+    "tt_away_2.25": 6,
+    "tt_away_2.5": 418,
+    "tt_away_2.75": 2,
+    "tt_away_3.5": 244,
+    "tt_away_3.75": 18,
+    "tt_away_4": 18,
+    "tt_away_4.25": 18,
+    "tt_away_4.5": 139,
+    "tt_away_4.75": 2,
+    "tt_away_5.5": 45,
+    "tt_home_0.5": 404,
+    "tt_home_0.75": 2,
+    "tt_home_1.5": 672,
+    "tt_home_1.75": 6,
+    "tt_home_2.5": 438,
+    "tt_home_2.75": 2,
+    "tt_home_3": 4,
+    "tt_home_3.25": 4,
+    "tt_home_3.5": 326,
+    "tt_home_3.75": 2,
+    "tt_home_4.5": 76,
+    "tt_home_5.5": 6
+  },
+  "markets_source": "fetch",
+  "matched": 4,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "alt_line_skipped": 1,
+    "market_inactive": 6464,
+    "market_unsupported_cards": 1738,
+    "market_unsupported_clean_sheet": 470,
+    "market_unsupported_corners": 6414,
+    "market_unsupported_correct_score": 1609,
+    "market_unsupported_double_chance": 836,
+    "market_unsupported_draw_no_bet": 708,
+    "market_unsupported_early_payout": 102,
+    "market_unsupported_handicap": 8183,
+    "market_unsupported_market_type": 5329,
+    "market_unsupported_non_goal": 262,
+    "market_unsupported_odd_even": 1524,
+    "market_unsupported_period": 30536,
+    "market_unsupported_win_to_nil": 877,
+    "outcome_inactive": 2627
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "alt_line_skipped": 1,
+      "market_inactive": 6464,
+      "outcome_inactive": 2627
+    },
+    "loss_or_diagnosis": {
+      "market_unsupported_cards": 1738,
+      "market_unsupported_clean_sheet": 470,
+      "market_unsupported_corners": 6414,
+      "market_unsupported_correct_score": 1609,
+      "market_unsupported_double_chance": 836,
+      "market_unsupported_draw_no_bet": 708,
+      "market_unsupported_early_payout": 102,
+      "market_unsupported_handicap": 8183,
+      "market_unsupported_market_type": 5329,
+      "market_unsupported_non_goal": 262,
+      "market_unsupported_odd_even": 1524,
+      "market_unsupported_period": 30536,
+      "market_unsupported_win_to_nil": 877
+    }
+  },
+  "pending_fixtures": 55,
+  "quoted_fixtures": [
+    {
+      "away": "El Paso Locomotive FC",
+      "fixture_id": "id1002816376363624",
+      "home": "Sacramento Republic FC"
+    },
+    {
+      "away": "Hartford Athletic",
+      "fixture_id": "id1002816376363620",
+      "home": "Charleston Battery"
+    },
+    {
+      "away": "Colorado Rapids",
+      "fixture_id": "id1000024266299806",
+      "home": "FC Dallas"
+    },
+    {
+      "away": "Portland Timbers",
+      "fixture_id": "id1000024266299804",
+      "home": "Austin FC"
+    }
+  ],
+  "reserved_requests": 19,
+  "rows": 13605,
+  "schema": 1,
+  "slate_candidate_fixtures": 103,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 7,
+  "slate_provider_overlap_fixtures": 45,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Widad T\u00e9mara",
+      "home": "CR Khemis Zemamra",
+      "league": "Botola Pro",
+      "normalized_pair": "cr khemis zemamra|widad temara"
+    },
+    {
+      "away": "Newell's Old Boys",
+      "home": "Instituto",
+      "league": "Liga Profesional de F\u00fatbol",
+      "normalized_pair": "instituto|newell's old boys"
+    },
+    {
+      "away": "Kilmarnock",
+      "home": "Celtic",
+      "league": "Premiership",
+      "normalized_pair": "celtic|kilmarnock"
+    },
+    {
+      "away": "Gen\u00e7lerbirli\u011fi",
+      "home": "Be\u015fikta\u015f",
+      "league": "Super Lig",
+      "normalized_pair": "besiktas|genclerbirligi"
+    },
+    {
+      "away": "Djurg\u00e5rden",
+      "home": "Halmstad",
+      "league": "Allsvenskan",
+      "normalized_pair": "djurgarden|halmstad"
+    },
+    {
+      "away": "H\u00f8dd",
+      "home": "Sogndal",
+      "league": "1. Division",
+      "normalized_pair": "hodd|sogndal"
+    },
+    {
+      "away": "\u00c5sane",
+      "home": "Sandnes Ulf",
+      "league": "1. Division",
+      "normalized_pair": "asane|sandnes ulf"
+    },
+    {
+      "away": "Difa\u00e2 El Jadida",
+      "home": "FAR Rabat",
+      "league": "Botola Pro",
+      "normalized_pair": "difaa el jadida|far rabat"
+    },
+    {
+      "away": "Bod\u00f8 / Glimt",
+      "home": "Troms\u00f8",
+      "league": "Eliteserien",
+      "normalized_pair": "bodo / glimt|tromso"
+    },
+    {
+      "away": "Zag\u0142\u0119bie Lubin",
+      "home": "Lech Pozna\u0144",
+      "league": "Ekstraklasa",
+      "normalized_pair": "lech poznan|zaglebie lubin"
+    },
+    {
+      "away": "Sporting KC",
+      "home": "San Diego",
+      "league": "Major League Soccer",
+      "normalized_pair": "san diego|sporting kc"
+    },
+    {
+      "away": "Celje",
+      "home": "Radomlje",
+      "league": "1. SNL",
+      "normalized_pair": "celje|radomlje"
+    },
+    {
+      "away": "Falkirk",
+      "home": "Hearts",
+      "league": "Premiership",
+      "normalized_pair": "falkirk|hearts"
+    },
+    {
+      "away": "Monterrey",
+      "home": "Toluca",
+      "league": "Liga MX",
+      "normalized_pair": "monterrey|toluca"
+    },
+    {
+      "away": "Sporting Braga",
+      "home": "Rio Ave",
+      "league": "Liga Portugal",
+      "normalized_pair": "rio ave|sporting braga"
+    },
+    {
+      "away": "Egersund",
+      "home": "Raufoss",
+      "league": "1. Division",
+      "normalized_pair": "egersund|raufoss"
+    },
+    {
+      "away": "Arsenal W",
+      "home": "Liverpool W",
+      "league": "Women's Super League",
+      "normalized_pair": "arsenal w|liverpool w"
+    },
+    {
+      "away": "Stal Rzesz\u00f3w",
+      "home": "\u0141KS \u0141\u00f3d\u017a",
+      "league": "1. Liga",
+      "normalized_pair": "lks lodz|stal rzeszow"
+    },
+    {
+      "away": "Rayo Vallecano",
+      "home": "Real Sociedad",
+      "league": "La Liga",
+      "normalized_pair": "rayo vallecano|real sociedad"
+    },
+    {
+      "away": "Rak\u00f3w Cz\u0119stochowa",
+      "home": "Legia Warszawa",
+      "league": "Ekstraklasa",
+      "normalized_pair": "legia warszawa|rakow czestochowa"
+    },
+    {
+      "away": "Como",
+      "home": "Inter",
+      "league": "Serie A",
+      "normalized_pair": "como|inter"
+    },
+    {
+      "away": "Br\u00f8ndby IF",
+      "home": "FC K\u00f8benhavn",
+      "league": "Superliga",
+      "normalized_pair": "brondby|kobenhavn"
+    },
+    {
+      "away": "Aalesund",
+      "home": "Lillestr\u00f8m",
+      "league": "Eliteserien",
+      "normalized_pair": "aalesund|lillestrom"
+    },
+    {
+      "away": "Cosenza",
+      "home": "Monopoli",
+      "league": "Serie C: Girone C",
+      "normalized_pair": "cosenza|monopoli"
+    },
+    {
+      "away": "Ittihad Tanger",
+      "home": "Raja Casablanca",
+      "league": "Botola Pro",
+      "normalized_pair": "ittihad tanger|raja casablanca"
+    },
+    {
+      "away": "Molde",
+      "home": "Sandefjord",
+      "league": "Eliteserien",
+      "normalized_pair": "molde|sandefjord"
+    },
+    {
+      "away": "Novara",
+      "home": "Treviso",
+      "league": "Serie C: Girone A",
+      "normalized_pair": "novara|treviso"
+    },
+    {
+      "away": "Z\u00fcrich",
+      "home": "Servette",
+      "league": "Super League",
+      "normalized_pair": "servette|zurich"
+    },
+    {
+      "away": "Ruch Chorz\u00f3w",
+      "home": "Stal Mielec",
+      "league": "1. Liga",
+      "normalized_pair": "ruch chorzow|stal mielec"
+    },
+    {
+      "away": "Mito Hollyhock",
+      "home": "JEF United",
+      "league": "J1 League",
+      "normalized_pair": "jef united|mito hollyhock"
+    },
+    {
+      "away": "Str\u00f8msgodset",
+      "home": "Stab\u00e6k",
+      "league": "1. Division",
+      "normalized_pair": "stabaek|stromsgodset"
+    },
+    {
+      "away": "AC Milan",
+      "home": "Genoa",
+      "league": "Serie A",
+      "normalized_pair": "genoa|milan"
+    },
+    {
+      "away": "Hannover 96",
+      "home": "Heidenheim",
+      "league": "2. Bundesliga",
+      "normalized_pair": "hannover 96|heidenheim"
+    },
+    {
+      "away": "Crvena Zvezda",
+      "home": "Vojvodina",
+      "league": "Super Liga",
+      "normalized_pair": "crvena zvezda|vojvodina"
+    },
+    {
+      "away": "Inter Turku",
+      "home": "KuPS",
+      "league": "Veikkausliiga",
+      "normalized_pair": "inter turku|kups"
+    },
+    {
+      "away": "Real Betis",
+      "home": "Elche",
+      "league": "La Liga",
+      "normalized_pair": "elche|real betis"
+    },
+    {
+      "away": "Eldense",
+      "home": "Las Palmas",
+      "league": "La Liga 2",
+      "normalized_pair": "eldense|las palmas"
+    },
+    {
+      "away": "Almer\u00eda",
+      "home": "Girona",
+      "league": "La Liga 2",
+      "normalized_pair": "almeria|girona"
+    },
+    {
+      "away": "Juventus",
+      "home": "Fiorentina",
+      "league": "Serie A",
+      "normalized_pair": "fiorentina|juventus"
+    },
+    {
+      "away": "Gil Vicente",
+      "home": "Santa Clara",
+      "league": "Liga Portugal",
+      "normalized_pair": "gil vicente|santa clara"
+    },
+    {
+      "away": "Sporting Covilh\u00e3",
+      "home": "Louletano",
+      "league": "Liga 3",
+      "normalized_pair": "louletano|sporting covilha"
+    },
+    {
+      "away": "Lugano",
+      "home": "St. Gallen",
+      "league": "Super League",
+      "normalized_pair": "lugano|st. gallen"
+    },
+    {
+      "away": "Atalanta",
+      "home": "Monza",
+      "league": "Serie A",
+      "normalized_pair": "atalanta|monza"
+    },
+    {
+      "away": "Livorno",
+      "home": "Campobasso",
+      "league": "Serie C: Girone B",
+      "normalized_pair": "campobasso|livorno"
+    },
+    {
+      "away": "Mar\u00edtimo",
+      "home": "Estoril",
+      "league": "Liga Portugal",
+      "normalized_pair": "estoril|maritimo"
+    },
+    {
+      "away": "UD Ibiza",
+      "home": "Teruel",
+      "league": "Primera Division RFEF: Group 2",
+      "normalized_pair": "teruel|ud ibiza"
+    },
+    {
+      "away": "Lechia Gda\u0144sk",
+      "home": "Polonia Bytom",
+      "league": "1. Liga",
+      "normalized_pair": "lechia gdansk|polonia bytom"
+    },
+    {
+      "away": "Pescara",
+      "home": "Grosseto",
+      "league": "Serie C: Girone B",
+      "normalized_pair": "grosseto|pescara"
+    },
+    {
+      "away": "Hapoel Tel Aviv",
+      "home": "Hapoel Be'er Sheva",
+      "league": "Ligat ha'Al",
+      "normalized_pair": "hapoel be'er sheva|hapoel tel aviv"
+    },
+    {
+      "away": "St. Pauli",
+      "home": "Magdeburg",
+      "league": "2. Bundesliga",
+      "normalized_pair": "magdeburg|st. pauli"
+    }
+  ],
+  "source": "oddspapi_odds",
+  "status": "reserved"
+}

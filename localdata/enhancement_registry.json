@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-07",
+ "generated_at": "2026-11-08",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
-   "hits": 11,
-   "inv_price_sum": 10.107142733689102,
+   "hits": 12,
+   "inv_price_sum": 10.74734759924608,
    "multi_n": 0,
-   "n": 16,
+   "n": 17,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -76,9 +76,10 @@
     "2026-11-02|Cruz Azul vs Leon|away_over_05@v1",
     "2026-11-02|Portland Timbers vs Houston Dynamo|away_over_05@v1",
     "2026-11-04|Alianza Lima vs Cienciano|away_over_05@v1",
-    "2026-11-05|Puntarenas FC vs San Carlos|away_over_05@v1"
+    "2026-11-05|Puntarenas FC vs San Carlos|away_over_05@v1",
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|away_over_05@v1"
    ],
-   "profit": 0.278,
+   "profit": 0.84,
    "records": [
     {
      "away": "Mixco",
@@ -531,6 +532,35 @@
      "rule": "pfc_c7c9572806b564198f651cee",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.66,
+     "date": "2026-11-07",
+     "hit": true,
+     "home": "Atl\u00e9tico San Luis",
+     "home_key": "atleticosanluis",
+     "league": "Liga MX",
+     "match": "Atl\u00e9tico San Luis vs Ju\u00e1rez",
+     "multi_source": false,
+     "price": 1.562,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-06T22:36:57.617644+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-07T00:37:51+02:00",
+      "kickoff": "2026-11-07T01:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.562,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-07T23:37:44.097000+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -807,10 +837,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 16,
-   "inv_price_sum": 8.549137055197235,
+   "hits": 17,
+   "inv_price_sum": 10.008316173950822,
    "multi_n": 0,
-   "n": 19,
+   "n": 21,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -830,9 +860,11 @@
     "2026-11-04|Alianza Lima vs Cienciano|away_under_15@v1",
     "2026-11-05|Municipal Lime\u00f1o vs Fuerte San Francisco|away_under_15@v1",
     "2026-11-05|Puntarenas FC vs San Carlos|away_under_15@v1",
-    "2026-11-06|Cruzeiro vs Bahia|away_under_15@v1"
+    "2026-11-06|Cruzeiro vs Bahia|away_under_15@v1",
+    "2026-11-07|Guadalupe FC vs ADR Jicaral|away_under_15@v1",
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|away_under_15@v1"
    ],
-   "profit": 26.675,
+   "profit": 25.991,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -1322,6 +1354,64 @@
      },
      "recorded_at": "2026-11-06T23:05:44.644322+00:00",
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "ADR Jicaral",
+     "away_key": "adrjicaral",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.7695,
+     "date": "2026-11-07",
+     "hit": false,
+     "home": "Guadalupe FC",
+     "home_key": "guadalupe",
+     "league": "Costa-Rica Liga de Ascenso",
+     "match": "Guadalupe FC vs ADR Jicaral",
+     "multi_source": false,
+     "price": 1.43,
+     "price_context": {
+      "book": "netbet",
+      "captured_at": "2026-11-06T22:36:51.114920+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-07T00:37:51+02:00",
+      "kickoff": "2026-11-07T02:00:00+00:00",
+      "league": "Costa-Rica Liga de Ascenso",
+      "price": 1.43,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-07T23:37:44.058894+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7075,
+     "date": "2026-11-07",
+     "hit": true,
+     "home": "Atl\u00e9tico San Luis",
+     "home_key": "atleticosanluis",
+     "league": "Liga MX",
+     "match": "Atl\u00e9tico San Luis vs Ju\u00e1rez",
+     "multi_source": false,
+     "price": 1.316,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-06T22:36:57.617644+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-07T00:37:51+02:00",
+      "kickoff": "2026-11-07T01:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.316,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-07T23:37:44.104375+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
     }
@@ -3053,10 +3143,10 @@
    "status_since": "2026-10-16"
   },
   "home_over_15@v1": {
-   "hits": 10,
-   "inv_price_sum": 10.7410391007952,
+   "hits": 11,
+   "inv_price_sum": 11.175821709490853,
    "multi_n": 0,
-   "n": 18,
+   "n": 19,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -3075,9 +3165,10 @@
     "2026-11-05|Municipal Lime\u00f1o vs Fuerte San Francisco|home_over_15@v1",
     "2026-11-05|Puntarenas FC vs San Carlos|home_over_15@v1",
     "2026-11-06|Cruzeiro vs Bahia|home_over_15@v1",
-    "2026-11-06|CD Marathon vs Platense FC|home_over_15@v1"
+    "2026-11-06|CD Marathon vs Platense FC|home_over_15@v1",
+    "2026-11-07|Guadalupe FC vs ADR Jicaral|home_over_15@v1"
    ],
-   "profit": -1.804,
+   "profit": -0.504,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -3600,6 +3691,35 @@
      "rule": "pfc_54fcf87604b73b87ee6c0a90",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "ADR Jicaral",
+     "away_key": "adrjicaral",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.6348,
+     "date": "2026-11-07",
+     "hit": true,
+     "home": "Guadalupe FC",
+     "home_key": "guadalupe",
+     "league": "Costa-Rica Liga de Ascenso",
+     "match": "Guadalupe FC vs ADR Jicaral",
+     "multi_source": false,
+     "price": 2.3,
+     "price_context": {
+      "book": "asports.bet",
+      "captured_at": "2026-11-06T22:36:51.114920+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-07T00:37:51+02:00",
+      "kickoff": "2026-11-07T02:00:00+00:00",
+      "league": "Costa-Rica Liga de Ascenso",
+      "price": 2.3,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-07T23:37:44.075192+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -4062,10 +4182,10 @@
    "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
-   "hits": 15,
-   "inv_price_sum": 15.116428471610755,
+   "hits": 17,
+   "inv_price_sum": 16.35021595376211,
    "multi_n": 0,
-   "n": 24,
+   "n": 26,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -4130,9 +4250,11 @@
     "2026-11-04|Internacional vs Coritiba|home_under_25@v1",
     "2026-11-04|Alianza Lima vs Cienciano|home_under_25@v1",
     "2026-11-05|Olimpia vs Deportivo Recoleta|home_under_25@v1",
-    "2026-11-06|Cruzeiro vs Bahia|home_under_25@v1"
+    "2026-11-06|Cruzeiro vs Bahia|home_under_25@v1",
+    "2026-11-07|Arsenal vs Hull City|home_under_25@v1",
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|home_under_25@v1"
    ],
-   "profit": -1.416,
+   "profit": -0.098,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -4817,6 +4939,64 @@
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Hull City",
+     "away_key": "hullcity",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6265,
+     "date": "2026-11-07",
+     "hit": true,
+     "home": "Arsenal",
+     "home_key": "arsenal",
+     "league": "England Premier League",
+     "match": "Arsenal vs Hull City",
+     "multi_source": false,
+     "price": 1.91,
+     "price_context": {
+      "book": "MyBookie.ag",
+      "captured_at": "2026-11-06T22:36:45.057435+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-07T00:37:51+02:00",
+      "kickoff": "2026-11-07T15:00:00+00:00",
+      "league": "England Premier League",
+      "price": 1.91,
+      "selection": "home",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-07T23:37:44.086492+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7267,
+     "date": "2026-11-07",
+     "hit": true,
+     "home": "Atl\u00e9tico San Luis",
+     "home_key": "atleticosanluis",
+     "league": "Liga MX",
+     "match": "Atl\u00e9tico San Luis vs Ju\u00e1rez",
+     "multi_source": false,
+     "price": 1.408,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-06T22:36:57.617644+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-07T00:37:51+02:00",
+      "kickoff": "2026-11-07T01:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.408,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-07T23:37:44.111768+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -5025,9 +5205,9 @@
   },
   "match_over_15@v1": {
    "hits": 39,
-   "inv_price_sum": 43.93513346205762,
-   "multi_n": 4,
-   "n": 52,
+   "inv_price_sum": 44.76846679539096,
+   "multi_n": 5,
+   "n": 53,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -5104,9 +5284,10 @@
     "2026-10-25|Sagan Tosu vs Vanraure Hachinohe|match_over_15@v1",
     "2026-10-26|Mladost \u017ddralovi vs Jadran LP|match_over_15@v1",
     "2026-11-02|Sacramento Republic FC vs FC Tulsa|match_over_15@v1",
-    "2026-11-05|Puntarenas FC vs San Carlos|match_over_15@v1"
+    "2026-11-05|Puntarenas FC vs San Carlos|match_over_15@v1",
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|match_over_15@v1"
    ],
-   "profit": -5.725,
+   "profit": -6.725,
    "records": [
     {
      "away": "Aston Villa",
@@ -5895,6 +6076,25 @@
      "recorded_at": "2026-11-05T22:38:22.314801+00:00",
      "rule": "pfc_c7c9572806b564198f651cee",
      "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7742,
+     "date": "2026-11-07",
+     "hit": false,
+     "home": "Atl\u00e9tico San Luis",
+     "home_key": "atleticosanluis",
+     "league": "Liga MX",
+     "match": "Atl\u00e9tico San Luis vs Ju\u00e1rez",
+     "multi_source": true,
+     "price": 1.2,
+     "price_context": {},
+     "recorded_at": "2026-11-07T23:37:44.126601+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "scoutingstats",
      "stated": null
     }
    ],
@@ -16184,10 +16384,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_35@v1": {
-   "hits": 6,
-   "inv_price_sum": 8.672912560818306,
+   "hits": 7,
+   "inv_price_sum": 10.090554324994724,
    "multi_n": 0,
-   "n": 16,
+   "n": 18,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -16204,9 +16404,11 @@
     "2026-11-02|Los Angeles FC vs Minnesota United|match_under_35@v1",
     "2026-11-02|Portland Timbers vs Houston Dynamo|match_under_35@v1",
     "2026-11-04|Alianza Lima vs Cienciano|match_under_35@v1",
-    "2026-11-05|Olimpia vs Deportivo Recoleta|match_under_35@v1"
+    "2026-11-05|Olimpia vs Deportivo Recoleta|match_under_35@v1",
+    "2026-11-07|Guadalupe FC vs ADR Jicaral|match_under_35@v1",
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|match_under_35@v1"
    ],
-   "profit": -2.485,
+   "profit": -2.97,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -16669,6 +16871,64 @@
      },
      "recorded_at": "2026-11-05T22:38:22.251116+00:00",
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "ADR Jicaral",
+     "away_key": "adrjicaral",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.6159,
+     "date": "2026-11-07",
+     "hit": false,
+     "home": "Guadalupe FC",
+     "home_key": "guadalupe",
+     "league": "Costa-Rica Liga de Ascenso",
+     "match": "Guadalupe FC vs ADR Jicaral",
+     "multi_source": false,
+     "price": 1.32,
+     "price_context": {
+      "book": "bet3000",
+      "captured_at": "2026-11-06T22:36:51.114920+00:00",
+      "contract_id": "pfc_1607fec83282d02c5254c2bf",
+      "decision_at": "2026-11-07T00:37:51+02:00",
+      "kickoff": "2026-11-07T02:00:00+00:00",
+      "league": "Costa-Rica Liga de Ascenso",
+      "price": 1.32,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-07T23:37:44.066844+00:00",
+     "rule": "pfc_1607fec83282d02c5254c2bf",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Ju\u00e1rez",
+     "away_key": "juarez",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6663,
+     "date": "2026-11-07",
+     "hit": true,
+     "home": "Atl\u00e9tico San Luis",
+     "home_key": "atleticosanluis",
+     "league": "Liga MX",
+     "match": "Atl\u00e9tico San Luis vs Ju\u00e1rez",
+     "multi_source": false,
+     "price": 1.515,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-06T22:36:57.617644+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-07T00:37:51+02:00",
+      "kickoff": "2026-11-07T01:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.515,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-07T23:37:44.119241+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
     }

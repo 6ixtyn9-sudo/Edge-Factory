@@ -6,20 +6,20 @@
       "attributed_scores": {
         "by_schema": {
           "enh_score_logit_v2": {
-            "cohort_brier": 0.24495646405405408,
-            "cohort_log_loss": 0.6903572979619131,
-            "fixtures": 37,
-            "model_brier": 0.23447856508803638,
-            "model_log_loss": 0.6620426332032163,
-            "records": 37
+            "cohort_brier": 0.23646483230769233,
+            "cohort_log_loss": 0.6715782215272665,
+            "fixtures": 39,
+            "model_brier": 0.2262941284795894,
+            "model_log_loss": 0.6440381404413683,
+            "records": 39
           }
         },
         "caveat": "Fixture-balanced descriptive scores on booked legs, not independent records or selection uplift; log probabilities clipped at 1e-15. No significance claim.",
-        "eligible_binary_legs": 93,
+        "eligible_binary_legs": 95,
         "missing_attribution": 56
       },
       "counts": {
-        "MATCH": 11
+        "MATCH": 12
       },
       "duplicate_storage_copies": [],
       "missing_receipt_days": [
@@ -4206,10 +4206,10 @@
                         "match": "Ey\u00fcpspor vs Kocaelispor",
                         "model": 0.8100105944511437,
                         "odds": 1.389,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.66,
@@ -4217,14 +4217,14 @@
                         "match": "Port FC vs Chonburi FC",
                         "model": 0.6628529575603053,
                         "odds": 1.562,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "away",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 2.17,
-                    "returned": null,
+                    "returned": 5.0548,
                     "stake": 2.3294
                   }
                 ],
@@ -4253,9 +4253,9 @@
                   ]
                 ],
                 "mean_acca_odds": 2.17,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 2,
+                "returned": 5.0548,
                 "selected_legs": 2,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -4275,10 +4275,10 @@
                         "match": "Ey\u00fcpspor vs Kocaelispor",
                         "model": 0.8100105944511437,
                         "odds": 1.389,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "over",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       },
                       {
                         "cohort": 0.66,
@@ -4286,14 +4286,14 @@
                         "match": "Port FC vs Chonburi FC",
                         "model": 0.6628529575603053,
                         "odds": 1.562,
-                        "outcome_source": null,
+                        "outcome_source": "retained_ledger",
                         "pick": "away",
-                        "result": null,
-                        "unresolved_reason": "missing_final_score"
+                        "result": "win",
+                        "unresolved_reason": null
                       }
                     ],
                     "odds": 2.17,
-                    "returned": null,
+                    "returned": 5.0548,
                     "stake": 2.3294
                   }
                 ],
@@ -4322,9 +4322,9 @@
                   ]
                 ],
                 "mean_acca_odds": 2.17,
-                "outcome_status": "INCOMPLETE_OUTCOMES",
-                "resolved_legs": 0,
-                "returned": null,
+                "outcome_status": "RESOLVED",
+                "resolved_legs": 2,
+                "returned": 5.0548,
                 "selected_legs": 2,
                 "selector_trace": {
                   "capacity_rescue_changed": false,
@@ -4464,10 +4464,85 @@
               "enh_score_logit_v2": 365
             },
             "scored_legs": 365,
-            "status": "INCOMPLETE_OUTCOMES"
+            "status": "RESOLVED"
           },
-          "open_accas": 1,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": 2.7254,
+          "settlement": "MATCH",
+          "status": "MATCH"
+        },
+        {
+          "accas": 0,
+          "bank_reconciliation": "MATCH",
+          "bank_total": 21.360391999999997,
+          "committed_excluding_target": 0.0,
+          "date": "2026-11-08",
+          "decision_status": "no_bet",
+          "engine_changed": false,
+          "execution_provenance": {
+            "checkout_head_at_capture": "bd42a27ac2f9511194605bba5fc4fc915c665593",
+            "event_sha": "bd42a27ac2f9511194605bba5fc4fc915c665593",
+            "file_sha256": {
+              "Config/verified_results.json": "bb2f019962210d0f5b799b9d50a4beab8fa8d5050462667138f5a32d35788e68",
+              "src/edgefactory/consensus_contracts.py": "39b05cabbe6b57105ba34defee0ae8b1fc6621ea5a40c7f337f10c69b53c8b31",
+              "src/edgefactory/enh_registry.py": "2b5a8abedfa8302aaa079ce254ea268447a41d3f6ab308affec078ec1524e170"
+            },
+            "run_id": "42418489528",
+            "scope": "checkout/files at receipt capture; not proof of earlier subprocess revisions"
+          },
+          "file": "phase5_reconciliation/ticket_decisions/autobets_enh_tickets_2026-11-08_decision.json.gz",
+          "free_bank": 21.360391999999997,
+          "ledger": "NOT_COMMITTED",
+          "ml_comparison": {
+            "added_to_ml_on": 0,
+            "arms": {
+              "ml_off": {
+                "accas": [],
+                "card_identity": [],
+                "mean_acca_odds": null,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 0,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": false
+                },
+                "total_stake": 0
+              },
+              "ml_on": {
+                "accas": [],
+                "card_identity": [],
+                "mean_acca_odds": null,
+                "outcome_status": "UNSETTLED_OR_UNPROVEN",
+                "resolved_legs": 0,
+                "returned": null,
+                "selected_legs": 0,
+                "selector_trace": {
+                  "capacity_rescue_changed": false,
+                  "capacity_rescue_checked": false,
+                  "dropped": [],
+                  "ml_ranking_active": false
+                },
+                "total_stake": 0
+              }
+            },
+            "card_identical": true,
+            "caveat": "Captured-pool comparison, not a randomized trial. Pairing rescue may differ; stakes may differ with capacity. No joint expected return is inferred.",
+            "execution_leg_symmetric_difference": 0,
+            "mean_absolute_disagreement": null,
+            "model_below_cohort": 0,
+            "models": {},
+            "paired_estimates": 0,
+            "pool_legs": 0,
+            "removed_from_ml_off": 0,
+            "schemas": {},
+            "scored_legs": 0,
+            "status": "UNSETTLED_OR_UNPROVEN \u2014 selection comparison only"
+          },
+          "settlement": "UNAVAILABLE",
           "status": "MATCH"
         }
       ],
@@ -4841,8 +4916,9 @@
           "free_bank": 447.291076,
           "freeze_time": "MATCH",
           "ledger": "MATCH",
-          "open_accas": 2,
-          "settlement": "PENDING",
+          "open_accas": 0,
+          "settled_net": 6.709400000000002,
+          "settlement": "MATCH",
           "status": "MATCH"
         }
       ],
