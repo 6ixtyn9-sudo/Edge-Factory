@@ -1,97 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 454.00044399999996,
+  "bank": 455.1353439999999,
   "cycle_base": 456.154568,
-  "open_slips": [
-    {
-      "date": "2026-11-08",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Deportivo Garcilaso vs Comerciantes Unidos",
-              "pick": "HOME",
-              "prob": 0.6288575928842768,
-              "odds": 1.4831,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "pinnapi_odds",
-              "fixture_key": [
-                "2026-11-08",
-                "Deportivo Garcilaso",
-                "Comerciantes Unidos"
-              ]
-            },
-            {
-              "match": "Lech Pozna\u0144 vs Zag\u0142\u0119bie Lubin",
-              "pick": "HOME",
-              "prob": 0.5917459596876702,
-              "odds": 1.55,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Betfair",
-              "price_source": "theoddsapi",
-              "fixture_key": [
-                "2026-11-08",
-                "Lech Pozna\u0144",
-                "Zag\u0142\u0119bie Lubin"
-              ]
-            }
-          ],
-          "odds": 2.3,
-          "stake_pct": 56.7501,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Villarreal vs Getafe",
-              "pick": "HOME",
-              "prob": 0.6253912213740458,
-              "odds": 1.4348,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "pinnapi_odds",
-              "fixture_key": [
-                "2026-11-08",
-                "Villarreal",
-                "Getafe"
-              ]
-            },
-            {
-              "match": "FAR Rabat vs Difa\u00e2 El Jadida",
-              "pick": "HOME",
-              "prob": 0.6052277432712216,
-              "odds": 1.4065,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "pinnapi_odds",
-              "fixture_key": [
-                "2026-11-08",
-                "FAR Rabat",
-                "Difa\u00e2 El Jadida"
-              ]
-            }
-          ],
-          "odds": 2.02,
-          "stake_pct": 56.75,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 113.5001
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -2221,6 +2132,87 @@
       ],
       "bank_pct": 454.0004,
       "close_pct": 454.0004
+    },
+    {
+      "date": "2026-11-08",
+      "staked_pct": 113.5001,
+      "returned_pct": 114.635,
+      "accas": [
+        {
+          "odds": 2.3,
+          "won": false,
+          "stake_pct": 56.7501,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Deportivo Garcilaso vs Comerciantes Unidos",
+              "pick": "HOME",
+              "odds": 1.4831,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-08",
+                "Deportivo Garcilaso",
+                "Comerciantes Unidos"
+              ]
+            },
+            {
+              "match": "Lech Pozna\u0144 vs Zag\u0142\u0119bie Lubin",
+              "pick": "HOME",
+              "odds": 1.55,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-08",
+                "Lech Pozna\u0144",
+                "Zag\u0142\u0119bie Lubin"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.02,
+          "won": true,
+          "stake_pct": 56.75,
+          "returned_pct": 114.635,
+          "legs": [
+            {
+              "match": "Villarreal vs Getafe",
+              "pick": "HOME",
+              "odds": 1.4348,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-08",
+                "Villarreal",
+                "Getafe"
+              ]
+            },
+            {
+              "match": "FAR Rabat vs Difa\u00e2 El Jadida",
+              "pick": "HOME",
+              "odds": 1.4065,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-08",
+                "FAR Rabat",
+                "Difa\u00e2 El Jadida"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 455.1353,
+      "close_pct": 455.1353
     }
   ],
   "events": [
