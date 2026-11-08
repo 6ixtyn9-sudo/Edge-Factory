@@ -90,36 +90,12 @@ jobs:
         # survival buffer, not a performance fix: it turns an OOM kill into
         # slow progress. It makes no audit or gate pass, and it changes no
         # threshold, stake, bank or retained evidence.
-        #
-        # 2026-11-08 run #1274: the hosted image ALREADY has /swapfile open,
-        # so `fallocate` and the `dd` fallback both failed with
-        # "Text file busy" and `set -e` killed the job in the same second.
-        # Steps 6-17 (including the schedule and enhancement steps) were
-        # skipped, so nothing was tested. This step now tolerates a
-        # pre-provisioned swap, uses a private path, and never fails the job
-        # for a reason that is not the build's fault.
         run: |
           set -e
-          echo "swap before:"
-          sudo swapon --show || true
-          free -m
-          if [ -n "$(sudo swapon --show --noheadings 2>/dev/null | tr -d '[:space:]')" ]; then
-            echo "swap already active; keeping the image-provided swap"
-            free -m
-            exit 0
-          fi
-          SWAP=/mnt/ef-swapfile
-          sudo swapoff "$SWAP" 2>/dev/null || true
-          sudo rm -f "$SWAP"
-          if ! sudo fallocate -l 6G "$SWAP"; then
-            echo "fallocate unavailable; falling back to dd"
-            sudo rm -f "$SWAP"
-            sudo dd if=/dev/zero of="$SWAP" bs=1M count=6144
-          fi
-          sudo chmod 600 "$SWAP"
-          sudo mkswap "$SWAP"
-          sudo swapon "$SWAP"
-          echo "swap after:"
+          sudo fallocate -l 6G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=6144
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
           sudo swapon --show
           free -m
 
@@ -227,11 +203,11 @@ jobs:
           fi
 
       - name: Enhancement tickets (generate/freeze)
-        # MEASUREMENT, not mitigation. `/usr/bin/time -v` is the PARENT of the
-        # build, so GNU time reports the child's rusage even when the child is
-        # SIGKILLed -- "Maximum resident set size" plus "Command terminated by
-        # signal 9" is the line that decides OOM versus a blocked call. Without
-        # it, runs #1272 and #1274 both left the cause unknown.
+        # MEASUREMENT, not mitigation. /usr/bin/time is the PARENT of the build,
+        # so it reports the child's rusage even when the child is SIGKILLed:
+        # "Maximum resident set size" plus "Command terminated by signal 9" is
+        # the line that decides OOM versus a blocked call. Runs #1272 and #1274
+        # both died inside this step and left the cause unknown.
         if: inputs.mode != 'remine_only' && inputs.mode != 'recover_and_rebuild'
         continue-on-error: true
         run: |
@@ -275,11 +251,6 @@ jobs:
         run: python3 scripts/phase5_persistence.py history-check
 
       - name: Persist localdata State (Cache)
-        # always(), not success(): an enhancement step that FAILS (dies
-        # non-fatally) used to discard the whole run's state, including the
-        # frozen MAIN card. A hard runner SIGKILL still skips this; only
-        # moving the git commit above the enhancement step would cover that,
-        # and it would guarantee the enhancement receipt is never committed.
         uses: actions/cache/save@v4
         if: always() && inputs.mode != 'remine_only'
         with:
@@ -287,8 +258,6 @@ jobs:
           key: localdata-v2-${{ github.run_id }}
 
       - name: Persist pipeline state to git (single source of truth)
-        # Same reasoning as the cache save above. The git commit remains the
-        # authoritative record; the restore step overrides stale cache.
         if: always() && inputs.mode != 'remine_only'
         run: |
           git config user.name "github-actions[bot]"
