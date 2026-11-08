@@ -81,6 +81,24 @@ jobs:
           pip install -r requirements.txt
           pip install "supabase>=2.4,<3"
 
+      - name: Add swap space for memory-heavy ticket builds
+        # 2026-11-08 run #1272: the runner lost communication with the server
+        # 48m into `Enhancement tickets`, before any persist step ran, so the
+        # job failed with steps 16-23 pending and nothing was committed. The
+        # ENH decision receipt materialises ~1.3 GB of JSON at a measured peak
+        # RSS of 2.7 GB while the settlement index is resident. This is a
+        # survival buffer, not a performance fix: it turns an OOM kill into
+        # slow progress. It makes no audit or gate pass, and it changes no
+        # threshold, stake, bank or retained evidence.
+        run: |
+          set -e
+          sudo fallocate -l 6G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=6144
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          sudo swapon --show
+          free -m
+
       - name: Restore localdata State (Cache)
         uses: actions/cache/restore@v4
         with:
@@ -261,25 +279,23 @@ jobs:
 
       - name: Ticket decision replay parity (read-only, flag never gate)
         # RUNS LAST, ON PURPOSE. This is a read-only audit of retained ENH
-        # decision receipts; it is scheduled behind every durable write so a
-        # shutdown signal here cannot orphan a frozen card.
+        # decision receipts; it is now scheduled behind every durable write
+        # so that a shutdown signal here can no longer orphan a frozen card.
         # CONTAINMENT, not a performance fix: a receipt is a ~545-byte
         # manifest over up to 21 shards (200-607 MB per day, 1.3 GB of JSON
         # once materialised), so replaying every retained day is unbounded
-        # as history grows. The window and the budget bound the worst case,
-        # and both were raised on 2026-11-08 (5min/210s -> 25min/1200s) so
-        # the 7-day window can actually complete instead of always ending
-        # INCOMPLETE_TIME_BUDGET. A green step still proves nothing about
-        # MATCH (continue-on-error stays true).
+        # as history grows. timeout-minutes + --parity-time-budget bound it;
+        # together they still do NOT establish parity, and a green step
+        # proves nothing about MATCH (continue-on-error stays true).
         if: always() && inputs.mode != 'remine_only'
-        timeout-minutes: 25
+        timeout-minutes: 5
         continue-on-error: true
         run: |
           set +e
           mkdir -p localdata
           PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity \
             --parity-window-days 7 \
-            --parity-time-budget 1200 \
+            --parity-time-budget 210 \
             --parity-output localdata/replay_parity.json
           result=$?
           echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
