@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-08T21:49:40",
+  "generated_at": "2026-11-09T00:57:41",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 21.360391999999997,
-  "multiple": 0.21360391999999997,
+  "bank_pct": 23.843491999999998,
+  "multiple": 0.23843491999999997,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 25,
+  "bet_days": 26,
   "accas": {
-    "wins": 19,
+    "wins": 20,
     "losses": 32
   },
-  "open_slips": [
-    {
-      "date": "2026-11-08",
-      "staked_pct": 2.67
-    }
-  ],
+  "open_slips": [],
   "events": [],
   "history": [
     {
@@ -7868,6 +7863,183 @@
       ],
       "bank_pct": 21.3604,
       "close_pct": 21.3604
+    },
+    {
+      "date": "2026-11-08",
+      "staked_pct": 2.67,
+      "returned_pct": 5.1531,
+      "accas": [
+        {
+          "odds": 1.93,
+          "won": true,
+          "stake_pct": 2.67,
+          "returned_pct": 5.1531,
+          "legs": [
+            {
+              "match": "Fredrikstad vs Brann",
+              "pick": "under",
+              "odds": 1.351,
+              "result": "win",
+              "label": "Match Under 4.5 Goals",
+              "market": "match_under_45",
+              "price_book": "polymarket",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-08T16:24:06.278039+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "SK Brann",
+                  "bookmaker": "polymarket",
+                  "bookmaker_market_id": "6255324",
+                  "captured_at": "2026-11-08T16:24:06.278039+00:00",
+                  "date": "2026-11-08",
+                  "home": "Fredrikstad FK",
+                  "kickoff": "2026-11-08T18:15:00.000Z",
+                  "league": "",
+                  "market": "ou_4.5",
+                  "odds": "1.351",
+                  "outcome_key": "1015",
+                  "provider_changed_at": "2026-11-08T16:20:06.729Z",
+                  "provider_fixture_id": "id1000002067015450",
+                  "provider_market_id": "1014",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-08T16:20:05.803Z",
+                  "schema_version": "4",
+                  "selection": "under",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "9c2a544ca07c232ad88c730c304d33f481443553d60edad4d60733c3d51e85f1",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "fixture_key": [
+                "2026-11-08",
+                "Fredrikstad",
+                "Brann"
+              ],
+              "prob": 0.8381,
+              "cohort_evidence": {
+                "rate": 0.8381,
+                "n": 951,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-08",
+                "market": "match_under_45",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 797,
+                "cohort_lower_bound": 0.8132991806584705,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "away",
+                  "league": "Eliteserien",
+                  "book": "polymarket",
+                  "source": "oddspapi",
+                  "price": 1.351,
+                  "captured_at": "2026-11-08T16:24:06.278039+00:00",
+                  "decision_at": "2026-11-08T18:26:18+02:00",
+                  "kickoff": "2026-11-08T18:15:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8435287321541083,
+              "ml_model_key": "8139c76b7586a7dea4036a346a212d3c3d543cce5da9009d08653b652ee85fcc",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Eliteserien",
+              "shadow": true,
+              "price_kickoff": "2026-11-08T18:15:00.000Z"
+            },
+            {
+              "match": "Villarreal vs Getafe",
+              "pick": "home",
+              "odds": 1.429,
+              "result": "win",
+              "label": "Home Team Under 2.5 Goals",
+              "market": "home_under_25",
+              "price_book": "polymarket",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-08T16:23:55.825912+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Getafe CF",
+                  "bookmaker": "polymarket",
+                  "bookmaker_market_id": "6243237",
+                  "captured_at": "2026-11-08T16:23:55.825912+00:00",
+                  "date": "2026-11-08",
+                  "home": "Villarreal CF",
+                  "kickoff": "2026-11-08T17:30:00.000Z",
+                  "league": "",
+                  "market": "tt_home_2.5",
+                  "odds": "1.429",
+                  "outcome_key": "10229",
+                  "provider_changed_at": "2026-11-08T16:23:52.830Z",
+                  "provider_fixture_id": "id1000000872478704",
+                  "provider_market_id": "10228",
+                  "provider_market_name": "Over Under Team 1",
+                  "provider_market_type": "teamtotals-team1",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-08T16:23:52.050Z",
+                  "schema_version": "4",
+                  "selection": "under",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "0b5ed7ab2b44c4cb66789e10ea3bc7a280c843b1d583ab9d166e6481eb429ec3",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "fixture_key": [
+                "2026-11-08",
+                "Villarreal",
+                "Getafe"
+              ],
+              "prob": 0.7257,
+              "cohort_evidence": {
+                "rate": 0.7257,
+                "n": 2785,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-08",
+                "market": "home_under_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 2021,
+                "cohort_lower_bound": 0.7088002252475385,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "home",
+                  "league": "La Liga",
+                  "book": "polymarket",
+                  "source": "oddspapi",
+                  "price": 1.429,
+                  "captured_at": "2026-11-08T16:23:55.825912+00:00",
+                  "decision_at": "2026-11-08T18:26:18+02:00",
+                  "kickoff": "2026-11-08T17:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7015884327373177,
+              "ml_model_key": "3b6af4493c23a2f77b1afb2c5644b82a619d200051f33fa876341db7723ab833",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "none",
+              "league": "La Liga",
+              "shadow": false,
+              "price_kickoff": "2026-11-08T17:30:00.000Z"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 23.8435,
+      "close_pct": 23.8435
     }
   ]
 }

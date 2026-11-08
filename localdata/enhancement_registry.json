@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-08",
+ "generated_at": "2026-11-09",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
-   "hits": 12,
-   "inv_price_sum": 10.74734759924608,
+   "hits": 15,
+   "inv_price_sum": 12.727613189277916,
    "multi_n": 0,
-   "n": 17,
+   "n": 20,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -77,9 +77,12 @@
     "2026-11-02|Portland Timbers vs Houston Dynamo|away_over_05@v1",
     "2026-11-04|Alianza Lima vs Cienciano|away_over_05@v1",
     "2026-11-05|Puntarenas FC vs San Carlos|away_over_05@v1",
-    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|away_over_05@v1"
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|away_over_05@v1",
+    "2026-11-08|Sacramento Republic vs El Paso Locomotive|away_over_05@v1",
+    "2026-11-08|Charleston Battery vs Hartford Athletic|away_over_05@v1",
+    "2026-11-08|Dallas vs Colorado Rapids|away_over_05@v1"
    ],
-   "profit": 0.84,
+   "profit": 2.406,
    "records": [
     {
      "away": "Mixco",
@@ -561,6 +564,93 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "El Paso Locomotive",
+     "away_key": "elpasolocomotive",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.661,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Sacramento Republic",
+     "home_key": "sacramentorepublic",
+     "league": "USL Championship",
+     "match": "Sacramento Republic vs El Paso Locomotive",
+     "multi_source": false,
+     "price": 1.639,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-07T22:51:21.165687+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T03:00:00+00:00",
+      "league": "USL Championship",
+      "price": 1.639,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.625730+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Hartford Athletic",
+     "away_key": "hartfordathletic",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.661,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Charleston Battery",
+     "home_key": "charlestonbattery",
+     "league": "USL Championship",
+     "match": "Charleston Battery vs Hartford Athletic",
+     "multi_source": false,
+     "price": 1.538,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-07T22:51:27.895578+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:30:00+00:00",
+      "league": "USL Championship",
+      "price": 1.538,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.640752+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Colorado Rapids",
+     "away_key": "coloradorapids",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.661,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Dallas",
+     "home_key": "dallas",
+     "league": "Major League Soccer",
+     "match": "Dallas vs Colorado Rapids",
+     "multi_source": false,
+     "price": 1.389,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-07T22:51:34.863676+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:00:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.389,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.658655+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -837,10 +927,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 17,
-   "inv_price_sum": 10.008316173950822,
+   "hits": 18,
+   "inv_price_sum": 11.415672586224622,
    "multi_n": 0,
-   "n": 21,
+   "n": 23,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -862,9 +952,11 @@
     "2026-11-05|Puntarenas FC vs San Carlos|away_under_15@v1",
     "2026-11-06|Cruzeiro vs Bahia|away_under_15@v1",
     "2026-11-07|Guadalupe FC vs ADR Jicaral|away_under_15@v1",
-    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|away_under_15@v1"
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|away_under_15@v1",
+    "2026-11-08|Charleston Battery vs Hartford Athletic|away_under_15@v1",
+    "2026-11-08|Dallas vs Colorado Rapids|away_under_15@v1"
    ],
-   "profit": 25.991,
+   "profit": 25.541,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -1414,6 +1506,64 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Hartford Athletic",
+     "away_key": "hartfordathletic",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7088,
+     "date": "2026-11-08",
+     "hit": false,
+     "home": "Charleston Battery",
+     "home_key": "charlestonbattery",
+     "league": "USL Championship",
+     "match": "Charleston Battery vs Hartford Athletic",
+     "multi_source": false,
+     "price": 1.312,
+     "price_context": {
+      "book": "caesars",
+      "captured_at": "2026-11-07T22:51:27.895578+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:30:00+00:00",
+      "league": "USL Championship",
+      "price": 1.312,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.636291+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Colorado Rapids",
+     "away_key": "coloradorapids",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7088,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Dallas",
+     "home_key": "dallas",
+     "league": "Major League Soccer",
+     "match": "Dallas vs Colorado Rapids",
+     "multi_source": false,
+     "price": 1.55,
+     "price_context": {
+      "book": "tiptorro",
+      "captured_at": "2026-11-07T22:51:34.863676+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:00:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.55,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.663158+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -1422,10 +1572,10 @@
    "status_since": "2026-10-16"
   },
   "away_under_25@v1": {
-   "hits": 11,
-   "inv_price_sum": 8.365564627381259,
+   "hits": 12,
+   "inv_price_sum": 8.96544465137646,
    "multi_n": 0,
-   "n": 14,
+   "n": 15,
    "processed": [
     "2026-10-04|Portugal vs Norway|away_under_25@v1",
     "2026-09-14|Inter vs Udinese|away_under_25@v1",
@@ -1472,9 +1622,10 @@
     "2026-10-25|Wellington Phoenix vs Central Coast Mariners|away_under_25@v1",
     "2026-10-25|Colorado Rapids vs Vancouver Whitecaps|away_under_25@v1",
     "2026-10-25|Sydney FC vs Adelaide United|away_under_25@v1",
-    "2026-11-02|Los Angeles FC vs Minnesota United|away_under_25@v1"
+    "2026-11-02|Los Angeles FC vs Minnesota United|away_under_25@v1",
+    "2026-11-08|Austin vs Portland Timbers|away_under_25@v1"
    ],
-   "profit": 4.783,
+   "profit": 5.45,
    "records": [
     {
      "away": "Norway",
@@ -1829,6 +1980,35 @@
      },
      "recorded_at": "2026-11-02T22:44:22.635844+00:00",
      "rule": "pfc_4e8ef1faa47bce63a119fb43",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Portland Timbers",
+     "away_key": "portlandtimbers",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7134,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Austin",
+     "home_key": "austin",
+     "league": "Major League Soccer",
+     "match": "Austin vs Portland Timbers",
+     "multi_source": false,
+     "price": 1.667,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-07T22:51:42.165370+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:00:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.667,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.676304+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
     }
@@ -3921,10 +4101,10 @@
    "status_since": "2026-10-24"
   },
   "home_under_15@v1": {
-   "hits": 4,
-   "inv_price_sum": 4.0461152533216405,
+   "hits": 5,
+   "inv_price_sum": 4.630910574959067,
    "multi_n": 0,
-   "n": 9,
+   "n": 10,
    "processed": [
     "2026-10-14|Mito Hollyhock vs FC Tokyo|home_under_15@v1",
     "2026-10-14|Slovan Bratislava vs VfB Stuttgart|home_under_15@v1",
@@ -3934,9 +4114,10 @@
     "2026-10-23|Dynamo Kyiv vs Kudrivka|home_under_15@v1",
     "2026-10-23|Atl\u00e9tico Nacional vs Deportivo Pasto|home_under_15@v1",
     "2026-10-23|Brisbane Roar vs Perth Glory|home_under_15@v1",
-    "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|home_under_15@v1"
+    "2026-10-24|Tokyo Verdy vs Avispa Fukuoka|home_under_15@v1",
+    "2026-11-08|Austin vs Portland Timbers|home_under_15@v1"
    ],
-   "profit": -0.798,
+   "profit": -0.088,
    "records": [
     {
      "away": "FC Tokyo",
@@ -4174,6 +4355,35 @@
      "rule": "pfc_27e0f725859bc708f95c58a3",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Portland Timbers",
+     "away_key": "portlandtimbers",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7218,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Austin",
+     "home_key": "austin",
+     "league": "Major League Soccer",
+     "match": "Austin vs Portland Timbers",
+     "multi_source": false,
+     "price": 1.71,
+     "price_context": {
+      "book": "pointsbet.com.au",
+      "captured_at": "2026-11-07T22:51:42.165370+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:00:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.71,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.680878+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -4182,10 +4392,10 @@
    "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
-   "hits": 17,
-   "inv_price_sum": 16.35021595376211,
+   "hits": 18,
+   "inv_price_sum": 18.61278616948677,
    "multi_n": 0,
-   "n": 26,
+   "n": 29,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -4252,9 +4462,12 @@
     "2026-11-05|Olimpia vs Deportivo Recoleta|home_under_25@v1",
     "2026-11-06|Cruzeiro vs Bahia|home_under_25@v1",
     "2026-11-07|Arsenal vs Hull City|home_under_25@v1",
-    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|home_under_25@v1"
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|home_under_25@v1",
+    "2026-11-08|Sacramento Republic vs El Paso Locomotive|home_under_25@v1",
+    "2026-11-08|Charleston Battery vs Hartford Athletic|home_under_25@v1",
+    "2026-11-08|Dallas vs Colorado Rapids|home_under_25@v1"
    ],
-   "profit": -0.098,
+   "profit": -1.765,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -4997,6 +5210,93 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "El Paso Locomotive",
+     "away_key": "elpasolocomotive",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.726,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Sacramento Republic",
+     "home_key": "sacramentorepublic",
+     "league": "USL Championship",
+     "match": "Sacramento Republic vs El Paso Locomotive",
+     "multi_source": false,
+     "price": 1.333,
+     "price_context": {
+      "book": "caesars",
+      "captured_at": "2026-11-07T22:51:21.165687+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T03:00:00+00:00",
+      "league": "USL Championship",
+      "price": 1.333,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.616203+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Hartford Athletic",
+     "away_key": "hartfordathletic",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.726,
+     "date": "2026-11-08",
+     "hit": false,
+     "home": "Charleston Battery",
+     "home_key": "charlestonbattery",
+     "league": "USL Championship",
+     "match": "Charleston Battery vs Hartford Athletic",
+     "multi_source": false,
+     "price": 1.312,
+     "price_context": {
+      "book": "caesars",
+      "captured_at": "2026-11-07T22:51:27.895578+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:30:00+00:00",
+      "league": "USL Championship",
+      "price": 1.312,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.631771+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Colorado Rapids",
+     "away_key": "coloradorapids",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.726,
+     "date": "2026-11-08",
+     "hit": false,
+     "home": "Dallas",
+     "home_key": "dallas",
+     "league": "Major League Soccer",
+     "match": "Dallas vs Colorado Rapids",
+     "multi_source": false,
+     "price": 1.333,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-07T22:51:34.863676+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:00:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.333,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.654135+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -5204,10 +5504,10 @@
    "status_since": "2026-10-24"
   },
   "match_over_15@v1": {
-   "hits": 39,
-   "inv_price_sum": 44.76846679539096,
-   "multi_n": 5,
-   "n": 53,
+   "hits": 41,
+   "inv_price_sum": 45.654248569240394,
+   "multi_n": 7,
+   "n": 55,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -5285,9 +5585,11 @@
     "2026-10-26|Mladost \u017ddralovi vs Jadran LP|match_over_15@v1",
     "2026-11-02|Sacramento Republic FC vs FC Tulsa|match_over_15@v1",
     "2026-11-05|Puntarenas FC vs San Carlos|match_over_15@v1",
-    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|match_over_15@v1"
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|match_over_15@v1",
+    "2026-11-08|Charleston Battery vs Hartford Athletic|match_over_15@v1",
+    "2026-11-08|Austin vs Portland Timbers|match_over_15@v1"
    ],
-   "profit": -6.725,
+   "profit": -4.075,
    "records": [
     {
      "away": "Aston Villa",
@@ -6095,6 +6397,44 @@
      "recorded_at": "2026-11-07T23:37:44.126601+00:00",
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "scoutingstats",
+     "stated": null
+    },
+    {
+     "away": "Hartford Athletic",
+     "away_key": "hartfordathletic",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7745,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Charleston Battery",
+     "home_key": "charlestonbattery",
+     "league": "USL Championship",
+     "match": "Charleston Battery vs Hartford Athletic",
+     "multi_source": true,
+     "price": 2.72,
+     "price_context": {},
+     "recorded_at": "2026-11-08T22:51:26.649653+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Portland Timbers",
+     "away_key": "portlandtimbers",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7914,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Austin",
+     "home_key": "austin",
+     "league": "Major League Soccer",
+     "match": "Austin vs Portland Timbers",
+     "multi_source": true,
+     "price": 1.93,
+     "price_context": {},
+     "recorded_at": "2026-11-08T22:51:26.690404+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
      "stated": null
     }
    ],
@@ -16384,10 +16724,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_35@v1": {
-   "hits": 7,
-   "inv_price_sum": 10.090554324994724,
+   "hits": 9,
+   "inv_price_sum": 11.948339878910545,
    "multi_n": 0,
-   "n": 18,
+   "n": 21,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -16406,9 +16746,12 @@
     "2026-11-04|Alianza Lima vs Cienciano|match_under_35@v1",
     "2026-11-05|Olimpia vs Deportivo Recoleta|match_under_35@v1",
     "2026-11-07|Guadalupe FC vs ADR Jicaral|match_under_35@v1",
-    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|match_under_35@v1"
+    "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|match_under_35@v1",
+    "2026-11-08|Sacramento Republic vs El Paso Locomotive|match_under_35@v1",
+    "2026-11-08|Charleston Battery vs Hartford Athletic|match_under_35@v1",
+    "2026-11-08|Austin vs Portland Timbers|match_under_35@v1"
    ],
-   "profit": -2.97,
+   "profit": -2.463,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -16931,6 +17274,93 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "El Paso Locomotive",
+     "away_key": "elpasolocomotive",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6661,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Sacramento Republic",
+     "home_key": "sacramentorepublic",
+     "league": "USL Championship",
+     "match": "Sacramento Republic vs El Paso Locomotive",
+     "multi_source": false,
+     "price": 1.408,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-07T22:51:21.165687+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T03:00:00+00:00",
+      "league": "USL Championship",
+      "price": 1.408,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.621197+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Hartford Athletic",
+     "away_key": "hartfordathletic",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6661,
+     "date": "2026-11-08",
+     "hit": false,
+     "home": "Charleston Battery",
+     "home_key": "charlestonbattery",
+     "league": "USL Championship",
+     "match": "Charleston Battery vs Hartford Athletic",
+     "multi_source": false,
+     "price": 1.49,
+     "price_context": {
+      "book": "20bet",
+      "captured_at": "2026-11-07T22:51:27.895578+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:30:00+00:00",
+      "league": "USL Championship",
+      "price": 1.49,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.645185+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Portland Timbers",
+     "away_key": "portlandtimbers",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6902,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Austin",
+     "home_key": "austin",
+     "league": "Major League Soccer",
+     "match": "Austin vs Portland Timbers",
+     "multi_source": false,
+     "price": 2.099,
+     "price_context": {
+      "book": "singbet",
+      "captured_at": "2026-11-07T22:51:42.165370+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:00:00+00:00",
+      "league": "Major League Soccer",
+      "price": 2.099,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.685670+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -16938,10 +17368,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_45@v1": {
-   "hits": 31,
-   "inv_price_sum": 21.413777214614452,
+   "hits": 32,
+   "inv_price_sum": 22.09358686791153,
    "multi_n": 0,
-   "n": 35,
+   "n": 36,
    "processed": [
     "2026-10-21|Ju\u00e1rez vs Atlante|match_under_45@v1",
     "2026-10-22|Atlas vs Am\u00e9rica|match_under_45@v1",
@@ -16977,9 +17407,10 @@
     "2026-11-02|Cruz Azul vs Leon|match_under_45@v1",
     "2026-11-02|Managua vs UNAN Managua|match_under_45@v1",
     "2026-11-02|Portland Timbers vs Houston Dynamo|match_under_45@v1",
-    "2026-11-04|Internacional vs Coritiba|match_under_45@v1"
+    "2026-11-04|Internacional vs Coritiba|match_under_45@v1",
+    "2026-11-08|Austin vs Portland Timbers|match_under_45@v1"
    ],
-   "profit": 16.327,
+   "profit": 16.798,
    "records": [
     {
      "away": "Atlante",
@@ -17953,10 +18384,39 @@
      "rule": "pfc_a7ba6711aeb15b9804a94f06",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Portland Timbers",
+     "away_key": "portlandtimbers",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.8377,
+     "date": "2026-11-08",
+     "hit": true,
+     "home": "Austin",
+     "home_key": "austin",
+     "league": "Major League Soccer",
+     "match": "Austin vs Portland Timbers",
+     "multi_source": false,
+     "price": 1.471,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-07T22:51:42.165370+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-08T00:52:23+02:00",
+      "kickoff": "2026-11-08T00:00:00+00:00",
+      "league": "Major League Soccer",
+      "price": 1.471,
+      "selection": "away",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-08T22:51:26.669359+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
-   "status_reason": "n=35 wilsonLB95=0.7405 >= mean breakeven 0.6118 but multi-source verification 0/9 not met",
+   "status_reason": "n=36 wilsonLB95=0.7469 >= mean breakeven 0.6137 but multi-source verification 0/9 not met",
    "status_since": "2026-10-22"
   }
  },
