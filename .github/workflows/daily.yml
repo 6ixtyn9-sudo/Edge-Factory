@@ -227,10 +227,21 @@ jobs:
           fi
 
       - name: Enhancement tickets (generate/freeze)
+        # MEASUREMENT, not mitigation. `/usr/bin/time -v` is the PARENT of the
+        # build, so GNU time reports the child's rusage even when the child is
+        # SIGKILLed -- "Maximum resident set size" plus "Command terminated by
+        # signal 9" is the line that decides OOM versus a blocked call. Without
+        # it, runs #1272 and #1274 both left the cause unknown.
         if: inputs.mode != 'remine_only' && inputs.mode != 'recover_and_rebuild'
         continue-on-error: true
         run: |
-          PYTHONPATH=src python3 scripts/auto_tickets.py --enhancements
+          echo "memory before enhancement build:"
+          free -m
+          PYTHONPATH=src /usr/bin/time -v python3 scripts/auto_tickets.py --enhancements 2>&1 | tail -60
+          echo "memory after enhancement build:"
+          free -m
+          echo "swap after enhancement build:"
+          sudo swapon --show || true
 
       - name: Enhancement performance report
         if: inputs.mode != 'remine_only' && inputs.mode != 'recover_and_rebuild'
@@ -264,14 +275,21 @@ jobs:
         run: python3 scripts/phase5_persistence.py history-check
 
       - name: Persist localdata State (Cache)
+        # always(), not success(): an enhancement step that FAILS (dies
+        # non-fatally) used to discard the whole run's state, including the
+        # frozen MAIN card. A hard runner SIGKILL still skips this; only
+        # moving the git commit above the enhancement step would cover that,
+        # and it would guarantee the enhancement receipt is never committed.
         uses: actions/cache/save@v4
-        if: success() && inputs.mode != 'remine_only'
+        if: always() && inputs.mode != 'remine_only'
         with:
           path: localdata
           key: localdata-v2-${{ github.run_id }}
 
       - name: Persist pipeline state to git (single source of truth)
-        if: success() && inputs.mode != 'remine_only'
+        # Same reasoning as the cache save above. The git commit remains the
+        # authoritative record; the restore step overrides stale cache.
+        if: always() && inputs.mode != 'remine_only'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
