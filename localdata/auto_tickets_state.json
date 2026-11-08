@@ -9,21 +9,6 @@
         {
           "legs": [
             {
-              "match": "BG Pathum United vs Rayong",
-              "pick": "HOME",
-              "prob": 0.6443444683908046,
-              "odds": 1.5587,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "pinnapi_odds",
-              "fixture_key": [
-                "2026-11-08",
-                "BG Pathum United",
-                "Rayong"
-              ]
-            },
-            {
               "match": "Deportivo Garcilaso vs Comerciantes Unidos",
               "pick": "HOME",
               "prob": 0.6288575928842768,
@@ -37,46 +22,71 @@
                 "Deportivo Garcilaso",
                 "Comerciantes Unidos"
               ]
+            },
+            {
+              "match": "Lech Pozna\u0144 vs Zag\u0142\u0119bie Lubin",
+              "pick": "HOME",
+              "prob": 0.5917459596876702,
+              "odds": 1.55,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-08",
+                "Lech Pozna\u0144",
+                "Zag\u0142\u0119bie Lubin"
+              ]
             }
           ],
-          "odds": 2.31,
-          "stake_pct": 56.7501
+          "odds": 2.3,
+          "stake_pct": 56.7501,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         },
         {
           "legs": [
             {
-              "match": "Sogndal vs H\u00f8dd",
+              "match": "Villarreal vs Getafe",
               "pick": "HOME",
-              "prob": 0.638962694204112,
-              "odds": 1.3497,
+              "prob": 0.6253912213740458,
+              "odds": 1.4348,
               "result": null,
               "market": "1x2",
               "price_book": "Pinnacle",
               "price_source": "pinnapi_odds",
               "fixture_key": [
                 "2026-11-08",
-                "Sogndal",
-                "H\u00f8dd"
+                "Villarreal",
+                "Getafe"
               ]
             },
             {
-              "match": "SC Freiburg vs FC Union Berlin",
+              "match": "FAR Rabat vs Difa\u00e2 El Jadida",
               "pick": "HOME",
-              "prob": 0.634359107666131,
-              "odds": 1.5051,
+              "prob": 0.6052277432712216,
+              "odds": 1.4065,
               "result": null,
               "market": "1x2",
               "price_book": "Pinnacle",
               "price_source": "pinnapi_odds",
               "fixture_key": [
                 "2026-11-08",
-                "SC Freiburg",
-                "FC Union Berlin"
+                "FAR Rabat",
+                "Difa\u00e2 El Jadida"
               ]
             }
           ],
-          "odds": 2.03,
-          "stake_pct": 56.75
+          "odds": 2.02,
+          "stake_pct": 56.75,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
         }
       ],
       "staked_pct": 113.5001
@@ -2392,6 +2402,11 @@
     },
     "2026-11-07": {
       "frozen_at": "2026-11-07T10:39:54+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-11-08": {
+      "frozen_at": "2026-11-08T18:51:44+02:00",
       "final": true,
       "lock_source": "state"
     }
