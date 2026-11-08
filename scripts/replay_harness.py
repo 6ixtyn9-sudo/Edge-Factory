@@ -72,12 +72,14 @@ import hashlib
 import itertools
 import json
 import math
+import os
 import random
 import re
 import sys
+import time
 import unicodedata
 from collections import Counter, defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -3946,19 +3948,75 @@ def _attributed_ml_scores(history):
         caveat="Fixture-balanced descriptive scores on booked legs, not independent records or selection uplift; log probabilities clipped at 1e-15. No significance claim.")
 
 
-def decision_parity_report(root=None):
+_RECEIPT_DATE = re.compile(r"_(\d{4}-\d{2}-\d{2})_decision")
+
+
+def _receipt_filename_date(logical_name):
+    """Date encoded in a receipt filename, or None.
+
+    `auto_tickets_2026-11-08_decision.json` -> date(2026, 11, 8). Used to scope
+    a routine audit without reading the (potentially huge) receipt at all.
+    """
+    match = _RECEIPT_DATE.search(logical_name)
+    if not match:
+        return None
+    try:
+        return date.fromisoformat(match.group(1))
+    except ValueError:
+        return None
+
+
+def decision_parity_report(root=None, *, window_days=None, reference=None,
+                           time_budget_seconds=None):
     """Read-only current-code replay of actual decision receipts, both lanes.
 
     Admission outputs are observed live facts, not reconstructed from today's
     registries. Missing legacy receipts remain missing. Shared saved result
     facts may grade counterfactuals; no state repair, policy refresh, provider
     call, training or financial settlement runs.
+
+    Cost containment (2026-11-08): a routine run replayed EVERY retained
+    receipt. The ENH receipts are sharded — the logical ``*.json.gz`` is a
+    ~545-byte manifest and the payload lives in up to 21 sibling
+    ``.part-<sha256>`` chunks (200-607 MB per retained day). Manifest size
+    therefore does not bound validation cost: reading one such day costs a
+    full materialise + sha256 + gunzip + JSON parse.
+
+    ``window_days`` bounds that work. Selection happens on the receipt's
+    FILENAME DATE *before* any I/O, so an out-of-window giant is never read.
+    The date is then re-validated against ``context["date"]``/``build_at``
+    during replay, so this is a scoping filter, never an identity relaxation.
+    Receipts whose filename carries no parseable date are always audited and
+    listed in ``scope["undated_receipts"]`` — never silently dropped.
+
+    ``time_budget_seconds`` stops cleanly mid-audit. An exhausted budget is
+    reported as ``INCOMPLETE_TIME_BUDGET`` (CLI exit 3), never as ``PASS``:
+    a partial audit must not look like a parity MATCH. Full history stays the
+    default; nothing here weakens a per-receipt check.
     """
     base = (root or at.ROOT) / "localdata"
+    started = time.perf_counter()
+    if reference is None:
+        reference = datetime.now(timezone.utc)
+    elif reference.tzinfo is None:
+        raise ValueError("parity window reference must be timezone-aware")
+    cutoff = (reference - timedelta(days=window_days)).date() if window_days else None
+    scope = dict(mode="window" if window_days else "full_history",
+                 window_days=window_days,
+                 reference=reference.isoformat(),
+                 cutoff=cutoff.isoformat() if cutoff else None,
+                 selection_basis="receipt filename date, before any read; "
+                                 "context date/build_at re-validated during replay",
+                 selected_receipts=0, excluded_receipts=0, undated_receipts=[],
+                 coverage_caveat=("Windowed audit of recent receipts only — NOT a "
+                                  "full-history parity claim." if window_days else
+                                  "Full retained history."))
     report = dict(schema=1, boundary="execution_safe_admission_to_ticket",
                   caveat="Replays captured admitted candidates and policy outputs, not provider acquisition or cohort training. Hashes detect corruption, not authenticity.",
                   ledger_comparison="fixture/market/selection/book/source/price/pairing/stake; unknown legacy identity is not invented",
-                  lanes={})
+                  scope=scope, lanes={})
+    budget = dict(seconds=time_budget_seconds, elapsed=0.0, exhausted=False)
+    report["budget"] = budget
     settled_facts = None  # lazy, shared across valid frozen ENH receipts
     for lane, prefix, state_file in (("main", "auto_tickets", "auto_tickets_state.json"),
                                       ("enh", "autobets_enh_tickets", "enhancement_tickets_state.json")):
@@ -3980,6 +4038,22 @@ def decision_parity_report(root=None):
         seen, storage_digests = set(), {}
         lane_report["duplicate_storage_copies"] = []
         for path in ticket_receipt_files(base, prefix):
+            if budget["exhausted"]:
+                break
+            logical_name = path.name.removesuffix(".gz")
+            filed_day = _receipt_filename_date(logical_name)
+            if cutoff is not None:
+                if filed_day is None:
+                    # No parseable date in the name: audit it and say so.
+                    scope["undated_receipts"].append(str(path.relative_to(base)))
+                elif filed_day < cutoff:
+                    scope["excluded_receipts"] += 1
+                    continue
+            elapsed = time.perf_counter() - started
+            if time_budget_seconds is not None and elapsed > time_budget_seconds:
+                budget.update(exhausted=True, elapsed=round(elapsed, 3))
+                break
+            scope["selected_receipts"] += 1
             item = dict(file=str(path.relative_to(base)), status="INVALID", ledger="UNAVAILABLE", settlement="UNAVAILABLE")
             lane_report["receipts"].append(item)
             try:
@@ -4104,6 +4178,14 @@ def decision_parity_report(root=None):
                             or r.get("bank_reconciliation") == "UNAVAILABLE"
                             or r["settlement"] == "INCOMPLETE_OUTCOME"
                             for r in lane["receipts"]) for lane in report["lanes"].values())
+    budget["elapsed"] = round(time.perf_counter() - started, 3)
+    if budget["exhausted"] and not bad:
+        # A stopped audit is not a verdict. It must never read as PASS, and it
+        # must not masquerade as a mismatch either.
+        report["status"] = "INCOMPLETE_TIME_BUDGET"
+        scope["coverage_caveat"] += (" Audit stopped on its time budget; remaining "
+                                     "receipts were NOT replayed.")
+        return report
     report["status"] = ("FAIL" if bad else "INSUFFICIENT_EVIDENCE" if not count
                         else "PARTIAL" if incomplete else "PASS")
     return report
@@ -4228,12 +4310,45 @@ def main():
     ap.add_argument("--no-fallback", action="store_true")
     ap.add_argument("--decision-parity", action="store_true",
                     help="read-only full-ticket replay of captured live decisions; JSON report")
+    ap.add_argument("--parity-window-days", type=int, metavar="N",
+                    help="with --decision-parity: audit only receipts filed in the last N "
+                         "days (cost containment; the claim becomes explicitly partial)")
+    ap.add_argument("--parity-reference", metavar="ISO8601",
+                    help="with --parity-window-days: timezone-aware reference instant "
+                         "(default: now UTC)")
+    ap.add_argument("--parity-time-budget", type=float, metavar="SECONDS",
+                    help="with --decision-parity: stop cleanly after this many seconds; "
+                         "an exhausted budget reports INCOMPLETE_TIME_BUDGET (exit 3)")
+    ap.add_argument("--parity-output", metavar="PATH",
+                    help="with --decision-parity: write the report atomically to PATH "
+                         "instead of stdout, so a killed run cannot leave truncated JSON")
     args = ap.parse_args()
 
     if args.decision_parity:
-        report = decision_parity_report()
-        print(json.dumps(report, indent=2, sort_keys=True, allow_nan=False))
-        return 1 if report["status"] == "FAIL" else 0
+        reference = None
+        if args.parity_reference:
+            reference = datetime.fromisoformat(args.parity_reference)
+            if reference.tzinfo is None:
+                ap.error("--parity-reference must include an offset")
+        report = decision_parity_report(window_days=args.parity_window_days,
+                                        reference=reference,
+                                        time_budget_seconds=args.parity_time_budget)
+        text = json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n"
+        if args.parity_output:
+            # Temp + rename: a SIGKILL leaves the previous report or none.
+            target = Path(args.parity_output)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_name(target.name + ".tmp")
+            with open(tmp, "w", encoding="utf-8") as handle:
+                handle.write(text)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp, target)
+        else:
+            sys.stdout.write(text)
+        if report["status"] == "FAIL":
+            return 1
+        return 3 if report["status"] == "INCOMPLETE_TIME_BUDGET" else 0
 
     settled = at.load_settled()
     archives = at.load_archived_picks()
