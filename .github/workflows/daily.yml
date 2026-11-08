@@ -348,6 +348,21 @@ jobs:
           fi
           exit "$result"
 
+      - name: Retain replay parity report
+        # Step 24 runs AFTER the cache save and git persist by design: that
+        # ordering keeps a durability barrier between a frozen card and a
+        # read-only audit. The cost is that the audit's own output is never
+        # captured -- the report it writes dies with the runner. This step
+        # sits last, so it cannot delay or precede any write; it only makes
+        # the verdict readable once the runner is gone.
+        if: always() && inputs.mode != 'remine_only'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Replay-Parity-${{ github.run_id }}
+          path: localdata/replay_parity.json
+          if-no-files-found: warn
+          retention-days: 30
+
   regression-tests:
     name: Regression tests (flag, never gate)
     runs-on: ubuntu-latest
