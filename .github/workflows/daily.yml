@@ -261,23 +261,25 @@ jobs:
 
       - name: Ticket decision replay parity (read-only, flag never gate)
         # RUNS LAST, ON PURPOSE. This is a read-only audit of retained ENH
-        # decision receipts; it is now scheduled behind every durable write
-        # so that a shutdown signal here can no longer orphan a frozen card.
+        # decision receipts; it is scheduled behind every durable write so a
+        # shutdown signal here cannot orphan a frozen card.
         # CONTAINMENT, not a performance fix: a receipt is a ~545-byte
         # manifest over up to 21 shards (200-607 MB per day, 1.3 GB of JSON
         # once materialised), so replaying every retained day is unbounded
-        # as history grows. timeout-minutes + --parity-time-budget bound it;
-        # together they still do NOT establish parity, and a green step
-        # proves nothing about MATCH (continue-on-error stays true).
+        # as history grows. The window and the budget bound the worst case,
+        # and both were raised on 2026-11-08 (5min/210s -> 25min/1200s) so
+        # the 7-day window can actually complete instead of always ending
+        # INCOMPLETE_TIME_BUDGET. A green step still proves nothing about
+        # MATCH (continue-on-error stays true).
         if: always() && inputs.mode != 'remine_only'
-        timeout-minutes: 5
+        timeout-minutes: 25
         continue-on-error: true
         run: |
           set +e
           mkdir -p localdata
           PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity \
             --parity-window-days 7 \
-            --parity-time-budget 210 \
+            --parity-time-budget 1200 \
             --parity-output localdata/replay_parity.json
           result=$?
           echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
