@@ -550,10 +550,20 @@ def test_operator_applied_decision_report_step_reuses_existing_artifacts_and_per
     # Check the applied command, documented step and existing artifact coverage.
     doc = (ROOT / 'HANDOVER.md').read_text()
     step = yaml.safe_load(doc.split('```yaml\n', 1)[1].split('\n```', 1)[0])[0]
-    assert 'scripts/replay_harness.py --decision-parity > localdata/replay_parity.json' in step['run']
-    assert 'scripts/replay_harness.py --decision-parity > localdata/replay_parity.json' in WORKFLOW.read_text()
+    # The audit is windowed and bounded (2026-11-08): full-history replay grew
+    # without limit as retained receipts accumulated. The step stays non-gating.
+    for fragment in ('scripts/replay_harness.py --decision-parity',
+                     '--parity-window-days 7',
+                     '--parity-time-budget 210',
+                     '--parity-output localdata/replay_parity.json'):
+        assert fragment in step['run'], f'HANDOVER step lost {fragment}'
+        assert fragment in WORKFLOW.read_text(), f'daily.yml lost {fragment}'
     assert step['continue-on-error'] is True
+    assert step['timeout-minutes'] == 5
+    assert 'timeout-minutes: 5' in WORKFLOW.read_text()
     assert 'exit "$result"' in step['run']
+    # An incomplete audit must never be presented as a MATCH.
+    assert 'INCOMPLETE_TIME_BUDGET' in WORKFLOW.read_text()
     assert 'localdata/*.json' in WORKFLOW.read_text()
     repo = tmp_path / 'repo'
     repo.mkdir()

@@ -1998,8 +1998,11 @@ class _SettledOutcomes(Mapping):
             yield key, outcome
 
 
-def _collect_settled_facts(*, root=None) -> tuple[_SettledOutcomes, dict, dict]:
+def _build_settled_facts(*, root=None) -> tuple[_SettledOutcomes, dict, dict]:
     """(key_to_outcome, entries_by_date, scores_by_key) from the same donors.
+
+    Uncached scan; callers go through `_collect_settled_facts`, which rebuilds
+    this only when an input's content identity changed.
 
     key_to_outcome is the exact-lookup map (warehouse wins on conflict, then
     overlay fills gaps). entries_by_date keeps the FULL home/away names per
@@ -2377,11 +2380,102 @@ def _report_narrow_key_supersession(count: int, detail: list) -> None:
 _SUPERSEDED_DETAIL_PRINTED = False
 
 
+def _settled_facts_identity(root):
+    """Content identity of every input `_build_settled_facts` reads.
+
+    `size+mtime` is NOT enough: a same-length rewrite inside the filesystem's
+    timestamp granularity (the settlement test suite does exactly that) would
+    silently serve a stale index. Small JSON inputs are therefore hashed; the
+    warehouse is keyed on (size, mtime_ns) because it is large and re-reading
+    it to hash would cost more than the rebuild it avoids. Missing inputs are
+    represented explicitly so their later appearance invalidates.
+    """
+    import hashlib
+    localdata = Path(root) / "localdata" if root is not None else LOCALDATA
+    config = Path(root) / "Config" if root is not None else ROOT / "Config"
+    digest = {}
+    for name, path in (("settled_results", localdata / "settled_results.json"),
+                       ("verified_results", config / "verified_results.json"),
+                       ("verified_dispositions", config / "verified_event_dispositions.json")):
+        try:
+            digest[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        except OSError:
+            digest[name] = None
+    try:
+        stat = (localdata / "warehouse.duckdb").stat()
+        digest["warehouse"] = (stat.st_size, stat.st_mtime_ns)
+    except OSError:
+        digest["warehouse"] = None
+    return tuple(sorted(digest.items()))
+
+
+# One-entry memo. Two entries would be needed to serve load_settled(root=...)
+# and load_settled() from the same process; production uses one root per
+# process, and a per-root dict would retain a second full index in memory.
+_SETTLED_FACTS_MEMO: dict = {}
+
+
+def _republish(target, saved) -> None:
+    """Restore a module-level inventory in place, preserving its container type.
+
+    `EMPTY_KEY_FIXTURES` is a set and the others are lists; callers hold the
+    live object, so it must be mutated rather than rebound.
+    """
+    target.clear()
+    if hasattr(target, "update"):
+        target.update(saved)
+    else:
+        target.extend(saved)
+
+
+def invalidate_settled_facts() -> None:
+    """Drop the memoised index (test isolation / explicit refresh)."""
+    _SETTLED_FACTS_MEMO.clear()
+
+
+def _collect_settled_facts(*, root=None) -> tuple[_SettledOutcomes, dict, dict]:
+    """Settlement index, rebuilt only when an input actually changed.
+
+    The index was rebuilt on every call (main grading, ENH timing, ML lookup,
+    parity: 3-4x per run, each a full donor scan that grows with history).
+    Identical inputs now reuse one build for the life of the process.
+
+    Reuse must not change OBSERVABLE behaviour. `_build_settled_facts` clears
+    and repopulates the module-level refusal inventories
+    (`AMBIGUOUS_SETTLEMENT_KEYS`, `EMPTY_KEY_TIERS_DROPPED`,
+    `EMPTY_KEY_FIXTURES`) and prints their counters, so a reused load replays
+    those exact publishes rather than leaving the previous (possibly mutated)
+    state in place. The returned maps are treated as read-only shared facts.
+    """
+    identity = _settled_facts_identity(root)
+    cached = _SETTLED_FACTS_MEMO.get(identity)
+    if cached is not None:
+        outcomes, entries, scores, inventories = cached
+        at_ambiguous, tiers, fixtures = inventories
+        _republish(AMBIGUOUS_SETTLEMENT_KEYS, at_ambiguous)
+        _republish(EMPTY_KEY_TIERS_DROPPED, tiers)
+        _republish(EMPTY_KEY_FIXTURES, fixtures)
+        print("settlement_facts status=reused "
+              f"keys={len(outcomes)} dates={len(entries)}", file=sys.stderr, flush=True)
+        return outcomes, entries, scores
+    outcomes, entries, scores = _build_settled_facts(root=root)
+    _SETTLED_FACTS_MEMO.clear()  # never retain a second full index
+    _SETTLED_FACTS_MEMO[identity] = (outcomes, entries, scores,
+                                     (list(AMBIGUOUS_SETTLEMENT_KEYS),
+                                      list(EMPTY_KEY_TIERS_DROPPED),
+                                      list(EMPTY_KEY_FIXTURES)))
+    return outcomes, entries, scores
+
+
+
+
 def load_settled(*, root=None):
     """Settled outcomes: warehouse donors first, shared overlay fills gaps.
 
-    Keeps auto-ticket grading on the same result facts as the audit instead
-    of overlay-only, so BetExplorer-settled fixtures grade here too.
+    Keeps auto-ticket grading on the same result facts as the audit instead of
+    overlay-only, so BetExplorer-settled fixtures grade here too. Reuses the
+    in-process index while its inputs are unchanged; the returned map is shared
+    and must not be mutated.
     """
     return (_collect_settled_facts(root=root) if root is not None
             else _collect_settled_facts())[0]

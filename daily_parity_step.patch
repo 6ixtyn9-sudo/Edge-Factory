@@ -1,0 +1,46 @@
+--- a/.github/workflows/daily.yml
++++ b/.github/workflows/daily.yml
+@@ -203,17 +203,39 @@
+           PYTHONPATH=src python3 scripts/fit_phase5_candidate.py --explain || true
+ 
+       - name: Ticket decision replay parity (read-only, flag never gate)
++        # CONTAINMENT, not a performance fix. A retained ENH decision receipt is
++        # a ~545-byte manifest over up to 21 shards (200-607 MB per day, 1.3 GB
++        # of JSON once materialised). Replaying every retained day is therefore
++        # unbounded as history grows; run 42432286562 spent its final ~29 min
++        # here before the runner shut down. This bound stops the step ranaway-ing
++        # again. It does NOT establish parity, and a green step still proves
++        # nothing about MATCH (continue-on-error stays true).
+         if: always() && inputs.mode != 'remine_only'
++        timeout-minutes: 5
+         continue-on-error: true
+         run: |
+           set +e
+           mkdir -p localdata
+-          PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity > localdata/replay_parity.json
++          PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity \
++            --parity-window-days 7 \
++            --parity-time-budget 210 \
++            --parity-output localdata/replay_parity.json
+           result=$?
+           echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
+-          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+-          cat localdata/replay_parity.json >> "$GITHUB_STEP_SUMMARY"
+-          echo '```' >> "$GITHUB_STEP_SUMMARY"
++          if [ ! -f localdata/replay_parity.json ]; then
++            echo '**AUDIT NOT PRODUCED** — the replay wrote no report (killed, or it failed before completion).' >> "$GITHUB_STEP_SUMMARY"
++          else
++            status=$(python3 -c "import json;print(json.load(open('localdata/replay_parity.json')).get('status','UNKNOWN'))" 2>/dev/null || echo UNREADABLE)
++            case "$status" in
++              PASS)   echo '**parity PASS for the audited window** (see scope; a narrow window is not full-history parity).' >> "$GITHUB_STEP_SUMMARY" ;;
++              INCOMPLETE_TIME_BUDGET) echo '**AUDIT INCOMPLETE — time budget exhausted. This is NOT a parity MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
++              FAIL)   echo '**AUDIT FAILED — a receipt replayed to a different ticket. This is NOT a MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
++              *)      echo "**AUDIT STATUS: ${status}** — not a parity MATCH." >> "$GITHUB_STEP_SUMMARY" ;;
++            esac
++            echo '```json' >> "$GITHUB_STEP_SUMMARY"
++            cat localdata/replay_parity.json >> "$GITHUB_STEP_SUMMARY"
++            echo '```' >> "$GITHUB_STEP_SUMMARY"
++          fi
+           exit "$result"
+ 
+       - name: Final history completeness publication gate
