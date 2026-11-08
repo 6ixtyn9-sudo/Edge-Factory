@@ -148,21 +148,21 @@ jobs:
           outcome = os.environ.get('RECOVERY_OUTCOME', 'skipped')
           slip = root / f'autobets_enh_tickets_{date.today().isoformat()}.txt'
           if outcome != 'success' and not slip.exists():
-              slip.write_text('NO BET — recovery/validation incomplete; no replacement authorised.\\nNo stake committed by this attempt.\\n')
+              slip.write_text('NO BET — recovery/validation incomplete; no replacement authorised.\nNo stake committed by this attempt.\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
-              out.write(f'## Recovery and enhancement rebuild: {outcome}\\n')
-              out.write('Current registry snapshot follows; research passes alone are not activation.\\n')
+              out.write(f'### Recovery and enhancement rebuild: {outcome}\n')
+              out.write('Current registry snapshot follows; research passes alone are not activation.\n')
               try:
                   registry = json.loads((root / 'edges_consensus.json').read_text())
                   edges = [e for e in registry.get('edges', []) if e.get('contract_schema') == 'post_forebet_v1']
-                  out.write(f"Post-Forebet contracts: {len(edges)}; certified: {sum(e.get('status') == 'certified' for e in edges)}\\n")
+                  out.write(f"Post-Forebet contracts: {len(edges)}; certified: {sum(e.get('status') == 'certified' for e in edges)}\n")
                   for edge in edges:
                       evidence = {k: edge.get(k) for k in ('contract_id', 'research_rule', 'status', 'sources', 'strategy', 'threshold', 'activated_as_of', 'train', 'valid', 'decay')}
-                      out.write('```json\\n' + json.dumps(evidence, indent=2) + '\\n```\\n')
+                      out.write('```json\n' + json.dumps(evidence, indent=2) + '\n```\n')
               except (OSError, ValueError) as error:
-                  out.write(f'Registry unavailable: {type(error).__name__}\\n')
+                  out.write(f'Registry unavailable: {type(error).__name__}\n')
               if slip.exists():
-                  out.write('### Enhancement artifact (a newer frozen replacement is never overwritten)\\n```text\\n' + slip.read_text() + '\\n```\\n')
+                  out.write('### Enhancement artifact (a newer frozen replacement is never overwritten)\n```text\n' + slip.read_text() + '\n```\n')
           PY_EVIDENCE
 
       - name: Execute Autonomous Smart Schedule
@@ -270,8 +270,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Resolve the requested branch AFTER the concurrency queue releases.
-          # The event SHA may predate the preceding run's state commit/cache.
           ref: ${{ github.ref }}
 
       - name: Set up Python
