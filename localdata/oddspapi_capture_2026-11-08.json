@@ -1,228 +1,293 @@
 {
-  "added": 11403,
-  "attempted": 5,
+  "added": 47799,
+  "attempted": 13,
   "attempted_fixtures": [
     {
-      "away": "FC Levadiakos",
-      "fixture_id": "id1002638473690282",
-      "home": "AEK Athens"
+      "away": "CS Constantine",
+      "fixture_id": "id1000084175049102",
+      "home": "JS Saoura"
     },
     {
-      "away": "Ventforet Kofu",
-      "fixture_id": "id1000040272151328",
-      "home": "Vegalta Sendai"
+      "away": "Getafe CF",
+      "fixture_id": "id1000000872478704",
+      "home": "Villarreal CF"
     },
     {
-      "away": "Kalamata",
-      "fixture_id": "id1002638473690284",
-      "home": "Asteras Tripolis"
+      "away": "FC Barcelona",
+      "fixture_id": "id1000000872478686",
+      "home": "Atletico Madrid"
     },
     {
-      "away": "Shonan Bellmare",
-      "fixture_id": "id1000040272151340",
-      "home": "Jubilo Iwata"
+      "away": "SK Brann",
+      "fixture_id": "id1000002067015450",
+      "home": "Fredrikstad FK"
     },
     {
-      "away": "Incheon United FC",
-      "fixture_id": "id1000041076045114",
-      "home": "Daejeon Citizen FC"
+      "away": "Aston Villa",
+      "fixture_id": "id1000001772221386",
+      "home": "Manchester United"
+    },
+    {
+      "away": "Union Berlin",
+      "fixture_id": "id1000003572513300",
+      "home": "SC Freiburg"
+    },
+    {
+      "away": "Atromitos Athinon",
+      "fixture_id": "id1000018572936128",
+      "home": "OFI Crete"
+    },
+    {
+      "away": "RKS Rakow Czestochowa",
+      "fixture_id": "id1000020272043314",
+      "home": "Legia Warszawa"
+    },
+    {
+      "away": "NK Celje",
+      "fixture_id": "id1000021272278534",
+      "home": "NK Radomlje"
+    },
+    {
+      "away": "FK Sarajevo",
+      "fixture_id": "id1000022276161548",
+      "home": "HSK Zrinjski Mostar"
+    },
+    {
+      "away": "Orense SC",
+      "fixture_id": "id1000024074735324",
+      "home": "CD Cuenca"
+    },
+    {
+      "away": "Deportivo Alaves B",
+      "fixture_id": "id1000054472505280",
+      "home": "Sestao River Club"
+    },
+    {
+      "away": "CF Calamocha",
+      "fixture_id": "id1000054473760258",
+      "home": "SD Logrones"
     }
   ],
   "budget": {
     "day": "2026-11-08",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 186,
-    "remaining_today": 14,
-    "spent_today": 11
+    "month_spent": 200,
+    "remaining_today": 0,
+    "spent_today": 25
   },
-  "budget_deferred": 132,
-  "captured_at": "2026-11-08T04:37:32+00:00",
+  "budget_deferred": 150,
+  "captured_at": "2026-11-08T16:24:57+00:00",
   "date": "2026-11-08",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
-  "excluded_srl_fixtures": 45,
+  "excluded_srl_fixtures": 0,
   "excluded_wrong_sport_fixtures": 0,
-  "fixtures": 1161,
-  "future_slate_fixtures": 27,
+  "fixtures": 410,
+  "future_slate_fixtures": 0,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 496,
+  "market_census_distinct": 697,
   "markets": {
-    "1x2": 1499,
-    "btts": 822,
-    "ou_0.5": 360,
-    "ou_0.75": 68,
-    "ou_1": 50,
-    "ou_1.25": 92,
-    "ou_1.5": 674,
-    "ou_1.75": 162,
-    "ou_2": 196,
-    "ou_2.25": 276,
-    "ou_2.5": 822,
-    "ou_2.75": 342,
-    "ou_3": 296,
-    "ou_3.25": 326,
-    "ou_3.5": 811,
-    "ou_3.75": 230,
-    "ou_4": 216,
-    "ou_4.25": 132,
-    "ou_4.5": 648,
-    "ou_4.75": 106,
-    "ou_5": 64,
-    "ou_5.25": 62,
-    "ou_5.5": 169,
-    "ou_5.75": 38,
-    "ou_6": 30,
-    "ou_6.25": 30,
-    "ou_6.5": 65,
-    "ou_6.75": 15,
-    "ou_7": 15,
-    "ou_7.25": 15,
-    "ou_7.5": 46,
-    "ou_7.75": 15,
-    "ou_8": 15,
-    "ou_8.25": 15,
-    "ou_8.5": 26,
-    "tt_away_0.5": 570,
-    "tt_away_0.75": 6,
-    "tt_away_1": 18,
-    "tt_away_1.25": 8,
-    "tt_away_1.5": 340,
-    "tt_away_1.75": 2,
-    "tt_away_2.5": 118,
-    "tt_away_3.5": 20,
-    "tt_away_4.5": 6,
-    "tt_away_5.5": 3,
-    "tt_home_0.5": 290,
-    "tt_home_0.75": 2,
-    "tt_home_1": 2,
-    "tt_home_1.25": 2,
-    "tt_home_1.5": 508,
-    "tt_home_1.75": 6,
-    "tt_home_2": 18,
-    "tt_home_2.25": 8,
-    "tt_home_2.5": 476,
-    "tt_home_2.75": 10,
-    "tt_home_3": 24,
-    "tt_home_3.25": 2,
-    "tt_home_3.5": 144,
-    "tt_home_3.75": 2,
-    "tt_home_4.5": 62,
-    "tt_home_5.5": 8
+    "1x2": 4853,
+    "btts": 3122,
+    "ou_0.5": 1696,
+    "ou_0.75": 279,
+    "ou_1": 341,
+    "ou_1.25": 390,
+    "ou_1.5": 2720,
+    "ou_1.75": 598,
+    "ou_2": 1004,
+    "ou_2.25": 1016,
+    "ou_2.5": 2874,
+    "ou_2.75": 1154,
+    "ou_3": 1388,
+    "ou_3.25": 1130,
+    "ou_3.5": 2636,
+    "ou_3.75": 768,
+    "ou_4": 768,
+    "ou_4.25": 442,
+    "ou_4.5": 2164,
+    "ou_4.75": 254,
+    "ou_5": 312,
+    "ou_5.25": 195,
+    "ou_5.5": 1341,
+    "ou_5.75": 160,
+    "ou_6": 108,
+    "ou_6.25": 109,
+    "ou_6.5": 729,
+    "ou_6.75": 82,
+    "ou_7": 80,
+    "ou_7.25": 80,
+    "ou_7.5": 198,
+    "ou_7.75": 60,
+    "ou_8": 60,
+    "ou_8.25": 60,
+    "ou_8.5": 89,
+    "tt_away_0.5": 2260,
+    "tt_away_0.75": 38,
+    "tt_away_1": 24,
+    "tt_away_1.25": 20,
+    "tt_away_1.5": 1906,
+    "tt_away_1.75": 10,
+    "tt_away_2": 10,
+    "tt_away_2.25": 44,
+    "tt_away_2.5": 1410,
+    "tt_away_2.75": 38,
+    "tt_away_3": 3,
+    "tt_away_3.25": 20,
+    "tt_away_3.5": 684,
+    "tt_away_3.75": 4,
+    "tt_away_4": 2,
+    "tt_away_4.25": 2,
+    "tt_away_4.5": 243,
+    "tt_away_4.75": 2,
+    "tt_away_5.5": 32,
+    "tt_home_0.5": 1775,
+    "tt_home_0.75": 44,
+    "tt_home_1": 36,
+    "tt_home_1.25": 36,
+    "tt_home_1.5": 2443,
+    "tt_home_1.75": 10,
+    "tt_home_2": 28,
+    "tt_home_2.25": 4,
+    "tt_home_2.5": 1804,
+    "tt_home_2.75": 36,
+    "tt_home_3": 8,
+    "tt_home_3.25": 38,
+    "tt_home_3.5": 1024,
+    "tt_home_3.75": 40,
+    "tt_home_4": 6,
+    "tt_home_4.25": 16,
+    "tt_home_4.5": 355,
+    "tt_home_5.5": 84
   },
   "markets_source": "cache",
-  "matched": 5,
+  "matched": 13,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "alt_line_skipped": 1,
-    "market_inactive": 4630,
-    "market_unsupported_clean_sheet": 482,
-    "market_unsupported_corners": 3067,
-    "market_unsupported_correct_score": 1530,
-    "market_unsupported_double_chance": 730,
-    "market_unsupported_draw_no_bet": 609,
-    "market_unsupported_early_payout": 46,
-    "market_unsupported_handicap": 6124,
-    "market_unsupported_market_type": 4414,
-    "market_unsupported_non_goal": 255,
-    "market_unsupported_odd_even": 1243,
-    "market_unsupported_period": 20113,
-    "market_unsupported_win_to_nil": 742,
-    "outcome_inactive": 1277
+    "alt_line_skipped": 12,
+    "invalid_price": 3,
+    "market_inactive": 18699,
+    "market_unsupported_cards": 9119,
+    "market_unsupported_clean_sheet": 1662,
+    "market_unsupported_corners": 22227,
+    "market_unsupported_correct_score": 5354,
+    "market_unsupported_double_chance": 2584,
+    "market_unsupported_draw_no_bet": 2168,
+    "market_unsupported_early_payout": 389,
+    "market_unsupported_handicap": 27112,
+    "market_unsupported_market_type": 16723,
+    "market_unsupported_non_goal": 890,
+    "market_unsupported_odd_even": 4992,
+    "market_unsupported_period": 98937,
+    "market_unsupported_win_to_nil": 3029,
+    "outcome_inactive": 3465
   },
   "parse_skips_classified": {
     "expected": {
-      "alt_line_skipped": 1,
-      "market_inactive": 4630,
-      "outcome_inactive": 1277
+      "alt_line_skipped": 12,
+      "market_inactive": 18699,
+      "outcome_inactive": 3465
     },
     "loss_or_diagnosis": {
-      "market_unsupported_clean_sheet": 482,
-      "market_unsupported_corners": 3067,
-      "market_unsupported_correct_score": 1530,
-      "market_unsupported_double_chance": 730,
-      "market_unsupported_draw_no_bet": 609,
-      "market_unsupported_early_payout": 46,
-      "market_unsupported_handicap": 6124,
-      "market_unsupported_market_type": 4414,
-      "market_unsupported_non_goal": 255,
-      "market_unsupported_odd_even": 1243,
-      "market_unsupported_period": 20113,
-      "market_unsupported_win_to_nil": 742
+      "invalid_price": 3,
+      "market_unsupported_cards": 9119,
+      "market_unsupported_clean_sheet": 1662,
+      "market_unsupported_corners": 22227,
+      "market_unsupported_correct_score": 5354,
+      "market_unsupported_double_chance": 2584,
+      "market_unsupported_draw_no_bet": 2168,
+      "market_unsupported_early_payout": 389,
+      "market_unsupported_handicap": 27112,
+      "market_unsupported_market_type": 16723,
+      "market_unsupported_non_goal": 890,
+      "market_unsupported_odd_even": 4992,
+      "market_unsupported_period": 98937,
+      "market_unsupported_win_to_nil": 3029
     }
   },
-  "pending_fixtures": 137,
+  "pending_fixtures": 163,
   "quoted_fixtures": [
     {
-      "away": "FC Levadiakos",
-      "fixture_id": "id1002638473690282",
-      "home": "AEK Athens"
+      "away": "CS Constantine",
+      "fixture_id": "id1000084175049102",
+      "home": "JS Saoura"
     },
     {
-      "away": "Ventforet Kofu",
-      "fixture_id": "id1000040272151328",
-      "home": "Vegalta Sendai"
+      "away": "Getafe CF",
+      "fixture_id": "id1000000872478704",
+      "home": "Villarreal CF"
     },
     {
-      "away": "Kalamata",
-      "fixture_id": "id1002638473690284",
-      "home": "Asteras Tripolis"
+      "away": "FC Barcelona",
+      "fixture_id": "id1000000872478686",
+      "home": "Atletico Madrid"
     },
     {
-      "away": "Shonan Bellmare",
-      "fixture_id": "id1000040272151340",
-      "home": "Jubilo Iwata"
+      "away": "SK Brann",
+      "fixture_id": "id1000002067015450",
+      "home": "Fredrikstad FK"
     },
     {
-      "away": "Incheon United FC",
-      "fixture_id": "id1000041076045114",
-      "home": "Daejeon Citizen FC"
+      "away": "Aston Villa",
+      "fixture_id": "id1000001772221386",
+      "home": "Manchester United"
+    },
+    {
+      "away": "Union Berlin",
+      "fixture_id": "id1000003572513300",
+      "home": "SC Freiburg"
+    },
+    {
+      "away": "Atromitos Athinon",
+      "fixture_id": "id1000018572936128",
+      "home": "OFI Crete"
+    },
+    {
+      "away": "RKS Rakow Czestochowa",
+      "fixture_id": "id1000020272043314",
+      "home": "Legia Warszawa"
+    },
+    {
+      "away": "NK Celje",
+      "fixture_id": "id1000021272278534",
+      "home": "NK Radomlje"
+    },
+    {
+      "away": "FK Sarajevo",
+      "fixture_id": "id1000022276161548",
+      "home": "HSK Zrinjski Mostar"
+    },
+    {
+      "away": "Orense SC",
+      "fixture_id": "id1000024074735324",
+      "home": "CD Cuenca"
+    },
+    {
+      "away": "Deportivo Alaves B",
+      "fixture_id": "id1000054472505280",
+      "home": "Sestao River Club"
+    },
+    {
+      "away": "CF Calamocha",
+      "fixture_id": "id1000054473760258",
+      "home": "SD Logrones"
     }
   ],
-  "reserved_requests": 14,
-  "rows": 11403,
+  "reserved_requests": 0,
+  "rows": 47799,
   "schema": 1,
-  "slate_candidate_fixtures": 92,
+  "slate_candidate_fixtures": 18,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 9,
-  "slate_provider_overlap_fixtures": 38,
+  "slate_priority_fixtures": 4,
+  "slate_provider_overlap_fixtures": 6,
   "slate_unmatched_fixtures": [
-    {
-      "away": "Widad T\u00e9mara",
-      "home": "CR Khemis Zemamra",
-      "league": "Botola Pro",
-      "normalized_pair": "cr khemis zemamra|widad temara"
-    },
-    {
-      "away": "Kilmarnock",
-      "home": "Celtic",
-      "league": "Premiership",
-      "normalized_pair": "celtic|kilmarnock"
-    },
     {
       "away": "Gen\u00e7lerbirli\u011fi",
       "home": "Be\u015fikta\u015f",
       "league": "Super Lig",
       "normalized_pair": "besiktas|genclerbirligi"
-    },
-    {
-      "away": "Djurg\u00e5rden",
-      "home": "Halmstad",
-      "league": "Allsvenskan",
-      "normalized_pair": "djurgarden|halmstad"
-    },
-    {
-      "away": "H\u00f8dd",
-      "home": "Sogndal",
-      "league": "1. Division",
-      "normalized_pair": "hodd|sogndal"
-    },
-    {
-      "away": "\u00c5sane",
-      "home": "Sandnes Ulf",
-      "league": "1. Division",
-      "normalized_pair": "asane|sandnes ulf"
     },
     {
       "away": "Difa\u00e2 El Jadida",
@@ -231,28 +296,10 @@
       "normalized_pair": "difaa el jadida|far rabat"
     },
     {
-      "away": "Bod\u00f8 / Glimt",
-      "home": "Troms\u00f8",
-      "league": "Eliteserien",
-      "normalized_pair": "bodo / glimt|tromso"
-    },
-    {
       "away": "Zag\u0142\u0119bie Lubin",
       "home": "Lech Pozna\u0144",
       "league": "Ekstraklasa",
       "normalized_pair": "lech poznan|zaglebie lubin"
-    },
-    {
-      "away": "Celje",
-      "home": "Radomlje",
-      "league": "1. SNL",
-      "normalized_pair": "celje|radomlje"
-    },
-    {
-      "away": "Falkirk",
-      "home": "Hearts",
-      "league": "Premiership",
-      "normalized_pair": "falkirk|hearts"
     },
     {
       "away": "Sporting Braga",
@@ -261,58 +308,10 @@
       "normalized_pair": "rio ave|sporting braga"
     },
     {
-      "away": "Egersund",
-      "home": "Raufoss",
-      "league": "1. Division",
-      "normalized_pair": "egersund|raufoss"
-    },
-    {
-      "away": "Arsenal W",
-      "home": "Liverpool W",
-      "league": "Women's Super League",
-      "normalized_pair": "arsenal w|liverpool w"
-    },
-    {
-      "away": "Stal Rzesz\u00f3w",
-      "home": "\u0141KS \u0141\u00f3d\u017a",
-      "league": "1. Liga",
-      "normalized_pair": "lks lodz|stal rzeszow"
-    },
-    {
-      "away": "Rayo Vallecano",
-      "home": "Real Sociedad",
-      "league": "La Liga",
-      "normalized_pair": "rayo vallecano|real sociedad"
-    },
-    {
-      "away": "Rak\u00f3w Cz\u0119stochowa",
-      "home": "Legia Warszawa",
-      "league": "Ekstraklasa",
-      "normalized_pair": "legia warszawa|rakow czestochowa"
-    },
-    {
       "away": "Como",
       "home": "Inter",
       "league": "Serie A",
       "normalized_pair": "como|inter"
-    },
-    {
-      "away": "Br\u00f8ndby IF",
-      "home": "FC K\u00f8benhavn",
-      "league": "Superliga",
-      "normalized_pair": "brondby|kobenhavn"
-    },
-    {
-      "away": "Aalesund",
-      "home": "Lillestr\u00f8m",
-      "league": "Eliteserien",
-      "normalized_pair": "aalesund|lillestrom"
-    },
-    {
-      "away": "Cosenza",
-      "home": "Monopoli",
-      "league": "Serie C: Girone C",
-      "normalized_pair": "cosenza|monopoli"
     },
     {
       "away": "Ittihad Tanger",
@@ -321,52 +320,10 @@
       "normalized_pair": "ittihad tanger|raja casablanca"
     },
     {
-      "away": "Molde",
-      "home": "Sandefjord",
-      "league": "Eliteserien",
-      "normalized_pair": "molde|sandefjord"
-    },
-    {
-      "away": "Novara",
-      "home": "Treviso",
-      "league": "Serie C: Girone A",
-      "normalized_pair": "novara|treviso"
-    },
-    {
-      "away": "Z\u00fcrich",
-      "home": "Servette",
-      "league": "Super League",
-      "normalized_pair": "servette|zurich"
-    },
-    {
       "away": "Ruch Chorz\u00f3w",
       "home": "Stal Mielec",
       "league": "1. Liga",
       "normalized_pair": "ruch chorzow|stal mielec"
-    },
-    {
-      "away": "Mito Hollyhock",
-      "home": "JEF United",
-      "league": "J1 League",
-      "normalized_pair": "jef united|mito hollyhock"
-    },
-    {
-      "away": "Str\u00f8msgodset",
-      "home": "Stab\u00e6k",
-      "league": "1. Division",
-      "normalized_pair": "stabaek|stromsgodset"
-    },
-    {
-      "away": "AC Milan",
-      "home": "Genoa",
-      "league": "Serie A",
-      "normalized_pair": "genoa|milan"
-    },
-    {
-      "away": "Hannover 96",
-      "home": "Heidenheim",
-      "league": "2. Bundesliga",
-      "normalized_pair": "hannover 96|heidenheim"
     },
     {
       "away": "Crvena Zvezda",
@@ -375,28 +332,10 @@
       "normalized_pair": "crvena zvezda|vojvodina"
     },
     {
-      "away": "Inter Turku",
-      "home": "KuPS",
-      "league": "Veikkausliiga",
-      "normalized_pair": "inter turku|kups"
-    },
-    {
-      "away": "Real Betis",
-      "home": "Elche",
-      "league": "La Liga",
-      "normalized_pair": "elche|real betis"
-    },
-    {
       "away": "Eldense",
       "home": "Las Palmas",
       "league": "La Liga 2",
       "normalized_pair": "eldense|las palmas"
-    },
-    {
-      "away": "Almer\u00eda",
-      "home": "Girona",
-      "league": "La Liga 2",
-      "normalized_pair": "almeria|girona"
     },
     {
       "away": "Juventus",
@@ -405,90 +344,18 @@
       "normalized_pair": "fiorentina|juventus"
     },
     {
-      "away": "Gil Vicente",
-      "home": "Santa Clara",
-      "league": "Liga Portugal",
-      "normalized_pair": "gil vicente|santa clara"
-    },
-    {
-      "away": "Sporting Covilh\u00e3",
-      "home": "Louletano",
-      "league": "Liga 3",
-      "normalized_pair": "louletano|sporting covilha"
-    },
-    {
-      "away": "Lugano",
-      "home": "St. Gallen",
-      "league": "Super League",
-      "normalized_pair": "lugano|st. gallen"
-    },
-    {
-      "away": "Atalanta",
-      "home": "Monza",
-      "league": "Serie A",
-      "normalized_pair": "atalanta|monza"
-    },
-    {
-      "away": "Livorno",
-      "home": "Campobasso",
-      "league": "Serie C: Girone B",
-      "normalized_pair": "campobasso|livorno"
-    },
-    {
-      "away": "Mar\u00edtimo",
-      "home": "Estoril",
-      "league": "Liga Portugal",
-      "normalized_pair": "estoril|maritimo"
-    },
-    {
-      "away": "UD Ibiza",
-      "home": "Teruel",
-      "league": "Primera Division RFEF: Group 2",
-      "normalized_pair": "teruel|ud ibiza"
-    },
-    {
-      "away": "Lechia Gda\u0144sk",
-      "home": "Polonia Bytom",
-      "league": "1. Liga",
-      "normalized_pair": "lechia gdansk|polonia bytom"
-    },
-    {
-      "away": "Pescara",
-      "home": "Grosseto",
-      "league": "Serie C: Girone B",
-      "normalized_pair": "grosseto|pescara"
-    },
-    {
       "away": "Hapoel Tel Aviv",
       "home": "Hapoel Be'er Sheva",
       "league": "Ligat ha'Al",
       "normalized_pair": "hapoel be'er sheva|hapoel tel aviv"
     },
     {
-      "away": "St. Pauli",
-      "home": "Magdeburg",
-      "league": "2. Bundesliga",
-      "normalized_pair": "magdeburg|st. pauli"
-    },
-    {
-      "away": "Busan I'Park",
-      "home": "Cheonan City",
-      "league": "K League 2",
-      "normalized_pair": "busan i'park|cheonan city"
-    },
-    {
-      "away": "Lusitania FC Lourosa",
-      "home": "Feirense",
-      "league": "Liga Portugal 2",
-      "normalized_pair": "feirense|lusitania lourosa"
-    },
-    {
-      "away": "Kongsvinger",
-      "home": "Bryne",
-      "league": "1. Division",
-      "normalized_pair": "bryne|kongsvinger"
+      "away": "Ponferradina",
+      "home": "Cultural Leonesa",
+      "league": "Primera Division RFEF: Group 1",
+      "normalized_pair": "cultural leonesa|ponferradina"
     }
   ],
   "source": "oddspapi_odds",
-  "status": "reserved"
+  "status": "budget"
 }
