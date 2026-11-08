@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-07T22:00:30",
+  "generated_at": "2026-11-08T01:46:47",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 18.634994,
-  "multiple": 0.18634994,
+  "bank_pct": 21.360391999999997,
+  "multiple": 0.21360391999999997,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 24,
+  "bet_days": 25,
   "accas": {
-    "wins": 18,
+    "wins": 19,
     "losses": 32
   },
-  "open_slips": [
-    {
-      "date": "2026-11-07",
-      "staked_pct": 2.3294
-    }
-  ],
+  "open_slips": [],
   "events": [],
   "history": [
     {
@@ -7722,6 +7717,152 @@
       ],
       "bank_pct": 18.635,
       "close_pct": 18.635
+    },
+    {
+      "date": "2026-11-07",
+      "staked_pct": 2.3294,
+      "returned_pct": 5.0548,
+      "accas": [
+        {
+          "odds": 2.17,
+          "won": true,
+          "stake_pct": 2.3294,
+          "returned_pct": 5.0548,
+          "legs": [
+            {
+              "match": "Ey\u00fcpspor vs Kocaelispor",
+              "pick": "over",
+              "odds": 1.389,
+              "result": "win",
+              "label": "Match Over 1.5 Goals",
+              "market": "match_over_15",
+              "price_book": "polymarket",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-07T04:37:19.830613+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Kocaelispor",
+                  "bookmaker": "polymarket",
+                  "bookmaker_market_id": "6197517",
+                  "captured_at": "2026-11-07T04:37:19.830613+00:00",
+                  "date": "2026-11-07",
+                  "home": "Eyupspor",
+                  "kickoff": "2026-11-07T10:30:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.389",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-07T04:36:53.748Z",
+                  "provider_fixture_id": "id1000005272723306",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-07T04:36:53.222Z",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "bb4ac4e869480a2d0ca9835a710173593291611c5537e3d29c1a7db125d8b1b9",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "fixture_key": [
+                "2026-11-07",
+                "Ey\u00fcpspor",
+                "Kocaelispor"
+              ],
+              "prob": 0.7923,
+              "cohort_evidence": {
+                "rate": 0.7923,
+                "n": 915,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-07",
+                "market": "match_over_15",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 725,
+                "cohort_lower_bound": 0.7648717824391804,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "away",
+                  "league": "Super Lig",
+                  "book": "polymarket",
+                  "source": "oddspapi",
+                  "price": 1.389,
+                  "captured_at": "2026-11-07T04:37:19.830613+00:00",
+                  "decision_at": "2026-11-07T09:52:22+02:00",
+                  "kickoff": "2026-11-07T10:30:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.8100105944511437,
+              "ml_model_key": "da5877a9ded6f073954edf477cf65567e3ec4e01d4b3e95e822115d7b7005558",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.7182920847473957,
+              "floor_basis": "market",
+              "league": "Super Lig",
+              "shadow": true,
+              "price_kickoff": "2026-11-07T10:30:00.000Z"
+            },
+            {
+              "match": "Port FC vs Chonburi FC",
+              "pick": "away",
+              "odds": 1.562,
+              "result": "win",
+              "label": "Away Team Over 0.5 Goals",
+              "market": "away_over_05",
+              "price_book": "polymarket",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-07T07:51:23.059777+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-07",
+                "Port FC",
+                "Chonburi FC"
+              ],
+              "prob": 0.66,
+              "cohort_evidence": {
+                "rate": 0.66,
+                "n": 2697,
+                "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                "as_of_exclusive": "2026-11-07",
+                "market": "away_over_05",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 1780,
+                "cohort_lower_bound": 0.6418981942046345,
+                "price_context": {
+                  "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+                  "selection": "home",
+                  "league": "Thai Premier League",
+                  "book": "polymarket",
+                  "source": "oddspapi",
+                  "price": 1.562,
+                  "captured_at": "2026-11-07T07:51:23.059777+00:00",
+                  "decision_at": "2026-11-07T09:52:22+02:00",
+                  "kickoff": "2026-11-07T12:00:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6628529575603053,
+              "ml_model_key": "2c8a315d87f1a89b517f291d7823a7ac2e9dd470e31a23fec9ab1aa5777d506a",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Thai Premier League",
+              "shadow": true,
+              "price_kickoff": "2026-11-07T12:00:00.000Z"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 21.3604,
+      "close_pct": 21.3604
     }
   ]
 }

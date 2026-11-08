@@ -1,7 +1,7 @@
 {
   "notes": [
     "need_h2h=0",
-    "unresolved=5"
+    "unresolved=6"
   ],
   "outcome": {
     "calls_charged": 0,
@@ -11,49 +11,58 @@
       "captured": 0,
       "lane_blocked_local": 0,
       "staleness_skip": 0,
-      "unresolved_id": 5
+      "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 25,
+    "ledger_entries": 41,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
       "reason": "free_listing_present_zero_matches",
       "resolved_pairs": 0
     },
-    "retained_pairs": 23,
+    "retained_pairs": 27,
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "charlestonbattery|indyeleven",
+        "fixture": "jselbiar|mcalger",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "leon|toluca",
+        "fixture": "jssaoura|csconstantine",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "orlandocity|newyorkcity",
+        "fixture": "virtusentella|modena",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "atlantaunited|chicagofire",
+        "fixture": "crkhemiszemamra|widadtemara",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "dcunited|cincinnati",
+        "fixture": "instituto|newellsoldboys",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [
+          "institutocordoba|newellsoldboys"
+        ],
+        "retained_pairs_sharing_a_key": 1
+      },
+      {
+        "fixture": "fredrikstad|brann",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -64,16 +73,15 @@
   },
   "preflight": {
     "allowance_by_key": {
-      "88739ee5": 6
+      "5b6ed40a": 40
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=6 [pools=2 cap=90 reserve=20 spent=8 month=2026-10] -> approved",
-    "month": "2026-10",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=40 [pools=2 cap=90 reserve=20 spent=5 month=2026-11] -> approved",
+    "month": "2026-11",
     "month_spend_by_key": {
-      "5b6ed40a": 1,
-      "88739ee5": 7
+      "5b6ed40a": 5
     },
     "need_h2h": 0,
     "need_listing": 0,
@@ -84,7 +92,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 6,
+    "spendable": 40,
     "verdict": "approved"
   },
   "provenance": {
@@ -93,7 +101,7 @@
     "point_in_time": "as_of is the capture instant; provider publishes no per-row history timestamp"
   },
   "role": "silent pre-kickoff H2H context capture for the dormant context vocabulary; NOT a price, NOT a vote, NOT a registered rule",
-  "run_date": "2026-10-24",
+  "run_date": "2026-11-08",
   "schema": 1,
   "snapshots": [],
   "source": "boggio_h2h",

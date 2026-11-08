@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-07T21:57:28",
+  "generated_at": "2026-11-08T01:41:51",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 447.291076,
-  "multiple": 4.4729107599999995,
+  "bank_pct": 454.00044399999996,
+  "multiple": 4.54000444,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 68,
+  "bet_days": 69,
   "accas": {
-    "wins": 81,
-    "losses": 56
+    "wins": 82,
+    "losses": 57
   },
-  "open_slips": [
-    {
-      "date": "2026-11-07",
-      "staked_pct": 111.8228
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -2082,6 +2077,87 @@
       ],
       "bank_pct": 447.2911,
       "close_pct": 447.291
+    },
+    {
+      "date": "2026-11-07",
+      "staked_pct": 111.8228,
+      "returned_pct": 118.5322,
+      "accas": [
+        {
+          "odds": 2.22,
+          "won": false,
+          "stake_pct": 55.9114,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "RB Leipzig vs FC Augsburg",
+              "pick": "HOME",
+              "odds": 1.4651,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-07",
+                "RB Leipzig",
+                "FC Augsburg"
+              ]
+            },
+            {
+              "match": "Port FC vs Chonburi FC",
+              "pick": "HOME",
+              "odds": 1.5128,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-07",
+                "Port FC",
+                "Chonburi FC"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 2.12,
+          "won": true,
+          "stake_pct": 55.9114,
+          "returned_pct": 118.5322,
+          "legs": [
+            {
+              "match": "Port Vale vs Scunthorpe United",
+              "pick": "HOME",
+              "odds": 1.5348,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-07",
+                "Port Vale",
+                "Scunthorpe United"
+              ]
+            },
+            {
+              "match": "Salisbury vs Sholing",
+              "pick": "HOME",
+              "odds": 1.3802,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-07",
+                "Salisbury",
+                "Sholing"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 454.0004,
+      "close_pct": 454.0004
     }
   ]
 }

@@ -32,12 +32,12 @@
       "status": "cache_only"
     },
     "betclan": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
+      "blocker": null,
+      "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
@@ -89,9 +89,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 3,
       "join_miss_counts": {
-        "out_of_window": 13,
+        "fixture_key_miss": 10,
         "selection_unsupported": 14
       },
       "reason": null,
@@ -147,19 +147,22 @@
       "status": null
     },
     "oddspapi_odds": {
-      "blocker": "no pre-build OddsPAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
-      "op_matched": 0,
-      "op_raw": 0,
-      "op_usable": 0,
-      "reason": "http_200_zero_rows_after_parse",
-      "status": "empty"
+      "join_matched_rows": 458,
+      "join_miss_counts": {
+        "market_unsupported": 3926,
+        "no_pick_for_fixture": 9221
+      },
+      "op_matched": 8,
+      "op_raw": 13605,
+      "op_usable": 13605,
+      "reason": null,
+      "status": "cache_only"
     },
     "pinnapi_odds": {
       "auth_attempts": [],
@@ -176,11 +179,12 @@
       "coherence_withheld_fixtures": 3,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 0,
+      "join_matched_rows": 94,
       "join_miss_counts": {
-        "out_of_window": 24703
+        "fixture_key_miss": 23010,
+        "no_pick_for_fixture": 1599
       },
-      "pa_matched": 0,
+      "pa_matched": 185,
       "pa_raw": 24703,
       "pa_scored": 24703,
       "reason": null,
@@ -220,12 +224,12 @@
       "status": null
     },
     "scoutingstats": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
-      "can_price": false,
-      "can_vote": false,
+      "blocker": null,
+      "can_fetch_today": true,
+      "can_price": true,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
@@ -254,7 +258,7 @@
           "Velez Sarsfield": 2
         },
         "board_truncated": false,
-        "card_fixture_count": 0,
+        "card_fixture_count": 103,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 194
@@ -268,7 +272,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 6
+        "fixture_key_miss": 6
       },
       "reason": "cache_rows_pending_join",
       "sa_matched": 0,
@@ -299,29 +303,32 @@
       "status": null
     },
     "statarea": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
+      "blocker": null,
+      "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
     "theoddsapi": {
-      "blocker": "no pre-build TheOddsAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
-      "oa_matched": 0,
-      "oa_raw": 0,
-      "oa_usable": 0,
+      "join_matched_rows": 304,
+      "join_miss_counts": {
+        "fixture_key_miss": 168,
+        "no_pick_for_fixture": 664
+      },
+      "oa_matched": 30,
+      "oa_raw": 1136,
+      "oa_usable": 1136,
       "reason": null,
-      "status": "empty"
+      "status": "cache_only"
     },
     "vitibet": {
       "blocker": null,
@@ -344,12 +351,12 @@
       "status": null
     },
     "zulubet": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
-      "can_price": false,
-      "can_vote": false,
+      "blocker": null,
+      "can_fetch_today": true,
+      "can_price": true,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     }
