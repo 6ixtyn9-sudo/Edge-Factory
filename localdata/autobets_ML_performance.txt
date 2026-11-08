@@ -30,16 +30,16 @@ NOTES
   All retained history is included; no regime reset or old-loss exclusion.
 
 LEARNING & EVIDENCE
-EVIDENCE 59 resolved selected observations / 40 fixtures · pool 60 resolved fixtures
-LEARNING last decision: 60 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
+EVIDENCE 59 resolved selected observations / 40 fixtures · pool 61 resolved fixtures
+LEARNING last decision: 61 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 DATA     17115 ineligible-quote candidate occurrences excluded from paired errors; not a count of independent fixtures
          Historical P&L and frozen predictions unchanged; not a clean-refit backtest.
-FORWARD POOL: Brier 0.2140 → 0.2190 · log loss 0.6142 → 0.6261 (base → adjusted)
-        adjusted worse on both metrics; 60 fixtures / 794 observations
+FORWARD POOL: Brier 0.2140 → 0.2189 · log loss 0.6142 → 0.6258 (base → adjusted)
+        adjusted worse on both metrics; 61 fixtures / 838 observations
 FORWARD SELECTED: Brier 0.2239 → 0.2380 · log loss 0.6482 → 0.6746 (base → adjusted)
         adjusted worse on both metrics; 40 fixtures / 59 observations
         Fixture-weighted, overlapping samples; descriptive, not significance or a policy gate.
-PAIRED   60 fixtures / 718 observations · Brier model 0.2205 / source 0.2148
+PAIRED   61 fixtures / 762 observations · Brier model 0.2204 / source 0.2147
 
 DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.
              Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.
