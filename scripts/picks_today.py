@@ -1163,17 +1163,10 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
                                                         "invalid_cohort_provenance", price=price, **_log_kw))
                     continue
                 c = dict(c)
-                # The price board is deliberately NOT copied onto each note.
-                # `enhancement_quote_alternatives` is ~120 KB per note and is
-                # already retained on the pick row itself, so copying it here
-                # duplicated ~836 MB into the 2026-11-08 ENH receipt (8,068
-                # notes, only 5 distinct contents) and OOM-killed the runner.
-                # Measured: 22 row boards, 22 note boards, 0 orphan boards --
-                # every board a note carried already exists on a row, so this
-                # removes bytes and no evidence. Audits read the row's copy.
                 for key in ("enhancement_price", "enhancement_price_source", "enhancement_price_book",
                             "enhancement_price_at", "enhancement_price_kickoff",
-                            "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection"):
+                            "enhancement_price_provenance", "enhancement_priced", "enhancement_price_rejection",
+                            "enhancement_quote_alternatives"):
                     c[key] = probe.get(key)
                 # Retain every authentic priced alternative, even on NO BET
                 # days, so the existing audit can score it prospectively.
