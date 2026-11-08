@@ -202,41 +202,20 @@ jobs:
         run: |
           PYTHONPATH=src python3 scripts/fit_phase5_candidate.py --explain || true
 
-      - name: Ticket decision replay parity (read-only, flag never gate)
-        # CONTAINMENT, not a performance fix. A retained ENH decision receipt is
-        # a ~545-byte manifest over up to 21 shards (200-607 MB per day, 1.3 GB
-        # of JSON once materialised). Replaying every retained day is therefore
-        # unbounded as history grows; run 42432286562 spent its final ~29 min
-        # here before the runner shut down. This bound stops the step ranaway-ing
-        # again. It does NOT establish parity, and a green step still proves
-        # nothing about MATCH (continue-on-error stays true).
-        if: always() && inputs.mode != 'remine_only'
-        timeout-minutes: 5
-        continue-on-error: true
-        run: |
-          set +e
-          mkdir -p localdata
-          PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity \
-            --parity-window-days 7 \
-            --parity-time-budget 210 \
-            --parity-output localdata/replay_parity.json
-          result=$?
-          echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
-          if [ ! -f localdata/replay_parity.json ]; then
-            echo '**AUDIT NOT PRODUCED** — the replay wrote no report (killed, or it failed before completion).' >> "$GITHUB_STEP_SUMMARY"
-          else
-            status=$(python3 -c "import json;print(json.load(open('localdata/replay_parity.json')).get('status','UNKNOWN'))" 2>/dev/null || echo UNREADABLE)
-            case "$status" in
-              PASS)   echo '**parity PASS for the audited window** (see scope; a narrow window is not full-history parity).' >> "$GITHUB_STEP_SUMMARY" ;;
-              INCOMPLETE_TIME_BUDGET) echo '**AUDIT INCOMPLETE — time budget exhausted. This is NOT a parity MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
-              FAIL)   echo '**AUDIT FAILED — a receipt replayed to a different ticket. This is NOT a MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
-              *)      echo "**AUDIT STATUS: ${status}** — not a parity MATCH." >> "$GITHUB_STEP_SUMMARY" ;;
-            esac
-            echo '```json' >> "$GITHUB_STEP_SUMMARY"
-            cat localdata/replay_parity.json >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-          fi
-          exit "$result"
+      # ---------------------------------------------------------------
+      # DURABILITY BARRIER
+      # Everything ABOVE this line may still be a judgement call.
+      # Everything BELOW it is a read-only diagnostic that must never be
+      # able to delay, or be killed before, the writes that keep a frozen
+      # card. The run of 2026-11-08T07:00Z froze 2 ACCAs (MAIN @2.31/@2.03,
+      # ENH @2.26/@1.12) at ~08:50Z, entered the parity diagnostic at
+      # ~09:09Z, took a runner shutdown signal at 09:36Z, and lost the
+      # cache save, the git persist and both artifact uploads — steps that
+      # were queued behind the diagnostic. A cancelled step does not run
+      # later "always()" steps, so ordering is the only protection.
+      # This barrier does NOT protect against a kill during the mining
+      # phase before it, nor during the persist steps themselves.
+      # ---------------------------------------------------------------
 
       - name: Final history completeness publication gate
         if: inputs.mode != 'remine_only'
@@ -279,6 +258,44 @@ jobs:
             localdata/scored_candidate_shadow_*.jsonl
           if-no-files-found: ignore
           retention-days: 30
+
+      - name: Ticket decision replay parity (read-only, flag never gate)
+        # RUNS LAST, ON PURPOSE. This is a read-only audit of retained ENH
+        # decision receipts; it is now scheduled behind every durable write
+        # so that a shutdown signal here can no longer orphan a frozen card.
+        # CONTAINMENT, not a performance fix: a receipt is a ~545-byte
+        # manifest over up to 21 shards (200-607 MB per day, 1.3 GB of JSON
+        # once materialised), so replaying every retained day is unbounded
+        # as history grows. timeout-minutes + --parity-time-budget bound it;
+        # together they still do NOT establish parity, and a green step
+        # proves nothing about MATCH (continue-on-error stays true).
+        if: always() && inputs.mode != 'remine_only'
+        timeout-minutes: 5
+        continue-on-error: true
+        run: |
+          set +e
+          mkdir -p localdata
+          PYTHONPATH=src python3 scripts/replay_harness.py --decision-parity \
+            --parity-window-days 7 \
+            --parity-time-budget 210 \
+            --parity-output localdata/replay_parity.json
+          result=$?
+          echo '### Ticket decision replay parity' >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f localdata/replay_parity.json ]; then
+            echo '**AUDIT NOT PRODUCED** — the replay wrote no report (killed, or it failed before completion).' >> "$GITHUB_STEP_SUMMARY"
+          else
+            status=$(python3 -c "import json;print(json.load(open('localdata/replay_parity.json')).get('status','UNKNOWN'))" 2>/dev/null || echo UNREADABLE)
+            case "$status" in
+              PASS)   echo '**parity PASS for the audited window** (see scope; a narrow window is not full-history parity).' >> "$GITHUB_STEP_SUMMARY" ;;
+              INCOMPLETE_TIME_BUDGET) echo '**AUDIT INCOMPLETE — time budget exhausted. This is NOT a parity MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
+              FAIL)   echo '**AUDIT FAILED — a receipt replayed to a different ticket. This is NOT a MATCH.**' >> "$GITHUB_STEP_SUMMARY" ;;
+              *)      echo "**AUDIT STATUS: ${status}** — not a parity MATCH." >> "$GITHUB_STEP_SUMMARY" ;;
+            esac
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat localdata/replay_parity.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$result"
 
   regression-tests:
     name: Regression tests (flag, never gate)
