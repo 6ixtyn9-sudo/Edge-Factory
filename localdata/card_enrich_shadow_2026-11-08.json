@@ -14,7 +14,7 @@
       "unresolved_id": 6
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 41,
+    "ledger_entries": 42,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
@@ -25,34 +25,6 @@
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "jssaoura|csconstantine",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "fredrikstad|brann",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "culturalleonesa|ponferradina",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
-        "fixture": "hapoelbeersheva|hapoeltelaviv",
-        "listing_pairs_sharing_a_key": null,
-        "nearest_listing": [],
-        "nearest_retained": [],
-        "retained_pairs_sharing_a_key": 0
-      },
-      {
         "fixture": "fiorentina|juventus",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
@@ -60,7 +32,35 @@
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "laspalmas|eldense",
+        "fixture": "atleticomadrid|barcelona",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "sportivotrinidense|sportivoameliano",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "rajacasablanca|ittihadtanger",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "rioave|braga",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "deportivogarcilaso|comerciantes",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -71,12 +71,12 @@
   },
   "preflight": {
     "allowance_by_key": {
-      "5b6ed40a": 40
+      "5b6ed40a": 34
     },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=40 [pools=2 cap=90 reserve=20 spent=5 month=2026-11] -> approved",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=34 [pools=2 cap=90 reserve=20 spent=5 month=2026-11] -> approved",
     "month": "2026-11",
     "month_spend_by_key": {
       "5b6ed40a": 5
@@ -90,7 +90,7 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 40,
+    "spendable": 34,
     "verdict": "approved"
   },
   "provenance": {
