@@ -1,196 +1,198 @@
 {
-  "added": 13605,
-  "attempted": 4,
+  "added": 11403,
+  "attempted": 5,
   "attempted_fixtures": [
     {
-      "away": "El Paso Locomotive FC",
-      "fixture_id": "id1002816376363624",
-      "home": "Sacramento Republic FC"
+      "away": "FC Levadiakos",
+      "fixture_id": "id1002638473690282",
+      "home": "AEK Athens"
     },
     {
-      "away": "Hartford Athletic",
-      "fixture_id": "id1002816376363620",
-      "home": "Charleston Battery"
+      "away": "Ventforet Kofu",
+      "fixture_id": "id1000040272151328",
+      "home": "Vegalta Sendai"
     },
     {
-      "away": "Colorado Rapids",
-      "fixture_id": "id1000024266299806",
-      "home": "FC Dallas"
+      "away": "Kalamata",
+      "fixture_id": "id1002638473690284",
+      "home": "Asteras Tripolis"
     },
     {
-      "away": "Portland Timbers",
-      "fixture_id": "id1000024266299804",
-      "home": "Austin FC"
+      "away": "Shonan Bellmare",
+      "fixture_id": "id1000040272151340",
+      "home": "Jubilo Iwata"
+    },
+    {
+      "away": "Incheon United FC",
+      "fixture_id": "id1000041076045114",
+      "home": "Daejeon Citizen FC"
     }
   ],
   "budget": {
     "day": "2026-11-08",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 181,
-    "remaining_today": 19,
-    "spent_today": 6
+    "month_spent": 186,
+    "remaining_today": 14,
+    "spent_today": 11
   },
-  "budget_deferred": 51,
-  "captured_at": "2026-11-07T22:51:48+00:00",
+  "budget_deferred": 132,
+  "captured_at": "2026-11-08T04:37:32+00:00",
   "date": "2026-11-08",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
   "excluded_srl_fixtures": 45,
   "excluded_wrong_sport_fixtures": 0,
   "fixtures": 1161,
-  "future_slate_fixtures": 36,
+  "future_slate_fixtures": 27,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 612,
+  "market_census_distinct": 496,
   "markets": {
-    "1x2": 1372,
-    "btts": 894,
-    "ou_0.5": 424,
+    "1x2": 1499,
+    "btts": 822,
+    "ou_0.5": 360,
     "ou_0.75": 68,
-    "ou_1": 56,
-    "ou_1.25": 88,
-    "ou_1.5": 730,
-    "ou_1.75": 180,
-    "ou_2": 230,
-    "ou_2.25": 284,
-    "ou_2.5": 838,
-    "ou_2.75": 358,
-    "ou_3": 386,
-    "ou_3.25": 402,
-    "ou_3.5": 834,
-    "ou_3.75": 236,
-    "ou_4": 264,
-    "ou_4.25": 130,
-    "ou_4.5": 630,
-    "ou_4.75": 118,
+    "ou_1": 50,
+    "ou_1.25": 92,
+    "ou_1.5": 674,
+    "ou_1.75": 162,
+    "ou_2": 196,
+    "ou_2.25": 276,
+    "ou_2.5": 822,
+    "ou_2.75": 342,
+    "ou_3": 296,
+    "ou_3.25": 326,
+    "ou_3.5": 811,
+    "ou_3.75": 230,
+    "ou_4": 216,
+    "ou_4.25": 132,
+    "ou_4.5": 648,
+    "ou_4.75": 106,
     "ou_5": 64,
-    "ou_5.25": 72,
-    "ou_5.5": 406,
-    "ou_5.75": 74,
-    "ou_6": 44,
-    "ou_6.25": 36,
-    "ou_6.5": 251,
+    "ou_5.25": 62,
+    "ou_5.5": 169,
+    "ou_5.75": 38,
+    "ou_6": 30,
+    "ou_6.25": 30,
+    "ou_6.5": 65,
     "ou_6.75": 15,
     "ou_7": 15,
     "ou_7.25": 15,
-    "ou_7.5": 78,
+    "ou_7.5": 46,
     "ou_7.75": 15,
     "ou_8": 15,
     "ou_8.25": 15,
-    "ou_8.5": 42,
-    "tt_away_0.5": 576,
-    "tt_away_0.75": 8,
-    "tt_away_1": 6,
-    "tt_away_1.5": 484,
-    "tt_away_2.25": 6,
-    "tt_away_2.5": 418,
-    "tt_away_2.75": 2,
-    "tt_away_3.5": 244,
-    "tt_away_3.75": 18,
-    "tt_away_4": 18,
-    "tt_away_4.25": 18,
-    "tt_away_4.5": 139,
-    "tt_away_4.75": 2,
-    "tt_away_5.5": 45,
-    "tt_home_0.5": 404,
+    "ou_8.5": 26,
+    "tt_away_0.5": 570,
+    "tt_away_0.75": 6,
+    "tt_away_1": 18,
+    "tt_away_1.25": 8,
+    "tt_away_1.5": 340,
+    "tt_away_1.75": 2,
+    "tt_away_2.5": 118,
+    "tt_away_3.5": 20,
+    "tt_away_4.5": 6,
+    "tt_away_5.5": 3,
+    "tt_home_0.5": 290,
     "tt_home_0.75": 2,
-    "tt_home_1.5": 672,
+    "tt_home_1": 2,
+    "tt_home_1.25": 2,
+    "tt_home_1.5": 508,
     "tt_home_1.75": 6,
-    "tt_home_2.5": 438,
-    "tt_home_2.75": 2,
-    "tt_home_3": 4,
-    "tt_home_3.25": 4,
-    "tt_home_3.5": 326,
+    "tt_home_2": 18,
+    "tt_home_2.25": 8,
+    "tt_home_2.5": 476,
+    "tt_home_2.75": 10,
+    "tt_home_3": 24,
+    "tt_home_3.25": 2,
+    "tt_home_3.5": 144,
     "tt_home_3.75": 2,
-    "tt_home_4.5": 76,
-    "tt_home_5.5": 6
+    "tt_home_4.5": 62,
+    "tt_home_5.5": 8
   },
-  "markets_source": "fetch",
-  "matched": 4,
+  "markets_source": "cache",
+  "matched": 5,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
     "alt_line_skipped": 1,
-    "market_inactive": 6464,
-    "market_unsupported_cards": 1738,
-    "market_unsupported_clean_sheet": 470,
-    "market_unsupported_corners": 6414,
-    "market_unsupported_correct_score": 1609,
-    "market_unsupported_double_chance": 836,
-    "market_unsupported_draw_no_bet": 708,
-    "market_unsupported_early_payout": 102,
-    "market_unsupported_handicap": 8183,
-    "market_unsupported_market_type": 5329,
-    "market_unsupported_non_goal": 262,
-    "market_unsupported_odd_even": 1524,
-    "market_unsupported_period": 30536,
-    "market_unsupported_win_to_nil": 877,
-    "outcome_inactive": 2627
+    "market_inactive": 4630,
+    "market_unsupported_clean_sheet": 482,
+    "market_unsupported_corners": 3067,
+    "market_unsupported_correct_score": 1530,
+    "market_unsupported_double_chance": 730,
+    "market_unsupported_draw_no_bet": 609,
+    "market_unsupported_early_payout": 46,
+    "market_unsupported_handicap": 6124,
+    "market_unsupported_market_type": 4414,
+    "market_unsupported_non_goal": 255,
+    "market_unsupported_odd_even": 1243,
+    "market_unsupported_period": 20113,
+    "market_unsupported_win_to_nil": 742,
+    "outcome_inactive": 1277
   },
   "parse_skips_classified": {
     "expected": {
       "alt_line_skipped": 1,
-      "market_inactive": 6464,
-      "outcome_inactive": 2627
+      "market_inactive": 4630,
+      "outcome_inactive": 1277
     },
     "loss_or_diagnosis": {
-      "market_unsupported_cards": 1738,
-      "market_unsupported_clean_sheet": 470,
-      "market_unsupported_corners": 6414,
-      "market_unsupported_correct_score": 1609,
-      "market_unsupported_double_chance": 836,
-      "market_unsupported_draw_no_bet": 708,
-      "market_unsupported_early_payout": 102,
-      "market_unsupported_handicap": 8183,
-      "market_unsupported_market_type": 5329,
-      "market_unsupported_non_goal": 262,
-      "market_unsupported_odd_even": 1524,
-      "market_unsupported_period": 30536,
-      "market_unsupported_win_to_nil": 877
+      "market_unsupported_clean_sheet": 482,
+      "market_unsupported_corners": 3067,
+      "market_unsupported_correct_score": 1530,
+      "market_unsupported_double_chance": 730,
+      "market_unsupported_draw_no_bet": 609,
+      "market_unsupported_early_payout": 46,
+      "market_unsupported_handicap": 6124,
+      "market_unsupported_market_type": 4414,
+      "market_unsupported_non_goal": 255,
+      "market_unsupported_odd_even": 1243,
+      "market_unsupported_period": 20113,
+      "market_unsupported_win_to_nil": 742
     }
   },
-  "pending_fixtures": 55,
+  "pending_fixtures": 137,
   "quoted_fixtures": [
     {
-      "away": "El Paso Locomotive FC",
-      "fixture_id": "id1002816376363624",
-      "home": "Sacramento Republic FC"
+      "away": "FC Levadiakos",
+      "fixture_id": "id1002638473690282",
+      "home": "AEK Athens"
     },
     {
-      "away": "Hartford Athletic",
-      "fixture_id": "id1002816376363620",
-      "home": "Charleston Battery"
+      "away": "Ventforet Kofu",
+      "fixture_id": "id1000040272151328",
+      "home": "Vegalta Sendai"
     },
     {
-      "away": "Colorado Rapids",
-      "fixture_id": "id1000024266299806",
-      "home": "FC Dallas"
+      "away": "Kalamata",
+      "fixture_id": "id1002638473690284",
+      "home": "Asteras Tripolis"
     },
     {
-      "away": "Portland Timbers",
-      "fixture_id": "id1000024266299804",
-      "home": "Austin FC"
+      "away": "Shonan Bellmare",
+      "fixture_id": "id1000040272151340",
+      "home": "Jubilo Iwata"
+    },
+    {
+      "away": "Incheon United FC",
+      "fixture_id": "id1000041076045114",
+      "home": "Daejeon Citizen FC"
     }
   ],
-  "reserved_requests": 19,
-  "rows": 13605,
+  "reserved_requests": 14,
+  "rows": 11403,
   "schema": 1,
-  "slate_candidate_fixtures": 103,
+  "slate_candidate_fixtures": 92,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 7,
-  "slate_provider_overlap_fixtures": 45,
+  "slate_priority_fixtures": 9,
+  "slate_provider_overlap_fixtures": 38,
   "slate_unmatched_fixtures": [
     {
       "away": "Widad T\u00e9mara",
       "home": "CR Khemis Zemamra",
       "league": "Botola Pro",
       "normalized_pair": "cr khemis zemamra|widad temara"
-    },
-    {
-      "away": "Newell's Old Boys",
-      "home": "Instituto",
-      "league": "Liga Profesional de F\u00fatbol",
-      "normalized_pair": "instituto|newell's old boys"
     },
     {
       "away": "Kilmarnock",
@@ -241,12 +243,6 @@
       "normalized_pair": "lech poznan|zaglebie lubin"
     },
     {
-      "away": "Sporting KC",
-      "home": "San Diego",
-      "league": "Major League Soccer",
-      "normalized_pair": "san diego|sporting kc"
-    },
-    {
       "away": "Celje",
       "home": "Radomlje",
       "league": "1. SNL",
@@ -257,12 +253,6 @@
       "home": "Hearts",
       "league": "Premiership",
       "normalized_pair": "falkirk|hearts"
-    },
-    {
-      "away": "Monterrey",
-      "home": "Toluca",
-      "league": "Liga MX",
-      "normalized_pair": "monterrey|toluca"
     },
     {
       "away": "Sporting Braga",
@@ -479,6 +469,24 @@
       "home": "Magdeburg",
       "league": "2. Bundesliga",
       "normalized_pair": "magdeburg|st. pauli"
+    },
+    {
+      "away": "Busan I'Park",
+      "home": "Cheonan City",
+      "league": "K League 2",
+      "normalized_pair": "busan i'park|cheonan city"
+    },
+    {
+      "away": "Lusitania FC Lourosa",
+      "home": "Feirense",
+      "league": "Liga Portugal 2",
+      "normalized_pair": "feirense|lusitania lourosa"
+    },
+    {
+      "away": "Kongsvinger",
+      "home": "Bryne",
+      "league": "1. Division",
+      "normalized_pair": "bryne|kongsvinger"
     }
   ],
   "source": "oddspapi_odds",

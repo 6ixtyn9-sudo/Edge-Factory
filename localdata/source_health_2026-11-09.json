@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unmapped": 3,
@@ -30,7 +30,7 @@
         "selection_unmapped": 111
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "not reliably fetched/observed today",
@@ -58,7 +58,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-09' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -170,20 +170,20 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "coherence_excluded_rows": 18,
+      "coherence_excluded_rows": 24,
       "coherence_reason_counts": {
-        "withheld_mixed_events_one_x_two": 18
+        "withheld_mixed_events_one_x_two": 24
       },
-      "coherence_withheld_fixtures": 3,
+      "coherence_withheld_fixtures": 4,
       "event_type": "prematch",
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 16107
+        "out_of_window": 19903
       },
       "pa_matched": 0,
-      "pa_raw": 891,
-      "pa_scored": 16107,
+      "pa_raw": 1123,
+      "pa_scored": 19903,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -233,26 +233,31 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 4,
-        "board_league_count": 3,
+        "board_fixtures": 7,
+        "board_league_count": 4,
         "board_leagues": {
-          "brazil_-_serie_b": 9,
-          "ecuador_-_serie_a": 48,
-          "paraguay_-_primera_division": 143
+          "australia_-_a-league": 96,
+          "mexico_-_liga_de_expansion_mx": 17,
+          "mexico_-_liga_mx": 41,
+          "usa_-_usl_championship": 46
         },
         "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 8,
+        "board_team_count": 12,
         "board_team_names": {
-          "CD Leones del Norte": 48,
-          "Criciuma": 9,
-          "Guayaquil City": 48,
-          "Libertad": 112,
-          "Libertad Asuncion": 31,
-          "Nacional (Par)": 112,
-          "Nacional Asuncion": 31,
-          "Vila Nova": 9
+          "Brisbane Roar": 96,
+          "CF America": 30,
+          "Club America": 11,
+          "Club Atletico La Paz": 17,
+          "EL Paso Locomotive FC": 5,
+          "El Paso Locomotive FC": 41,
+          "Macarthur FC": 96,
+          "Pumas UNAM": 41,
+          "Sacramento Republic": 41,
+          "Sacramento Republic FC": 5,
+          "Tlaxcala": 1,
+          "Tlaxcala F.C": 16
         },
         "board_truncated": false,
         "card_fixture_count": 0,
