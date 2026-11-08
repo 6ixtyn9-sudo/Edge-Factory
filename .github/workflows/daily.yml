@@ -90,12 +90,36 @@ jobs:
         # survival buffer, not a performance fix: it turns an OOM kill into
         # slow progress. It makes no audit or gate pass, and it changes no
         # threshold, stake, bank or retained evidence.
+        #
+        # 2026-11-08 run #1274: the hosted image ALREADY has /swapfile open,
+        # so `fallocate` and the `dd` fallback both failed with
+        # "Text file busy" and `set -e` killed the job in the same second.
+        # Steps 6-17 (including the schedule and enhancement steps) were
+        # skipped, so nothing was tested. This step now tolerates a
+        # pre-provisioned swap, uses a private path, and never fails the job
+        # for a reason that is not the build's fault.
         run: |
           set -e
-          sudo fallocate -l 6G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=6144
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          echo "swap before:"
+          sudo swapon --show || true
+          free -m
+          if [ -n "$(sudo swapon --show --noheadings 2>/dev/null | tr -d '[:space:]')" ]; then
+            echo "swap already active; keeping the image-provided swap"
+            free -m
+            exit 0
+          fi
+          SWAP=/mnt/ef-swapfile
+          sudo swapoff "$SWAP" 2>/dev/null || true
+          sudo rm -f "$SWAP"
+          if ! sudo fallocate -l 6G "$SWAP"; then
+            echo "fallocate unavailable; falling back to dd"
+            sudo rm -f "$SWAP"
+            sudo dd if=/dev/zero of="$SWAP" bs=1M count=6144
+          fi
+          sudo chmod 600 "$SWAP"
+          sudo mkswap "$SWAP"
+          sudo swapon "$SWAP"
+          echo "swap after:"
           sudo swapon --show
           free -m
 
