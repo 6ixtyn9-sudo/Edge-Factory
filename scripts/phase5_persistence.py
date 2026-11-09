@@ -702,56 +702,6 @@ def _receipt_payload_sha256(payload: dict) -> str:
     return hasher.hexdigest()
 
 
-def _committed_receipt_bundle_matches_worktree(repo: Path, relative: str,
-                                               envelope: bytes) -> bool:
-    """Check a committed receipt bundle without inflating its gzip stream."""
-    magic = b"EDGEFACTORY_TICKET_RECEIPT_PARTS_V1" + bytes([10])
-    if not envelope.startswith(magic):
-        return True  # caller already proved the single-stream blob equals HEAD
-    try:
-        if len(envelope) > 1024 * 1024:
-            return False
-        manifest = json.loads(envelope[len(magic):])
-        parts = manifest.get("parts")
-        total = manifest.get("size")
-        digest = manifest.get("sha256")
-        valid_digest = lambda value: (
-            isinstance(value, str) and len(value) == 64
-            and all(ch in "0123456789abcdef" for ch in value)
-        )
-        if (not isinstance(manifest, dict)
-                or type(manifest.get("schema")) is not int or manifest["schema"] != 1
-                or manifest.get("encoding") != "gzip"
-                or type(total) is not int or total <= 0
-                or not valid_digest(digest)
-                or not isinstance(parts, list) or not 1 <= len(parts) <= 4096):
-            return False
-
-        declared_total = 0
-        receipt = Path(relative)
-        for part in parts:
-            part_sha, part_size = part.get("sha256"), part.get("size")
-            if (not isinstance(part, dict) or not valid_digest(part_sha)
-                    or type(part_size) is not int
-                    or not 0 < part_size <= 80 * 1024 * 1024):
-                return False
-            declared_total += part_size
-            part_relative = (receipt.parent /
-                f"{receipt.name}.part-{part_sha}").as_posix()
-            part_path = repo / part_relative
-            if (part_path.is_symlink() or not part_path.is_file()
-                    or part_path.stat().st_size != part_size):
-                return False
-            head_blob = _run(repo, "rev-parse", f"HEAD:{part_relative}")
-            worktree_blob = _run(repo, "hash-object", "--", part_relative)
-            if (head_blob.returncode != 0 or worktree_blob.returncode != 0
-                    or head_blob.stdout.strip() != worktree_blob.stdout.strip()):
-                return False
-        return declared_total == total
-    except (OSError, ValueError, TypeError, AttributeError):
-        return False
-
-
 def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, bytes]:
     """Keep cached frozen audit receipts when finance restore retains that freeze.
 
@@ -775,16 +725,6 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
                 if result.returncode == 0:
                     head_blob, head_relative = result.stdout, alternative
                     break
-            # Exact committed single-stream gzip bytes need no decompression:
-            # there is no cache/HEAD difference to reconcile, and the raw
-            # committed evidence is retained unchanged.
-            if (head_blob is not None and head_relative == relative
-                    and head_blob == cached and path.suffix == ".gz"
-                    and _committed_receipt_bundle_matches_worktree(repo, relative, cached)):
-                retained[relative] = cached
-                print(f"restore: retained exact committed receipt without decompression: "
-                      f"{path.name}", flush=True)
-                continue
             try:
                 # Seed the canonical destination with HEAD, even when HEAD is
                 # legacy JSON and an untracked gzip alias survives git clean.
