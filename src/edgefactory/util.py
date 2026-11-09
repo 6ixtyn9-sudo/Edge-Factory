@@ -1132,6 +1132,7 @@ DATED_ARCHIVE_FAMILIES = {
     "picks": {"json", "txt"}, "picks_morning": {"json"},
     "auto_tickets": {"txt"}, "autobets_enh_tickets": {"txt"}, "autobets_ML": {"txt"},
     "source_health": {"json"}, "betminer_probe": {"json"},
+    "betexplorer_odds_cache": {"json"},
     "oddspapi_capture": {"json"}, "theoddsapi_capture": {"json"},
     "card_enrich_shadow": {"json"}, "remine_audit": {"jsonl"},
     "ml_fade_research_report": {"md"}, "ml_fade_checkpoint_contexts": {"txt"},
