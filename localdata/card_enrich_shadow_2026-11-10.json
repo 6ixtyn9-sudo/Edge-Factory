@@ -1,7 +1,7 @@
 {
   "notes": [
     "need_h2h=0",
-    "unresolved=3"
+    "unresolved=4"
   ],
   "outcome": {
     "calls_charged": 0,
@@ -11,35 +11,42 @@
       "captured": 0,
       "lane_blocked_local": 0,
       "staleness_skip": 0,
-      "unresolved_id": 3
+      "unresolved_id": 4
     },
     "free_listing_recorded_today": true,
-    "ledger_entries": 27,
+    "ledger_entries": 43,
     "listing": {
       "charged": false,
       "outcome": "not_planned",
       "reason": "free_listing_present_zero_matches",
       "resolved_pairs": 0
     },
-    "retained_pairs": 7,
+    "retained_pairs": 2,
     "shadow_file_present": true,
     "unresolved": [
       {
-        "fixture": "sevilla|osasuna",
+        "fixture": "colchesterunitedu21|charltonathleticu21",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "flamengo|atleticomineiro",
+        "fixture": "romaw|servettechenoisw",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
         "retained_pairs_sharing_a_key": 0
       },
       {
-        "fixture": "montpellier|redstar93",
+        "fixture": "realmadridw|parisw",
+        "listing_pairs_sharing_a_key": null,
+        "nearest_listing": [],
+        "nearest_retained": [],
+        "retained_pairs_sharing_a_key": 0
+      },
+      {
+        "fixture": "hackenw|chelseaw",
         "listing_pairs_sharing_a_key": null,
         "nearest_listing": [],
         "nearest_retained": [],
@@ -49,15 +56,16 @@
     "usable_snapshots": 0
   },
   "preflight": {
-    "allowance_by_key": {},
+    "allowance_by_key": {
+      "5b6ed40a": 28
+    },
     "allowed_calls": 0,
     "budget_env": "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS",
     "budget_monthly": 90,
-    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=0 [pools=2 cap=90 reserve=20 spent=8 month=2026-10] -> unattributed_quota",
-    "month": "2026-10",
+    "math": "calls=0 (h2h=0 + listing=0) x 1 family-unit vs spendable=28 [pools=2 cap=90 reserve=20 spent=5 month=2026-11] -> approved",
+    "month": "2026-11",
     "month_spend_by_key": {
-      "5b6ed40a": 1,
-      "88739ee5": 7
+      "5b6ed40a": 5
     },
     "need_h2h": 0,
     "need_listing": 0,
@@ -68,8 +76,8 @@
     },
     "reserve_per_key": 20,
     "ring_keys": 2,
-    "spendable": 0,
-    "verdict": "unattributed_quota"
+    "spendable": 28,
+    "verdict": "approved"
   },
   "provenance": {
     "api": "https://football-prediction-api.p.rapidapi.com/api/v2/head-to-head/:id",
@@ -77,7 +85,7 @@
     "point_in_time": "as_of is the capture instant; provider publishes no per-row history timestamp"
   },
   "role": "silent pre-kickoff H2H context capture for the dormant context vocabulary; NOT a price, NOT a vote, NOT a registered rule",
-  "run_date": "2026-10-26",
+  "run_date": "2026-11-10",
   "schema": 1,
   "snapshots": [],
   "source": "boggio_h2h",
