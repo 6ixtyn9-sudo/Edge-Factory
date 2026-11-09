@@ -1,33 +1,7 @@
 {
-  "added": 2682,
-  "attempted": 5,
-  "attempted_fixtures": [
-    {
-      "away": "Agrobiznes Volochisk",
-      "fixture_id": "id1000069172550322",
-      "home": "FC Viktoriya Sumy"
-    },
-    {
-      "away": "Olimpik Mobiuz",
-      "fixture_id": "id1002347772217660",
-      "home": "FC Jayxun"
-    },
-    {
-      "away": "Respublika Football Academy",
-      "fixture_id": "id1002347772217662",
-      "home": "FK Gazalkent"
-    },
-    {
-      "away": "FK Aral Samali",
-      "fixture_id": "id1002347772217664",
-      "home": "PFK Metallurg Bekabad"
-    },
-    {
-      "away": "Lochin",
-      "fixture_id": "id1002347772217666",
-      "home": "FC Yaypan Fergana"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-09",
     "keys": 3,
@@ -36,8 +10,8 @@
     "remaining_today": 2,
     "spent_today": 23
   },
-  "budget_deferred": 8,
-  "captured_at": "2026-11-09T04:39:37+00:00",
+  "budget_deferred": 28,
+  "captured_at": "2026-11-09T08:47:26+00:00",
   "date": "2026-11-09",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
@@ -47,133 +21,19 @@
   "future_slate_fixtures": 2,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 248,
-  "markets": {
-    "1x2": 498,
-    "btts": 214,
-    "ou_0.5": 62,
-    "ou_0.75": 28,
-    "ou_1": 28,
-    "ou_1.25": 46,
-    "ou_1.5": 150,
-    "ou_1.75": 50,
-    "ou_2": 82,
-    "ou_2.25": 50,
-    "ou_2.5": 250,
-    "ou_2.75": 50,
-    "ou_3": 94,
-    "ou_3.25": 28,
-    "ou_3.5": 182,
-    "ou_3.75": 28,
-    "ou_4": 76,
-    "ou_4.25": 28,
-    "ou_4.5": 57,
-    "ou_4.75": 12,
-    "ou_5": 10,
-    "ou_5.25": 10,
-    "ou_5.5": 44,
-    "ou_5.75": 5,
-    "ou_6": 5,
-    "ou_6.25": 5,
-    "ou_6.5": 6,
-    "ou_6.75": 5,
-    "ou_7": 5,
-    "ou_7.25": 5,
-    "ou_7.5": 5,
-    "ou_7.75": 5,
-    "ou_8": 5,
-    "ou_8.25": 5,
-    "ou_8.5": 5,
-    "tt_away_0.5": 64,
-    "tt_away_0.75": 18,
-    "tt_away_1": 40,
-    "tt_away_1.25": 18,
-    "tt_away_1.5": 60,
-    "tt_away_1.75": 2,
-    "tt_away_2": 32,
-    "tt_away_2.5": 24,
-    "tt_away_3.5": 5,
-    "tt_away_4.5": 3,
-    "tt_away_5.5": 3,
-    "tt_home_0.5": 30,
-    "tt_home_0.75": 18,
-    "tt_home_1": 40,
-    "tt_home_1.25": 18,
-    "tt_home_1.5": 96,
-    "tt_home_1.75": 2,
-    "tt_home_2": 34,
-    "tt_home_2.5": 26,
-    "tt_home_3.5": 5,
-    "tt_home_4.5": 3,
-    "tt_home_5.5": 3
-  },
+  "market_census_distinct": 0,
+  "markets": {},
   "markets_source": "cache",
-  "matched": 5,
+  "matched": 0,
   "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "market_inactive": 12,
-    "market_unsupported_clean_sheet": 30,
-    "market_unsupported_correct_score": 184,
-    "market_unsupported_double_chance": 149,
-    "market_unsupported_draw_no_bet": 43,
-    "market_unsupported_early_payout": 7,
-    "market_unsupported_handicap": 641,
-    "market_unsupported_market_type": 385,
-    "market_unsupported_non_goal": 55,
-    "market_unsupported_odd_even": 164,
-    "market_unsupported_period": 2388,
-    "market_unsupported_win_to_nil": 58,
-    "outcome_inactive": 97
-  },
   "parse_skips_classified": {
-    "expected": {
-      "market_inactive": 12,
-      "outcome_inactive": 97
-    },
-    "loss_or_diagnosis": {
-      "market_unsupported_clean_sheet": 30,
-      "market_unsupported_correct_score": 184,
-      "market_unsupported_double_chance": 149,
-      "market_unsupported_draw_no_bet": 43,
-      "market_unsupported_early_payout": 7,
-      "market_unsupported_handicap": 641,
-      "market_unsupported_market_type": 385,
-      "market_unsupported_non_goal": 55,
-      "market_unsupported_odd_even": 164,
-      "market_unsupported_period": 2388,
-      "market_unsupported_win_to_nil": 58
-    }
+    "expected": {},
+    "loss_or_diagnosis": {}
   },
-  "pending_fixtures": 13,
-  "quoted_fixtures": [
-    {
-      "away": "Agrobiznes Volochisk",
-      "fixture_id": "id1000069172550322",
-      "home": "FC Viktoriya Sumy"
-    },
-    {
-      "away": "Olimpik Mobiuz",
-      "fixture_id": "id1002347772217660",
-      "home": "FC Jayxun"
-    },
-    {
-      "away": "Respublika Football Academy",
-      "fixture_id": "id1002347772217662",
-      "home": "FK Gazalkent"
-    },
-    {
-      "away": "FK Aral Samali",
-      "fixture_id": "id1002347772217664",
-      "home": "PFK Metallurg Bekabad"
-    },
-    {
-      "away": "Lochin",
-      "fixture_id": "id1002347772217666",
-      "home": "FC Yaypan Fergana"
-    }
-  ],
+  "pending_fixtures": 28,
+  "quoted_fixtures": [],
   "reserved_requests": 2,
-  "rows": 2682,
+  "rows": 0,
   "schema": 1,
   "slate_candidate_fixtures": 6,
   "slate_match_mode": "exact_normalized_pair",

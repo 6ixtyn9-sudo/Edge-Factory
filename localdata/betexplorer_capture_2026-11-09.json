@@ -12,16 +12,6 @@
       "w_score": 0.5405
     },
     {
-      "avg_p": 42.426009178608226,
-      "away": "V\u00e5lerenga",
-      "date": "2026-11-09",
-      "home": "Kristiansund",
-      "league": "Eliteserien",
-      "market": "1x2",
-      "pick": "away",
-      "w_score": 0.5405
-    },
-    {
       "avg_p": 42.425357689192836,
       "away": "Barletta",
       "date": "2026-11-09",
@@ -60,24 +50,32 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
+    },
+    {
+      "avg_p": 42.426009178608226,
+      "away": "V\u00e5lerenga",
+      "date": "2026-11-09",
+      "home": "Kristiansund",
+      "league": "Eliteserien",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
     }
   ],
-  "be_429": 2,
-  "be_cached": 3,
-  "be_cooling_down": true,
+  "be_429": 0,
+  "be_cached": 5,
+  "be_cooling_down": false,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 3,
+  "cache_only": 5,
   "candidate_fixtures": 6,
-  "captured_at": "2026-11-09T04:39:37.905155+00:00",
+  "captured_at": "2026-11-09T08:47:26.363637+00:00",
   "date": "2026-11-09",
   "deferred_fixtures": 0,
-  "errors": [
-    "BetExplorerCoolingDown"
-  ],
+  "errors": [],
   "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 10,
+  "market_requests": 0,
   "match_detail": {
     "bookmakers": 69,
     "challenge_pages": 0,
@@ -91,9 +89,9 @@
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": true,
+  "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 3,
+  "network_attempted": 1,
   "quoted_fixtures": [
     {
       "avg_p": 52.167808523890024,
@@ -103,16 +101,6 @@
       "league": "Serie C: Girone B",
       "market": "1x2",
       "pick": "home",
-      "w_score": 0.5405
-    },
-    {
-      "avg_p": 42.426009178608226,
-      "away": "V\u00e5lerenga",
-      "date": "2026-11-09",
-      "home": "Kristiansund",
-      "league": "Eliteserien",
-      "market": "1x2",
-      "pick": "away",
       "w_score": 0.5405
     },
     {
@@ -144,9 +132,19 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
+    },
+    {
+      "avg_p": 42.426009178608226,
+      "away": "V\u00e5lerenga",
+      "date": "2026-11-09",
+      "home": "Kristiansund",
+      "league": "Eliteserien",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
     }
   ],
-  "requests": 18,
+  "requests": 3,
   "rows": 15,
   "schema": 1,
   "status": "ok"
