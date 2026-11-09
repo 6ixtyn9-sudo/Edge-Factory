@@ -11,9 +11,9 @@
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 1144
 - eligible prior picks: 1169
-- pending/unmatched result picks: 16
+- pending/unmatched result picks: 14
 - rescheduled result picks (settled ±3d): 3
-- voided postponed/cancelled/abandoned events: 8
+- voided postponed/cancelled/abandoned events: 10
 - ambiguous event-disposition rows: 0
 - settled via shared overlay facts: 1
 - ambiguous result picks: 1
@@ -1479,7 +1479,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
 
 | disposition | voided picks |
 | --- | --- |
-| POSTPONED | 8 |
+| POSTPONED | 10 |
 - 2026-10-23 `POSTPONED` `CAUTION` — Gateshead vs Tamworth (source_status:scoutingstats); excluded from win/loss/ROI
 - 2026-10-23 `POSTPONED` `SKIPPED_VETO` — Holywell vs Penybont (source_status:scoutingstats); excluded from win/loss/ROI
 - 2026-10-24 `POSTPONED` `CAUTION` — Glentoran vs Ballymena United (source_status:scoutingstats); excluded from win/loss/ROI
@@ -1488,6 +1488,8 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
 - 2026-10-28 `POSTPONED` `WATCHLIST_SUSPECT_PRICE` — Salamanca CF UDS vs Celta de Vigo (source_status:scoutingstats); excluded from win/loss/ROI
 - 2026-11-05 `POSTPONED` `SKIPPED_VETO` — Al Kholood vs Al Khaleej (source_status:scoutingstats); excluded from win/loss/ROI
 - 2026-11-07 `POSTPONED` `SKIPPED_VETO` — Granada vs Tenerife (source_status:scoutingstats); excluded from win/loss/ROI
+- 2026-11-08 `POSTPONED` `SKIPPED_VETO` — Las Palmas vs Eldense (source_status:scoutingstats); excluded from win/loss/ROI
+- 2026-11-08 `POSTPONED` `SKIPPED_VETO` — Estoril vs Marítimo (source_status:scoutingstats); excluded from win/loss/ROI
 
 ## Rescheduled Fixture Examples
 
@@ -1511,8 +1513,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
 - 2026-10-25 `WATCHLIST_UNCORROBORATED_PRICE` `1x2 single[scoutingstats] avg_p>=65` — Sporting CP vs Academico Viseu -> HOME @ 1.22 (pending_or_unmatched_result); keys=['cp', 'lisbon']/['academico']
 - 2026-10-28 `SKIPPED_VETO` `1x2 unanimous[bzzoiro+scoutingstats+statarea] avg_p>=35` — Liverpool FC vs Chelsea -> HOME @ 2.3 (pending_or_unmatched_result); keys=['liverpool']/['chelsea']
 - 2026-11-07 `SKIPPED_VETO` `1x2 unanimous[scoutingstats+statarea] avg_p>=35` — Sporting CP vs Moreirense -> HOME @ 1.1536 (pending_or_unmatched_result); keys=['cp', 'lisbon']/['moreirens']
-- 2026-11-08 `SKIPPED_VETO` `1x2 unanimous[scoutingstats+statarea] avg_p>=35` — Las Palmas vs Eldense -> HOME @ 2.0 (pending_or_unmatched_result); keys=['laspalmas']/['eldense']
-- 2026-11-08 `SKIPPED_VETO` `1x2 unanimous[scoutingstats+statarea] avg_p>=35` — Estoril vs Marítimo -> HOME @ 2.08 (pending_or_unmatched_result); keys=['estoril']/['maritimo']
 
 ## Ambiguous result examples
 

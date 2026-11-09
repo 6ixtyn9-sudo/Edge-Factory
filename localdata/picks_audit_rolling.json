@@ -108,7 +108,7 @@
     }
   },
   "by_event_disposition": {
-    "POSTPONED": 8
+    "POSTPONED": 10
   },
   "by_odds_match_method": {
     "alias_fuzzy": {
@@ -1403,7 +1403,7 @@
     "settled_picks": 1144,
     "wins": 732
   },
-  "pending_result_picks": 16,
+  "pending_result_picks": 14,
   "population_definitions": {
     "enhancement_hit_rate": "hits / settled recommended enhancements",
     "enhancement_priced_roi": "priced enhancement P&L / priced_n",
@@ -58561,45 +58561,9 @@
       "pick": "home",
       "reason": "pending_or_unmatched_result",
       "rule": "pfc_f56fe4a2759e9b17b9bdb116"
-    },
-    {
-      "away": "Eldense",
-      "away_key_candidates": [
-        "eldense"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-11-08",
-      "home": "Las Palmas",
-      "home_key_candidates": [
-        "laspalmas"
-      ],
-      "league": "La Liga 2",
-      "match": "Las Palmas vs Eldense",
-      "odds": 2.0,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_f56fe4a2759e9b17b9bdb116"
-    },
-    {
-      "away": "Mar\u00edtimo",
-      "away_key_candidates": [
-        "maritimo"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-11-08",
-      "home": "Estoril",
-      "home_key_candidates": [
-        "estoril"
-      ],
-      "league": "Liga Portugal",
-      "match": "Estoril vs Mar\u00edtimo",
-      "odds": 2.08,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "pfc_f56fe4a2759e9b17b9bdb116"
     }
   ],
-  "unmatched_result_picks": 16,
+  "unmatched_result_picks": 14,
   "unsafe_regular_ledger_dates": [
     "2026-10-11",
     "2026-10-12",
@@ -59747,7 +59711,47 @@
       "pick": "home",
       "reason": "void_event",
       "rule": "pfc_f56fe4a2759e9b17b9bdb116"
+    },
+    {
+      "away": "Eldense",
+      "away_key_candidates": [
+        "eldense"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-11-08",
+      "disposition": "POSTPONED",
+      "home": "Las Palmas",
+      "home_key_candidates": [
+        "laspalmas"
+      ],
+      "league": "La Liga 2",
+      "match": "Las Palmas vs Eldense",
+      "odds": 2.0,
+      "origin": "source_status:scoutingstats",
+      "pick": "home",
+      "reason": "void_event",
+      "rule": "pfc_f56fe4a2759e9b17b9bdb116"
+    },
+    {
+      "away": "Mar\u00edtimo",
+      "away_key_candidates": [
+        "maritimo"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-11-08",
+      "disposition": "POSTPONED",
+      "home": "Estoril",
+      "home_key_candidates": [
+        "estoril"
+      ],
+      "league": "Liga Portugal",
+      "match": "Estoril vs Mar\u00edtimo",
+      "odds": 2.08,
+      "origin": "source_status:scoutingstats",
+      "pick": "home",
+      "reason": "void_event",
+      "rule": "pfc_f56fe4a2759e9b17b9bdb116"
     }
   ],
-  "voided_event_picks": 8
+  "voided_event_picks": 10
 }

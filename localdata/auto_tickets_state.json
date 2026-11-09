@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 455.1353439999999,
   "cycle_base": 456.154568,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-09",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Pineto vs Vis Pesaro",
+              "pick": "HOME",
+              "prob": 0.5216780852389002,
+              "odds": 1.69,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Pineto",
+                "Vis Pesaro"
+              ]
+            },
+            {
+              "match": "Kristiansund vs V\u00e5lerenga",
+              "pick": "AWAY",
+              "prob": 0.42426009178608226,
+              "odds": 2.35,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Kristiansund",
+                "V\u00e5lerenga"
+              ]
+            }
+          ],
+          "odds": 3.97,
+          "stake_pct": 56.8919
+        },
+        {
+          "legs": [
+            {
+              "match": "Plymouth Parkway vs Berkhamsted",
+              "pick": "HOME",
+              "prob": 0.4827106912356187,
+              "odds": 2.05,
+              "result": null,
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Plymouth Parkway",
+                "Berkhamsted"
+              ]
+            },
+            {
+              "match": "Hvidovre vs Aarhus Fremad",
+              "pick": "HOME",
+              "prob": 0.46575084049308935,
+              "odds": 1.9434,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Hvidovre",
+                "Aarhus Fremad"
+              ]
+            }
+          ],
+          "odds": 3.98,
+          "stake_pct": 56.8919
+        }
+      ],
+      "staked_pct": 113.7838
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
