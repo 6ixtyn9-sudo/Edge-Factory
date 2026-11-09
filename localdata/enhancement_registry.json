@@ -1,13 +1,13 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-09",
+ "generated_at": "2026-11-10",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
-   "hits": 15,
-   "inv_price_sum": 12.727613189277916,
+   "hits": 17,
+   "inv_price_sum": 14.057949179748627,
    "multi_n": 0,
-   "n": 20,
+   "n": 22,
    "processed": [
     "2026-08-04|Newport County vs Roma|away_over_05@v1",
     "2026-08-06|Valur Reykjavik vs FC Nordsjaelland|away_over_05@v1",
@@ -80,9 +80,11 @@
     "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|away_over_05@v1",
     "2026-11-08|Sacramento Republic vs El Paso Locomotive|away_over_05@v1",
     "2026-11-08|Charleston Battery vs Hartford Athletic|away_over_05@v1",
-    "2026-11-08|Dallas vs Colorado Rapids|away_over_05@v1"
+    "2026-11-08|Dallas vs Colorado Rapids|away_over_05@v1",
+    "2026-11-09|CS Herediano vs Inter San Carlos|away_over_05@v1",
+    "2026-11-09|Quer\u00e9taro vs Puebla|away_over_05@v1"
    ],
-   "profit": 2.406,
+   "profit": 3.417,
    "records": [
     {
      "away": "Mixco",
@@ -651,6 +653,64 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Inter San Carlos",
+     "away_key": "intersancarlos",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.6274,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "CS Herediano",
+     "home_key": "csherediano",
+     "league": "Costa Rica,Primera Division Apertura",
+     "match": "CS Herediano vs Inter San Carlos",
+     "multi_source": false,
+     "price": 1.562,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-08T22:26:52.048154+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:30:00+00:00",
+      "league": "Costa Rica,Primera Division Apertura",
+      "price": 1.562,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.472236+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Puebla",
+     "away_key": "puebla",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.66,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "Quer\u00e9taro",
+     "home_key": "queretaro",
+     "league": "Liga MX",
+     "match": "Quer\u00e9taro vs Puebla",
+     "multi_source": false,
+     "price": 1.449,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-08T22:26:57.246309+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.449,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.536192+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -927,10 +987,10 @@
    "status_since": "2026-10-24"
   },
   "away_under_15@v1": {
-   "hits": 18,
-   "inv_price_sum": 11.415672586224622,
+   "hits": 19,
+   "inv_price_sum": 12.883475616527653,
    "multi_n": 0,
-   "n": 23,
+   "n": 25,
    "processed": [
     "2026-10-15|Nashville SC vs Sporting Kansas City|away_under_15@v1",
     "2026-10-16|Heerenveen vs Excelsior|away_under_15@v1",
@@ -954,9 +1014,11 @@
     "2026-11-07|Guadalupe FC vs ADR Jicaral|away_under_15@v1",
     "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|away_under_15@v1",
     "2026-11-08|Charleston Battery vs Hartford Athletic|away_under_15@v1",
-    "2026-11-08|Dallas vs Colorado Rapids|away_under_15@v1"
+    "2026-11-08|Dallas vs Colorado Rapids|away_under_15@v1",
+    "2026-11-09|CS Herediano vs Inter San Carlos|away_under_15@v1",
+    "2026-11-09|Quer\u00e9taro vs Puebla|away_under_15@v1"
    ],
-   "profit": 25.541,
+   "profit": 24.861,
    "records": [
     {
      "away": "Sporting Kansas City",
@@ -1561,6 +1623,64 @@
       "source": "oddspapi"
      },
      "recorded_at": "2026-11-08T22:51:26.663158+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Inter San Carlos",
+     "away_key": "intersancarlos",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.7304,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "CS Herediano",
+     "home_key": "csherediano",
+     "league": "Costa Rica,Primera Division Apertura",
+     "match": "CS Herediano vs Inter San Carlos",
+     "multi_source": false,
+     "price": 1.32,
+     "price_context": {
+      "book": "1xbet",
+      "captured_at": "2026-11-08T22:26:52.048154+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:30:00+00:00",
+      "league": "Costa Rica,Primera Division Apertura",
+      "price": 1.32,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.488057+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Puebla",
+     "away_key": "puebla",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7085,
+     "date": "2026-11-09",
+     "hit": false,
+     "home": "Quer\u00e9taro",
+     "home_key": "queretaro",
+     "league": "Liga MX",
+     "match": "Quer\u00e9taro vs Puebla",
+     "multi_source": false,
+     "price": 1.408,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-08T22:26:57.246309+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.408,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.520055+00:00",
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
@@ -3323,10 +3443,10 @@
    "status_since": "2026-10-16"
   },
   "home_over_15@v1": {
-   "hits": 11,
-   "inv_price_sum": 11.175821709490853,
+   "hits": 13,
+   "inv_price_sum": 13.06243078076515,
    "multi_n": 0,
-   "n": 19,
+   "n": 22,
    "processed": [
     "2026-10-23|Atletico Nacional vs Deportivo Pasto|home_over_15@v1",
     "2026-10-23|Flamengo vs Estudiantes|home_over_15@v1",
@@ -3346,9 +3466,12 @@
     "2026-11-05|Puntarenas FC vs San Carlos|home_over_15@v1",
     "2026-11-06|Cruzeiro vs Bahia|home_over_15@v1",
     "2026-11-06|CD Marathon vs Platense FC|home_over_15@v1",
-    "2026-11-07|Guadalupe FC vs ADR Jicaral|home_over_15@v1"
+    "2026-11-07|Guadalupe FC vs ADR Jicaral|home_over_15@v1",
+    "2026-11-09|Antigua GFC vs Malacateco|home_over_15@v1",
+    "2026-11-09|CS Herediano vs Inter San Carlos|home_over_15@v1",
+    "2026-11-09|Universitario vs UCV Moquegua|home_over_15@v1"
    ],
-   "profit": -0.504,
+   "profit": -0.435,
    "records": [
     {
      "away": "Deportivo Pasto",
@@ -3900,6 +4023,93 @@
      "rule": "pfc_1607fec83282d02c5254c2bf",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Malacateco",
+     "away_key": "malacateco",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.7113,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "Antigua GFC",
+     "home_key": "antiguagfc",
+     "league": "Guatemala,Liga Nacional Apertura",
+     "match": "Antigua GFC vs Malacateco",
+     "multi_source": false,
+     "price": 1.68,
+     "price_context": {
+      "book": "netbet",
+      "captured_at": "2026-11-08T22:27:02.141762+00:00",
+      "contract_id": "pfc_fbf508b9c62bae8f281bb6e1",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:00:00+00:00",
+      "league": "Guatemala,Liga Nacional Apertura",
+      "price": 1.68,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.447522+00:00",
+     "rule": "pfc_fbf508b9c62bae8f281bb6e1",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Inter San Carlos",
+     "away_key": "intersancarlos",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.645,
+     "date": "2026-11-09",
+     "hit": false,
+     "home": "CS Herediano",
+     "home_key": "csherediano",
+     "league": "Costa Rica,Primera Division Apertura",
+     "match": "CS Herediano vs Inter San Carlos",
+     "multi_source": false,
+     "price": 1.75,
+     "price_context": {
+      "book": "bet3000",
+      "captured_at": "2026-11-08T22:26:52.048154+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:30:00+00:00",
+      "league": "Costa Rica,Primera Division Apertura",
+      "price": 1.75,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.496276+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "UCV Moquegua",
+     "away_key": "ucvmoquegua",
+     "bucket": "WATCHLIST_SUSPECT_PRICE",
+     "cohort_rate": 0.7706,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "Universitario",
+     "home_key": "universitario",
+     "league": "Primera Division",
+     "match": "Universitario vs UCV Moquegua",
+     "multi_source": false,
+     "price": 1.389,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-08T22:27:41.365746+00:00",
+      "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T01:30:00+00:00",
+      "league": "Primera Division",
+      "price": 1.389,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.552182+00:00",
+     "rule": "pfc_4a3e5fbac72b2ebef11632f0",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "status": "PAPER",
@@ -4392,10 +4602,10 @@
    "status_since": "2026-10-15"
   },
   "home_under_25@v1": {
-   "hits": 18,
-   "inv_price_sum": 18.61278616948677,
+   "hits": 20,
+   "inv_price_sum": 20.040480491441244,
    "multi_n": 0,
-   "n": 29,
+   "n": 31,
    "processed": [
     "2026-08-13|Shelbourne FC vs Ajax|home_under_25@v1",
     "2026-08-13|Dinamo Minsk vs Sporting Braga|home_under_25@v1",
@@ -4465,9 +4675,11 @@
     "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|home_under_25@v1",
     "2026-11-08|Sacramento Republic vs El Paso Locomotive|home_under_25@v1",
     "2026-11-08|Charleston Battery vs Hartford Athletic|home_under_25@v1",
-    "2026-11-08|Dallas vs Colorado Rapids|home_under_25@v1"
+    "2026-11-08|Dallas vs Colorado Rapids|home_under_25@v1",
+    "2026-11-09|CS Herediano vs Inter San Carlos|home_under_25@v1",
+    "2026-11-09|Quer\u00e9taro vs Puebla|home_under_25@v1"
    ],
-   "profit": -1.765,
+   "profit": -0.956,
    "records": [
     {
      "away": "Slovan Bratislava",
@@ -5297,6 +5509,64 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Inter San Carlos",
+     "away_key": "intersancarlos",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.6396,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "CS Herediano",
+     "home_key": "csherediano",
+     "league": "Costa Rica,Primera Division Apertura",
+     "match": "CS Herediano vs Inter San Carlos",
+     "multi_source": false,
+     "price": 1.476,
+     "price_context": {
+      "book": "caesars",
+      "captured_at": "2026-11-08T22:26:52.048154+00:00",
+      "contract_id": "pfc_642ac9053223500b638e3451",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:30:00+00:00",
+      "league": "Costa Rica,Primera Division Apertura",
+      "price": 1.476,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.480222+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Puebla",
+     "away_key": "puebla",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7264,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "Quer\u00e9taro",
+     "home_key": "queretaro",
+     "league": "Liga MX",
+     "match": "Quer\u00e9taro vs Puebla",
+     "multi_source": false,
+     "price": 1.333,
+     "price_context": {
+      "book": "kalshi",
+      "captured_at": "2026-11-08T22:26:57.246309+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.333,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.512256+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -5504,10 +5774,10 @@
    "status_since": "2026-10-24"
   },
   "match_over_15@v1": {
-   "hits": 41,
-   "inv_price_sum": 45.654248569240394,
-   "multi_n": 7,
-   "n": 55,
+   "hits": 44,
+   "inv_price_sum": 47.216563293881116,
+   "multi_n": 8,
+   "n": 58,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -5587,9 +5857,12 @@
     "2026-11-05|Puntarenas FC vs San Carlos|match_over_15@v1",
     "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|match_over_15@v1",
     "2026-11-08|Charleston Battery vs Hartford Athletic|match_over_15@v1",
-    "2026-11-08|Austin vs Portland Timbers|match_over_15@v1"
+    "2026-11-08|Austin vs Portland Timbers|match_over_15@v1",
+    "2026-11-09|Antigua GFC vs Malacateco|match_over_15@v1",
+    "2026-11-09|CS Herediano vs Inter San Carlos|match_over_15@v1",
+    "2026-11-09|Quer\u00e9taro vs Puebla|match_over_15@v1"
    ],
-   "profit": -4.075,
+   "profit": -0.745,
    "records": [
     {
      "away": "Aston Villa",
@@ -6436,6 +6709,63 @@
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Malacateco",
+     "away_key": "malacateco",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.8394,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "Antigua GFC",
+     "home_key": "antiguagfc",
+     "league": "Guatemala,Liga Nacional Apertura",
+     "match": "Antigua GFC vs Malacateco",
+     "multi_source": false,
+     "price": 1.31,
+     "price_context": {},
+     "recorded_at": "2026-11-09T23:07:17.464301+00:00",
+     "rule": "pfc_fbf508b9c62bae8f281bb6e1",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Inter San Carlos",
+     "away_key": "intersancarlos",
+     "bucket": "CERTIFIED_CLEAN",
+     "cohort_rate": 0.8103,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "CS Herediano",
+     "home_key": "csherediano",
+     "league": "Costa Rica,Primera Division Apertura",
+     "match": "CS Herediano vs Inter San Carlos",
+     "multi_source": false,
+     "price": 2.38,
+     "price_context": {},
+     "recorded_at": "2026-11-09T23:07:17.504201+00:00",
+     "rule": "pfc_642ac9053223500b638e3451",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Puebla",
+     "away_key": "puebla",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.7738,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "Quer\u00e9taro",
+     "home_key": "queretaro",
+     "league": "Liga MX",
+     "match": "Quer\u00e9taro vs Puebla",
+     "multi_source": true,
+     "price": 2.64,
+     "price_context": {},
+     "recorded_at": "2026-11-09T23:07:17.544245+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -6446,9 +6776,9 @@
   "match_over_25@v1": {
    "hits": 352,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 347.1278238968742,
+   "inv_price_sum": 347.6478446977062,
    "multi_n": 103,
-   "n": 533,
+   "n": 534,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -7226,9 +7556,10 @@
     "2026-11-05|Thun vs Hearts|match_over_25@v1",
     "2026-11-05|Sturm Graz vs NK Celje|match_over_25@v1",
     "2026-11-05|CD Olimpia vs Juticalpa|match_over_25@v1",
-    "2026-11-06|CD Marathon vs Platense FC|match_over_25@v1"
+    "2026-11-06|CD Marathon vs Platense FC|match_over_25@v1",
+    "2026-11-09|Antigua GFC vs Malacateco|match_over_25@v1"
    ],
-   "profit": 9.367,
+   "profit": 8.367,
    "records": [
     {
      "away": "Spartak Varna",
@@ -15654,6 +15985,35 @@
      "rule": "pfc_54fcf87604b73b87ee6c0a90",
      "source": "oddspapi",
      "stated": null
+    },
+    {
+     "away": "Malacateco",
+     "away_key": "malacateco",
+     "bucket": "CAUTION",
+     "cohort_rate": 0.6501,
+     "date": "2026-11-09",
+     "hit": false,
+     "home": "Antigua GFC",
+     "home_key": "antiguagfc",
+     "league": "Guatemala,Liga Nacional Apertura",
+     "match": "Antigua GFC vs Malacateco",
+     "multi_source": false,
+     "price": 1.923,
+     "price_context": {
+      "book": "polymarket",
+      "captured_at": "2026-11-08T22:27:02.141762+00:00",
+      "contract_id": "pfc_fbf508b9c62bae8f281bb6e1",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:00:00+00:00",
+      "league": "Guatemala,Liga Nacional Apertura",
+      "price": 1.923,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.456597+00:00",
+     "rule": "pfc_fbf508b9c62bae8f281bb6e1",
+     "source": "oddspapi",
+     "stated": null
     }
    ],
    "records_truncated": false,
@@ -16724,10 +17084,10 @@
    "status_since": "2026-10-24"
   },
   "match_under_35@v1": {
-   "hits": 9,
-   "inv_price_sum": 11.948339878910545,
+   "hits": 10,
+   "inv_price_sum": 12.627687704997502,
    "multi_n": 0,
-   "n": 21,
+   "n": 22,
    "processed": [
     "2026-10-23|Shamrock Rovers vs Sligo Rovers|match_under_35@v1",
     "2026-10-23|Al Faisaly vs Al Nassr|match_under_35@v1",
@@ -16749,9 +17109,10 @@
     "2026-11-07|Atl\u00e9tico San Luis vs Ju\u00e1rez|match_under_35@v1",
     "2026-11-08|Sacramento Republic vs El Paso Locomotive|match_under_35@v1",
     "2026-11-08|Charleston Battery vs Hartford Athletic|match_under_35@v1",
-    "2026-11-08|Austin vs Portland Timbers|match_under_35@v1"
+    "2026-11-08|Austin vs Portland Timbers|match_under_35@v1",
+    "2026-11-09|Quer\u00e9taro vs Puebla|match_under_35@v1"
    ],
-   "profit": -2.463,
+   "profit": -1.991,
    "records": [
     {
      "away": "Sligo Rovers",
@@ -17358,6 +17719,35 @@
       "source": "oddspapi"
      },
      "recorded_at": "2026-11-08T22:51:26.685670+00:00",
+     "rule": "pfc_f56fe4a2759e9b17b9bdb116",
+     "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Puebla",
+     "away_key": "puebla",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6663,
+     "date": "2026-11-09",
+     "hit": true,
+     "home": "Quer\u00e9taro",
+     "home_key": "queretaro",
+     "league": "Liga MX",
+     "match": "Quer\u00e9taro vs Puebla",
+     "multi_source": false,
+     "price": 1.472,
+     "price_context": {
+      "book": "4casters",
+      "captured_at": "2026-11-08T22:26:57.246309+00:00",
+      "contract_id": "pfc_f56fe4a2759e9b17b9bdb116",
+      "decision_at": "2026-11-09T00:29:02+02:00",
+      "kickoff": "2026-11-09T00:00:00+00:00",
+      "league": "Liga MX",
+      "price": 1.472,
+      "selection": "home",
+      "source": "oddspapi"
+     },
+     "recorded_at": "2026-11-09T23:07:17.528287+00:00",
      "rule": "pfc_f56fe4a2759e9b17b9bdb116",
      "source": "oddspapi",
      "stated": null

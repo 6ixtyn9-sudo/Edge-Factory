@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-11-09T22:07:12",
+  "generated_at": "2026-11-10T01:10:35",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 455.1353439999999,
-  "multiple": 4.551353439999999,
+  "bank_pct": 398.2434439999999,
+  "multiple": 3.982434439999999,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 70,
+  "bet_days": 71,
   "accas": {
     "wins": 83,
-    "losses": 58
+    "losses": 59
   },
   "open_slips": [
     {
       "date": "2026-11-09",
-      "staked_pct": 113.7838
+      "staked_pct": 56.8919
     }
   ],
   "events": [
@@ -2244,6 +2244,51 @@
       ],
       "bank_pct": 455.1353,
       "close_pct": 455.1353
+    },
+    {
+      "date": "2026-11-09",
+      "staked_pct": 56.8919,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 3.97,
+          "won": false,
+          "stake_pct": 56.8919,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Pineto vs Vis Pesaro",
+              "pick": "HOME",
+              "odds": 1.69,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Pineto",
+                "Vis Pesaro"
+              ]
+            },
+            {
+              "match": "Kristiansund vs V\u00e5lerenga",
+              "pick": "AWAY",
+              "odds": 2.35,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Kristiansund",
+                "V\u00e5lerenga"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 398.2434,
+      "close_pct": 398.2434
     }
   ]
 }
