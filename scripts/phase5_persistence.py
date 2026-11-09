@@ -725,6 +725,16 @@ def _retain_ticket_decisions(repo: Path, financial_blobs: dict) -> dict[str, byt
                 if result.returncode == 0:
                     head_blob, head_relative = result.stdout, alternative
                     break
+            # Exact committed single-stream gzip bytes need no decompression:
+            # there is no cache/HEAD difference to reconcile, and the raw
+            # committed evidence is retained unchanged.
+            if (head_blob is not None and head_relative == relative
+                    and head_blob == cached and path.suffix == ".gz"
+                    and not cached.startswith(b"EDGEFACTORY_TICKET_RECEIPT_PARTS_V1" + bytes([10]))):
+                retained[relative] = cached
+                print(f"restore: retained exact committed receipt without decompression: "
+                      f"{path.name}", flush=True)
+                continue
             try:
                 # Seed the canonical destination with HEAD, even when HEAD is
                 # legacy JSON and an untracked gzip alias survives git clean.
@@ -868,7 +878,10 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
         values = {}
         invalid = False
         damaged = []
-        for label, blob in (("committed", head), ("cached", cache)):
+        identical_copies = head is not None and cache is not None and head == cache
+        inputs = (("committed", head),) if identical_copies else (
+            ("committed", head), ("cached", cache))
+        for label, blob in inputs:
             if blob is None:
                 continue
             try:
@@ -881,6 +894,11 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
             except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
                 invalid = True
                 damaged.append(blob)
+        if identical_copies:
+            if "committed" in values:
+                values["cached"] = values["committed"]
+            else:
+                damaged.append(cache)
         if state_file and damaged and values:
             # Only exact, receipt-acknowledged corrupt bytes can be superseded
             # by a validated later-day recovery. Never clear an integrity block.
@@ -921,7 +939,9 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
         chosen = head if head is not None else cache
         if not invalid and head is not None and cache is not None:
             h, c = values["committed"], values["cached"]
-            if state_file:
+            if state_file and head == cache:
+                chosen = head
+            elif state_file:
                 try:
                     chosen = json.dumps(ml_paper.merge_pending_states(h, c), sort_keys=True,
                                         allow_nan=False).encode()
