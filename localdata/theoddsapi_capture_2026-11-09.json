@@ -1,84 +1,11 @@
 {
   "added": 0,
-  "attempted": 10,
-  "attempted_fixtures": [
-    {
-      "away": "UCV Moquegua",
-      "date": "2026-11-09",
-      "home": "Universitario",
-      "kickoff": "2026-11-09T01:30:00Z",
-      "league": "Primera Division"
-    },
-    {
-      "away": "Malacateco",
-      "date": "2026-11-09",
-      "home": "Antigua GFC",
-      "kickoff": "01:00",
-      "league": "Guatemala,Liga Nacional Apertura"
-    },
-    {
-      "away": "Real Espana",
-      "date": "2026-11-09",
-      "home": "Atletico Independiente",
-      "kickoff": "2026-11-09T00:15:00+01:00",
-      "league": "Honduras: Liga Nacional"
-    },
-    {
-      "away": "Inter San Carlos",
-      "date": "2026-11-09",
-      "home": "CS Herediano",
-      "kickoff": "01:30",
-      "league": "Costa Rica,Primera Division Apertura"
-    },
-    {
-      "away": "Vis Pesaro",
-      "date": "2026-11-09",
-      "home": "Pineto",
-      "kickoff": "2026-11-09T19:30:00Z",
-      "league": "Serie C: Girone B"
-    },
-    {
-      "away": "Puebla",
-      "date": "2026-11-09",
-      "home": "Quer\u00e9taro",
-      "kickoff": "2026-11-09T00:00:00Z",
-      "league": "Liga MX"
-    },
-    {
-      "away": "Berkhamsted",
-      "date": "2026-11-09",
-      "home": "Plymouth Parkway",
-      "kickoff": "2026-11-09T19:30:00Z",
-      "league": "FA Cup"
-    },
-    {
-      "away": "Aarhus Fremad",
-      "date": "2026-11-09",
-      "home": "Hvidovre",
-      "kickoff": "2026-11-09T18:00:00Z",
-      "league": "First Division"
-    },
-    {
-      "away": "Barletta",
-      "date": "2026-11-09",
-      "home": "Foggia",
-      "kickoff": "2026-11-09T19:30:00Z",
-      "league": "Serie C: Girone C"
-    },
-    {
-      "away": "2 de Mayo",
-      "date": "2026-11-09",
-      "home": "Sportivo Luque\u00f1o",
-      "kickoff": "2026-11-09T22:30:00Z",
-      "league": "Division 1"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 12,
-  "captured_at": "2026-11-09T17:09:44+00:00",
+  "captured_at": "2026-11-09T19:58:06+00:00",
   "date": "2026-11-09",
-  "due_reasons": {
-    "first_at": 10
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -95,36 +22,24 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 2
+    "priced": 2,
+    "retry_cooldown": 10
   },
   "skipped": [
+    "Universitario|UCV Moquegua (retry cooldown (6h after failed attempt))",
+    "Antigua GFC|Malacateco (retry cooldown (6h after failed attempt))",
+    "Atletico Independiente|Real Espana (retry cooldown (6h after failed attempt))",
+    "CS Herediano|Inter San Carlos (retry cooldown (6h after failed attempt))",
+    "Pineto|Vis Pesaro (retry cooldown (6h after failed attempt))",
+    "Quer\u00e9taro|Puebla (retry cooldown (6h after failed attempt))",
+    "Plymouth Parkway|Berkhamsted (retry cooldown (6h after failed attempt))",
+    "Hvidovre|Aarhus Fremad (retry cooldown (6h after failed attempt))",
     "Leon|Guadalajara-Chivas (priced)",
-    "Kristiansund|V\u00e5lerenga (priced)"
+    "Kristiansund|V\u00e5lerenga (priced)",
+    "Foggia|Barletta (retry cooldown (6h after failed attempt))",
+    "Sportivo Luque\u00f1o|2 de Mayo (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Universitario vs UCV Moquegua (league not covered: Primera Division)",
-    "Antigua GFC vs Malacateco (league not covered: Guatemala,Liga Nacional Apertura)",
-    "Atletico Independiente vs Real Espana (league not covered: Honduras: Liga Nacional)",
-    "CS Herediano vs Inter San Carlos (league not covered: Costa Rica,Primera Division Apertura)",
-    "Pineto vs Vis Pesaro (league not covered: Serie C: Girone B)",
-    "Quer\u00e9taro vs Puebla (league not covered: Liga MX)",
-    "Plymouth Parkway vs Berkhamsted (league not covered: FA Cup)",
-    "Hvidovre vs Aarhus Fremad (league not covered: First Division)",
-    "Foggia vs Barletta (league not covered: Serie C: Girone C)",
-    "Sportivo Luque\u00f1o vs 2 de Mayo (league not covered: Division 1)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Costa Rica,Primera Division Apertura": 1,
-    "league not covered: Division 1": 1,
-    "league not covered: FA Cup": 1,
-    "league not covered: First Division": 1,
-    "league not covered: Guatemala,Liga Nacional Apertura": 1,
-    "league not covered: Honduras: Liga Nacional": 1,
-    "league not covered: Liga MX": 1,
-    "league not covered: Primera Division": 1,
-    "league not covered: Serie C: Girone B": 1,
-    "league not covered: Serie C: Girone C": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
