@@ -1,5 +1,5 @@
 {
-  "attempted": 3,
+  "attempted": 6,
   "attempted_fixtures": [
     {
       "avg_p": 52.167808523890024,
@@ -12,11 +12,31 @@
       "w_score": 0.5405
     },
     {
-      "avg_p": 48.27106912356187,
-      "away": "Berkhamsted",
+      "avg_p": 42.426009178608226,
+      "away": "V\u00e5lerenga",
       "date": "2026-11-09",
-      "home": "Plymouth Parkway",
-      "league": "FA Cup",
+      "home": "Kristiansund",
+      "league": "Eliteserien",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 42.425357689192836,
+      "away": "Barletta",
+      "date": "2026-11-09",
+      "home": "Foggia",
+      "league": "Serie C: Girone C",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 35.7983682983683,
+      "away": "2 de Mayo",
+      "date": "2026-11-09",
+      "home": "Sportivo Luque\u00f1o",
+      "league": "Division 1",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
@@ -30,29 +50,41 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
+    },
+    {
+      "avg_p": 48.27106912356187,
+      "away": "Berkhamsted",
+      "date": "2026-11-09",
+      "home": "Plymouth Parkway",
+      "league": "FA Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 3,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
+  "cache_only": 3,
   "candidate_fixtures": 6,
-  "captured_at": "2026-11-09T01:37:56.942647+00:00",
+  "captured_at": "2026-11-09T04:39:37.905155+00:00",
   "date": "2026-11-09",
-  "deferred_fixtures": 3,
-  "errors": [],
-  "fixtures_with_rows": 3,
+  "deferred_fixtures": 0,
+  "errors": [
+    "BetExplorerCoolingDown"
+  ],
+  "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 15,
+  "market_requests": 10,
   "match_detail": {
-    "bookmakers": 45,
+    "bookmakers": 69,
     "challenge_pages": 0,
-    "fixtures": 4,
-    "market_rows": 99,
-    "markets": 22,
-    "named_rows": 99,
+    "fixtures": 6,
+    "market_rows": 149,
+    "markets": 34,
+    "named_rows": 149,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -74,11 +106,21 @@
       "w_score": 0.5405
     },
     {
-      "avg_p": 48.27106912356187,
-      "away": "Berkhamsted",
+      "avg_p": 42.426009178608226,
+      "away": "V\u00e5lerenga",
       "date": "2026-11-09",
-      "home": "Plymouth Parkway",
-      "league": "FA Cup",
+      "home": "Kristiansund",
+      "league": "Eliteserien",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 42.425357689192836,
+      "away": "Barletta",
+      "date": "2026-11-09",
+      "home": "Foggia",
+      "league": "Serie C: Girone C",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
@@ -92,10 +134,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.5405
+    },
+    {
+      "avg_p": 48.27106912356187,
+      "away": "Berkhamsted",
+      "date": "2026-11-09",
+      "home": "Plymouth Parkway",
+      "league": "FA Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
     }
   ],
-  "requests": 24,
-  "rows": 9,
+  "requests": 18,
+  "rows": 15,
   "schema": 1,
   "status": "ok"
 }
