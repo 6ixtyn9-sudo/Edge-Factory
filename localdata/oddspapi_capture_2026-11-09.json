@@ -6,19 +6,19 @@
     "day": "2026-11-09",
     "keys": 3,
     "month_budget": 750,
-    "month_spent": 223,
-    "remaining_today": 2,
-    "spent_today": 23
+    "month_spent": 225,
+    "remaining_today": 0,
+    "spent_today": 25
   },
-  "budget_deferred": 35,
-  "captured_at": "2026-11-09T10:26:06+00:00",
+  "budget_deferred": 42,
+  "captured_at": "2026-11-09T13:39:21+00:00",
   "date": "2026-11-09",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
   "excluded_srl_fixtures": 1,
   "excluded_wrong_sport_fixtures": 0,
-  "fixtures": 90,
-  "future_slate_fixtures": 2,
+  "fixtures": 70,
+  "future_slate_fixtures": 0,
   "keys": 3,
   "market_census": "oddspapi_market_census_2026-11.json",
   "market_census_distinct": 0,
@@ -30,14 +30,14 @@
     "expected": {},
     "loss_or_diagnosis": {}
   },
-  "pending_fixtures": 35,
+  "pending_fixtures": 42,
   "quoted_fixtures": [],
-  "reserved_requests": 2,
+  "reserved_requests": 0,
   "rows": 0,
   "schema": 1,
   "slate_candidate_fixtures": 6,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 0,
+  "slate_priority_fixtures": 2,
   "slate_provider_overlap_fixtures": 2,
   "slate_unmatched_fixtures": [
     {
@@ -66,5 +66,5 @@
     }
   ],
   "source": "oddspapi_odds",
-  "status": "reserved"
+  "status": "budget"
 }
