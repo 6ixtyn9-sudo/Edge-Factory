@@ -44,6 +44,11 @@ Deliberately retained, with no age limit:
   rolling ledgers/state, monthly source archives (*_YYYY-MM.csv.gz),
   warehouse data, and any file whose name does not match a known pattern.
 
+Any filename cited by ``docs/operator/DATED-CLAIMS.md`` is retained with no
+age limit. A citation is a durability contract: the prune must never break a
+claim it cannot see. On 2026-11-09 the 30-day pass deleted eleven 2026-10-10
+files, one of them cited by six ledger rows, and all six stopped resolving.
+
 The CLI first rolls older durable daily families into
 ``archive/<family>/<year>/<month>/`` without changing their bytes. The same
 30-day hot window is retained at the root; readers support both layouts.
@@ -168,6 +173,29 @@ def morning_archive_is_redundant(root: Path, day: str) -> bool:
     return dump(with_morning) == dump(without_morning)
 
 
+DATED_CLAIMS_LEDGER = ROOT / "docs" / "operator" / "DATED-CLAIMS.md"
+_CITED_PATH = re.compile(r"localdata/[A-Za-z0-9_./-]+\.(?:json|jsonl|txt|md|csv|gz)")
+
+
+def cited_basenames(ledger: Path = DATED_CLAIMS_LEDGER) -> set[str] | None:
+    """Basenames the dated-claims ledger cites as backing evidence.
+
+    A cited path is what ``tests/test_dated_claims_ledger.py`` asserts resolves,
+    so pruning one manufactures a broken claim. Returns ``None`` when the
+    ledger exists but cannot be read: unknown citations must not authorise a
+    deletion, so the caller prunes nothing at all (``morning_archive_is_
+    redundant`` fails closed in exactly the same way).
+    """
+    try:
+        text = ledger.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return set()  # no ledger, no citations
+    except OSError as exc:
+        print(f"  citation guard unavailable ({exc}); pruning nothing")
+        return None
+    return {Path(match).name for match in _CITED_PATH.findall(text)}
+
+
 def files_to_prune(
     root: Path = LOCALDATA,
     *,
@@ -181,9 +209,12 @@ def files_to_prune(
     today = today or date.today()
     cutoff = today - timedelta(days=keep_days - 1)  # oldest retained day
     stale: list[Path] = []
+    cited = cited_basenames()
     for path in sorted(root.iterdir()) if root.exists() else ():
         if not path.is_file() or path.is_symlink():
             continue
+        if cited is None or path.name in cited:
+            continue  # cited evidence, or the ledger could not be read
         day = _telemetry_day(path.name)
         if day is not None:
             if day < cutoff:
