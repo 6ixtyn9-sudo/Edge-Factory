@@ -1,73 +1,7 @@
 {
-  "added": 42276,
-  "attempted": 13,
-  "attempted_fixtures": [
-    {
-      "away": "Inter San Carlos",
-      "fixture_id": "id1002709272053696",
-      "home": "CS Herediano"
-    },
-    {
-      "away": "Club Puebla",
-      "fixture_id": "id1002746472055312",
-      "home": "Queretaro FC"
-    },
-    {
-      "away": "CD Malacateco",
-      "fixture_id": "id1002739675445662",
-      "home": "Antigua GFC"
-    },
-    {
-      "away": "Forward Madison FC",
-      "fixture_id": "id1002816576363118",
-      "home": "Charlotte Independence"
-    },
-    {
-      "away": "Bubali",
-      "fixture_id": "id1005104676143432",
-      "home": "Sporting Aruba"
-    },
-    {
-      "away": "Red Bull Bragantino SP",
-      "fixture_id": "id1001528176411418",
-      "home": "SC Corinthians SP"
-    },
-    {
-      "away": "Puerto Rico Surf SC",
-      "fixture_id": "id1004876976570470",
-      "home": "Taurinos Cayey"
-    },
-    {
-      "away": "CD Fuerte San Francisco Morazan",
-      "fixture_id": "id1002708873075384",
-      "home": "CD FAS Santa Ana"
-    },
-    {
-      "away": "Cancun FC",
-      "fixture_id": "id1002738276367028",
-      "home": "Piratas Veracruz"
-    },
-    {
-      "away": "Llaneros FC",
-      "fixture_id": "id1002707076084772",
-      "home": "Alianza FC Valledupar"
-    },
-    {
-      "away": "CD Moquegua",
-      "fixture_id": "id1000040671936242",
-      "home": "Universitario de Deportes"
-    },
-    {
-      "away": "CD Choloma",
-      "fixture_id": "id1002741476321142",
-      "home": "CD Marathon San Pedro Sula"
-    },
-    {
-      "away": "CD Guadalajara",
-      "fixture_id": "id1002746472055314",
-      "home": "Club Leon"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "budget": {
     "day": "2026-11-09",
     "keys": 3,
@@ -76,234 +10,29 @@
     "remaining_today": 10,
     "spent_today": 15
   },
-  "captured_at": "2026-11-08T22:27:56+00:00",
+  "captured_at": "2026-11-09T01:37:56+00:00",
   "date": "2026-11-09",
   "errors": [],
   "excluded_nonprematch_fixtures": 0,
   "excluded_srl_fixtures": 1,
   "excluded_wrong_sport_fixtures": 0,
   "fixtures": 101,
-  "future_slate_fixtures": 2,
   "keys": 3,
-  "market_census": "oddspapi_market_census_2026-11.json",
-  "market_census_distinct": 594,
-  "markets": {
-    "1x2": 5559,
-    "btts": 3068,
-    "ou_0.5": 1145,
-    "ou_0.75": 124,
-    "ou_1": 291,
-    "ou_1.25": 186,
-    "ou_1.5": 2315,
-    "ou_1.75": 362,
-    "ou_2": 608,
-    "ou_2.25": 756,
-    "ou_2.5": 2958,
-    "ou_2.75": 1298,
-    "ou_3": 1390,
-    "ou_3.25": 934,
-    "ou_3.5": 2878,
-    "ou_3.75": 484,
-    "ou_4": 462,
-    "ou_4.25": 282,
-    "ou_4.5": 2105,
-    "ou_4.75": 170,
-    "ou_5": 234,
-    "ou_5.25": 128,
-    "ou_5.5": 1167,
-    "ou_5.75": 97,
-    "ou_6": 85,
-    "ou_6.25": 85,
-    "ou_6.5": 405,
-    "ou_6.75": 50,
-    "ou_7": 50,
-    "ou_7.25": 50,
-    "ou_7.5": 106,
-    "ou_7.75": 45,
-    "ou_8": 45,
-    "ou_8.25": 45,
-    "ou_8.5": 62,
-    "tt_away_0.5": 1914,
-    "tt_away_0.75": 64,
-    "tt_away_1": 150,
-    "tt_away_1.25": 70,
-    "tt_away_1.5": 1762,
-    "tt_away_1.75": 44,
-    "tt_away_2": 72,
-    "tt_away_2.25": 8,
-    "tt_away_2.5": 988,
-    "tt_away_2.75": 4,
-    "tt_away_3.5": 415,
-    "tt_away_4.5": 76,
-    "tt_away_5.5": 16,
-    "tt_home_0.5": 1248,
-    "tt_home_0.75": 40,
-    "tt_home_1": 92,
-    "tt_home_1.25": 48,
-    "tt_home_1.5": 1950,
-    "tt_home_1.75": 76,
-    "tt_home_2": 102,
-    "tt_home_2.25": 56,
-    "tt_home_2.5": 1626,
-    "tt_home_2.75": 12,
-    "tt_home_3": 62,
-    "tt_home_3.25": 10,
-    "tt_home_3.5": 957,
-    "tt_home_3.75": 6,
-    "tt_home_4": 16,
-    "tt_home_4.5": 278,
-    "tt_home_5.5": 85
-  },
-  "markets_source": "fetch",
-  "matched": 13,
-  "odds_vocabulary": "unchanged",
-  "parse_skips": {
-    "alt_line_skipped": 16,
-    "invalid_price": 1,
-    "market_inactive": 6557,
-    "market_unsupported_cards": 1475,
-    "market_unsupported_clean_sheet": 909,
-    "market_unsupported_corners": 9223,
-    "market_unsupported_correct_score": 3642,
-    "market_unsupported_double_chance": 2128,
-    "market_unsupported_draw_no_bet": 1649,
-    "market_unsupported_early_payout": 175,
-    "market_unsupported_handicap": 16120,
-    "market_unsupported_market_type": 11043,
-    "market_unsupported_non_goal": 532,
-    "market_unsupported_odd_even": 3215,
-    "market_unsupported_period": 53397,
-    "market_unsupported_win_to_nil": 1928,
-    "outcome_inactive": 3089
-  },
-  "parse_skips_classified": {
-    "expected": {
-      "alt_line_skipped": 16,
-      "market_inactive": 6557,
-      "outcome_inactive": 3089
-    },
-    "loss_or_diagnosis": {
-      "invalid_price": 1,
-      "market_unsupported_cards": 1475,
-      "market_unsupported_clean_sheet": 909,
-      "market_unsupported_corners": 9223,
-      "market_unsupported_correct_score": 3642,
-      "market_unsupported_double_chance": 2128,
-      "market_unsupported_draw_no_bet": 1649,
-      "market_unsupported_early_payout": 175,
-      "market_unsupported_handicap": 16120,
-      "market_unsupported_market_type": 11043,
-      "market_unsupported_non_goal": 532,
-      "market_unsupported_odd_even": 3215,
-      "market_unsupported_period": 53397,
-      "market_unsupported_win_to_nil": 1928
-    }
-  },
-  "pending_fixtures": 13,
-  "quoted_fixtures": [
-    {
-      "away": "Inter San Carlos",
-      "fixture_id": "id1002709272053696",
-      "home": "CS Herediano"
-    },
-    {
-      "away": "Club Puebla",
-      "fixture_id": "id1002746472055312",
-      "home": "Queretaro FC"
-    },
-    {
-      "away": "CD Malacateco",
-      "fixture_id": "id1002739675445662",
-      "home": "Antigua GFC"
-    },
-    {
-      "away": "Forward Madison FC",
-      "fixture_id": "id1002816576363118",
-      "home": "Charlotte Independence"
-    },
-    {
-      "away": "Bubali",
-      "fixture_id": "id1005104676143432",
-      "home": "Sporting Aruba"
-    },
-    {
-      "away": "Red Bull Bragantino SP",
-      "fixture_id": "id1001528176411418",
-      "home": "SC Corinthians SP"
-    },
-    {
-      "away": "Puerto Rico Surf SC",
-      "fixture_id": "id1004876976570470",
-      "home": "Taurinos Cayey"
-    },
-    {
-      "away": "CD Fuerte San Francisco Morazan",
-      "fixture_id": "id1002708873075384",
-      "home": "CD FAS Santa Ana"
-    },
-    {
-      "away": "Cancun FC",
-      "fixture_id": "id1002738276367028",
-      "home": "Piratas Veracruz"
-    },
-    {
-      "away": "Llaneros FC",
-      "fixture_id": "id1002707076084772",
-      "home": "Alianza FC Valledupar"
-    },
-    {
-      "away": "CD Moquegua",
-      "fixture_id": "id1000040671936242",
-      "home": "Universitario de Deportes"
-    },
-    {
-      "away": "CD Choloma",
-      "fixture_id": "id1002741476321142",
-      "home": "CD Marathon San Pedro Sula"
-    },
-    {
-      "away": "CD Guadalajara",
-      "fixture_id": "id1002746472055314",
-      "home": "Club Leon"
-    }
-  ],
-  "reserved_requests": 2,
-  "rows": 42276,
+  "markets": {},
+  "matched": 0,
+  "pending_fixtures": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
-  "slate_candidate_fixtures": 12,
+  "slate_candidate_fixtures": 6,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 2,
-  "slate_provider_overlap_fixtures": 4,
+  "slate_provider_overlap_fixtures": 2,
   "slate_unmatched_fixtures": [
-    {
-      "away": "UCV Moquegua",
-      "home": "Universitario",
-      "league": "Primera Division",
-      "normalized_pair": "ucv moquegua|universitario"
-    },
-    {
-      "away": "Malacateco",
-      "home": "Antigua GFC",
-      "league": "Guatemala,Liga Nacional Apertura",
-      "normalized_pair": "antigua gfc|malacateco"
-    },
-    {
-      "away": "Real Espana",
-      "home": "Atletico Independiente",
-      "league": "Honduras: Liga Nacional",
-      "normalized_pair": "atletico independiente|real espana"
-    },
     {
       "away": "Vis Pesaro",
       "home": "Pineto",
       "league": "Serie C: Girone B",
       "normalized_pair": "pineto|vis pesaro"
-    },
-    {
-      "away": "Guadalajara-Chivas",
-      "home": "Leon",
-      "league": "Mexico,Liga Mx Apertura",
-      "normalized_pair": "guadalajara-chivas|leon"
     },
     {
       "away": "V\u00e5lerenga",
@@ -324,5 +53,6 @@
       "normalized_pair": "2 de mayo|sportivo luqueno"
     }
   ],
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "nothing_pending"
 }
