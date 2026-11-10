@@ -321,7 +321,7 @@ jobs:
         # together they still do NOT establish parity, and a green step
         # proves nothing about MATCH (continue-on-error stays true).
         if: always() && inputs.mode != 'remine_only'
-        timeout-minutes: 20
+        timeout-minutes: 5
         continue-on-error: true
         run: |
           set +e
