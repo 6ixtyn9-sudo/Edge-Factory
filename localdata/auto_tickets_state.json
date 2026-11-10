@@ -1,56 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 398.2434439999999,
+  "bank": 341.3515439999999,
   "cycle_base": 456.154568,
-  "open_slips": [
-    {
-      "date": "2026-11-09",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Plymouth Parkway vs Berkhamsted",
-              "pick": "HOME",
-              "prob": 0.4827106912356187,
-              "odds": 2.05,
-              "result": null,
-              "market": "1x2",
-              "price_book": "betexplorer_best",
-              "price_source": "betexplorer_odds",
-              "fixture_key": [
-                "2026-11-09",
-                "Plymouth Parkway",
-                "Berkhamsted"
-              ]
-            },
-            {
-              "match": "Hvidovre vs Aarhus Fremad",
-              "pick": "HOME",
-              "prob": 0.46575084049308935,
-              "odds": 1.9434,
-              "result": null,
-              "market": "1x2",
-              "price_book": "Pinnacle",
-              "price_source": "pinnapi_odds",
-              "fixture_key": [
-                "2026-11-09",
-                "Hvidovre",
-                "Aarhus Fremad"
-              ]
-            }
-          ],
-          "odds": 3.98,
-          "stake_pct": 56.8919,
-          "results": [
-            "conflict",
-            "win"
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 56.8919
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -2264,7 +2216,7 @@
     },
     {
       "date": "2026-11-09",
-      "staked_pct": 56.8919,
+      "staked_pct": 113.7838,
       "returned_pct": 0.0,
       "accas": [
         {
@@ -2302,10 +2254,46 @@
               ]
             }
           ]
+        },
+        {
+          "odds": 3.98,
+          "won": false,
+          "stake_pct": 56.8919,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Plymouth Parkway vs Berkhamsted",
+              "pick": "HOME",
+              "odds": 2.05,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Plymouth Parkway",
+                "Berkhamsted"
+              ]
+            },
+            {
+              "match": "Hvidovre vs Aarhus Fremad",
+              "pick": "HOME",
+              "odds": 1.9434,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Hvidovre",
+                "Aarhus Fremad"
+              ]
+            }
+          ]
         }
       ],
-      "bank_pct": 398.2434,
-      "close_pct": 398.2434
+      "bank_pct": 341.3515,
+      "close_pct": 341.3515
     }
   ],
   "events": [

@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-10T09:49:57",
+  "generated_at": "2026-11-10T08:14:35",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 398.2434439999999,
-  "multiple": 3.982434439999999,
+  "bank_pct": 341.3515439999999,
+  "multiple": 3.413515439999999,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
   "bet_days": 71,
   "accas": {
     "wins": 83,
-    "losses": 59
+    "losses": 60
   },
-  "open_slips": [
-    {
-      "date": "2026-11-09",
-      "staked_pct": 56.8919
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -2247,7 +2242,7 @@
     },
     {
       "date": "2026-11-09",
-      "staked_pct": 56.8919,
+      "staked_pct": 113.7838,
       "returned_pct": 0.0,
       "accas": [
         {
@@ -2285,10 +2280,46 @@
               ]
             }
           ]
+        },
+        {
+          "odds": 3.98,
+          "won": false,
+          "stake_pct": 56.8919,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Plymouth Parkway vs Berkhamsted",
+              "pick": "HOME",
+              "odds": 2.05,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "betexplorer_best",
+              "price_source": "betexplorer_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Plymouth Parkway",
+                "Berkhamsted"
+              ]
+            },
+            {
+              "match": "Hvidovre vs Aarhus Fremad",
+              "pick": "HOME",
+              "odds": 1.9434,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-09",
+                "Hvidovre",
+                "Aarhus Fremad"
+              ]
+            }
+          ]
         }
       ],
-      "bank_pct": 398.2434,
-      "close_pct": 398.2434
+      "bank_pct": 341.3515,
+      "close_pct": 341.3515
     }
   ]
 }
