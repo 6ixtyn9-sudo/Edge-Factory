@@ -8,7 +8,7 @@ RECORD   4W / 41L   (8.9% hit)   over 6 bet-days
 OPEN     0 held accas · 1 unresolved leg results
 PROFIT   -39.6% of capital · -39.611 paper units · ROI -60.7%
 DRAWDOWN 39.611 paper units / 39.6% (ticket-date marks; pending at cost)
-DAYS     6 bet / 2 no-bet · 0 missed freeze
+DAYS     6 bet / 3 no-bet · 0 missed freeze
 
 BET-DAYS, oldest first (6 of 6)
   Staked/returned/net cover settled accas only; pending stakes are separate.
@@ -30,16 +30,16 @@ NOTES
   All retained history is included; no regime reset or old-loss exclusion.
 
 LEARNING & EVIDENCE
-EVIDENCE 59 resolved selected observations / 40 fixtures · pool 80 resolved fixtures
-LEARNING last decision: 80 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
+EVIDENCE 59 resolved selected observations / 40 fixtures · pool 88 resolved fixtures
+LEARNING last decision: 88 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 DATA     17115 ineligible-quote candidate occurrences excluded from paired errors; not a count of independent fixtures
          Historical P&L and frozen predictions unchanged; not a clean-refit backtest.
-FORWARD POOL: Brier 0.2131 → 0.2169 · log loss 0.6122 → 0.6211 (base → adjusted)
-        adjusted worse on both metrics; 80 fixtures / 1222 observations
+FORWARD POOL: Brier 0.2136 → 0.2169 · log loss 0.6136 → 0.6213 (base → adjusted)
+        adjusted worse on both metrics; 88 fixtures / 1602 observations
 FORWARD SELECTED: Brier 0.2239 → 0.2380 · log loss 0.6482 → 0.6746 (base → adjusted)
         adjusted worse on both metrics; 40 fixtures / 59 observations
         Fixture-weighted, overlapping samples; descriptive, not significance or a policy gate.
-PAIRED   80 fixtures / 1146 observations · Brier model 0.2180 / source 0.2137
+PAIRED   88 fixtures / 1526 observations · Brier model 0.2179 / source 0.2141
 
 DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.
              Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.
