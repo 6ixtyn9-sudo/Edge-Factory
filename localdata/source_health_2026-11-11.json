@@ -26,18 +26,18 @@
       "status": "empty"
     },
     "betclan": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
+      "blocker": null,
+      "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
     "betexplorer": {
       "be_matched": 0,
-      "be_raw": 0,
+      "be_raw": 3,
       "be_usable": 0,
       "blocker": "no pre-build BetExplorer rows",
       "can_fetch_today": false,
@@ -48,7 +48,7 @@
       "join_matched_rows": 0,
       "join_miss_counts": {},
       "reason": null,
-      "status": "absent"
+      "status": "empty"
     },
     "betminer": {
       "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
@@ -85,7 +85,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 1
+        "fixture_key_miss": 1
       },
       "reason": null,
       "status": "cache_only"
@@ -140,19 +140,22 @@
       "status": null
     },
     "oddspapi_odds": {
-      "blocker": "no pre-build OddsPAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_miss_counts": {
+        "fixture_key_miss": 13954,
+        "market_unsupported": 4964
+      },
       "op_matched": 0,
-      "op_raw": 0,
-      "op_usable": 0,
-      "reason": "http_200_zero_rows_after_parse",
-      "status": "empty"
+      "op_raw": 18918,
+      "op_usable": 18918,
+      "reason": null,
+      "status": "cache_only"
     },
     "pinnapi_odds": {
       "auth_attempts": [],
@@ -171,7 +174,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 11516
+        "fixture_key_miss": 11516
       },
       "pa_matched": 0,
       "pa_raw": 11516,
@@ -213,12 +216,12 @@
       "status": null
     },
     "scoutingstats": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
-      "can_price": false,
-      "can_vote": false,
+      "blocker": null,
+      "can_fetch_today": true,
+      "can_price": true,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
@@ -252,7 +255,7 @@
           "unsupported_market:double_chance": 3,
           "unsupported_market:draw_no_bet": 2
         },
-        "card_fixture_count": 0,
+        "card_fixture_count": 2,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 79,
@@ -267,7 +270,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 2
+        "fixture_key_miss": 2
       },
       "reason": "cache_rows_pending_join",
       "sa_matched": 0,
@@ -298,12 +301,12 @@
       "status": null
     },
     "statarea": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
+      "blocker": null,
+      "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
@@ -343,12 +346,12 @@
       "status": null
     },
     "zulubet": {
-      "blocker": "not reliably fetched/observed today",
-      "can_fetch_today": false,
-      "can_price": false,
-      "can_vote": false,
+      "blocker": null,
+      "can_fetch_today": true,
+      "can_price": true,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
       "status": null
     }
