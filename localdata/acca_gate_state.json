@@ -1,5 +1,5 @@
 {
-  "as_of_last": "2026-11-10",
+  "as_of_last": "2026-11-11",
   "blocked": {
     "BETEXPLORER_RESCUE": {
       "since": "2026-10-15",
@@ -21,11 +21,11 @@
       "z": 0.905
     },
     "NAMED_BOOKMAKER_PRICE": {
-      "hit_rate": 0.625,
-      "implied_rate": 0.625,
-      "n": 832,
-      "roi": 0.0009,
-      "z": 0.001
+      "hit_rate": 0.6204,
+      "implied_rate": 0.6246,
+      "n": 822,
+      "roi": -0.0075,
+      "z": -0.256
     },
     "SCOUTINGSTATS_SOLE": {
       "hit_rate": 0.625,
@@ -35,18 +35,18 @@
       "z": -1.037
     },
     "SOURCE_FALLBACK": {
-      "hit_rate": 0.5556,
-      "implied_rate": 0.5063,
-      "n": 9,
-      "roi": 0.1389,
-      "z": 0.299
+      "hit_rate": 0.5,
+      "implied_rate": 0.508,
+      "n": 8,
+      "roi": 0.0275,
+      "z": -0.046
     },
     "SUSPECT_ALIAS_FUZZY": {
-      "hit_rate": 0.6,
-      "implied_rate": 0.5791,
-      "n": 10,
-      "roi": 0.031,
-      "z": 0.139
+      "hit_rate": 0.5,
+      "implied_rate": 0.5993,
+      "n": 8,
+      "roi": -0.2213,
+      "z": -0.599
     }
   }
 }
