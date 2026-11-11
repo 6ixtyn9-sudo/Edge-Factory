@@ -1,0 +1,235 @@
+{
+  "added": 12995,
+  "attempted": 6,
+  "attempted_fixtures": [
+    {
+      "away": "Brooklyn FC",
+      "fixture_id": "id1004343972322468",
+      "home": "DC Power FC"
+    },
+    {
+      "away": "SC Internacional RS",
+      "fixture_id": "id1004709776643574",
+      "home": "CR Flamengo RJ"
+    },
+    {
+      "away": "Inter Santa Tecla",
+      "fixture_id": "id1002708873075392",
+      "home": "CD FAS Santa Ana"
+    },
+    {
+      "away": "Deportivo Toluca FC",
+      "fixture_id": "id1002895376595256",
+      "home": "Club America"
+    },
+    {
+      "away": "Tigres FC",
+      "fixture_id": "id1000123876204164",
+      "home": "Deportes Quindio"
+    },
+    {
+      "away": "Chorrillo FC",
+      "fixture_id": "id1001949076708740",
+      "home": "Panama City FC"
+    }
+  ],
+  "budget": {
+    "day": "2026-11-12",
+    "keys": 3,
+    "month_budget": 750,
+    "month_spent": 291,
+    "remaining_today": 9,
+    "spent_today": 16
+  },
+  "budget_deferred": 2,
+  "captured_at": "2026-11-11T22:29:49+00:00",
+  "date": "2026-11-12",
+  "errors": [],
+  "excluded_nonprematch_fixtures": 0,
+  "excluded_srl_fixtures": 13,
+  "excluded_wrong_sport_fixtures": 0,
+  "fixtures": 122,
+  "future_slate_fixtures": 10,
+  "keys": 3,
+  "market_census": "oddspapi_market_census_2026-11.json",
+  "market_census_distinct": 431,
+  "markets": {
+    "1x2": 2424,
+    "btts": 1052,
+    "ou_0.5": 412,
+    "ou_0.75": 52,
+    "ou_1": 108,
+    "ou_1.25": 102,
+    "ou_1.5": 798,
+    "ou_1.75": 180,
+    "ou_2": 250,
+    "ou_2.25": 206,
+    "ou_2.5": 1082,
+    "ou_2.75": 214,
+    "ou_3": 246,
+    "ou_3.25": 160,
+    "ou_3.5": 924,
+    "ou_3.75": 132,
+    "ou_4": 144,
+    "ou_4.25": 112,
+    "ou_4.5": 714,
+    "ou_4.75": 62,
+    "ou_5": 64,
+    "ou_5.25": 56,
+    "ou_5.5": 368,
+    "ou_5.75": 44,
+    "ou_6": 44,
+    "ou_6.25": 24,
+    "ou_6.5": 128,
+    "ou_6.75": 20,
+    "ou_7": 20,
+    "ou_7.25": 20,
+    "ou_7.5": 37,
+    "ou_7.75": 20,
+    "ou_8": 20,
+    "ou_8.25": 20,
+    "ou_8.5": 29,
+    "tt_away_0.5": 535,
+    "tt_away_0.75": 54,
+    "tt_away_1": 90,
+    "tt_away_1.25": 36,
+    "tt_away_1.5": 314,
+    "tt_away_1.75": 2,
+    "tt_away_2": 48,
+    "tt_away_2.5": 119,
+    "tt_away_3.5": 17,
+    "tt_away_4.5": 1,
+    "tt_away_5.5": 1,
+    "tt_home_0.5": 200,
+    "tt_home_0.75": 20,
+    "tt_home_1": 64,
+    "tt_home_1.25": 26,
+    "tt_home_1.5": 458,
+    "tt_home_1.75": 10,
+    "tt_home_2": 42,
+    "tt_home_2.25": 4,
+    "tt_home_2.5": 350,
+    "tt_home_2.75": 2,
+    "tt_home_3": 16,
+    "tt_home_3.25": 22,
+    "tt_home_3.5": 223,
+    "tt_home_3.75": 16,
+    "tt_home_4": 16,
+    "tt_home_4.5": 16,
+    "tt_home_5.5": 3,
+    "tt_home_6.5": 2
+  },
+  "markets_source": "fetch",
+  "matched": 6,
+  "odds_vocabulary": "unchanged",
+  "parse_skips": {
+    "market_inactive": 273,
+    "market_unsupported_clean_sheet": 136,
+    "market_unsupported_corners": 817,
+    "market_unsupported_correct_score": 909,
+    "market_unsupported_double_chance": 752,
+    "market_unsupported_draw_no_bet": 497,
+    "market_unsupported_early_payout": 45,
+    "market_unsupported_handicap": 3369,
+    "market_unsupported_market_type": 2285,
+    "market_unsupported_non_goal": 104,
+    "market_unsupported_odd_even": 728,
+    "market_unsupported_period": 10367,
+    "market_unsupported_win_to_nil": 280,
+    "outcome_inactive": 1032
+  },
+  "parse_skips_classified": {
+    "expected": {
+      "market_inactive": 273,
+      "outcome_inactive": 1032
+    },
+    "loss_or_diagnosis": {
+      "market_unsupported_clean_sheet": 136,
+      "market_unsupported_corners": 817,
+      "market_unsupported_correct_score": 909,
+      "market_unsupported_double_chance": 752,
+      "market_unsupported_draw_no_bet": 497,
+      "market_unsupported_early_payout": 45,
+      "market_unsupported_handicap": 3369,
+      "market_unsupported_market_type": 2285,
+      "market_unsupported_non_goal": 104,
+      "market_unsupported_odd_even": 728,
+      "market_unsupported_period": 10367,
+      "market_unsupported_win_to_nil": 280
+    }
+  },
+  "pending_fixtures": 8,
+  "quoted_fixtures": [
+    {
+      "away": "Brooklyn FC",
+      "fixture_id": "id1004343972322468",
+      "home": "DC Power FC"
+    },
+    {
+      "away": "SC Internacional RS",
+      "fixture_id": "id1004709776643574",
+      "home": "CR Flamengo RJ"
+    },
+    {
+      "away": "Inter Santa Tecla",
+      "fixture_id": "id1002708873075392",
+      "home": "CD FAS Santa Ana"
+    },
+    {
+      "away": "Deportivo Toluca FC",
+      "fixture_id": "id1002895376595256",
+      "home": "Club America"
+    },
+    {
+      "away": "Tigres FC",
+      "fixture_id": "id1000123876204164",
+      "home": "Deportes Quindio"
+    },
+    {
+      "away": "Chorrillo FC",
+      "fixture_id": "id1001949076708740",
+      "home": "Panama City FC"
+    }
+  ],
+  "reserved_requests": 10,
+  "rows": 12995,
+  "schema": 1,
+  "slate_candidate_fixtures": 15,
+  "slate_match_mode": "exact_normalized_pair",
+  "slate_priority_fixtures": 0,
+  "slate_provider_overlap_fixtures": 10,
+  "slate_unmatched_fixtures": [
+    {
+      "away": "Lithuania (u19)",
+      "home": "Portugal (u19)",
+      "league": "International,Euro U19 Qualification League \u00c3\u008e\u00c2\u0091 R2 Grp. 3",
+      "normalized_pair": "lithuania (u19)|portugal (u19)"
+    },
+    {
+      "away": "Spain",
+      "home": "Czech Republic",
+      "league": "UEFA Nations League",
+      "normalized_pair": "czech republic|spain"
+    },
+    {
+      "away": "Arsenal W",
+      "home": "Barcelona W",
+      "league": "UEFA Women's Champions League",
+      "normalized_pair": "arsenal w|barcelona w"
+    },
+    {
+      "away": "Real Betis",
+      "home": "Navalcarnero",
+      "league": "Copa Del Rey",
+      "normalized_pair": "navalcarnero|real betis"
+    },
+    {
+      "away": "Municipal Lime\u00f1o",
+      "home": "\u00c1guila",
+      "league": "El Salvador: Primera Division",
+      "normalized_pair": "aguila|municipal limeno"
+    }
+  ],
+  "source": "oddspapi_odds",
+  "status": "reserved"
+}
