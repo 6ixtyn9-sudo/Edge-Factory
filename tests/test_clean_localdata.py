@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 import json
 from datetime import date
 from unittest.mock import patch
@@ -264,3 +271,61 @@ def test_shadow_ledgers_are_deliberately_not_committed():
     pruned = {p.pattern.split("_shadow_")[0][1:]
               for p in TELEMETRY_PATTERNS if "_shadow_" in p.pattern}
     assert len(pruned) == 7, pruned
+
+
+def test_archive_and_prune_preserves_ledger_cited_odds_cache(tmp_path):
+    """Ledger-cited odds cache remains resolvable through archiving and pruning.
+
+    Unrelated, uncited old telemetry retains its standard cleanup behavior.
+    """
+    repo = tmp_path / "repo"
+    localdata = repo / "localdata"
+    localdata.mkdir(parents=True)
+    docs = repo / "docs" / "operator"
+    docs.mkdir(parents=True)
+    ledger = docs / "DATED-CLAIMS.md"
+
+    # Old dated odds-cache fixture and a ledger row citing it
+    odds_cache_name = f"betexplorer_odds_cache_{OLD}.json"
+    odds_cache_path = localdata / odds_cache_name
+    odds_payload = b'{"date": "' + OLD.encode() + b'", "fixtures": {"test": 1}}\n'
+    odds_cache_path.write_bytes(odds_payload)
+
+    ledger_content = (
+        "# Dated claims ledger\n\n"
+        "| file | claim | backing |\n"
+        "|---|---|---|\n"
+        f"| `tests/test_odds.py` | odds verified | `localdata/{odds_cache_name}` |\n"
+    )
+    ledger.write_text(ledger_content, encoding="utf-8")
+
+    # Unrelated, uncited old telemetry (one pruned by clean_localdata, one archived)
+    old_capture = localdata / f"betexplorer_capture_{OLD}.json"
+    old_capture.write_text("old capture")
+    uncited_odds_name = "betexplorer_odds_cache_2026-07-15.json"
+    uncited_odds = localdata / uncited_odds_name
+    uncited_odds.write_text("uncited odds")
+
+    # Recent telemetry that should remain untouched
+    recent_capture = localdata / f"betexplorer_capture_{RECENT}.json"
+    recent_capture.write_text("recent capture")
+
+    # Exercise the archive-and-prune flow via main
+    assert main(["--localdata", str(localdata), "--today", TODAY.isoformat()]) == 0
+
+    # Assert the exact cited path still exists with unchanged bytes
+    assert odds_cache_path.exists()
+    assert odds_cache_path.read_bytes() == odds_payload
+    # Ensure it was not moved into archive
+    archived_cited = localdata / "archive" / "betexplorer_odds_cache" / "2026" / "08" / odds_cache_name
+    assert not archived_cited.exists()
+
+    # Verify unrelated, uncited old telemetry retains its intended cleanup behavior
+    assert not old_capture.exists()  # pruned by clean_localdata
+    assert not uncited_odds.exists()  # rolled over into archive
+    archived_uncited = localdata / "archive" / "betexplorer_odds_cache" / "2026" / "07" / uncited_odds_name
+    assert archived_uncited.exists()
+    assert archived_uncited.read_text() == "uncited odds"
+
+    # Recent telemetry retains its active state
+    assert recent_capture.exists()

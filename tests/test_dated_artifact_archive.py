@@ -353,3 +353,38 @@ def test_printed_main_slice_seed_is_identical_after_archival(tmp_path, monkeypat
         settled={}, path=tmp_path / "after.jsonl", today_text=TODAY.isoformat())
     assert after == before and missing_after == missing_before
     assert (tmp_path / "before.jsonl").read_bytes() == (tmp_path / "after.jsonl").read_bytes()
+
+
+def test_archive_dated_artifacts_preserves_ledger_cited_files_and_fails_closed(tmp_path):
+    repo = tmp_path / "repo"
+    localdata = repo / "localdata"
+    localdata.mkdir(parents=True)
+    docs = repo / "docs" / "operator"
+    docs.mkdir(parents=True)
+    ledger = docs / "DATED-CLAIMS.md"
+
+    cited_name = f"betexplorer_odds_cache_{OLD}.json"
+    uncited_name = "betexplorer_odds_cache_2026-07-15.json"
+    cited_path = localdata / cited_name
+    uncited_path = localdata / uncited_name
+    cited_path.write_bytes(b"cited")
+    uncited_path.write_bytes(b"uncited")
+
+    ledger.write_text(f"| `test` | claim | `localdata/{cited_name}` |\n", encoding="utf-8")
+
+    moved = archive_dated_artifacts(localdata, today=TODAY)
+    assert cited_path.exists() and cited_path.read_bytes() == b"cited"
+    assert not uncited_path.exists()
+    assert dated_archive_path(localdata, uncited_name).read_bytes() == b"uncited"
+    assert moved == [(uncited_path, dated_archive_path(localdata, uncited_name))]
+
+    # Fail closed if ledger cannot be read
+    ledger.chmod(0o000)
+    try:
+        another_old = localdata / "picks_2026-07-01.json"
+        another_old.write_bytes(b"[]")
+        moved_on_error = archive_dated_artifacts(localdata, today=TODAY)
+        assert moved_on_error == []
+        assert another_old.exists()
+    finally:
+        ledger.chmod(0o644)

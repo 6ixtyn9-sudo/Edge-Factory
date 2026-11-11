@@ -13,6 +13,7 @@ import math
 import unicodedata
 from functools import lru_cache
 from datetime import date, datetime
+from pathlib import Path
 
 def finite_probability(value, *, scale=1.0) -> float | None:
     """Validate an observed probability without coercion or imputation."""
@@ -1205,8 +1206,60 @@ def dated_artifact_files(localdata, pattern):
     return [dated_artifact_path(base, name) for name in sorted(names)]
 
 
+DATED_CLAIMS_LEDGER = Path(__file__).resolve().parent.parent.parent / "docs" / "operator" / "DATED-CLAIMS.md"
+_CITED_PATH = re.compile(r"localdata/[A-Za-z0-9_./-]+\.(?:json|jsonl|txt|md|csv|gz)")
+
+
+def resolve_dated_claims_ledger(localdata=None, ledger=None):
+    if ledger is not None:
+        return Path(ledger)
+    if localdata is not None:
+        base = Path(localdata)
+        cand = base.parent / "docs" / "operator" / "DATED-CLAIMS.md"
+        if cand.exists():
+            return cand
+        cand2 = base / "docs" / "operator" / "DATED-CLAIMS.md"
+        if cand2.exists():
+            return cand2
+    return DATED_CLAIMS_LEDGER
+
+
+def cited_basenames(ledger=None):
+    """Basenames the dated-claims ledger cites as backing evidence.
+
+    Returns None when the ledger exists but cannot be read (fails closed).
+    Returns an empty set when the ledger does not exist.
+    """
+    path = resolve_dated_claims_ledger(ledger=ledger)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return set()
+    except OSError as exc:
+        print(f"  citation guard unavailable ({exc}); failing closed")
+        return None
+    return {Path(match).name for match in _CITED_PATH.findall(text)}
+
+
+def cited_paths(ledger=None):
+    """Relative paths the dated-claims ledger cites as backing evidence.
+
+    Returns None when the ledger exists but cannot be read (fails closed).
+    Returns an empty set when the ledger does not exist.
+    """
+    path = resolve_dated_claims_ledger(ledger=ledger)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return set()
+    except OSError as exc:
+        print(f"  citation guard unavailable ({exc}); failing closed")
+        return None
+    return set(_CITED_PATH.findall(text))
+
+
 def archive_dated_artifacts(localdata, *, today=None, keep_days=DATED_ARCHIVE_KEEP_DAYS,
-                            dry_run=False):
+                            dry_run=False, ledger=None):
     """Rollover old known daily files, without compression, pruning or replacement.
 
     Cooperating maintenance calls share a lock. Copy/fsync/link publishes an
@@ -1228,6 +1281,10 @@ def archive_dated_artifacts(localdata, *, today=None, keep_days=DATED_ARCHIVE_KE
     cutoff = today - timedelta(days=keep_days - 1)
     if not base.exists():
         return []
+    ledger_path = resolve_dated_claims_ledger(base, ledger)
+    cited = cited_basenames(ledger_path)
+    if cited is None:
+        return []
     latest_cards = {}
     for path in base.iterdir():
         match = _DATED_ARTIFACT_RE.fullmatch(path.name)
@@ -1239,6 +1296,7 @@ def archive_dated_artifacts(localdata, *, today=None, keep_days=DATED_ARCHIVE_KE
     for source in sorted(base.iterdir()):
         target = dated_archive_path(base, source.name)
         if (target is not None and source.name not in latest_cards.values()
+                and source.name not in cited
                 and source.is_file() and not source.is_symlink()
                 and date.fromisoformat(_DATED_ARTIFACT_RE.fullmatch(source.name)["day"]) < cutoff):
             planned.append((source, target))

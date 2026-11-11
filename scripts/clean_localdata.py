@@ -71,6 +71,11 @@ import shutil
 import sys
 import tempfile
 from datetime import date, timedelta
+from edgefactory.util import (
+    cited_basenames as _cited_basenames,
+    cited_paths,
+    resolve_dated_claims_ledger,
+)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -177,23 +182,18 @@ DATED_CLAIMS_LEDGER = ROOT / "docs" / "operator" / "DATED-CLAIMS.md"
 _CITED_PATH = re.compile(r"localdata/[A-Za-z0-9_./-]+\.(?:json|jsonl|txt|md|csv|gz)")
 
 
-def cited_basenames(ledger: Path = DATED_CLAIMS_LEDGER) -> set[str] | None:
+def cited_basenames(ledger: Path | None = None) -> set[str] | None:
     """Basenames the dated-claims ledger cites as backing evidence.
 
-    A cited path is what ``tests/test_dated_claims_ledger.py`` asserts resolves,
-    so pruning one manufactures a broken claim. Returns ``None`` when the
+    A cited path is what tests/test_dated_claims_ledger.py asserts resolves,
+    so pruning one manufactures a broken claim. Returns None when the
     ledger exists but cannot be read: unknown citations must not authorise a
-    deletion, so the caller prunes nothing at all (``morning_archive_is_
-    redundant`` fails closed in exactly the same way).
+    deletion, so the caller prunes nothing at all (morning_archive_is_
+    redundant fails closed in exactly the same way).
     """
-    try:
-        text = ledger.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return set()  # no ledger, no citations
-    except OSError as exc:
-        print(f"  citation guard unavailable ({exc}); pruning nothing")
-        return None
-    return {Path(match).name for match in _CITED_PATH.findall(text)}
+    if ledger is None:
+        ledger = DATED_CLAIMS_LEDGER
+    return _cited_basenames(ledger)
 
 
 def files_to_prune(
@@ -201,6 +201,7 @@ def files_to_prune(
     *,
     keep_days: int = DEFAULT_KEEP_DAYS,
     today: date | None = None,
+    ledger: Path | None = None,
 ) -> list[Path]:
     """Return old known telemetry files; never unknown or durable data."""
     if keep_days < 1:
@@ -209,7 +210,8 @@ def files_to_prune(
     today = today or date.today()
     cutoff = today - timedelta(days=keep_days - 1)  # oldest retained day
     stale: list[Path] = []
-    cited = cited_basenames()
+    ledger_path = resolve_dated_claims_ledger(root, ledger)
+    cited = cited_basenames(ledger_path)
     for path in sorted(root.iterdir()) if root.exists() else ():
         if not path.is_file() or path.is_symlink():
             continue
@@ -233,9 +235,10 @@ def clean_localdata(
     keep_days: int = DEFAULT_KEEP_DAYS,
     today: date | None = None,
     dry_run: bool = False,
+    ledger: Path | None = None,
 ) -> list[Path]:
     """Delete (or with ``dry_run`` only list) stale telemetry; return paths."""
-    removed = files_to_prune(root, keep_days=keep_days, today=today)
+    removed = files_to_prune(root, keep_days=keep_days, today=today, ledger=ledger)
     for path in removed:
         print(f"  {'would remove' if dry_run else 'removing'} stale telemetry: {path.name}")
         if not dry_run:
@@ -254,6 +257,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="directory to clean (default: repo localdata/)")
     parser.add_argument("--dry-run", action="store_true",
                         help="list what would be removed without deleting")
+    parser.add_argument("--ledger", type=Path, default=None,
+                        help="dated-claims ledger path (default: auto-detected)")
     args = parser.parse_args(argv)
     print(f"Cleaning dated localdata telemetry (keeping {args.keep_days} days) ...")
     # Archive durable daily families before the old telemetry-pruning pass.
@@ -261,10 +266,12 @@ def main(argv: list[str] | None = None) -> int:
     # have allowed deletion. Public pruning helpers retain their old contract.
     from edgefactory.util import archive_dated_artifacts
     archived = archive_dated_artifacts(args.localdata, keep_days=args.keep_days,
-                                       today=args.today, dry_run=args.dry_run)
+                                       today=args.today, dry_run=args.dry_run,
+                                       ledger=args.ledger)
     print(f"  {'would archive' if args.dry_run else 'archived'} {len(archived)} dated artifacts")
     removed = clean_localdata(args.localdata, keep_days=args.keep_days,
-                              today=args.today, dry_run=args.dry_run)
+                              today=args.today, dry_run=args.dry_run,
+                              ledger=args.ledger)
     remaining = sum(1 for _ in args.localdata.iterdir()) if args.localdata.exists() else 0
     verb = "Would remove" if args.dry_run else "Removed"
     print(f"Done. {verb} {len(removed)} file(s); {remaining} entries in {args.localdata.name}/.")

@@ -22,7 +22,7 @@ from typing import Any
 
 # The workflow invokes this script directly without PYTHONPATH.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from edgefactory.util import (archive_dated_artifacts, dated_archive_path, dated_artifact_path,
+from edgefactory.util import (archive_dated_artifacts, dated_archive_path, dated_artifact_path, cited_paths,
                               ticket_receipt_files, ticket_receipt_path, ticket_receipt_bytes,
                               compact_ticket_receipts, write_ticket_receipt,
                               read_ticket_receipt, freeze_timestamp_matches, encode_ticket_receipt_files)
@@ -995,6 +995,18 @@ def _retain_ml_paper_evidence(repo: Path) -> dict[str, bytes]:
     return retained
 
 
+def _validate_dated_claims(repo: Path | str) -> None:
+    """Ensure every backing file cited by DATED-CLAIMS.md exists on disk."""
+    repo = Path(repo)
+    ledger = repo / "docs" / "operator" / "DATED-CLAIMS.md"
+    paths = cited_paths(ledger)
+    if paths is None:
+        raise ValueError("dated claims ledger could not be read")
+    missing = [p for p in sorted(paths) if not (repo / p).exists()]
+    if missing:
+        raise ValueError(f"dated claims evidence missing: {missing}")
+
+
 def _validate_cached_dated_archives(repo):
     """Check the cache/HEAD union BEFORE checkout or clean can destroy a copy.
 
@@ -1282,8 +1294,9 @@ def persist_localdata(
         compact_ticket_receipts(repo / "localdata")
         archived = archive_dated_artifacts(repo / "localdata")
         print(f"DATED_ARCHIVE rolled_over={len(archived)}", flush=True)
+        _validate_dated_claims(repo)
     except (OSError, ValueError) as exc:
-        reason = f"ticket receipt storage validation failed: {exc}"
+        reason = f"storage validation failed: {exc}"
         _warn_not_persisted(reason)
         return {"status": "not_persisted", "reason": reason}
     # Raw candidate ledgers can exceed GitHub's per-blob limit in one day.
