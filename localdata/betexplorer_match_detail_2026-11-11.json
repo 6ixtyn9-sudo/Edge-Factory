@@ -1,7 +1,508 @@
 {
-  "captured_at": "2026-11-11T01:52:57.023442+00:00",
+  "captured_at": "2026-11-11T13:25:00.433925+00:00",
   "date": "2026-11-11",
   "fixtures": {
+    "2026-11-11|isidrometapn|platense": {
+      "away": "Platense Municipal",
+      "best_1x2": {
+        "odd1": 1.48,
+        "odd2": 5.6,
+        "oddx": 4.2
+      },
+      "captured_at": "2026-11-11T13:25:00.433548+00:00",
+      "data_dt": [
+        11,
+        11,
+        2026,
+        2,
+        0
+      ],
+      "event_id": "p2vJk60t",
+      "home": "Metapan",
+      "kickoff": "02:00",
+      "kickoff_date": "2026-11-11",
+      "league": "El Salvador: Primera Division",
+      "market_failures": [],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.48,
+            4.2,
+            5.6
+          ],
+          "average_by_line": {
+            "0": [
+              1.48,
+              4.2,
+              5.6
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:36",
+                "2026-11-11T01:36",
+                "2026-11-11T01:32"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up",
+                "up"
+              ],
+              "odds": [
+                1.48,
+                4.2,
+                5.6
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ah": {
+          "average": null,
+          "average_by_line": {
+            "-0.50": [
+              1.48,
+              2.42
+            ],
+            "-1.00": [
+              1.74,
+              1.9
+            ],
+            "-1.50": [
+              2.23,
+              1.54
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0",
+            "-0.50",
+            "-1.00",
+            "-1.50"
+          ],
+          "named_rows": 4,
+          "rows": [
+            {
+              "best": false,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:25",
+                "2026-11-11T01:25"
+              ],
+              "line": "0",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.29,
+                3.1
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:36",
+                "2026-11-11T01:36"
+              ],
+              "line": "-0.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.48,
+                2.42
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:36",
+                "2026-11-11T01:36"
+              ],
+              "line": "-1.00",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.74,
+                1.9
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:36",
+                "2026-11-11T01:36"
+              ],
+              "line": "-1.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                2.23,
+                1.54
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 4
+        },
+        "bts": {
+          "average": [
+            1.77,
+            1.87
+          ],
+          "average_by_line": {
+            "0": [
+              1.77,
+              1.87
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "Yes",
+            "No"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:36",
+                "2026-11-11T01:36"
+              ],
+              "line": "0",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.77,
+                1.87
+              ],
+              "pos": [
+                "y",
+                "n"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "dc": {
+          "average": [
+            1.12,
+            1.18,
+            2.42
+          ],
+          "average_by_line": {
+            "0": [
+              1.12,
+              1.18,
+              2.42
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1X",
+            "12",
+            "X2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:32",
+                "2026-11-11T01:36",
+                "2026-11-11T01:36"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.12,
+                1.18,
+                2.42
+              ],
+              "pos": [
+                "10",
+                "12",
+                "02"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ha": {
+          "average": [
+            1.17,
+            4.0
+          ],
+          "average_by_line": {
+            "0": [
+              1.17,
+              4.0
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:36",
+                "2026-11-11T01:36"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.17,
+                4.0
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ou": {
+          "average": null,
+          "average_by_line": {
+            "2.00": [
+              1.29,
+              3.1
+            ],
+            "2.50": [
+              1.64,
+              2.05
+            ],
+            "3.00": [
+              2.05,
+              1.63
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "2.00",
+            "2.50",
+            "3.00",
+            "ou"
+          ],
+          "named_rows": 4,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:32",
+                "2026-11-11T01:32"
+              ],
+              "line": "2.00",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.29,
+                3.1
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:32",
+                "2026-11-11T01:32"
+              ],
+              "line": "2.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.64,
+                2.05
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:32",
+                "2026-11-11T01:36"
+              ],
+              "line": "3.00",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                2.05,
+                1.63
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-11T01:32",
+                "2026-11-11T01:32"
+              ],
+              "line": "ou",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.64,
+                2.05
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 4
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/el-salvador/primera-division/metapan-platense-municipal/p2vJk60t/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110734,
+        "page_sha256": "ccf2ee0c07341e24190981afc0631b761726c8b9f46c9b5578fae5c755913cf7",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "1"
+    },
     "2026-11-11|vietnam|chinesetaipei": {
       "away": "Chinese Taipei",
       "best_1x2": {

@@ -1,6 +1,16 @@
 {
-  "attempted": 1,
+  "attempted": 2,
   "attempted_fixtures": [
+    {
+      "avg_p": 66.0,
+      "away": "Platense",
+      "date": "2026-11-11",
+      "home": "Isidro Metap\u00e1n",
+      "league": "El-Salvador Primera Division",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
     {
       "avg_p": 82.00486982581008,
       "away": "Chinese Taipei",
@@ -18,21 +28,21 @@
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
   "cache_only": 1,
-  "candidate_fixtures": 1,
-  "captured_at": "2026-11-11T10:36:54.812646+00:00",
+  "candidate_fixtures": 2,
+  "captured_at": "2026-11-11T13:24:25.364057+00:00",
   "date": "2026-11-11",
   "deferred_fixtures": 0,
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 18,
+    "bookmakers": 24,
     "challenge_pages": 0,
-    "fixtures": 1,
-    "market_rows": 40,
-    "markets": 6,
-    "named_rows": 40,
+    "fixtures": 2,
+    "market_rows": 52,
+    "markets": 12,
+    "named_rows": 52,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -41,8 +51,18 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 0,
+  "network_attempted": 1,
   "quoted_fixtures": [
+    {
+      "avg_p": 66.0,
+      "away": "Platense",
+      "date": "2026-11-11",
+      "home": "Isidro Metap\u00e1n",
+      "league": "El-Salvador Primera Division",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
     {
       "avg_p": 82.00486982581008,
       "away": "Chinese Taipei",
@@ -54,8 +74,8 @@
       "w_score": 0.5405
     }
   ],
-  "requests": 0,
-  "rows": 3,
+  "requests": 9,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }
