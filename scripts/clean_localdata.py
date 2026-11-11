@@ -226,6 +226,26 @@ def files_to_prune(
         if (morning_day is not None and morning_day < cutoff
                 and morning_archive_is_redundant(root, morning_day.isoformat())):
             stale.append(path)
+
+    # ML paper intermediate timestamped run receipts (autobets_ML_<DATE>_<TIMESTAMP>.json).
+    # Prune runs older than the retention window; canonical autobets_ML_<DATE>.json is kept.
+    ml_receipt_dir = root / "phase5_reconciliation" / "ml_paper_receipts"
+    if ml_receipt_dir.is_dir():
+        ts_pattern = re.compile(rf"^autobets_ML_{_DATE}_\d{{8}}T\d{{12}}Z\.json$")
+        for path in sorted(ml_receipt_dir.iterdir()):
+            if not path.is_file() or path.is_symlink():
+                continue
+            if cited is None or path.name in cited:
+                continue
+            match = ts_pattern.match(path.name)
+            if match:
+                try:
+                    file_day = date.fromisoformat(match.group("day"))
+                    if file_day < cutoff:
+                        stale.append(path)
+                except ValueError:
+                    continue
+
     return stale
 
 

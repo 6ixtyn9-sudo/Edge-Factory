@@ -902,6 +902,7 @@ def ticket_receipt_files(localdata, prefix, *, conflicts=False):
 # receipt payload and its signed JSON digest are never rewritten.
 TICKET_RECEIPT_MAX_FILE_BYTES = 80 * 1024 * 1024
 _TICKET_RECEIPT_PART_BYTES = 32 * 1024 * 1024
+TICKET_RECEIPT_MAX_PARTS = 16
 _TICKET_RECEIPT_PARTS_MAGIC = b"EDGEFACTORY_TICKET_RECEIPT_PARTS_V1\n"
 
 
@@ -999,6 +1000,8 @@ def _ticket_receipt_storage(path, stored):
         digest = hashlib.sha256(chunk).hexdigest()
         files[path.with_name(path.name + ".part-" + digest)] = chunk
         parts.append(dict(sha256=digest, size=len(chunk)))
+    if len(parts) > TICKET_RECEIPT_MAX_PARTS:
+        raise ValueError(f"receipt requires {len(parts)} parts; exceeds maximum storage limit of {TICKET_RECEIPT_MAX_PARTS} parts")
     manifest = dict(schema=1, encoding="gzip", size=len(stored),
                     sha256=hashlib.sha256(stored).hexdigest(), parts=parts)
     envelope = _TICKET_RECEIPT_PARTS_MAGIC + json.dumps(

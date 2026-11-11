@@ -1249,6 +1249,51 @@ def _warn_not_persisted(reason: str) -> None:
     )
 
 
+def _validate_staged_blob_sizes(
+    repo: Path,
+    *,
+    max_bytes: int = 45 * 1024 * 1024,
+    max_parts: int = 16,
+) -> None:
+    """Unstage oversized staged artifacts to prevent repository bloat."""
+    staged = _run(repo, "diff", "--cached", "--name-only", "-z")
+    if staged.returncode != 0 or not staged.stdout:
+        return
+    allowlist = {
+        "localdata/statarea.csv.gz",
+        "localdata/forebet.csv.gz",
+        "localdata/zulubet.csv.gz",
+        "localdata/phase5_shadow/rows.jsonl",
+        "localdata/purity_registry.json",
+    }
+    paths = [p for p in staged.stdout.split(b"\0") if p]
+    staged_parts = [p.decode("utf-8", "surrogateescape") for p in paths if b".part-" in p]
+    if len(staged_parts) > max_parts:
+        print(
+            f"::warning::Too many staged multipart shards ({len(staged_parts)} > {max_parts}); "
+            f"unstaging excess shards to protect repository history"
+        )
+        for part in staged_parts[max_parts:]:
+            _run(repo, "reset", "HEAD", "--", part)
+
+    for raw in paths:
+        relative = raw.decode("utf-8", "surrogateescape")
+        if relative in allowlist or ".part-" in relative:
+            continue
+        full_path = repo / relative
+        if full_path.is_file() and not full_path.is_symlink():
+            try:
+                size = full_path.stat().st_size
+                if size > max_bytes:
+                    print(
+                        f"::warning::Staged file {relative} is {size / 1024 / 1024:.1f} MiB "
+                        f"(exceeds {max_bytes / 1024 / 1024:.1f} MiB limit); unstaging from git"
+                    )
+                    _run(repo, "reset", "HEAD", "--", relative)
+            except OSError:
+                continue
+
+
 def _report_localdata_root_entries(repo: Path) -> dict[str, int | None]:
     """GitHub's listing is the index tree, not ignored runner/cache files."""
     root = repo / "localdata"
@@ -1308,6 +1353,7 @@ def persist_localdata(
         reason = _decode_output(staged.stderr)
         _warn_not_persisted(f"git add failed: {reason}")
         return {"status": "not_persisted", "reason": reason}
+    _validate_staged_blob_sizes(repo)
     _report_localdata_root_entries(repo)
     if _run(repo, "diff", "--cached", "--quiet").returncode == 0:
         print("PHASE5_PERSISTENCE no_localdata_changes")

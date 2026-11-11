@@ -1201,3 +1201,51 @@ def test_batched_checkout_failure_is_not_reported_as_success(tmp_path, monkeypat
     monkeypatch.setattr(module, '_run', failing)
     with pytest.raises(RuntimeError, match='could not restore committed localdata batch'):
         module.restore_committed_localdata(repo)
+
+
+def test_validate_staged_blob_sizes_unstages_oversized_file(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _seed_repo(repo)
+    module = _persistence_module()
+    oversized = repo / "localdata" / "oversized_telemetry.json"
+    oversized.write_bytes(b"x" * 1024)
+    _git(repo, "add", "-f", "localdata/oversized_telemetry.json")
+    assert "localdata/oversized_telemetry.json" in _git(repo, "diff", "--cached", "--name-only").stdout
+
+    # With a small max_bytes limit, it must be unstaged
+    module._validate_staged_blob_sizes(repo, max_bytes=512)
+    assert "localdata/oversized_telemetry.json" not in _git(repo, "diff", "--cached", "--name-only").stdout
+    assert oversized.exists()  # unlinked from index, but preserved on disk for cache/artifact
+
+
+def test_validate_staged_blob_sizes_unstages_excess_parts(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _seed_repo(repo)
+    module = _persistence_module()
+    part_dir = repo / "localdata" / "phase5_reconciliation" / "ticket_decisions"
+    part_dir.mkdir(parents=True, exist_ok=True)
+    parts = []
+    for i in range(5):
+        p = part_dir / f"test_decision.json.gz.part-{'a' * 63}{i}"
+        p.write_bytes(b"chunk")
+        _git(repo, "add", str(p))
+        parts.append(p)
+    assert len([p for p in _git(repo, "diff", "--cached", "--name-only").stdout.splitlines() if ".part-" in p]) == 5
+
+    # With max_parts=2, excess parts must be unstaged
+    module._validate_staged_blob_sizes(repo, max_parts=2)
+    cached_parts = [p for p in _git(repo, "diff", "--cached", "--name-only").stdout.splitlines() if ".part-" in p]
+    assert len(cached_parts) == 2
+
+
+def test_ticket_receipt_storage_rejects_excess_parts(tmp_path, monkeypatch):
+    from edgefactory import util
+    monkeypatch.setattr(util, "TICKET_RECEIPT_MAX_PARTS", 2)
+    monkeypatch.setattr(util, "TICKET_RECEIPT_MAX_FILE_BYTES", 100)
+    monkeypatch.setattr(util, "_TICKET_RECEIPT_PART_BYTES", 50)
+    path = tmp_path / "test_decision.json.gz"
+    # 150 bytes requires 3 parts (> max of 2)
+    with pytest.raises(ValueError, match="exceeds maximum storage limit of 2 parts"):
+        util._ticket_receipt_storage(path, b"x" * 150)
