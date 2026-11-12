@@ -1,6 +1,98 @@
 {
-  "attempted": 2,
+  "attempted": 6,
   "attempted_fixtures": [
+    {
+      "avg_p": 77.93244719592134,
+      "away": "Eritrea",
+      "date": "2026-11-12",
+      "home": "Guinea",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
+    },
+    {
+      "avg_p": 77.0,
+      "away": "Lithuania (u19)",
+      "date": "2026-11-12",
+      "home": "Portugal (u19)",
+      "league": "International,Euro U19 Qualification League \u00c3\u008e\u00c2\u0091 R2 Grp. 3",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6656
+    },
+    {
+      "avg_p": 74.0,
+      "away": "Sweden U19",
+      "date": "2026-11-12",
+      "home": "Germany U19",
+      "league": "World UEFA U19 Championship - Qualification",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 72.15733283386403,
+      "away": "Arsenal W",
+      "date": "2026-11-12",
+      "home": "Barcelona W",
+      "league": "UEFA Women's Champions League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 71.0,
+      "away": "Lithuania U19",
+      "date": "2026-11-12",
+      "home": "Portugal U19",
+      "league": "World UEFA U19 Championship - Qualification",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 81.6327474560592,
+      "away": "Sudan",
+      "date": "2026-11-12",
+      "home": "Senegal",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
+    }
+  ],
+  "be_429": 2,
+  "be_cached": 3,
+  "be_cooling_down": true,
+  "be_rows_rejected": 0,
+  "be_rows_rejected_reasons": {},
+  "cache_only": 3,
+  "candidate_fixtures": 15,
+  "captured_at": "2026-11-12T04:18:18.984618+00:00",
+  "date": "2026-11-12",
+  "deferred_fixtures": 10,
+  "errors": [],
+  "fixtures_with_rows": 2,
+  "market_budget_stop": false,
+  "market_requests": 0,
+  "match_detail": {
+    "bookmakers": 16,
+    "challenge_pages": 0,
+    "fixtures": 2,
+    "market_rows": 40,
+    "markets": 8,
+    "named_rows": 40,
+    "standings_rows": 0,
+    "with_h2h": 0,
+    "with_last_results": 0,
+    "with_standings": 0
+  },
+  "max_fixtures": 12,
+  "ml_precutoff_active": true,
+  "ml_refresh_attempted": 0,
+  "network_attempted": 3,
+  "quoted_fixtures": [
     {
       "avg_p": 77.93244719592134,
       "away": "Eritrea",
@@ -22,52 +114,8 @@
       "w_score": 0.7259
     }
   ],
-  "be_429": 2,
-  "be_cached": 1,
-  "be_cooling_down": true,
-  "be_rows_rejected": 0,
-  "be_rows_rejected_reasons": {},
-  "cache_only": 1,
-  "candidate_fixtures": 15,
-  "captured_at": "2026-11-12T01:22:58.475276+00:00",
-  "date": "2026-11-12",
-  "deferred_fixtures": 14,
-  "errors": [
-    "BetExplorerCoolingDown"
-  ],
-  "fixtures_with_rows": 1,
-  "market_budget_stop": false,
-  "market_requests": 0,
-  "match_detail": {
-    "bookmakers": 16,
-    "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 40,
-    "markets": 8,
-    "named_rows": 40,
-    "standings_rows": 0,
-    "with_h2h": 0,
-    "with_last_results": 0,
-    "with_standings": 0
-  },
-  "max_fixtures": 12,
-  "ml_precutoff_active": true,
-  "ml_refresh_attempted": 1,
-  "network_attempted": 1,
-  "quoted_fixtures": [
-    {
-      "avg_p": 81.6327474560592,
-      "away": "Sudan",
-      "date": "2026-11-12",
-      "home": "Senegal",
-      "league": "Africa Cup of Nations Qualifications",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.7259
-    }
-  ],
-  "requests": 3,
-  "rows": 3,
+  "requests": 9,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }
