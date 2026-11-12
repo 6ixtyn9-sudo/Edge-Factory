@@ -485,3 +485,155 @@ def test_old_draft_cannot_be_late_trained_or_publish_new_ungated_exposure(tmp_pa
         mp.capture({}, now=NOW+timedelta(hours=2), **kwargs)
     assert path.read_bytes() == before
     assert not mp.receipt_files(tmp_path)
+
+
+# =============================================================================
+# Pooled Evidence Admission Gate & Joint Risk Tests
+# =============================================================================
+
+def test_activation_boundary_activates_pooled_evidence_as_of_nov_12():
+    d_unpooled = NOW.replace(year=2026, month=11, day=11)
+    d_pooled = NOW.replace(year=2026, month=11, day=12)
+    m_unpooled = mp._admission_model([], d_unpooled)
+    m_pooled = mp._admission_model([], d_pooled)
+    assert m_unpooled["policy"] == mp.ADMISSION_POLICY
+    assert m_pooled["policy"] == mp.ADMISSION_POLICY
+    assert m_unpooled["cell_budget"] == 17692560
+    assert m_pooled["cell_budget"] == 216
+    assert "parent_cells" not in m_unpooled
+    assert "parent_cells" in m_pooled
+
+
+def test_pooled_evidence_admits_empirical_edge_and_builds_accas(tmp_path):
+    d_pooled = NOW.replace(year=2026, month=11, day=12)
+    outcomes = []
+    base_t = datetime(2026, 11, 10, 10, tzinfo=UTC)
+    for i in range(25):
+        won = (i < 18)
+        score = [2, 1] if won else [0, 1]
+        outcomes.append({
+            "date": "2026-11-10",
+            "fixture": ["2026-11-10", f"home_{i}", f"away_{i}"],
+            "score": score,
+            "captured_at": (base_t + timedelta(minutes=i)).isoformat(),
+            "persisted_at": (base_t + timedelta(minutes=i + 1)).isoformat(),
+            "source_partition": [["1x2", "home", 0.70], ["1x2", "draw", 0.15], ["1x2", "away", 0.15]],
+            "admission_prices": [["1x2", "home", 1.65]]
+        })
+    adm_model = mp._admission_model(outcomes, d_pooled)
+
+    model = {
+        "method": "source_market", "status": "fitted_source_market_context",
+        "power": 1.0, "as_of": d_pooled.isoformat(), "training_outcomes": outcomes,
+        "admission": adm_model
+    }
+    model["model_key"] = mp.digest({k: v for k, v in model.items() if k != "model_key"})
+
+    c1 = next_candidate(1, p=0.70, odds=1.75)
+    c1["fixture"] = ["2026-11-12", "TeamA", "TeamB"]
+    c1["book"] = "BookmakerX"
+    c1["forecast_model_key"] = model["model_key"]
+
+    c2 = next_candidate(2, p=0.70, odds=1.75)
+    c2["fixture"] = ["2026-11-12", "TeamC", "TeamD"]
+    c2["book"] = "BookmakerX"
+    c2["forecast_model_key"] = model["model_key"]
+
+    candidates = [c1, c2]
+    mp.apply_admission(candidates, model)
+    assert all(c["admission"]["status"] == "eligible" for c in candidates)
+    assert all(c["admission"]["reason"] == "positive_conservative_edge" for c in candidates)
+
+    proposals = mp.acca_proposals(candidates)
+    assert len(proposals) == 1
+    acca = proposals[0]
+    assert acca["probability_basis"] == "independent_leg_admission_lower_envelope"
+    assert acca["odds"] == pytest.approx(1.75 * 1.75)
+    assert acca["estimated_ev"] > 0
+    assert acca["model_kelly_fraction"] > 0
+
+    receipt_row = {
+        "candidates": candidates,
+        "accas": proposals,
+        "policy": {"admission": mp.ADMISSION_POLICY},
+        "learning": model,
+        "date": "2026-11-12"
+    }
+    mp._validate_admission(receipt_row)
+
+
+def test_pooled_evidence_rejects_candidates_when_evidence_fails_break_even():
+    d_pooled = NOW.replace(year=2026, month=11, day=12)
+    outcomes = []
+    base_t = datetime(2026, 11, 10, 10, tzinfo=UTC)
+    for i in range(25):
+        score = [2, 1] if i < 5 else [0, 1]
+        outcomes.append({
+            "date": "2026-11-10",
+            "fixture": ["2026-11-10", f"h_{i}", f"a_{i}"],
+            "score": score,
+            "captured_at": (base_t + timedelta(minutes=i)).isoformat(),
+            "persisted_at": (base_t + timedelta(minutes=i + 1)).isoformat(),
+            "source_partition": [["1x2", "home", 0.50], ["1x2", "draw", 0.25], ["1x2", "away", 0.25]],
+            "admission_prices": [["1x2", "home", 2.20]]
+        })
+    adm_model = mp._admission_model(outcomes, d_pooled)
+    model = {
+        "method": "source_market", "status": "fitted_source_market_context",
+        "power": 1.0, "as_of": d_pooled.isoformat(), "training_outcomes": outcomes,
+        "admission": adm_model
+    }
+    model["model_key"] = mp.digest({k: v for k, v in model.items() if k != "model_key"})
+
+    c = next_candidate(1, p=0.50, odds=2.20)
+    c["forecast_model_key"] = model["model_key"]
+    mp.apply_admission([c], model)
+
+    assert c["admission"]["status"] == "abstain"
+    assert c["admission"]["reason"] == "edge_not_supported"
+    assert c["admission"]["probability_lower"] < 1.0 / c["odds"]
+
+
+def test_card_rendering_shows_joint_admission_envelope():
+    c1 = next_candidate(1, p=0.70, odds=1.75)
+    c1["fixture"] = ["2026-11-12", "Home1", "Away1"]
+    c1["home"] = "Home1"
+    c1["away"] = "Away1"
+    c1["book"] = "Book1"
+    c1["admission"] = {
+        "policy": mp.ADMISSION_POLICY, "status": "eligible", "reason": "positive_conservative_edge", "joint_basis": "independent_leg_admission_lower_envelope",
+        "probability_lower": 0.65, "fixtures": 25, "wins": 18,
+        "lower_hit_rate": 0.65, "source_probability": 0.70,
+        "required_source_probability": 1.0 / 1.75, "required_model_probability": 1.0 / 1.75
+    }
+
+    c2 = next_candidate(2, p=0.70, odds=1.75)
+    c2["fixture"] = ["2026-11-12", "Home2", "Away2"]
+    c2["home"] = "Home2"
+    c2["away"] = "Away2"
+    c2["book"] = "Book1"
+    c2["admission"] = {
+        "policy": mp.ADMISSION_POLICY, "status": "eligible", "reason": "positive_conservative_edge", "joint_basis": "independent_leg_admission_lower_envelope",
+        "probability_lower": 0.65, "fixtures": 25, "wins": 18,
+        "lower_hit_rate": 0.65, "source_probability": 0.70,
+        "required_source_probability": 1.0 / 1.75, "required_model_probability": 1.0 / 1.75
+    }
+
+    proposals = mp.acca_proposals([c1, c2])
+    assert len(proposals) == 1
+    receipt = {
+        "date": "2026-11-12",
+        "status": "paper_bets_published",
+        "candidates": [c1, c2],
+        "accas": proposals,
+        "policy": {"admission": mp.ADMISSION_POLICY},
+        "learning": {"status": "fitted_source_market_context", "admission": {"policy": mp.ADMISSION_POLICY}},
+        "paper_bank_at_decision": 1000.0,
+        "freeze_basis": mp.ACTUAL_RUN_FREEZE
+    }
+    proposals[0]["stake_units"] = 2.5
+    card_text = mp.render_card(receipt)
+    assert "[PAPER ACCA #1]" in card_text
+    assert "Joint admission envelope" in card_text
+    assert "Home1 vs Away1" in card_text
+    assert "Home2 vs Away2" in card_text

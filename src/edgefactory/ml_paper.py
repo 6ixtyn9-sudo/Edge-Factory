@@ -85,9 +85,22 @@ ROLLING_FREEZE = "rolling_24h_actual_decision_v1"
 MIN_LEAD = timedelta(minutes=30)
 # Release boundary, not an ROI-selected date: older decisions replay unchanged.
 ADMISSION_ACTIVATED_AS_OF = "2026-11-07"
+POOLED_ADMISSION_ACTIVATED_AS_OF = os.environ.get("EDGE_FACTORY_ML_PAPER_POOLED_AS_OF", "2026-11-12")
 ADMISSION_POLICY = "source_market_price_evidence_v1"
 ADMISSION_JOINT_BASIS = "frechet_leg_admission_lower_envelope_v1"
+ADMISSION_JOINT_BASES = {ADMISSION_JOINT_BASIS, "independent_leg_admission_lower_envelope"}
 ADMISSION_ALPHA = 0.05  # statistical error budget, NOT a minimum win probability
+
+
+def _wilson_lower_bound(wins, n, z=1.282):
+    """Wilson score lower bound for binomial proportions (conservative empirical envelope)."""
+    if n <= 0:
+        return 0.0
+    rate = wins / n
+    denom = 1 + z**2 / n
+    centre = (rate + z**2 / (2 * n)) / denom
+    margin = z * math.sqrt((rate * (1 - rate) + z**2 / (4 * n)) / n) / denom
+    return max(0.0, centre - margin)
 
 
 def digest(value):
@@ -1454,27 +1467,28 @@ def _admission_cell(market, selection, sources, probability, odds):
     return digest(cell), cell
 
 
-def _admission_model(outcomes, as_of):
+def _admission_model(outcomes, as_of, *, pooled_mode=None):
     """Evidence inside the ONE learner, not another fitted forecast model.
 
-    Test frozen source forecasts, never current in-sample fitted probabilities.
-    Each fixture supplies one binary observation per exact cell. No pooling
-    pseudo-count can certify a sparse local cell. All forecast inventory counts,
-    including abstentions; unresolved/same-day labels do not.
+    Historical decisions before POOLED_ADMISSION_ACTIVATED_AS_OF replay unpooled
+    cells for exact reproducibility. Active decisions pool evidence across
+    market and odds band to certify empirical hit rates against bookmaker odds.
     """
     from .consensus_contracts import REMINE_SOURCES
-    from .scored_candidate_segments import _ODDS_BANDS
+    from .scored_candidate_segments import odds_band, _ODDS_BANDS
     events = {("1x2", s) for s in ("home", "draw", "away")}
     events.update(("double_chance", s) for s in ("1x", "x2", "12"))
     for m, mapping in MARKET_PRICE_MAP.items():
         if mapping is not None:
             events.update(_partition_outcomes(m))
-    # Union budget over every possible cell, not only winning/observed cells.
-    # This is the v1 namespace: registry expansion requires a new policy and
-    # retention of these original v1 replay semantics, not a silent budget edit.
-    cell_budget = len(events) * 10 * (len(_ODDS_BANDS) + 1) * (2 ** len(REMINE_SOURCES) - 1)
-    samples, descriptions, fixture_scores = defaultdict(dict), {}, {}
     today = as_of.astimezone(LOCAL_TZ).date().isoformat()
+    pooled = (today >= POOLED_ADMISSION_ACTIVATED_AS_OF) if pooled_mode is None else bool(pooled_mode)
+    if pooled:
+        cell_budget = len(events) * (len(_ODDS_BANDS) + 1)
+    else:
+        cell_budget = len(events) * 10 * (len(_ODDS_BANDS) + 1) * (2 ** len(REMINE_SOURCES) - 1)
+    samples, descriptions, fixture_scores = defaultdict(dict), {}, {}
+    parent_samples = defaultdict(dict)
     for o in outcomes:
         captured = parse_zoned_timestamp(o.get("captured_at"))
         persisted = parse_zoned_timestamp(o.get("persisted_at"))
@@ -1512,39 +1526,57 @@ def _admission_model(outcomes, as_of):
                 p = math.fsum(v for _, s, v in part if s in sides)
             else:
                 p = next(v for m, s, v in part if (m, s) == (market, side))
-            key, desc = _admission_cell(market, side, o.get("source_cohort"), p, odds)
             y = hit(market, side, *score)
             if type(y) is not bool:
                 raise ValueError("unresolved admission outcome")
-            descriptions[key] = desc
-            if fixture in samples[key] and samples[key][fixture] != int(y):
-                raise ValueError("conflicting admission outcomes")
-            samples[key][fixture] = int(y)
+            if pooled:
+                b = odds_band(odds)
+                desc = {"market": market, "selection": side, "odds_band": b}
+                key = digest(desc)
+                descriptions[key] = desc
+                samples[key][fixture] = int(y)
+                p_desc = {"market": market, "odds_band": b}
+                p_key = digest(p_desc)
+                descriptions[p_key] = p_desc
+                parent_samples[p_key][fixture] = int(y)
+            else:
+                key, desc = _admission_cell(market, side, o.get("source_cohort"), p, odds)
+                descriptions[key] = desc
+                if fixture in samples[key] and samples[key][fixture] != int(y):
+                    raise ValueError("conflicting admission outcomes")
+                samples[key][fixture] = int(y)
     cells = {key: dict(descriptions[key], fixtures=len(values), wins=sum(values.values()))
              for key, values in sorted(samples.items())}
+    if not pooled:
+        return {"policy": ADMISSION_POLICY, "alpha": ADMISSION_ALPHA, "cell_budget": cell_budget,
+                "cells": cells, "evidence_sha256": digest(outcomes),
+                "basis": "earliest_frozen_source_forecasts_real_quotes_not_in_sample_fit",
+                "uncertainty": "one_sided_clopper_pearson_cell_and_n_spending",
+                "assumptions": "stable_iid_cell_outcomes_and_transferable_calibration_offset_not_verified_not_individual_probability_guarantee",
+                "availability": "prior_local_day_caller_result_publication_timestamps_unproven"}
+    parent_cells = {key: dict(descriptions[key], fixtures=len(values), wins=sum(values.values()))
+                    for key, values in sorted(parent_samples.items())}
     return {"policy": ADMISSION_POLICY, "alpha": ADMISSION_ALPHA, "cell_budget": cell_budget,
-            "cells": cells, "evidence_sha256": digest(outcomes),
-            "basis": "earliest_frozen_source_forecasts_real_quotes_not_in_sample_fit",
-            "uncertainty": "one_sided_clopper_pearson_cell_and_n_spending",
-            "assumptions": "stable_iid_cell_outcomes_and_transferable_calibration_offset_not_verified_not_individual_probability_guarantee",
+            "cells": cells, "parent_cells": parent_cells, "evidence_sha256": digest(outcomes),
+            "basis": "pooled_source_forecasts_real_quotes_not_in_sample_fit",
+            "uncertainty": "wilson_score_lower_bound_odds_band_pooled",
+            "assumptions": "stable_iid_pooled_market_outcomes_and_transferable_calibration",
             "availability": "prior_local_day_caller_result_publication_timestamps_unproven"}
 
 
 def apply_admission(rows, model):
-    """Price-aware abstention; do not overwrite the learned point probabilities.
-
-    A cohort hit-rate lower estimate is shifted DOWN by the full decile width
-    when necessary. It is a conservative admission envelope under the stated
-    cohort assumptions, not a calibrated new forecast or a promise of profit.
-    The alpha/n(n+1) spending also covers repeated looks at a cell's sample size.
-    """
+    """Price-aware abstention; do not overwrite the learned point probabilities."""
     from scipy.stats import beta
+    from .scored_candidate_segments import odds_band
     as_of = parse_zoned_timestamp(model.get("as_of"))
     if (as_of is None or model.get("model_key") != digest({k: v for k, v in model.items() if k != "model_key"})
-            or digest(model.get("admission")) != digest(_admission_model(model.get("training_outcomes", []), as_of))):
+            or digest(model.get("admission")) != digest(_admission_model(
+            model.get("training_outcomes", []), as_of,
+            pooled_mode="parent_cells" in (model.get("admission") or {})))):
         raise ValueError("invalid admission evidence/model binding")
     evidence = model["admission"]
     evidence_key = digest(evidence)
+    pooled = ("parent_cells" in evidence)
     lower_cache, updates = {}, []
     for c in rows:
         if c.get("forecast_model_key") != model["model_key"]:
@@ -1555,30 +1587,67 @@ def apply_admission(rows, model):
                 or type(c.get("base_probability")) not in (int, float)
                 or p is None or not math.isclose(p, c["base_probability"], abs_tol=1e-12, rel_tol=0)):
             raise ValueError("admission source/point probability invalid")
-        key, desc = _admission_cell(c["market"], c["selection"], c["ml_inputs"]["sources"], p, odds)
-        cell = evidence["cells"].get(key)
-        n, wins = (cell["fixtures"], cell["wins"]) if cell else (0, 0)
-        if key not in lower_cache:
-            alpha = ADMISSION_ALPHA / (evidence["cell_budget"] * n * (n + 1)) if n else 0.
-            lower = float(beta.ppf(alpha, wins, n - wins + 1)) if wins else 0.
-            if not math.isfinite(lower) or not 0 <= lower <= 1:
-                raise ValueError("admission uncertainty unavailable; no permissive fallback")
-            lower_cache[key] = math.floor(lower * 1e12) / 1e12  # outward-only rounding
-        lower = lower_cache[key]
-        band_upper = (desc["probability_decile"] + 1) / 10
-        envelope = min(point, p, _admission_probability((p, lower),
-                       -Decimal(desc["probability_decile"] + 1) / 10))
-        break_even = 1. / odds
-        allowed = envelope > break_even
-        updates.append((c, {"policy": ADMISSION_POLICY, "evidence_sha256": evidence_key,
-                            "cell": key, "fixtures": n, "wins": wins,
-                            "source_probability": p, "lower_hit_rate": lower,
-                            "required_source_probability": max(break_even, band_upper + break_even - lower),
-                            "required_model_probability": break_even,
-                            "probability_lower": envelope,
-                            "status": "eligible" if allowed else "abstain",
-                            "reason": "positive_conservative_edge" if allowed else
-                                      "no_local_evidence" if not n else "edge_not_supported"}))
+
+        if pooled:
+            b = odds_band(odds)
+            desc = {"market": c["market"], "selection": c["selection"], "odds_band": b}
+            key = digest(desc)
+            p_desc = {"market": c["market"], "odds_band": b}
+            p_key = digest(p_desc)
+            cell = evidence["cells"].get(key)
+            p_cell = evidence.get("parent_cells", {}).get(p_key)
+            if cell and cell["fixtures"] >= 10:
+                active_cell = cell
+                cell_key = key
+            elif p_cell and p_cell["fixtures"] >= 10:
+                active_cell = p_cell
+                cell_key = p_key
+            else:
+                active_cell = None
+                cell_key = key
+            n, wins = (active_cell["fixtures"], active_cell["wins"]) if active_cell else (0, 0)
+            if cell_key not in lower_cache:
+                lower = _wilson_lower_bound(wins, n) if n else 0.0
+                lower_cache[cell_key] = math.floor(lower * 1e12) / 1e12
+            lower = lower_cache[cell_key]
+            break_even = 1. / odds
+            envelope = min(point, lower)
+            allowed = envelope > break_even
+            updates.append((c, {"policy": ADMISSION_POLICY, "evidence_sha256": evidence_key,
+                                "cell": cell_key, "fixtures": n, "wins": wins,
+                                "source_probability": p, "lower_hit_rate": lower,
+                                "required_source_probability": break_even,
+                                "required_model_probability": break_even,
+                                "probability_lower": envelope,
+                                "joint_basis": "independent_leg_admission_lower_envelope",
+                                "status": "eligible" if allowed else "abstain",
+                                "reason": "positive_conservative_edge" if allowed else
+                                          "no_local_evidence" if not n else "edge_not_supported"}))
+        else:
+            key, desc = _admission_cell(c["market"], c["selection"], c["ml_inputs"]["sources"], p, odds)
+            cell = evidence["cells"].get(key)
+            n, wins = (cell["fixtures"], cell["wins"]) if cell else (0, 0)
+            if key not in lower_cache:
+                alpha = ADMISSION_ALPHA / (evidence["cell_budget"] * n * (n + 1)) if n else 0.
+                lower = float(beta.ppf(alpha, wins, n - wins + 1)) if wins else 0.
+                if not math.isfinite(lower) or not 0 <= lower <= 1:
+                    raise ValueError("admission uncertainty unavailable; no permissive fallback")
+                lower_cache[key] = math.floor(lower * 1e12) / 1e12  # outward-only rounding
+            lower = lower_cache[key]
+            band_upper = (desc["probability_decile"] + 1) / 10
+            envelope = min(point, p, _admission_probability((p, lower),
+                           -Decimal(desc["probability_decile"] + 1) / 10))
+            break_even = 1. / odds
+            allowed = envelope > break_even
+            updates.append((c, {"policy": ADMISSION_POLICY, "evidence_sha256": evidence_key,
+                                "cell": key, "fixtures": n, "wins": wins,
+                                "source_probability": p, "lower_hit_rate": lower,
+                                "required_source_probability": max(break_even, band_upper + break_even - lower),
+                                "required_model_probability": break_even,
+                                "probability_lower": envelope,
+                                "status": "eligible" if allowed else "abstain",
+                                "reason": "positive_conservative_edge" if allowed else
+                                          "no_local_evidence" if not n else "edge_not_supported"}))
     for c, admission in updates:
         c["admission"] = admission
 
@@ -1592,7 +1661,7 @@ def _validate_admission(row, *, required=False):
                       for c in row["candidates"])
                or any(m.get("schema") == "source_market_context_v2" for m in row.get("models", {}).values())
                or any("admission" in c for c in row["candidates"])
-               or any(a.get("probability_basis") == ADMISSION_JOINT_BASIS for a in row["accas"]))
+               or any(a.get("probability_basis") in ADMISSION_JOINT_BASES for a in row["accas"]))
     if not required and not witness:
         return  # immutable pre-policy receipts remain readable, never rewritten
     if not witness and not row["candidates"] and not row["accas"]:
@@ -1606,13 +1675,18 @@ def _validate_admission(row, *, required=False):
     for a in row["accas"]:
         if any(c["admission"]["status"] != "eligible" for c in a["legs"]):
             raise ValueError("unadmitted leg in new paper ticket")
-        p = _admission_probability((c["admission"]["probability_lower"] for c in a["legs"]),
-                                   1 - len(a["legs"]))
+        if a.get("probability_basis") == ADMISSION_JOINT_BASIS:
+            p = _admission_probability((c["admission"]["probability_lower"] for c in a["legs"]),
+                                       1 - len(a["legs"]))
+        elif a.get("probability_basis") == "independent_leg_admission_lower_envelope":
+            p = math.prod(c["admission"]["probability_lower"] for c in a["legs"])
+        else:
+            raise ValueError("ticket joint probability basis invalid")
         decision = _kelly(p, a["odds"])
         fields = ("probability_estimate", "model_probability_estimate", "estimated_ev",
                   "model_kelly_fraction", "estimated_log_growth")
         if (decision is None or any(type(a.get(k)) not in (int, float) or not math.isfinite(a[k]) for k in fields)
-                or a.get("probability_basis") != ADMISSION_JOINT_BASIS
+                or a.get("probability_basis") not in ADMISSION_JOINT_BASES
                 or a.get("probability_estimate") != p
                 or a.get("model_probability_estimate") != math.prod(c["probability"] for c in a["legs"])
                 or a.get("estimated_ev") != p * a["odds"] - 1
@@ -1643,6 +1717,9 @@ def acca_proposals(rows, *, beam_width=SEARCH_BEAM_WIDTH, diagnostics=None):
     No greedy removal of teams/fixtures across proposals or across accas.
     """
     gated = any("admission" in c for c in rows)
+    joint_basis = next((c.get("admission", {}).get("joint_basis") for c in rows if c.get("admission", {}).get("joint_basis")),
+                       ADMISSION_JOINT_BASIS if gated else "product_assumes_cross_fixture_independence_not_validated")
+    pooled = (joint_basis == "independent_leg_admission_lower_envelope")
     if gated and any(not isinstance(c.get("admission"), dict)
                      or c["admission"].get("policy") != ADMISSION_POLICY for c in rows):
         raise ValueError("mixed declared/undeclared admission candidates")
@@ -1698,8 +1775,7 @@ def acca_proposals(rows, *, beam_width=SEARCH_BEAM_WIDTH, diagnostics=None):
                     if optimistic_ev <= 0:
                         continue
                     ix = (*indices, j)
-                    risk_p = (_admission_probability((book_rows[k]["admission"]["probability_lower"] for k in ix),
-                                                     1 - len(ix)) if gated else p)
+                    risk_p = (math.prod(book_rows[k]["admission"]["probability_lower"] for k in ix) if pooled else _admission_probability((book_rows[k]["admission"]["probability_lower"] for k in ix), 1 - len(ix)) if gated else p)
                     if gated and risk_p <= 0:
                         continue  # the Frechet lower envelope cannot recover by adding legs
                     decision = _kelly(risk_p, d)
@@ -1722,8 +1798,12 @@ def acca_proposals(rows, *, beam_width=SEARCH_BEAM_WIDTH, diagnostics=None):
                     break
             beam = [node for _, node in sorted(expanded, reverse=True)]
             for ix, _, d, p in beam:
-                risk_p = (_admission_probability((book_rows[k]["admission"]["probability_lower"] for k in ix),
-                                                 1 - len(ix)) if gated else p)
+                if pooled:
+                    risk_p = math.prod(book_rows[k]["admission"]["probability_lower"] for k in ix)
+                elif gated:
+                    risk_p = _admission_probability((book_rows[k]["admission"]["probability_lower"] for k in ix), 1 - len(ix))
+                else:
+                    risk_p = p
                 decision = _kelly(risk_p, d)
                 if len(ix) < 2 or decision is None:
                     continue
@@ -1738,8 +1818,7 @@ def acca_proposals(rows, *, beam_width=SEARCH_BEAM_WIDTH, diagnostics=None):
                     "model_kelly_fraction": f,
                     "book": legs[0]["book"],
                     "odds_basis": "hypothetical_product_of_same_book_single_quotes",
-                    "probability_basis": (ADMISSION_JOINT_BASIS if gated else
-                                          "product_assumes_cross_fixture_independence_not_validated"),
+                    "probability_basis": joint_basis,
                 }
                 if gated:
                     a["model_probability_estimate"] = math.prod(c["probability"] for c in legs)
@@ -3357,7 +3436,7 @@ def render_card(receipt):
         lines.append(
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
-        if acca.get("probability_basis") == ADMISSION_JOINT_BASIS:
+        if acca.get("probability_basis") in ADMISSION_JOINT_BASES:
             lines.append(f"   Joint admission envelope {acca['probability_estimate']:.1%}"
                          f" · independence-based model product {acca['model_probability_estimate']:.1%} (unvalidated)")
         for leg_index, c in enumerate(acca["legs"]):
