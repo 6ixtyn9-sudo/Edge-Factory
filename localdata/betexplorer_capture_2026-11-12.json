@@ -1,6 +1,26 @@
 {
-  "attempted": 6,
+  "attempted": 7,
   "attempted_fixtures": [
+    {
+      "avg_p": 74.0,
+      "away": "Sweden U19",
+      "date": "2026-11-12",
+      "home": "Germany U19",
+      "league": "World UEFA U19 Championship - Qualification",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
+    {
+      "avg_p": 71.0,
+      "away": "Lithuania U19",
+      "date": "2026-11-12",
+      "home": "Portugal U19",
+      "league": "World UEFA U19 Championship - Qualification",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.6134
+    },
     {
       "avg_p": 77.93244719592134,
       "away": "Eritrea",
@@ -22,16 +42,6 @@
       "w_score": 0.6656
     },
     {
-      "avg_p": 74.0,
-      "away": "Sweden U19",
-      "date": "2026-11-12",
-      "home": "Germany U19",
-      "league": "World UEFA U19 Championship - Qualification",
-      "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
-    },
-    {
       "avg_p": 72.15733283386403,
       "away": "Arsenal W",
       "date": "2026-11-12",
@@ -42,14 +52,14 @@
       "w_score": 0.5405
     },
     {
-      "avg_p": 71.0,
-      "away": "Lithuania U19",
+      "avg_p": 68.91291347411699,
+      "away": "Real Betis",
       "date": "2026-11-12",
-      "home": "Portugal U19",
-      "league": "World UEFA U19 Championship - Qualification",
+      "home": "Navalcarnero",
+      "league": "Copa Del Rey",
       "market": "1x2",
-      "pick": "home",
-      "w_score": 0.6134
+      "pick": "away",
+      "w_score": 0.5405
     },
     {
       "avg_p": 81.6327474560592,
@@ -63,35 +73,35 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 3,
+  "be_cached": 6,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 3,
+  "cache_only": 6,
   "candidate_fixtures": 15,
-  "captured_at": "2026-11-12T04:18:18.984618+00:00",
+  "captured_at": "2026-11-12T07:31:17.904716+00:00",
   "date": "2026-11-12",
-  "deferred_fixtures": 10,
+  "deferred_fixtures": 8,
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 3,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 16,
+    "bookmakers": 31,
     "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 40,
-    "markets": 8,
-    "named_rows": 40,
+    "fixtures": 3,
+    "market_rows": 78,
+    "markets": 13,
+    "named_rows": 78,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": true,
+  "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 3,
+  "network_attempted": 1,
   "quoted_fixtures": [
     {
       "avg_p": 77.93244719592134,
@@ -104,6 +114,16 @@
       "w_score": 0.7259
     },
     {
+      "avg_p": 68.91291347411699,
+      "away": "Real Betis",
+      "date": "2026-11-12",
+      "home": "Navalcarnero",
+      "league": "Copa Del Rey",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
       "avg_p": 81.6327474560592,
       "away": "Sudan",
       "date": "2026-11-12",
@@ -114,8 +134,8 @@
       "w_score": 0.7259
     }
   ],
-  "requests": 9,
-  "rows": 6,
+  "requests": 10,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }
