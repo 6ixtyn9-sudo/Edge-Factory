@@ -1,5 +1,5 @@
 {
-  "attempted": 6,
+  "attempted": 9,
   "attempted_fixtures": [
     {
       "avg_p": 77.93244719592134,
@@ -52,6 +52,36 @@
       "w_score": 0.5405
     },
     {
+      "avg_p": 49.111340981756626,
+      "away": "Finland",
+      "date": "2026-11-12",
+      "home": "Albania",
+      "league": "UEFA Nations League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 47.76501700037778,
+      "away": "Belgium",
+      "date": "2026-11-12",
+      "home": "T\u00fcrkiye",
+      "league": "UEFA Nations League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 39.150596703921195,
+      "away": "Cyprus",
+      "date": "2026-11-12",
+      "home": "Armenia",
+      "league": "UEFA Nations League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
       "avg_p": 81.6327474560592,
       "away": "Sudan",
       "date": "2026-11-12",
@@ -69,22 +99,20 @@
   "be_rows_rejected_reasons": {},
   "cache_only": 5,
   "candidate_fixtures": 12,
-  "captured_at": "2026-11-12T13:28:00.879663+00:00",
+  "captured_at": "2026-11-12T16:26:20.666875+00:00",
   "date": "2026-11-12",
-  "deferred_fixtures": 6,
-  "errors": [
-    "BetExplorerCoolingDown"
-  ],
-  "fixtures_with_rows": 3,
+  "deferred_fixtures": 3,
+  "errors": [],
+  "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 10,
   "match_detail": {
-    "bookmakers": 31,
+    "bookmakers": 67,
     "challenge_pages": 0,
-    "fixtures": 3,
-    "market_rows": 78,
-    "markets": 13,
-    "named_rows": 78,
+    "fixtures": 5,
+    "market_rows": 176,
+    "markets": 25,
+    "named_rows": 176,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -93,7 +121,7 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "network_attempted": 4,
   "quoted_fixtures": [
     {
       "avg_p": 77.93244719592134,
@@ -116,6 +144,26 @@
       "w_score": 0.5405
     },
     {
+      "avg_p": 49.43098524512137,
+      "away": "France",
+      "date": "2026-11-12",
+      "home": "Italy",
+      "league": "UEFA Nations League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
+    },
+    {
+      "avg_p": 49.111340981756626,
+      "away": "Finland",
+      "date": "2026-11-12",
+      "home": "Albania",
+      "league": "UEFA Nations League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.5405
+    },
+    {
       "avg_p": 81.6327474560592,
       "away": "Sudan",
       "date": "2026-11-12",
@@ -126,8 +174,8 @@
       "w_score": 0.7259
     }
   ],
-  "requests": 2,
-  "rows": 9,
+  "requests": 20,
+  "rows": 15,
   "schema": 1,
   "status": "ok"
 }
