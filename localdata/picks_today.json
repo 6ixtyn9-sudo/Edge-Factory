@@ -1,21 +1,18 @@
 [
   {
-    "as_of": "2026-11-12T18:28:07+02:00",
+    "as_of": "2026-11-12T21:24:40+02:00",
     "avg_p": 62.0,
     "away": "Municipal Lime\u00f1o",
     "bookmaker": "Pinnacle",
     "bucket": "CAUTION",
-    "build_git_sha": "e7005de3b2458f6d2171ea698e30092f0732cb71",
-    "built_at_utc": "2026-11-12T16:31:22.851761+00:00",
+    "build_git_sha": "e01ef0b51f3c120c80e23eed06f955a823a37bf7",
+    "built_at_utc": "2026-11-12T19:25:55.454002+00:00",
     "contract_id": "pfc_54fcf87604b73b87ee6c0a90",
     "contract_schema": "post_forebet_v1",
     "ctx": {
       "away_norm": "municipallimeno",
       "comp_type_name": "league",
       "competition_type": "ALLOW",
-      "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "CERTIFIED_CLEAN,CAUTION",
-      "duplicate_event_keys": "aguila vs municipallimeno",
       "home_norm": "aguila",
       "league": "UNKNOWN",
       "league_key": "el salvador primera division",
@@ -38,18 +35,6 @@
     "decay_verdict": "WATCH",
     "display_rule": "1x2 unanimous[vitibet+zulubet] avg_p>=60",
     "draw_risk_flag": "EXTREME",
-    "duplicate_bucket_sources": [
-      "CERTIFIED_CLEAN",
-      "CAUTION"
-    ],
-    "duplicate_matches_collapsed": [
-      "\u00c1guila vs Municipal Lime\u00f1o"
-    ],
-    "duplicate_rows_collapsed": 1,
-    "duplicate_rules_collapsed": [
-      "1x2 single[zulubet] avg_p>=55",
-      "1x2 unanimous[vitibet+zulubet] avg_p>=60"
-    ],
     "edge_n_way": 2,
     "edge_rule": "pfc_54fcf87604b73b87ee6c0a90",
     "edge_status": "certified",

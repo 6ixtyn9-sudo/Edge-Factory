@@ -1,49 +1,11 @@
 {
   "added": 0,
-  "attempted": 5,
-  "attempted_fixtures": [
-    {
-      "away": "Sudan",
-      "date": "2026-11-12",
-      "home": "Senegal",
-      "kickoff": "2026-11-12T19:00:00Z",
-      "league": "Africa Cup of Nations Qualifications"
-    },
-    {
-      "away": "Eritrea",
-      "date": "2026-11-12",
-      "home": "Guinea",
-      "kickoff": "2026-11-12T17:00:00Z",
-      "league": "Africa Cup of Nations Qualifications"
-    },
-    {
-      "away": "Arsenal W",
-      "date": "2026-11-12",
-      "home": "Barcelona W",
-      "kickoff": "2026-11-12T17:45:00Z",
-      "league": "UEFA Women's Champions League"
-    },
-    {
-      "away": "Municipal Lime\u00f1o",
-      "date": "2026-11-12",
-      "home": "\u00c1guila",
-      "kickoff": "2026-11-12T22:30:00+01:00",
-      "league": "El Salvador: Primera Division"
-    },
-    {
-      "away": "Belgium",
-      "date": "2026-11-12",
-      "home": "T\u00fcrkiye",
-      "kickoff": "2026-11-12T17:00:00Z",
-      "league": "UEFA Nations League"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 14,
-  "captured_at": "2026-11-12T16:56:38+00:00",
+  "captured_at": "2026-11-12T19:54:24+00:00",
   "date": "2026-11-12",
-  "due_reasons": {
-    "first_at": 5
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -61,32 +23,26 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 2,
-    "priced": 7
+    "priced": 7,
+    "retry_cooldown": 5
   },
   "skipped": [
+    "Senegal|Sudan (retry cooldown (6h after failed attempt))",
+    "Guinea|Eritrea (retry cooldown (6h after failed attempt))",
     "Czech Republic|Spain (priced)",
     "San Marino|Belarus (priced)",
     "Germany U19|Sweden U19 (kickoff already passed)",
+    "Barcelona W|Arsenal W (retry cooldown (6h after failed attempt))",
     "England|Croatia (priced)",
     "Portugal U19|Lithuania U19 (kickoff already passed)",
     "Navalcarnero|Real Betis (priced)",
+    "\u00c1guila|Municipal Lime\u00f1o (retry cooldown (6h after failed attempt))",
     "Italy|France (priced)",
     "Albania|Finland (priced)",
+    "T\u00fcrkiye|Belgium (retry cooldown (6h after failed attempt))",
     "Armenia|Cyprus (priced)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Senegal vs Sudan (league not covered: Africa Cup of Nations Qualifications)",
-    "Guinea vs Eritrea (league not covered: Africa Cup of Nations Qualifications)",
-    "Barcelona W vs Arsenal W (league not covered: UEFA Women's Champions League)",
-    "\u00c1guila vs Municipal Lime\u00f1o (league not covered: El Salvador: Primera Division)",
-    "T\u00fcrkiye vs Belgium (no event in soccer_uefa_nations_league)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Africa Cup of Nations Qualifications": 2,
-    "league not covered: El Salvador: Primera Division": 1,
-    "league not covered: UEFA Women's Champions League": 1,
-    "no event in soccer_uefa_nations_league": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
