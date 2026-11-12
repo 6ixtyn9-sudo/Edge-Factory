@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 23.843491999999998,
+  "bank": 20.863091999999998,
   "cycle_base": 100.0,
   "history": [
     {
@@ -8028,24 +8028,35 @@
       ],
       "bank_pct": 23.8435,
       "close_pct": 23.8435
-    }
-  ],
-  "events": [],
-  "open_slips": [
+    },
     {
       "date": "2026-11-12",
+      "staked_pct": 2.9804,
+      "returned_pct": 0.0,
       "accas": [
         {
+          "odds": 2.33,
+          "won": false,
+          "stake_pct": 2.9804,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "England vs Croatia",
               "pick": "over",
-              "prob": 0.6803,
               "odds": 1.44,
-              "result": null,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "Betsson",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-11T22:28:55.514601+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-12",
+                "England",
+                "Croatia"
+              ],
+              "prob": 0.6803,
               "cohort_evidence": {
                 "rate": 0.6803,
                 "n": 391,
@@ -8070,31 +8081,31 @@
               "ml_rank_probability": 0.6824622222418397,
               "ml_model_key": "aebbe82dbc613727008d5bc5d8378ade8154c05e205bc0ab9bac6ab4dd614780",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.71821399187453,
               "floor_basis": "market",
               "league": "UEFA Nations League",
-              "price_at": "2026-11-11T22:28:55.514601+00:00",
-              "price_kickoff": "2026-11-12T19:45:00Z",
-              "price_provenance": null,
               "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-12",
-                "England",
-                "Croatia"
-              ]
+              "price_kickoff": "2026-11-12T19:45:00Z"
             },
             {
               "match": "San Marino vs Belarus",
               "pick": "over",
-              "prob": 0.6198,
               "odds": 1.62,
-              "result": null,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
               "market": "match_over_25",
               "price_book": "Betsson",
               "price_source": "theoddsapi",
+              "price_at": "2026-11-11T22:28:55.422821+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-12",
+                "San Marino",
+                "Belarus"
+              ],
+              "prob": 0.6198,
               "cohort_evidence": {
                 "rate": 0.6198,
                 "n": 121,
@@ -8119,35 +8130,23 @@
               "ml_rank_probability": 0.7614691107845578,
               "ml_model_key": "56fd6c55130ccbd80b9a13600b87be4a4da160d83245518f07bc5732233899dd",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Match Over 2.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": 1.71821399187453,
               "floor_basis": "market",
               "league": "UEFA Nations League",
-              "price_at": "2026-11-11T22:28:55.422821+00:00",
-              "price_kickoff": "2026-11-12T19:45:00Z",
-              "price_provenance": null,
               "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-12",
-                "San Marino",
-                "Belarus"
-              ]
+              "price_kickoff": "2026-11-12T19:45:00Z"
             }
-          ],
-          "odds": 2.33,
-          "stake_pct": 2.9804,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         }
       ],
-      "staked_pct": 2.9804
+      "bank_pct": 20.8631,
+      "close_pct": 20.8631
     }
   ],
+  "events": [],
+  "open_slips": [],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,

@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-12T22:03:21",
+  "generated_at": "2026-11-13T01:07:25",
   "lane": "main",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 341.3515439999999,
-  "multiple": 3.413515439999999,
+  "bank_pct": 383.16706599999986,
+  "multiple": 3.8316706599999986,
   "cycle_base_pct": 456.154568,
   "next_take_profit_pct": 912.31,
-  "bet_days": 71,
+  "bet_days": 72,
   "accas": {
-    "wins": 83,
-    "losses": 60
+    "wins": 84,
+    "losses": 61
   },
-  "open_slips": [
-    {
-      "date": "2026-11-12",
-      "staked_pct": 85.3378
-    }
-  ],
+  "open_slips": [],
   "events": [
     {
       "date": "2026-10-11",
@@ -2325,6 +2320,87 @@
       ],
       "bank_pct": 341.3515,
       "close_pct": 341.3515
+    },
+    {
+      "date": "2026-11-12",
+      "staked_pct": 85.3378,
+      "returned_pct": 127.1533,
+      "accas": [
+        {
+          "odds": 2.98,
+          "won": true,
+          "stake_pct": 42.6689,
+          "returned_pct": 127.1533,
+          "legs": [
+            {
+              "match": "\u00c1guila vs Municipal Lime\u00f1o",
+              "pick": "HOME",
+              "odds": 1.6135,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-12",
+                "\u00c1guila",
+                "Municipal Lime\u00f1o"
+              ]
+            },
+            {
+              "match": "T\u00fcrkiye vs Belgium",
+              "pick": "AWAY",
+              "odds": 1.8475,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-12",
+                "T\u00fcrkiye",
+                "Belgium"
+              ]
+            }
+          ]
+        },
+        {
+          "odds": 4.12,
+          "won": false,
+          "stake_pct": 42.6689,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "Italy vs France",
+              "pick": "AWAY",
+              "odds": 2.0,
+              "result": "loss",
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-12",
+                "Italy",
+                "France"
+              ]
+            },
+            {
+              "match": "Albania vs Finland",
+              "pick": "HOME",
+              "odds": 2.06,
+              "result": "win",
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-12",
+                "Albania",
+                "Finland"
+              ]
+            }
+          ]
+        }
+      ],
+      "bank_pct": 383.1671,
+      "close_pct": 383.167
     }
   ]
 }

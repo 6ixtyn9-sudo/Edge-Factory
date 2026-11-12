@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-12T22:06:18",
+  "generated_at": "2026-11-13T01:11:40",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 23.843491999999998,
-  "multiple": 0.23843491999999997,
+  "bank_pct": 20.863091999999998,
+  "multiple": 0.20863091999999997,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 26,
+  "bet_days": 27,
   "accas": {
     "wins": 20,
-    "losses": 32
+    "losses": 33
   },
-  "open_slips": [
-    {
-      "date": "2026-11-12",
-      "staked_pct": 2.9804
-    }
-  ],
+  "open_slips": [],
   "events": [],
   "history": [
     {
@@ -8045,6 +8040,121 @@
       ],
       "bank_pct": 23.8435,
       "close_pct": 23.8435
+    },
+    {
+      "date": "2026-11-12",
+      "staked_pct": 2.9804,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.33,
+          "won": false,
+          "stake_pct": 2.9804,
+          "returned_pct": 0.0,
+          "legs": [
+            {
+              "match": "England vs Croatia",
+              "pick": "over",
+              "odds": 1.44,
+              "result": "win",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "Betsson",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-11T22:28:55.514601+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-12",
+                "England",
+                "Croatia"
+              ],
+              "prob": 0.6803,
+              "cohort_evidence": {
+                "rate": 0.6803,
+                "n": 391,
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "as_of_exclusive": "2026-11-12",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 266,
+                "cohort_lower_bound": 0.6325194581385691,
+                "price_context": {
+                  "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                  "selection": "home",
+                  "league": "UEFA Nations League",
+                  "book": "Betsson",
+                  "source": "theoddsapi",
+                  "price": 1.44,
+                  "captured_at": "2026-11-11T22:28:55.514601+00:00",
+                  "decision_at": "2026-11-12T09:32:23+02:00",
+                  "kickoff": "2026-11-12T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.6824622222418397,
+              "ml_model_key": "aebbe82dbc613727008d5bc5d8378ade8154c05e205bc0ab9bac6ab4dd614780",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.71821399187453,
+              "floor_basis": "market",
+              "league": "UEFA Nations League",
+              "shadow": true,
+              "price_kickoff": "2026-11-12T19:45:00Z"
+            },
+            {
+              "match": "San Marino vs Belarus",
+              "pick": "over",
+              "odds": 1.62,
+              "result": "loss",
+              "label": "Match Over 2.5 Goals",
+              "market": "match_over_25",
+              "price_book": "Betsson",
+              "price_source": "theoddsapi",
+              "price_at": "2026-11-11T22:28:55.422821+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-12",
+                "San Marino",
+                "Belarus"
+              ],
+              "prob": 0.6198,
+              "cohort_evidence": {
+                "rate": 0.6198,
+                "n": 121,
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "as_of_exclusive": "2026-11-12",
+                "market": "match_over_25",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 75,
+                "cohort_lower_bound": 0.5309159036269087,
+                "price_context": {
+                  "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                  "selection": "away",
+                  "league": "UEFA Nations League",
+                  "book": "Betsson",
+                  "source": "theoddsapi",
+                  "price": 1.62,
+                  "captured_at": "2026-11-11T22:28:55.422821+00:00",
+                  "decision_at": "2026-11-12T09:32:23+02:00",
+                  "kickoff": "2026-11-12T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7614691107845578,
+              "ml_model_key": "56fd6c55130ccbd80b9a13600b87be4a4da160d83245518f07bc5732233899dd",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": 1.71821399187453,
+              "floor_basis": "market",
+              "league": "UEFA Nations League",
+              "shadow": true,
+              "price_kickoff": "2026-11-12T19:45:00Z"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 20.8631,
+      "close_pct": 20.8631
     }
   ]
 }

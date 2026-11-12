@@ -1,6 +1,6 @@
 {
  "evidence_schema_version": 1,
- "generated_at": "2026-11-10",
+ "generated_at": "2026-11-13",
  "integrity_reviewed_at": "2026-10-21",
  "markets": {
   "away_over_05@v1": {
@@ -6774,11 +6774,11 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 352,
+   "hits": 354,
    "integrity_recovery": "47 retained records recovered from published historical registry snapshots; all cumulative counters independently match",
-   "inv_price_sum": 347.6478446977062,
+   "inv_price_sum": 350.33524290236556,
    "multi_n": 103,
-   "n": 534,
+   "n": 538,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -7557,9 +7557,13 @@
     "2026-11-05|Sturm Graz vs NK Celje|match_over_25@v1",
     "2026-11-05|CD Olimpia vs Juticalpa|match_over_25@v1",
     "2026-11-06|CD Marathon vs Platense FC|match_over_25@v1",
-    "2026-11-09|Antigua GFC vs Malacateco|match_over_25@v1"
+    "2026-11-09|Antigua GFC vs Malacateco|match_over_25@v1",
+    "2026-11-12|Senegal vs Sudan|match_over_25@v1",
+    "2026-11-12|Czech Republic vs Spain|match_over_25@v1",
+    "2026-11-12|San Marino vs Belarus|match_over_25@v1",
+    "2026-11-12|England vs Croatia|match_over_25@v1"
    ],
-   "profit": 8.367,
+   "profit": 7.267,
    "records": [
     {
      "away": "Spartak Varna",
@@ -16013,6 +16017,122 @@
      "recorded_at": "2026-11-09T23:07:17.456597+00:00",
      "rule": "pfc_fbf508b9c62bae8f281bb6e1",
      "source": "oddspapi",
+     "stated": null
+    },
+    {
+     "away": "Sudan",
+     "away_key": "sudan",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6803,
+     "date": "2026-11-12",
+     "hit": true,
+     "home": "Senegal",
+     "home_key": "senegal",
+     "league": "Africa Cup of Nations Qualifications",
+     "match": "Senegal vs Sudan",
+     "multi_source": false,
+     "price": 1.46,
+     "price_context": {
+      "book": "BetMGM.us",
+      "captured_at": "2026-11-11T22:30:55.156116+00:00",
+      "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+      "decision_at": "2026-11-12T00:31:11+02:00",
+      "kickoff": "2026-11-12T19:00:00+00:00",
+      "league": "Africa Cup of Nations Qualifications",
+      "price": 1.46,
+      "selection": "home",
+      "source": "betexplorer"
+     },
+     "recorded_at": "2026-11-12T23:04:00.036701+00:00",
+     "rule": "pfc_4a3e5fbac72b2ebef11632f0",
+     "source": "betexplorer",
+     "stated": null
+    },
+    {
+     "away": "Spain",
+     "away_key": "spain",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6198,
+     "date": "2026-11-12",
+     "hit": false,
+     "home": "Czech Republic",
+     "home_key": "czechrepublic",
+     "league": "UEFA Nations League",
+     "match": "Czech Republic vs Spain",
+     "multi_source": false,
+     "price": 1.41,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-11-11T22:28:55.254867+00:00",
+      "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+      "decision_at": "2026-11-12T00:31:11+02:00",
+      "kickoff": "2026-11-12T19:45:00+00:00",
+      "league": "UEFA Nations League",
+      "price": 1.41,
+      "selection": "away",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-12T23:04:00.045964+00:00",
+     "rule": "pfc_4a3e5fbac72b2ebef11632f0",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Belarus",
+     "away_key": "belarus",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6198,
+     "date": "2026-11-12",
+     "hit": false,
+     "home": "San Marino",
+     "home_key": "sanmarino",
+     "league": "UEFA Nations League",
+     "match": "San Marino vs Belarus",
+     "multi_source": false,
+     "price": 1.67,
+     "price_context": {
+      "book": "1xBet",
+      "captured_at": "2026-11-11T22:28:55.422821+00:00",
+      "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+      "decision_at": "2026-11-12T00:31:11+02:00",
+      "kickoff": "2026-11-12T19:45:00+00:00",
+      "league": "UEFA Nations League",
+      "price": 1.67,
+      "selection": "away",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-12T23:04:00.075483+00:00",
+     "rule": "pfc_4a3e5fbac72b2ebef11632f0",
+     "source": "theoddsapi",
+     "stated": null
+    },
+    {
+     "away": "Croatia",
+     "away_key": "croatia",
+     "bucket": "SKIPPED_VETO",
+     "cohort_rate": 0.6803,
+     "date": "2026-11-12",
+     "hit": true,
+     "home": "England",
+     "home_key": "england",
+     "league": "UEFA Nations League",
+     "match": "England vs Croatia",
+     "multi_source": false,
+     "price": 1.44,
+     "price_context": {
+      "book": "Betsson",
+      "captured_at": "2026-11-11T22:28:55.514601+00:00",
+      "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+      "decision_at": "2026-11-12T00:31:11+02:00",
+      "kickoff": "2026-11-12T19:45:00+00:00",
+      "league": "UEFA Nations League",
+      "price": 1.44,
+      "selection": "home",
+      "source": "theoddsapi"
+     },
+     "recorded_at": "2026-11-12T23:04:00.084449+00:00",
+     "rule": "pfc_4a3e5fbac72b2ebef11632f0",
+     "source": "theoddsapi",
      "stated": null
     }
    ],
