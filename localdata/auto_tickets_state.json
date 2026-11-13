@@ -2,7 +2,86 @@
   "base_pct": 100.0,
   "bank": 256.0138,
   "cycle_base": 456.154568,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-11-13",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Glentoran vs Bangor",
+              "pick": "HOME",
+              "prob": 0.7125975414216996,
+              "odds": 1.3311,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Pinnacle",
+              "price_source": "pinnapi_odds",
+              "fixture_key": [
+                "2026-11-13",
+                "Glentoran",
+                "Bangor"
+              ]
+            },
+            {
+              "match": "Slovakia vs Faroe Islands",
+              "pick": "HOME",
+              "prob": 0.6317326502095948,
+              "odds": 1.4,
+              "result": null,
+              "market": "1x2",
+              "price_book": "Betfair",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-13",
+                "Slovakia",
+                "Faroe Islands"
+              ]
+            }
+          ],
+          "odds": 1.86,
+          "stake_pct": 32.0017
+        },
+        {
+          "legs": [
+            {
+              "match": "Liechtenstein vs Azerbaijan",
+              "pick": "AWAY",
+              "prob": 0.7058792431830829,
+              "odds": 1.3,
+              "result": null,
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-13",
+                "Liechtenstein",
+                "Azerbaijan"
+              ]
+            },
+            {
+              "match": "Serbia vs Germany",
+              "pick": "AWAY",
+              "prob": 0.6695786676788764,
+              "odds": 1.3,
+              "result": null,
+              "market": "1x2",
+              "price_book": "1xBet",
+              "price_source": "theoddsapi",
+              "fixture_key": [
+                "2026-11-13",
+                "Serbia",
+                "Germany"
+              ]
+            }
+          ],
+          "odds": 1.69,
+          "stake_pct": 32.0017
+        }
+      ],
+      "staked_pct": 64.0034
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
