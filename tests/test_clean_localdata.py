@@ -353,3 +353,19 @@ def test_prunes_old_timestamped_ml_paper_receipts_and_retains_canonical(tmp_path
     assert not old_ts.exists()
     assert old_canonical.exists()
     assert fresh_ts.exists()
+
+
+def test_old_nonempty_ml_receipts_and_corruption_are_durable_not_telemetry(tmp_path):
+    import clean_localdata as cl
+    root = tmp_path / "localdata"
+    directory = root / "phase5_reconciliation/ml_paper_receipts"
+    directory.mkdir(parents=True)
+    decision = directory / "autobets_ML_2026-10-01_20261001T120000000000Z.json"
+    replacement = directory / "autobets_ML_2026-10-01_20261001T130000000000Z.json"
+    corrupt = directory / "autobets_ML_2026-10-01_20261001T140000000000Z.json"
+    decision.write_text('{"schema":"autobets_ML_v2","sha256":"original"}')
+    replacement.write_text('{"supersession":{"targets":[{"receipt_sha256":"original","acca_index":1}]}}')
+    corrupt.write_text('{broken evidence')
+    originals = {p: p.read_bytes() for p in (decision, replacement, corrupt)}
+    assert cl.clean_localdata(root, keep_days=30, today=date(2026, 11, 13)) == []
+    assert all(p.read_bytes() == blob for p, blob in originals.items())

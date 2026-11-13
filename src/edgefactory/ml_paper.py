@@ -1,31 +1,29 @@
-"""Independent autobets_ML PAPER lane; no live state, real stakes, registry or network access.
+"""Independent autobets_ML PAPER lane; no live stakes, registry or network access.
 
-Uses fixture-bound, market-matched source forecasts with a shared temperature
-and strongly regularized outcome-specific context, fitted on prior-day outcomes. No exact-score forecasting,
-calibration of old base predictions, success tilt or alternative Poisson model.
-Complete source partitions preserve complements and 1X2/DC identities regardless
-of quote coverage. Missing source markets are unavailable, never guessed.
+Fixture-bound, market-matched source forecasts are learned on prior-day outcomes.
+Complete partitions preserve complements and 1X2/DC identities irrespective of
+quote coverage. Missing source markets or quotes are unavailable, never guessed.
 
-Same-book paper accas choose their own leg count, card count and stakes.
-No fixed win-probability/odds eligibility floor or artificial leg-count cap is
-imposed. New decisions require local market/price evidence, conservative leg
-admission and a Frechet joint envelope; unsupported forecasts remain recorded
-without stakes. Older decisions keep their original read/replay semantics.
-CAUTION and SKIPPED_VETO strategy labels are intentionally paper-eligible
-(test_lower_probability_and_caution_bucket_can_win_paper_search); identity,
-price-quality and timing guards still apply. This never overrides live gates.
-New decisions use a rolling 24-hour kickoff horizon, at any existing run,
-and freeze on publication. No 06:00/09:00 clock gate applies to rolling ML.
-Legacy daily receipts/drafts remain readable and immutable; frozen receipts
-supersede pending rows. Aggregate open exposure is capped at 25% of paper bank.
-Learning uses unique earliest source partitions with each fixture's total weight
-one. The single temperature is regularized toward the source anchor; it cannot
-sharpen probabilities, reverse rankings or learn bucket/price effects.
-Products of same-book single quotes are explicitly hypothetical acca payouts;
-neither book acceptance nor independence/calibration of joint probabilities is
-claimed. Positive estimated EV is a PAPER search objective, never a live gate.
-Receipts are write-once; reports re-read regulation results without rewriting
-predictions. No Main comparison, promotion, or notifications are implemented.
+New decisions maximise estimated WHOLE-TICKET hit probability, not EV, payout or
+log-bank growth. One best same-book compatible pair is selected: adding legs
+cannot increase the chance of all legs winning. Price breaks exact probability
+ties only. Local evidence remains required; a price-edge veto is not a data-
+quality veto. A small flat 0.1% of total PAPER bank replaces Kelly for this mode;
+fixture (5%) and aggregate (25%) exposure ceilings can only reduce that risk.
+CAUTION / SKIPPED_VETO remain paper-eligible; identity, quote quality, freshness,
+source generation and proven kickoff guards still apply. No live gate changes.
+
+The rolling horizon is 24 hours at actual decision time, with no clock gate.
+Legacy daily/growth/Kelly decisions, models and admission arithmetic remain
+readable and immutable. New policy declarations are independently replayed.
+Explicit operator replacements can release unstarted SAME-DAY paper tickets
+through an append-only receipt. No historical receipt or settled loss is edited.
+
+Model products assume cross-fixture independence; calibration, joint dependence
+and executable acca payouts are unverified. Same-book single-quote products are
+hypothetical, not confirmed acca quotes. A hit-rate objective can select negative
+estimated EV; neither a better hit rate nor profitability is promised. This lane
+never promotes to real money or changes Main/ENH state or notifications.
 """
 
 from __future__ import annotations
@@ -43,6 +41,8 @@ from heapq import heappush, heapreplace
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from . import ml_paper_probability as hit_probability
+from . import ml_paper_supersession as paper_supersession
 from . import price_sources as psrc
 from .enh_pricing import (
     MARKET_PRICE_MAP,
@@ -399,6 +399,10 @@ def validate_record(row, day, *, draft=False):
     _validate_bets(row)
     _validate_concentration_record(row)
     _validate_admission(row)
+    _validate_hit_probability_record(row)
+    paper_supersession.validate_declaration(row)
+    if "supersession" in row and not _is_hit_probability_record(row):
+        raise ValueError("paper replacement requires chance-first policy")
 
 
 def receipts(root):
@@ -436,9 +440,22 @@ def receipts(root):
         blobs[day] = blob
         result[day] = row
     ordered = sorted(result.values(), key=lambda r: (parse_zoned_timestamp(r["captured_at"]), r.get("decision_id", "")))
+    withdrawn = paper_supersession.withdrawn_tickets(ordered)
+    by_hash = {r["sha256"]: r for r in ordered}
+    releases = defaultdict(list)
+    for (original, index), detail in withdrawn.items():
+        releases[detail["superseded_by"]].append(by_hash[original]["accas"][index-1])
     committed = defaultdict(int)
     prior_hashes = []
     for row in ordered:
+        for acca in releases[row["sha256"]]:
+            stake = _decimal_micro_units(acca["stake_units"], "withdrawn stake", rounding=ROUND_CEILING)
+            for fixture in {tuple(c["fixture"]) for c in acca["legs"]}:
+                committed[fixture] -= stake
+                if committed[fixture] < 0:
+                    raise ValueError("paper supersession releases unreserved capital")
+                if not committed[fixture]:
+                    del committed[fixture]
         fixtures = {tuple(c["fixture"]) for a in row["accas"] for c in a["legs"]}
         if row.get("freeze_basis") == ROLLING_FREEZE:
             reused = set(committed).intersection(fixtures)
@@ -1672,6 +1689,8 @@ def _validate_admission(row, *, required=False):
     apply_admission(copied, learner)
     if any(digest(a.get("admission")) != digest(b.get("admission")) for a, b in zip(copied, row["candidates"])):
         raise ValueError("candidate admission differs from frozen evidence")
+    if _is_hit_probability_record(row):
+        return  # evidence replays unchanged; price edge is not the new objective
     for a in row["accas"]:
         if any(c["admission"]["status"] != "eligible" for c in a["legs"]):
             raise ValueError("unadmitted leg in new paper ticket")
@@ -1693,6 +1712,50 @@ def _validate_admission(row, *, required=False):
                 or a.get("model_kelly_fraction") != decision[0]
                 or a.get("estimated_log_growth") != decision[1]):
             raise ValueError("ticket admission/joint risk arithmetic invalid")
+
+
+
+def _selection_objective(at):
+    return (hit_probability.OBJECTIVE
+            if at.astimezone(LOCAL_TZ).date().isoformat() >= hit_probability.ACTIVATED_LOCAL_DATE
+            else None)
+
+
+def _is_hit_probability_record(row):
+    policy = row.get("policy") or {}
+    objective = policy.get("selection_objective")
+    witness = (objective is not None or (row.get("search") or {}).get("selection_objective") is not None
+               or any("selection_objective" in a for a in row["accas"]))
+    if witness and objective != hit_probability.OBJECTIVE:
+        raise ValueError("missing or unsupported paper selection objective")
+    return objective == hit_probability.OBJECTIVE
+
+
+def _validate_hit_probability_record(row, *, required=False):
+    declared = _is_hit_probability_record(row)
+    if not declared:
+        if required:
+            raise ValueError("new paper decision requires chance-first selection policy")
+        return
+    if any((row.get("policy") or {}).get(k) != v for k, v in hit_probability.policy().items()):
+        raise ValueError("invalid chance-first paper policy")
+    if len(row["accas"]) > 1:
+        raise ValueError("chance-first publishes only the highest-probability ticket")
+    if row["accas"]:
+        expected = hit_probability.best_acca(row["candidates"])
+        actual = row["accas"][0]
+        if expected is None or any(actual.get(k) != v for k, v in expected.items()):
+            raise ValueError("paper ticket differs from highest supported hit-probability pair")
+        limit = _hit_probability_stake_micro_units(row["paper_bank_at_decision"])
+        if (_stake_micro_units(actual["stake_units"]) > limit
+                or (actual.get("portfolio_allocation") or {}).get("selection_objective") != hit_probability.OBJECTIVE):
+            raise ValueError("chance-first paper stake exceeds flat risk budget")
+
+
+def _hit_probability_stake_micro_units(bank):
+    _nonnegative_finite(bank, "total paper bank")
+    return int((Decimal(str(bank)) * Decimal(str(hit_probability.STAKE_FRACTION)) * MICRO_UNITS)
+               .to_integral_value(rounding=ROUND_FLOOR))
 
 
 def _kelly(p, odds):
@@ -2230,8 +2293,8 @@ def _without_replayed_accas(plan, report, diagnostics):
     return kept
 
 
-def _size_publication_accas(rows, report, diagnostics):
-    """All fresh-production sizing: allocator -> fixture projection -> aggregate."""
+def _size_publication_accas(rows, report, diagnostics, *, objective=None):
+    """Explicit objective sizing -> fixture projection -> aggregate ceiling."""
     bank, committed = report["paper_bank_units"], report["paper_committed_units"]
     available = max(0.0, report["paper_free_units"])
     concentration = {
@@ -2239,7 +2302,8 @@ def _size_publication_accas(rows, report, diagnostics):
         "prior_open_fixture_micro_units": _prior_open_fixture_micro_units(report),
     }
     if _aggregate_headroom_micro_units(bank, committed) > 0 and available > 0:
-        plan = select_accas(rows, available, diagnostics=diagnostics, concentration=concentration)
+        plan = select_accas(rows, available, diagnostics=diagnostics, concentration=concentration,
+                            objective=objective)
         audit = diagnostics.pop("fixture_concentration")
         fresh = _without_replayed_accas(plan, report, diagnostics)
         if len(fresh) != len(plan):
@@ -2299,8 +2363,12 @@ def _concentrate_sealed_draft(payload, history, score_lookup):
 
 
 def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
-                 concentration=None):
-    """Joint comonotonic-acca sizing, quarter Kelly and downward free-bank flooring.
+                 concentration=None, objective=None):
+    """Explicit chance-first selection, or legacy quarter-Kelly helper replay.
+
+    Fresh production supplies the chance-first objective after its release.
+    The default retains historical helper/replay semantics only; it must not
+    silently change old fixtures or rebuild their financial history.
 
     ``concentration`` is an explicit replay/helper opt-in containing total bank
     and prior open fixture micro-units. Production sizing ALWAYS supplies it;
@@ -2319,6 +2387,11 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
         _normalise_prior_fixtures(concentration["prior_open_fixture_micro_units"])
     if not math.isfinite(available_units) or available_units <= 0:
         return []
+    if objective is not None:
+        if objective != hit_probability.OBJECTIVE:
+            raise ValueError("unsupported paper selection objective")
+        return _select_hit_probability_acca(rows, available_units, diagnostics=diagnostics,
+                                            concentration=concentration)
     search = {}
     proposals = acca_proposals(rows, diagnostics=search)
     fractions, allocation = allocate_portfolio(proposals)
@@ -2356,6 +2429,35 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
     return plan
 
 
+
+def _select_hit_probability_acca(rows, available_units, *, diagnostics, concentration):
+    bank = concentration["total_bank_units"] if concentration is not None else available_units
+    search = {}
+    proposal = hit_probability.best_acca(rows, diagnostics=search)
+    allocation = dict(search, staking="flat_fraction_of_total_paper_bank_not_Kelly",
+                      paper_stake_fraction_of_total_bank=hit_probability.STAKE_FRACTION)
+    if diagnostics is not None:
+        diagnostics.update(allocation)
+    stake = min(_hit_probability_stake_micro_units(bank),
+                _decimal_micro_units(available_units, "free paper bank"))
+    plan = ([dict(proposal, stake_units=stake / MICRO_UNITS,
+                  stake_fraction_of_free_bank=stake / MICRO_UNITS / available_units,
+                  portfolio_allocation=allocation)] if proposal is not None and stake > 0 else [])
+    if concentration is not None:
+        input_count = len(plan)
+        plan, audit = project_fixture_stakes(plan, **concentration)
+        for a in plan:
+            a["stake_fraction_of_free_bank"] = a["stake_units"] / available_units
+        if diagnostics is not None:
+            diagnostics["mutual_exclusivity"] = {
+                "rule": "single_highest_probability_ticket_no_weaker_refill",
+                "input_acca_count": input_count, "kept_acca_count": input_count,
+                "dropped_acca_count": 0,
+            }
+            diagnostics["fixture_concentration"] = audit
+    return plan
+
+
 def _publish_receipt(path, payload):
     """The only production decision writer: require policy BEFORE atomic creation.
 
@@ -2369,6 +2471,9 @@ def _publish_receipt(path, payload):
     captured = parse_zoned_timestamp(payload.get("captured_at"))
     _validate_admission(payload, required=(captured is not None and
                         captured.astimezone(LOCAL_TZ).date().isoformat() >= ADMISSION_ACTIVATED_AS_OF))
+    _validate_hit_probability_record(payload, required=(captured is not None
+                                    and _selection_objective(captured) is not None
+                                    and not payload.get("draft_sha256")))
     if any(not _quote_generation_ok(c.get("price_source"), c.get("price_provenance"))
            for c in payload["candidates"]):
         raise ValueError("superseded or unproven OddsPapi parser generation in new publication")
@@ -2732,6 +2837,9 @@ def capture(
                 )
                 return None
             payload = _concentrate_sealed_draft(payload, history, score_lookup)
+            if (payload["status"] == "missed_freeze_no_paper_bet"
+                    and _selection_objective(at) is not None):
+                payload["policy"].update(hit_probability.policy())
             payload["persisted_at"] = at.isoformat()
             payload["sha256"] = digest(payload)
             return payload if _publish_receipt(path, payload) else None
@@ -2784,7 +2892,9 @@ def capture(
         report = performance(prior, score_lookup)
         available = max(0.0, report["paper_free_units"])
         search_diagnostics = {}
-        plan, concentration_audit = _size_publication_accas(rows, report, search_diagnostics)
+        objective = _selection_objective(captured)
+        plan, concentration_audit = _size_publication_accas(
+            rows, report, search_diagnostics, objective=objective)
         persisted = clock()
         if persisted.astimezone(LOCAL_TZ).date().isoformat() != day or persisted < captured:
             return None  # no cross-day/backdated publication
@@ -2834,6 +2944,8 @@ def capture(
             "accas": plan,
         }
         _attach_concentration_policy(payload, concentration_audit)
+        if objective is not None:
+            payload["policy"].update(hit_probability.policy())
 
         def freeze_current(at):
             if at < captured or at.astimezone(LOCAL_TZ).date().isoformat() != day:
@@ -2849,7 +2961,7 @@ def capture(
             if len(eligible) != len(rows):
                 rejected["quote_or_kickoff_expired_during_build"] = len(rows) - len(eligible)
                 final_plan, final_audit = _size_publication_accas(
-                    eligible, report, search_diagnostics
+                    eligible, report, search_diagnostics, objective=objective
                 )
             for c in eligible:
                 c["price_age_seconds_at_freeze"] = (
@@ -2965,13 +3077,14 @@ def _validate_rolling_record(row, captured):
 
 
 def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
-                    min_leg_odds=1.0, now=None, index=None):
+                    min_leg_odds=1.0, now=None, index=None, supersede=None, replacement_reason=None):
     """Next-24h PAPER decisions at every existing run; no daily clock gate.
 
     Never edits old receipts, spends live capital, or invents future inputs.
-    Quarter-Kelly remains unchanged; remaining aggregate commitment headroom
-    can only reduce a new allocation. Pending fixtures may reuse residual budget;
-    settled fixtures never re-enter.
+    Chance-first selection uses small flat paper risk; legacy decisions retain
+    quarter-Kelly. Aggregate/fixture headroom can only reduce an allocation.
+    Explicit operator replacements withdraw only proven pre-kickoff positions,
+    atomically with their new decision. Settled fixtures never re-enter.
     """
     clock = (lambda: now) if now is not None else (lambda: datetime.now(UTC))
     root = Path(root)
@@ -2991,7 +3104,20 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
         history = receipts(root)
         if any(parse_zoned_timestamp(r["persisted_at"]) > captured for r in history):
             raise ValueError("future paper evidence cannot fund a rolling decision")
-        report = performance(history, score_lookup)
+        objective = _selection_objective(captured)
+        pending = None
+        if supersede is not None:
+            if objective is None:
+                raise ValueError("paper replacement requires active chance-first policy")
+            pending = {"date": day, "captured_at": captured.isoformat(), "persisted_at": captured.isoformat(),
+                       "supersession": {"policy": paper_supersession.POLICY,
+                                        "reason": replacement_reason, "targets": supersede}}
+        elif replacement_reason is not None:
+            raise ValueError("replacement reason requires explicit paper ticket references")
+        paper_supersession.withdrawn_tickets(history, pending=pending)
+        if pending is not None:
+            _require_unresolved_replacement_targets(history, pending, score_lookup)
+        report = performance(history, score_lookup, pending_replacement=pending)
         prior_open = _prior_open_fixture_micro_units(report)
         fixture_limit = _fixture_limit_micro_units(report["paper_bank_units"])
         # Never reopen settled evidence (including an acca already lost with
@@ -3032,13 +3158,13 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
         if captured.astimezone(LOCAL_TZ).date().isoformat() >= ADMISSION_ACTIVATED_AS_OF:
             apply_admission(rows, learner)
         available = max(0.0, report["paper_free_units"])
-        if not rows and history:
+        if not rows and history and pending is None:
             return None  # no new eligible opportunity, not another daily seal
         search = {}
         # Timestamp AFTER search/sizing and recheck every guard at publication.
         # If a slow search crosses expiry, rebuild only the surviving candidates.
         for _ in range(3):
-            plan, concentration_audit = _size_publication_accas(rows, report, search)
+            plan, concentration_audit = _size_publication_accas(rows, report, search, objective=objective)
             persisted = clock()
             if persisted < captured or persisted.astimezone(LOCAL_TZ).date().isoformat() != day:
                 return None
@@ -3055,6 +3181,8 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
             "date": day, "candidates": [{k: v for k, v in c.items()
                 if not k.startswith("price_age_seconds_")} for c in rows],
             "learning": learner, "bank": report["paper_bank_units"],
+            **({"selection_policy": hit_probability.policy()} if objective is not None else {}),
+            **({"supersession": pending["supersession"]} if pending is not None else {}),
             "committed": report["paper_committed_units"], "rejections": dict(rejected),
             # Policy/prior exposure participate in deduplication identity. Equal
             # bank totals do not imply equal per-fixture residual budgets.
@@ -3096,8 +3224,23 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
                        "fixture_concentration": _fixture_concentration_policy(
                            report["paper_bank_units"])},
         }
+        if objective is not None:
+            receipt["policy"].update(hit_probability.policy())
+        if pending is not None:
+            receipt["supersession"] = pending["supersession"]
+            _require_unresolved_replacement_targets(history, receipt, score_lookup)
         receipt["sha256"] = digest(receipt)
+        paper_supersession.withdrawn_tickets([*history, receipt])
         return receipt if _publish_receipt(rolling_receipt_path(root, receipt), receipt) else None
+
+
+
+def _require_unresolved_replacement_targets(history, replacement, score_lookup):
+    by_hash = {r["sha256"]: r for r in history}
+    for t in replacement["supersession"]["targets"]:
+        old = by_hash[t["receipt_sha256"]]["accas"][t["acca_index"]-1]
+        if any(score_lookup(c) is not None for c in old["legs"]):
+            raise ValueError("known results cannot be removed by paper replacement")
 
 
 def source_forecast_probability(candidate):
@@ -3194,7 +3337,7 @@ def _source_comparisons(records):
     }
 
 
-def calibration_diagnostics(history, score_lookup):
+def calibration_diagnostics(history, score_lookup, *, withdrawn=None):
     """Paired prequential errors of frozen base vs calibrated probabilities.
 
     Includes unbet candidates. Repeated books/buckets do not manufacture more
@@ -3208,8 +3351,10 @@ def calibration_diagnostics(history, score_lookup):
     comparisons = {}
     excluded = Counter()
     excluded_fixtures = set()
+    withdrawn = paper_supersession.withdrawn_tickets(history) if withdrawn is None else withdrawn
     for receipt in history:
-        selected = {c["candidate_id"] for a in receipt["accas"] for c in a["legs"]}
+        selected = {c["candidate_id"] for i, a in enumerate(receipt["accas"], 1)
+                    if (receipt.get("sha256"), i) not in withdrawn for c in a["legs"]}
         for c in receipt["candidates"]:
             reason = _learning_quote_rejection(c)
             if reason is not None:
@@ -3277,7 +3422,7 @@ def calibration_diagnostics(history, score_lookup):
     return groups
 
 
-def performance(history, score_lookup):
+def performance(history, score_lookup, *, pending_replacement=None):
     """Own acca/unit ROI, drawdown, Brier error and market/bucket diagnostics.
 
     Exact regulation outcomes only. Missing/ambiguous scores stay pending.
@@ -3285,6 +3430,8 @@ def performance(history, score_lookup):
     model-chosen stakes are PAPER accounting, never a live bank. Group figures are LEG diagnostics,
     not acca ROI and not summed across overlapping bucket/market categories.
     """
+    withdrawn = paper_supersession.withdrawn_tickets(history, pending=pending_replacement)
+    withdrawn_details = []
     days, accas, groups = [], [], defaultdict(lambda: {"settled": 0, "wins": 0, "profit": 0.0})
     brier = []
     seen_legs = set()
@@ -3295,7 +3442,14 @@ def performance(history, score_lookup):
     for receipt in history:
         _validate_bets(receipt)
         daily = []
-        for acca in receipt["accas"]:
+        for original_index, acca in enumerate(receipt["accas"], 1):
+            key = (receipt.get("sha256"), original_index)
+            if key in withdrawn:
+                withdrawn_details.append(dict(
+                    withdrawn[key], date=receipt["date"], receipt_sha256=key[0], acca_index=original_index,
+                    odds=acca["odds"], stake_units=acca["stake_units"], legs=acca["legs"],
+                ))
+                continue
             outcomes = []
             for c in acca["legs"]:
                 score = score_lookup(c)
@@ -3331,6 +3485,11 @@ def performance(history, score_lookup):
                 "profit_units": profit,
                 "legs": acca["legs"],
             }
+            if withdrawn:
+                item["publication_local_index"] = original_index
+            if acca.get("selection_objective") == hit_probability.OBJECTIVE:
+                item.update({k: acca[k] for k in ("selection_objective", "probability_estimate",
+                                                "model_probability_estimate")})
             accas.append(item)
             daily.append(item)
             if all(y is not None for y in outcomes):
@@ -3376,8 +3535,10 @@ def performance(history, score_lookup):
         "settled_stake_units": staked,
         "receipt_days": len({r["date"] for r in history}),
         "decision_receipts": len(history),
-        "bet_days": len({r["date"] for r in history if r["accas"]}),
-        "no_bet_days": len({r["date"] for r in history} - {r["date"] for r in history if r["accas"]}),
+        "bet_days": len({r["date"] for r in days if r["accas"]}),
+        "no_bet_days": len({r["date"] for r in days} - {r["date"] for r in days if r["accas"]}),
+        "superseded_accas": len(withdrawn_details),
+        "superseded_tickets": withdrawn_details,
         "missed_freeze_days": sum(r["status"] == "missed_freeze_no_paper_bet" for r in history),
         "settled_accas": len(graded),
         "wins": sum(a["status"] == "win" for a in graded),
@@ -3393,7 +3554,7 @@ def performance(history, score_lookup):
         "drawdown_basis": "ticket_date_latest_known_result_marks_pending_at_cost_not_settlement_timeline",
         "drawdown_has_pending_results": unresolved_legs > 0,
         "selected_leg_brier_score": sum(brier) / len(brier) if brier else None,
-        "calibration": calibration_diagnostics(history, score_lookup),
+        "calibration": calibration_diagnostics(history, score_lookup, withdrawn=withdrawn),
         "acca_calibration_by_length": dict(acca_calibration),
         "current_risk_policy": {
             "schema": SCHEMA,
@@ -3403,6 +3564,8 @@ def performance(history, score_lookup):
             "max_new_fixture_stake_fraction_of_total_bank": MAX_FIXTURE_STAKE_FRACTION,
             "accas_mutually_exclusive_within_new_publications": True,
             "fixture_concentration_policy": FIXTURE_CONCENTRATION_POLICY,
+            "selection_objective": hit_probability.OBJECTIVE,
+            "new_paper_stake_fraction_of_total_bank": hit_probability.STAKE_FRACTION,
             "fixture_concentration_applies_to": "new_publications_only_existing_positions_unchanged",
             "bankruptcy": "zero_free_capital_no_new_stakes_no_refill",
         },
@@ -3416,10 +3579,12 @@ def performance(history, score_lookup):
 
 def render_card(receipt):
     """Readable TXT card; the JSON receipt remains the machine/audit record."""
+    chance_first = _is_hit_probability_record(receipt)
     lines = [
         f"autobets_ML TICKETS — {receipt['date']}",
         "=" * 62,
-        "PAPER ONLY — own legs, accas and model-sized stakes; no odds band.",
+        ("PAPER ONLY — chance-first pair; small flat paper risk; no odds band." if chance_first
+         else "PAPER ONLY — own legs, accas and model-sized stakes; no odds band."),
         "Same-book single-price products; acca acceptance/payout unconfirmed.",
     ]
     if receipt.get("freeze_basis") == ROLLING_FREEZE:
@@ -3436,7 +3601,9 @@ def render_card(receipt):
         lines.append(
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
-        if acca.get("probability_basis") in ADMISSION_JOINT_BASES:
+        if acca.get("selection_objective") == hit_probability.OBJECTIVE:
+            lines.extend(_paper_ticket_probability_lines(acca))
+        elif acca.get("probability_basis") in ADMISSION_JOINT_BASES:
             lines.append(f"   Joint admission envelope {acca['probability_estimate']:.1%}"
                          f" · independence-based model product {acca['model_probability_estimate']:.1%} (unvalidated)")
         for leg_index, c in enumerate(acca["legs"]):
@@ -3549,6 +3716,16 @@ def _paper_publication_time(receipt):
     return stamp.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M:%S SAST") if stamp else "time unavailable"
 
 
+
+def _paper_ticket_probability_lines(acca):
+    p = acca.get("model_probability_estimate", acca.get("probability_estimate"))
+    if type(p) not in (int, float) or not math.isfinite(p) or not 0 <= p <= 1:
+        return []
+    label = "Chance-first" if acca.get("selection_objective") == hit_probability.OBJECTIVE else "Frozen model"
+    return [f"   {label} · estimated hit {p:.1%} · estimated miss {1-p:.1%}",
+            "   Model product: independence assumed; not calibrated or guaranteed."]
+
+
 def render_daily_card(history, report=None, *, audit=False):
     """One day's rolling publications; labels are views, never receipt identity.
 
@@ -3560,7 +3737,24 @@ def render_daily_card(history, report=None, *, audit=False):
     rows = sorted(history, key=lambda r: (parse_zoned_timestamp(r["captured_at"]), r.get("decision_id", "")))
     if not rows or len({r["date"] for r in rows}) != 1:
         raise ValueError("daily card requires receipts for exactly one date")
-    count = sum(len(r["accas"]) for r in rows)
+    withdrawn = paper_supersession.withdrawn_tickets(rows)
+    active = {id(r): [(i, a) for i, a in enumerate(r["accas"], 1)
+                      if (r.get("sha256"), i) not in withdrawn] for r in rows}
+    count = sum(len(active[id(r)]) for r in rows)
+    superseded_lines = []
+    for publication, row in enumerate(rows, 1):
+        for original_index, acca in enumerate(row["accas"], 1):
+            detail = withdrawn.get((row.get("sha256"), original_index))
+            if detail is not None:
+                superseded_lines.extend([
+                    f"   P{publication}/{original_index} @{acca['odds']:.3f} · released {acca['stake_units']:.6f} paper units",
+                    f"      Withdrawn {detail['superseded_at']} · not a win or loss; original receipt retained.",
+                    f"      Receipt {row['sha256']} · replacement {detail['superseded_by']}",
+                    f"      Reason: {detail['reason']}",
+                ])
+                if audit:
+                    for c in acca["legs"]:
+                        superseded_lines.append(f"      {c['home']} vs {c['away']} · {_paper_market_label(c)} @{c['odds']:.3f}")
     lines = [f"autobets_ML TICKETS — {rows[0]['date']}", "=" * 62]
     if report is not None:
         lines.append(
@@ -3568,13 +3762,18 @@ def render_daily_card(history, report=None, *, audit=False):
             f" · free {report['paper_free_units']:.3f} / reserved {report['paper_committed_units']:.3f}"
         )
     lines.extend([
-        (f"{count} paper accas · {sum(bool(r['accas']) for r in rows)} ticket publications"
-         f" · {sum(not r['accas'] for r in rows)} scans without tickets · times in SAST"),
+        (f"{count} paper accas · {sum(bool(active[id(r)]) for r in rows)} ticket publications"
+         f" · {sum(not r['accas'] for r in rows)} scans without tickets · times in SAST"
+         + (f" · {len(withdrawn)} superseded before kickoff" if withdrawn else "")),
         "PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.",
         "Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.", "",
     ])
+    if any(_is_hit_probability_record(r) for r in rows):
+        lines.extend(["CHANCE FIRST — highest estimated whole-ticket hit probability, not payout or EV.",
+                      f"New PAPER risk: flat {hit_probability.STAKE_FRACTION:.1%} of total bank before exposure caps.", ""])
     if not count:
-        lines.extend(["NO PAPER BET — no tickets published for this date; reasons in the audit report.", ""])
+        lines.extend([("NO ACTIVE PAPER BET — earlier ticket withdrawn; no qualifying replacement."
+                       if withdrawn else "NO PAPER BET — no tickets published for this date; reasons in the audit report."), ""])
     diagnostics = []
     references = []
     number = 1
@@ -3582,11 +3781,12 @@ def render_daily_card(history, report=None, *, audit=False):
     for publication, row in enumerate(rows, 1):
         leg_diagnostics = []
         first = number
-        for original_index, acca in enumerate(row["accas"], 1):
+        for original_index, acca in active[id(row)]:
             lines.extend([
                 f"[PAPER ACCA #{number}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}",
                 f"   Published {_paper_publication_time(row)} · reference P{publication}/{original_index}",
             ])
+            lines.extend(_paper_ticket_probability_lines(acca))
             for leg_index, leg in enumerate(acca["legs"], 1):
                 if leg_index > 1:
                     lines.append("")
@@ -3635,11 +3835,13 @@ def render_daily_card(history, report=None, *, audit=False):
                     )
             lines.append("")
             number += 1
-        if row["accas"]:
+        if active[id(row)]:
             result = f"ACCA #{first}" if first == number - 1 else f"ACCA #{first}–#{number - 1}"
+        elif row["accas"]:
+            result = "Superseded before kickoff; not an active ticket"
         else:
             result = "No additional tickets" if had_tickets else "No tickets at this publication"
-        had_tickets = had_tickets or bool(row["accas"])
+        had_tickets = had_tickets or bool(active[id(row)])
         identity = row.get("decision_id") or row.get("sha256") or "legacy daily receipt"
         if row["accas"]:
             references.append(
@@ -3691,7 +3893,13 @@ def render_daily_card(history, report=None, *, audit=False):
                 f"   Exact opportunity replay: {replay['dropped_acca_count']} acca(s) not republished;"
                 f" {replay['released_stake_units']:.6f} units left idle, no refill"
             )
+        if _is_hit_probability_record(row):
+            diagnostics.append("   Objective: highest whole-ticket hit estimate; price breaks exact probability ties only.")
+            diagnostics.append(f"   PAPER risk: flat {hit_probability.STAKE_FRACTION:.1%} of total bank before downward-only caps; positive EV not required.")
         diagnostics.extend([*leg_diagnostics, f"   Learning: {row['learning']['status']}", ""])
+    if superseded_lines:
+        lines.extend(["SUPERSEDED BEFORE KICKOFF — audit only; not current recommendations",
+                      *superseded_lines, ""])
     if audit:
         lines.extend([
             "PUBLICATION & LEG DETAILS",
@@ -3767,7 +3975,9 @@ def _paper_performance_history_lines(report):
                  f" ({acca['stake_units']:.6f} paper units)   HELD (not settled)"),
             ])
             if publication.get("decision_id"):
-                held.append(f"      Receipt {publication['decision_id']} / publication-local ticket {original_index}")
+                local_index = acca.get("publication_local_index", original_index)
+                held.append(f"      Receipt {publication['decision_id']} / publication-local ticket {local_index}")
+            held.extend(_paper_ticket_probability_lines(acca))
             for leg in acca["legs"]:
                 kickoff = parse_zoned_timestamp(leg.get("kickoff_utc"))
                 when = (" · " + kickoff.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M SAST")
@@ -3779,6 +3989,11 @@ def _paper_performance_history_lines(report):
     if not by_day:
         lines.append("  No bet days recorded.")
     lines.extend(["", "HELD (not yet settled; stake counted as committed)", *(held or ["  None."])])
+    if report.get("superseded_tickets"):
+        lines.extend(["", "SUPERSEDED BEFORE KICKOFF — released, not wins or losses"])
+        for old in report["superseded_tickets"]:
+            lines.append(f"  {old['date']} @{old['odds']:.3f} · released {old['stake_units']:.6f} paper units · {old['superseded_at']}")
+            lines.append(f"      Original receipt {old['receipt_sha256']} / ticket {old['acca_index']}")
     lines.extend([
         "", "NOTES",
         f"  Percentages of capital use the initial {base:g}-paper-unit base, not today's free bank.",
@@ -3857,7 +4072,8 @@ def render_performance(report):
         + history_text + "\nLEARNING & EVIDENCE\n" + evidence + "\n"
         "DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.\n"
         "             Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.\n\n"
-        "STAKING  quarter Kelly, own paper bank only; ROI is profit / settled stakes\n"
+        f"STAKING  new chance-first tickets: flat {hit_probability.STAKE_FRACTION:.1%} of total PAPER bank before caps; no Kelly/EV ranking\n"
+        "         Historical quarter Kelly stakes retained; ROI is profit / settled stakes\n"
         f"FIXTURES new publications: gross stake <= {MAX_FIXTURE_STAKE_FRACTION:.1%} of TOTAL paper bank per canonical fixture;\n"
         "         downward-only, no refill; existing frozen positions remain unchanged\n"
         "PAYOUT   hypothetical same-book singles product, not a confirmed acca quote\n"

@@ -359,7 +359,46 @@ view. The existing publisher writes that derived audit view; no extra capture or
 workflow is required. Rejection counts count checks, not unique fixtures, and can
 repeat across scans.
 
-Pending fixtures can be reused only within the approved combined 5% of total
-paper bank gross-stake budget. Previously booked stakes count first; exhausted
-and settled fixtures do not reopen. Quarter-Kelly and the aggregate exposure
-limit remain unchanged. Existing stakes and receipts are never resized.
+**Chance-first objective (new decisions from 2026-11-13):** maximise the model's
+estimated chance of the **whole acca** landing, not EV, payout or log-bank growth.
+The selector searches compatible same-book pairs exactly and publishes just the
+best pair, with price used only to break an exact probability tie. Two legs are
+the existing minimum; adding more legs cannot improve the chance of all winning.
+No lower-probability extra cards are added for turnover. No fixed probability
+floor is invented: "best available" does not necessarily mean "likely to win".
+
+Local market/quote evidence is still required (the existing minimum ten distinct
+fixtures in active pooled evidence). The original price-edge verdict remains in
+the audit, but **negative estimated EV is not an eligibility veto in this
+paper-only mode**. Otherwise the old gate could still force long-shot draws.
+Quote identity, source-generation, freshness and kickoff guards are unchanged.
+Each active ticket shows its whole-ticket estimated hit AND miss probabilities,
+explicitly labelled as independence-based, uncalibrated and not guaranteed.
+
+Chance-first risk is a small flat **0.1% of total PAPER bank** per publication,
+rounded down; it is not a Kelly allocation or a real-money recommendation.
+Pending fixtures can be reused only within the combined 5% of total paper-bank
+gross-stake budget, and the shared 25% aggregate ceiling still applies. Existing
+reservations count first; limits only reduce stakes, never refill other tickets.
+Historical growth/Kelly receipts retain their original interpretation and stakes.
+
+An operator may explicitly replace a **same-day, unstarted, unresolved PAPER**
+ticket before its original 30-minute lead boundary. The replacement is one atomic,
+append-only receipt naming the exact original receipt hash and publication-local
+ticket index. The original JSON bytes remain unchanged. Only the withdrawn paper
+reservation is released; it is not a win/loss and cannot erase a settled loss.
+The daily slip shows active recommendations first and withdrawn tickets separately
+as audit-only. Ordinary empty scans still never cancel tickets.
+
+```bash
+# Set RECEIPT_SHA256 to the exact original frozen JSON receipt's sha256 field.
+PYTHONPATH=src python scripts/replace_ml_paper_ticket.py \
+  --receipt-sha256 "$RECEIPT_SHA256" --acca-index 1 \
+  --reason "Operator requested chance-first replacement."
+```
+
+The command uses existing local slates/quotes at actual runtime, with no provider
+fetch or retimestamping. If no supported fresh pair exists, it records the explicit
+withdrawal without inventing a replacement. Nonempty frozen ML receipts (including
+supersessions) and malformed evidence are retained by cleanup regardless of age:
+they are durable capital/audit-chain evidence, not disposable scan telemetry.

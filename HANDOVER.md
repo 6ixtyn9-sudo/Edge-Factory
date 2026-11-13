@@ -12839,3 +12839,118 @@ cases pass the repair. Persisted source/settlement keys, raw quote orientation,
 financial history, bank balances, admission/staking thresholds, cache expiry,
 request budgets, workflows and dependencies are unchanged. Fresh negative caches
 still expire normally. No assistant workflow dispatch or merge.
+
+### 13 November 2026 — ML PAPER: highest ticket hit probability, including current-slip replacement
+
+Operator rejected the Serbia/Germany + Liechtenstein/Azerbaijan double-draw
+paper acca and explicitly chose **highest chance of landing**, not bankroll
+growth/EV. A follow-up instruction required changing the CURRENT tickets too,
+not merely changing future selection. Work stays on arena/cbad7d07-edge-factory.
+No Main/ENH selection, financial state, real-money order, provider, network
+collection, workflow dispatch, merge or promotion was performed.
+
+New decisions from local 2026-11-13 explicitly declare
+`highest_ticket_hit_probability_v1`. The existing source learner, complete
+market partitions, local evidence, quote identity/generation/age, proven kickoff
+and 24-hour horizon guards remain. Exact compatible same-book pair search ranks
+WHOLE-TICKET model probability first, price only on an EXACT probability tie,
+then canonical IDs. Exactly one best two-leg ticket is published per decision:
+two is the existing minimum and adding legs cannot improve an all-legs-win
+probability. There is no fabricated minimum hit probability or promised hit-rate
+uplift. "Best available" need not exceed 50% and is not a calibrated probability.
+
+The legacy price-aware admission witness still replays byte-for-byte. In the new
+objective it supplies local support (at least the active pooled minimum of ten
+unique fixtures and positive empirical support), NOT a positive-EV veto. Merely
+sorting already EV-eligible legs would have continued forcing long shots on this
+slate. Negative estimated EV is explicitly permitted for PAPER chance-first
+selection, never represented as profitability. Kelly cannot sensibly size that
+objective: new risk is instead a deliberately small, non-optimised flat 0.1% of
+TOTAL paper bank, downward-rounded. The existing 5% gross-fixture and shared 25%
+aggregate ceilings, prior commitments and exact opportunity replay/no-refill
+protections still apply. Old growth/Kelly helpers and frozen receipts retain
+their historical interpretation. Readers/writers independently replay the new
+objective, arithmetic, best pair and flat-risk ceiling. Cards display ticket hit
+AND miss estimates, with explicit unvalidated independence/calibration caveats.
+
+Explicit pre-kickoff replacement is atomic and append-only. It references the
+original receipt SHA256 and 1-based publication-local acca index, records the
+operator reason, requires SAME-DAY prior/unstarted/unresolved targets and the
+original 30-minute lead time, releases their reservations, and never edits
+original receipt bytes or treats a withdrawal as a W/L. Duplicate references,
+repeat/concurrent withdrawals, unknown tickets and known/started outcomes fail
+closed. Daily cards/performance distinguish active tickets from audit-only
+withdrawals. `scripts/replace_ml_paper_ticket.py` uses only existing local
+slates/quotes at actual time; it does not fetch or retimestamp anything. If no
+supported fresh pair exists, it records the explicit withdrawal without making
+up a replacement. Cleanup now retains ALL nonempty/corrupt timestamped ML
+receipts regardless of age: deleting those would break the prior-hash/capital
+chain and erase replacement evidence. Only empty intermediate placeholders are
+prunable. README documents the objective, small PAPER risk and explicit command.
+
+Current branch-local slip WAS replaced, before kickoff:
+- Original receipt `20261112T223642381751Z`, SHA256
+  `fdbe9fde2b5cc5f819d495357022510122dd04300de5a7ae242c8d564573a852`,
+  acca 1 @35.775, 0.097512 units: withdrawn, audit-only, reservation released.
+- Replacement receipt `20261113T063037299117Z`, SHA256
+  `9201bfaa43643a1956a386966204f670537321429289dbdd408a784f0856b62b`,
+  captured 06:30:37 UTC, published 06:34:20 UTC (08:34:20 SAST).
+- 1xBet: Azerbaijan away win @1.300 + Slovakia home win @1.370;
+  hypothetical product 1.781; 0.056447 PAPER units. Model hit 46.24545%,
+  miss 53.75455%, versus the withdrawn ticket's frozen model product 4.41309%.
+  Estimated EV is NEGATIVE (-17.64%): explicitly chance-first, not value-first.
+- Original quote times remain 2026-11-12 22:28 UTC, inside their unchanged
+  TheOddsAPI 12-hour policy at publication. Expired quotes were not rescued.
+- Independent exhaustive oracle verified this is the maximum among 4,906
+  compatible supported pairs in the published, time-eligible candidate pool.
+  Independent semantic/checksum validation of the new receipt passed.
+- Byte hashes verified ALL 174 previously frozen paper/live sibling files in
+  the pre-run manifest unchanged. Only a new ML receipt and derived ML
+  card/audit/performance views were written. No manual localdata commit.
+
+IMPORTANT local-results availability caveat, separate from the selection change:
+the existing grader re-reads currently available local regulation facts. Relative
+to the previously committed derived performance report, Nov 3 publication
+20261103T060852964169Z tickets 2/3 now lack result witnesses (previously losses
+-1.263540/-4.471153); Nov 6 publication 20261106T044557571480Z ticket 1 now lacks
+its previous win witness (+9.6757032125). They are pending, not invented scores.
+The regenerated displayed bank is therefore 56.4479141792, not 60.3889243917,
+and 8.924971 units remain reserved including older unresolved positions. The
+pre-kickoff withdrawal itself creates ZERO profit/loss. No old receipt, actual
+settlement store or live ledger was edited to force either bank number. This is
+not a clean-backtest or historical-bank-reset claim; those three local result
+witness gaps remain an operational limitation and were not repaired in this task.
+
+Validation: the three core new regressions failed before implementation. Full
+suite after the main repair: **7069 passed in 419.73s**. The real local command
+published the new immutable receipt and all derived reports, but the enclosing
+900-second shell wait timed out during a redundant post-publication full-history
+read; it was NOT rerun and no duplicate withdrawal was made. Fixed that new CLI
+to print the ALREADY published TXT (as the existing ML runner does), rather than
+reload hundreds of MB of frozen history just to print. Added a dedicated CLI
+regression. Focused suite after that print-only fix: **155 passed**. Final
+review also reproduced a new-date daily missing-draft seal being rejected by the
+new writer policy check; it now explicitly declares chance-first on its empty
+missed-freeze receipt (never inventing a ticket or reselecting a legacy draft).
+Added its before-failing/after-passing regression. FINAL ALL-ML + retention suite:
+**889 passed in 205.24s** after every code change. New-module/CLI/test Ruff checks
+and existing ML module F checks pass; diff check clean. Diagnostic logs/manifests
+live under ignored `.cache/`, not production
+receipts. Engineering/selection correctness is demonstrated; calibration,
+profitable betting and production deployment are not claimed.
+
+### 13 November 2026 — Chance-first ML PR publication scope
+
+Operator requested a PR for the current branch. The implementation still
+publishes ONE best two-leg acca per publication; the subsequent question about
+that cap did not authorize a multi-acca implementation, and no such change is
+claimed. The PR explicitly identifies this current limitation.
+
+Follow the repository's bot-owned localdata convention: commit source, tests
+and documentation only, using explicit paths. The branch-local replacement
+receipt and derived ML card/audit/performance files remain intact but UNCOMMITTED;
+they are not silently deployed to main by merging this code PR. In particular,
+the locally recomputed bank/result-availability changes are not shipped as
+financial state. An operational replacement elsewhere must use the explicit,
+pre-kickoff guarded CLI against that environment's current evidence. No bot
+workflow is dispatched and no PR merge is requested/performed in this turn.
