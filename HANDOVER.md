@@ -12954,3 +12954,90 @@ the locally recomputed bank/result-availability changes are not shipped as
 financial state. An operational replacement elsewhere must use the explicit,
 pre-kickoff guarded CLI against that environment's current evidence. No bot
 workflow is dispatched and no PR merge is requested/performed in this turn.
+
+### 13 November 2026 — Remove single-acca cap, retain one shared PAPER budget
+
+Operator questioned the one-acca cap, approved removing it, then explicitly chose
+**existing evidence checks only** for extra accas over an additional >50% hit
+floor. This supersedes the earlier PR scope note: multiple accas ARE now included
+in PR #230 on the same arena/cbad7d07-edge-factory branch. No numeric probability
+floor, daily ticket quota, provider fetch, workflow dispatch or live-lane change.
+
+New declarations use `highest_ticket_hit_probability_disjoint_v2`. Take the exact
+highest-hit compatible same-book TWO-leg pair; remove every quote/market/book for
+both used canonical fixtures; repeat on the remaining supported pool. Exact
+probability ties still use price, then canonical candidate IDs. This preserves
+the best primary ticket, but is explicitly a greedy best-remaining sequence, not
+a maximum-cardinality matching, maximum aggregate any-win probability, guaranteed
+strike-rate uplift, or portfolio-profit optimum. Cross-fixture independence and
+calibration remain unvalidated. Later pairs can be substantially less likely to
+land; CAUTION/SKIPPED_VETO and negative estimated EV stay PAPER-eligible only
+under the unchanged source/quote/timing/local-evidence safeguards.
+
+The existing **0.1% TOTAL PAPER bank budget is SHARED PER PUBLICATION**, not awarded
+to each ticket. Equal integer micro-unit shares; indivisible remainder goes to
+higher hit ranks. Zero shares cannot publish. Fixture/aggregate limits, exact
+opportunity replay drops and no-refill rules only reduce original shares: no
+redistribution to another or weaker ticket. A saved daily draft preserves hit
+rank/order and can only retain/reduce its original budget/shares at sealing, even
+if results increase paper capital. New independent replay checks every published
+pair/rank, source arithmetic, original share, and the aggregate publication
+budget. Frozen `highest_ticket_hit_probability_v1` receipts retain their EXACT
+single-ticket policy and remain independently valid/readable. New writers require
+v2; no frozen v1 receipt was upgraded, rehashed or reinterpreted.
+
+Current local slip was updated again using the explicit guarded replacement
+command, targeting the PREVIOUS chance-first v1 receipt (NOT repeating the already
+withdrawn double-draw target):
+- Target: SHA256
+  `9201bfaa43643a1956a386966204f670537321429289dbdd408a784f0856b62b`, acca 1.
+  Its 0.056447 reservation was released with zero W/L/P&L; original bytes kept.
+- New receipt: `autobets_ML_2026-11-13_20261113T073524424830Z.json`, SHA256
+  `f1b0b635414334c59cc790c12dfd63872bc38cbe36ace7aeed48a579483068bb`.
+  Captured 07:35:24.424830 UTC; published 07:38:48.340663 UTC / 09:38:48 SAST.
+- P4/1, 1xBet: Azerbaijan away win @1.300 + Slovakia home win @1.370;
+  hypothetical @1.781; hit 46.24545%, miss 53.75455%; 0.018816 PAPER units.
+- P4/2, 1xBet: Germany away win @1.300 + Netherlands home win @1.560;
+  hypothetical @2.028; hit 38.24116%, miss 61.75884%; 0.018816 PAPER units.
+- P4/3, 1xBet: Bulgaria/Iceland UNDER 2.5 @1.780 + Slovenia/Switzerland UNDER
+  2.5 @1.690; hypothetical @3.0082; hit 31.26147%, miss 68.73853%; 0.018815 units.
+- Total new stake EXACTLY 56,447 micro-units / 0.056447 PAPER units: unchanged
+  versus the replaced single ticket. Six different fixtures; all November 13
+  19:45 UTC / 21:45 SAST. Real existing quote timestamps remain unchanged and
+  within their source age limits at actual publication. No stale-quote rescue.
+- Independent exhaustive oracle verified ranks against 4,906 / 2,125 / 625
+  supported compatible pairs respectively; no pair remained after rank three.
+  New receipt checksum/semantic replay passed. ALL 175 pre-run frozen paper/live
+  files, including both earlier recommended tickets' receipts, byte-unchanged.
+- Both earlier recommendations now appear only in the withdrawal audit.
+  Current bank 56.4479141792, reserved 8.924971, free 47.5229431792: unchanged from
+  the previous refresh. 3W/39L and six held accas across all dates. The three old
+  result-witness gaps described above remain unresolved; no settlement repair.
+
+Operational interruption: the replacement process was OOM-killed AFTER the new
+receipt AND derived card/audit/performance reports had published. Verification
+confirmed the completed publication; **the replacement was NOT rerun**. Root
+cause was `publish()` retaining the full validated history/report then calling
+`latest_card()` to load that entire history again. For rolling publications that
+helper unconditionally returns the latest row anyway; publisher now reuses its
+already validated latest rolling receipt and keeps the unchanged legacy/draft
+lookup path. Added a regression that FAILED on the redundant third load and
+passes after the fix. No claim of a successful pre-fix CLI exit is made.
+
+Validation: five new core portfolio tests failed before implementation. Targeted
+portfolio/safety suite: 67 passed before the final publisher regression. Full
+suite before that last fix: 7,105 passed in 501.57s. FINAL full suite after every
+code change and the additional OOM-regression fix: **7,106 passed in 317.38s**.
+New module/tests/CLI Ruff checks, existing ML module F checks and diff check pass.
+Randomised exhaustive next-pair oracles, shuffled/book-order invariance, alternate
+quote fixture exclusion, negative-EV/evidence-only admission, micro-unit limits,
+no-refill cap/replay/aggregate reductions, v1 replay, atomic v1->multi replacement,
+malicious rehashed policy/rank/share/order changes, and rising/falling-bank daily
+draft sealing are covered. Logs and byte manifest/oracle summary are ignored
+`.cache/ml-multi-*` diagnostics, not production receipts.
+
+PR publication remains SOURCE/TESTS/DOCS ONLY per bot-owned localdata convention.
+The new local receipts and generated reports remain intact and uncommitted;
+merging the PR does not copy this runtime state to main or cancel production
+positions. No workflow dispatch, merge, production deployment, Main/ENH financial
+edit, real-money action, or claim of calibration/profitability occurred.

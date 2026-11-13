@@ -18,7 +18,7 @@ from test_ml_paper_rolling import run, slate
 import scripts.auto_tickets as at
 from edgefactory import ml_paper as mp
 
-OBJECTIVE = "highest_ticket_hit_probability_v1"
+OBJECTIVE = mp.hit_probability.OBJECTIVE
 NOW = datetime(2026, 11, 13, 8, tzinfo=UTC)
 DAY = "2026-11-13"
 
@@ -56,19 +56,21 @@ def test_hit_probability_beats_draw_lottery_even_when_favourites_have_negative_e
             supported(4, p=.211, odds=5.3, lower=.197)]
     before = deepcopy(rows)
     plan, diagnostics = choose(rows)
-    assert len(plan) == 1 and signature(plan[0]) == ("1", "2")
+    assert len(plan) == 2 and signature(plan[0]) == ("1", "2")
     assert len(plan[0]["legs"]) == 2
     assert plan[0]["probability_estimate"] == pytest.approx(.855)
     assert plan[0]["estimated_ev"] < 0  # price/value is NOT the selection gate
-    assert plan[0]["stake_units"] == .1  # small flat PAPER risk, not Kelly/chasing payout
+    assert plan[0]["stake_units"] == .05  # one .1-unit budget SHARED across both accas
+    assert sum(a["stake_units"] for a in plan) == .1
     assert diagnostics["selection_objective"] == OBJECTIVE
     assert rows == before
 
 
-def test_no_extra_legs_or_weaker_extra_cards_to_manufacture_more_payout():
+def test_multiple_two_leg_accas_never_add_legs_to_manufacture_more_payout():
     rows = [supported(i, p=.99 - i / 1000, odds=10.) for i in range(1, 9)]
     plan, _ = choose(rows)
-    assert len(plan) == 1 and signature(plan[0]) == ("1", "2")
+    assert len(plan) == 4 and signature(plan[0]) == ("1", "2")
+    assert all(len(a["legs"]) == 2 and a["stake_units"] == .025 for a in plan)
     assert plan[0]["probability_estimate"] > math.prod(c["probability"] for c in rows)
 
 

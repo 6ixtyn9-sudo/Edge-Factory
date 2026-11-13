@@ -361,11 +361,19 @@ repeat across scans.
 
 **Chance-first objective (new decisions from 2026-11-13):** maximise the model's
 estimated chance of the **whole acca** landing, not EV, payout or log-bank growth.
-The selector searches compatible same-book pairs exactly and publishes just the
-best pair, with price used only to break an exact probability tie. Two legs are
-the existing minimum; adding more legs cannot improve the chance of all winning.
-No lower-probability extra cards are added for turnover. No fixed probability
-floor is invented: "best available" does not necessarily mean "likely to win".
+The selector takes the exact best compatible same-book pair, then the exact best
+remaining pair, removing **all quotes/markets/books for used fixtures** at each
+step. Multiple accas are allowed, with **two legs each** and no fixture reuse
+within a publication. Price only breaks exact probability ties. There is no daily
+ticket quota or single-ticket cap; the count follows the supported pair pool and
+available micro-unit risk budget. This primary-first greedy sequence is not a
+global matching, portfolio any-win, or profitability optimum.
+
+The operator chose **existing evidence checks only** for additional tickets—no
+extra hit-probability floor. Later accas can have substantially lower estimates,
+even below 50%; "best remaining" does not mean "likely to win". Adding more tickets
+does not establish a higher strike rate or profit. Adding legs still cannot
+improve any one ticket's all-legs-win probability.
 
 Local market/quote evidence is still required (the existing minimum ten distinct
 fixtures in active pooled evidence). The original price-edge verdict remains in
@@ -375,12 +383,21 @@ Quote identity, source-generation, freshness and kickoff guards are unchanged.
 Each active ticket shows its whole-ticket estimated hit AND miss probabilities,
 explicitly labelled as independence-based, uncalibrated and not guaranteed.
 
-Chance-first risk is a small flat **0.1% of total PAPER bank** per publication,
-rounded down; it is not a Kelly allocation or a real-money recommendation.
-Pending fixtures can be reused only within the combined 5% of total paper-bank
-gross-stake budget, and the shared 25% aggregate ceiling still applies. Existing
-reservations count first; limits only reduce stakes, never refill other tickets.
-Historical growth/Kelly receipts retain their original interpretation and stakes.
+Chance-first risk is a small flat **0.1% of total PAPER bank per publication,
+SHARED across all its accas—not 0.1% per ticket**. The budget is rounded down and
+split equally in integer micro-units, with indivisible remainders assigned in hit-
+probability rank order. A share below one micro-unit cannot become a ticket. This
+is not Kelly, a fitted allocation optimum, or a real-money recommendation.
+
+Existing reservations count first. The 5% gross-stake limit per fixture and shared
+25% aggregate ceiling only reduce stakes. Replay drops and cap reductions leave
+unused shares idle: no weaker refill or redistribution. New publications may reuse
+pending fixtures only within that existing combined exposure budget; within one
+publication, all accas are fixture-disjoint. The declared multi-acca objective is
+`highest_ticket_hit_probability_disjoint_v2`; frozen single-ticket chance-first
+v1 and historical growth/Kelly receipts remain readable and unchanged. A saved
+daily draft can only retain/reduce its original shares when sealed, never expand
+them because paper capital has increased.
 
 An operator may explicitly replace a **same-day, unstarted, unresolved PAPER**
 ticket before its original 30-minute lead boundary. The replacement is one atomic,

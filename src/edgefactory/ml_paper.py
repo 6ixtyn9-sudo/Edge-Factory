@@ -5,11 +5,13 @@ Complete partitions preserve complements and 1X2/DC identities irrespective of
 quote coverage. Missing source markets or quotes are unavailable, never guessed.
 
 New decisions maximise estimated WHOLE-TICKET hit probability, not EV, payout or
-log-bank growth. One best same-book compatible pair is selected: adding legs
-cannot increase the chance of all legs winning. Price breaks exact probability
-ties only. Local evidence remains required; a price-edge veto is not a data-
-quality veto. A small flat 0.1% of total PAPER bank replaces Kelly for this mode;
-fixture (5%) and aggregate (25%) exposure ceilings can only reduce that risk.
+log-bank growth. Take the best same-book pair, then the best remaining pair,
+without reusing fixtures within the publication. Every ticket has two legs:
+adding legs cannot increase its all-legs-win probability. Price breaks exact
+probability ties only. Existing local evidence remains required; no additional
+probability floor or daily count quota is imposed. One small flat 0.1% of total
+PAPER bank is SHARED across all tickets in a publication, not multiplied per
+acca. Fixture (5%) and aggregate (25%) ceilings can only reduce that risk.
 CAUTION / SKIPPED_VETO remain paper-eligible; identity, quote quality, freshness,
 source generation and proven kickoff guards still apply. No live gate changes.
 
@@ -1726,9 +1728,9 @@ def _is_hit_probability_record(row):
     objective = policy.get("selection_objective")
     witness = (objective is not None or (row.get("search") or {}).get("selection_objective") is not None
                or any("selection_objective" in a for a in row["accas"]))
-    if witness and objective != hit_probability.OBJECTIVE:
+    if witness and objective not in hit_probability.OBJECTIVES:
         raise ValueError("missing or unsupported paper selection objective")
-    return objective == hit_probability.OBJECTIVE
+    return objective in hit_probability.OBJECTIVES
 
 
 def _validate_hit_probability_record(row, *, required=False):
@@ -1737,19 +1739,56 @@ def _validate_hit_probability_record(row, *, required=False):
         if required:
             raise ValueError("new paper decision requires chance-first selection policy")
         return
-    if any((row.get("policy") or {}).get(k) != v for k, v in hit_probability.policy().items()):
+    objective = row["policy"]["selection_objective"]
+    if any(row["policy"].get(k) != v for k, v in hit_probability.policy(objective).items()):
         raise ValueError("invalid chance-first paper policy")
-    if len(row["accas"]) > 1:
-        raise ValueError("chance-first publishes only the highest-probability ticket")
-    if row["accas"]:
-        expected = hit_probability.best_acca(row["candidates"])
-        actual = row["accas"][0]
-        if expected is None or any(actual.get(k) != v for k, v in expected.items()):
-            raise ValueError("paper ticket differs from highest supported hit-probability pair")
-        limit = _hit_probability_stake_micro_units(row["paper_bank_at_decision"])
-        if (_stake_micro_units(actual["stake_units"]) > limit
-                or (actual.get("portfolio_allocation") or {}).get("selection_objective") != hit_probability.OBJECTIVE):
-            raise ValueError("chance-first paper stake exceeds flat risk budget")
+    if objective == hit_probability.LEGACY_OBJECTIVE:
+        # Frozen single-ticket receipts are evidence, not a migration target.
+        if len(row["accas"]) > 1:
+            raise ValueError("v1 chance-first publishes only the highest-probability ticket")
+        if row["accas"]:
+            expected = hit_probability.best_acca(row["candidates"], objective=objective)
+            actual = row["accas"][0]
+            if expected is None or any(actual.get(k) != v for k, v in expected.items()):
+                raise ValueError("paper ticket differs from highest supported hit-probability pair")
+            limit = _hit_probability_stake_micro_units(row["paper_bank_at_decision"])
+            if (_stake_micro_units(actual["stake_units"]) > limit
+                    or (actual.get("portfolio_allocation") or {}).get("selection_objective") != objective):
+                raise ValueError("chance-first paper stake exceeds flat risk budget")
+        return
+    _require_mutually_exclusive(row["accas"])
+    if not row["accas"]:
+        return  # no headroom, no evidence, or all opportunities already reserved
+    expected = hit_probability.ranked_accas(row["candidates"])
+    search = row.get("search") or {}
+    budget = search.get("shared_publication_budget_micro_units")
+    limit = min(_hit_probability_stake_micro_units(row["paper_bank_at_decision"]),
+                _decimal_micro_units(row["paper_available_at_decision"], "free paper bank"))
+    if (type(budget) is not int or not 0 < budget <= limit
+            or (not row.get("draft_sha256") and budget != limit)
+            or search.get("selection_objective") != objective
+            or search.get("supported_acca_count") != len(expected)):
+        raise ValueError("invalid chance-first shared publication budget")
+    shares = hit_probability.budget_shares(len(expected), budget)
+    last_rank = 0
+    for actual in row["accas"]:
+        rank = actual.get("selection_rank")
+        if type(rank) is not int or not last_rank < rank <= len(expected):
+            raise ValueError("chance-first accas are not in best-remaining-pair order")
+        proposal = expected[rank-1]
+        if any(actual.get(k) != v for k, v in proposal.items()):
+            raise ValueError("paper ticket differs from exact best remaining supported pair")
+        allocation = actual.get("portfolio_allocation") or {}
+        if (allocation.get("selection_objective") != objective
+                or allocation.get("staking") != hit_probability.SHARED_STAKING
+                or allocation.get("shared_publication_budget_micro_units") != budget
+                or allocation.get("supported_acca_count") != len(expected)
+                or allocation.get("pre_cap_share_micro_units") != shares[rank-1]
+                or _stake_micro_units(actual["stake_units"]) > shares[rank-1]):
+            raise ValueError("chance-first acca exceeds its shared budget share; no refill")
+        last_rank = rank
+    if sum(_stake_micro_units(a["stake_units"]) for a in row["accas"]) > budget:
+        raise ValueError("chance-first paper stakes exceed shared publication budget")
 
 
 def _hit_probability_stake_micro_units(bank):
@@ -2337,7 +2376,34 @@ def _concentrate_sealed_draft(payload, history, score_lookup):
     report = performance(prior, score_lookup)
     bank, committed = report["paper_bank_units"], report["paper_committed_units"]
     available = max(0.0, report["paper_free_units"])
-    exclusive_accas, exclusivity_dropped = _mutually_exclusive_accas(payload["accas"])
+    shared = (payload.get("policy") or {}).get("selection_objective") == hit_probability.OBJECTIVE
+    if shared:
+        # A saved multi-acca draft is not a fresh opportunity: retain its
+        # probability order and only lower its original budget / shares.
+        count = len(hit_probability.ranked_accas(payload["candidates"]))
+        budget = min((payload.get("search") or {}).get("shared_publication_budget_micro_units", 0),
+                     _hit_probability_stake_micro_units(bank),
+                     _decimal_micro_units(available, "free paper bank"))
+        shares = hit_probability.budget_shares(count, budget)
+        exclusive_accas = []
+        for acca in payload["accas"]:
+            share = shares[acca["selection_rank"]-1]
+            stake = min(_stake_micro_units(acca["stake_units"]), share)
+            if stake > 0:
+                exclusive_accas.append(dict(
+                    acca, stake_units=stake / MICRO_UNITS,
+                    portfolio_allocation=dict(acca["portfolio_allocation"],
+                                              shared_publication_budget_micro_units=budget,
+                                              pre_cap_share_micro_units=share),
+                ))
+        _require_mutually_exclusive(exclusive_accas)
+        exclusivity_dropped = 0
+        payload["search"] = dict(payload.get("search") or {},
+                                 selection_objective=hit_probability.OBJECTIVE,
+                                 shared_publication_budget_micro_units=budget,
+                                 supported_acca_count=count)
+    else:
+        exclusive_accas, exclusivity_dropped = _mutually_exclusive_accas(payload["accas"])
     replay_diagnostics = {}
     exclusive_accas = _without_replayed_accas(exclusive_accas, report, replay_diagnostics)
     plan, audit = project_fixture_stakes(
@@ -2354,7 +2420,8 @@ def _concentrate_sealed_draft(payload, history, score_lookup):
                     diagnostics_scope="unconstrained_pre_projection_solver_not_published_optimality",
                     published_portfolio_optimality_proven=False,
                     **replay_diagnostics,
-                    mutual_exclusivity={"rule": "pairwise_fixture_disjoint_highest_stake_first_no_refill",
+                    mutual_exclusivity={"rule": (hit_probability.DISJOINT_RULE if shared else
+                                                 "pairwise_fixture_disjoint_highest_stake_first_no_refill"),
                                         "dropped_acca_count": exclusivity_dropped}),
     )
     if payload["status"] != "missed_freeze_no_paper_bet":
@@ -2374,10 +2441,10 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
     and prior open fixture micro-units. Production sizing ALWAYS supplies it;
     immutable writers independently require the approved policy. The default
     preserves the old helper's unconstrained semantics, not production policy.
-    With concentration supplied (production), accas are additionally mutually
-    exclusive: pairwise fixture-disjoint, highest allocated stake wins
-    (canonical tiebreak), no refill. Admission envelopes feed the unchanged
-    allocator; old ungated helper/replay semantics remain readable.
+    Chance-first v2 takes each exact best remaining pair, excluding fixtures
+    already selected, with one equal-split publication budget. Legacy growth
+    allocation retains highest-stake-first fixture exclusivity. Neither mode
+    refills shares after caps or replay drops. Old helper semantics remain.
     """
     if concentration is not None:
         if (not isinstance(concentration, dict)
@@ -2388,10 +2455,10 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
     if not math.isfinite(available_units) or available_units <= 0:
         return []
     if objective is not None:
-        if objective != hit_probability.OBJECTIVE:
+        if objective not in hit_probability.OBJECTIVES:
             raise ValueError("unsupported paper selection objective")
-        return _select_hit_probability_acca(rows, available_units, diagnostics=diagnostics,
-                                            concentration=concentration)
+        return _select_hit_probability_accas(rows, available_units, diagnostics=diagnostics,
+                                            concentration=concentration, objective=objective)
     search = {}
     proposals = acca_proposals(rows, diagnostics=search)
     fractions, allocation = allocate_portfolio(proposals)
@@ -2430,19 +2497,34 @@ def select_accas(rows, available_units=BASE_PAPER_UNITS, *, diagnostics=None,
 
 
 
-def _select_hit_probability_acca(rows, available_units, *, diagnostics, concentration):
+def _select_hit_probability_accas(rows, available_units, *, diagnostics, concentration, objective):
     bank = concentration["total_bank_units"] if concentration is not None else available_units
     search = {}
-    proposal = hit_probability.best_acca(rows, diagnostics=search)
-    allocation = dict(search, staking="flat_fraction_of_total_paper_bank_not_Kelly",
-                      paper_stake_fraction_of_total_bank=hit_probability.STAKE_FRACTION)
+    budget = min(_hit_probability_stake_micro_units(bank),
+                 _decimal_micro_units(available_units, "free paper bank"))
+    if objective == hit_probability.LEGACY_OBJECTIVE:
+        proposal = hit_probability.best_acca(rows, diagnostics=search, objective=objective)
+        proposals = [proposal] if proposal is not None else []
+        allocation = dict(search, staking="flat_fraction_of_total_paper_bank_not_Kelly",
+                          paper_stake_fraction_of_total_bank=hit_probability.STAKE_FRACTION)
+    else:
+        proposals = hit_probability.ranked_accas(rows, diagnostics=search)
+        allocation = dict(search, staking=hit_probability.SHARED_STAKING,
+                          shared_publication_budget_micro_units=budget,
+                          paper_stake_fraction_of_total_bank=hit_probability.STAKE_FRACTION,
+                          risk_budget_scope="one_publication_shared_across_all_accas")
     if diagnostics is not None:
         diagnostics.update(allocation)
-    stake = min(_hit_probability_stake_micro_units(bank),
-                _decimal_micro_units(available_units, "free paper bank"))
-    plan = ([dict(proposal, stake_units=stake / MICRO_UNITS,
-                  stake_fraction_of_free_bank=stake / MICRO_UNITS / available_units,
-                  portfolio_allocation=allocation)] if proposal is not None and stake > 0 else [])
+    shares = hit_probability.budget_shares(len(proposals), budget)
+    plan = []
+    for proposal, share in zip(proposals, shares):
+        if share <= 0:
+            continue
+        detail = (dict(allocation, pre_cap_share_micro_units=share)
+                  if objective == hit_probability.OBJECTIVE else allocation)
+        plan.append(dict(proposal, stake_units=share / MICRO_UNITS,
+                         stake_fraction_of_free_bank=share / MICRO_UNITS / available_units,
+                         portfolio_allocation=detail))
     if concentration is not None:
         input_count = len(plan)
         plan, audit = project_fixture_stakes(plan, **concentration)
@@ -2450,7 +2532,8 @@ def _select_hit_probability_acca(rows, available_units, *, diagnostics, concentr
             a["stake_fraction_of_free_bank"] = a["stake_units"] / available_units
         if diagnostics is not None:
             diagnostics["mutual_exclusivity"] = {
-                "rule": "single_highest_probability_ticket_no_weaker_refill",
+                "rule": (hit_probability.DISJOINT_RULE if objective == hit_probability.OBJECTIVE
+                         else "single_highest_probability_ticket_no_weaker_refill"),
                 "input_acca_count": input_count, "kept_acca_count": input_count,
                 "dropped_acca_count": 0,
             }
@@ -2471,9 +2554,11 @@ def _publish_receipt(path, payload):
     captured = parse_zoned_timestamp(payload.get("captured_at"))
     _validate_admission(payload, required=(captured is not None and
                         captured.astimezone(LOCAL_TZ).date().isoformat() >= ADMISSION_ACTIVATED_AS_OF))
-    _validate_hit_probability_record(payload, required=(captured is not None
-                                    and _selection_objective(captured) is not None
-                                    and not payload.get("draft_sha256")))
+    current_objective = _selection_objective(captured) if captured is not None else None
+    fresh_decision = current_objective is not None and not payload.get("draft_sha256")
+    _validate_hit_probability_record(payload, required=fresh_decision)
+    if fresh_decision and payload["policy"].get("selection_objective") != current_objective:
+        raise ValueError("new chance-first publication requires current portfolio policy")
     if any(not _quote_generation_ok(c.get("price_source"), c.get("price_provenance"))
            for c in payload["candidates"]):
         raise ValueError("superseded or unproven OddsPapi parser generation in new publication")
@@ -2839,7 +2924,7 @@ def capture(
             payload = _concentrate_sealed_draft(payload, history, score_lookup)
             if (payload["status"] == "missed_freeze_no_paper_bet"
                     and _selection_objective(at) is not None):
-                payload["policy"].update(hit_probability.policy())
+                payload["policy"].update(hit_probability.policy(_selection_objective(at)))
             payload["persisted_at"] = at.isoformat()
             payload["sha256"] = digest(payload)
             return payload if _publish_receipt(path, payload) else None
@@ -2945,7 +3030,7 @@ def capture(
         }
         _attach_concentration_policy(payload, concentration_audit)
         if objective is not None:
-            payload["policy"].update(hit_probability.policy())
+            payload["policy"].update(hit_probability.policy(objective))
 
         def freeze_current(at):
             if at < captured or at.astimezone(LOCAL_TZ).date().isoformat() != day:
@@ -3181,7 +3266,7 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
             "date": day, "candidates": [{k: v for k, v in c.items()
                 if not k.startswith("price_age_seconds_")} for c in rows],
             "learning": learner, "bank": report["paper_bank_units"],
-            **({"selection_policy": hit_probability.policy()} if objective is not None else {}),
+            **({"selection_policy": hit_probability.policy(objective)} if objective is not None else {}),
             **({"supersession": pending["supersession"]} if pending is not None else {}),
             "committed": report["paper_committed_units"], "rejections": dict(rejected),
             # Policy/prior exposure participate in deduplication identity. Equal
@@ -3225,7 +3310,7 @@ def capture_rolling(context, *, root, score_lookup, kickoff_fn, source_guard,
                            report["paper_bank_units"])},
         }
         if objective is not None:
-            receipt["policy"].update(hit_probability.policy())
+            receipt["policy"].update(hit_probability.policy(objective))
         if pending is not None:
             receipt["supersession"] = pending["supersession"]
             _require_unresolved_replacement_targets(history, receipt, score_lookup)
@@ -3487,7 +3572,7 @@ def performance(history, score_lookup, *, pending_replacement=None):
             }
             if withdrawn:
                 item["publication_local_index"] = original_index
-            if acca.get("selection_objective") == hit_probability.OBJECTIVE:
+            if acca.get("selection_objective") in hit_probability.OBJECTIVES:
                 item.update({k: acca[k] for k in ("selection_objective", "probability_estimate",
                                                 "model_probability_estimate")})
             accas.append(item)
@@ -3566,6 +3651,9 @@ def performance(history, score_lookup, *, pending_replacement=None):
             "fixture_concentration_policy": FIXTURE_CONCENTRATION_POLICY,
             "selection_objective": hit_probability.OBJECTIVE,
             "new_paper_stake_fraction_of_total_bank": hit_probability.STAKE_FRACTION,
+            "new_paper_risk_budget_scope": "one_publication_shared_across_all_accas",
+            "max_accas_per_publication": None,
+            "minimum_ticket_hit_probability": None,
             "fixture_concentration_applies_to": "new_publications_only_existing_positions_unchanged",
             "bankruptcy": "zero_free_capital_no_new_stakes_no_refill",
         },
@@ -3583,10 +3671,13 @@ def render_card(receipt):
     lines = [
         f"autobets_ML TICKETS — {receipt['date']}",
         "=" * 62,
-        ("PAPER ONLY — chance-first pair; small flat paper risk; no odds band." if chance_first
+        ("PAPER ONLY — chance-first two-leg accas; small paper risk; no odds band." if chance_first
          else "PAPER ONLY — own legs, accas and model-sized stakes; no odds band."),
         "Same-book single-price products; acca acceptance/payout unconfirmed.",
     ]
+    if (receipt.get("policy") or {}).get("selection_objective") == hit_probability.OBJECTIVE:
+        lines.append(f"PAPER risk: {hit_probability.STAKE_FRACTION:.1%} of total bank per publication, shared across all accas; caps leave unused shares idle.")
+        lines.append("Exact best remaining pairs; no fixture reuse or additional hit-probability floor.")
     if receipt.get("freeze_basis") == ROLLING_FREEZE:
         lines.append(f"DECISION {receipt['decision_id']} · next 24 hours · frozen on publication")
     lines.append("")
@@ -3601,7 +3692,7 @@ def render_card(receipt):
         lines.append(
             f"[PAPER ACCA #{i}] @{acca['odds']:.3f} — {acca['stake_units']:.6f} paper units — {acca['book']}"
         )
-        if acca.get("selection_objective") == hit_probability.OBJECTIVE:
+        if acca.get("selection_objective") in hit_probability.OBJECTIVES:
             lines.extend(_paper_ticket_probability_lines(acca))
         elif acca.get("probability_basis") in ADMISSION_JOINT_BASES:
             lines.append(f"   Joint admission envelope {acca['probability_estimate']:.1%}"
@@ -3721,7 +3812,7 @@ def _paper_ticket_probability_lines(acca):
     p = acca.get("model_probability_estimate", acca.get("probability_estimate"))
     if type(p) not in (int, float) or not math.isfinite(p) or not 0 <= p <= 1:
         return []
-    label = "Chance-first" if acca.get("selection_objective") == hit_probability.OBJECTIVE else "Frozen model"
+    label = "Chance-first" if acca.get("selection_objective") in hit_probability.OBJECTIVES else "Frozen model"
     return [f"   {label} · estimated hit {p:.1%} · estimated miss {1-p:.1%}",
             "   Model product: independence assumed; not calibrated or guaranteed."]
 
@@ -3769,8 +3860,15 @@ def render_daily_card(history, report=None, *, audit=False):
         "Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.", "",
     ])
     if any(_is_hit_probability_record(r) for r in rows):
-        lines.extend(["CHANCE FIRST — highest estimated whole-ticket hit probability, not payout or EV.",
-                      f"New PAPER risk: flat {hit_probability.STAKE_FRACTION:.1%} of total bank before exposure caps.", ""])
+        lines.append("CHANCE FIRST — highest estimated whole-ticket hit probability, not payout or EV.")
+        if any((r.get("policy") or {}).get("selection_objective") == hit_probability.OBJECTIVE for r in rows):
+            lines.extend([
+                "Best remaining two-leg pairs; no fixture reuse within each publication.",
+                "No additional hit-probability floor; later accas can have much lower hit estimates.",
+                f"New PAPER risk: {hit_probability.STAKE_FRACTION:.1%} of total bank per publication, shared across all accas before exposure caps; no refill.", "",
+            ])
+        else:
+            lines.extend([f"Frozen v1 PAPER risk: flat {hit_probability.STAKE_FRACTION:.1%} of total bank for its single ticket before exposure caps.", ""])
     if not count:
         lines.extend([("NO ACTIVE PAPER BET — earlier ticket withdrawn; no qualifying replacement."
                        if withdrawn else "NO PAPER BET — no tickets published for this date; reasons in the audit report."), ""])
@@ -3895,7 +3993,9 @@ def render_daily_card(history, report=None, *, audit=False):
             )
         if _is_hit_probability_record(row):
             diagnostics.append("   Objective: highest whole-ticket hit estimate; price breaks exact probability ties only.")
-            diagnostics.append(f"   PAPER risk: flat {hit_probability.STAKE_FRACTION:.1%} of total bank before downward-only caps; positive EV not required.")
+            scope = ("per publication, shared across all accas"
+                     if row["policy"]["selection_objective"] == hit_probability.OBJECTIVE else "for the frozen v1 single ticket")
+            diagnostics.append(f"   PAPER risk: {hit_probability.STAKE_FRACTION:.1%} of total bank {scope} before downward-only caps; positive EV not required.")
         diagnostics.extend([*leg_diagnostics, f"   Learning: {row['learning']['status']}", ""])
     if superseded_lines:
         lines.extend(["SUPERSEDED BEFORE KICKOFF — audit only; not current recommendations",
@@ -4072,7 +4172,8 @@ def render_performance(report):
         + history_text + "\nLEARNING & EVIDENCE\n" + evidence + "\n"
         "DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.\n"
         "             Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.\n\n"
-        f"STAKING  new chance-first tickets: flat {hit_probability.STAKE_FRACTION:.1%} of total PAPER bank before caps; no Kelly/EV ranking\n"
+        f"STAKING  new chance-first risk: {hit_probability.STAKE_FRACTION:.1%} of total PAPER bank per publication, shared across all accas\n"
+        "         equal split before downward-only caps; no refill or Kelly/EV ranking\n"
         "         Historical quarter Kelly stakes retained; ROI is profit / settled stakes\n"
         f"FIXTURES new publications: gross stake <= {MAX_FIXTURE_STAKE_FRACTION:.1%} of TOTAL paper bank per canonical fixture;\n"
         "         downward-only, no refill; existing frozen positions remain unchanged\n"
@@ -4128,7 +4229,11 @@ def publish(root, score_lookup):
             audit_path = root / RECEIPT_DIR / "reports" / f"{PREFIX}_{latest_day}_audit.txt"
             audit_path.parent.mkdir(parents=True, exist_ok=True)
             audit_path.write_text(render_daily_card(daily, report, audit=True))
-    card = latest_card(root)
+    # latest_card returns the latest rolling receipt before inspecting drafts.
+    # Reuse that already-validated row instead of loading hundreds of MB again
+    # while retaining history/report; that redundant read can exhaust memory.
+    card = (history[-1] if history and history[-1].get("freeze_basis") == ROLLING_FREEZE
+            else latest_card(root))
     if card is not None and card.get("freeze_basis") != ROLLING_FREEZE:
         dated_artifact_path(root, f"{PREFIX}_{card['date']}.txt").write_text(render_card(card))
     return report
