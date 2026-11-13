@@ -227,8 +227,10 @@ def files_to_prune(
                 and morning_archive_is_redundant(root, morning_day.isoformat())):
             stale.append(path)
 
-    # ML paper intermediate timestamped run receipts (autobets_ML_<DATE>_<TIMESTAMP>.json).
-    # Prune runs older than the retention window; canonical autobets_ML_<DATE>.json is kept.
+    # Only EMPTY ML intermediate placeholders are telemetry. Nonempty frozen
+    # receipts carry paper positions, prior hashes and pre-kickoff replacements;
+    # deleting them would erase the audit trail and break the capital chain.
+    # Malformed evidence is retained too, never silently pruned to repair a lane.
     ml_receipt_dir = root / "phase5_reconciliation" / "ml_paper_receipts"
     if ml_receipt_dir.is_dir():
         ts_pattern = re.compile(rf"^autobets_ML_{_DATE}_\d{{8}}T\d{{12}}Z\.json$")
@@ -242,7 +244,12 @@ def files_to_prune(
                 try:
                     file_day = date.fromisoformat(match.group("day"))
                     if file_day < cutoff:
-                        stale.append(path)
+                        try:
+                            empty_placeholder = json.loads(path.read_text()) == {}
+                        except (ValueError, OSError):
+                            empty_placeholder = False
+                        if empty_placeholder:
+                            stale.append(path)
                 except ValueError:
                     continue
 

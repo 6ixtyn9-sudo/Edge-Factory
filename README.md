@@ -359,7 +359,63 @@ view. The existing publisher writes that derived audit view; no extra capture or
 workflow is required. Rejection counts count checks, not unique fixtures, and can
 repeat across scans.
 
-Pending fixtures can be reused only within the approved combined 5% of total
-paper bank gross-stake budget. Previously booked stakes count first; exhausted
-and settled fixtures do not reopen. Quarter-Kelly and the aggregate exposure
-limit remain unchanged. Existing stakes and receipts are never resized.
+**Chance-first objective (new decisions from 2026-11-13):** maximise the model's
+estimated chance of the **whole acca** landing, not EV, payout or log-bank growth.
+The selector takes the exact best compatible same-book pair, then the exact best
+remaining pair, removing **all quotes/markets/books for used fixtures** at each
+step. Multiple accas are allowed, with **two legs each** and no fixture reuse
+within a publication. Price only breaks exact probability ties. There is no daily
+ticket quota or single-ticket cap; the count follows the supported pair pool and
+available micro-unit risk budget. This primary-first greedy sequence is not a
+global matching, portfolio any-win, or profitability optimum.
+
+The operator chose **existing evidence checks only** for additional tickets—no
+extra hit-probability floor. Later accas can have substantially lower estimates,
+even below 50%; "best remaining" does not mean "likely to win". Adding more tickets
+does not establish a higher strike rate or profit. Adding legs still cannot
+improve any one ticket's all-legs-win probability.
+
+Local market/quote evidence is still required (the existing minimum ten distinct
+fixtures in active pooled evidence). The original price-edge verdict remains in
+the audit, but **negative estimated EV is not an eligibility veto in this
+paper-only mode**. Otherwise the old gate could still force long-shot draws.
+Quote identity, source-generation, freshness and kickoff guards are unchanged.
+Each active ticket shows its whole-ticket estimated hit AND miss probabilities,
+explicitly labelled as independence-based, uncalibrated and not guaranteed.
+
+Chance-first risk is a small flat **0.1% of total PAPER bank per publication,
+SHARED across all its accas—not 0.1% per ticket**. The budget is rounded down and
+split equally in integer micro-units, with indivisible remainders assigned in hit-
+probability rank order. A share below one micro-unit cannot become a ticket. This
+is not Kelly, a fitted allocation optimum, or a real-money recommendation.
+
+Existing reservations count first. The 5% gross-stake limit per fixture and shared
+25% aggregate ceiling only reduce stakes. Replay drops and cap reductions leave
+unused shares idle: no weaker refill or redistribution. New publications may reuse
+pending fixtures only within that existing combined exposure budget; within one
+publication, all accas are fixture-disjoint. The declared multi-acca objective is
+`highest_ticket_hit_probability_disjoint_v2`; frozen single-ticket chance-first
+v1 and historical growth/Kelly receipts remain readable and unchanged. A saved
+daily draft can only retain/reduce its original shares when sealed, never expand
+them because paper capital has increased.
+
+An operator may explicitly replace a **same-day, unstarted, unresolved PAPER**
+ticket before its original 30-minute lead boundary. The replacement is one atomic,
+append-only receipt naming the exact original receipt hash and publication-local
+ticket index. The original JSON bytes remain unchanged. Only the withdrawn paper
+reservation is released; it is not a win/loss and cannot erase a settled loss.
+The daily slip shows active recommendations first and withdrawn tickets separately
+as audit-only. Ordinary empty scans still never cancel tickets.
+
+```bash
+# Set RECEIPT_SHA256 to the exact original frozen JSON receipt's sha256 field.
+PYTHONPATH=src python scripts/replace_ml_paper_ticket.py \
+  --receipt-sha256 "$RECEIPT_SHA256" --acca-index 1 \
+  --reason "Operator requested chance-first replacement."
+```
+
+The command uses existing local slates/quotes at actual runtime, with no provider
+fetch or retimestamping. If no supported fresh pair exists, it records the explicit
+withdrawal without inventing a replacement. Nonempty frozen ML receipts (including
+supersessions) and malformed evidence are retained by cleanup regardless of age:
+they are durable capital/audit-chain evidence, not disposable scan telemetry.
