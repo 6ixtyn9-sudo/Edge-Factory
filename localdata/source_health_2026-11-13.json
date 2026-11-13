@@ -42,7 +42,7 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 5,
+      "be_matched": 0,
       "be_raw": 15,
       "be_usable": 15,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
@@ -51,10 +51,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 4,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 3,
-        "no_pick_for_fixture": 8
+        "out_of_window": 15
       },
       "reason": null,
       "status": "cache_only"
@@ -94,7 +93,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 1
+        "out_of_window": 1
       },
       "reason": null,
       "status": "cache_only"
@@ -155,13 +154,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 563,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 14664,
         "market_unsupported": 9480,
-        "no_pick_for_fixture": 7944
+        "out_of_window": 23171
       },
-      "op_matched": 3,
+      "op_matched": 0,
       "op_raw": 32651,
       "op_usable": 32651,
       "reason": null,
@@ -182,12 +180,11 @@
       "coherence_withheld_fixtures": 1,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 14,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 12392,
-        "no_pick_for_fixture": 238
+        "out_of_window": 12644
       },
-      "pa_matched": 24,
+      "pa_matched": 0,
       "pa_raw": 12644,
       "pa_scored": 12644,
       "reason": null,
@@ -285,7 +282,7 @@
           "unsupported_market:team_total_goals": 29,
           "unsupported_market:team_total_odd_even": 8
         },
-        "card_fixture_count": 17,
+        "card_fixture_count": 15,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
           "live_price": 2
@@ -299,7 +296,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 39
+        "out_of_window": 39
       },
       "reason": "cache_rows_pending_join",
       "sa_matched": 0,
@@ -346,11 +343,11 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 116,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "no_pick_for_fixture": 338
+        "out_of_window": 454
       },
-      "oa_matched": 14,
+      "oa_matched": 0,
       "oa_raw": 454,
       "oa_usable": 454,
       "reason": null,
