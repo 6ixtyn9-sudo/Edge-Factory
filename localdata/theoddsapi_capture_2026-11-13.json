@@ -1,11 +1,70 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 8,
+  "attempted_fixtures": [
+    {
+      "away": "Malawi",
+      "date": "2026-11-13",
+      "home": "Egypt",
+      "kickoff": "2026-11-13T19:00:00Z",
+      "league": "Africa Cup of Nations Qualifications"
+    },
+    {
+      "away": "Portadown",
+      "date": "2026-11-13",
+      "home": "Coleraine",
+      "kickoff": "2026-11-13T19:45:00Z",
+      "league": "Premiership"
+    },
+    {
+      "away": "Lesotho",
+      "date": "2026-11-13",
+      "home": "Gabon",
+      "kickoff": "2026-11-13T16:00:00Z",
+      "league": "Africa Cup of Nations Qualifications"
+    },
+    {
+      "away": "Bangor",
+      "date": "2026-11-13",
+      "home": "Glentoran",
+      "kickoff": "2026-11-13T19:45:00Z",
+      "league": "Premiership"
+    },
+    {
+      "away": "Dolomiti Bellunesi",
+      "date": "2026-11-13",
+      "home": "Ospitaletto",
+      "kickoff": "2026-11-13T19:30:00Z",
+      "league": "Serie C: Girone A"
+    },
+    {
+      "away": "Chico",
+      "date": "2026-11-13",
+      "home": "Llaneros",
+      "kickoff": "2026-11-13T01:00:00+01:00",
+      "league": "Colombia: Primera A"
+    },
+    {
+      "away": "Panama",
+      "date": "2026-11-13",
+      "home": "Curacao",
+      "kickoff": "2026-11-13T00:30:00Z",
+      "league": "CONCACAF Nations League"
+    },
+    {
+      "away": "Cacere\u00f1o",
+      "date": "2026-11-13",
+      "home": "Ponferradina",
+      "kickoff": "2026-11-13T18:00:00Z",
+      "league": "Primera Division RFEF: Group 1"
+    }
+  ],
   "candidate_fixtures": 15,
-  "captured_at": "2026-11-13T13:45:37+00:00",
+  "captured_at": "2026-11-13T16:48:47+00:00",
   "date": "2026-11-13",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 8
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -22,27 +81,35 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 7,
-    "retry_cooldown": 8
+    "priced": 7
   },
   "skipped": [
-    "Egypt|Malawi (retry cooldown (6h after failed attempt))",
-    "Coleraine|Portadown (retry cooldown (6h after failed attempt))",
-    "Gabon|Lesotho (retry cooldown (6h after failed attempt))",
-    "Glentoran|Bangor (retry cooldown (6h after failed attempt))",
     "Liechtenstein|Azerbaijan (priced)",
     "Serbia|Germany (priced)",
     "Slovakia|Faroe Islands (priced)",
-    "Ospitaletto|Dolomiti Bellunesi (retry cooldown (6h after failed attempt))",
-    "Llaneros|Chico (retry cooldown (6h after failed attempt))",
     "Netherlands|Greece (priced)",
-    "Curacao|Panama (retry cooldown (6h after failed attempt))",
     "Andorra|Gibraltar (priced)",
     "Slovenia|Switzerland (priced)",
-    "Bulgaria|Iceland (priced)",
-    "Ponferradina|Cacere\u00f1o (retry cooldown (6h after failed attempt))"
+    "Bulgaria|Iceland (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Egypt vs Malawi (league not covered: Africa Cup of Nations Qualifications)",
+    "Gabon vs Lesotho (league not covered: Africa Cup of Nations Qualifications)",
+    "Ospitaletto vs Dolomiti Bellunesi (league not covered: Serie C: Girone A)",
+    "Llaneros vs Chico (league not covered: Colombia: Primera A)",
+    "Curacao vs Panama (league not covered: CONCACAF Nations League)",
+    "Ponferradina vs Cacere\u00f1o (league not covered: Primera Division RFEF: Group 1)",
+    "Coleraine vs Portadown (no event in soccer_spl)",
+    "Glentoran vs Bangor (no event in soccer_spl)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Africa Cup of Nations Qualifications": 2,
+    "league not covered: CONCACAF Nations League": 1,
+    "league not covered: Colombia: Primera A": 1,
+    "league not covered: Primera Division RFEF: Group 1": 1,
+    "league not covered: Serie C: Girone A": 1,
+    "no event in soccer_spl": 2
+  }
 }

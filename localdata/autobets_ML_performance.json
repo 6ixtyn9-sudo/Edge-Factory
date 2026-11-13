@@ -5,11 +5,11 @@
   "base_paper_units": 100.0,
   "paper_bank_units": 60.3889243917,
   "paper_multiple": 0.603889243917,
-  "paper_committed_units": 0.116835,
-  "paper_free_units": 60.2720893917,
+  "paper_committed_units": 0.177223,
+  "paper_free_units": 60.211701391700004,
   "settled_stake_units": 65.296108,
   "receipt_days": 12,
-  "decision_receipts": 110,
+  "decision_receipts": 112,
   "bet_days": 7,
   "no_bet_days": 5,
   "superseded_accas": 1,
@@ -267,8 +267,8 @@
   "wins": 4,
   "losses": 41,
   "hit_rate": 0.08888888888888889,
-  "pending_accas": 4,
-  "unresolved_result_legs": 9,
+  "pending_accas": 5,
+  "unresolved_result_legs": 10,
   "resolved_result_legs": 58,
   "profit_units": -39.6110756083,
   "roi": -0.606637620856361,
@@ -16205,6 +16205,341 @@
       "decision_id": "20261113T133930795191Z",
       "captured_at": "2026-11-13T13:39:30.795191+00:00",
       "frozen_at": "2026-11-13T13:41:53.293405+00:00"
+    },
+    {
+      "date": "2026-11-13",
+      "status": "paper_accas",
+      "accas": [
+        {
+          "odds": 1.3072120000000003,
+          "stake_units": 0.060388,
+          "leg_outcomes": [
+            null,
+            null
+          ],
+          "status": "pending",
+          "profit_units": null,
+          "legs": [
+            {
+              "admission": {
+                "cell": "59f2fd320cb71c5d32e1ac092937a453bcf3052910aae1f232094b2856178e17",
+                "evidence_sha256": "a9f591cbc2e7337ff8ed797421d5a4debfc8b62ab5a2f8f318ed906257e659ba",
+                "fixtures": 15,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.71766724154,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.71766724154,
+                "reason": "edge_not_supported",
+                "required_model_probability": 0.889679715302491,
+                "required_source_probability": 0.889679715302491,
+                "source_probability": 0.84918888681708,
+                "status": "abstain",
+                "wins": 13
+              },
+              "away": "Malawi",
+              "base_partition": [
+                [
+                  "1x2",
+                  "home",
+                  0.84918888681708
+                ],
+                [
+                  "1x2",
+                  "draw",
+                  0.1121797501398471
+                ],
+                [
+                  "1x2",
+                  "away",
+                  0.03863136304307291
+                ]
+              ],
+              "base_probability": 0.84918888681708,
+              "book": "polymarket",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "34bb54b6425bc9b293371e2037eac19a5136b18c2b8227808d36f5f3671778ee",
+              "context": {
+                "as_of": "2026-11-13T16:31:22.177391+00:00",
+                "country": "Africa",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-13",
+                "form_values": {
+                  "home_form_btts": 0.625,
+                  "home_form_ga": 1.0,
+                  "home_form_gf": 1.75,
+                  "home_form_over15": 0.75,
+                  "home_form_over25": 0.5,
+                  "home_form_over35": 0.375
+                },
+                "league": "world africa cup of nations qualification",
+                "parent_confidence": 0.83878333022562,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+              "date": "2026-11-13",
+              "fixture": [
+                "2026-11-13",
+                "egypt",
+                "malawi"
+              ],
+              "forecast_model_key": "f855ad1c2e556b390b258fbd354031f3c5d76eb84285a22e8fb9a9031e8ea782",
+              "home": "Egypt",
+              "kickoff_utc": "2026-11-13T19:00:00+00:00",
+              "market": "1x2",
+              "ml_inputs": {
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "fixture": [
+                  "2026-11-13",
+                  "egypt",
+                  "malawi",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "prosoccer",
+                  "scoutingstats",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.03863136304307291,
+                  "forecast_1x2_away_spread": 0.039999999999999994,
+                  "forecast_1x2_draw_mean": 0.1121797501398471,
+                  "forecast_1x2_draw_spread": 0.006539250419541315,
+                  "forecast_1x2_home_mean": 0.84918888681708,
+                  "forecast_1x2_home_spread": 0.040000000000000036,
+                  "forecast_btts_yes_mean": 0.25,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.783001808318264,
+                  "forecast_ou_1.5_over_spread": 0.0,
+                  "forecast_ou_2.5_over_mean": 0.5271522309711286,
+                  "forecast_ou_2.5_over_spread": 0.07430446194225726,
+                  "forecast_ou_3.5_over_mean": 0.354679802955665,
+                  "forecast_ou_3.5_over_spread": 0.0,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null
+                }
+              },
+              "model_key": "b3293358f6dafab1785dbc68f0d11fffd7baabe1614bd207d177392d39a82f78",
+              "odds": 1.124,
+              "pre_normalized_probability": 0.8434276447793845,
+              "price_age_seconds_at_decision": 11337.739222,
+              "price_age_seconds_at_freeze": 11490.733731,
+              "price_at": "2026-11-13T13:22:24.438169+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Malawi",
+                  "bookmaker": "polymarket",
+                  "bookmaker_market_id": "6450271",
+                  "captured_at": "2026-11-13T13:22:24.438169+00:00",
+                  "date": "2026-11-13",
+                  "home": "Egypt",
+                  "kickoff": "2026-11-13T19:00:00.000Z",
+                  "league": "",
+                  "market": "1x2",
+                  "odds": "1.124",
+                  "outcome_key": "101",
+                  "provider_changed_at": "2026-11-13T13:19:17.735Z",
+                  "provider_fixture_id": "id1000184875802232",
+                  "provider_market_id": "101",
+                  "provider_market_name": "Full Time Result",
+                  "provider_market_type": "1x2",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-13T13:19:17.704Z",
+                  "schema_version": "4",
+                  "selection": "home",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "de86e00c2850695a9ea98f7ce78e5ed374abdd09e62c2631b072eb8b47563c8a",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.8434276447793845,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "home"
+            },
+            {
+              "admission": {
+                "cell": "b7e939ce6f2774bb25a385897b4e5e2ddd72b5e5b7b3b39a201b077df19c4eb8",
+                "evidence_sha256": "a9f591cbc2e7337ff8ed797421d5a4debfc8b62ab5a2f8f318ed906257e659ba",
+                "fixtures": 45,
+                "joint_basis": "independent_leg_admission_lower_envelope",
+                "lower_hit_rate": 0.788642178064,
+                "policy": "source_market_price_evidence_v1",
+                "probability_lower": 0.788642178064,
+                "reason": "edge_not_supported",
+                "required_model_probability": 0.8598452278589853,
+                "required_source_probability": 0.8598452278589853,
+                "source_probability": 0.8143322475570032,
+                "status": "abstain",
+                "wins": 39
+              },
+              "away": "Portadown",
+              "base_partition": [
+                [
+                  "match_over_15",
+                  "over",
+                  0.8143322475570032
+                ],
+                [
+                  "match_under_15",
+                  "under",
+                  0.18566775244299683
+                ]
+              ],
+              "base_probability": 0.8143322475570032,
+              "book": "polymarket",
+              "bucket": "SKIPPED_VETO",
+              "candidate_id": "acca5bdc059b6a38b87fdf109ef966ecb1699387e1e9abc5fcbfa922eadf7728",
+              "context": {
+                "as_of": "2026-11-13T16:31:22.177391+00:00",
+                "country": "Northern Ireland",
+                "country_sources": [
+                  "scoutingstats"
+                ],
+                "form_as_of_exclusive": "2026-11-13",
+                "form_values": {
+                  "away_form_btts": 0.6,
+                  "away_form_ga": 1.4,
+                  "away_form_gf": 0.9,
+                  "away_form_over15": 0.8,
+                  "away_form_over25": 0.4,
+                  "away_form_over35": 0.2,
+                  "home_form_btts": 0.6,
+                  "home_form_ga": 1.4,
+                  "home_form_gf": 2.0,
+                  "home_form_over15": 0.8,
+                  "home_form_over25": 0.7,
+                  "home_form_over35": 0.5
+                },
+                "league": "scotland premiership",
+                "parent_confidence": 0.7819564824029677,
+                "parent_selection": "home",
+                "schema": "source_market_context_v2"
+              },
+              "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+              "date": "2026-11-13",
+              "fixture": [
+                "2026-11-13",
+                "coleraine",
+                "portadown"
+              ],
+              "forecast_model_key": "f855ad1c2e556b390b258fbd354031f3c5d76eb84285a22e8fb9a9031e8ea782",
+              "home": "Coleraine",
+              "kickoff_utc": "2026-11-13T19:45:00+00:00",
+              "market": "match_over_15",
+              "ml_inputs": {
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "fixture": [
+                  "2026-11-13",
+                  "coleraine",
+                  "portadown",
+                  [],
+                  []
+                ],
+                "sources": [
+                  "bettingclosed",
+                  "scoutingstats",
+                  "vitibet"
+                ],
+                "values": {
+                  "forecast_1x2_away_mean": 0.08263412648149823,
+                  "forecast_1x2_away_spread": 0.025268252962996438,
+                  "forecast_1x2_draw_mean": 0.13540939111553424,
+                  "forecast_1x2_draw_spread": 0.030818782231068514,
+                  "forecast_1x2_home_mean": 0.7819564824029676,
+                  "forecast_1x2_home_spread": 0.056087035194064994,
+                  "forecast_btts_yes_mean": 0.4623655913978495,
+                  "forecast_btts_yes_spread": 0.0,
+                  "forecast_ou_1.5_over_mean": 0.8143322475570032,
+                  "forecast_ou_1.5_over_spread": 0.0,
+                  "forecast_ou_2.5_over_mean": 0.645320197044335,
+                  "forecast_ou_2.5_over_spread": 0.0,
+                  "forecast_ou_3.5_over_mean": 0.44148936170212766,
+                  "forecast_ou_3.5_over_spread": 0.0,
+                  "forecast_ou_4.5_over_mean": null,
+                  "forecast_ou_4.5_over_spread": null,
+                  "forecast_xg_away_mean": null,
+                  "forecast_xg_away_spread": null,
+                  "forecast_xg_home_mean": null,
+                  "forecast_xg_home_spread": null
+                }
+              },
+              "model_key": "1abecab4860e93ee3eb00638c725e0f134ca75c1b98138730202e4e989c9651f",
+              "odds": 1.163,
+              "pre_normalized_probability": 0.8166758078464362,
+              "price_age_seconds_at_decision": 389.255492,
+              "price_age_seconds_at_freeze": 542.250001,
+              "price_at": "2026-11-13T16:24:52.921899+00:00",
+              "price_provenance": {
+                "archive": "oddspapi_odds_2026-11.csv.gz",
+                "evidence_scope": "normalized_archive_row_not_native_provider_payload",
+                "row": {
+                  "away": "Portadown FC",
+                  "bookmaker": "polymarket",
+                  "bookmaker_market_id": "6897035",
+                  "captured_at": "2026-11-13T16:24:52.921899+00:00",
+                  "date": "2026-11-13",
+                  "home": "Coleraine FC",
+                  "kickoff": "2026-11-13T19:45:00.000Z",
+                  "league": "",
+                  "market": "ou_1.5",
+                  "odds": "1.163",
+                  "outcome_key": "108",
+                  "provider_changed_at": "2026-11-13T16:24:49.415Z",
+                  "provider_fixture_id": "id1000020072346412",
+                  "provider_market_id": "108",
+                  "provider_market_name": "Over Under Full Time",
+                  "provider_market_type": "totals",
+                  "provider_period": "fulltime",
+                  "provider_sport_id": "10",
+                  "published_at": "2026-11-13T16:24:49.374Z",
+                  "schema_version": "4",
+                  "selection": "over",
+                  "source": "oddspapi",
+                  "source_type": "odds",
+                  "sport": "soccer"
+                },
+                "row_sha256": "2a80c6afed1e252ee7ef7a12369424f7239a00d60447f726551bf00a60c05d7d",
+                "schema": "normalized_odds_quote_v1"
+              },
+              "price_source": "oddspapi",
+              "probability": 0.8166758078464362,
+              "probability_normalization": "complete_source_market_partition_v1",
+              "selection": "over"
+            }
+          ],
+          "publication_local_index": 1,
+          "selection_objective": "highest_ticket_hit_probability_disjoint_v2",
+          "probability_estimate": 0.6888069531602209,
+          "model_probability_estimate": 0.6888069531602209
+        }
+      ],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261113T163122177391Z",
+      "captured_at": "2026-11-13T16:31:22.177391+00:00",
+      "frozen_at": "2026-11-13T16:33:55.171900+00:00"
+    },
+    {
+      "date": "2026-11-13",
+      "status": "no_paper_bet",
+      "accas": [],
+      "learning_status": "fitted_source_market_context",
+      "decision_id": "20261113T164211507176Z",
+      "captured_at": "2026-11-13T16:42:11.507176+00:00",
+      "frozen_at": "2026-11-13T16:44:41.128910+00:00"
     }
   ],
   "latest_learning": {
@@ -16944,7 +17279,7 @@
       "policy": "source_market_price_evidence_v1",
       "uncertainty": "wilson_score_lower_bound_odds_band_pooled"
     },
-    "as_of": "2026-11-13T13:39:30.795191+00:00",
+    "as_of": "2026-11-13T16:42:11.507176+00:00",
     "context_model": {
       "coef": [
         0.0005719648415535766,
@@ -21620,7 +21955,7 @@
     "fixtures": 97,
     "learning_policy": "fixture_balanced_source_market_context",
     "method": "source_market",
-    "model_key": "09fe9157ccb293ef870e21341124f64b56f6c2ec5060e56fa47e3ea0a3a38cf1",
+    "model_key": "8afaa5c86a3dedb1478ea28cb251fa68db5baa3ab4ce2275fdaeedf80e80c27c",
     "observations": 320,
     "parameters": 1293,
     "power": 1.0,
