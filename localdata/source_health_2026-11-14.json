@@ -51,7 +51,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-11-14' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -172,11 +172,11 @@
       "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 14811
+        "out_of_window": 14966
       },
       "pa_matched": 0,
-      "pa_raw": 807,
-      "pa_scored": 14811,
+      "pa_raw": 816,
+      "pa_scored": 14966,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
@@ -224,50 +224,63 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 4,
-        "board_league_count": 3,
+        "board_fixtures": 3,
+        "board_league_count": 2,
         "board_leagues": {
-          "el_salvador_-_primera_division": 89,
-          "guatemala_-_liga_nacional": 63,
-          "venezuela_-_primera_division": 48
+          "concacaf_-_nations_league": 77,
+          "mexico_-_liga_de_expansion_mx": 123
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 77,
+        "board_priced_rows": 12,
         "board_rows": 200,
-        "board_team_count": 8,
+        "board_team_count": 6,
         "board_team_names": {
-          "Atletico Balboa": 34,
-          "Aurora FC": 63,
-          "CD Aguila": 55,
-          "CD Inca": 34,
-          "CD Municipal Limeno": 55,
-          "Deportivo Mixco": 63,
-          "Monagas": 48,
-          "Puerto Cabello": 48
+          "Atletico Morelia": 40,
+          "Club Atletico Morelia": 83,
+          "Curacao": 77,
+          "Panama": 77,
+          "Universidad Guadalajara": 83,
+          "Universidad de Guadalajara": 40
         },
         "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_moneyline": 6,
+          "unknown_market:1st_half_team_total": 10,
+          "unknown_market:1st_half_total_goals": 1,
+          "unknown_market:2nd_half_moneyline": 1,
+          "unknown_market:2nd_half_total_goals": 1,
+          "unknown_market:moneyline_3_way_total_goals": 10,
+          "unknown_market:team_clean_sheet": 4,
+          "unsupported_market:correct_score": 66,
+          "unsupported_market:team_total_exact": 5,
+          "unsupported_market:team_total_odd_even": 4
+        },
         "card_fixture_count": 0,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 77
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "out_of_window": 12
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 2,
+      "sa_scored": 12,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

@@ -1,6 +1,16 @@
 {
-  "attempted": 1,
+  "attempted": 2,
   "attempted_fixtures": [
+    {
+      "avg_p": 78.19564824029676,
+      "away": "Portadown",
+      "date": "2026-11-13",
+      "home": "Coleraine",
+      "league": "Premiership",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
+    },
     {
       "avg_p": 83.878333022562,
       "away": "Malawi",
@@ -13,36 +23,46 @@
     }
   ],
   "be_429": 2,
-  "be_cached": 0,
+  "be_cached": 1,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 0,
-  "candidate_fixtures": 15,
-  "captured_at": "2026-11-12T22:29:02.997589+00:00",
+  "cache_only": 1,
+  "candidate_fixtures": 13,
+  "captured_at": "2026-11-13T01:34:19.964587+00:00",
   "date": "2026-11-13",
-  "deferred_fixtures": 14,
+  "deferred_fixtures": 12,
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 2,
   "market_budget_stop": false,
-  "market_requests": 2,
+  "market_requests": 5,
   "match_detail": {
-    "bookmakers": 4,
+    "bookmakers": 13,
     "challenge_pages": 0,
-    "fixtures": 1,
-    "market_rows": 14,
-    "markets": 2,
-    "named_rows": 14,
+    "fixtures": 2,
+    "market_rows": 30,
+    "markets": 7,
+    "named_rows": 30,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
     "with_standings": 0
   },
   "max_fixtures": 12,
-  "ml_precutoff_active": false,
+  "ml_precutoff_active": true,
   "ml_refresh_attempted": 0,
   "network_attempted": 1,
   "quoted_fixtures": [
+    {
+      "avg_p": 78.19564824029676,
+      "away": "Portadown",
+      "date": "2026-11-13",
+      "home": "Coleraine",
+      "league": "Premiership",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
+    },
     {
       "avg_p": 83.878333022562,
       "away": "Malawi",
@@ -54,8 +74,8 @@
       "w_score": 0.7259
     }
   ],
-  "requests": 7,
-  "rows": 3,
+  "requests": 10,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }
