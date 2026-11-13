@@ -1,44 +1,26 @@
 autobets_ML — performance, percent of capital (PAPER ONLY)
 ==============================================================
 
-BANK     56.4%   x0.564 of the initial base · 56.448 paper units
-CAPITAL  47.5% free / 8.9% reserved · 47.523 free / 8.925 reserved paper units
+BANK     60.4%   x0.604 of the initial base · 60.389 paper units
+CAPITAL  60.3% free / 0.1% reserved · 60.332 free / 0.056 reserved paper units
 
-RECORD   3W / 39L   (7.1% hit)   over 7 bet-days
-OPEN     6 held accas · 14 unresolved leg results
-PROFIT   -43.6% of capital · -43.552 paper units · ROI -77.2%
-DRAWDOWN 43.552 paper units / 43.6% (ticket-date marks; pending at cost)
+RECORD   4W / 41L   (8.9% hit)   over 7 bet-days
+OPEN     3 held accas · 7 unresolved leg results
+PROFIT   -39.6% of capital · -39.611 paper units · ROI -60.7%
+DRAWDOWN 39.611 paper units / 39.6% (ticket-date marks; pending at cost)
 DAYS     7 bet / 5 no-bet · 0 missed freeze
 
 BET-DAYS, oldest first (7 of 7)
   Staked/returned/net cover settled accas only; pending stakes are separate.
   2026-11-02   0W/1L   staked    8.2%   returned    0.0%   net   -8.2%   pending    0.0%   bank*   91.8%
-  2026-11-03   3W/3L   staked    9.5%   returned   12.9%   net   +3.4%   pending    5.7%   bank*   95.2%
-  2026-11-04   0W/5L   staked   11.1%   returned    0.0%   net  -11.1%   pending    0.0%   bank*   84.1%
-  2026-11-05   0W/15L   staked   15.7%   returned    0.0%   net  -15.7%   pending    0.0%   bank*   68.4%
-  2026-11-06   0W/6L   staked    5.3%   returned    0.0%   net   -5.3%   pending    3.1%   bank*   63.1%
-  2026-11-07   0W/9L   staked    6.7%   returned    0.0%   net   -6.7%   pending    0.0%   bank*   56.4%
-  2026-11-13   0W/0L   staked    0.0%   returned       —   net       —   pending    0.1%   bank*   56.4%
+  2026-11-03   3W/5L   staked   15.2%   returned   12.9%   net   -2.3%   pending    0.0%   bank*   89.5%
+  2026-11-04   0W/5L   staked   11.1%   returned    0.0%   net  -11.1%   pending    0.0%   bank*   78.3%
+  2026-11-05   0W/15L   staked   15.7%   returned    0.0%   net  -15.7%   pending    0.0%   bank*   62.7%
+  2026-11-06   1W/6L   staked    8.4%   returned   12.8%   net   +4.4%   pending    0.0%   bank*   67.1%
+  2026-11-07   0W/9L   staked    6.7%   returned    0.0%   net   -6.7%   pending    0.0%   bank*   60.4%
+  2026-11-13   0W/0L   staked    0.0%   returned       —   net       —   pending    0.1%   bank*   60.4%
 
 HELD (not yet settled; stake counted as committed)
-  2026-11-03   ACCA #2 @5.760   stake 1.3% (1.263540 paper units)   HELD (not settled)
-      Receipt 20261103T060852964169Z / publication-local ticket 2
-      Villarreal vs Paris Saint Germain · 2026-11-03 22:00 SAST
-         Home Win (1X2) @4.800
-      FC Barcelona vs Aston Villa · 2026-11-03 22:00 SAST
-         Match Over 2.5 Goals @1.200
-  2026-11-03   ACCA #3 @12.349   stake 4.5% (4.471153 paper units)   HELD (not settled)
-      Receipt 20261103T060852964169Z / publication-local ticket 3
-      Villarreal vs Paris Saint Germain · 2026-11-03 22:00 SAST
-         Home Win (1X2) @5.020
-      Atlético Madrid vs FC Bayern München · 2026-11-03 22:00 SAST
-         Away Win (1X2) @2.460
-  2026-11-06   ACCA #5 @4.088   stake 3.1% (3.133831 paper units)   HELD (not settled)
-      Receipt 20261106T044557571480Z / publication-local ticket 1
-      Oxford City vs Leicester City · 2026-11-06 21:45 SAST
-         Match Over 4.5 Goals @3.750
-      Maccabi Tel Aviv vs Maccabi Petah Tikva · 2026-11-06 14:00 SAST
-         Match Over 1.5 Goals @1.090
   2026-11-13   ACCA #1 @1.781   stake 0.0% (0.018816 paper units)   HELD (not settled)
       Receipt 20261113T091303978090Z / publication-local ticket 1
    Chance-first · estimated hit 46.2% · estimated miss 53.8%
@@ -76,16 +58,16 @@ NOTES
   All retained history is included; no regime reset or old-loss exclusion.
 
 LEARNING & EVIDENCE
-EVIDENCE 54 resolved selected observations / 35 fixtures · pool 90 resolved fixtures
+EVIDENCE 59 resolved selected observations / 40 fixtures · pool 97 resolved fixtures
 LEARNING last decision: 90 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 DATA     17115 ineligible-quote candidate occurrences excluded from paired errors; not a count of independent fixtures
          Historical P&L and frozen predictions unchanged; not a clean-refit backtest.
-FORWARD POOL: Brier 0.2127 → 0.2150 · log loss 0.6099 → 0.6156 (base → adjusted)
-        adjusted worse on both metrics; 90 fixtures / 1953 observations
-FORWARD SELECTED: Brier 0.2224 → 0.2353 · log loss 0.6426 → 0.6654 (base → adjusted)
-        adjusted worse on both metrics; 35 fixtures / 54 observations
+FORWARD POOL: Brier 0.2106 → 0.2133 · log loss 0.6060 → 0.6125 (base → adjusted)
+        adjusted worse on both metrics; 97 fixtures / 2058 observations
+FORWARD SELECTED: Brier 0.2239 → 0.2380 · log loss 0.6482 → 0.6746 (base → adjusted)
+        adjusted worse on both metrics; 40 fixtures / 59 observations
         Fixture-weighted, overlapping samples; descriptive, not significance or a policy gate.
-PAIRED   90 fixtures / 1879 observations · Brier model 0.2160 / source 0.2131
+PAIRED   97 fixtures / 1982 observations · Brier model 0.2143 / source 0.2111
 
 DATA QUALITY Legacy OddsPapi generations <=3 could mix bookings prices with goal outcomes.
              Frozen accounting is retained, not certified betting ROI; new supply requires generation 4.

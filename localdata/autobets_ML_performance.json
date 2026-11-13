@@ -3,11 +3,11 @@
   "paper_only": true,
   "unit": "model_chosen_paper_stakes_compounding_own_bank",
   "base_paper_units": 100.0,
-  "paper_bank_units": 56.4479141792,
-  "paper_multiple": 0.564479141792,
-  "paper_committed_units": 8.924971,
-  "paper_free_units": 47.5229431792,
-  "settled_stake_units": 56.42758400000001,
+  "paper_bank_units": 60.3889243917,
+  "paper_multiple": 0.603889243917,
+  "paper_committed_units": 0.056447,
+  "paper_free_units": 60.3324773917,
+  "settled_stake_units": 65.296108,
   "receipt_days": 12,
   "decision_receipts": 108,
   "bet_days": 7,
@@ -263,107 +263,107 @@
     }
   ],
   "missed_freeze_days": 0,
-  "settled_accas": 42,
-  "wins": 3,
-  "losses": 39,
-  "hit_rate": 0.07142857142857142,
-  "pending_accas": 6,
-  "unresolved_result_legs": 14,
-  "resolved_result_legs": 51,
-  "profit_units": -43.5520858208,
-  "roi": -0.7718226217305351,
-  "max_daily_close_drawdown_units": 43.552085820799995,
-  "max_daily_close_drawdown_fraction": 0.43552085820799996,
+  "settled_accas": 45,
+  "wins": 4,
+  "losses": 41,
+  "hit_rate": 0.08888888888888889,
+  "pending_accas": 3,
+  "unresolved_result_legs": 7,
+  "resolved_result_legs": 58,
+  "profit_units": -39.6110756083,
+  "roi": -0.606637620856361,
+  "max_daily_close_drawdown_units": 39.6110756083,
+  "max_daily_close_drawdown_fraction": 0.396110756083,
   "drawdown_basis": "ticket_date_latest_known_result_marks_pending_at_cost_not_settlement_timeline",
   "drawdown_has_pending_results": true,
-  "selected_leg_brier_score": 0.2075353252455455,
+  "selected_leg_brier_score": 0.20797873678346276,
   "calibration": {
     "all_candidates": {
-      "resolved_fixtures": 90,
-      "resolved_observations": 1953,
-      "base_brier": 0.21273156306979754,
-      "base_logloss": 0.60992158534838,
-      "calibrated_brier": 0.21498313754735754,
-      "calibrated_logloss": 0.6156174885399358
+      "resolved_fixtures": 97,
+      "resolved_observations": 2058,
+      "base_brier": 0.21057721558089412,
+      "base_logloss": 0.6059877219797029,
+      "calibrated_brier": 0.21332906144656172,
+      "calibrated_logloss": 0.6125157434449708
     },
     "selected_candidates": {
-      "resolved_fixtures": 35,
-      "resolved_observations": 54,
-      "base_brier": 0.2224277560463707,
-      "base_logloss": 0.6426459092558656,
-      "calibrated_brier": 0.23527404792733547,
-      "calibrated_logloss": 0.6654250917317818
+      "resolved_fixtures": 40,
+      "resolved_observations": 59,
+      "base_brier": 0.223937791541771,
+      "base_logloss": 0.6481916963423695,
+      "calibrated_brier": 0.23796991034407206,
+      "calibrated_logloss": 0.6746120123390101
     },
     "source_comparison": {
       "basis": "frozen_market_matched_source_forecasts_not_independent_ground_truth",
       "weighting": "one_total_weight_per_fixture_within_each_group",
       "limitation": "descriptive_only_overlapping_groups_not_additive_no_significance_or_rule_changes",
       "all_candidates": {
-        "paired_fixtures": 90,
-        "paired_observations": 1879,
-        "missing_source_fixtures": 12,
-        "missing_source_observations": 74,
-        "base_brier": 0.213694854558149,
-        "base_logloss": 0.6120235884119374,
-        "model_brier": 0.21598048009037107,
-        "model_logloss": 0.6179123114324147,
-        "source_brier": 0.21312563077659874,
-        "source_logloss": 0.6107471145944099
+        "paired_fixtures": 97,
+        "paired_observations": 1982,
+        "missing_source_fixtures": 13,
+        "missing_source_observations": 76,
+        "base_brier": 0.2115449615555153,
+        "base_logloss": 0.6081322704510993,
+        "model_brier": 0.21425277590988803,
+        "model_logloss": 0.6146356209594106,
+        "source_brier": 0.21106307036429384,
+        "source_logloss": 0.6068625026177548
       },
       "selected_candidates": {
-        "paired_fixtures": 33,
-        "paired_observations": 47,
+        "paired_fixtures": 38,
+        "paired_observations": 52,
         "missing_source_fixtures": 4,
         "missing_source_observations": 7,
-        "base_brier": 0.2251670421473864,
-        "base_logloss": 0.6472236673439635,
-        "model_brier": 0.23595319829619887,
-        "model_logloss": 0.6646865460947191,
-        "source_brier": 0.22607628664005147,
-        "source_logloss": 0.645207917709812
+        "base_brier": 0.22639612081346358,
+        "base_logloss": 0.6524590013707968,
+        "model_brier": 0.2387015863179133,
+        "model_logloss": 0.6744541658966782,
+        "source_brier": 0.22204248659266573,
+        "source_logloss": 0.6397858407669356
       },
       "by_model_source_gap": {
         "lt_10pp": {
-          "paired_fixtures": 85,
-          "paired_observations": 1779,
+          "paired_fixtures": 92,
+          "paired_observations": 1872,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.20677409923280168,
-          "base_logloss": 0.5968605131683338,
-          "model_brier": 0.2076284825527009,
-          "model_logloss": 0.599680030729145,
-          "source_brier": 0.20623675112500905,
-          "source_logloss": 0.5964099745223139
+          "base_brier": 0.20502831539712238,
+          "base_logloss": 0.5939933495391346,
+          "model_brier": 0.2060169822602249,
+          "model_logloss": 0.5968750763156114,
+          "source_brier": 0.2049189869811801,
+          "source_logloss": 0.594160794311755
         },
         "10_to_lt_20pp": {
-          "paired_fixtures": 20,
-          "paired_observations": 97,
+          "paired_fixtures": 23,
+          "paired_observations": 106,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.2325836758410879,
-          "base_logloss": 0.6531170679331664,
-          "model_brier": 0.2453669544964169,
-          "model_logloss": 0.6839400642950464,
-          "source_brier": 0.2342882369526708,
-          "source_logloss": 0.6530318987461972
+          "base_brier": 0.214614874387604,
+          "base_logloss": 0.612100999506816,
+          "model_brier": 0.23063915856011993,
+          "model_logloss": 0.6493239690500624,
+          "source_brier": 0.2228799540824891,
+          "source_logloss": 0.6291171677863893
         },
         "ge_20pp": {
-          "paired_fixtures": 3,
-          "paired_observations": 3,
+          "paired_fixtures": 4,
+          "paired_observations": 4,
           "missing_source_fixtures": 0,
           "missing_source_observations": 0,
-          "base_brier": 0.21727114602144396,
-          "base_logloss": 0.6250335685594391,
-          "model_brier": 0.21727114602144396,
-          "model_logloss": 0.6250335685594391,
-          "source_brier": 0.27146157456495307,
-          "source_logloss": 0.7353703463962681
+          "base_brier": 0.20754308857604098,
+          "base_logloss": 0.6059614010877061,
+          "model_brier": 0.20754308857604098,
+          "model_logloss": 0.6059614010877061,
+          "source_brier": 0.21547966798227086,
+          "source_logloss": 0.6130101885847541
         },
         "unavailable": {
           "paired_fixtures": 0,
           "paired_observations": 0,
-          "missing_source_fixtures": 12,
-          "missing_source_observations": 74,
+          "missing_source_fixtures": 13,
+          "missing_source_observations": 76,
           "base_brier": null,
           "base_logloss": null,
           "model_brier": null,
@@ -398,16 +398,16 @@
           "source_logloss": 0.7837066830355147
         },
         "SKIPPED_VETO": {
-          "paired_fixtures": 82,
-          "paired_observations": 1778,
+          "paired_fixtures": 88,
+          "paired_observations": 1870,
           "missing_source_fixtures": 11,
           "missing_source_observations": 70,
-          "base_brier": 0.2063196437690983,
-          "base_logloss": 0.5948481833909415,
-          "model_brier": 0.20889476493113796,
-          "model_logloss": 0.6014548233861671,
-          "source_brier": 0.20689344305106827,
-          "source_logloss": 0.5972846082444262
+          "base_brier": 0.20457814934616927,
+          "base_logloss": 0.5915826884405093,
+          "model_brier": 0.20774736607300248,
+          "model_logloss": 0.5994805562527629,
+          "source_brier": 0.2049229042267294,
+          "source_logloss": 0.5936786062663839
         },
         "WATCHLIST_UNCORROBORATED_PRICE": {
           "paired_fixtures": 1,
@@ -420,6 +420,18 @@
           "model_logloss": 0.7994173635750048,
           "source_brier": 0.22194769351943086,
           "source_logloss": 0.6368846118651413
+        },
+        "WATCHLIST_UNKNOWN_CTX": {
+          "paired_fixtures": 1,
+          "paired_observations": 11,
+          "missing_source_fixtures": 1,
+          "missing_source_observations": 2,
+          "base_brier": 0.2026580072548354,
+          "base_logloss": 0.6249817319746509,
+          "model_brier": 0.1918785650548378,
+          "model_logloss": 0.5725537715681591,
+          "source_brier": 0.22385781367811305,
+          "source_logloss": 0.6320429650264597
         }
       }
     },
@@ -438,9 +450,9 @@
   },
   "acca_calibration_by_length": {
     "2": {
-      "resolved": 35,
-      "wins": 3,
-      "predicted_wins": 9.899525725502407
+      "resolved": 42,
+      "wins": 4,
+      "predicted_wins": 12.37299210897993
     },
     "3": {
       "resolved": 1,
@@ -471,14 +483,14 @@
   },
   "by_bucket_market_leg_diagnostics": {
     "bucket:SKIPPED_VETO": {
-      "settled": 47,
-      "wins": 17,
-      "profit": -9.945999999999998
+      "settled": 53,
+      "wins": 19,
+      "profit": -13.613
     },
     "market:1x2": {
-      "settled": 17,
+      "settled": 19,
       "wins": 5,
-      "profit": 0.6400000000000006
+      "profit": -1.3599999999999994
     },
     "bucket:CAUTION": {
       "settled": 1,
@@ -511,14 +523,14 @@
       "profit": 1.23
     },
     "market:match_under_25": {
-      "settled": 9,
+      "settled": 10,
       "wins": 1,
-      "profit": -6.55
+      "profit": -7.55
     },
     "market:match_over_15": {
-      "settled": 5,
-      "wins": 2,
-      "profit": -2.372
+      "settled": 9,
+      "wins": 5,
+      "profit": -2.949
     },
     "market:home_under_45": {
       "settled": 1,
@@ -539,6 +551,11 @@
       "settled": 3,
       "wins": 1,
       "profit": 0.75
+    },
+    "bucket:WATCHLIST_UNKNOWN_CTX": {
+      "settled": 1,
+      "wins": 1,
+      "profit": 0.09000000000000008
     },
     "bucket:CERTIFIED_CLEAN": {
       "settled": 1,
@@ -927,11 +944,11 @@
           "odds": 5.76,
           "stake_units": 1.26354,
           "leg_outcomes": [
-            null,
+            false,
             true
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -1.26354,
           "legs": [
             {
               "away": "Paris Saint Germain",
@@ -1108,11 +1125,11 @@
           "odds": 12.349199999999998,
           "stake_units": 4.471153,
           "leg_outcomes": [
-            null,
+            false,
             true
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "loss",
+          "profit_units": -4.471153,
           "legs": [
             {
               "away": "Paris Saint Germain",
@@ -4801,7 +4818,7 @@
           "odds": 5.7084,
           "stake_units": 2.393197,
           "leg_outcomes": [
-            null,
+            false,
             false
           ],
           "status": "loss",
@@ -11305,10 +11322,10 @@
           "stake_units": 3.133831,
           "leg_outcomes": [
             true,
-            null
+            true
           ],
-          "status": "pending",
-          "profit_units": null,
+          "status": "win",
+          "profit_units": 9.6757032125,
           "legs": [
             {
               "away": "Leicester City",
@@ -11984,7 +12001,7 @@
           "stake_units": 0.98792,
           "leg_outcomes": [
             false,
-            null
+            false
           ],
           "status": "loss",
           "profit_units": -0.98792,
@@ -12934,7 +12951,7 @@
           "odds": 3.51,
           "stake_units": 0.418621,
           "leg_outcomes": [
-            null,
+            true,
             false
           ],
           "status": "loss",
@@ -13369,7 +13386,7 @@
           "stake_units": 2.026981,
           "leg_outcomes": [
             false,
-            null
+            true
           ],
           "status": "loss",
           "profit_units": -2.026981,

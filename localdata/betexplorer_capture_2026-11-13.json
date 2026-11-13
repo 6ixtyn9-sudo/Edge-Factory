@@ -39,22 +39,20 @@
   "be_rows_rejected_reasons": {},
   "cache_only": 2,
   "candidate_fixtures": 13,
-  "captured_at": "2026-11-13T07:34:22.742470+00:00",
+  "captured_at": "2026-11-13T10:34:45.418432+00:00",
   "date": "2026-11-13",
   "deferred_fixtures": 10,
-  "errors": [
-    "BetExplorerCoolingDown"
-  ],
-  "fixtures_with_rows": 2,
+  "errors": [],
+  "fixtures_with_rows": 3,
   "market_budget_stop": false,
-  "market_requests": 0,
+  "market_requests": 3,
   "match_detail": {
-    "bookmakers": 13,
+    "bookmakers": 19,
     "challenge_pages": 0,
-    "fixtures": 2,
-    "market_rows": 30,
-    "markets": 7,
-    "named_rows": 30,
+    "fixtures": 3,
+    "market_rows": 44,
+    "markets": 10,
+    "named_rows": 44,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -65,6 +63,16 @@
   "ml_refresh_attempted": 0,
   "network_attempted": 1,
   "quoted_fixtures": [
+    {
+      "avg_p": 73.96118342102834,
+      "away": "Lesotho",
+      "date": "2026-11-13",
+      "home": "Gabon",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
+    },
     {
       "avg_p": 83.878333022562,
       "away": "Malawi",
@@ -86,8 +94,8 @@
       "w_score": 0.7259
     }
   ],
-  "requests": 2,
-  "rows": 6,
+  "requests": 8,
+  "rows": 9,
   "schema": 1,
   "status": "ok"
 }
