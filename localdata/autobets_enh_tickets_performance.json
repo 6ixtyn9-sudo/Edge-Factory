@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-11-13T22:25:01",
+  "generated_at": "2026-11-14T01:44:23",
   "lane": "enh",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 20.863091999999998,
-  "multiple": 0.20863091999999997,
+  "bank_pct": 23.497071,
+  "multiple": 0.23497070999999997,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 27,
+  "bet_days": 28,
   "accas": {
-    "wins": 20,
+    "wins": 21,
     "losses": 33
   },
-  "open_slips": [
-    {
-      "date": "2026-11-13",
-      "staked_pct": 2.6079
-    }
-  ],
+  "open_slips": [],
   "events": [],
   "history": [
     {
@@ -8160,6 +8155,121 @@
       ],
       "bank_pct": 20.8631,
       "close_pct": 20.8631
+    },
+    {
+      "date": "2026-11-13",
+      "staked_pct": 2.6079,
+      "returned_pct": 5.2419,
+      "accas": [
+        {
+          "odds": 2.01,
+          "won": true,
+          "stake_pct": 2.6079,
+          "returned_pct": 5.2419,
+          "legs": [
+            {
+              "match": "Glentoran vs Bangor",
+              "pick": "home",
+              "odds": 1.51,
+              "result": "win",
+              "label": "Home Team Over 1.5 Goals",
+              "market": "home_over_15",
+              "price_book": "1xbet",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-13T16:24:59.210024+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-13",
+                "Glentoran",
+                "Bangor"
+              ],
+              "prob": 0.7722,
+              "cohort_evidence": {
+                "rate": 0.7722,
+                "n": 395,
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "as_of_exclusive": "2026-11-13",
+                "market": "home_over_15",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 305,
+                "cohort_lower_bound": 0.7282828613932569,
+                "price_context": {
+                  "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                  "selection": "home",
+                  "league": "Premiership",
+                  "book": "1xbet",
+                  "source": "oddspapi",
+                  "price": 1.51,
+                  "captured_at": "2026-11-13T16:24:59.210024+00:00",
+                  "decision_at": "2026-11-13T18:25:46+02:00",
+                  "kickoff": "2026-11-13T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.629125009049055,
+              "ml_model_key": "cbb6f40b48592a13d488263f37737bdbadd24f6c696641357e83208483668639",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "inherited",
+              "league": "Premiership",
+              "shadow": true,
+              "price_kickoff": "2026-11-13T19:45:00.000Z"
+            },
+            {
+              "match": "Coleraine vs Portadown",
+              "pick": "home",
+              "odds": 1.33,
+              "result": "win",
+              "label": "Home Team Under 3.5 Goals",
+              "market": "home_under_35",
+              "price_book": "1xbet",
+              "price_source": "oddspapi",
+              "price_at": "2026-11-13T16:24:52.921899+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-13",
+                "Coleraine",
+                "Portadown"
+              ],
+              "prob": 0.7342,
+              "cohort_evidence": {
+                "rate": 0.7342,
+                "n": 395,
+                "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                "as_of_exclusive": "2026-11-13",
+                "market": "home_under_35",
+                "basis": "cohort_payout_bound",
+                "cohort_min_hits": 290,
+                "cohort_lower_bound": 0.6885075684862536,
+                "price_context": {
+                  "contract_id": "pfc_4a3e5fbac72b2ebef11632f0",
+                  "selection": "home",
+                  "league": "Premiership",
+                  "book": "1xbet",
+                  "source": "oddspapi",
+                  "price": 1.33,
+                  "captured_at": "2026-11-13T16:24:52.921899+00:00",
+                  "decision_at": "2026-11-13T18:25:46+02:00",
+                  "kickoff": "2026-11-13T19:45:00+00:00"
+                }
+              },
+              "ml_rank_probability": 0.7275326503905721,
+              "ml_model_key": "cbb6f40b48592a13d488263f37737bdbadd24f6c696641357e83208483668639",
+              "ml_model_schema": "enh_score_logit_v2",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
+              "floor": null,
+              "floor_basis": "none",
+              "league": "Premiership",
+              "shadow": true,
+              "price_kickoff": "2026-11-13T19:45:00.000Z"
+            }
+          ]
+        }
+      ],
+      "bank_pct": 23.4971,
+      "close_pct": 23.4971
     }
   ]
 }

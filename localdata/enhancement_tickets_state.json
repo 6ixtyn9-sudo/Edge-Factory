@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 20.863091999999998,
+  "bank": 23.497071,
   "cycle_base": 100.0,
   "history": [
     {
@@ -8143,24 +8143,35 @@
       ],
       "bank_pct": 20.8631,
       "close_pct": 20.8631
-    }
-  ],
-  "events": [],
-  "open_slips": [
+    },
     {
       "date": "2026-11-13",
+      "staked_pct": 2.6079,
+      "returned_pct": 5.2419,
       "accas": [
         {
+          "odds": 2.01,
+          "won": true,
+          "stake_pct": 2.6079,
+          "returned_pct": 5.2419,
           "legs": [
             {
               "match": "Glentoran vs Bangor",
               "pick": "home",
-              "prob": 0.7722,
               "odds": 1.51,
-              "result": null,
+              "result": "win",
+              "label": "Home Team Over 1.5 Goals",
               "market": "home_over_15",
               "price_book": "1xbet",
               "price_source": "oddspapi",
+              "price_at": "2026-11-13T16:24:59.210024+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-13",
+                "Glentoran",
+                "Bangor"
+              ],
+              "prob": 0.7722,
               "cohort_evidence": {
                 "rate": 0.7722,
                 "n": 395,
@@ -8185,31 +8196,31 @@
               "ml_rank_probability": 0.629125009049055,
               "ml_model_key": "cbb6f40b48592a13d488263f37737bdbadd24f6c696641357e83208483668639",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Home Team Over 1.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": null,
               "floor_basis": "inherited",
               "league": "Premiership",
-              "price_at": "2026-11-13T16:24:59.210024+00:00",
-              "price_kickoff": "2026-11-13T19:45:00.000Z",
-              "price_provenance": null,
               "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-13",
-                "Glentoran",
-                "Bangor"
-              ]
+              "price_kickoff": "2026-11-13T19:45:00.000Z"
             },
             {
               "match": "Coleraine vs Portadown",
               "pick": "home",
-              "prob": 0.7342,
               "odds": 1.33,
-              "result": null,
+              "result": "win",
+              "label": "Home Team Under 3.5 Goals",
               "market": "home_under_35",
               "price_book": "1xbet",
               "price_source": "oddspapi",
+              "price_at": "2026-11-13T16:24:52.921899+00:00",
+              "price_provenance": null,
+              "fixture_key": [
+                "2026-11-13",
+                "Coleraine",
+                "Portadown"
+              ],
+              "prob": 0.7342,
               "cohort_evidence": {
                 "rate": 0.7342,
                 "n": 395,
@@ -8234,35 +8245,23 @@
               "ml_rank_probability": 0.7275326503905721,
               "ml_model_key": "cbb6f40b48592a13d488263f37737bdbadd24f6c696641357e83208483668639",
               "ml_model_schema": "enh_score_logit_v2",
-              "label": "Home Team Under 3.5 Goals",
+              "ranking_basis": "cohort",
+              "ml_ordering_active": false,
               "floor": null,
               "floor_basis": "none",
               "league": "Premiership",
-              "price_at": "2026-11-13T16:24:52.921899+00:00",
-              "price_kickoff": "2026-11-13T19:45:00.000Z",
-              "price_provenance": null,
               "shadow": true,
-              "ml_ordering_active": false,
-              "ranking_basis": "cohort",
-              "fixture_key": [
-                "2026-11-13",
-                "Coleraine",
-                "Portadown"
-              ]
+              "price_kickoff": "2026-11-13T19:45:00.000Z"
             }
-          ],
-          "odds": 2.01,
-          "stake_pct": 2.6079,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
+          ]
         }
       ],
-      "staked_pct": 2.6079
+      "bank_pct": 23.4971,
+      "close_pct": 23.4971
     }
   ],
+  "events": [],
+  "open_slips": [],
   "frozen_by_date": {
     "2026-10-14": {
       "frozen_at": null,

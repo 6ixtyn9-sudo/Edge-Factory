@@ -1,0 +1,356 @@
+{
+  "captured_at": "2026-11-13T22:46:48.420916+00:00",
+  "date": "2026-11-14",
+  "fixtures": {
+    "2026-11-14|cucuta|jaguares": {
+      "away": "Jaguares de Cordoba",
+      "best_1x2": {
+        "odd1": 1.51,
+        "odd2": 5.4,
+        "oddx": 4.1
+      },
+      "captured_at": "2026-11-13T22:46:48.420783+00:00",
+      "data_dt": [
+        14,
+        11,
+        2026,
+        21,
+        30
+      ],
+      "event_id": "AcVQTWhC",
+      "home": "Cucuta",
+      "kickoff": "21:30",
+      "kickoff_date": "2026-11-14",
+      "league": "Colombia: Primera A",
+      "market_failures": [
+        "ha"
+      ],
+      "markets": {
+        "1x2": {
+          "average": [
+            1.51,
+            4.1,
+            5.4
+          ],
+          "average_by_line": {
+            "0": [
+              1.51,
+              4.1,
+              5.4
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "X",
+            "2"
+          ],
+          "lines": [
+            "0"
+          ],
+          "named_rows": 1,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-13T21:31",
+                "2026-11-12T21:33",
+                "2026-11-12T21:33"
+              ],
+              "line": "0",
+              "movement": [
+                "down",
+                "up",
+                "down"
+              ],
+              "odds": [
+                1.51,
+                4.1,
+                5.4
+              ],
+              "pos": [
+                "1",
+                "0",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 1
+        },
+        "ah": {
+          "average": null,
+          "average_by_line": {
+            "-0.50": [
+              1.49,
+              2.38
+            ],
+            "-1.50": [
+              2.31,
+              1.52
+            ],
+            "-2.50": [
+              4.1,
+              1.18
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "1",
+            "2"
+          ],
+          "lines": [
+            "-0.50",
+            "-1.50",
+            "-2.50"
+          ],
+          "named_rows": 3,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-13T21:31",
+                "2026-11-13T21:31"
+              ],
+              "line": "-0.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.49,
+                2.38
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-12T21:33",
+                "2026-11-12T21:33"
+              ],
+              "line": "-1.50",
+              "movement": [
+                "up",
+                "down"
+              ],
+              "odds": [
+                2.31,
+                1.52
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-13T21:31",
+                "2026-11-13T21:31"
+              ],
+              "line": "-2.50",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                4.1,
+                1.18
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            }
+          ],
+          "rows_count": 3
+        },
+        "ou": {
+          "average": null,
+          "average_by_line": {
+            "2.00": [
+              1.3,
+              3.15
+            ],
+            "2.50": [
+              1.65,
+              2.06
+            ],
+            "3.00": [
+              2.08,
+              1.64
+            ]
+          },
+          "bookmakers": [
+            "Stake.com"
+          ],
+          "columns": [
+            "Over",
+            "Under"
+          ],
+          "lines": [
+            "2.00",
+            "2.50",
+            "2.75",
+            "3.00",
+            "ou"
+          ],
+          "named_rows": 5,
+          "rows": [
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-13T21:31",
+                "2026-11-13T21:31"
+              ],
+              "line": "2.00",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.3,
+                3.15
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-13T21:31",
+                "2026-11-13T21:31"
+              ],
+              "line": "2.50",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.65,
+                2.06
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-12T21:33",
+                "2026-11-12T21:33"
+              ],
+              "line": "2.75",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                1.82,
+                1.85
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-13T21:31",
+                "2026-11-13T21:31"
+              ],
+              "line": "3.00",
+              "movement": [
+                null,
+                null
+              ],
+              "odds": [
+                2.08,
+                1.64
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "all"
+            },
+            {
+              "best": true,
+              "bookmaker": "Stake.com",
+              "bookmaker_id": "1089",
+              "created": [
+                "2026-11-13T21:31",
+                "2026-11-13T21:31"
+              ],
+              "line": "ou",
+              "movement": [
+                "down",
+                "up"
+              ],
+              "odds": [
+                1.65,
+                2.06
+              ],
+              "pos": [
+                "1",
+                "2"
+              ],
+              "source": "table"
+            }
+          ],
+          "rows_count": 5
+        }
+      },
+      "match_url": "https://www.betexplorer.com/football/colombia/primera-a/cucuta-jaguares-de-cordoba/AcVQTWhC/",
+      "page": {
+        "blocks": [],
+        "challenge": false,
+        "h2h_meetings": null,
+        "h2h_record": null,
+        "h2h_rows": [],
+        "last_results_rows": [],
+        "page_bytes": 110305,
+        "page_sha256": "0312de5a1cda8c5bed41e1b30c2d7513c031ab6437c8ea0fa7ba4f1edb4cb76a",
+        "standings_columns": [],
+        "standings_rows": [],
+        "standings_rows_count": 0
+      },
+      "page_param": "0"
+    }
+  },
+  "schema": 2
+}
