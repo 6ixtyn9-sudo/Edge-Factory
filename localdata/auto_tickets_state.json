@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 383.16706599999986,
+  "bank": 256.0138,
   "cycle_base": 456.154568,
   "open_slips": [],
   "history": [
@@ -2298,19 +2298,19 @@
     {
       "date": "2026-11-12",
       "staked_pct": 85.3378,
-      "returned_pct": 127.1533,
+      "returned_pct": 0.0,
       "accas": [
         {
           "odds": 2.98,
-          "won": true,
+          "won": false,
           "stake_pct": 42.6689,
-          "returned_pct": 127.1533,
+          "returned_pct": 0.0,
           "legs": [
             {
               "match": "\u00c1guila vs Municipal Lime\u00f1o",
               "pick": "HOME",
               "odds": 1.6135,
-              "result": "win",
+              "result": "loss",
               "market": "1x2",
               "price_book": "Pinnacle",
               "price_source": "pinnapi_odds",
@@ -2373,8 +2373,8 @@
           ]
         }
       ],
-      "bank_pct": 383.1671,
-      "close_pct": 383.167
+      "bank_pct": 256.0138,
+      "close_pct": 256.0137
     }
   ],
   "events": [
