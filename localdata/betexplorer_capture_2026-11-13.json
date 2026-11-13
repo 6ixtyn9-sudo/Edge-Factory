@@ -1,15 +1,25 @@
 {
-  "attempted": 3,
+  "attempted": 5,
   "attempted_fixtures": [
     {
-      "avg_p": 73.96118342102834,
-      "away": "Lesotho",
+      "avg_p": 71.25975414216997,
+      "away": "Bangor",
       "date": "2026-11-13",
-      "home": "Gabon",
-      "league": "Africa Cup of Nations Qualifications",
+      "home": "Glentoran",
+      "league": "Premiership",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7259
+    },
+    {
+      "avg_p": 70.5879243183083,
+      "away": "Azerbaijan",
+      "date": "2026-11-13",
+      "home": "Liechtenstein",
+      "league": "UEFA Nations League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
     },
     {
       "avg_p": 83.878333022562,
@@ -30,29 +40,39 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7259
+    },
+    {
+      "avg_p": 73.96118342102834,
+      "away": "Lesotho",
+      "date": "2026-11-13",
+      "home": "Gabon",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
     }
   ],
   "be_429": 2,
-  "be_cached": 2,
+  "be_cached": 3,
   "be_cooling_down": true,
   "be_rows_rejected": 0,
   "be_rows_rejected_reasons": {},
-  "cache_only": 2,
+  "cache_only": 3,
   "candidate_fixtures": 13,
-  "captured_at": "2026-11-13T10:34:45.418432+00:00",
+  "captured_at": "2026-11-13T13:22:29.845169+00:00",
   "date": "2026-11-13",
-  "deferred_fixtures": 10,
+  "deferred_fixtures": 8,
   "errors": [],
-  "fixtures_with_rows": 3,
+  "fixtures_with_rows": 5,
   "market_budget_stop": false,
-  "market_requests": 3,
+  "market_requests": 9,
   "match_detail": {
-    "bookmakers": 19,
+    "bookmakers": 42,
     "challenge_pages": 0,
-    "fixtures": 3,
-    "market_rows": 44,
-    "markets": 10,
-    "named_rows": 44,
+    "fixtures": 5,
+    "market_rows": 104,
+    "markets": 20,
+    "named_rows": 104,
     "standings_rows": 0,
     "with_h2h": 0,
     "with_last_results": 0,
@@ -61,17 +81,27 @@
   "max_fixtures": 12,
   "ml_precutoff_active": false,
   "ml_refresh_attempted": 0,
-  "network_attempted": 1,
+  "network_attempted": 2,
   "quoted_fixtures": [
     {
-      "avg_p": 73.96118342102834,
-      "away": "Lesotho",
+      "avg_p": 71.25975414216997,
+      "away": "Bangor",
       "date": "2026-11-13",
-      "home": "Gabon",
-      "league": "Africa Cup of Nations Qualifications",
+      "home": "Glentoran",
+      "league": "Premiership",
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7259
+    },
+    {
+      "avg_p": 70.5879243183083,
+      "away": "Azerbaijan",
+      "date": "2026-11-13",
+      "home": "Liechtenstein",
+      "league": "UEFA Nations League",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 0.5405
     },
     {
       "avg_p": 83.878333022562,
@@ -92,10 +122,20 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 0.7259
+    },
+    {
+      "avg_p": 73.96118342102834,
+      "away": "Lesotho",
+      "date": "2026-11-13",
+      "home": "Gabon",
+      "league": "Africa Cup of Nations Qualifications",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.7259
     }
   ],
-  "requests": 8,
-  "rows": 9,
+  "requests": 16,
+  "rows": 15,
   "schema": 1,
   "status": "ok"
 }

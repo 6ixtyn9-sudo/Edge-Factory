@@ -2,10 +2,10 @@ autobets_ML — performance, percent of capital (PAPER ONLY)
 ==============================================================
 
 BANK     60.4%   x0.604 of the initial base · 60.389 paper units
-CAPITAL  60.3% free / 0.1% reserved · 60.332 free / 0.056 reserved paper units
+CAPITAL  60.3% free / 0.1% reserved · 60.272 free / 0.117 reserved paper units
 
 RECORD   4W / 41L   (8.9% hit)   over 7 bet-days
-OPEN     3 held accas · 7 unresolved leg results
+OPEN     4 held accas · 9 unresolved leg results
 PROFIT   -39.6% of capital · -39.611 paper units · ROI -60.7%
 DRAWDOWN 39.611 paper units / 39.6% (ticket-date marks; pending at cost)
 DAYS     7 bet / 5 no-bet · 0 missed freeze
@@ -45,6 +45,14 @@ HELD (not yet settled; stake counted as committed)
          Match Under 2.5 Goals @1.780
       Slovenia vs Switzerland · 2026-11-13 21:45 SAST
          Match Under 2.5 Goals @1.690
+  2026-11-13   ACCA #4 @1.423   stake 0.1% (0.060388 paper units)   HELD (not settled)
+      Receipt 20261113T132934698154Z / publication-local ticket 1
+   Chance-first · estimated hit 65.3% · estimated miss 34.7%
+   Model product: independence assumed; not calibrated or guaranteed.
+      Egypt vs Malawi · 2026-11-13 21:00 SAST
+         Home Win (1X2) @1.124
+      Gabon vs Lesotho · 2026-11-13 18:00 SAST
+         Home Win (1X2) @1.266
 
 SUPERSEDED BEFORE KICKOFF — released, not wins or losses
   2026-11-13 @35.775 · released 0.097512 paper units · 2026-11-13T09:15:47.208439+00:00
@@ -59,7 +67,7 @@ NOTES
 
 LEARNING & EVIDENCE
 EVIDENCE 59 resolved selected observations / 40 fixtures · pool 97 resolved fixtures
-LEARNING last decision: 90 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
+LEARNING last decision: 97 resolved prior-day fixtures; dynamic calibration + success tilt from first results, not an automatic review/promotion trigger
 DATA     17115 ineligible-quote candidate occurrences excluded from paired errors; not a count of independent fixtures
          Historical P&L and frozen predictions unchanged; not a clean-refit backtest.
 FORWARD POOL: Brier 0.2106 → 0.2133 · log loss 0.6060 → 0.6125 (base → adjusted)
