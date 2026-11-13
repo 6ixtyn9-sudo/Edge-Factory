@@ -1,22 +1,57 @@
 autobets_ML TICKETS — 2026-11-13
 ==============================================================
-CURRENT PAPER BANK (all dates): 60.389 units · free 60.291 / reserved 0.098
-1 paper accas · 1 ticket publications · 1 scans without tickets · times in SAST
+CURRENT PAPER BANK (all dates): 56.448 units · free 47.523 / reserved 8.925
+3 paper accas · 1 ticket publications · 1 scans without tickets · times in SAST · 1 superseded before kickoff
 PAPER ONLY — hypothetical same-book singles products; acca acceptance/payout unconfirmed.
 Rolling publications use the next 24 hours; frozen tickets retain their original decision basis.
 
-[PAPER ACCA #1] @35.775 — 0.097512 paper units — Winamax (DE)
-   Published 2026-11-13 00:39:28 SAST · reference P1/1
-   Serbia vs Germany · KICKOFF 2026-11-13 21:45 SAST
-      Draw (1X2) @6.750 · ML 20.9% · CAUTION
+CHANCE FIRST — highest estimated whole-ticket hit probability, not payout or EV.
+Best remaining two-leg pairs; no fixture reuse within each publication.
+No additional hit-probability floor; later accas can have much lower hit estimates.
+New PAPER risk: 0.1% of total bank per publication, shared across all accas before exposure caps; no refill.
 
+[PAPER ACCA #1] @1.781 — 0.018816 paper units — 1xBet
+   Published 2026-11-13 11:15:47 SAST · reference P3/1
+   Chance-first · estimated hit 46.2% · estimated miss 53.8%
+   Model product: independence assumed; not calibrated or guaranteed.
    Liechtenstein vs Azerbaijan · KICKOFF 2026-11-13 21:45 SAST
-      Draw (1X2) @5.300 · ML 21.1% · CAUTION
+      Away Win (1X2) @1.300 · ML 67.6% · CAUTION
+
+   Slovakia vs Faroe Islands · KICKOFF 2026-11-13 21:45 SAST
+      Home Win (1X2) @1.370 · ML 68.4% · CAUTION
+
+[PAPER ACCA #2] @2.028 — 0.018816 paper units — 1xBet
+   Published 2026-11-13 11:15:47 SAST · reference P3/2
+   Chance-first · estimated hit 38.2% · estimated miss 61.8%
+   Model product: independence assumed; not calibrated or guaranteed.
+   Serbia vs Germany · KICKOFF 2026-11-13 21:45 SAST
+      Away Win (1X2) @1.300 · ML 63.6% · CAUTION
+
+   Netherlands vs Greece · KICKOFF 2026-11-13 21:45 SAST
+      Home Win (1X2) @1.560 · ML 60.1% · SKIPPED_VETO
+
+[PAPER ACCA #3] @3.008 — 0.018815 paper units — 1xBet
+   Published 2026-11-13 11:15:47 SAST · reference P3/3
+   Chance-first · estimated hit 31.3% · estimated miss 68.7%
+   Model product: independence assumed; not calibrated or guaranteed.
+   Bulgaria vs Iceland · KICKOFF 2026-11-13 21:45 SAST
+      Match Under 2.5 Goals @1.780 · ML 55.4% · SKIPPED_VETO
+
+   Slovenia vs Switzerland · KICKOFF 2026-11-13 21:45 SAST
+      Match Under 2.5 Goals @1.690 · ML 56.4% · SKIPPED_VETO
+
+SUPERSEDED BEFORE KICKOFF — audit only; not current recommendations
+   P1/1 @35.775 · released 0.097512 paper units
+      Withdrawn 2026-11-13T09:15:47.208439+00:00 · not a win or loss; original receipt retained.
+      Receipt fdbe9fde2b5cc5f819d495357022510122dd04300de5a7ae242c8d564573a852 · replacement 1a902a22be9afaae22f42f8f503b5baa03a363dbbc1b0e4103791841ed734182
+      Reason: Operator requested the reconstructed multi-acca chance-first PAPER slip be visible on GitHub, approved a one-off ML-only runtime-state commit, and explicitly rejected new machinery. Replace the original still-active double-draw using current-time validated existing local evidence; share the existing paper-risk budget and preserve original receipts.
+      Serbia vs Germany · Draw (1X2) @6.750
+      Liechtenstein vs Azerbaijan · Draw (1X2) @5.300
 
 PUBLICATION & LEG DETAILS
 Daily acca numbers are display labels; P/publication-local index maps to the frozen receipt.
 Rejection counts are checks, not unique fixtures; checks can recur across scans.
-P1 · 2026-11-13 00:39:28 SAST · ACCA #1
+P1 · 2026-11-13 00:39:28 SAST · Superseded before kickoff; not an active ticket
    Receipt 20261112T223642381751Z · status paper_accas
    Frozen at 2026-11-12T22:39:28.369305+00:00 · basis rolling_24h_actual_decision_v1
    SHA256 fdbe9fde2b5cc5f819d495357022510122dd04300de5a7ae242c8d564573a852
@@ -30,15 +65,9 @@ P1 · 2026-11-13 00:39:28 SAST · ACCA #1
    2026-11-13 serbia vs germany: new 0.097512 + prior open 0.000000 · unused new budget 2.921934 units
    Coverage: candidate count: 2404; candidate fixtures: 9; slate rows: 29; status: inputs_available
    Rejections: data quality: 1; outside rolling window or unproven kickoff: 14; quote or probability unavailable: 2598
-   ACCA #1 / leg 1: source forecast 20.9% · gap +0.1 pp · quote age 0.13h at decision
-      base 20.9% → adjusted 20.9% · learning move +0.1 pp · price break-even 14.8% (1/odds, not a fair probability or proof of value)
-      Scalar adjustment 20.9% → partition-normalized 20.9% · includes unquoted outcomes; not proof of calibration
-   ACCA #1 / leg 2: source forecast 21.1% · gap +0.0 pp · quote age 0.13h at decision
-      base 21.1% → adjusted 21.1% · learning move +0.0 pp · price break-even 18.9% (1/odds, not a fair probability or proof of value)
-      Scalar adjustment 21.1% → partition-normalized 21.1% · includes unquoted outcomes; not proof of calibration
    Learning: fitted_source_market_context
 
-P2 · 2026-11-13 00:52:38 SAST · No additional tickets
+P2 · 2026-11-13 00:52:38 SAST · No tickets at this publication
    Receipt 20261112T224951151292Z · status no_paper_bet
    Frozen at 2026-11-12T22:52:38.669924+00:00 · basis rolling_24h_actual_decision_v1
    SHA256 690f6f4d59ec63eac36ff6190f12a25a4c04e51383eab4fe3a8a6757cda29e21
@@ -51,6 +80,46 @@ P2 · 2026-11-13 00:52:38 SAST · No additional tickets
    Coverage: candidate count: 2404; candidate fixtures: 9; slate rows: 15; status: inputs_available
    Rejections: data quality: 1; quote or probability unavailable: 2598
    Exact opportunity replay: 1 acca(s) not republished; 0.097355 units left idle, no refill
+   Learning: fitted_source_market_context
+
+P3 · 2026-11-13 11:15:47 SAST · ACCA #1–#3
+   Receipt 20261113T091303978090Z · status paper_accas
+   Frozen at 2026-11-13T09:15:47.208439+00:00 · basis rolling_24h_actual_decision_v1
+   SHA256 1a902a22be9afaae22f42f8f503b5baa03a363dbbc1b0e4103791841ed734182
+   Decision window 2026-11-13T09:13:03.978090+00:00 → 2026-11-14T09:13:03.978090+00:00
+   Bank at decision: 56.447914 paper units
+   Available at decision: 47.579390 paper units
+   Reserved at decision: 8.868524 paper units
+   Fixture budget: 5.0% of TOTAL bank at decision · 2.822395 units per canonical fixture
+   Reservation 0.056447 → 0.056447 units · released/idle 0.000000; no refill
+   2026-11-13 bulgaria vs iceland: new 0.018815 + prior open 0.000000 · unused new budget 2.803580 units
+   2026-11-13 liechtenstein vs azerbaijan: new 0.018816 + prior open 0.000000 · unused new budget 2.803579 units
+   2026-11-13 netherlands vs greece: new 0.018816 + prior open 0.000000 · unused new budget 2.803579 units
+   2026-11-13 serbia vs germany: new 0.018816 + prior open 0.000000 · unused new budget 2.803579 units
+   2026-11-13 slovakia vs faroeislands: new 0.018816 + prior open 0.000000 · unused new budget 2.803579 units
+   2026-11-13 slovenia vs switzerland: new 0.018815 + prior open 0.000000 · unused new budget 2.803580 units
+   Coverage: candidate count: 425; candidate fixtures: 7; slate rows: 30; status: inputs_available
+   Rejections: outside rolling window or unproven kickoff: 4; quote or probability unavailable: 298
+   Objective: highest whole-ticket hit estimate; price breaks exact probability ties only.
+   PAPER risk: 0.1% of total bank per publication, shared across all accas before downward-only caps; positive EV not required.
+   ACCA #1 / leg 1: source forecast 67.0% · gap +0.6 pp · quote age 10.74h at decision
+      base 67.0% → adjusted 67.6% · learning move +0.6 pp · price break-even 76.9% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 67.6% → partition-normalized 67.6% · includes unquoted outcomes; not proof of calibration
+   ACCA #1 / leg 2: source forecast 69.4% · gap -1.0 pp · quote age 10.74h at decision
+      base 69.4% → adjusted 68.4% · learning move -1.0 pp · price break-even 73.0% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 68.4% → partition-normalized 68.4% · includes unquoted outcomes; not proof of calibration
+   ACCA #2 / leg 1: source forecast 63.1% · gap +0.5 pp · quote age 10.74h at decision
+      base 63.1% → adjusted 63.6% · learning move +0.5 pp · price break-even 76.9% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 63.6% → partition-normalized 63.6% · includes unquoted outcomes; not proof of calibration
+   ACCA #2 / leg 2: source forecast 61.1% · gap -0.9 pp · quote age 10.74h at decision
+      base 61.1% → adjusted 60.1% · learning move -0.9 pp · price break-even 64.1% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 60.1% → partition-normalized 60.1% · includes unquoted outcomes; not proof of calibration
+   ACCA #3 / leg 1: source forecast 51.7% · gap +3.8 pp · quote age 10.74h at decision
+      base 51.7% → adjusted 55.4% · learning move +3.8 pp · price break-even 56.2% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 55.4% → partition-normalized 55.4% · includes unquoted outcomes; not proof of calibration
+   ACCA #3 / leg 2: source forecast 53.6% · gap +2.8 pp · quote age 10.74h at decision
+      base 53.6% → adjusted 56.4% · learning move +2.8 pp · price break-even 59.2% (1/odds, not a fair probability or proof of value)
+      Scalar adjustment 56.4% → partition-normalized 56.4% · includes unquoted outcomes; not proof of calibration
    Learning: fitted_source_market_context
 
 ADMISSION  CAUTION / SKIPPED_VETO remain paper-eligible; data-quality guards unchanged.
